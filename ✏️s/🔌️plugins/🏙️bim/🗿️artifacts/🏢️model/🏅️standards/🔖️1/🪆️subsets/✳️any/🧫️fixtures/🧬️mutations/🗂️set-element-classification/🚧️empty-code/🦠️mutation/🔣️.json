@@ -1,9 +1,6 @@
 {
   "mutation": "setElementClassification",
   "id": "w-south",
-  "classification": {
-    "system": "Uniclass",
-    "code": "",
-    "title": "Walls"
-  }
+  "system": "cs-uni",
+  "code": ""
 }

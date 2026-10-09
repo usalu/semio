@@ -728,6 +728,28 @@ impl FaultFrom for TextError {
     }
 }
 
+impl FaultFrom for ValueError {
+    fn fault_origin(&self) -> FaultOrigin {
+        FaultOrigin::Framework
+    }
+
+    fn fault_code(&self) -> FaultCode {
+        FaultCode::new("value.refusal")
+    }
+
+    fn fault_severity(&self) -> Severity {
+        Severity::Error
+    }
+
+    fn fault_message(&self) -> String {
+        self.message.to_string()
+    }
+
+    fn fault_params(&self) -> FaultParams {
+        FaultParams(vec![("refusalKind".to_string(), self.kind.as_str().to_string())])
+    }
+}
+
 /// 📦️ JSON wire encoding for {@link Fault} crossing host/WIT boundaries.
 pub fn encode_fault_bytes(fault: &Fault) -> Vec<u8> {
     serde_json::to_vec(&fault.to_value()).unwrap_or_else(|_| fault.message.as_bytes().to_vec())

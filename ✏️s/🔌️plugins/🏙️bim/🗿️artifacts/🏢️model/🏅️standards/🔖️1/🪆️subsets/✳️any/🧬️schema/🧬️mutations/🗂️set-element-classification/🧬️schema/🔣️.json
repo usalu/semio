@@ -7,7 +7,8 @@
   "required": [
     "mutation",
     "id",
-    "classification"
+    "system",
+    "code"
   ],
   "properties": {
     "mutation": {
@@ -29,17 +30,33 @@
         "order": 10
       }
     },
-    "classification": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Classification",
+    "system": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "record",
+        "widget": "reference",
         "role": "value",
         "label": {
-          "en": "Classification",
-          "de": "Klassifizierung"
+          "en": "System",
+          "de": "System"
         },
-        "group": "classification",
+        "ref": {
+          "kind": "classification-system"
+        },
+        "group": "value",
         "order": 20
+      }
+    },
+    "code": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Code",
+          "de": "Code"
+        },
+        "group": "value",
+        "order": 30
       }
     }
   }

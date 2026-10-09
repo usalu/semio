@@ -94,8 +94,8 @@ impl Placing {
         let host = nearest_host(ctx.snapshot, storey, pointer.at, pointer.tolerance * super::session::PICK_PIXELS)?;
         let Some((kind, width)) = self.opening_kind(ctx) else { return Some(Candidate { offset: host.offset, host, width: 0.0, opening: None, valid: false }) };
         let Some(offset) = fitted_offset(host.length, width, host.offset) else { return Some(Candidate { offset: host.offset, host, width, opening: None, valid: false }) };
-        let name = ctx.name_of(|labels| labels.kind_opening, "Opening", ctx.snapshot.openings.len());
-        let opening = Opening { host: host.host.clone(), kind, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: host.side < 0.0, name };
+        let name = ctx.name_of(|labels| labels.kind_opening, ctx.snapshot.openings.len());
+        let opening = Opening { host: host.host.clone(), kind, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: host.side < 0.0, reveal_depth: None, reveal_material: None, name };
         let valid = ctx.accepts(&ModelMutation::CreateOpening(crate::mutations::create_opening::CreateOpening { id: "probe".into(), opening: opening.clone() }));
         Some(Candidate { host, offset, width, opening: Some(opening), valid })
     }

@@ -1188,7 +1188,7 @@ pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request
         canonical_base_revision: request.canonical_base_revision,
         authoring_seed: request.authoring_seed.clone(),
     };
-    let payload = ArtifactRetainedCommandPayload::try_new(
+    let payload = ArtifactRetainedCommandPayload::new(
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
@@ -1204,7 +1204,7 @@ pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request
         E::NATIVE_MAXIMUM_RAW_BYTES,
         E::NATIVE_MAXIMUM_WORK_ITEMS,
         E::native_edit_work(tool_id),
-    )?;
+    );
     Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
 }
 
@@ -1404,7 +1404,7 @@ pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: ArtifactO
         canonical_base_revision: request.canonical_base_revision,
         authoring_seed: request.authoring_seed.clone(),
     };
-    let payload = ArtifactRetainedCommandPayload::try_new(
+    let payload = ArtifactRetainedCommandPayload::new(
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
@@ -1420,7 +1420,7 @@ pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: ArtifactO
         SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES,
         SNAPSHOT_EDIT_WORK_CAPACITY.work_items(),
         Box::new(BoundedArtifactCommandWork::new(tool_id, snapshot_edit_reduce::<E>, snapshot_edit_extent::<E>)),
-    )?;
+    );
     Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
 }
 

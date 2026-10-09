@@ -2,9 +2,10 @@
 //! centre offset keeps it inside its host and clear of its neighbours. Stairs: the invariants every authored stair must hold. Columns: the authored rise between a base and a top constraint.
 //! Nothing here is stored; lengths and widths are derived from authored parameters on every read.
 
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::resolve_size;
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{resolve, stacking, StoreyLevel};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::axis_length;
-use crate::{stair_construction_problem, ModelDiff, ModelSnapshot, Opening, OpeningKind, Stair, StairFlight, TopConstraint};
+use crate::{ramp_construction_problem, stair_construction_problem, ModelDiff, ModelSnapshot, Opening, OpeningKind, Railing, Ramp, Stair, StairFlight, TopConstraint};
 use protocol::{MutationOutcome, OutcomeCode};
 
 const TOLERANCE: f64 = 1e-9;
@@ -74,6 +75,14 @@ pub fn placement_issue(base: &ModelSnapshot, skip: Option<&str>, host: &str, len
         ((other.offset - offset).abs() < reach - TOLERANCE).then(|| format!("Opening \"{id}\" already occupies that stretch of the host."))
     })
 }
+
+/// 📏️ The first opening hosted by `host` (in id order) whose cut rises above a host that is `height` metres tall, none when every hosted opening fits below it.
+pub fn overflowing_opening(base: &ModelSnapshot, host: &str, height: f64) -> Option<String> {
+    base.openings.iter().filter(|(_, opening)| opening.host == host).find_map(|(id, opening)| {
+        let size = resolve_size(base, opening);
+        (size.sill + size.height > height + TOLERANCE).then(|| id.clone())
+    })
+}
 //#endregion 🔖️Openings
 
 //#region 🔖️Stairs
@@ -102,6 +111,7 @@ fn top_issue(base: &ModelSnapshot, stair: &Stair) -> Option<StairIssue> {
     match &stair.top {
         TopConstraint::Unconnected { height } if !positive(*height) => invalid("top", "An unconnected stair top needs a positive height."),
         TopConstraint::StoreyTop { offset } | TopConstraint::Unconnected { height: offset } if !offset.is_finite() => invalid("top", "A stair top offset must be finite."),
+        TopConstraint::Roof { .. } | TopConstraint::Slab { .. } | TopConstraint::Ceiling { .. } => invalid("top", "Only a wall attaches its top to a roof, a slab or a ceiling."),
         TopConstraint::Storey { storey, offset } => {
             if !offset.is_finite() {
                 return invalid("top", "A stair top offset must be finite.");
@@ -144,6 +154,64 @@ pub fn refuse_stair(issue: StairIssue, prefix: &[&str]) -> MutationOutcome<Model
 }
 //#endregion 🔖️Stairs
 
+//#region 🔖️Ramps
+fn ramp_top_issue(base: &ModelSnapshot, ramp: &Ramp) -> Option<StairIssue> {
+    match &ramp.top {
+        TopConstraint::Unconnected { height: offset } | TopConstraint::StoreyTop { offset } if !offset.is_finite() => invalid("top", "A ramp top offset must be finite."),
+        TopConstraint::Roof { .. } | TopConstraint::Slab { .. } | TopConstraint::Ceiling { .. } => invalid("top", "Only a wall attaches its top to a roof, a slab or a ceiling."),
+        TopConstraint::Storey { storey, offset } => {
+            if !offset.is_finite() {
+                return invalid("top", "A ramp top offset must be finite.");
+            }
+            let own = base.storeys.get(&ramp.storey).map(|row| &row.building);
+            match base.storeys.get(storey) {
+                None => Some(StairIssue { code: OutcomeCode::TargetMissing, message: format!("Storey \"{storey}\" does not exist."), path: vec!["top", "storey"] }),
+                Some(row) if Some(&row.building) != own => Some(StairIssue { code: OutcomeCode::Invariant, message: format!("Storey \"{storey}\" belongs to another building."), path: vec!["top", "storey"] }),
+                Some(_) => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+/// 🛝️ The first broken invariant of `ramp` against `base`, none when it holds: the construction rules, a finite top and a top storey of the same building, a material that exists. The ramp's own storey is checked by the caller.
+pub fn ramp_issue(base: &ModelSnapshot, ramp: &Ramp) -> Option<StairIssue> {
+    if let Some((field, message)) = ramp_construction_problem(ramp) {
+        return invalid(field, message);
+    }
+    if !base.materials.contains_key(&ramp.material) {
+        return Some(StairIssue { code: OutcomeCode::TargetMissing, message: format!("Material \"{}\" does not exist.", ramp.material), path: vec!["material"] });
+    }
+    ramp_top_issue(base, ramp)
+}
+//#endregion 🔖️Ramps
+
+//#region 🔖️RailingHosts
+/// 🪝️ The first broken host rule of `railing` against `base`, none when it holds or the railing is not hosted: the host is a stair, a ramp or a slab of the same building, a slab edge exists and is straight, a stair or ramp has no edge index.
+pub fn host_issue(base: &ModelSnapshot, railing: &Railing) -> Option<StairIssue> {
+    let host = railing.host.as_ref()?;
+    let building = |storey: &str| base.storeys.get(storey).map(|row| &row.building);
+    let (storey, edges) = if let Some(stair) = base.stairs.get(&host.element) {
+        (&stair.storey, None)
+    } else if let Some(ramp) = base.ramps.get(&host.element) {
+        (&ramp.storey, None)
+    } else if let Some(slab) = base.slabs.get(&host.element) {
+        (&slab.storey, Some(&slab.boundary))
+    } else {
+        return Some(StairIssue { code: OutcomeCode::TargetMissing, message: format!("Element \"{}\" is no stair, ramp or slab.", host.element), path: vec!["host", "element"] });
+    };
+    if building(storey).is_none() || building(storey) != building(&railing.storey) {
+        return Some(StairIssue { code: OutcomeCode::Invariant, message: format!("Element \"{}\" stands in another building.", host.element), path: vec!["host", "element"] });
+    }
+    match edges {
+        None if host.edge != 0 => invalid("host", "A stair or ramp host has no edge index; use side and inset."),
+        Some(boundary) if host.edge as usize >= boundary.len() => Some(StairIssue { code: OutcomeCode::Invariant, message: format!("Slab \"{}\" has no edge {}.", host.element, host.edge), path: vec!["host", "edge"] }),
+        Some(boundary) if boundary[host.edge as usize].bulge != 0.0 => Some(StairIssue { code: OutcomeCode::Invariant, message: format!("Edge {} of slab \"{}\" is curved; a railing follows straight edges only.", host.edge, host.element), path: vec!["host", "edge"] }),
+        _ => None,
+    }
+}
+//#endregion 🔖️RailingHosts
+
 //#region 🔖️Rise
 /// 🪜️ The elevation of storey `id` above its building datum, summed from stored heights along the stacking of its building: a pure read of
 /// `base` that runs no inference engine, none when the storey is absent.
@@ -169,6 +237,7 @@ pub fn rise(base: &ModelSnapshot, storey_id: &str, base_offset: f64, top: &TopCo
         TopConstraint::StoreyTop { offset } => Some(storey.height + offset - base_offset),
         TopConstraint::Storey { storey: target, offset } if target == storey_id => Some(offset - base_offset),
         TopConstraint::Storey { storey: target, offset } => Some(storey_elevation(base, target)? + offset - storey_elevation(base, storey_id)? - base_offset),
+        TopConstraint::Roof { .. } | TopConstraint::Slab { .. } | TopConstraint::Ceiling { .. } => None,
     }
 }
 //#endregion 🔖️Rise

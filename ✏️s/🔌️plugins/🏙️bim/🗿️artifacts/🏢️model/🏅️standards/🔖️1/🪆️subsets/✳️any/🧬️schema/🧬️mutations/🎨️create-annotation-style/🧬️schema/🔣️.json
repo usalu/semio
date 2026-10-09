@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-annotation-style/schema.json",
+  "title": "CreateAnnotationStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "annotation_style"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createAnnotationStyle"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Style id",
+          "de": "Stil-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "annotation_style": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/AnnotationStyle",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Annotation style",
+          "de": "Beschriftungsstil"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

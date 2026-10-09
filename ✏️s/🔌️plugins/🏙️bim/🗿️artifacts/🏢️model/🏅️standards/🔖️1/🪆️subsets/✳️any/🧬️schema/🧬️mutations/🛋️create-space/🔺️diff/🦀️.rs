@@ -1,6 +1,6 @@
 //! 🔺️ Diff constructor for `CreateSpace`: one created space entry. The storey must exist, the number is unique within the storey, a
-//! bounded space needs a finite seed and an explicit outline at least three finite vertices that enclose area. Outline, area and
-//! volume of a bounded space are inferred from the walls around the seed.
+//! bounded space needs a finite seed and an explicit outline at least three finite vertices that enclose area, its zone must exist and its
+//! finishes must name materials. Outline, area, volume and finish areas of a bounded space are inferred from the walls around the seed.
 
 use super::super::elements;
 use super::CreateSpace;
@@ -35,6 +35,14 @@ pub fn diff(payload: &CreateSpace, base: &ModelSnapshot) -> MutationOutcome<Mode
     }
     if !drawable(&space.boundary) {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A space boundary needs a finite seed or an outline of at least three finite vertices enclosing area.", ["space", "boundary"]);
+    }
+    if let Some(zone) = space.zone.as_ref().filter(|zone| !base.zones.contains_key(*zone)) {
+        return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Zone \"{zone}\" does not exist."), ["space", "zone"]);
+    }
+    for (field, finish) in [("floor_finish", &space.floor_finish), ("wall_finish", &space.wall_finish), ("ceiling_finish", &space.ceiling_finish)] {
+        if let Some(material) = finish.as_ref().filter(|material| !base.materials.contains_key(*material)) {
+            return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Material \"{material}\" does not exist."), ["space", field]);
+        }
     }
     MutationOutcome::new(ModelDiff::spaces(payload.id.clone(), Entry::Created(space.clone())))
 }

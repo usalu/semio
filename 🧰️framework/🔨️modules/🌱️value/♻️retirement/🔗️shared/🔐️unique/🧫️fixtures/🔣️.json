@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unique",
+      "weakAliases": 0,
+      "value": 31
+    },
+    {
+      "id": "one-weak",
+      "weakAliases": 1,
+      "value": 47
+    },
+    {
+      "id": "three-weak",
+      "weakAliases": 3,
+      "value": 59
+    }
+  ],
+  "copyGrants": [
+    1,
+    7,
+    4096
+  ]
+}

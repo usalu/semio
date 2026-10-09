@@ -1,0 +1,9 @@
+{
+  "mutation": "setTag",
+  "id": "tag-south",
+  "element": "w-east",
+  "offset": {
+    "x": 0.4,
+    "y": 0
+  }
+}

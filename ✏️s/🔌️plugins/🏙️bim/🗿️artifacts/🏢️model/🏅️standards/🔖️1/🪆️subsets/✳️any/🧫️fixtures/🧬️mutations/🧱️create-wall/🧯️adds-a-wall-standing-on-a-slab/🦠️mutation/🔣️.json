@@ -1,0 +1,30 @@
+{
+  "mutation": "createWall",
+  "id": "w-hall",
+  "wall": {
+    "storey": "st-ground",
+    "wall_type": "wt-300",
+    "axis": {
+      "Line": {
+        "start": {
+          "x": 0,
+          "y": 6
+        },
+        "end": {
+          "x": 8,
+          "y": 6
+        }
+      }
+    },
+    "location": "Center",
+    "base_offset": 0,
+    "top": {
+      "StoreyTop": {
+        "offset": 0
+      }
+    },
+    "phase": "New",
+    "name": "Hall",
+    "base_slab": "sl-ground"
+  }
+}

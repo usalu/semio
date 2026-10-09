@@ -38,7 +38,11 @@
           "de": "Achse"
         },
         "group": "value",
-        "order": 20
+        "order": 20,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
       }
     },
     "base_offset": {
@@ -50,8 +54,15 @@
           "en": "Base offset (m)",
           "de": "Fußversatz (m)"
         },
-        "group": "value",
-        "order": 30
+        "group": "placement",
+        "order": 30,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
       }
     },
     "top": {
@@ -63,79 +74,12 @@
           "en": "Top",
           "de": "Oberkante"
         },
-        "group": "value",
-        "order": 40
-      }
-    },
-    "u_spacing": {
-      "type": "number",
-      "x-semio-ui": {
-        "widget": "number",
-        "role": "value",
-        "label": {
-          "en": "Horizontal spacing (m)",
-          "de": "Horizontaler Raster (m)"
-        },
-        "group": "value",
-        "order": 50
-      }
-    },
-    "v_spacing": {
-      "type": "number",
-      "x-semio-ui": {
-        "widget": "number",
-        "role": "value",
-        "label": {
-          "en": "Vertical spacing (m)",
-          "de": "Vertikaler Raster (m)"
-        },
-        "group": "value",
-        "order": 60
-      }
-    },
-    "mullion": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile",
-      "x-semio-ui": {
-        "widget": "record",
-        "role": "value",
-        "label": {
-          "en": "Mullion profile",
-          "de": "Pfostenprofil"
-        },
-        "group": "value",
-        "order": 70
-      }
-    },
-    "panel_material": {
-      "type": "string",
-      "x-semio-ui": {
-        "widget": "reference",
-        "role": "value",
-        "label": {
-          "en": "Panel material",
-          "de": "Füllungsmaterial"
-        },
-        "ref": {
-          "kind": "material"
-        },
-        "group": "value",
-        "order": 80
-      }
-    },
-    "mullion_material": {
-      "type": "string",
-      "x-semio-ui": {
-        "widget": "reference",
-        "role": "value",
-        "label": {
-          "en": "Mullion material",
-          "de": "Pfostenmaterial"
-        },
-        "ref": {
-          "kind": "material"
-        },
-        "group": "value",
-        "order": 90
+        "group": "placement",
+        "order": 40,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
       }
     },
     "name": {
@@ -148,7 +92,11 @@
           "de": "Name"
         },
         "group": "identity",
-        "order": 100
+        "order": 50,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
       }
     }
   }

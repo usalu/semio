@@ -161,7 +161,8 @@
           }
         }
       },
-      "usage": "Kitchen"
+      "usage": "Kitchen",
+      "phase": "New"
     },
     "sp-2": {
       "storey": "st-ground",
@@ -201,7 +202,8 @@
           ]
         }
       },
-      "usage": "Circulation"
+      "usage": "Circulation",
+      "phase": "New"
     },
     "sp-3": {
       "storey": "st-first",
@@ -215,7 +217,8 @@
           }
         }
       },
-      "usage": "Sleeping"
+      "usage": "Sleeping",
+      "phase": "New"
     }
   },
   "properties": {
@@ -231,9 +234,19 @@
   },
   "classifications": {
     "sp-2": {
-      "system": "DIN 276",
-      "code": "340",
-      "title": "Wände"
+      "cs-din-276": "340"
+    }
+  },
+  "classification_systems": {
+    "cs-din-276": {
+      "name": "DIN 276",
+      "edition": "",
+      "entries": [
+        {
+          "code": "340",
+          "title": "Wände"
+        }
+      ]
     }
   }
 }

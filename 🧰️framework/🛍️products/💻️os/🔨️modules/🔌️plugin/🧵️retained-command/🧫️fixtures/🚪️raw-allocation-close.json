@@ -1,9 +1,28 @@
 {
-  "schema": "retained-command-raw-allocation-close/v1",
+  "schema": "retained-command-raw-allocation-close/v2",
   "maximumItems": 1,
-  "maximumBytes": 4096,
+  "maximumCopyBytes": 4096,
   "cases": [
-    { "id": "empty-large-capacity", "capacity": 16384, "initializedBytes": 0, "expectedByteRelease": 0, "expectedAllocationRelease": 1 },
-    { "id": "partial-large-capacity", "capacity": 65536, "initializedBytes": 8193, "expectedByteRelease": 8193, "expectedAllocationRelease": 1 }
+    {
+      "id": "empty-zero-capacity",
+      "capacity": 0,
+      "initializedBytes": 0,
+      "expectedCopiedBytes": 0,
+      "expectedReleasedBytes": 0
+    },
+    {
+      "id": "empty-large-capacity",
+      "capacity": 16384,
+      "initializedBytes": 0,
+      "expectedCopiedBytes": 0,
+      "expectedReleasedBytes": 16384
+    },
+    {
+      "id": "partial-large-capacity",
+      "capacity": 65536,
+      "initializedBytes": 8193,
+      "expectedCopiedBytes": 8193,
+      "expectedReleasedBytes": 65536
+    }
   ]
 }

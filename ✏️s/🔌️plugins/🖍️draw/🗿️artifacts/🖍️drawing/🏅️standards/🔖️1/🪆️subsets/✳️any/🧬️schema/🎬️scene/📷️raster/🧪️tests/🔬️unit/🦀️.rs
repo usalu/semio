@@ -1,39 +1,34 @@
 use super::*;
-#[test]
-fn scene_sampled_pixels_wait_for_actual_affine_retirement_before_layer_publication(){
- let sources:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖼️images/🔣️.json")).unwrap();let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️image/🔣️.json")).unwrap();assert_eq!(cases.as_array().unwrap().len(),4);
- for row in cases.as_array().unwrap(){for grant in [1,7,4096]{
-  let source=sources.as_array().unwrap().iter().find(|v|v["name"]==row["source"]).unwrap();let mut job=RasterSceneJob::new(input(&source["input"])).unwrap();let mut parents=0;let mut closing=false;let mut pointer=None;let mut nodes=0;let mut cleanup_work=0;let mut done=false;
-  for _ in 0..2000000{let active=job.phase=="imageCleanup";if active{if !closing{parents+=1;closing=true;nodes=job.nodes;}assert!(job.sampler.is_none());assert_eq!(job.nodes,nodes);let pixels=job.sampled.as_ref().unwrap().pixels.as_ptr();if let Some(before)=pointer{assert_eq!(pixels,before);}else{pointer=Some(pixels);}}
-   let budget=if job.phase=="compositing"{grant}else{1};let before=job.work;let p=job.advance(budget).unwrap();assert!(p.work-before<=budget as u64);if active{if let Some(owner)=job.sampler_retirement.as_mut(){if owner.terminal_is_empty(){cleanup_work=owner.advance(1).unwrap().work;}}else{assert!(cleanup_work>=10);assert!(job.sampled.is_none());assert_eq!(job.nodes,nodes+1);closing=false;pointer=None;}}
+use std::collections::BTreeSet;
+use crate::schema::scene_preparation::tests::close_owned;
+fn close_scene(job:RasterSceneJob){let(mut close,image)=job.into_retirement();crate::draw_scene_physical_close!(close,1);if let Some(image)=image{close_owned(image);}}
+fn finish_scene(job:RasterSceneJob)->RasterImage{let(mut close,image)=job.into_retirement();crate::draw_scene_physical_close!(close,1);image.unwrap()}
+fn child_handoff(kind:&str,sources:serde_json::Value,cases:serde_json::Value){
+ for row in cases.as_array().unwrap(){for grant in [1,7,4096]{let source=sources.as_array().unwrap().iter().find(|v|v["name"]==row["source"]).unwrap();let mut job=RasterSceneJob::new(input(&source["input"])).unwrap();let mut parents=0;let mut done=false;
+  for _ in 0..2_000_000{let active=job.phase==kind;let pointer=if active{parents+=1;let image=if kind=="imageCleanup"{assert!(job.sampler.is_none());assert!(!job.sampler_retirement.as_ref().unwrap().terminal_is_empty());job.sampled.as_ref().unwrap()}else{assert!(job.painter.is_none());assert!(!job.painter_retirement.as_ref().unwrap().terminal_is_empty());job.painted.as_ref().unwrap()};Some(image.pixels.as_ptr())}else{None};let nodes=job.nodes;let before=job.work;let budget=if active{1}else{grant};let p=job.advance(budget).unwrap();assert!(p.work-before<=budget as u64);
+   if let Some(pointer)=pointer{assert_eq!(job.nodes,nodes+1);assert_eq!(job.images.0.last().unwrap().1.0.pixels.as_ptr(),pointer);if kind=="imageCleanup"{assert!(!job.retired_samplers.last().unwrap().terminal_is_empty());}else{assert!(!job.retired_painters.last().unwrap().terminal_is_empty());}}
    if p.done{done=true;break;}}
-  assert!(done);assert_eq!(parents,row["parents"].as_u64().unwrap());assert!(job.sampler_retirement.is_none()&&job.sampled.is_none());assert_eq!(serde_json::to_value(&job.result().unwrap().pixels).unwrap(),source["expected"]);eprintln!("[DEBUG] Actual native scene affine handoff {}: grant={grant}, parents={parents}, moved pixel pointer retained and RGBA matched",row["source"]);
+  assert!(done);if grant==1{assert_eq!(parents,row["parents"].as_u64().unwrap());}assert!(job.retired_painters.iter().all(|child|!child.terminal_is_empty()));assert!(job.retired_samplers.iter().all(|child|!child.terminal_is_empty()));assert_eq!(serde_json::to_value(&finish_scene(job).pixels).unwrap(),source["expected"]);eprintln!("[DEBUG] Native scene {kind} {} grant={grant} retained original child and moved pixel backing until caller-funded close",row["source"]);
  }}
 }
 #[test]
-fn scene_path_pixels_wait_for_actual_whole_parent_retirement_before_compositing(){
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️path/🔣️.json")).unwrap();
- for row in rows.as_array().unwrap(){for grant in [1,7,4096]{let source=cases.as_array().unwrap().iter().find(|case|case["name"]==row["source"]).unwrap();let mut job=RasterSceneJob::new(input(&source["input"])).unwrap();let mut parents=0;let mut closing=false;let mut pointer=None;let mut nodes=0;let mut cleanup_work=0;let mut done=false;
-  for _ in 0..2000000{let active=job.phase=="pathCleanup";if active{if !closing{parents+=1;closing=true;nodes=job.nodes;}assert!(job.painter.is_none());assert_eq!(job.nodes,nodes);let pixels=job.painted.as_ref().unwrap().pixels.as_ptr();if let Some(before)=pointer{assert_eq!(pixels,before);}else{pointer=Some(pixels);}}
-   let budget=if job.phase=="compositing"{grant}else{1};let before=job.work;let p=job.advance(budget).unwrap();assert!(p.work-before<=budget as u64);if active{if let Some(owner)=job.painter_retirement.as_mut(){if owner.terminal_is_empty(){cleanup_work=owner.advance(1).unwrap().work;}}else{assert!(cleanup_work>=16);assert!(job.painted.is_none());assert_eq!(job.nodes,nodes+1);closing=false;pointer=None;}}
-   if p.done{done=true;break;}}
-  assert!(done);assert_eq!(parents,row["parents"].as_u64().unwrap());assert!(job.painter_retirement.is_none()&&job.painted.is_none());assert_eq!(serde_json::to_value(&job.result().unwrap().pixels).unwrap(),source["expected"]);eprintln!("[DEBUG] Native scene whole-path handoff {}: grant={grant}, parents={parents}, RGBA matched",row["source"]);
- }}
-}
+fn scene_sampled_pixels_retain_actual_affine_owner_until_caller_close(){child_handoff("imageCleanup",serde_json::from_str(include_str!("../../🧫️fixtures/🖼️images/🔣️.json")).unwrap(),serde_json::from_str(include_str!("../../🧫️fixtures/🧹️image/🔣️.json")).unwrap());}
+#[test]
+fn scene_path_pixels_retain_actual_whole_parent_until_caller_close(){child_handoff("pathCleanup",serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap(),serde_json::from_str(include_str!("../../🧫️fixtures/🧹️path/🔣️.json")).unwrap());}
 #[test]
 fn painted_scenes_filter_every_shared_image_under_bounded_grants(){
  let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖼️images/🔣️.json")).unwrap();
- for row in cases.as_array().unwrap(){for grant in [1,7,4096]{let mut job=RasterSceneJob::new(input(&row["input"])).unwrap();let mut work=0;let mut done=false;for _ in 0..2000000{let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done{done=true;break;}}assert!(done);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(job.result().unwrap().pixels,expected,"{} grant {grant}",row["name"]);}}
+ for row in cases.as_array().unwrap(){for grant in [1,7,4096]{let mut job=RasterSceneJob::new(input(&row["input"])).unwrap();let mut work=0;let mut done=false;for _ in 0..2000000{let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done{done=true;break;}}assert!(done);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(job.result().unwrap().pixels,expected,"{} grant {grant}",row["name"]);close_scene(job);}}
  eprintln!("[DEBUG] {} filtered scene images matched native neutral RGBA under grants 1, 7 and 4096",cases.as_array().unwrap().len());
 }
 #[test]
 fn painted_scenes_filtering_admits_source_and_crop_and_cancels_reduction(){
  let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖼️images/🔣️.json")).unwrap();
- let mut grid=input(&cases[0]["input"]);grid.max_pixels=1;let mut job=RasterSceneJob::new(grid.clone()).unwrap();assert_eq!(job.advance(100000).unwrap().pixels,1);assert!(job.result().is_ok());
- let mut shifted=grid.clone();shifted.width=2;shifted.nodes[0].transform[4]=0.5;shifted.max_pixels=2;let mut job=RasterSceneJob::new(shifted.clone()).unwrap();assert!(job.advance(100000).is_err());assert!(job.result().is_err());shifted.max_pixels=3;let mut job=RasterSceneJob::new(shifted).unwrap();assert_eq!(job.advance(100000).unwrap().pixels,3);assert!(job.result().is_ok());
- grid.nodes[0].transform[4]=1e8;let mut job=RasterSceneJob::new(grid.clone()).unwrap();assert_eq!(job.advance(100000).unwrap().pixels,0);
+ let mut grid=input(&cases[0]["input"]);grid.max_pixels=1;let mut job=RasterSceneJob::new(grid.clone()).unwrap();assert_eq!(job.advance(100000).unwrap().pixels,1);assert!(job.result().is_ok());close_scene(job);
+ let mut shifted=grid.clone();shifted.width=2;shifted.nodes[0].transform[4]=0.5;shifted.max_pixels=2;let mut job=RasterSceneJob::new(shifted.clone()).unwrap();assert!(job.advance(100000).is_err());assert!(job.result().is_err());close_scene(job);shifted.max_pixels=3;let mut job=RasterSceneJob::new(shifted).unwrap();assert_eq!(job.advance(100000).unwrap().pixels,3);assert!(job.result().is_ok());close_scene(job);
+ grid.nodes[0].transform[4]=1e8;let mut job=RasterSceneJob::new(grid.clone()).unwrap();assert_eq!(job.advance(100000).unwrap().pixels,0);close_scene(job);
  grid.nodes[0].transform=[1.0/64.0,0.0,0.0,1.0/64.0,0.0,0.0];grid.nodes[0].content=RasterSceneContent::Pixels(Arc::new(RasterImage{width:64,height:64,pixels:vec![255;64*64*4]}));grid.max_pixels=4097;
- let mut job=RasterSceneJob::new(grid).unwrap();let mut seen=false;for _ in 0..100{let p=job.advance(1).unwrap();if p.phase=="image"{seen=true;break;}}assert!(seen);job.cancel();assert!(job.advance(1).is_err());assert!(job.result().is_err());
+ let mut job=RasterSceneJob::new(grid).unwrap();let mut seen=false;for _ in 0..100{let p=job.advance(1).unwrap();if p.phase=="image"{seen=true;break;}}assert!(seen);job.cancel();assert!(job.advance(1).is_err());assert!(job.result().is_err());close_scene(job);
 }
 fn input(v:&serde_json::Value)->RasterSceneInput {
  RasterSceneInput {width:v["width"].as_u64().unwrap() as u32,height:v["height"].as_u64().unwrap() as u32,origin:serde_json::from_value(v["origin"].clone()).unwrap(),tolerance:v["tolerance"].as_f64().unwrap(),max_pixels:v["maxPixels"].as_u64().unwrap() as usize,max_source_bytes:v["maxSourceBytes"].as_u64().unwrap()as usize,assets:v["assets"].as_array().unwrap().iter().map(|a|RasterSceneAsset{id:a["id"].as_str().unwrap().into(),image:Arc::new(RasterImage{width:a["image"]["width"].as_u64().unwrap()as u32,height:a["image"]["height"].as_u64().unwrap()as u32,pixels:serde_json::from_value(a["image"]["pixels"].clone()).unwrap()})}).collect(),nodes:v["nodes"].as_array().unwrap().iter().map(|n|{
@@ -44,15 +39,15 @@ fn input(v:&serde_json::Value)->RasterSceneInput {
 #[test]
 fn painted_scenes_match_shared_rgba_under_bounded_grants() {
  let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
- for row in cases.as_array().unwrap(){for grant in [1,7,4096]{let mut job=RasterSceneJob::new(input(&row["input"])).unwrap();let mut work=0;let mut done=false;for _ in 0..2000000{let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done{done=true;break;}}assert!(done);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(job.result().unwrap().pixels,expected,"{} grant {grant}",row["name"]);}}
+ for row in cases.as_array().unwrap(){for grant in [1,7,4096]{let mut job=RasterSceneJob::new(input(&row["input"])).unwrap();let mut work=0;let mut done=false;for _ in 0..2000000{let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done{done=true;break;}}assert!(done);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(job.result().unwrap().pixels,expected,"{} grant {grant}",row["name"]);close_scene(job);}}
  eprintln!("[DEBUG] Nineteen resolved scenes matched native RGBA under grants 1, 7 and 4096");
 }
 #[test]
 fn painted_scenes_refuse_cancelled_partial_over_budget_and_reopened_scopes() {
  let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
- for steps in [0,1,3,10,30,100]{let mut job=RasterSceneJob::new(input(&cases[5]["input"])).unwrap();assert!(job.result().is_err());for _ in 0..steps{job.advance(1).unwrap();}job.cancel();assert!(job.advance(1).is_err());assert!(job.result().is_err());}
- let mut value=input(&cases[5]["input"]);value.max_pixels=1;let mut job=RasterSceneJob::new(value).unwrap();assert!(job.advance(100000).is_err());assert!(job.result().is_err());assert!(job.advance(1).is_err());
- let mut value=input(&cases[4]["input"]);let mut plain=value.nodes[0].clone();plain.groups.clear();value.nodes.insert(1,plain);let mut job=RasterSceneJob::new(value).unwrap();assert!(job.advance(100000).is_err());assert!(job.result().is_err());
+ for steps in [0,1,3,10,30,100]{let mut job=RasterSceneJob::new(input(&cases[5]["input"])).unwrap();assert!(job.result().is_err());for _ in 0..steps{job.advance(1).unwrap();}job.cancel();assert!(job.advance(1).is_err());assert!(job.result().is_err());close_scene(job);}
+ let mut value=input(&cases[5]["input"]);value.max_pixels=1;let mut job=RasterSceneJob::new(value).unwrap();assert!(job.advance(100000).is_err());assert!(job.result().is_err());assert!(job.advance(1).is_err());close_scene(job);
+ let mut value=input(&cases[4]["input"]);let mut plain=value.nodes[0].clone();plain.groups.clear();value.nodes.insert(1,plain);let mut job=RasterSceneJob::new(value).unwrap();assert!(job.advance(100000).is_err());assert!(job.result().is_err());close_scene(job);
 }
 
 #[test]
@@ -71,7 +66,7 @@ fn painted_scenes_crops_retain_uncropped_curve_paint_and_stroke() {
   let mut full=PathRasterJob::new(PathRasterInput{width:32,height:24,origin:[-0.25,0.5],segments:segments.clone(),transform,tolerance:0.001,fill_rule:FillRule::Evenodd,fill:fill.clone(),stroke:stroke.clone()}).unwrap();while !full.advance(4096).unwrap().done{}
   let node=RasterSceneNode{id:"path".into(),groups:Vec::new(),transform,opacity:1.0,blend_mode:"normal".into(),visible:true,content:RasterSceneContent::Path{segments:segments.clone(),fill_rule:FillRule::Evenodd,fill,stroke}};
   let mut scene=RasterSceneJob::new(RasterSceneInput{width:32,height:24,origin:[-0.25,0.5],tolerance:0.001,max_pixels:768,max_source_bytes:268439552,assets:Vec::new(),nodes:vec![node]}).unwrap();while !scene.advance(4096).unwrap().done{}
-  assert_eq!(scene.result().unwrap().pixels,full.result().unwrap().pixels,"crop {count}");count+=1;
+  assert_eq!(scene.result().unwrap().pixels,full.result().unwrap().pixels,"crop {count}");let(close,image)=full.into_retirement();close_owned(close);if let Some(image)=image{close_owned(image);}close_scene(scene);count+=1;
  }}}
  eprintln!("[DEBUG] {count} native cropped curve/stroke scenes matched uncropped path output");
 }
@@ -84,7 +79,7 @@ fn painted_scenes_large_ellipse_bounds_retain_visible_short_arc() {
  let mut full=PathRasterJob::new(PathRasterInput{width:16,height:8,origin:[0.0;2],segments:segments.clone(),transform,tolerance:0.001,fill_rule:FillRule::Nonzero,fill:None,stroke:stroke.clone()}).unwrap();while !full.advance(4096).unwrap().done{}
  let node=RasterSceneNode{id:"short-arc".into(),groups:Vec::new(),transform,opacity:1.0,blend_mode:"normal".into(),visible:true,content:RasterSceneContent::Path{segments,fill_rule:FillRule::Nonzero,fill:None,stroke}};
  let mut scene=RasterSceneJob::new(RasterSceneInput{width:16,height:8,origin:[0.0;2],tolerance:0.001,max_pixels:128,max_source_bytes:268439552,assets:Vec::new(),nodes:vec![node]}).unwrap();while !scene.advance(4096).unwrap().done{}
- assert_eq!(scene.result().unwrap().pixels,full.result().unwrap().pixels);eprintln!("[DEBUG] Native large ellipse bounds preserved the visible short arc");
+ assert_eq!(scene.result().unwrap().pixels,full.result().unwrap().pixels);let(close,image)=full.into_retirement();close_owned(close);if let Some(image)=image{close_owned(image);}close_scene(scene);eprintln!("[DEBUG] Native large ellipse bounds preserved the visible short arc");
 }
 
 #[test]
@@ -92,45 +87,37 @@ fn painted_scenes_decode_shared_encoded_assets_under_every_grant(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖼️assets/🔣️.json")).unwrap();
  for row in rows.as_array().unwrap(){for grant in [1,7,4096]{let mut job=RasterSceneJob::new(input(&row["input"])).unwrap();let mut work=0;let mut done=false;
   for _ in 0..2000000{let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done{assert_eq!(p.admitted_images,row["expectedDecodes"].as_u64().unwrap()as usize,"{}",row["name"]);assert_eq!(p.source_bytes,row["expectedSourceBytes"].as_u64().unwrap()as usize);assert_eq!(p.assets,row["input"]["assets"].as_array().unwrap().len());if let Some(pixels)=row["expectedAllocatedPixels"].as_u64(){assert_eq!(p.pixels,pixels as usize);}done=true;break;}}
-  assert!(done);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(job.into_result().unwrap().pixels,expected,"{} grant {grant}",row["name"]);
+  assert!(done);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(finish_scene(job).pixels,expected,"{} grant {grant}",row["name"]);
  }}
  eprintln!("[DEBUG] All {} encoded image scenes preserved native neutral RGBA and shared asset budgets",rows.as_array().unwrap().len());
 }
 #[test]
 fn painted_scenes_refuse_malformed_encoded_assets_and_catalogs(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖼️assets/⚠️invalid/🔣️.json")).unwrap();
- for row in rows.as_array().unwrap(){if let Ok(mut job)=RasterSceneJob::new(input(&row["input"])){let mut failed=false;for _ in 0..2000000{match job.advance(7){Err(_)=>{failed=true;break;},Ok(p)=>if p.done{break;}}}assert!(failed,"{}",row["name"]);assert!(job.result().is_err());assert!(job.advance(1).is_err());}}
+ for row in rows.as_array().unwrap(){if let Ok(mut job)=RasterSceneJob::new(input(&row["input"])){let mut failed=false;for _ in 0..2000000{match job.advance(7){Err(_)=>{failed=true;break;},Ok(p)=>if p.done{break;}}}assert!(failed,"{}",row["name"]);assert!(job.result().is_err());assert!(job.advance(1).is_err());close_scene(job);}}
  eprintln!("[DEBUG] All {} invalid encoded scene inputs refused native publication",rows.as_array().unwrap().len());
 }
 #[test]
 fn painted_scenes_cancel_live_source_asset_phases_and_count_utf8_bytes(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖼️assets/🔣️.json")).unwrap();let value=input(&rows[5]["input"]);let mut probe=RasterSceneJob::new(value.clone()).unwrap();let mut seen=BTreeSet::new();let mut steps=0;
- loop{let p=probe.advance(1).unwrap();steps+=1;if !p.done&&seen.insert(p.phase){let mut job=RasterSceneJob::new(value.clone()).unwrap();job.advance(steps).unwrap();job.cancel();assert!(job.advance(1).is_err());assert!(job.result().is_err());}if p.done{break;}}
+ loop{let p=probe.advance(1).unwrap();steps+=1;if !p.done&&seen.insert(p.phase){let mut job=RasterSceneJob::new(value.clone()).unwrap();job.advance(steps).unwrap();job.cancel();assert!(job.advance(1).is_err());assert!(job.result().is_err());close_scene(job);}if p.done{break;}}close_scene(probe);
  for phase in ["assets","image","compositing"]{assert!(seen.contains(phase));}
  let mut value=input(&rows[0]["input"]);value.nodes.clear();value.assets=vec![RasterSceneAsset{id:"samples".into(),image:Arc::new(RasterImage{width:1,height:1,pixels:vec![1,2,3,4]})}];value.max_source_bytes=4;
- let mut job=RasterSceneJob::new(value.clone()).unwrap();assert_eq!(job.advance(100000).unwrap().source_bytes,4);assert!(job.result().is_ok());value.max_source_bytes=3;let mut job=RasterSceneJob::new(value).unwrap();assert!(job.advance(100000).is_err());
+ let mut job=RasterSceneJob::new(value.clone()).unwrap();assert_eq!(job.advance(100000).unwrap().source_bytes,4);assert!(job.result().is_ok());close_scene(job);value.max_source_bytes=3;let mut job=RasterSceneJob::new(value).unwrap();assert!(job.advance(100000).is_err());close_scene(job);
  eprintln!("[DEBUG] Native encoded scene admission/source/filter/composition phases cancelled without publication; UTF-8 admission verified");
 }
 #[test]
 fn painted_scenes_receive_admitted_sample_owners_without_physical_decode(){
  let asset=RasterSceneAsset{id:"sample-owner".into(),image:Arc::new(RasterImage{width:1,height:1,pixels:vec![10,20,30,255]})};let original=Arc::clone(&asset.image);
- let mut input=input(&serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()[0]["input"]);input.nodes.clear();input.assets=vec![asset];let mut job=RasterSceneJob::new(input).unwrap();assert!(job.result().is_err());while !job.advance(1).unwrap().done{}assert_eq!(original.pixels,vec![10,20,30,255]);assert_eq!(Arc::strong_count(&original),1);
+ let mut input=input(&serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()[0]["input"]);input.nodes.clear();input.assets=vec![asset];let mut job=RasterSceneJob::new(input).unwrap();assert!(job.result().is_err());while !job.advance(1).unwrap().done{}assert_eq!(original.pixels,vec![10,20,30,255]);close_scene(job);assert_eq!(Arc::strong_count(&original),1);
  eprintln!("[DEBUG] Native semantic raster consumed an independent admitted sample owner without encoded source state");
 }
 
 #[test]
-fn painted_scene_actual_compositor_retirement_before_completion(){
- let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️compositing/🔣️.json")).unwrap();
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
- for row in rows.as_array().unwrap(){for grant in [1,7,4096]{
-  let source=cases.as_array().unwrap().iter().find(|v|v["name"]==row["source"]).unwrap();let mut job=RasterSceneJob::new(input(&source["input"])).unwrap();let mut moved=None;let mut closing=0;let mut terminal=false;let mut done=false;
-  for _ in 0..2000000{
-   if job.phase=="compositingCleanup"{assert!(job.compositor.is_none());assert!(job.result().is_err());let pointer=job.output.as_ref().unwrap().pixels.as_ptr();if let Some(previous)=moved{assert_eq!(pointer,previous);}else{moved=Some(pointer);}
-    let child=job.compositor_retirement.as_ref().unwrap();if child.terminal_is_empty(){terminal=true;}else{closing+=1;}
-   }
-   let p=job.advance(if grant==1{1}else{grant}).unwrap();if p.done{done=true;break;}
-  }
-  assert!(done);if grant==1{assert!(terminal);assert!(closing>=6);}assert!(job.compositor_retirement.is_none());assert!(job.compositor.is_none());let output=job.into_result().unwrap();if let Some(pointer)=moved{assert_eq!(output.pixels.as_ptr(),pointer);}let expected:Vec<u8>=serde_json::from_value(source["expected"].clone()).unwrap();assert_eq!(output.pixels,expected);
-  eprintln!("[DEBUG] Actual native scene compositor handoff {}: grant={grant} closing={closing} terminal_empty=true moved_pixel_pointer=true",row["source"]);
+fn painted_scene_actual_compositor_retains_private_owner_until_caller_close(){
+ let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️compositing/🔣️.json")).unwrap();let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+ for row in rows.as_array().unwrap(){for grant in [1,7,4096]{let source=cases.as_array().unwrap().iter().find(|v|v["name"]==row["source"]).unwrap();let mut job=RasterSceneJob::new(input(&source["input"])).unwrap();let mut moved=None;let mut done=false;
+  for _ in 0..2_000_000{if job.phase=="compositingCleanup"{assert!(job.compositor.is_none());assert!(job.result().is_err());assert!(!job.compositor_retirement.as_ref().unwrap().terminal_is_empty());moved=Some(job.output.as_ref().unwrap().pixels.as_ptr());}if job.advance(grant).unwrap().done{done=true;break;}}
+  assert!(done);assert_eq!(job.retired_compositors.len(),1);assert!(!job.retired_compositors[0].terminal_is_empty());let output=finish_scene(job);if let Some(pointer)=moved{assert_eq!(output.pixels.as_ptr(),pointer);}let expected:Vec<u8>=serde_json::from_value(source["expected"].clone()).unwrap();assert_eq!(output.pixels,expected);eprintln!("[DEBUG] Native scene compositor {} grant={grant} preserved real private owner and exact output pointer until caller close",row["source"]);
  }}
 }

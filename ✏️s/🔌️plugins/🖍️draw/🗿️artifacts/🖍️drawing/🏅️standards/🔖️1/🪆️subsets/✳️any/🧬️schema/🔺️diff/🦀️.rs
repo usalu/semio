@@ -137,6 +137,17 @@ pub struct DrawingFillPatch { pub value: Option<FillStyle> }
 #[value(default)]
 pub struct DrawingStrokePatch { pub value: Option<StrokeStyle> }
 
+/// 🔷️ One sparse authored coordinate edit, independent of transform and appearance.
+#[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue)]
+#[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
+#[value(rename_all="camelCase")]
+#[cfg_attr(test,serde(rename_all="camelCase"))]
+pub struct DrawingShapeCoordinatePatch {
+    pub field:crate::schema::shape_geometry::ShapeCoordinateField,
+    pub index:Option<usize>,
+    pub value:f64,
+}
+
 /// 🩹 Typed layer changes.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -161,6 +172,12 @@ pub struct DrawingLayerPatch {
     pub path_segments: Option<PagedList<crate::PathSegment, {usize::MAX}>>,
     pub text_content: Option<String>,
     pub text_size: Option<f64>,
+    pub image_key: Option<String>,
+    pub image_width: Option<f64>,
+    pub image_height: Option<f64>,
+    #[value(default,skip_serializing_if="Vec::is_empty")]
+    #[cfg_attr(test,serde(default,skip_serializing_if="Vec::is_empty"))]
+    pub shape_coordinates:Vec<DrawingShapeCoordinatePatch>,
 }
 //#endregion 🔖️DeltaHelpers
 
@@ -370,6 +387,19 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         let DrawingLayerNode::Path(path) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Geometry target is not a path")); };
         path.segments = segments.clone();
     }
+    if !patch.shape_coordinates.is_empty() {
+        let DrawingLayerNode::Shape(shape)=layer else{return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target","Shape target has another kind"));};
+        for coordinate in &patch.shape_coordinates {
+            crate::schema::shape_geometry::set_shape_coordinate(shape,coordinate.field,coordinate.index,coordinate.value).map_err(|message|protocol::MutationApplyError::new("mutation.apply.invalid-value",message))?;
+        }
+    }
+    if patch.image_key.is_some() || patch.image_width.is_some() || patch.image_height.is_some() {
+        let DrawingLayerNode::Image(image)=layer else{return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target","Image target has another kind"));};
+        for dimension in [patch.image_width,patch.image_height].into_iter().flatten() {if !dimension.is_finite()||dimension<=0.0{return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value","Invalid image dimension"));}}
+        if let Some(key)=&patch.image_key{image.image_key=key.clone().into();}
+        if let Some(width)=patch.image_width{image.width=width;}
+        if let Some(height)=patch.image_height{image.height=height;}
+    }
     if patch.text_content.is_some() || patch.text_size.is_some() {
         let DrawingLayerNode::Text(text) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Text target has another kind")); };
         if let Some(size) = patch.text_size {
@@ -491,6 +521,16 @@ impl DrawingLayerPatch {
             DrawingLayerNode::Boolean(boolean) if self.boolean_operation.is_some() => inverse.boolean_operation = Some(boolean.operation.to_string_owner()),
             DrawingLayerNode::Trace(trace) if self.trace_params.is_some() => inverse.trace_params = Some(trace.params.clone()),
             DrawingLayerNode::Path(path) if self.path_segments.is_some() => inverse.path_segments = Some(path.segments.clone()),
+            DrawingLayerNode::Shape(shape)=>{
+                for coordinate in &self.shape_coordinates {
+                    if let Ok(value)=crate::schema::shape_geometry::shape_coordinate(shape,&coordinate.field,coordinate.index){inverse.shape_coordinates.push(DrawingShapeCoordinatePatch{field:coordinate.field,index:coordinate.index,value});}
+                }
+            }
+            DrawingLayerNode::Image(image) => {
+                if self.image_key.is_some(){inverse.image_key=Some(image.image_key.to_string_owner());}
+                if self.image_width.is_some(){inverse.image_width=Some(image.width);}
+                if self.image_height.is_some(){inverse.image_height=Some(image.height);}
+            }
             DrawingLayerNode::Text(text) => {
                 if self.text_content.is_some() {
                     inverse.text_content = Some(text.content.to_string_owner());
@@ -540,6 +580,12 @@ impl DrawingLayerPatch {
         take!(path_segments);
         take!(text_content);
         take!(text_size);
+        take!(image_key);
+        take!(image_width);
+        take!(image_height);
+        for coordinate in src.shape_coordinates {
+            if let Some(current)=self.shape_coordinates.iter_mut().find(|current|current.field==coordinate.field&&current.index==coordinate.index){*current=coordinate;}else{self.shape_coordinates.push(coordinate);}
+        }
     }
 }
 
@@ -1010,7 +1056,7 @@ pub fn diff_set_trace_params(layer_id: &(impl std::fmt::Display + ?Sized), param
     layer_base_patch(layer_id, DrawingLayerPatch { trace_params: Some(params.clone()), ..Default::default() })
 }
 
-pub(crate) fn layer_base_patch(layer_id: &(impl std::fmt::Display + ?Sized), patch: DrawingLayerPatch) -> DrawingDiff {
+pub(crate) pub(crate) fn layer_base_patch(layer_id: &(impl std::fmt::Display + ?Sized), patch: DrawingLayerPatch) -> DrawingDiff {
     DrawingDiff { layers: Some(DrawingLayersDelta { modified: vec![DrawingLayerModification { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
 

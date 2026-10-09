@@ -40,7 +40,9 @@
     "IfcDoorStyle": 2,
     "IfcFacetedBrep": 9,
     "IfcClassification": 2,
-    "IfcClassificationReference": 2
+    "IfcClassificationReference": 2,
+    "IfcRamp": 0,
+    "IfcRampFlight": 0
   },
   "containment": {
     "st-base": [],

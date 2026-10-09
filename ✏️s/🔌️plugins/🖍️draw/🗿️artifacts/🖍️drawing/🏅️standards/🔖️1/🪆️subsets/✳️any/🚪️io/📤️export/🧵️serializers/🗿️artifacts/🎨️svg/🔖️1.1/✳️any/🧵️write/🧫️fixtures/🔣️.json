@@ -1,0 +1,8 @@
+[
+ {"source":"rectangle","styles":"","viewBox":[0,0,2,1],"maxOutputBytes":65536,"maxWork":1000000000,"expected":[255,0,0,255,255,0,0,255],"channelTolerance":0},
+ {"source":"rectangle","styles":"linear gradient","viewBox":[0,0,2,1],"maxOutputBytes":65536,"maxWork":1000000000,"expected":[191,0,64,255,64,0,191,255],"channelTolerance":2},
+ {"source":"rectangle","styles":"radial gradient","viewBox":[0,0,2,1],"maxOutputBytes":65536,"maxWork":1000000000,"expected":[165,0,90,255,53,0,202,255],"channelTolerance":2},
+ {"source":"rectangle","styles":"multiply blend","viewBox":[0,0,2,1],"maxOutputBytes":65536,"maxWork":1000000000,"expected":[0,0,0,255,0,0,0,255],"channelTolerance":0},
+ {"source":"rectangle","styles":"isolated group opacity","viewBox":[0,0,2,1],"maxOutputBytes":65536,"maxWork":1000000000,"expected":[0,0,255,128,0,0,255,128],"channelTolerance":0},
+ {"source":"rectangle","styles":"evenodd hole","viewBox":[0,0,2,1],"maxOutputBytes":65536,"maxWork":1000000000,"expected":[255,0,0,255,0,0,0,0],"channelTolerance":0}
+]

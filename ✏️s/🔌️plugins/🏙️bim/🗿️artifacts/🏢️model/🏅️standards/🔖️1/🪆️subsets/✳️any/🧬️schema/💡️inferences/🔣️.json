@@ -7,6 +7,7 @@
   "required": [
     "element_solids",
     "stair_runs",
+    "ramp_runs",
     "spaces",
     "quantities",
     "opening_frames",
@@ -14,7 +15,10 @@
     "wall_layout",
     "curtain_layout",
     "plan_linework",
-    "diagnostics"
+    "diagnostics",
+    "zone_totals",
+    "scheme_totals",
+    "diagnostic_index"
   ],
   "properties": {
     "element_solids": {
@@ -28,6 +32,13 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/StairRun"
+      },
+      "x-semio-derived": true
+    },
+    "ramp_runs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/RampRun"
       },
       "x-semio-derived": true
     },
@@ -82,6 +93,24 @@
       "items": {
         "$ref": "#/$defs/Diagnostic"
       },
+      "x-semio-derived": true
+    },
+    "zone_totals": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ZoneTotals"
+      },
+      "x-semio-derived": true
+    },
+    "scheme_totals": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SchemeTotals"
+      },
+      "x-semio-derived": true
+    },
+    "diagnostic_index": {
+      "$ref": "#/$defs/DiagnosticIndex",
       "x-semio-derived": true
     }
   },
@@ -444,6 +473,136 @@
         }
       }
     },
+    "RampRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_z",
+        "top_z",
+        "rise",
+        "length",
+        "run_length",
+        "slope",
+        "angle",
+        "width",
+        "flights",
+        "landings",
+        "compliance"
+      ],
+      "properties": {
+        "base_z": {
+          "type": "number"
+        },
+        "top_z": {
+          "type": "number"
+        },
+        "rise": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "run_length": {
+          "type": "number"
+        },
+        "slope": {
+          "type": "number"
+        },
+        "angle": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "flights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RampFlight"
+          }
+        },
+        "landings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RampLanding"
+          }
+        },
+        "compliance": {
+          "$ref": "#/$defs/RampCompliance"
+        }
+      }
+    },
+    "RampFlight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "length",
+        "z_from",
+        "z_to"
+      ],
+      "properties": {
+        "from": {
+          "type": "number"
+        },
+        "to": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "z_from": {
+          "type": "number"
+        },
+        "z_to": {
+          "type": "number"
+        }
+      }
+    },
+    "RampLanding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "length",
+        "z"
+      ],
+      "properties": {
+        "from": {
+          "type": "number"
+        },
+        "to": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "RampCompliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_ok",
+        "slope_ok",
+        "compliant"
+      ],
+      "properties": {
+        "run_ok": {
+          "type": "boolean"
+        },
+        "slope_ok": {
+          "type": "boolean"
+        },
+        "compliant": {
+          "type": "boolean"
+        }
+      }
+    },
     "SpaceRoom": {
       "type": "object",
       "additionalProperties": false,
@@ -459,6 +618,7 @@
         "clear_height",
         "volume",
         "ceiling_slab",
+        "ceiling",
         "bounding_walls"
       ],
       "properties": {
@@ -502,6 +662,9 @@
           "type": "number"
         },
         "ceiling_slab": {
+          "type": "string"
+        },
+        "ceiling": {
           "type": "string"
         },
         "bounding_walls": {
@@ -576,7 +739,8 @@
         "net_volume",
         "mass",
         "risers",
-        "layers"
+        "layers",
+        "finishes"
       ],
       "properties": {
         "kind": {
@@ -633,10 +797,31 @@
         "risers": {
           "type": "integer"
         },
+        "balusters": {
+          "type": "integer"
+        },
         "layers": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/LayerQuantity"
+          }
+        },
+        "finishes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FinishQuantity"
+          }
+        },
+        "panels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PanelQuantity"
+          }
+        },
+        "mullions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MullionQuantity"
           }
         }
       }
@@ -654,7 +839,9 @@
         "Void",
         "Stair",
         "Railing",
-        "Space"
+        "Ramp",
+        "Space",
+        "Ceiling"
       ]
     },
     "LayerQuantity": {
@@ -691,7 +878,8 @@
       "required": [
         "kinds",
         "types",
-        "materials"
+        "materials",
+        "finishes"
       ],
       "properties": {
         "kinds": {
@@ -707,6 +895,12 @@
           }
         },
         "materials": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Totals"
+          }
+        },
+        "finishes": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/Totals"
@@ -753,9 +947,11 @@
         "HostMissing",
         "TypeMissing",
         "NonPositiveSize",
+        "HostDegenerate",
         "OutsideHostExtent",
         "BelowHostBase",
         "AboveHostTop",
+        "OutsideTrimmedExtent",
         "OverlapsSibling"
       ]
     },
@@ -1025,50 +1221,102 @@
       }
     },
     "JoinEnd": {
-      "enum": ["Start", "End", "Along"]
+      "enum": [
+        "Start",
+        "End",
+        "Along"
+      ]
     },
     "JoinKind": {
-      "enum": ["Miter", "Butt", "Through", "Cross"]
+      "enum": [
+        "Miter",
+        "Butt",
+        "Through",
+        "Cross"
+      ]
     },
     "Point2": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
       }
     },
     "Vertex": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["point", "bulge"],
+      "required": [
+        "point",
+        "bulge"
+      ],
       "properties": {
-        "point": { "$ref": "#/$defs/Point2" },
-        "bulge": { "type": "number" }
+        "point": {
+          "$ref": "#/$defs/Point2"
+        },
+        "bulge": {
+          "type": "number"
+        }
       }
     },
     "FaceCurve": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["start", "end", "bulge"],
+      "required": [
+        "start",
+        "end",
+        "bulge"
+      ],
       "properties": {
-        "start": { "$ref": "#/$defs/Point2" },
-        "end": { "$ref": "#/$defs/Point2" },
-        "bulge": { "type": "number" }
+        "start": {
+          "$ref": "#/$defs/Point2"
+        },
+        "end": {
+          "$ref": "#/$defs/Point2"
+        },
+        "bulge": {
+          "type": "number"
+        }
       }
     },
     "WallJoin": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "end", "other", "other_end", "point", "overlap_area"],
+      "required": [
+        "kind",
+        "end",
+        "other",
+        "other_end",
+        "point",
+        "overlap_area"
+      ],
       "properties": {
-        "kind": { "$ref": "#/$defs/JoinKind" },
-        "end": { "$ref": "#/$defs/JoinEnd" },
-        "other": { "type": "string" },
-        "other_end": { "$ref": "#/$defs/JoinEnd" },
-        "point": { "$ref": "#/$defs/Point2" },
-        "overlap_area": { "type": "number" }
+        "kind": {
+          "$ref": "#/$defs/JoinKind"
+        },
+        "end": {
+          "$ref": "#/$defs/JoinEnd"
+        },
+        "other": {
+          "type": "string"
+        },
+        "other_end": {
+          "$ref": "#/$defs/JoinEnd"
+        },
+        "point": {
+          "$ref": "#/$defs/Point2"
+        },
+        "overlap_area": {
+          "type": "number"
+        }
       }
     },
     "WallLayout": {
@@ -1096,41 +1344,162 @@
         "joins"
       ],
       "properties": {
-        "base_z": { "type": "number" },
-        "top_z": { "type": "number" },
-        "height": { "type": "number" },
-        "thickness": { "type": "number" },
-        "length": { "type": "number" },
-        "offset_left": { "type": "number" },
-        "offset_right": { "type": "number" },
-        "layer_offsets": { "type": "array", "items": { "type": "number" } },
-        "left_face": { "$ref": "#/$defs/FaceCurve" },
-        "right_face": { "$ref": "#/$defs/FaceCurve" },
-        "left_length": { "type": "number" },
-        "right_length": { "type": "number" },
-        "left_area": { "type": "number" },
-        "right_area": { "type": "number" },
-        "side_area": { "type": "number" },
-        "footprint": { "type": "array", "items": { "$ref": "#/$defs/Vertex" } },
-        "footprint_area": { "type": "number" },
-        "volume": { "type": "number" },
-        "joins": { "type": "array", "items": { "$ref": "#/$defs/WallJoin" } }
+        "base_z": {
+          "type": "number"
+        },
+        "top_z": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "offset_left": {
+          "type": "number"
+        },
+        "offset_right": {
+          "type": "number"
+        },
+        "layer_offsets": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "left_face": {
+          "$ref": "#/$defs/FaceCurve"
+        },
+        "right_face": {
+          "$ref": "#/$defs/FaceCurve"
+        },
+        "left_length": {
+          "type": "number"
+        },
+        "right_length": {
+          "type": "number"
+        },
+        "left_area": {
+          "type": "number"
+        },
+        "right_area": {
+          "type": "number"
+        },
+        "side_area": {
+          "type": "number"
+        },
+        "footprint": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vertex"
+          }
+        },
+        "footprint_area": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "joins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WallJoin"
+          }
+        }
       }
     },
     "CurtainLayout": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["base_z", "top_z", "height", "length", "area", "u_panels", "v_panels", "panel_width", "panel_height"],
+      "required": [
+        "base_z",
+        "top_z",
+        "height",
+        "length",
+        "area",
+        "u_panels",
+        "v_panels",
+        "u_edges",
+        "v_edges",
+        "overrides",
+        "stray",
+        "repeated",
+        "ignored_u",
+        "ignored_v"
+      ],
       "properties": {
-        "base_z": { "type": "number" },
-        "top_z": { "type": "number" },
-        "height": { "type": "number" },
-        "length": { "type": "number" },
-        "area": { "type": "number" },
-        "u_panels": { "type": "integer", "minimum": 0 },
-        "v_panels": { "type": "integer", "minimum": 0 },
-        "panel_width": { "type": "number" },
-        "panel_height": { "type": "number" }
+        "base_z": {
+          "type": "number"
+        },
+        "top_z": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        },
+        "u_panels": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "v_panels": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "u_edges": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "v_edges": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "panel": {
+          "$ref": "#/$defs/CurtainPanel"
+        },
+        "overrides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellPanel"
+          }
+        },
+        "stray": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "repeated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ignored_u": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "ignored_v": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
       }
     },
     "PlanStyle": {
@@ -1171,7 +1540,18 @@
         "SpaceTag",
         "GridLine",
         "GridBubble",
-        "GridLabel"
+        "GridLabel",
+        "SectionCut",
+        "Silhouette",
+        "Edge",
+        "Datum",
+        "DatumLabel",
+        "CeilingEdge",
+        "CeilingHole",
+        "RampOutline",
+        "RampLanding",
+        "RampArrow",
+        "RampTag"
       ]
     },
     "PlanVertex": {
@@ -1431,6 +1811,7 @@
         "OpeningAboveTop",
         "OpeningOverlap",
         "OpeningSize",
+        "OpeningOutsideTrimmed",
         "DegenerateAxis",
         "DegenerateThickness",
         "DegenerateHeight",
@@ -1448,9 +1829,38 @@
         "StairRiserHeight",
         "StairTreadDepth",
         "StairComfort",
+        "StairStringerIgnored",
         "SpaceNotEnclosed",
         "SpaceSeedInWall",
-        "SpaceDuplicateNumber"
+        "SpaceDuplicateNumber",
+        "RoofFlatCurved",
+        "RoofFlatSkeleton",
+        "RoofFlatDegenerate",
+        "RoofFlatPitch",
+        "RoofOverhangCollapsed",
+        "RoofGableToHip",
+        "AnnotationAnchorMissing",
+        "AnnotationAnchorUnresolved",
+        "AnnotationStyleMissing",
+        "DimensionZero",
+        "DimensionLockViolated",
+        "TagEmpty",
+        "ClashBeamCeiling",
+        "ClashCeilingCeiling",
+        "RefCeilingType",
+        "CeilingOutsideStorey",
+        "RampSlope",
+        "RampNoRun",
+        "RefRailingHost",
+        "RailingHostUnresolved",
+        "CurtainOverrideOutOfGrid",
+        "CurtainDoorNotAtBase",
+        "CurtainGridLineOutside",
+        "CurtainDuplicateOverride",
+        "RefCurtainWallType",
+        "RefCurtainPanel",
+        "RefCurtainOverrideHost",
+        "ColumnTiltInvalid"
       ]
     },
     "Diagnostic": {
@@ -1494,6 +1904,329 @@
           "additionalProperties": {
             "type": "number"
           }
+        }
+      }
+    },
+    "FinishSurface": {
+      "enum": [
+        "Floor",
+        "Wall",
+        "Ceiling"
+      ]
+    },
+    "FinishQuantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface",
+        "material",
+        "area"
+      ],
+      "properties": {
+        "surface": {
+          "$ref": "#/$defs/FinishSurface"
+        },
+        "material": {
+          "type": "string"
+        },
+        "area": {
+          "type": "number"
+        }
+      }
+    },
+    "ZoneTotals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaces",
+        "resolved",
+        "area",
+        "net_area",
+        "volume",
+        "occupancy",
+        "floor_finish_area",
+        "wall_finish_area",
+        "ceiling_finish_area"
+      ],
+      "properties": {
+        "spaces": {
+          "type": "integer"
+        },
+        "resolved": {
+          "type": "integer"
+        },
+        "area": {
+          "type": "number"
+        },
+        "net_area": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "occupancy": {
+          "type": "number"
+        },
+        "floor_finish_area": {
+          "type": "number"
+        },
+        "wall_finish_area": {
+          "type": "number"
+        },
+        "ceiling_finish_area": {
+          "type": "number"
+        }
+      }
+    },
+    "SchemeTotals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaces",
+        "resolved",
+        "area",
+        "volume",
+        "occupancy"
+      ],
+      "properties": {
+        "spaces": {
+          "type": "integer"
+        },
+        "resolved": {
+          "type": "integer"
+        },
+        "area": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "occupancy": {
+          "type": "number"
+        }
+      }
+    },
+    "SeverityCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "properties": {
+        "error": {
+          "type": "integer"
+        },
+        "warning": {
+          "type": "integer"
+        },
+        "info": {
+          "type": "integer"
+        }
+      }
+    },
+    "ElementFindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "count",
+        "codes"
+      ],
+      "properties": {
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "codes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DiagnosticCode"
+          }
+        }
+      }
+    },
+    "DiagnosticIndex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "elements",
+        "categories",
+        "codes",
+        "storeys"
+      ],
+      "properties": {
+        "total": {
+          "$ref": "#/$defs/SeverityCounts"
+        },
+        "elements": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ElementFindings"
+          }
+        },
+        "categories": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/SeverityCounts"
+          }
+        },
+        "codes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "storeys": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/SeverityCounts"
+          }
+        }
+      }
+    },
+    "CurtainPanel": {
+      "oneOf": [
+        {
+          "const": "Glass"
+        },
+        {
+          "const": "Empty"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Solid"
+          ],
+          "properties": {
+            "Solid": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "material"
+              ],
+              "properties": {
+                "material": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Door"
+          ],
+          "properties": {
+            "Door": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "door_type"
+              ],
+              "properties": {
+                "door_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Window"
+          ],
+          "properties": {
+            "Window": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "window_type"
+              ],
+              "properties": {
+                "window_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CellPanel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "u",
+        "v",
+        "panel",
+        "id"
+      ],
+      "properties": {
+        "u": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "v": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "panel": {
+          "$ref": "#/$defs/CurtainPanel"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "PanelQuantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "count",
+        "area"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "area": {
+          "type": "number"
+        }
+      }
+    },
+    "MullionQuantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "count",
+        "length"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "number"
         }
       }
     }

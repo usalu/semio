@@ -1,0 +1,5 @@
+{
+  "mutation": "setZone",
+  "id": "z-night",
+  "occupancy_density": 0.04
+}

@@ -23,14 +23,14 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared retirement exceeds admitted depth"));}
-        if let Some(source)=self.source.as_ref(){
+        if let Some(source)=self.source.as_mut(){
             if self.lease_only {
                 if Arc::weak_count(source)!=0||grant.maximum_release_bytes<arc_bytes::<T>(){return Ok(RetainedCloneStep::Progress(empty));}
                 let value=Arc::into_inner(self.source.take().unwrap());
                 let released_bytes=if let Some(value)=value{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));arc_bytes::<T>()}else{0};
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes,..empty}));
             }
-            if Arc::strong_count(source)!=1||Arc::weak_count(source)!=0||grant.maximum_release_bytes<arc_bytes::<T>(){return Ok(RetainedCloneStep::Progress(empty));}
+            if grant.maximum_release_bytes<arc_bytes::<T>()||Arc::get_mut(source).is_none(){return Ok(RetainedCloneStep::Progress(empty));}
             let source=self.source.take().unwrap();
             match Arc::try_unwrap(source){Ok(value)=>{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:arc_bytes::<T>(),..empty}));},Err(source)=>{*self.source=Some(source);return Ok(RetainedCloneStep::Progress(empty));}}
         }
@@ -87,3 +87,7 @@ impl<T:RetireOwned+Sync> RetireOwned for SharedControlledRetirement<T> {
 /// 📏️ Exact original shared backing demand used by the admitted shared retirement owners.
 pub fn shared_retirement_allocation_bytes<T>()->usize {std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).expect("shared Arc allocation layout").0.pad_to_align().size()}
 pub(crate) fn arc_bytes<T>()->usize {shared_retirement_allocation_bytes::<T>()}
+
+#[cfg(test)]
+#[path="🔐️unique/🧪️tests/🦀️.rs"]
+mod shared_unique_tests;

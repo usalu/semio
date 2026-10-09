@@ -6,7 +6,8 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "id"
+    "id",
+    "system"
   ],
   "properties": {
     "mutation": {
@@ -26,6 +27,22 @@
         },
         "group": "target",
         "order": 10
+      }
+    },
+    "system": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "System",
+          "de": "System"
+        },
+        "ref": {
+          "kind": "classification-system"
+        },
+        "group": "value",
+        "order": 20
       }
     }
   }

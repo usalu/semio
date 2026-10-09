@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-element-storey/schema.json",
+  "title": "SetElementStorey",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "storey"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setElementStorey"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "storey": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

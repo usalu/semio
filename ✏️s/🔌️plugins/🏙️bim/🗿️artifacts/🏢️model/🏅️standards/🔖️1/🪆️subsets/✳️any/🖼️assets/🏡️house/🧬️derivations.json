@@ -1,0 +1,65 @@
+{
+  "derived": [
+    {
+      "produced": [
+        "w-a-north-1-0"
+      ],
+      "mutations": [
+        {
+          "mutation": "mirrorElements",
+          "ids": [
+            "w-a-south"
+          ],
+          "line_start": {
+            "x": 0,
+            "y": 4
+          },
+          "line_end": {
+            "x": 10,
+            "y": 4
+          },
+          "prefix": "w-a-north"
+        },
+        {
+          "mutation": "renameElement",
+          "id": "w-a-north-1-0",
+          "name": "Attic North"
+        }
+      ]
+    },
+    {
+      "produced": [
+        "w-a-west-1-0"
+      ],
+      "mutations": [
+        {
+          "mutation": "mirrorElements",
+          "ids": [
+            "w-a-east"
+          ],
+          "line_start": {
+            "x": 5,
+            "y": 0
+          },
+          "line_end": {
+            "x": 5,
+            "y": 8
+          },
+          "prefix": "w-a-west"
+        },
+        {
+          "mutation": "renameElement",
+          "id": "w-a-west-1-0",
+          "name": "Attic West"
+        }
+      ]
+    }
+  ],
+  "moved": [
+    {
+      "id": "w-u-bath-east",
+      "from": "st-ground",
+      "to": "st-upper"
+    }
+  ]
+}

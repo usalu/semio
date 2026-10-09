@@ -2,7 +2,42 @@
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "s.draw.drawing@1/🧱️structure -- Layer existence and ordering -- create, delete, duplicate, reorder. Split out of ✳️any's single wildcard-owned manifest (2026-09-02) so every mutation has a real, non-wildcard subset owner; see ../../✳️any/🔮️oracles/🔣️.json for the shared oracles/no-oracle-decisions/probes/comparison-profiles/tolerance-profiles this subset's requirements resolve against (the registry merges every 🔮️oracles contribution repo-wide, so none of that needs restating here). The `mutate-drawing-1` cross-language differential test still exhaustively claims the original `drawing-1-any` catalog id (relocating it is a later wave, out of scope here) -- this subset's own catalog fragment reuses that SAME id so `mutation-catalog-unclaimed` resolves against the still-claimed name, while `subsetDirectoryName` correctly ties its vectors to this subset's own physical 🧬️mutations tree.",
-  "oracles": [],
+  "oracles": [
+    {
+      "id": "fast-json-patch-drawing-image-assets",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "source": {
+        "repository": "https://github.com/Starcounter-Jack/JSON-Patch",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "fast-json-patch",
+        "implementation": "RFC 6902 JSON Patch",
+        "version": "3.1.1"
+      },
+      "capabilities": [
+        "drawing-1-image-assets"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "win32-x64"
+      ],
+      "notes": "Independent RFC 6902 add/remove operations replay neutral image asset snapshot fixtures; sparse deltas and inverse restore the whole authored document.",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "rationale": "Independent RFC 6902 add/remove operations replay neutral image asset snapshot fixtures; sparse deltas and inverse restore the whole authored document."
+    }
+  ],
   "noOracleDecisions": [],
   "mutationCatalogs": [
     {
@@ -14,7 +49,9 @@
         "create-layer",
         "delete-layer",
         "duplicate-layer",
-        "reorder-layer"
+        "reorder-layer",
+        "import-image-asset",
+        "remove-image-asset"
       ],
       "vectors": [
         {
@@ -58,6 +95,28 @@
             {
               "id": "moves-shape-a-above-shape-b",
               "directoryName": "⬆️moves"
+            }
+          ]
+        },
+        {
+          "mutationId": "import-image-asset",
+          "sourceMutationDirectoryName": "📥️import-image-asset",
+          "mutationDirectoryName": "📥️import-image-asset",
+          "scenarios": [
+            {
+              "id": "admits-a-validated-one-pixel-image",
+              "directoryName": "➕️adds"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-image-asset",
+          "sourceMutationDirectoryName": "🗑️remove-image-asset",
+          "mutationDirectoryName": "🗑️remove-image-asset",
+          "scenarios": [
+            {
+              "id": "removes-an-unused-one-pixel-image",
+              "directoryName": "➖️removes"
             }
           ]
         }
@@ -203,6 +262,70 @@
             ],
             "enclosing": [
               "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "capability": "drawing-1-structure-mutate",
+          "id": "import-image-asset",
+          "productionDispatch": {
+            "variant": "ImportImageAsset",
+            "bridgeVersion": 1,
+            "operation": "import-image-asset"
+          },
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "oracleRequirements": [
+            {
+              "capability": "drawing-1-image-assets",
+              "qualifyingKind": "third-party-library",
+              "oracle": "fast-json-patch-drawing-image-assets"
+            }
+          ],
+          "carriers": [
+            "json"
+          ],
+          "invariants": {
+            "local": [
+              "sample-dimensions-and-references-valid"
+            ],
+            "enclosing": [
+              "sparse-asset-delta-and-exact-inverse"
+            ]
+          }
+        },
+        {
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "capability": "drawing-1-structure-mutate",
+          "id": "remove-image-asset",
+          "productionDispatch": {
+            "variant": "RemoveImageAsset",
+            "bridgeVersion": 1,
+            "operation": "remove-image-asset"
+          },
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "oracleRequirements": [
+            {
+              "capability": "drawing-1-image-assets",
+              "qualifyingKind": "third-party-library",
+              "oracle": "fast-json-patch-drawing-image-assets"
+            }
+          ],
+          "carriers": [
+            "json"
+          ],
+          "invariants": {
+            "local": [
+              "sample-dimensions-and-references-valid"
+            ],
+            "enclosing": [
+              "sparse-asset-delta-and-exact-inverse"
             ]
           }
         }

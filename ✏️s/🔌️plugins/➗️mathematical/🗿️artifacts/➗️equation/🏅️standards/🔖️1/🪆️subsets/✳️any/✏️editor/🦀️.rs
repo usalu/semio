@@ -1117,7 +1117,7 @@ impl ArtifactEditor for EquationPlayApp {
             authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(EquationRetainedCommandWork::new(tool_id, equation_operation_identity(tool_id, &operation_context), extent));
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -1133,7 +1133,7 @@ impl ArtifactEditor for EquationPlayApp {
             EQUATION_RETAINED_RAW_BYTES,
             EQUATION_RETAINED_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

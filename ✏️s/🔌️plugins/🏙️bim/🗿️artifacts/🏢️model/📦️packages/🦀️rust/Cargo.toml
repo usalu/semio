@@ -29,8 +29,14 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false, features = ["booleans"] }
 semio-framework-geometry = { workspace = true }
+semio-framework-expression = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-ifc = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-framework-ui-contract.workspace = true
@@ -43,7 +49,7 @@ semio-framework-value-derive = { path = "../../../../../../../🧰️framework/�
 
 [dev-dependencies]
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
-semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws"] }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
 serde.workspace = true
 serde_json.workspace = true
 gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"] }

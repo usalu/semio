@@ -1,0 +1,7 @@
+{
+  "mutation": "setViewport",
+  "id": "vp-1",
+  "label": {
+    "value": "Entrance floor"
+  }
+}

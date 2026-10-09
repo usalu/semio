@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-sheet-revision/schema.json",
+  "title": "DeleteSheetRevision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 4096
+  },
+  "properties": {
+    "mutation": {
+      "const": "deleteSheetRevision"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Revision",
+          "de": "Änderung"
+        },
+        "ref": {
+          "kind": "sheet-revision"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

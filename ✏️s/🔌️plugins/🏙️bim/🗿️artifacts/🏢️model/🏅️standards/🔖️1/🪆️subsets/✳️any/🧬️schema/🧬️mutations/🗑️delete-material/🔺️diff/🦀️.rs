@@ -1,25 +1,33 @@
-//! 🔺️ Diff constructor for `DeleteMaterial`: one deleted material entry. A material that any layer, profile type, railing or curtain
-//! wall still names is refused as `mutation.target-referenced`.
+//! 🔺️ Diff constructor for `DeleteMaterial`: one deleted material entry. A material that any layer, profile type, railing, ramp or curtain
+//! wall type, panel override or space finish still names is refused as `mutation.target-referenced`.
 
 use super::DeleteMaterial;
-use crate::{Entry, Layer, ModelDiff, ModelSnapshot};
+use crate::{CurtainPanel, Entry, Layer, ModelDiff, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn layered(layers: &[Layer], id: &str) -> bool {
     layers.iter().any(|layer| layer.material == id)
 }
 
+fn solid(panel: &CurtainPanel, id: &str) -> bool {
+    matches!(panel, CurtainPanel::Solid { material } if material == id)
+}
+
 fn user(base: &ModelSnapshot, id: &str) -> Option<&'static str> {
     [
         ("a wall type", base.wall_types.values().any(|row| layered(&row.layers, id))),
         ("a slab type", base.slab_types.values().any(|row| layered(&row.layers, id))),
+        ("a ceiling type", base.ceiling_types.values().any(|row| layered(&row.layers, id))),
         ("a roof type", base.roof_types.values().any(|row| layered(&row.layers, id))),
         ("a column type", base.column_types.values().any(|row| row.material == id)),
         ("a beam type", base.beam_types.values().any(|row| row.material == id)),
         ("a window type", base.window_types.values().any(|row| row.material == id)),
         ("a door type", base.door_types.values().any(|row| row.material == id)),
-        ("a curtain wall", base.curtain_walls.values().any(|row| row.panel_material == id || row.mullion_material == id)),
+        ("a curtain wall type", base.curtain_wall_types.values().any(|row| row.panel_material == id || row.mullion_material == id || solid(&row.panel, id))),
+        ("a curtain panel override", base.curtain_panel_overrides.values().any(|row| solid(&row.panel, id))),
         ("a railing", base.railings.values().any(|row| row.material == id)),
+        ("a space finish", base.spaces.values().any(|row| [&row.floor_finish, &row.wall_finish, &row.ceiling_finish].into_iter().any(|finish| finish.as_deref() == Some(id)))),
+        ("a ramp", base.ramps.values().any(|row| row.material == id)),
     ]
     .into_iter()
     .find_map(|(kind, present)| present.then_some(kind))

@@ -9,6 +9,48 @@ import boundsFixture from "../../../🧫️fixtures/🔄️arc-bounds/🔣️.js
 import type { PathGeometrySegment } from "../../../../🟦️.ts";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
+import algorithms from "../../🧫️fixtures/🎛️algorithms/🔣️.json";
+import {PathSimplifyJob} from "../../📉️simplify/🟦️.ts";
+import {Line3,Vector3} from "three";
+
+test("path tangent and simplification fixtures preserve source and match independent geometry",()=>{
+  const validate=new Ajv({strict:true}).compile(schema);
+  for(const row of algorithms) {
+    const before=row.before as PathGeometrySegment[],saved=structuredClone(before),operation=row.operation as PathEdit;
+    expect(validate(operation)).toBe(row.name!=="simplify-invalid-tolerance");
+    if("error" in row){expect(()=>editPath(before,operation)).toThrow();expect(before).toEqual(saved);continue;}
+    const result=editPath(before,operation),rounded=(value:unknown)=>JSON.parse(JSON.stringify(value,(_,v)=>typeof v==="number"?Number(v.toFixed(10)):v));
+    expect(rounded(result)).toEqual(rounded(row.after));expect(before).toEqual(saved);
+    if(operation.kind==="node") {
+      const anchor=before[operation.index]!;if(anchor.kind==="close")throw Error("Anchor missing");
+      const incoming=result[operation.index],outgoing=result[operation.index+1];
+      if(incoming?.kind==="cubic"&&outgoing?.kind==="cubic") {
+        const a=new Vector2(...incoming.ctrl2).sub(new Vector2(...anchor.to)),b=new Vector2(...outgoing.ctrl1).sub(new Vector2(...anchor.to));
+        expect(Math.abs(a.cross(b))).toBeLessThan(1e-10);expect(a.dot(b)).toBeLessThanOrEqual(0);
+        if(operation.mode==="symmetric")expect(a.length()).toBeCloseTo(b.length(),10);
+        if(operation.mode==="corner"){expect(a.length()).toBe(0);expect(b.length()).toBe(0);}
+      }
+    }
+    if(operation.kind==="simplify") {
+      const job=new PathSimplifyJob(before,operation.tolerance);let work=0;
+      expect(()=>job.result()).toThrow();
+      for(let grant=0;grant<10000;grant++){const progress=job.advance(1);expect(progress.work-work).toBeLessThanOrEqual(1);work=progress.work;if(progress.done)break;}
+      expect(job.result()).toEqual(result);
+      if(before.every(segment=>segment.kind==="line"||segment.kind==="move")) {
+        const points=result.filter(segment=>segment.kind!=="close").map(segment=>segment.to);
+        for(const segment of before){const p=new Vector3(...segment.to,0);let deviation=Infinity;for(let index=1;index<points.length;index++){const line=new Line3(new Vector3(...points[index-1]!,0),new Vector3(...points[index]!,0));deviation=Math.min(deviation,line.closestPointToPoint(p,true,new Vector3()).distanceTo(p));}expect(deviation).toBeLessThanOrEqual(operation.tolerance+1e-10);}
+      }
+    }
+  }
+  const row=algorithms.find(row=>row.name==="delete-last-closed-contour-anchor")!;
+  expect(editPath(row.before as PathGeometrySegment[],row.operation as PathEdit)).toEqual(produce(row.before as PathGeometrySegment[],draft=>{draft.splice(1,2);}));
+});
+
+test("simplification interruption never publishes a partial candidate",()=>{
+  const source:PathGeometrySegment[]=[{kind:"move",to:[0,0]},...Array.from({length:200},(_,index)=>({kind:"line" as const,to:[index+1,index%2] as Point}))];
+  for(const phase of ["scanning","reducing","building","complete"]){const job=new PathSimplifyJob(source,.1);for(let step=0;step<100000;step++){if(job.advance(1).phase===phase)break;}job.cancel();expect(()=>job.result()).toThrow(/cancelled/);expect(()=>job.advance(1)).toThrow(/cancelled/);expect(job.close(0)).toEqual({released:0,done:false});let closed=false;for(let step=0;step<10000;step++){const progress=job.close(1);expect(progress.released).toBeLessThanOrEqual(1);if(progress.done){closed=true;break;}}expect(closed).toBe(true);expect(source).toHaveLength(201);}
+  expect(()=>new PathSimplifyJob(source,0)).toThrow();expect(()=>new PathSimplifyJob(source,.1).advance(0)).toThrow();
+});
 test("path node editing matches shared cases and independent geometry", () => {
   const validate = new Ajv({ strict: true }).compile(schema);
   for (const item of fixture) {

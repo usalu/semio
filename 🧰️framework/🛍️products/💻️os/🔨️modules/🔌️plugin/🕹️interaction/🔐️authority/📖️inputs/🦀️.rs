@@ -1,7 +1,8 @@
 //! 🔒️ Exact immutable document/config read ownership retained alongside a local interaction query.
 
 use std::mem::ManuallyDrop;
-use store::{ArtifactStoreOneItemGrant, SnapshotRead, SnapshotRetirementStep};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use store::SnapshotRead;
 
 //#region 🔒️FrozenInputRoots
 struct InputReadState<D, C> {
@@ -28,26 +29,34 @@ impl<D, C> LocalInteractionInputReads<D, C> {
         self.owned.closing = true;
     }
 
-    pub(crate) fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    pub(crate) fn retirement_demands(&self) -> RetirementDemand {
+        RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() }
+    }
+
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
-            return Ok(SnapshotRetirementStep::Complete);
+            return Ok(RetainedCloneStep::Complete(idle));
+        }
+        if grant.maximum_depth < self.retirement_demands().depth {
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "local interaction input return exceeds admitted depth"));
         }
         if !self.owned.closing || grant.maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Blocked);
+            return Ok(RetainedCloneStep::Progress(idle));
         }
         if let Some(read) = self.owned.document.take() {
             if !read.return_to_registry() {
-                return Err("local-interaction.artifact-read-return".into());
+                return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "local-interaction.artifact-read-return"));
             }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(read) = self.owned.config.take() {
+        } else if let Some(read) = self.owned.config.take() {
             if !read.return_to_registry() {
-                return Err("local-interaction.config-read-return".into());
+                return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "local-interaction.config-read-return"));
             }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        } else {
+            return Ok(RetainedCloneStep::Complete(idle));
         }
-        Ok(SnapshotRetirementStep::Complete)
+        let progress = RetainedCloneProgress { copied_items: 1, ..idle };
+        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {

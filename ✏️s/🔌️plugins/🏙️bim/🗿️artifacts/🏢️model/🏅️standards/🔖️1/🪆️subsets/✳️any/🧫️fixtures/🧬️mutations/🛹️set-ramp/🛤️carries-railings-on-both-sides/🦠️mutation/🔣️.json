@@ -1,0 +1,6 @@
+{
+  "mutation": "setRamp",
+  "id": "rp-1",
+  "railing_left": true,
+  "railing_right": true
+}

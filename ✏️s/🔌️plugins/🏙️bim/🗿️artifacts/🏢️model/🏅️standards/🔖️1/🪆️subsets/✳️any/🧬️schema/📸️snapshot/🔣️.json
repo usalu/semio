@@ -73,6 +73,13 @@
       },
       "x-semio-state": "artifact"
     },
+    "curtain_wall_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CurtainWallType"
+      },
+      "x-semio-state": "artifact"
+    },
     "sites": {
       "type": "object",
       "additionalProperties": {
@@ -112,6 +119,13 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CurtainWall"
+      },
+      "x-semio-state": "artifact"
+    },
+    "curtain_panel_overrides": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CurtainPanelOverride"
       },
       "x-semio-state": "artifact"
     },
@@ -164,10 +178,157 @@
       },
       "x-semio-state": "artifact"
     },
+    "ramps": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Ramp"
+      },
+      "x-semio-state": "artifact"
+    },
     "spaces": {
       "type": "object",
       "additionalProperties": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Space"
+      },
+      "x-semio-state": "artifact"
+    },
+    "ceiling_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CeilingType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "ceilings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Ceiling"
+      },
+      "x-semio-state": "artifact"
+    },
+    "zones": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Zone"
+      },
+      "x-semio-state": "artifact"
+    },
+    "area_schemes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/AreaScheme"
+      },
+      "x-semio-state": "artifact"
+    },
+    "views": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/View"
+      },
+      "x-semio-state": "artifact"
+    },
+    "sheets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Sheet"
+      },
+      "x-semio-state": "artifact"
+    },
+    "viewports": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Viewport"
+      },
+      "x-semio-state": "artifact"
+    },
+    "sheet_revisions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SheetRevision"
+      },
+      "x-semio-state": "artifact"
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Dimension"
+      },
+      "x-semio-state": "artifact"
+    },
+    "tags": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Tag"
+      },
+      "x-semio-state": "artifact"
+    },
+    "text_notes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TextNote"
+      },
+      "x-semio-state": "artifact"
+    },
+    "leaders": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Leader"
+      },
+      "x-semio-state": "artifact"
+    },
+    "annotation_styles": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/AnnotationStyle"
+      },
+      "x-semio-state": "artifact"
+    },
+    "families": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Family"
+      },
+      "x-semio-state": "artifact"
+    },
+    "family_parameters": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/FamilyParameter"
+      },
+      "x-semio-state": "artifact"
+    },
+    "family_solids": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/FamilySolid"
+      },
+      "x-semio-state": "artifact"
+    },
+    "wall_sweeps": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WallSweep"
+      },
+      "x-semio-state": "artifact"
+    },
+    "schedules": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Schedule"
+      },
+      "x-semio-state": "artifact"
+    },
+    "property_templates": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/PropertyTemplate"
+      },
+      "x-semio-state": "artifact"
+    },
+    "classification_systems": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ClassificationSystem"
       },
       "x-semio-state": "artifact"
     },
@@ -181,7 +342,7 @@
     "classifications": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Classification"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ClassificationSet"
       },
       "x-semio-state": "artifact"
     }

@@ -1,12 +1,14 @@
 //! 🏗️ `createEntity`: brings one entity of a kind into the model. The entity table owns what a new entity of the kind looks like and which `create-*` mutation brings it; this
 //! command resolves its container (the explicit parent, else the selection, else the first container), mints its id from the authoring seed, names it and selects it.
 
+use crate::editor::bim::entities::views::unique_name;
 use crate::editor::bim::entities::{id_taken, kind_of, ordered_storeys, EntityKind, ENTITIES};
 use crate::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
 use crate::editor::bim::kit::{fault, select_effect, IdMint};
 use crate::editor::bim::terminology::BimLabels;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::mutations::create_view::CreateView;
+use crate::{ModelMutation, ModelSnapshot, View, ViewKind};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -24,7 +26,8 @@ fn container_kind(kind: &str) -> Option<&'static str> {
         "building" => Some("site"),
         "storey" | "grid" => Some("building"),
         "opening" => Some("wall"),
-        "site" | "material" | "wall-type" | "slab-type" | "roof-type" | "column-type" | "beam-type" | "window-type" | "door-type" => None,
+        "viewport" | "sheet-revision" => Some("sheet"),
+        "site" | "zone" | "area-scheme" | "schedule" | "sheet" | "material" | "wall-type" | "slab-type" | "ceiling-type" | "roof-type" | "column-type" | "beam-type" | "window-type" | "door-type" => None,
         _ => Some("storey"),
     }
 }
@@ -50,12 +53,19 @@ pub fn handle(payload: &CreateEntity, doc: &ArtifactView<'_, ModelSnapshot>, _cf
     let snapshot = doc.snapshot;
     let row = kind_of(&payload.kind).ok_or_else(|| fault("bim.create.kind-unknown", format!("'{}' is not an entity kind of the model", payload.kind)))?;
     let create = row.create.ok_or_else(|| fault("bim.create.unsupported", format!("no create mutation exists for '{}' yet", payload.kind)))?;
-    let parent = resolve_parent(snapshot, row.kind, &payload.parent, &ctx.selected);
+    let parent = if row.kind == "schedule" { payload.parent.clone() } else { resolve_parent(snapshot, row.kind, &payload.parent, &ctx.selected) };
     let id = IdMint::new(doc.operation_optional()).mint(row.kind, |id| id_taken(snapshot, id));
     let name = if payload.name.is_empty() { default_name(row, ctx.labels(), (row.ids)(snapshot).len()) } else { payload.name.clone() };
     let mutation = create(snapshot, &id, &parent, &name).map_err(|code| fault(code, format!("a {} needs its container first", row.kind)))?;
     let domain = if row.library { BIM_LIBRARY_DOMAIN } else { BIM_ELEMENT_DOMAIN };
-    let mut emit = Emit::mutations(vec![mutation]);
+    let mut mutations = vec![mutation];
+    if let Some(ModelMutation::CreateStorey(created)) = mutations.first().cloned() {
+        let view_id = IdMint::new(doc.operation_optional()).mint("view", |view_id| view_id == id || id_taken(snapshot, view_id));
+        let title = ctx.labels().map_or_else(|| format!("Plan {}", created.storey.name), |labels| BimLabels::named(labels.view_plan_of, &created.storey.name));
+        let view = View::of_storey(&created.storey.building, &unique_name(snapshot, &created.storey.building, &title), ViewKind::Plan, &id);
+        mutations.push(ModelMutation::CreateView(CreateView { id: view_id, view }));
+    }
+    let mut emit = Emit::mutations(mutations);
     emit.effects.push(select_effect(domain, &[(row.kind.to_string(), id)], "replace"));
     Ok(emit)
 }

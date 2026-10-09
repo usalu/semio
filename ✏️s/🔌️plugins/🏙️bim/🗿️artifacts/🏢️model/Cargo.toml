@@ -39,8 +39,20 @@ path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️package
 [workspace.dependencies.semio-framework-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-csv]
+path = "../../../🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf]
+path = "../../../🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-ifc]
 path = "../../../🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-json]
+path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pdf]
+path = "../../../🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-svg]
 path = "../../../🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust"

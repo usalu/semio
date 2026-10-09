@@ -49,7 +49,7 @@
       "attributes": {
         "fillRule": "evenodd"
       },
-      "operation": "subtract",
+      "operation": "difference",
       "children": [
         "shape-a"
       ]

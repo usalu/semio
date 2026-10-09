@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-curtain-wall-type/schema.json",
+  "title": "CreateCurtainWallType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "curtain_wall_type"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createCurtainWallType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Curtain wall type id",
+          "de": "Fassadentyp-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "curtain_wall_type": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CurtainWallType",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Curtain wall type",
+          "de": "Fassadentyp"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

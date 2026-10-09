@@ -1,0 +1,9 @@
+{
+  "mutation": "setSheet",
+  "id": "sh-1",
+  "paper": {
+    "Iso": {
+      "size": "A1"
+    }
+  }
+}

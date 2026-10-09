@@ -1,6 +1,6 @@
 use super::*;
 
-const ORIGIN: Frame = Frame { min_x: 0.0, max_y: 0.0, left: 0.0, top: 0.0 };
+const ORIGIN: Frame = Frame { min_x: 0.0, max_y: 0.0, left: 0.0, top: 0.0, mm: 10.0 };
 
 fn vertex(x: f64, y: f64, bulge: f64) -> PlanVertex {
     PlanVertex { x, y, bulge }
@@ -29,16 +29,18 @@ fn coordinates_snap_to_a_micrometre_of_paper_without_negative_zero() {
 
 #[test]
 fn the_frame_scales_to_paper_millimetres_and_flips_north_up() {
-    assert_eq!(MM_PER_METRE, 10.0);
-    let frame = Frame { min_x: 2.0, max_y: 5.0, left: 8.0, top: 16.0 };
+    assert_eq!([100, 50, 20, 200].map(mm_per_metre), [10.0, 20.0, 50.0, 5.0]);
+    assert_eq!(mm_per_metre(0), 1000.0);
+    let frame = Frame { min_x: 2.0, max_y: 5.0, left: 8.0, top: 16.0, mm: 10.0 };
     assert_eq!(frame.point(2.0, 5.0), (8.0, 16.0));
     assert_eq!(frame.point(3.0, 4.0), (18.0, 26.0));
+    assert_eq!(Frame { mm: 20.0, ..frame }.point(3.0, 4.0), (28.0, 36.0));
 }
 
 #[test]
 fn straight_paths_are_move_and_line_commands_and_closed_ones_end_in_z() {
     let corners = [vertex(0.0, 0.0, 0.0), vertex(1.0, 0.0, 0.0), vertex(1.0, 1.0, 0.0)];
-    let frame = Frame { min_x: 0.0, max_y: 1.0, left: 0.0, top: 0.0 };
+    let frame = Frame { min_x: 0.0, max_y: 1.0, left: 0.0, top: 0.0, mm: 10.0 };
     assert_eq!(data(&corners, false, &frame), "M0 10 L10 10 L10 0");
     assert_eq!(data(&corners, true, &frame), "M0 10 L10 10 L10 0 Z");
 }
@@ -56,7 +58,7 @@ fn a_bulge_becomes_an_arc_whose_flags_follow_its_sign_and_size() {
 #[test]
 fn the_closing_segment_of_a_ring_uses_the_bulge_of_the_last_vertex() {
     let ring = [vertex(0.0, 0.0, 0.0), vertex(1.0, 0.0, 0.0), vertex(1.0, 1.0, 1.0)];
-    let frame = Frame { min_x: 0.0, max_y: 1.0, left: 0.0, top: 0.0 };
+    let frame = Frame { min_x: 0.0, max_y: 1.0, left: 0.0, top: 0.0, mm: 10.0 };
     assert!(data(&ring, true, &frame).ends_with("A7.071068 7.071068 0 0 0 0 10 Z"), "{}", data(&ring, true, &frame));
 }
 

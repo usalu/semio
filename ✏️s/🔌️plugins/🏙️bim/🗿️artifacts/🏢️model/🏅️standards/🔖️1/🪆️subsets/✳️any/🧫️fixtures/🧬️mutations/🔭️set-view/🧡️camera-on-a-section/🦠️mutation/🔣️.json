@@ -1,0 +1,14 @@
+{
+  "mutation": "setView",
+  "id": "v-section",
+  "camera": {
+    "target": {
+      "x": 4,
+      "y": 3
+    },
+    "target_height": 1.5,
+    "azimuth": 0.8,
+    "pitch": 0.5,
+    "distance": 25
+  }
+}

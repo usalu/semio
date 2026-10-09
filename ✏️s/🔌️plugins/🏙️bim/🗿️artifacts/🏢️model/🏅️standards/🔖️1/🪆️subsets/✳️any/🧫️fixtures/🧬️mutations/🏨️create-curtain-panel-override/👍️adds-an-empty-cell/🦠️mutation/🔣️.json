@@ -1,0 +1,10 @@
+{
+  "mutation": "createCurtainPanelOverride",
+  "id": "ov-2",
+  "curtain_panel_override": {
+    "curtain": "cw-1",
+    "u": 3,
+    "v": 1,
+    "panel": "Empty"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "mutation": "setView",
+  "id": "v-ground",
+  "crop": {
+    "value": {
+      "min": {
+        "x": 0,
+        "y": 0
+      },
+      "max": {
+        "x": 6,
+        "y": 4
+      }
+    }
+  }
+}

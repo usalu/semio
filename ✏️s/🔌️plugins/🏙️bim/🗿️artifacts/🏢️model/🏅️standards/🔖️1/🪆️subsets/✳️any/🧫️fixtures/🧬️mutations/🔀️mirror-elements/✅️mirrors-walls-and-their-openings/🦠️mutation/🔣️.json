@@ -1,0 +1,15 @@
+{
+  "mutation": "mirrorElements",
+  "ids": [
+    "w-south",
+    "w-east"
+  ],
+  "line_start": {
+    "x": 4,
+    "y": -1
+  },
+  "line_end": {
+    "x": 4,
+    "y": 7
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "mutation": "setCeilingType",
+  "id": "ct-board",
+  "name": "Double board",
+  "layers": [
+    {
+      "material": "m-board",
+      "thickness": 0.025,
+      "function": "Finish"
+    }
+  ]
+}

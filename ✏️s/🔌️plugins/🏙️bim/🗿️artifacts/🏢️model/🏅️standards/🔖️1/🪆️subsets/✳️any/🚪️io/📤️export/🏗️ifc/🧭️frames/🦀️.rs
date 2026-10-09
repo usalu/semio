@@ -63,6 +63,7 @@ pub fn profile_top(profile: &Profile) -> f64 {
         Profile::Rectangle { depth, .. } | Profile::IShape { depth, .. } => depth / 2.0,
         Profile::Circle { diameter } => diameter / 2.0,
         Profile::Custom { outline } => outline.iter().map(|vertex| vertex.point.y).fold(f64::NEG_INFINITY, f64::max),
+        Profile::Family { .. } => 0.0,
     }
 }
 

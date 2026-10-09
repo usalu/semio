@@ -100,3 +100,7 @@ test("path retirement preserves published contours and drains private curves und
  }
  console.log("[DEBUG] Real flatten phases return completed contours intact and retire private curves with exact neutral work totals");
 });
+
+import admissionRows from "../../../🧹️retire/🧫️fixtures/📥️admission/🔣️.json";
+import admissionSchema from "../../../🧹️retire/🧬️schema/📥️admission/🔣️.json";
+test("retained flatten admission preserves refused source until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="flatten")continue;const input:PathFlattenInput={segments:[{kind:"move",to:[3,7]}],transform:[1,0,0,1,0,0],tolerance:row.tolerance!};expect(validate(input)).toBe(false);expect(()=>new PathFlattenJob(input)).toThrow(/contract/);const job=PathFlattenJob.admit(input);expect((job as unknown as {input:PathFlattenInput}).input.segments).toBe(input.segments);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.output).toBe(null);while(!retired.job.advance(1).done){}expect(retired.job.terminalIsEmpty()).toBe(true);console.log("[DEBUG] Refused flatten admission retained actual source until explicit close");}});

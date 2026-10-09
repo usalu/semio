@@ -1,0 +1,11 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const f = "C:/git/semio/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏡️house/🧪️tests/🧩️example/🦀️.rs";
+let t = readFileSync(f, "utf8");
+const a = t.indexOf("    let ground_new_doors");
+const b = t.indexOf("    assert!(model.schedules[\"sch-doors-ground\"]");
+t = t.slice(0, a) + `    use crate::standards::v1::subsets::any::schema::inferences::schedules::rows::{phase_of, storey_of};
+    let ground_new_doors = model.openings.iter().filter(|(id, opening)| matches!(opening.kind, OpeningKind::Door { .. }) && storey_of(&model, id).is_some_and(|storey| storey == "st-ground") && phase_of(&model, id) == crate::Phase::New).count();
+    assert!(ground_new_doors > 0 && ground_new_doors < items("sch-doors"), "the ground floor has some of the doors");
+    assert_eq!(items("sch-doors-ground"), ground_new_doors, "the scoped door schedule lists the new doors of the ground floor only");
+` + t.slice(b);
+writeFileSync(f, t);

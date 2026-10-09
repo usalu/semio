@@ -1,0 +1,6 @@
+{
+  "mutation": "setZone",
+  "id": "z-day",
+  "name": "Day zone",
+  "occupancy_density": 0.08
+}

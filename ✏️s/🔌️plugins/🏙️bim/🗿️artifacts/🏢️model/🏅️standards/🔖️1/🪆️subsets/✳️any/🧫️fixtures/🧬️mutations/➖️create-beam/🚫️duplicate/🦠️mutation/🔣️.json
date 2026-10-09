@@ -4,15 +4,20 @@
   "beam": {
     "storey": "st-ground",
     "beam_type": "bt-30x50",
-    "start": {
-      "x": 0,
-      "y": 3
-    },
-    "end": {
-      "x": 4,
-      "y": 3
+    "axis": {
+      "Line": {
+        "start": {
+          "x": 0,
+          "y": 3
+        },
+        "end": {
+          "x": 4,
+          "y": 3
+        }
+      }
     },
     "top_offset": -0.2,
+    "phase": "New",
     "name": "Beam B"
   }
 }

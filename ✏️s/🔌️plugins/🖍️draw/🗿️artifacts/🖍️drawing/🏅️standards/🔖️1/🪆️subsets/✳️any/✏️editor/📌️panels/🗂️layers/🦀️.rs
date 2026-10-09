@@ -83,6 +83,11 @@ fn layers_rows<'a>(document: &'a DrawingSnapshot, labels: &DrawingPlayLabels) ->
         LayersRow::Add("drawing-play-layers.add.text", labels.add_text, "type", "text"),
         LayersRow::Add("drawing-play-layers.add.group", labels.add_group, "folder-plus", "group"),
         LayersRow::Add("drawing-play-layers.add.boolean", labels.add_boolean, "combine", "boolean"),
+        LayersRow::Add("drawing-play-layers.add.ellipse", labels.add_ellipse, "circle", "shape:ellipse"),
+        LayersRow::Add("drawing-play-layers.add.line", labels.add_line, "minus", "shape:line"),
+        LayersRow::Add("drawing-play-layers.add.polygon", labels.add_polygon, "pentagon", "shape:polygon"),
+        LayersRow::Add("drawing-play-layers.add.image", labels.add_image, "image", "image"),
+        LayersRow::Add("drawing-play-layers.add.trace", labels.add_trace, "scan-line", "trace"),
     ];
     if document.layers.is_empty() {
         rows.push(LayersRow::Empty);

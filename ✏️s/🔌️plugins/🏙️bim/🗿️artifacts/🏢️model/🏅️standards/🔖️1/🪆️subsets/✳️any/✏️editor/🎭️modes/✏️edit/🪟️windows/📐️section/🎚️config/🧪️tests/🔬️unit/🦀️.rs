@@ -3,7 +3,7 @@ use protocol::{OpBinary, OpText};
 use store::{ArtifactDsl, ArtifactPack};
 
 fn pinned() -> BimSectionWindowConfig {
-    BimSectionWindowConfig { start_x: -1.0, start_y: 3.0, end_x: 9.0, end_y: 3.5, depth: 2.0, framed: true, viewport: store::Viewport2d { x: 4.0, y: -1.0, zoom: 30.0 } }
+    BimSectionWindowConfig { view: "v-section".into(), framed: true, viewport: store::Viewport2d { x: 4.0, y: -1.0, zoom: 30.0 } }
 }
 
 fn replace(config: BimSectionWindowConfig) -> BimSectionWindowConfigMutation {

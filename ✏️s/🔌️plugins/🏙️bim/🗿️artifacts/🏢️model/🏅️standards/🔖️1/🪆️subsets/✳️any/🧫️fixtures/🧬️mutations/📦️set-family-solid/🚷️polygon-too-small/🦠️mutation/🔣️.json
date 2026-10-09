@@ -1,0 +1,20 @@
+{
+  "mutation": "setFamilySolid",
+  "id": "s-hea",
+  "shape": {
+    "Extrusion": {
+      "profile": {
+        "Polygon": {
+          "points": [
+            {
+              "x": "0 m",
+              "y": "0 m"
+            }
+          ]
+        }
+      },
+      "base": "0 m",
+      "height": "1 m"
+    }
+  }
+}

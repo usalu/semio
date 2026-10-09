@@ -1,0 +1,15 @@
+{
+  "mutation": "createSchedule",
+  "id": "sch-walls",
+  "schedule": {
+    "name": "Walls",
+    "category": "Wall",
+    "columns": [],
+    "sort": [],
+    "filter": [],
+    "group": [],
+    "itemize": true,
+    "storeys": [],
+    "phases": []
+  }
+}

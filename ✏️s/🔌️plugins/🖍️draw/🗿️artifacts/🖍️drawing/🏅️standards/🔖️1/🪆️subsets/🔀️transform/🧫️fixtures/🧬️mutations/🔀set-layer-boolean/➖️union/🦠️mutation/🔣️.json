@@ -1,5 +1,5 @@
 {
   "mutation": "setLayerBooleanOperation",
   "layerId": "boolean-a",
-  "booleanOperation": "subtract"
+  "booleanOperation": "difference"
 }

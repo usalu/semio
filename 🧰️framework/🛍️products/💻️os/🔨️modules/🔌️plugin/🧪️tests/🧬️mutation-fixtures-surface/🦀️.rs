@@ -1181,12 +1181,12 @@ fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
         let work = Probe { observed: Some(observed.clone()), consumes: row["domainConsumes"].as_u64().unwrap(), closing: false };
         let completion = ArtifactToolCompletion::new();
         let consumer = completion.clone();
-        let payload = ArtifactRetainedCommandPayload::try_new(ArtifactRetainedCommandInputs {
+        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs {
             command: SurfaceEditorCommand::Increment,
             snapshot: std::sync::Arc::new(SurfaceSnapshot::default()), config: std::sync::Arc::new(NoConfig::default()), history: std::sync::Arc::new(HistoryView::empty()),
             interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None,
             operation: crate::app::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id: 1, generation: 1, canonical_base_revision: [0;32], authoring_seed: "unit-authority".into() }, completion,
-        }, |_| SURFACE_TOOL_ID, 32, 1, Box::new(work)).unwrap();
+        }, |_| SURFACE_TOOL_ID, 32, 1, Box::new(work));
         let mut job = ArtifactRetainedCommandJob::new(payload);
         let mut sequence = 0;
         for _ in 0..32 {

@@ -1,0 +1,14 @@
+{
+  "mutation": "mirrorElements",
+  "ids": [
+    "w-missing"
+  ],
+  "line_start": {
+    "x": 4,
+    "y": -1
+  },
+  "line_end": {
+    "x": 4,
+    "y": 7
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "setDimension",
+  "id": "dim-west",
+  "offset": 1
+}

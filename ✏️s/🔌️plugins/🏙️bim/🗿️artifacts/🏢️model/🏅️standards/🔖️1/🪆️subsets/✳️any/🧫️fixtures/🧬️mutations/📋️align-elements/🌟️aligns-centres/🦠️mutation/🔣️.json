@@ -1,0 +1,10 @@
+{
+  "mutation": "alignElements",
+  "ids": [
+    "c-1",
+    "b-1"
+  ],
+  "axis": "Y",
+  "edge": "Center",
+  "target": 5
+}

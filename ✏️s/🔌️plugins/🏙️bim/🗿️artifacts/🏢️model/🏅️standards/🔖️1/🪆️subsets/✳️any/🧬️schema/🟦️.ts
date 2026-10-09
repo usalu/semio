@@ -22,6 +22,8 @@ export interface ModelArtifact {
   /** @state artifact */
   door_types?: Record<string, DoorType>;
   /** @state artifact */
+  curtain_wall_types?: Record<string, CurtainWallType>;
+  /** @state artifact */
   sites?: Record<string, Site>;
   /** @state artifact */
   buildings?: Record<string, Building>;
@@ -33,6 +35,8 @@ export interface ModelArtifact {
   walls?: Record<string, Wall>;
   /** @state artifact */
   curtain_walls?: Record<string, CurtainWall>;
+  /** @state artifact */
+  curtain_panel_overrides?: Record<string, CurtainPanelOverride>;
   /** @state artifact */
   columns?: Record<string, Column>;
   /** @state artifact */
@@ -48,12 +52,78 @@ export interface ModelArtifact {
   /** @state artifact */
   railings?: Record<string, Railing>;
   /** @state artifact */
+  ramps?: Record<string, Ramp>;
+  /** @state artifact */
   spaces?: Record<string, Space>;
+  /** @state artifact */
+  ceiling_types?: Record<string, CeilingType>;
+  /** @state artifact */
+  ceilings?: Record<string, Ceiling>;
+  /** @state artifact */
+  zones?: Record<string, Zone>;
+  /** @state artifact */
+  area_schemes?: Record<string, AreaScheme>;
+  /** @state artifact */
+  views?: Record<string, View>;
+  /** @state artifact */
+  sheets?: Record<string, Sheet>;
+  /** @state artifact */
+  viewports?: Record<string, Viewport>;
+  /** @state artifact */
+  sheet_revisions?: Record<string, SheetRevision>;
+  /** @state artifact */
+  dimensions?: Record<string, Dimension>;
+  /** @state artifact */
+  tags?: Record<string, Tag>;
+  /** @state artifact */
+  text_notes?: Record<string, TextNote>;
+  /** @state artifact */
+  leaders?: Record<string, Leader>;
+  /** @state artifact */
+  annotation_styles?: Record<string, AnnotationStyle>;
+  /** @state artifact */
+  families?: Record<string, Family>;
+  /** @state artifact */
+  family_parameters?: Record<string, FamilyParameter>;
+  /** @state artifact */
+  family_solids?: Record<string, FamilySolid>;
+  /** @state artifact */
+  wall_sweeps?: Record<string, WallSweep>;
+  /** @state artifact */
+  schedules?: Record<string, Schedule>;
+  /** @state artifact */
+  property_templates?: Record<string, PropertyTemplate>;
+  /** @state artifact */
+  classification_systems?: Record<string, ClassificationSystem>;
   /** @state artifact */
   properties?: Record<string, PropertySet>;
   /** @state artifact */
-  classifications?: Record<string, Classification>;
+  classifications?: Record<string, ClassificationSet>;
 }
+
+export type PropertyKind = "Text" | "Real" | "Integer" | "Boolean" | "Length" | "Area" | "Volume" | "Angle";
+
+export type TemplateTarget = "Site" | "Building" | "Storey" | "Wall" | "CurtainWall" | "Column" | "Beam" | "Slab" | "Ceiling" | "Roof" | "Window" | "Door" | "Void" | "Stair" | "Ramp" | "Railing" | "Space" | "Zone" | "WallType" | "SlabType" | "CeilingType" | "RoofType" | "ColumnType" | "BeamType" | "WindowType" | "DoorType";
+
+export type AnchorEnd = "Start" | "End";
+
+export type WallSide = "Left" | "Right";
+
+export type TagCategory = "Name" | "Type" | "Number" | "Size";
+
+export type Terminator = "Tick" | "Arrow" | "Dot";
+
+export type DimensionUnit = "Metre" | "Centimetre" | "Millimetre";
+
+export type FamilyCategory = "Furniture" | "Equipment" | "Casework" | "Plumbing" | "Lighting" | "Mechanical" | "Electrical" | "Generic" | "Profile";
+
+export type ParameterKind = "Length" | "Angle" | "Real" | "Integer" | "Boolean" | "Text" | "Material";
+
+export type SolidAxis = "X" | "Y" | "Z";
+
+export type IsoSize = "A0" | "A1" | "A2" | "A3" | "A4";
+
+export type Orientation = "Landscape" | "Portrait";
 
 export type MaterialCategory = "Concrete" | "Masonry" | "Wood" | "Metal" | "Glass" | "Insulation" | "Finish" | "Membrane" | "Other";
 
@@ -73,6 +143,60 @@ export type StringerKind = "None" | "Closed" | "Open" | "Mono";
 
 export type RiserKind = "Open" | "Closed";
 
+export type ScheduleCategory = "Wall" | "CurtainWall" | "Slab" | "Roof" | "Column" | "Beam" | "Window" | "Door" | "Void" | "Stair" | "Railing" | "Space" | "Finish" | "Material";
+
+export type ScheduleField = "Id" | "Name" | "Kind" | "Storey" | "Level" | "Type" | "Phase" | "Material" | "Host" | "Number" | "Usage" | "Surface" | "Swing" | "Leaves" | "Panes" | "Count" | "Length" | "Width" | "Height" | "Perimeter" | "GrossSideArea" | "OpeningArea" | "NetSideArea" | "GrossArea" | "NetArea" | "SurfaceArea" | "GrossVolume" | "NetVolume" | "Mass" | "Risers" | "Thickness" | "LayerArea" | "LayerVolume" | "LayerMass" | "FinishArea";
+
+export type ScheduleOp = "Equals" | "NotEquals" | "Contains" | "Greater" | "GreaterOrEqual" | "Less" | "LessOrEqual" | "Empty" | "NotEmpty";
+
+export type EndJoin = "Miter" | "Butt" | "None";
+
+export type ViewKind = "Plan" | "CeilingPlan" | "Section" | "Elevation" | "Orthographic" | "Perspective";
+
+export type DetailLevel = "Coarse" | "Medium" | "Fine";
+
+export type ViewCategory = "Walls" | "CurtainWalls" | "Columns" | "Beams" | "Slabs" | "Roofs" | "Openings" | "Stairs" | "Railings" | "Spaces" | "Grids";
+
+export type HostSide = "Left" | "Right";
+
+export type AreaMeasure = "Gross" | "Net";
+
+export type AnnotationAnchor =
+  | { Point: { point: Point2 } }
+  | { WallFace: { wall: string; side: WallSide } }
+  | { WallAxis: { wall: string } }
+  | { WallEnd: { wall: string; end: AnchorEnd } }
+  | { OpeningCentre: { opening: string } }
+  | { Grid: { grid: string } }
+  | { ColumnCentre: { column: string } };
+
+export type ParametricProfile =
+  | { Rectangle: { width: string; depth: string } }
+  | { Circle: { diameter: string } }
+  | { IShape: { width: string; depth: string; web: string; flange: string } }
+  | { Polygon: { points: ExprPoint[] } };
+
+export type SolidShape =
+  | { Extrusion: { profile: ParametricProfile; base: string; height: string } }
+  | { Revolution: { profile: ParametricProfile; axis: SolidAxis; angle: string } }
+  | { Sweep: { profile: ParametricProfile; path: ExprPoint[] } }
+  | { Cuboid: { x: string; y: string; z: string; width: string; depth: string; height: string } };
+
+export type Paper =
+  | { Iso: { size: IsoSize } }
+  | { Custom: { width: number; height: number } };
+
+export type CurtainGrid =
+  | { Spacing: { spacing: number } }
+  | { Lines: { positions: number[] } };
+
+export type CurtainPanel =
+  | "Glass"
+  | { Solid: { material: string } }
+  | { Door: { door_type: string } }
+  | { Window: { window_type: string } }
+  | "Empty";
+
 export type Axis =
   | { Line: { start: Point2; end: Point2 } }
   | { Arc: { start: Point2; end: Point2; bulge: number } };
@@ -80,13 +204,17 @@ export type Axis =
 export type TopConstraint =
   | { Unconnected: { height: number } }
   | { StoreyTop: { offset: number } }
-  | { Storey: { storey: string; offset: number } };
+  | { Storey: { storey: string; offset: number } }
+  | { Roof: { roof: string; offset: number } }
+  | { Slab: { slab: string; offset: number } }
+  | { Ceiling: { ceiling: string; offset: number } };
 
 export type Profile =
   | { Rectangle: { width: number; depth: number } }
   | { Circle: { diameter: number } }
   | { IShape: { width: number; depth: number; web: number; flange: number } }
-  | { Custom: { outline: Vertex[] } };
+  | { Custom: { outline: Vertex[] } }
+  | { Family: { family: string } };
 
 export type RoofShape =
   | "Flat"
@@ -125,6 +253,158 @@ export type SpaceBoundary =
   | { Bounded: { seed: Point2 } }
   | { Explicit: { outline: Vertex[] } };
 
+export type ScheduleKey =
+  | { Field: { field: ScheduleField } }
+  | { Property: { set: string; name: string } };
+
+export interface PropertyDef {
+  name: string;
+  kind: PropertyKind;
+  unit?: string;
+  description?: string;
+  required: boolean;
+  default_value?: PropertyValue;
+  allowed: PropertyValue[];
+  minimum?: number;
+  maximum?: number;
+}
+
+export interface PropertyTemplate {
+  name: string;
+  applies_to: TemplateTarget[];
+  properties: PropertyDef[];
+}
+
+export interface ClassificationItem {
+  code: string;
+  title: string;
+  parent?: string;
+}
+
+export interface ClassificationSystem {
+  name: string;
+  edition: string;
+  source?: string;
+  entries: ClassificationItem[];
+}
+
+export interface Dimension {
+  storey: string;
+  anchors: AnnotationAnchor[];
+  angle: number;
+  offset: number;
+  style: string;
+  lock?: number;
+  name: string;
+}
+
+export interface Tag {
+  storey: string;
+  element: string;
+  category: TagCategory;
+  offset: Point2;
+  style: string;
+}
+
+export interface TextNote {
+  storey: string;
+  position: Point2;
+  text: string;
+  rotation: number;
+  style: string;
+}
+
+export interface Leader {
+  storey: string;
+  anchor: AnnotationAnchor;
+  offset: Point2;
+  text: string;
+  style: string;
+}
+
+export interface AnnotationStyle {
+  name: string;
+  text_height: number;
+  terminator: Terminator;
+  unit: DimensionUnit;
+  precision: number;
+  mark_size: number;
+  gap: number;
+  overshoot: number;
+}
+
+export interface ExprPoint {
+  x: string;
+  y: string;
+}
+
+export interface ExprPoint3 {
+  x: string;
+  y: string;
+  z: string;
+}
+
+export interface Family {
+  name: string;
+  category: FamilyCategory;
+}
+
+export interface FamilyParameter {
+  family: string;
+  name: string;
+  kind: ParameterKind;
+  value: string;
+}
+
+export interface FamilySolid {
+  family: string;
+  name: string;
+  shape: SolidShape;
+  material: string;
+  visible: string;
+  offset: ExprPoint3;
+}
+
+export interface Sheet {
+  number: string;
+  name: string;
+  paper: Paper;
+  orientation: Orientation;
+  project: string;
+  drawn_by: string;
+  checked_by: string;
+  date: string;
+  revision: string;
+  scale_label: string;
+}
+
+export interface Viewport {
+  sheet: string;
+  view: string;
+  position: Point2;
+  scale: number;
+  crop?: ViewCrop;
+  label?: string;
+}
+
+export interface SheetRevision {
+  sheet: string;
+  number: string;
+  date: string;
+  description: string;
+  author: string;
+}
+
+export interface WallSweep {
+  host: string;
+  side: WallSide;
+  profile: Profile;
+  height: number;
+  inset: number;
+  material: string;
+  name: string;
+}
+
 export interface Point2 {
   x: number;
   y: number;
@@ -157,6 +437,13 @@ export interface Baluster {
   spacing: number;
 }
 
+export interface RailingHost {
+  element: string;
+  side: HostSide;
+  edge: number;
+  inset: number;
+}
+
 export interface Layer {
   material: string;
   thickness: number;
@@ -186,6 +473,11 @@ export interface WallType {
 }
 
 export interface SlabType {
+  name: string;
+  layers: Layer[];
+}
+
+export interface CeilingType {
   name: string;
   layers: Layer[];
 }
@@ -269,19 +561,39 @@ export interface Wall {
   base_offset: number;
   top: TopConstraint;
   phase: Phase;
+  start_join?: EndJoin;
+  end_join?: EndJoin;
   name: string;
+  base_slab?: string;
+}
+
+export interface CurtainWallType {
+  name: string;
+  u_grid: CurtainGrid;
+  v_grid: CurtainGrid;
+  interior_mullion: Profile;
+  border_mullion: Profile;
+  panel: CurtainPanel;
+  panel_material: string;
+  mullion_material: string;
+}
+
+export interface CurtainPanelOverride {
+  curtain: string;
+  u: number;
+  v: number;
+  panel: CurtainPanel;
 }
 
 export interface CurtainWall {
   storey: string;
+  curtain_wall_type: string;
   axis: Axis;
   base_offset: number;
   top: TopConstraint;
-  u_spacing: number;
-  v_spacing: number;
-  mullion: Profile;
-  panel_material: string;
-  mullion_material: string;
+  u_grid?: CurtainGrid;
+  v_grid?: CurtainGrid;
+  phase: Phase;
   name: string;
 }
 
@@ -290,23 +602,37 @@ export interface Column {
   column_type: string;
   position: Point2;
   rotation: number;
+  tilt?: Slope;
   base_offset: number;
   top: TopConstraint;
+  phase: Phase;
   name: string;
 }
 
 export interface Beam {
   storey: string;
   beam_type: string;
-  start: Point2;
-  end: Point2;
+  axis: Axis;
   top_offset: number;
+  end_top_offset?: number;
+  phase: Phase;
   name: string;
 }
 
 export interface Slab {
   storey: string;
   slab_type: string;
+  boundary: Vertex[];
+  holes: Vertex[][];
+  offset: number;
+  slope?: Slope;
+  phase: Phase;
+  name: string;
+}
+
+export interface Ceiling {
+  storey: string;
+  ceiling_type: string;
   boundary: Vertex[];
   holes: Vertex[][];
   offset: number;
@@ -321,6 +647,7 @@ export interface Roof {
   shape: RoofShape;
   overhang: number;
   base_offset: number;
+  phase: Phase;
   name: string;
 }
 
@@ -334,6 +661,8 @@ export interface Opening {
   flip_hand: boolean;
   flip_facing: boolean;
   name: string;
+  reveal_depth?: number;
+  reveal_material?: string;
 }
 
 export interface Stair {
@@ -350,6 +679,7 @@ export interface Stair {
   tread_thickness: number;
   riser: RiserKind;
   landing_depth: number;
+  phase: Phase;
   name: string;
 }
 
@@ -364,6 +694,25 @@ export interface Railing {
   infill: Infill;
   material: string;
   base_offset: number;
+  host?: RailingHost;
+  phase: Phase;
+  name: string;
+}
+
+export interface Ramp {
+  storey: string;
+  path: Vertex[];
+  width: number;
+  landing_start: number;
+  landing_end: number;
+  landing_turn: number;
+  max_slope: number;
+  thickness: number;
+  material: string;
+  base_offset: number;
+  top: TopConstraint;
+  railing_left: boolean;
+  railing_right: boolean;
   name: string;
 }
 
@@ -373,13 +722,94 @@ export interface Space {
   name: string;
   boundary: SpaceBoundary;
   usage: string;
+  phase: Phase;
+  zone?: string;
+  floor_finish?: string;
+  wall_finish?: string;
+  ceiling_finish?: string;
 }
 
-export interface Classification {
-  system: string;
-  code: string;
-  title: string;
+export interface Zone {
+  name: string;
+  category: string;
+  occupancy_density: number;
+}
+
+export interface AreaScheme {
+  name: string;
+  measure: AreaMeasure;
+  usages: string[];
+  zones: string[];
+}
+
+export interface ViewPlane {
+  start: Point2;
+  end: Point2;
+}
+
+export interface ViewCrop {
+  min: Point2;
+  max: Point2;
+}
+
+export interface ViewCamera {
+  target: Point2;
+  target_height: number;
+  azimuth: number;
+  pitch: number;
+  distance: number;
+}
+
+export interface View {
+  building: string;
+  name: string;
+  kind: ViewKind;
+  storey?: string;
+  plane?: ViewPlane;
+  camera?: ViewCamera;
+  cut_height?: number;
+  depth: number;
+  crop?: ViewCrop;
+  hidden: ViewCategory[];
+  phase?: Phase;
+  scale: number;
+  detail: DetailLevel;
+}
+
+export interface ScheduleColumn {
+  key: ScheduleKey;
+  heading?: string;
+  total: boolean;
+}
+
+export interface ScheduleSort {
+  key: ScheduleKey;
+  descending: boolean;
+}
+
+export interface ScheduleFilter {
+  key: ScheduleKey;
+  op: ScheduleOp;
+  value: string;
+}
+
+export interface ScheduleGroup {
+  key: ScheduleKey;
+}
+
+export interface Schedule {
+  name: string;
+  category: ScheduleCategory;
+  columns: ScheduleColumn[];
+  sort: ScheduleSort[];
+  filter: ScheduleFilter[];
+  group: ScheduleGroup[];
+  itemize: boolean;
+  storeys: string[];
+  phases: Phase[];
 }
 
 export type PropertySet = Record<string, Record<string, PropertyValue>>;
+
+export type ClassificationSet = Record<string, string>;
 

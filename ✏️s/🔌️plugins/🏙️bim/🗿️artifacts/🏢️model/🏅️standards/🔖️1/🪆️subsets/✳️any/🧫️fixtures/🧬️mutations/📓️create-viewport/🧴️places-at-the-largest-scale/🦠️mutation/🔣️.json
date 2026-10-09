@@ -1,0 +1,13 @@
+{
+  "mutation": "createViewport",
+  "id": "vp-1",
+  "viewport": {
+    "sheet": "sh-1",
+    "view": "v-ground",
+    "position": {
+      "x": 20,
+      "y": 20
+    },
+    "scale": 1000
+  }
+}

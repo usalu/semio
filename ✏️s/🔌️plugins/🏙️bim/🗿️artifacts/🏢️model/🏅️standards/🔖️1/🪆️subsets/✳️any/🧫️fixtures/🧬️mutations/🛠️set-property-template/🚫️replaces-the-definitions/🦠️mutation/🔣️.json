@@ -1,0 +1,20 @@
+{
+  "mutation": "setPropertyTemplate",
+  "id": "pt-door",
+  "properties": [
+    {
+      "name": "Reference",
+      "kind": "Text",
+      "required": true,
+      "allowed": []
+    },
+    {
+      "name": "Width",
+      "kind": "Length",
+      "required": false,
+      "allowed": [],
+      "minimum": 0.7,
+      "maximum": 2.5
+    }
+  ]
+}

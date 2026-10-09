@@ -4,7 +4,7 @@
 use super::reader::{opt_text, real, refs, text, Doc};
 use super::spatial::{number_of, single_values, string_of};
 use super::Import;
-use crate::{BeamType, Classification, ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, PropertyValue, Rgb, RoofType, SlabType, Swing, WallType, WindowType};
+use crate::{BeamType, CeilingType, Classification, ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, PropertyValue, Rgb, RoofType, SlabType, Swing, WallType, WindowType};
 use semio_s_artifact_stdio_ifc::part21::Part21Value;
 use std::collections::BTreeMap;
 
@@ -145,6 +145,12 @@ pub fn read_types(i: &mut Import<'_>) {
         i.model.slab_types.insert(id.clone(), SlabType { name: text(args, 2), layers });
         i.type_ids.insert(instance.id, id);
     }
+    for (instance, args) in i.doc.rows("IFCCOVERINGTYPE").into_iter().filter(|(_, args)| args.get(9).and_then(Part21Value::as_enum) == Some("CEILING")) {
+        let id = opt_text(args, 7).unwrap_or_else(|| Import::unused(&format!("cet-{}", Import::slug(&text(args, 2))), |c| i.model.ceiling_types.contains_key(c)));
+        let layers = layers_of(i, instance.id, args);
+        i.model.ceiling_types.insert(id.clone(), CeilingType { name: text(args, 2), layers });
+        i.type_ids.insert(instance.id, id);
+    }
     for (instance, args) in i.doc.rows("IFCBUILDINGELEMENTPROXYTYPE").into_iter().filter(|(_, args)| text(args, 8) == "RoofType") {
         let id = opt_text(args, 7).unwrap_or_else(|| Import::unused(&format!("rt-{}", Import::slug(&text(args, 2))), |c| i.model.roof_types.contains_key(c)));
         let layers = layers_of(i, instance.id, args);
@@ -220,7 +226,7 @@ pub fn read_attached(i: &mut Import<'_>) {
         for definition in i.doc.index.definitions.get(&ifc).into_iter().flatten() {
             let Some(set) = i.doc.args(*definition, "IFCPROPERTYSET") else { continue };
             let name = text(set, 2);
-            if name == "Semio_Authoring" {
+            if name == "Semio_Authoring" || name == super::zoning::COVERING_SET {
                 continue;
             }
             let rows: BTreeMap<String, PropertyValue> = single_values(&i.doc, set).into_iter().filter_map(|(property, value)| property_value(&value).map(|value| (property, value))).collect();

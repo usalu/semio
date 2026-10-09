@@ -206,9 +206,42 @@ def ceiling(snapshot, storey, point):
 # endregion 🔖️Ceiling
 
 
+# region 🔖️Hung
+def hung(snapshot, storey, point):
+    """🔲️ `(ceiling id, drop of the underside below the storey top)` of the lowest ceiling of the storey that covers the point, else `None`.
+
+    A ceiling hangs `offset` below the storey top and its layers reach down by the type thickness; a slope lowers the plane by `tan(angle)` per metre along the fall direction,
+    measured from the uphill edge of the boundary (the point of the boundary with the smallest projection on the fall direction)."""
+    candidates = []
+    for ceiling_id, ceiling in snapshot.get("ceilings", {}).items():
+        if ceiling["storey"] != storey:
+            continue
+        kind = snapshot.get("ceiling_types", {}).get(ceiling["ceiling_type"])
+        thickness = math.fsum(max(layer["thickness"], 0.0) for layer in kind["layers"]) if kind else 0.0
+        if thickness <= 1e-12 or len(ceiling["boundary"]) < 3:
+            continue
+        shape = Polygon([xy(vertex["point"]) for vertex in ceiling["boundary"]], [[xy(vertex["point"]) for vertex in hole] for hole in ceiling["holes"]])
+        if not shape.contains(Point(point)):
+            continue
+        drop = ceiling["offset"] + thickness
+        if ceiling.get("slope"):
+            direction = ceiling["slope"]["direction"]
+            along = lambda x, y: x * math.cos(direction) + y * math.sin(direction)
+            uphill = min(along(x, y) for x, y in shape.exterior.coords)
+            drop += math.tan(ceiling["slope"]["angle"]) * (along(point[0], point[1]) - uphill)
+        candidates.append((-drop, ceiling_id, drop))
+    if not candidates:
+        return None
+    _, ceiling_id, drop = sorted(candidates)[0]
+    return ceiling_id, drop
+
+
+# endregion 🔖️Hung
+
+
 # region 🔖️Table
 def refused(status):
-    return {"status": status, "area": 0.0, "perimeter": 0.0, "net_floor_area": 0.0, "clear_height": 0.0, "volume": 0.0, "hole_count": 0, "ceiling_slab": "", "bounding_walls": []}
+    return {"status": status, "area": 0.0, "perimeter": 0.0, "net_floor_area": 0.0, "clear_height": 0.0, "volume": 0.0, "hole_count": 0, "ceiling_slab": "", "ceiling": "", "bounding_walls": []}
 
 
 def row_of(snapshot, storey, status, area, perimeter, holes, shape, point, columns, shapes):
@@ -216,10 +249,13 @@ def row_of(snapshot, storey, status, area, perimeter, holes, shape, point, colum
     height = snapshot["storeys"][storey]["height"]
     found = ceiling(snapshot, storey, point)
     clear = height if found is None else max(height + found[2] - found[1], 0.0)
+    below = hung(snapshot, storey, point)
+    if below is not None:
+        clear = min(clear, max(height - below[1], 0.0))
     cut = shape.difference(unary_union(columns)).area if columns else shape.area
     net = max(area - (shape.area - cut), 0.0)
     walls = sorted(wall_id for wall_id, footprint in shapes.items() if shape.boundary.intersection(footprint.boundary).length > CONTACT)
-    return {"status": status, "area": area, "perimeter": perimeter, "net_floor_area": net, "clear_height": clear, "volume": area * clear, "hole_count": holes, "ceiling_slab": "" if found is None else found[0], "bounding_walls": walls}
+    return {"status": status, "area": area, "perimeter": perimeter, "net_floor_area": net, "clear_height": clear, "volume": area * clear, "hole_count": holes, "ceiling_slab": "" if found is None else found[0], "ceiling": "" if below is None else below[0], "bounding_walls": walls}
 
 
 def tables(snapshot):
@@ -285,7 +321,36 @@ def problems_of(snapshot):
         for (first, left), (second, right) in zip(found, found[1:]):
             if left.intersection(right).area > EXACT and not left.equals(right):
                 problems.append("%s and %s overlap" % (first, second))
-    return problems + parametric_problems(snapshot)
+    return problems + parametric_problems(snapshot) + ceiling_problems(snapshot)
+
+
+def ceiling_problems(snapshot):
+    """🧪️ Lowering a flat ceiling that governs a room by `delta` lowers the clear height of that room by exactly `delta`, and the rooms it does not govern keep theirs."""
+    delta = 0.05
+    before = tables(snapshot)
+    problems = []
+    for ceiling_id, ceiling in snapshot.get("ceilings", {}).items():
+        if ceiling.get("slope"):
+            continue
+        lowered = copy.deepcopy(snapshot)
+        lowered["ceilings"][ceiling_id]["offset"] += delta
+        after = tables(lowered)
+        for space_id, row in before.items():
+            governed = row["ceiling"] == ceiling_id and row["clear_height"] > 0 and row["clear_height"] == max(snapshot["storeys"][snapshot["spaces"][space_id]["storey"]]["height"] - hung(snapshot, snapshot["spaces"][space_id]["storey"], room_point(snapshot, space_id))[1], 0.0)
+            expected = row["clear_height"] - delta if governed else row["clear_height"]
+            if abs(after[space_id]["clear_height"] - expected) > EXACT * 10 and row["ceiling"] != ceiling_id:
+                problems.append("%s: lowering %s changed a room it does not hang over (%.12g to %.12g)" % (space_id, ceiling_id, row["clear_height"], after[space_id]["clear_height"]))
+            elif governed and abs(after[space_id]["clear_height"] - expected) > EXACT * 10:
+                problems.append("%s: lowering %s by %g changed the clear height from %.12g to %.12g" % (space_id, ceiling_id, delta, row["clear_height"], after[space_id]["clear_height"]))
+    return problems
+
+
+def room_point(snapshot, space_id):
+    """📍️ The point the clear height of a space is measured at: its seed, or the representative point of its outline."""
+    tag, body = variant(snapshot["spaces"][space_id]["boundary"])
+    if tag == "Explicit":
+        return sampled(vertices_of(body["outline"])).representative_point().coords[0]
+    return xy(body["seed"])
 
 
 def parametric_problems(snapshot):
@@ -342,7 +407,7 @@ def adapter():
     """🧭️ Registration in the ORACLE role only, by the feature's scenario ids."""
     from semio_repo_test import Adapter
 
-    return Adapter("python").oracle("spaces-rooms", spaces_handler)
+    return Adapter("python").oracle("spaces-rooms", spaces_handler).oracle("spaces-hung-edit", spaces_handler)
 
 
 # endregion 🔖️Handlers

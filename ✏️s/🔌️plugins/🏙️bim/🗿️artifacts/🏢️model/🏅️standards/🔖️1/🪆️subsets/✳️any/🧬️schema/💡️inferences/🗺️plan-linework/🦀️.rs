@@ -7,7 +7,7 @@
 //! one to one onto a `Canvas2d` layer record: `outer`/`vertices` become `Move`/`Line`/`Arc` path segments (the bulge `tan(sweep / 4)` is the
 //! arc), the style picks stroke weight and dash.
 //!
-//! Plan convention: the cut plane is [`CUT_HEIGHT`] above the storey elevation. An element whose vertical span `[low, high)` contains the cut is
+//! Plan convention: the cut plane is the `cut_height` of the storey (the default [`DEFAULT_CUT_HEIGHT`] when it authors none) above the storey elevation. An element whose vertical span `[low, high)` contains the cut is
 //! cut (poché or cut outline), one entirely below is drawn in projection, one entirely above is drawn hidden (dashed): beams, roofs, demolished
 //! walls. Walls lose the part of the footprint that an opening cutting the plane removes; openings add their symbols (door leaf and swing, window
 //! frame, glazing and sill); stairs show risers, the cut line and the up arrow; spaces show outline and tag; grid lines show bubbles and labels.
@@ -19,12 +19,14 @@
 
 use super::super::curtain_layout::CurtainLayout;
 use super::super::opening_frames::OpeningFrame;
+use super::super::annotation_layout::StoreyAnnotations;
 use super::super::spaces::StoreyRooms;
+use super::super::ramp_runs::RampRun;
 use super::super::stair_runs::StairRun;
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::WallLayout;
 use super::super::element_solids::{dep_object, dep_records, dep_types, dep_value};
-use crate::ModelSnapshot;
+use crate::{ModelSnapshot, DEFAULT_CUT_HEIGHT};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::Point;
@@ -37,13 +39,14 @@ pub mod members;
 pub mod annotations;
 #[path = "🪜️stairs/🦀️.rs"]
 pub mod stairs;
+#[path = "🛝️ramps/🦀️.rs"]
+pub mod ramps;
 #[path = "🧱️walls/🦀️.rs"]
 pub mod walls;
+#[path = "📏️notation/🦀️.rs"]
+pub mod notation;
 
 //#region 🔖️Values
-/// ✂️ Height of the cut plane above the storey elevation, in metres: the plan convention for every storey.
-pub const CUT_HEIGHT: f64 = 1.2;
-
 /// 🖊️ The line class of a primitive: how the plan window strokes it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum PlanStyle {
@@ -83,6 +86,33 @@ pub enum PlanKind {
     GridLine,
     GridBubble,
     GridLabel,
+    DimensionLine,
+    DimensionExtension,
+    DimensionMark,
+    DimensionText,
+    TagText,
+    NoteText,
+    LeaderLine,
+    LeaderMark,
+    LeaderText,
+    SectionCut,
+    Silhouette,
+    Edge,
+    Datum,
+    DatumLabel,
+    CeilingEdge,
+    CeilingHole,
+    RampOutline,
+    RampLanding,
+    RampArrow,
+    RampTag,
+}
+
+impl PlanKind {
+    /// 🪧️ Whether the kind belongs to the annotations of a plan (dimensions, tags, text notes, leaders): their texts are placed by the middle of the baseline and carry their own height.
+    pub const fn is_notation(self) -> bool {
+        matches!(self, Self::DimensionLine | Self::DimensionExtension | Self::DimensionMark | Self::DimensionText | Self::TagText | Self::NoteText | Self::LeaderLine | Self::LeaderMark | Self::LeaderText)
+    }
 }
 
 /// 📍️ A path vertex: a point and the bulge `tan(sweep / 4)` of the segment leaving it (zero = straight).
@@ -129,6 +159,8 @@ pub struct PlanText {
     pub detail: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub measure: Option<f64>,
+    #[value(default)]
+    pub height: f64,
 }
 
 /// ▭️ The rectangle that holds every primitive of a plan.
@@ -190,7 +222,9 @@ pub struct Inputs<'a> {
     pub curtains: BTreeMap<&'a str, &'a CurtainLayout>,
     pub frames: BTreeMap<&'a str, &'a OpeningFrame>,
     pub runs: BTreeMap<&'a str, &'a StairRun>,
+    pub ramp_runs: BTreeMap<&'a str, &'a RampRun>,
     pub rooms: Option<&'a StoreyRooms>,
+    pub annotations: Option<&'a StoreyAnnotations>,
 }
 
 /// 🧾️ What every drawing routine needs: the model, the storey, its levels, the inferred values and the cut.
@@ -239,7 +273,7 @@ impl Sheet {
     #[allow(clippy::too_many_arguments)]
     pub fn text(&mut self, element: &str, kind: PlanKind, style: PlanStyle, at: Point, rotation: f64, label: &str, detail: &str, measure: Option<f64>) {
         let id = self.id(element, kind);
-        self.texts.push(PlanText { id, element: element.to_string(), kind, style, x: at.x, y: at.y, rotation, label: label.to_string(), detail: detail.to_string(), measure });
+        self.texts.push(PlanText { id, element: element.to_string(), kind, style, x: at.x, y: at.y, rotation, label: label.to_string(), detail: detail.to_string(), measure, height: 0.0 });
     }
 
     /// 🟫️ Adds a region from geometry loops.
@@ -320,33 +354,46 @@ impl PlanLinework {
 }
 
 impl Sheet {
-    /// 📦️ The finished plan of `storey`.
+    /// 📦️ The finished plan of `storey` whose cut plane lies at `cut_elevation`; the caller that knows the height above the storey sets `cut_height`.
     pub fn finish(self, storey: &str, cut_elevation: f64) -> PlanLinework {
         let mut bounds = None;
         self.regions.iter().for_each(|region| measure(&mut bounds, &region.outer, true));
         self.polylines.iter().for_each(|line| measure(&mut bounds, &line.vertices, line.closed));
         self.texts.iter().for_each(|text| extend(&mut bounds, Point::new(text.x, text.y)));
         let [min_x, min_y, max_x, max_y] = bounds.unwrap_or([0.0; 4]);
-        PlanLinework { storey: storey.to_string(), cut_height: CUT_HEIGHT, cut_elevation, regions: self.regions, polylines: self.polylines, texts: self.texts, bounds: PlanBounds { min_x, min_y, max_x, max_y } }
+        PlanLinework { storey: storey.to_string(), cut_height: 0.0, cut_elevation, regions: self.regions, polylines: self.polylines, texts: self.texts, bounds: PlanBounds { min_x, min_y, max_x, max_y } }
     }
 }
 //#endregion 🔖️Sheet
 
 //#region 🔖️Plan
-/// 🗺️ The plan of one storey from the values its parents inferred.
+/// ✂️ The height above its elevation at which the plan of a storey cuts: the storey's own `cut_height`, else the plan convention.
+pub fn storey_cut_height(snapshot: &ModelSnapshot, storey: &str) -> f64 {
+    snapshot.storeys.get(storey).and_then(|row| row.cut_height).unwrap_or(DEFAULT_CUT_HEIGHT)
+}
+
+/// 🗺️ The plan of one storey from the values its parents inferred, cut at the height its storey authors.
 pub fn plan_of(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>) -> PlanLinework {
+    plan_at(snapshot, storey, inputs, storey_cut_height(snapshot, storey))
+}
+
+/// ✂️ The plan of one storey cut `cut_height` metres above its elevation: the plan of a view, which authors its own cut height.
+pub fn plan_at(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, cut_height: f64) -> PlanLinework {
     let own = inputs.levels.get(storey).copied().unwrap_or_default();
-    let cx = Context { snapshot, storey, own, levels: &inputs.levels, inputs, cut: own.elevation + CUT_HEIGHT };
+    let cx = Context { snapshot, storey, own, levels: &inputs.levels, inputs, cut: own.elevation + cut_height };
     let mut sheet = Sheet::default();
     annotations::draw_grids(&mut sheet, &cx);
     walls::draw(&mut sheet, &cx);
     members::draw(&mut sheet, &cx);
     stairs::draw(&mut sheet, &cx);
+    ramps::draw(&mut sheet, &cx);
     annotations::draw_spaces(&mut sheet, &cx);
-    sheet.finish(storey, cx.cut)
+    notation::draw(&mut sheet, inputs.annotations);
+    PlanLinework { cut_height, ..sheet.finish(storey, cx.cut) }
 }
 
 /// 🗺️ The plan of every storey (the `Plan` nodes of the model graph).
+#[cfg(test)]
 pub fn compute_plan_linework(snapshot: &ModelSnapshot) -> BTreeMap<String, PlanLinework> {
     std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::PLANS }>(snapshot).plan_linework)
 }
@@ -373,19 +420,24 @@ pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
     let columns = snapshot.columns.iter().filter(|(_, row)| row.storey == storey);
     let beams = snapshot.beams.iter().filter(|(_, row)| row.storey == storey);
     let slabs = snapshot.slabs.iter().filter(|(_, row)| row.storey == storey);
+    let ceilings = snapshot.ceilings.iter().filter(|(_, row)| row.storey == storey);
     let spaces = snapshot.spaces.iter().filter(|(_, row)| row.storey == storey).map(|(id, space)| (id.clone(), dep_object([("number", dep_value(&space.number)), ("name", dep_value(&space.name)), ("boundary", dep_value(&space.boundary))])));
     let grids = snapshot.grids.iter().filter(|(_, row)| Some(&row.building) == building.as_ref());
     dep_object([
         ("storey", dep_value(&snapshot.storeys.get(storey).cloned())),
         ("curtain_walls", dep_records(snapshot.curtain_walls.iter().filter(|(_, row)| row.storey == storey))),
+        ("curtain_wall_types", dep_types(snapshot.curtain_walls.values().filter(|row| row.storey == storey).map(|row| &row.curtain_wall_type), &snapshot.curtain_wall_types)),
         ("columns", dep_records(columns.clone())),
         ("column_types", dep_types(columns.map(|(_, row)| &row.column_type), &snapshot.column_types)),
         ("beams", dep_records(beams.clone())),
         ("beam_types", dep_types(beams.map(|(_, row)| &row.beam_type), &snapshot.beam_types)),
         ("slabs", dep_records(slabs.clone())),
         ("slab_types", dep_types(slabs.map(|(_, row)| &row.slab_type), &snapshot.slab_types)),
+        ("ceilings", dep_records(ceilings.clone())),
+        ("ceiling_types", dep_types(ceilings.map(|(_, row)| &row.ceiling_type), &snapshot.ceiling_types)),
         ("roofs", dep_records(snapshot.roofs.iter().filter(|(_, row)| row.storey == storey))),
         ("railings", dep_records(snapshot.railings.iter().filter(|(_, row)| row.storey == storey))),
+        ("ramps", dep_records(snapshot.ramps.iter().filter(|(_, row)| row.storey == storey))),
         ("spaces", DslValue::object(spaces)),
         ("grids", DslValue::object(grids.map(|(id, grid)| (id.clone(), dep_value(grid))))),
     ])
@@ -393,7 +445,7 @@ pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
 
 /// 📖️ The snapshot collections the plan reads.
 pub const READS: &[&str] = &[
-    "storeys", "buildings", "sites", "walls", "wall_types", "curtain_walls", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "roofs", "stairs", "railings", "spaces", "grids", "materials",
+    "storeys", "buildings", "sites", "walls", "wall_types", "curtain_walls", "curtain_wall_types", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "stairs", "ramps", "railings", "spaces", "grids", "materials",
 ];
 //#endregion 🔖️Dependency
 

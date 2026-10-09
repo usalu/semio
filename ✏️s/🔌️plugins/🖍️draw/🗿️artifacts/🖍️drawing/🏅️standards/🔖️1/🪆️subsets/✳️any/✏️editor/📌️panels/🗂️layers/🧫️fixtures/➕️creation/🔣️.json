@@ -1,0 +1,14 @@
+{
+  "kinds": [
+    "path",
+    "shape:rect",
+    "text",
+    "group",
+    "boolean",
+    "shape:ellipse",
+    "shape:line",
+    "shape:polygon",
+    "image",
+    "trace"
+  ]
+}

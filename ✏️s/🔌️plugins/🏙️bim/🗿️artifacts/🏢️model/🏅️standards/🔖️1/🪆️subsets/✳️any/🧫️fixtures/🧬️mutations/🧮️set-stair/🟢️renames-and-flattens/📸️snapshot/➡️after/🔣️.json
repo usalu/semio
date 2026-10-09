@@ -3,13 +3,13 @@
   "beams": {},
   "buildings": {
     "bldg-1": {
-      "elevation": 0.0,
+      "elevation": 0,
       "name": "House",
       "origin": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 0,
+        "y": 0
       },
-      "rotation": 0.0,
+      "rotation": 0,
       "site": "site-1"
     }
   },
@@ -21,33 +21,25 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
           "start": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           }
         }
       },
-      "base_offset": 0.0,
-      "mullion": {
-        "Rectangle": {
-          "depth": 0.08,
-          "width": 0.06
-        }
-      },
-      "mullion_material": "m-brick",
+      "base_offset": 0,
+      "phase": "New",
       "name": "Facade",
-      "panel_material": "m-brick",
       "storey": "st-ground",
+      "curtain_wall_type": "cwt-1",
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
-      },
-      "u_spacing": 1.5,
-      "v_spacing": 1.2
+      }
     }
   },
   "door_types": {
@@ -62,6 +54,64 @@
       "width": 0.9
     }
   },
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 1.5 x 1.2",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.2
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.08,
+          "width": 0.06
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.08,
+          "width": 0.06
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-brick",
+      "mullion_material": "m-brick"
+    },
+    "cwt-2": {
+      "name": "Curtain wall 1.5 x 1.2",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.2
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.08
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.08
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-brick",
+      "mullion_material": "m-brick"
+    }
+  },
   "grids": {},
   "materials": {
     "m-brick": {
@@ -72,9 +122,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800.0,
+      "density": 1800,
       "name": "Brick",
-      "specific_heat": 900.0
+      "specific_heat": 900
     }
   },
   "openings": {},
@@ -93,11 +143,11 @@
   "sites": {
     "site-1": {
       "boundary": [],
-      "elevation": 100.0,
-      "latitude": 47.0,
-      "longitude": 8.0,
+      "elevation": 100,
+      "latitude": 47,
+      "longitude": 8,
       "name": "Plot",
-      "true_north": 0.0
+      "true_north": 0
     }
   },
   "slab_types": {},
@@ -105,17 +155,18 @@
   "spaces": {},
   "stairs": {
     "s-1": {
-      "direction": 0.0,
+      "direction": 0,
       "flight": "Straight",
-      "landing_depth": 1.0,
+      "landing_depth": 1,
       "max_riser": 0.175,
       "min_tread": 0.27,
+      "phase": "New",
       "name": "Garden stair",
-      "nosing": 0.0,
+      "nosing": 0,
       "riser": "Closed",
       "start": {
-        "x": 1.0,
-        "y": 1.0
+        "x": 1,
+        "y": 1
       },
       "storey": "st-ground",
       "stringer": {
@@ -125,11 +176,11 @@
       },
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "tread_thickness": 0.04,
-      "width": 1.0
+      "width": 1
     }
   },
   "storeys": {
@@ -141,7 +192,7 @@
     },
     "st-ground": {
       "building": "bldg-1",
-      "height": 3.0,
+      "height": 3,
       "level": 0,
       "name": "Ground"
     }
@@ -163,16 +214,16 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
           "start": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           }
         }
       },
-      "base_offset": 0.0,
+      "base_offset": 0,
       "location": "Center",
       "name": "East",
       "phase": "New",
@@ -188,23 +239,23 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           },
           "start": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           }
         }
       },
-      "base_offset": 0.0,
+      "base_offset": 0,
       "location": "Center",
       "name": "South",
       "phase": "New",
       "storey": "st-ground",
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "wall_type": "wt-300"

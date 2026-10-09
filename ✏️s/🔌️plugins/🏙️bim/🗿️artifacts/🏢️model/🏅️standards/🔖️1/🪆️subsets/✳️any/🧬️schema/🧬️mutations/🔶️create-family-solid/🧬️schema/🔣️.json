@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-family-solid/schema.json",
+  "title": "CreateFamilySolid",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "solid"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createFamilySolid"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Solid id",
+          "de": "Körper-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "solid": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/FamilySolid",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Family solid",
+          "de": "Familienkörper"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

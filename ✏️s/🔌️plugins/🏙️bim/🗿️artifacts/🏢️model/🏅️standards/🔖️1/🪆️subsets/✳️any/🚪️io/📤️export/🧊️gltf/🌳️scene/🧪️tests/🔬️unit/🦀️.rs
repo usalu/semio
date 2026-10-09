@@ -1,6 +1,11 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::gltf::projection::through;
 use crate::standards::v1::subsets::any::io::export::gltf::testkit::house;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+
+fn build(snapshot: &ModelSnapshot) -> (GltfModel, Vec<String>) {
+    registry::with_inference(None, snapshot, |inferred| super::build(snapshot, inferred))
+}
 
 fn parent_of(model: &GltfModel, child: usize) -> Option<usize> {
     model.nodes.iter().position(|node| node.children.contains(&child))

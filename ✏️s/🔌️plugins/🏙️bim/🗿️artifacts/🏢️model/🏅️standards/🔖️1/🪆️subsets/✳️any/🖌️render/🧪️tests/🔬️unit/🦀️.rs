@@ -31,14 +31,3 @@ fn placed_elements_are_listed_with_their_storey_and_name() {
     assert_eq!(element_name(&model, "nothing"), "");
     assert_eq!(storey_of(&model, "nothing"), None);
 }
-
-#[test]
-fn the_inference_memo_serves_an_unchanged_model_from_one_allocation_and_replaces_it_on_change() {
-    let model = demo();
-    let first = solids(&model);
-    assert!(Rc::ptr_eq(&first, &solids(&model.clone())), "an equal snapshot reuses the memo");
-    assert_eq!(first.len(), 4, "the demo's four walls have solids");
-    let mut edited = model;
-    edited.walls.get_mut("w-east").expect("the east wall").name = "Renamed".into();
-    assert!(!Rc::ptr_eq(&first, &solids(&edited)), "a changed snapshot replaces the memo");
-}

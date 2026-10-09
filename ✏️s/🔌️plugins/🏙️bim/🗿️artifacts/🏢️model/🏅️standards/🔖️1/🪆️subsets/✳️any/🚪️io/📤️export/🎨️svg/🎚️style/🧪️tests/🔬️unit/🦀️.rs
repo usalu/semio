@@ -1,6 +1,6 @@
 use super::*;
 
-const KINDS: [PlanKind; 27] = [
+const KINDS: [PlanKind; 32] = [
     PlanKind::WallCut,
     PlanKind::WallLayer,
     PlanKind::WallOutline,
@@ -28,6 +28,11 @@ const KINDS: [PlanKind; 27] = [
     PlanKind::GridLine,
     PlanKind::GridBubble,
     PlanKind::GridLabel,
+    PlanKind::SectionCut,
+    PlanKind::Silhouette,
+    PlanKind::Edge,
+    PlanKind::Datum,
+    PlanKind::DatumLabel,
 ];
 
 #[test]
@@ -58,4 +63,11 @@ fn the_style_sheet_strokes_each_class_dashes_only_hidden_and_fills_only_cut_and_
     assert_eq!(sheet.matches("stroke-dasharray").count(), 1);
     assert!(sheet.contains(".hidden{stroke-dasharray") && sheet.contains("path.region.cut{fill:") && sheet.contains("path.region.projection{fill:") && sheet.contains("fill-rule:evenodd"));
     assert!(!sheet.contains('<') && !sheet.contains('&'));
+}
+
+#[test]
+fn every_kind_of_view_has_its_own_kebab_case_class_and_the_style_sheet_sets_the_font_on_the_sheet() {
+    let kinds = [ViewKind::Plan, ViewKind::CeilingPlan, ViewKind::Section, ViewKind::Elevation, ViewKind::Orthographic, ViewKind::Perspective];
+    assert_eq!(kinds.map(view_class), ["plan", "ceiling-plan", "section", "elevation", "orthographic", "perspective"]);
+    assert!(sheet().contains(".sheet{font-family:sans-serif}"));
 }

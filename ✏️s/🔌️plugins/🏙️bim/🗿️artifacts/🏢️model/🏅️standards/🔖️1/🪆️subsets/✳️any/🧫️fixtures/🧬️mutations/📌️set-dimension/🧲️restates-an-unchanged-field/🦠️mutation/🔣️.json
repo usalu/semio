@@ -1,0 +1,6 @@
+{
+  "mutation": "setDimension",
+  "id": "dim-south",
+  "offset": -1,
+  "name": "South wall length"
+}

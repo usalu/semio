@@ -1,0 +1,263 @@
+{
+  "nodes": {
+    "dashboard-authority-verification": {
+      "name": "dashboard-authority-verification",
+      "type": "app",
+      "data": {
+        "root": ".",
+        "name": "dashboard-authority-verification",
+        "tags": [
+          "npm:private"
+        ],
+        "metadata": {
+          "targetGroups": {},
+          "js": {
+            "packageName": "dashboard-authority-verification",
+            "isInPackageManagerWorkspaces": false
+          }
+        },
+        "targets": {
+          "authority": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ../📜️script.ts verify authority",
+              "cwd": ".",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "lock": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ../📜️script.ts lock",
+              "cwd": ".",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "cursor": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ../📜️script.ts verify unit quick terminal::tests::the_launcher_gives_text_editors_a_visible_cursor",
+              "cwd": ".",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "unit": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ../📜️script.ts verify unit quick",
+              "cwd": ".",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "terminal": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ../📜️script.ts verify unit quick terminal::",
+              "cwd": ".",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "editing": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts verify unit quick terminal::tests::launcher_text_editing_follows_the_shared_input_caret",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "inspect": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts inspect",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "pty": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts pty",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "ptyall": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts pty all",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "borders": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts pty rendered_form_text_remains_inside_its_window",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "unicode": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts pty the_terminal_driver_preserves_committed_unicode_text",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "unicodeinput": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts pty launcher_text_editing_follows_the_visible_hardware_cursor",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "confirm": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts verify unit quick terminal::tests::confirmation_is_operable_with_the_mouse",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "button": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts verify unit quick terminal::tests::the_configured_start_action_needs_one_click",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "coverage": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts battle coverage",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "journeys": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts battle journeys",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "load": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts battle load",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scalar": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts ui scalar_width_rendering_preserves_combining_marks",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "ui": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "cwd": ".",
+              "command": "bun ../📜️script.ts ui tui::",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "script": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": ".",
+              "usePty": false,
+              "command": "bun ../📜️script.ts script-run"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "scriptlogs": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ../📜️script.ts script-run logs",
+              "cwd": ".",
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    }
+  },
+  "externalNodes": {},
+  "dependencies": {
+    "dashboard-authority-verification": []
+  },
+  "version": "6.0",
+  "errors": [],
+  "computedAt": 1791479840813
+}

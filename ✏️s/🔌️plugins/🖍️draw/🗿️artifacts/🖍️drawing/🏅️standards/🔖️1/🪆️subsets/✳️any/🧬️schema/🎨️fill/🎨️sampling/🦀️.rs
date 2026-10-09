@@ -1,11 +1,12 @@
 //! 🎨️ Prepared local-space paint with stable stops and logarithmic lookup.
 use crate::{FillStyle,GradientStop};
-use semio_framework_2d::retirement::{WorkRetirementCounter,WorkRetirementProgress};
+use semio_framework_2d::physical_work_retirement;
 
 pub const MAX_PAINT_STOPS:usize=4096;
 fn unit(value:f64)->bool {value.is_finite()&&(0.0..=1.0).contains(&value)}
 fn valid_color(color:&[f64;4])->bool {color.iter().all(|value|unit(*value))}
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct GradientRamp {stops:Vec<GradientStop>}
 impl GradientRamp {
     pub fn new(stops:&semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>)->Result<Self,&'static str> {
@@ -28,19 +29,14 @@ impl GradientRamp {
         Ok(std::array::from_fn(|index|left.color[index]+(right.color[index]-left.color[index])*t))
     }
     /// 🧹️ Consumes the actual fixed-width stop buffer before retiring the ramp header.
-    pub fn into_retirement(self)->GradientRampRetirement {GradientRampRetirement {ramp:Some(self),slot:0,counter:WorkRetirementCounter::default()}}
+    pub fn into_retirement(self)->GradientRampRetirement {GradientRampRetirement::new(self)}
 }
 
-pub struct GradientRampRetirement {ramp:Option<GradientRamp>,slot:u8,counter:WorkRetirementCounter}
-impl GradientRampRetirement {
-    pub fn terminal_is_empty(&self)->bool {self.ramp.is_none()}
-    pub fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,&'static str> {
-        let ramp=&mut self.ramp;let slot=&mut self.slot;
-        self.counter.advance(grant,||{if *slot==0{ramp.as_mut().unwrap().stops=Vec::new();*slot=1;false}else{*ramp=None;true}})
-    }
-}
+physical_work_retirement!(GradientRampRetirement,GradientRamp,&'static str,|_:&str|"Ramp retirement refused its physical grant");
 
+#[derive(semio_framework_value::RetireOwned)]
 enum Geometry {Solid([f64;4]),Linear {origin:[f64;2],unit:[f64;2],length:f64},Radial {center:[f64;2],radius:f64}}
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PreparedFill {geometry:Geometry,ramp:Option<GradientRamp>}
 impl PreparedFill {
     pub fn new(fill:&FillStyle)->Result<Self,&'static str> {
@@ -78,19 +74,9 @@ impl PreparedFill {
         self.ramp.as_ref().expect("gradient geometry owns ramp").sample(offset)
     }
     /// 🖌️ Adopts its genuine ramp frontier and retains paint until that child is terminal.
-    pub fn into_retirement(mut self)->PreparedFillRetirement {
-        let ramp=self.ramp.take().map(GradientRamp::into_retirement);PreparedFillRetirement {fill:Some(self),ramp,slot:0,counter:WorkRetirementCounter::default()}
-    }
+    pub fn into_retirement(self)->PreparedFillRetirement {PreparedFillRetirement::new(self)}
 }
-
-pub struct PreparedFillRetirement {fill:Option<PreparedFill>,ramp:Option<GradientRampRetirement>,slot:u8,counter:WorkRetirementCounter}
-impl PreparedFillRetirement {
-    pub fn terminal_is_empty(&self)->bool {self.fill.is_none()&&self.ramp.is_none()}
-    pub fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,&'static str> {
-        let fill=&mut self.fill;let ramp=&mut self.ramp;let slot=&mut self.slot;
-        self.counter.advance(grant,||{if *slot==0 {if let Some(child)=ramp {if !child.terminal_is_empty(){child.advance(1).expect("valid ramp unit grant");return false;}}*ramp=None;*slot=1;false}else{*fill=None;true}})
-    }
-}
+physical_work_retirement!(PreparedFillRetirement,PreparedFill,&'static str,|_:&str|"Paint retirement refused its physical grant");
 
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]

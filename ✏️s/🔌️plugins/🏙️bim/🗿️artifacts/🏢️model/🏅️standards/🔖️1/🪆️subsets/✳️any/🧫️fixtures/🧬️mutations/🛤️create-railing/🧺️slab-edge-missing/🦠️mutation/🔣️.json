@@ -1,0 +1,33 @@
+{
+  "mutation": "createRailing",
+  "id": "rl-9",
+  "railing": {
+    "storey": "st-ground",
+    "path": [],
+    "height": 1,
+    "post_spacing": 1.2,
+    "profile": {
+      "Rectangle": {
+        "width": 0.06,
+        "depth": 0.04
+      }
+    },
+    "post_profile": {
+      "Rectangle": {
+        "width": 0.05,
+        "depth": 0.05
+      }
+    },
+    "infill": "None",
+    "material": "m-steel",
+    "base_offset": 0,
+    "host": {
+      "element": "sl-host",
+      "side": "Left",
+      "edge": 9,
+      "inset": 0.05
+    },
+    "phase": "New",
+    "name": "Hosted guard"
+  }
+}

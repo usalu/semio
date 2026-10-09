@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """🗺️ Third-party ORACLE for the `s.bim.model@1` inference `🗺️plan-linework`.
 
-The subject (Rust, `semio-s-artifact-bim-model`) cuts every storey at 1.2 m above its elevation and draws the architectural plan as typed
+The subject (Rust, `semio-s-artifact-bim-model`) cuts every storey at the cut height it authors (1.2 m above its elevation by default) and draws the architectural plan as typed
 primitives. This file re-derives, from the SAME committed snapshots and without sharing a line of code with the subject, the measures a
 geometry library can adjudicate and compares them with the subject's `plan-metrics` table:
 
@@ -29,6 +29,8 @@ storeys that share or skip a level and spaces that share a number are decided by
 """
 
 # region 🔖️Imports
+import csv
+import io
 import json
 import math
 import sys
@@ -43,8 +45,8 @@ from shapely.ops import unary_union
 
 
 # region 🔖️Vocabulary
-CUT_HEIGHT = 1.2
-"""✂️ The plan convention: the cut plane lies 1.2 m above the storey elevation."""
+DEFAULT_CUT_HEIGHT = 1.2
+"""✂️ The plan convention: a storey that authors no `cut_height` is cut 1.2 m above its elevation."""
 
 ARC_SEGMENTS = 4096
 """📐️ Chords an arc or circle is sampled into before shapely measures it."""
@@ -551,7 +553,7 @@ def plan_metrics(snapshot):
     levels = storey_levels(snapshot)
     table, problems = {}, []
     for storey in sorted(snapshot["storeys"]):
-        cut = levels[storey][0] + CUT_HEIGHT
+        cut = levels[storey][0] + snapshot["storeys"][storey].get("cut_height", DEFAULT_CUT_HEIGHT)
         walls, wall_audit = wall_cut_area(snapshot, storey, levels, cut)
         columns, column_audit = column_cut_area(snapshot, storey, levels, cut)
         table[storey] = {
@@ -624,11 +626,105 @@ def diagnostics_handler(ctx):
     return Outcome(table, raw=json.dumps(table, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
 
 
+ADJUDICATED_CODES = ("clash.wall-wall", "clash.wall-column", "clash.column-column", "clash.wall-beam", "clash.beam-column", "clash.beam-beam", "reference.wall-type", "reference.opening-host", "opening.outside-host", "degenerate.axis-length", "storey.level-duplicate", "storey.level-gap", "space.duplicate-number")
+"""⚖️ The codes of the diagnostics a library can adjudicate on its own, by their slugs."""
+
+CSV_HEADER = ["severity", "code", "storey", "elements", "missing", "message_en", "message_de"]
+"""📊️ The columns of the CSV export of the findings."""
+
+
+def export_uri(ctx, name):
+    """📤️ The URI of the committed export file a scenario names."""
+    return next(candidate for candidate in ctx.step_input_uris() if "📤️export" in candidate and candidate.endswith(name))
+
+
+def export_measure(finding):
+    """📏️ The measure of an exported finding: the overlap area of a clash, the levels a gap skips, else zero."""
+    values = finding["values"]
+    if finding["code"] == "storey.level-gap":
+        return float(values["to"]) - float(values["from"])
+    return float(values.get("overlap_area", 0.0))
+
+
+def export_json_table(document):
+    """🧾️ The adjudicated table of the JSON export, read with the json module: `"<slug>|<ids>" -> {measure}`."""
+    return {"%s|%s" % (finding["code"], "+".join(finding["elements"])): {"measure": export_measure(finding)} for finding in document["findings"] if finding["code"] in ADJUDICATED_CODES}
+
+
+def export_json_handler(ctx):
+    """🧾️ Oracle answer for the JSON export: python's json module reads the committed file and shapely's table must agree with it."""
+    from semio_repo_test import Outcome
+
+    document = json.loads(ctx.input_bytes(export_uri(ctx, "⚠️diagnostics.json")).decode("utf-8"))
+    table = rounded(export_json_table(document))
+    problems = differences("table", rounded(diagnostics_table(case_snapshot(ctx))), table)
+    if problems:
+        raise AssertionError("; ".join(problems))
+    return Outcome(table, raw=json.dumps(table, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+
+PANEL_SEVERITIES = (("error", "error"), ("warning", "warning"), ("info", "note"))
+"""🚨️ The severities of the exported findings and the keys of the panel groups, most severe first."""
+
+
+def panel_group_table(document, snapshot):
+    """🚨️ The groups of the diagnostics panel recomputed from the exported findings: per severity, the storeys by level (the storeys the model lacks after the known ones, the whole model last) with the findings counted per kind (the domain of the code)."""
+    levels = {identifier: storey["level"] for identifier, storey in snapshot["storeys"].items()}
+    table = {}
+    for token, key in PANEL_SEVERITIES:
+        groups = {}
+        for finding in document["findings"]:
+            if finding["severity"] != token:
+                continue
+            storey = finding["storey"]
+            rank = (0, levels[storey], storey) if storey in levels else ((1, 0, storey) if storey is not None else (2, 0, ""))
+            kinds = groups.setdefault(rank, {})
+            kind = finding["code"].split(".", 1)[0]
+            kinds[kind] = kinds.get(kind, 0) + 1
+        table[key] = [{"storey": rank[2] if rank[0] < 2 else None, "kinds": {kind: float(count) for kind, count in kinds.items()}} for rank, kinds in sorted(groups.items())]
+    return table
+
+
+def panel_groups_handler(ctx):
+    """🚨️ Oracle answer for the panel groups: the exported JSON is read with the json module and grouped with plain dictionaries."""
+    from semio_repo_test import Outcome
+
+    document = json.loads(ctx.input_bytes(export_uri(ctx, "⚠️diagnostics.json")).decode("utf-8"))
+    table = panel_group_table(document, case_snapshot(ctx))
+    return Outcome(table, raw=json.dumps(table, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+
+def export_csv_table(text):
+    """📊️ The CSV export read with the csv module: `"<position>|<slug>|<ids>" -> {severity, storey, missing, message_en, message_de}`; a record that breaks RFC 4180 or the header fails."""
+    rows = list(csv.reader(io.StringIO(text, newline=""), strict=True))
+    if rows[0] != CSV_HEADER:
+        raise AssertionError("header %r" % rows[0])
+    table = {}
+    for position, row in enumerate(rows[1:]):
+        if len(row) != len(CSV_HEADER):
+            raise AssertionError("record %d has %d fields" % (position, len(row)))
+        record = dict(zip(CSV_HEADER, row))
+        table["%04d|%s|%s" % (position, record["code"], record["elements"])] = {"severity": record["severity"], "storey": record["storey"], "missing": record["missing"], "message_en": record["message_en"], "message_de": record["message_de"]}
+    return table
+
+
+def export_csv_handler(ctx):
+    """📊️ Oracle answer for the CSV export: python's csv module reads the committed file; every finding shapely adjudicates must be one of its records."""
+    from semio_repo_test import Outcome
+
+    table = export_csv_table(ctx.input_bytes(export_uri(ctx, "⚠️diagnostics.csv")).decode("utf-8"))
+    present = {key.split("|", 1)[1] for key in table}
+    missing = [key for key in diagnostics_table(case_snapshot(ctx)) if key not in present]
+    if missing:
+        raise AssertionError("the export lacks findings shapely adjudicates: %s" % missing)
+    return Outcome(table, raw=json.dumps(table, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+
 def adapter():
     """🧭️ Registration in the ORACLE role only, by the feature's scenario ids."""
     from semio_repo_test import Adapter
 
-    return Adapter("python").oracle("plan-metrics-house", plan_metrics_handler).oracle("plan-metrics-curved", plan_metrics_handler).oracle("diagnostics-clean", diagnostics_handler).oracle("diagnostics-defects", diagnostics_handler)
+    return Adapter("python").oracle("plan-metrics-house", plan_metrics_handler).oracle("plan-metrics-curved", plan_metrics_handler).oracle("plan-metrics-cut-heights", plan_metrics_handler).oracle("diagnostics-clean", diagnostics_handler).oracle("diagnostics-defects", diagnostics_handler).oracle("diagnostics-export-json", export_json_handler).oracle("diagnostics-export-csv", export_csv_handler).oracle("diagnostics-panel-groups", panel_groups_handler)
 
 
 # endregion 🔖️Handlers

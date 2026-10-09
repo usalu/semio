@@ -480,7 +480,7 @@ impl ArtifactEditor for WavEditor {
                 authoring_seed: request.authoring_seed.clone(),
             };
             let tool_id = wavEditor_command_id(&request.command);
-            let payload = ArtifactRetainedCommandPayload::try_new(
+            let payload = ArtifactRetainedCommandPayload::new(
                 ArtifactRetainedCommandInputs {
                     command: *request.command,
                     snapshot: request.snapshot,
@@ -496,7 +496,7 @@ impl ArtifactEditor for WavEditor {
                 edit_audio::MAXIMUM_RAW_BYTES,
                 edit_audio::CAPACITY.work_items(),
                 Box::new(edit_audio::EditAudioWork::new(tool_id)),
-            )?;
+            );
             return Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
         }
         if !STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
@@ -513,7 +513,7 @@ impl ArtifactEditor for WavEditor {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -529,7 +529,7 @@ impl ArtifactEditor for WavEditor {
             STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
             Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, wavEditor_retained_reduce, wavEditor_retained_extent)),
-        )?;
+        );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_document_store_initialization_job(

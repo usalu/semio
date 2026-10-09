@@ -1607,6 +1607,20 @@ async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
     abort_and_close(&mut app).await;
 }
 
+/// ⚖️ LAW: a window config partition closes through the physical release its own store publishes — its resident backings (the 1 024-slot
+/// snapshot read registry alone is far over one ordinary close page) are priced by the app's close demand, so a published window config
+/// reaches the exact terminal-empty witness instead of answering `Pending { 0, 0 }` against an ordinary-page grant for ever.
+#[semio_framework_async_macros::async_test]
+async fn a_published_window_config_closes_through_its_own_published_physical_demand() {
+    let fixture = fixture();
+    let mut app = toy_app(1).await;
+    publish_window_selection(&mut app, text(&fixture["windowSettingsReads"]["startWindowId"]), 1).await;
+    for _ in 0..8 {
+        app.advance_typed_operation_publication().await.expect("turn");
+    }
+    close(&mut app);
+}
+
 /// ⚖️ LAW: a tick dirties the bodies of the window kinds the run declares it renders in, next to the panel and the scene
 /// windows, and those bodies read the run's progress, step ring and latest tick payload through `ArtifactView::tool_run()`.
 #[semio_framework_async_macros::async_test]

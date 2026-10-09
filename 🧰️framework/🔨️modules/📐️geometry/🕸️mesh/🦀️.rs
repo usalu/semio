@@ -2,7 +2,7 @@
 //!
 //! [`TriMesh`] stores positions, normals and counter-clockwise (outward) triangles; builders emit one vertex triple per triangle (flat shading), [`TriMesh::crease_normals`] smooths curved parts.
 //! Measures use the divergence theorem, so they are exact for closed, outward-wound meshes: `volume = sum(a . (b x c)) / 6`.
-//! Builders: [`extrude`] / [`extrude_loops`] (polygon with holes between two height planes), [`prism_between`] (two equal-length rings), [`sweep_profile`] (vertical profile swept along bulged path segments with mitered corners).
+//! Builders: [`extrude`] / [`extrude_loops`] (polygon with holes between two height planes), [`prism_between`] (two equal-length rings), [`sweep_profile`] (vertical profile swept along bulged path segments with mitered corners), [`revolve_profile`] (profile turned about the Z axis).
 //! Hand the result to a renderer via [`TriMesh::positions_f32`], [`TriMesh::normals_f32`], [`TriMesh::indices_flat`].
 
 use crate::bulge::BulgeSeg;
@@ -491,27 +491,32 @@ struct Station {
     point: Point,
     lateral: Vec2,
     scale: f64,
+    fraction: f64,
 }
 
 fn stations(path: &[BulgeSeg], tolerance: f64) -> Vec<Station> {
+    let total: f64 = path.iter().map(BulgeSeg::length).sum();
+    let fraction = |before: f64, seg: &BulgeSeg, t: f64| if total > 0.0 { (before + seg.length() * t) / total } else { 0.0 };
     let mut out: Vec<Station> = Vec::new();
+    let mut before = 0.0;
     for (k, seg) in path.iter().enumerate() {
         if k == 0 {
-            out.push(Station { point: seg.start, lateral: perp(seg.tangent_at(0.0)), scale: 1.0 });
+            out.push(Station { point: seg.start, lateral: perp(seg.tangent_at(0.0)), scale: 1.0, fraction: 0.0 });
         } else {
             let (n_in, n_out) = (perp(path[k - 1].tangent_at(1.0)), perp(seg.tangent_at(0.0)));
             let sum = n_in + n_out;
             let m = if sum.hypot() > 1e-9 { sum / sum.hypot() } else { n_in };
             let last = out.len() - 1;
-            out[last] = Station { point: seg.start, lateral: m, scale: 1.0 / m.dot(n_in).max(0.2) };
+            out[last] = Station { point: seg.start, lateral: m, scale: 1.0 / m.dot(n_in).max(0.2), fraction: fraction(before, seg, 0.0) };
         }
         let mut points = Vec::new();
         seg.flatten_into(tolerance, &mut points);
         let count = points.len();
         for (i, p) in points.into_iter().enumerate() {
             let t = if i + 1 == count { 1.0 } else { seg.param_of(p) };
-            out.push(Station { point: p, lateral: perp(seg.tangent_at(t)), scale: 1.0 });
+            out.push(Station { point: p, lateral: perp(seg.tangent_at(t)), scale: 1.0, fraction: fraction(before, seg, t) });
         }
+        before += seg.length();
     }
     out
 }
@@ -520,6 +525,13 @@ fn stations(path: &[BulgeSeg], tolerance: f64) -> Vec<Station> {
 /// Profile coordinates are `(u, v)`: `u` horizontal to the left of the direction of travel, `v` up from `base_z`; rings may have either orientation.
 /// Corners between segments are mitered, arcs are flattened within `tolerance`, both ends are capped. Curved parts get smooth normals.
 pub fn sweep_profile(outer: &[Point], holes: &[Vec<Point>], path: &[BulgeSeg], base_z: f64, tolerance: f64) -> TriMesh {
+    sweep_profile_ramped(outer, holes, path, base_z, 0.0, tolerance)
+}
+
+/// 📐️ [`sweep_profile`] along a path that climbs linearly with its arc length by `rise` metres (negative descends): the reference line of the profile starts at `base_z` and ends at `base_z + rise`, and the cross-section
+/// is turned about the horizontal lateral axis so that it stays perpendicular to the inclined path (the profile `v` runs along the up direction of the slope, not along the vertical). Corners and caps behave like [`sweep_profile`]; the horizontal
+/// sweep is unchanged, so with `rise = 0` the result is identical.
+pub fn sweep_profile_ramped(outer: &[Point], holes: &[Vec<Point>], path: &[BulgeSeg], base_z: f64, rise: f64, tolerance: f64) -> TriMesh {
     let outer = dedup_ring(&oriented(&dedup_ring(outer), true));
     let holes: Vec<Vec<Point>> = holes.iter().map(|h| dedup_ring(&oriented(&dedup_ring(h), false))).filter(|h| h.len() >= 3).collect();
     let mut mesh = TriMesh::new();
@@ -527,9 +539,13 @@ pub fn sweep_profile(outer: &[Point], holes: &[Vec<Point>], path: &[BulgeSeg], b
         return mesh;
     }
     let st = stations(path, tolerance);
+    let run: f64 = path.iter().map(BulgeSeg::length).sum();
+    let slope = if run > 0.0 { rise.atan2(run) } else { 0.0 };
+    let (sine, cosine) = slope.sin_cos();
     let place = |s: &Station, p: Point| {
-        let q = s.point + s.lateral * (p.x * s.scale);
-        [q.x, q.y, base_z + p.y]
+        let ahead = Vec2::new(s.lateral.y, -s.lateral.x);
+        let q = s.point + s.lateral * (p.x * s.scale) - ahead * (p.y * sine);
+        [q.x, q.y, base_z + rise * s.fraction + p.y * cosine]
     };
     let rings: Vec<&Vec<Point>> = std::iter::once(&outer).chain(holes.iter()).collect();
     let triangulation = triangulate(&outer, &holes);
@@ -545,6 +561,39 @@ pub fn sweep_profile(outer: &[Point], holes: &[Vec<Point>], path: &[BulgeSeg], b
                 let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
                 mesh.push_quad(place(&w[0], a), place(&w[0], b), place(&w[1], b), place(&w[1], a));
             }
+        }
+    }
+    mesh.crease_normals(35f64.to_radians())
+}
+
+/// 🌀 Solid of revolution: a profile in the half plane `(r, z)` (`x` is the distance from the axis, `y` the height along it, rings of either orientation, no vertex left of the axis) turned about the Z axis through
+/// `sweep` radians (clamped to a full turn). A partial sweep is capped at both ends; arcs are flattened within `tolerance`. Curved parts get smooth normals. An invalid profile or a non-positive sweep yields an empty mesh.
+pub fn revolve_profile(profile: &[Point], sweep: f64, tolerance: f64) -> TriMesh {
+    let ring = dedup_ring(&oriented(&dedup_ring(profile), true));
+    let mut mesh = TriMesh::new();
+    if ring.len() < 3 || !(sweep > 0.0) || !sweep.is_finite() || ring.iter().any(|p| !(p.x >= -1e-9) || !p.y.is_finite()) {
+        return mesh;
+    }
+    let sweep = sweep.min(std::f64::consts::TAU);
+    let full = sweep >= std::f64::consts::TAU - 1e-12;
+    let reach = ring.iter().map(|p| p.x).fold(0.0, f64::max);
+    let step = if reach > tolerance { 2.0 * (1.0 - tolerance / reach).acos() } else { sweep };
+    let steps = ((sweep / step.max(1e-6)).ceil() as usize).clamp(if full { 8 } else { 1 }, 4096);
+    let place = |p: Point, turn: f64| [p.x.max(0.0) * turn.cos(), p.x.max(0.0) * turn.sin(), p.y];
+    let angle = |i: usize| sweep * i as f64 / steps as f64;
+    for i in 0..steps {
+        let (from, to) = (angle(i), angle(i + 1));
+        for j in 0..ring.len() {
+            let (a, b) = (ring[j], ring[(j + 1) % ring.len()]);
+            mesh.push_quad(place(a, from), place(a, to), place(b, to), place(b, from));
+        }
+    }
+    if !full {
+        let triangulation = triangulate(&ring, &[]);
+        for t in &triangulation.triangles {
+            let [a, b, c] = t.map(|i| triangulation.vertices[i as usize]);
+            mesh.push_triangle(place(a, 0.0), place(b, 0.0), place(c, 0.0));
+            mesh.push_triangle(place(a, sweep), place(c, sweep), place(b, sweep));
         }
     }
     mesh.crease_normals(35f64.to_radians())

@@ -433,7 +433,7 @@ fn retained_presence_overlapping_rosters_retire_shared_entries_once_across_worke
 fn retained_presence_read_return_releases_alias_before_cross_worker_reclamation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧹️retirement.json")).unwrap();
     for variant in fixture["readerReturn"]["variants"].as_array().unwrap() {
-        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let registry = crate::os_store::SnapshotReadRegistryHandle::new();
         let root = Arc::new(fixture["readerReturn"]["text"].as_str().unwrap().to_string());
         let lease = registry.try_issue(root.clone()).unwrap();
         let variant = variant.as_str().unwrap().to_string();
@@ -468,7 +468,7 @@ fn retained_presence_read_return_releases_alias_before_cross_worker_reclamation(
 
 #[test]
 fn retained_presence_read_return_injected_alias_barrier_preserves_unreturned_guard() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let root = Arc::new(String::from("aä🧵"));
     let lease = registry.try_issue(root.clone()).unwrap();
     let barrier = Arc::new(std::sync::Barrier::new(2));
@@ -502,7 +502,7 @@ fn retained_presence_read_return_injected_alias_barrier_preserves_unreturned_gua
 
 #[test]
 fn retained_presence_read_transfer_contention_preserves_unreturned_capability() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let root = Arc::new(String::from("aä🧵"));
     let lease = registry.try_issue(root.clone()).unwrap();
     let read = ErasedSnapshotRead::new(root, lease);

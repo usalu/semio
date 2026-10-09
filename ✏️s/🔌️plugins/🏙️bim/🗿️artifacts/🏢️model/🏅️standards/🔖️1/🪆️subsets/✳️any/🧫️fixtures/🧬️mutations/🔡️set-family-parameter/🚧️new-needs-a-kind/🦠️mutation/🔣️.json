@@ -1,0 +1,6 @@
+{
+  "mutation": "setFamilyParameter",
+  "family": "fam-table",
+  "name": "height",
+  "value": "0.74 m"
+}

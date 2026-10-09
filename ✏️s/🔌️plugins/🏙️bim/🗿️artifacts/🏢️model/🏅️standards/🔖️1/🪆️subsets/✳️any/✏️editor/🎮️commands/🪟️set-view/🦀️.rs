@@ -1,9 +1,10 @@
-//! 🪟️ `setView`: sets one named view parameter of the addressed window, persisted in that window's own config: the plan's storey and cut height, the world's projection, storey
-//! isolation and visibility and section plane, the section's line and depth. It never touches the document. Choosing the working storey is also shared as presence.
+//! 🪟️ `setView`: sets one named view parameter of the addressed window, persisted in that window's own config: the plan and section windows' authored view, the world's projection, storey
+//! isolation and visibility and section plane. It never touches the document. Choosing a plan view shares its storey as the working storey in presence.
 
 use crate::editor::bim::kit::fault;
-use crate::editor::bim::modes::edit::windows::{plan, section, world};
+use crate::editor::bim::modes::edit::windows::{plan, schedule, section, world};
 use crate::editor::bim::BimDispatchCtx;
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
 use crate::{ModelMutation, ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
@@ -31,15 +32,12 @@ fn unknown(window: &str, field: &str) -> Fault {
 fn plan_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &mut BimDispatchCtx) -> Result<plan::config::BimPlanWindowConfig, Fault> {
     let mut config = ctx.plan.clone();
     match payload.field.as_str() {
-        "storey" => {
-            if !payload.value.is_empty() && !snapshot.storeys.contains_key(&payload.value) {
-                return Err(fault("bim.view.storey-missing", format!("no storey '{}'", payload.value)));
-            }
-            config.storey = payload.value.clone();
+        "view" => {
+            let storey = snapshot.views.get(&payload.value).filter(|view| view.kind.is_plan()).and_then(|view| view.storey.clone()).ok_or_else(|| fault("bim.view.view-missing", format!("no plan view '{}'", payload.value)))?;
+            config.view = payload.value.clone();
             config.framed = false;
-            ctx.presence_out.push(ctx.presence.on_storey(&payload.value));
+            ctx.presence_out.push(ctx.presence.on_storey(&storey));
         }
-        "cut_height" => config.cut_height = number(payload)?.clamp(0.0, 10.0),
         other => return Err(unknown(plan::WINDOW_KIND_ID, other)),
     }
     Ok(config)
@@ -49,6 +47,9 @@ fn world_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx)
     let mut config = ctx.world.clone();
     match payload.field.as_str() {
         "projection" => {
+            if !world::PROJECTION_KINDS.contains(&payload.value.as_str()) {
+                return Err(fault("bim.view.value-invalid", format!("'{}' is not a projection of the 3D window", payload.value)));
+            }
             config.projection.kind = payload.value.clone();
             config.framed = false;
         }
@@ -65,6 +66,10 @@ fn world_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx)
                 config.hidden_storeys.push(payload.value.clone());
             }
         }
+        "view_phase" => {
+            let phase = ViewPhase::parse(&payload.value).ok_or_else(|| fault("bim.view.value-invalid", format!("'{}' is not a phase filter", payload.value)))?;
+            config.view_phase = phase.key().to_string();
+        }
         "section_enabled" => config.section_enabled = flag(payload)?,
         "section_axis" if matches!(payload.value.as_str(), "x" | "y" | "z") => config.section_axis = payload.value.clone(),
         "section_axis" => return Err(fault("bim.view.value-invalid", format!("'{}' is not an axis", payload.value))),
@@ -74,18 +79,33 @@ fn world_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx)
     Ok(config)
 }
 
-fn section_view(payload: &SetView, ctx: &BimDispatchCtx) -> Result<section::config::BimSectionWindowConfig, Fault> {
+fn section_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<section::config::BimSectionWindowConfig, Fault> {
     let mut config = ctx.section.clone();
     match payload.field.as_str() {
-        "line" => {
-            let parts: Vec<f64> = payload.value.split(',').filter_map(|part| part.trim().parse::<f64>().ok()).collect();
-            match parts.as_slice() {
-                [start_x, start_y, end_x, end_y] => (config.start_x, config.start_y, config.end_x, config.end_y, config.framed) = (*start_x, *start_y, *end_x, *end_y, false),
-                _ => return Err(fault("bim.view.value-invalid", "a section line is 'x1, y1, x2, y2'")),
+        "view" => {
+            if !snapshot.views.get(&payload.value).is_some_and(|view| view.kind.is_vertical()) {
+                return Err(fault("bim.view.view-missing", format!("no section or elevation view '{}'", payload.value)));
             }
+            config.view = payload.value.clone();
+            config.framed = false;
         }
-        "depth" => config.depth = number(payload)?.max(0.0),
         other => return Err(unknown(section::WINDOW_KIND_ID, other)),
+    }
+    Ok(config)
+}
+
+fn schedule_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<schedule::config::BimScheduleWindowConfig, Fault> {
+    let mut config = ctx.schedule.clone();
+    match payload.field.as_str() {
+        "schedule" => {
+            if !payload.value.is_empty() && !snapshot.schedules.contains_key(&payload.value) {
+                return Err(fault("bim.view.schedule-missing", format!("no schedule '{}'", payload.value)));
+            }
+            config.schedule = payload.value.clone();
+            config.editing = false;
+        }
+        "editing" => config.editing = flag(payload)? && snapshot.schedules.contains_key(&config.schedule),
+        other => return Err(unknown(schedule::WINDOW_KIND_ID, other)),
     }
     Ok(config)
 }
@@ -96,7 +116,8 @@ pub fn handle(payload: &SetView, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &C
     let mutation = match ctx.window_kind.as_str() {
         plan::WINDOW_KIND_ID => plan::config::addressed(&view, plan_view(payload, doc.snapshot, ctx)?)?,
         world::WINDOW_KIND_ID => world::config::addressed(&view, world_view(payload, doc.snapshot, ctx)?)?,
-        section::WINDOW_KIND_ID => section::config::addressed(&view, section_view(payload, ctx)?)?,
+        section::WINDOW_KIND_ID => section::config::addressed(&view, section_view(payload, doc.snapshot, ctx)?)?,
+        schedule::WINDOW_KIND_ID => schedule::config::addressed(&view, schedule_view(payload, doc.snapshot, ctx)?)?,
         other => return Err(fault("bim.view.window-unsupported", format!("the window '{other}' has no view parameters"))),
     };
     emit.window_config_mutations.push(mutation);

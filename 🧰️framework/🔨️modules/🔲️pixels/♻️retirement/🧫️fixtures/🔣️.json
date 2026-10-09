@@ -1,0 +1,96 @@
+{
+  "cases": [
+    {
+      "name": "last mask backing",
+      "input": {
+        "kind": "mask",
+        "bytes": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "aliases": 0,
+        "weakLeases": 0
+      }
+    },
+    {
+      "name": "borrowed mask backing",
+      "input": {
+        "kind": "mask",
+        "bytes": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "aliases": 1,
+        "weakLeases": 0
+      }
+    },
+    {
+      "name": "weak mask lease",
+      "input": {
+        "kind": "mask",
+        "bytes": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "aliases": 0,
+        "weakLeases": 1
+      }
+    },
+    {
+      "name": "last image backing",
+      "input": {
+        "kind": "image",
+        "bytes": [
+          64,
+          128,
+          0,
+          255
+        ],
+        "aliases": 0,
+        "weakLeases": 0
+      }
+    },
+    {
+      "name": "borrowed image backing",
+      "input": {
+        "kind": "image",
+        "bytes": [
+          64,
+          128,
+          0,
+          255
+        ],
+        "aliases": 1,
+        "weakLeases": 0
+      }
+    }
+  ],
+  "laws": [
+    "zero-grant-retains-original",
+    "last-owner-requires-whole-physical-release",
+    "borrowed-owner-preserves-source",
+    "weak-lease-preserves-backing",
+    "terminal-destructor-releases-no-backing"
+  ],
+  "workBytes": 16,
+  "interruptions": [
+    0,
+    1,
+    10,
+    100,
+    4096
+  ],
+  "nativeOwners": [
+    "coverage",
+    "affine",
+    "composite",
+    "flatten",
+    "stroke"
+  ]
+}

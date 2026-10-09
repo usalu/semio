@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-curtain-panel-override/schema.json",
+  "title": "CreateCurtainPanelOverride",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "curtain_panel_override"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createCurtainPanelOverride"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Panel override id",
+          "de": "Paneel-Abweichung-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "curtain_panel_override": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CurtainPanelOverride",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Panel override",
+          "de": "Paneel-Abweichung"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

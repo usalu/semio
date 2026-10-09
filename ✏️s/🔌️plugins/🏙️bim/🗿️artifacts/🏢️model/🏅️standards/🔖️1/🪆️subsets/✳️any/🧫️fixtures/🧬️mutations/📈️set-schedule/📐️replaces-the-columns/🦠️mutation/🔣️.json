@@ -1,0 +1,40 @@
+{
+  "mutation": "setSchedule",
+  "id": "sch-walls",
+  "columns": [
+    {
+      "key": {
+        "Field": {
+          "field": "Name"
+        }
+      },
+      "total": false
+    },
+    {
+      "key": {
+        "Field": {
+          "field": "Type"
+        }
+      },
+      "total": false
+    },
+    {
+      "key": {
+        "Field": {
+          "field": "NetSideArea"
+        }
+      },
+      "heading": "Area",
+      "total": true
+    },
+    {
+      "key": {
+        "Property": {
+          "set": "Pset_WallCommon",
+          "name": "FireRating"
+        }
+      },
+      "total": false
+    }
+  ]
+}

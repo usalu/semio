@@ -312,7 +312,7 @@ impl ArtifactViewer for Grid2dViewer {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -328,7 +328,7 @@ impl ArtifactViewer for Grid2dViewer {
             GRID2D_VIEW_RETAINED_RAW_BYTES,
             1,
             Box::new(Grid2dViewCommandWork { tool_id, consumed: false }),
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

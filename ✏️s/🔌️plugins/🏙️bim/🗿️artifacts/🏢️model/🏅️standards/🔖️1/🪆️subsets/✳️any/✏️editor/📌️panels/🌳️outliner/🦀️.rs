@@ -2,7 +2,7 @@
 //! say, each storey holds one group per element kind, and openings sit under the wall that hosts them. Every container is a windowed node that stamps its full extent and builds only the
 //! slice the host scrolled to, so a model of thousands of elements costs the first paint one slice. Rows are the element ids, so a click selects the same element the plan and the world do.
 
-use crate::editor::bim::entities::{kind_of, ordered_storeys, EntityKind, ENTITIES};
+use crate::editor::bim::entities::{fields_of, kind_of, ordered_storeys, EntityKind, ENTITIES};
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 use crate::editor::bim::terminology::BimLabels;
@@ -15,6 +15,10 @@ use semio_framework_plugin::PanelTabDefinition;
 use semio_framework_plugin::PanelTabKind;
 use semio_framework_plugin::PanelTreeBuilder;
 use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::{row_action, row_target, RowActionPlacement};
+use semio_framework_plugin::UiFixedMap;
+use semio_framework_plugin::UiText;
 use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use semio_framework_ui_locale::Label;
@@ -24,9 +28,12 @@ use semio_framework_ui_locale::LocalizedLabel;
 pub const BODY_KEY: &str = "bim.edit.outliner";
 const ROOT: &str = "bim-outliner";
 const SECTION: &str = "bim-outliner.model";
-/// ➕️ The kinds the panel offers an add row for when their create mutation exists, in tree order.
 /// 📂️ A group of at most this many elements opens on first paint; a larger one waits for the host to open it and then streams its slice.
 const OPEN_GROUP_LIMIT: usize = 12;
+/// 🏘️ The kinds that belong to the project, not to a storey: they are one group each under the sites.
+const PROJECT_KINDS: [&str; 2] = ["zone", "area-scheme"];
+/// 🖐️ The drag-data key of a movable element row; the storey row it is dropped on answers with a `setField` that carries it as the entity to move.
+pub const DRAG_ELEMENT_MIME: &str = "application/x-semio-bim-element";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -42,12 +49,26 @@ pub fn definition() -> PanelTabDefinition {
 }
 //#endregion 🔖️Definition
 
+#[path = "🖼️views/🦀️.rs"]
+pub mod views;
+
 //#region 🔖️Rows
+/// 🔭️ The kinds of view the outliner offers to add besides the plan of an entity row: what `createView` makes for the building, with the label of the row.
+const VIEW_ADDS: [(&str, fn(&BimLabels) -> semio_framework_ui_locale::LabelText); 5] = [
+    ("ceiling-plan", |labels| labels.name_ceiling_plan),
+    ("section", |labels| labels.name_section),
+    ("elevation", |labels| labels.name_elevation),
+    ("elevations", |labels| labels.name_elevations),
+    ("perspective", |labels| labels.name_camera),
+];
+
 /// 🌳️ One row of the outliner's single logical roster.
 enum Row<'a> {
     Add(&'static EntityKind),
+    AddView(usize),
     Empty,
     Site(&'a str),
+    Project(&'static str),
 }
 
 fn roster<'a>(snapshot: &'a ModelSnapshot) -> Vec<Row<'a>> {
@@ -55,11 +76,16 @@ fn roster<'a>(snapshot: &'a ModelSnapshot) -> Vec<Row<'a>> {
     if snapshot.sites.is_empty() && snapshot.buildings.is_empty() {
         rows.push(Row::Empty);
     }
+    rows.extend(PROJECT_KINDS.into_iter().filter(|kind| kind_of(kind).is_some_and(|row| !(row.ids)(snapshot).is_empty())).map(Row::Project));
     rows.extend(ENTITIES.iter().filter(|row| !row.library && row.create.is_some()).map(Row::Add));
+    if !snapshot.buildings.is_empty() {
+        rows.extend((0..VIEW_ADDS.len()).map(Row::AddView));
+    }
     rows
 }
 
-fn item(row_id: &str, name: &str, icon: &str, granularity: Option<&str>, description: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+/// 🌳️ A tree row with a label, an icon and, when it has them, a granularity and a description.
+pub fn item(row_id: &str, name: &str, icon: &str, granularity: Option<&str>, description: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
     let mut item = semio_framework_ui_contract::tree_item(ui_label(name)?).try_id(row_id).map_err(|_| crate::editor::bim::kit::ui_capacity_error())?.icon(ui_text(icon)?);
     if let Some(granularity) = granularity {
         item = item.granularity(ui_text(granularity)?);
@@ -70,7 +96,8 @@ fn item(row_id: &str, name: &str, icon: &str, granularity: Option<&str>, descrip
     Ok(item)
 }
 
-fn leaf(builder: semio_framework_ui_contract::TreeItemBuilder) -> UiAssemblyResult<BuiltNode> {
+/// 🍃️ The builder as a closed row without children.
+pub fn leaf(builder: semio_framework_ui_contract::TreeItemBuilder) -> UiAssemblyResult<BuiltNode> {
     builder.default_open(false).try_build().map_err(|_| crate::editor::bim::kit::ui_capacity_error())
 }
 
@@ -78,9 +105,45 @@ fn entity_item(snapshot: &ModelSnapshot, row: &EntityKind, id: &str, description
     item(id, &(row.name)(snapshot, id).unwrap_or_else(|| id.to_string()), row.icon, Some(row.kind), description)
 }
 
-fn element_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, row: &'static EntityKind, id: &str) -> UiAssemblyResult<BuiltNode> {
-    let length = inference.wall_layout.get(id).map(|layout| format!("{:.2} m", layout.length));
-    let builder = entity_item(snapshot, row, id, length.as_deref())?;
+/// 🪜️ Whether the kind stands on a storey the user may change: its table row has a writable `storey` field.
+fn movable(row: &EntityKind) -> bool {
+    fields_of(row).any(|field| field.key == "storey" && field.write.is_some())
+}
+
+/// 🖐️ The payload a drag of the element row `id` carries.
+fn drag_data(id: &str) -> UiAssemblyResult<UiFixedMap<UiText>> {
+    let mut data = UiFixedMap::default();
+    data.try_push(ui_text(DRAG_ELEMENT_MIME)?, ui_text(id)?).map_err(|_| crate::editor::bim::kit::ui_capacity_error())?;
+    Ok(data)
+}
+
+/// 🎯️ The storey row as the drop target of a movable element: dropping sets the `storey` field of the dragged element to this storey through `setField`, which is `set-element-storey`.
+fn drop_onto(builder: semio_framework_ui_contract::TreeItemBuilder, storey: &str) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+    let args = ui_value_map([("field", ui_value_text("storey")?), ("value", ui_value_text(storey)?)])?;
+    let (action, args) = bim_action("setField", Some(args))?;
+    builder.try_on_with(Trigger::Drop, action, args.ok_or_else(crate::editor::bim::kit::ui_capacity_error)?).map_err(|_| crate::editor::bim::kit::ui_capacity_error())
+}
+
+/// 🪜️ The row of an element that can change its storey: draggable onto a storey row, and its menu offers the move to the storey above and below, the keyboard and screen-reader way to the same `set-element-storey`.
+fn movable_item(builder: semio_framework_ui_contract::TreeItemBuilder, labels: &BimLabels, id: &str) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+    let target = row_target(BIM_EDITOR_CONTROLLER_ID, Some(ui_value_map([("id", ui_value_text(id)?)])?), None)?;
+    let full = |_| crate::editor::bim::kit::ui_capacity_error();
+    builder
+        .draggable(true)
+        .drag_data(drag_data(id)?)
+        .target(target)
+        .try_row_action(row_action("arrow-up", labels.cmd_storey_up.as_str(), "storeyUp", RowActionPlacement::Menu)?)
+        .map_err(full)?
+        .try_row_action(row_action("arrow-down", labels.cmd_storey_down.as_str(), "storeyDown", RowActionPlacement::Menu)?)
+        .map_err(full)
+}
+
+fn element_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, row: &'static EntityKind, id: &str) -> UiAssemblyResult<BuiltNode> {
+    let length = inference.wall_layout.get(id).map(|layout| format!("{:.2} m", layout.length)).or_else(|| inference.zone_totals.get(id).map(|zone| format!("{} · {:.2} m²", zone.spaces, zone.net_area))).or_else(|| inference.scheme_totals.get(id).map(|scheme| format!("{} · {:.2} m²", scheme.spaces, scheme.area)));
+    let mut builder = entity_item(snapshot, row, id, length.as_deref())?;
+    if movable(row) {
+        builder = movable_item(builder, labels, id)?;
+    }
     let hosted: Vec<&String> = snapshot.openings.iter().filter(|(_, opening)| opening.host == id).map(|(opening, _)| opening).collect();
     let opening = kind_of("opening").unwrap_or(row);
     if hosted.is_empty() {
@@ -93,16 +156,16 @@ fn group_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &Mo
     let group_id = format!("{storey}::{}", row.kind);
     let count = ids.len().to_string();
     let builder = item(&group_id, (row.group)(labels).as_str(), row.icon, None, Some(&count))?;
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, &group_id, ids.len() <= OPEN_GROUP_LIMIT, ids.len(), |index| element_row(windows, snapshot, inference, row, &ids[index]))
+    semio_framework_plugin::tree_window_indexed_item(windows, builder, &group_id, ids.len() <= OPEN_GROUP_LIMIT, ids.len(), |index| element_row(windows, snapshot, inference, labels, row, &ids[index]))
 }
 
 fn storey_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, id: &str) -> UiAssemblyResult<BuiltNode> {
     let storey = kind_of("storey").unwrap_or(&ENTITIES[0]);
     let elevation = inference.storey_levels.get(id).map(|level| format!("{:+.2} m", level.elevation));
-    let builder = entity_item(snapshot, storey, id, elevation.as_deref())?;
+    let builder = drop_onto(entity_item(snapshot, storey, id, elevation.as_deref())?, id)?;
     let groups: Vec<(&'static EntityKind, Vec<String>)> = ENTITIES
         .iter()
-        .filter(|row| !row.library && !matches!(row.kind, "site" | "building" | "storey" | "grid" | "opening"))
+        .filter(|row| !row.library && !matches!(row.kind, "site" | "building" | "storey" | "grid" | "opening" | "view"))
         .map(|row| (row, (row.ids)(snapshot).into_iter().filter(|candidate| (row.parent)(snapshot, candidate).as_deref() == Some(id)).collect::<Vec<_>>()))
         .filter(|(_, ids)| !ids.is_empty())
         .collect();
@@ -118,13 +181,14 @@ fn building_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: 
     let builder = entity_item(snapshot, building, id, None)?;
     let storeys = ordered_storeys(snapshot, id);
     let grids: Vec<&String> = snapshot.grids.iter().filter(|(_, line)| line.building == id).map(|(grid_id, _)| grid_id).collect();
-    let total = storeys.len() + grids.len();
+    let total = storeys.len() + grids.len() + usize::from(!views::groups(snapshot, id).is_empty());
     if total == 0 {
         return leaf(builder);
     }
     semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, total, |index| match storeys.get(index) {
         Some(storey) => storey_row(windows, snapshot, inference, labels, storey),
-        None => leaf(entity_item(snapshot, grid, grids[index - storeys.len()], None)?),
+        None if index < storeys.len() + grids.len() => leaf(entity_item(snapshot, grid, grids[index - storeys.len()], None)?),
+        None => views::views_row(windows, snapshot, labels, id).unwrap_or_else(|| Err(crate::editor::bim::kit::ui_capacity_error())),
     })
 }
 
@@ -138,9 +202,20 @@ fn site_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &Mod
     semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, buildings.len(), |index| building_row(windows, snapshot, inference, labels, buildings[index]))
 }
 
+fn project_group(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, kind: &str) -> UiAssemblyResult<BuiltNode> {
+    let row = kind_of(kind).unwrap_or(&ENTITIES[0]);
+    group_row(windows, snapshot, inference, labels, "project", row, &(row.ids)(snapshot))
+}
+
 fn add_row(row: &EntityKind, labels: &BimLabels) -> UiAssemblyResult<BuiltNode> {
     let args = ui_value_map([("kind", ui_value_text(row.kind)?), ("parent", ui_value_text("")?), ("name", ui_value_text("")?)])?;
     tree_item_with_icon(format!("{ROOT}.add.{}", row.kind), Label::data(BimLabels::named(labels.action_add_named, (row.label)(labels).as_str())), "plus", bim_action("createEntity", Some(args)))
+}
+
+fn add_view_row(index: usize, labels: &BimLabels) -> UiAssemblyResult<BuiltNode> {
+    let (kind, name) = VIEW_ADDS[index];
+    let args = ui_value_map([("kind", ui_value_text(kind)?), ("parent", ui_value_text("")?), ("name", ui_value_text("")?)])?;
+    tree_item_with_icon(format!("{ROOT}.add-view.{kind}"), Label::data(BimLabels::named(labels.action_add_named, name(labels).as_str())), "plus", bim_action("createView", Some(args)))
 }
 
 fn empty_row(labels: &BimLabels) -> UiAssemblyResult<BuiltNode> {
@@ -156,8 +231,10 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &Bim
     PanelTreeBuilder::new(ROOT)?
         .window_section(windows, SECTION, Some(ui_label(title)?), true, &rows, |row| match row {
             Row::Add(kind) => add_row(kind, labels),
+            Row::AddView(index) => add_view_row(*index, labels),
             Row::Empty => empty_row(labels),
             Row::Site(id) => site_row(windows, snapshot, inference, labels, id),
+            Row::Project(kind) => project_group(windows, snapshot, inference, labels, kind),
         })?
         .interaction_domain(BIM_EDITOR_CONTROLLER_ID, BIM_ELEMENT_DOMAIN)?
         .build()

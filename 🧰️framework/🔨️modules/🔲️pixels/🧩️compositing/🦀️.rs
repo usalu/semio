@@ -1,6 +1,7 @@
 //! 🧩️ Isolated RGBA compositing following https://www.w3.org/TR/compositing-1/.
 use crate::{editing::{validate_extent,validate_image,PixelEditError,PixelProgress},RasterImage};
-use semio_framework_2d::retirement::{WorkRetirementCounter,WorkRetirementProgress};
+use crate::retirement::{RasterLease,MaskLease};
+use semio_framework_2d::physical_work_retirement;
 use std::{collections::BTreeMap,sync::Arc};
 
 pub type CompositeAffine = [f64;6];
@@ -23,21 +24,28 @@ impl std::str::FromStr for CompositeBlend {
 }
 
 #[derive(Clone,Debug)]
-pub struct CompositeMask {pub width:u32,pub height:u32,pub coverage:Arc<[u8]>,pub transform:CompositeAffine,pub invert:bool}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct CompositeMask {pub width:u32,pub height:u32,pub coverage:MaskLease,pub transform:CompositeAffine,pub invert:bool}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum CompositeContent {Pixels(String),Group(Vec<CompositeLayer>),Adjustment {brightness:f64,contrast:f64}}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CompositeLayer {pub opacity:f64,pub blend:CompositeBlend,pub visible:bool,pub transform:CompositeAffine,pub mask:Option<CompositeMask>,pub content:CompositeContent}
 #[derive(Clone,Debug)]
 pub struct CompositeInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub images:BTreeMap<String,Arc<RasterImage>>,pub layers:Vec<CompositeLayer>}
 
 #[derive(Clone,Debug)]
-struct Mask {width:u32,height:u32,coverage:Arc<[u8]>,inverse:CompositeAffine,invert:bool}
+#[derive(semio_framework_value::RetireOwned)]
+struct Mask {width:u32,height:u32,coverage:MaskLease,inverse:CompositeAffine,invert:bool}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 struct Style {opacity:f64,blend:CompositeBlend,mask:Option<Mask>}
 #[derive(Debug)]
-enum Command {Begin,Commit,Draw {image:Arc<RasterImage>,inverse:CompositeAffine,style:Style},End(Style),Adjust {slope:f64,intercept:f64,style:Style}}
+#[derive(semio_framework_value::RetireOwned)]
+enum Command {Begin,Commit,Draw {image:RasterLease,inverse:CompositeAffine,style:Style},End(Style),Adjust {slope:f64,intercept:f64,style:Style}}
 #[derive(Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 struct Step {depth:usize,command:Command}
 const IDENTITY:CompositeAffine=[1.0,0.0,0.0,1.0,0.0,0.0];
 const TILE:usize=256;
@@ -106,7 +114,7 @@ fn source_over(back:[f64;4],front:[f64;3],alpha:f64,mode:CompositeBlend)->[f64;4
     out[3]=out_alpha;out
 }
 
-struct Compiler<'a> {images:&'a BTreeMap<String,Arc<RasterImage>>,commands:Vec<Step>,nodes:usize,max_depth:usize}
+struct Compiler<'a> {images:&'a [(String,RasterLease)],commands:Vec<Step>,nodes:usize,max_depth:usize}
 impl Compiler<'_> {
     fn layers(&mut self,layers:&[CompositeLayer],parent:CompositeAffine,depth:usize,enabled:bool)->Result<(),PixelEditError> {
         if depth>32{return Err(PixelEditError::Invalid("Layer nesting exceeds compositor budget"));}
@@ -120,13 +128,13 @@ impl Compiler<'_> {
             let mask=if let Some(mask)=&layer.mask {
                 if mask.coverage.len()!=validate_extent(mask.width,mask.height)?{return Err(PixelEditError::Invalid("Invalid mask coverage"));}
                 inverse(mask.transform)?;
-                Some(Mask {width:mask.width,height:mask.height,coverage:Arc::clone(&mask.coverage),invert:mask.invert,inverse:inverse(multiply(world,mask.transform))?})
+                Some(Mask {width:mask.width,height:mask.height,coverage:MaskLease(Arc::clone(&mask.coverage.0)),invert:mask.invert,inverse:inverse(multiply(world,mask.transform))?})
             }else{None};
             let style=Style {opacity:layer.opacity,blend:layer.blend,mask};
             match &layer.content {
                 CompositeContent::Pixels(key)=>{
-                    let image=self.images.get(key).ok_or(PixelEditError::Invalid("Layer image is missing"))?;
-                    if active{self.commands.push(Step {depth,command:Command::Draw {image:Arc::clone(image),inverse:inv,style}});}
+                    let image=self.images.iter().find(|(id,_)|id==key).map(|(_,image)|image).ok_or(PixelEditError::Invalid("Layer image is missing"))?;
+                    if active{self.commands.push(Step {depth,command:Command::Draw {image:image.clone(),inverse:inv,style}});}
                 }
                 CompositeContent::Group(children)=>{
                     if active{self.commands.push(Step {depth:depth+1,command:Command::Begin});}
@@ -145,19 +153,24 @@ impl Compiler<'_> {
 }
 
 /// 🧱️ Incremental tile compositor sharing immutable source assets and retaining a private candidate.
-pub struct CompositeJob {commands:Vec<Step>,buffers:Vec<Vec<[f64;4]>>,candidate:Option<RasterImage>,origin:[f64;2],width:usize,count:usize,total:usize,tile:usize,command:usize,offset:usize,completed:usize,cancelled:bool}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct CompositeJob {images:Vec<(String,RasterLease)>,layers:Vec<CompositeLayer>,commands:Vec<Step>,buffers:Vec<Vec<[f64;4]>>,candidate:Option<RasterImage>,origin:[f64;2],width:usize,count:usize,total:usize,tile:usize,command:usize,offset:usize,completed:usize,cancelled:bool}
 impl CompositeJob {
     pub fn new(input:CompositeInput)->Result<Self,PixelEditError> {
-        let count=validate_extent(input.width,input.height)?;
-        if !input.origin.iter().all(|v|v.is_finite()){return Err(PixelEditError::Invalid("Origin must contain finite coordinates"));}
-        if input.images.len()>1024{return Err(PixelEditError::Invalid("Image count exceeds compositor budget"));}
-        for image in input.images.values(){validate_image(image)?;}
-        let mut compiler=Compiler {images:&input.images,commands:Vec::new(),nodes:0,max_depth:0};
-        compiler.layers(&input.layers,IDENTITY,0,true)?;
+        Self::new_owned(input.width,input.height,input.origin,input.images.into_iter().map(|(key,image)|(key,RasterLease(image))).collect(),input.layers)
+    }
+    /// 🎟️ Retains original ordered image and layer backing for explicitly funded retirement.
+    pub fn new_owned(width:u32,height:u32,origin:[f64;2],images:Vec<(String,RasterLease)>,layers:Vec<CompositeLayer>)->Result<Self,PixelEditError> {
+        let count=validate_extent(width,height)?;
+        if !origin.iter().all(|v|v.is_finite()){return Err(PixelEditError::Invalid("Origin must contain finite coordinates"));}
+        if images.len()>1024{return Err(PixelEditError::Invalid("Image count exceeds compositor budget"));}
+        for (at,(key,image)) in images.iter().enumerate(){if images[..at].iter().any(|(id,_)|id==key){return Err(PixelEditError::Invalid("Image identifiers must be unique"));}validate_image(image)?;}
+        let mut compiler=Compiler {images:&images,commands:Vec::new(),nodes:0,max_depth:0};
+        compiler.layers(&layers,IDENTITY,0,true)?;
         compiler.commands.push(Step {depth:0,command:Command::Commit});
         let total=compiler.commands.len().checked_mul(count).ok_or(PixelEditError::Invalid("Compositing work exceeds numeric limits"))?;
-        let buffers=vec![vec![[0.0;4];TILE];compiler.max_depth+1];
-        Ok(Self {commands:compiler.commands,buffers,candidate:Some(RasterImage {width:input.width,height:input.height,pixels:vec![0;count*4]}),origin:input.origin,width:input.width as usize,count,total,tile:0,command:0,offset:0,completed:0,cancelled:false})
+        let buffers=vec![vec![[0.0;4];TILE];compiler.max_depth+1];let commands=compiler.commands;
+        Ok(Self {images,layers,commands,buffers,candidate:Some(RasterImage {width,height,pixels:vec![0;count*4]}),origin,width:width as usize,count,total,tile:0,command:0,offset:0,completed:0,cancelled:false})
     }
     pub fn advance(&mut self,budget:usize)->Result<PixelProgress,PixelEditError> {
         if self.cancelled{return Err(PixelEditError::Cancelled);}
@@ -209,30 +222,13 @@ impl CompositeJob {
     }
     pub fn into_retirement(mut self)->(CompositeRetirement,Option<RasterImage>){
         let output=if !self.cancelled&&self.completed==self.total{self.candidate.take()}else{None};self.cancelled=true;
-        (CompositeRetirement{job:Some(self),slot:0,counter:WorkRetirementCounter::default()},output)
+        (CompositeRetirement::new(self),output)
     }
 }
 
 
-/// 🧹️ Consumes genuine compiled records, tile buffers and the private candidate under structural grants.
-pub struct CompositeRetirement{job:Option<CompositeJob>,slot:u8,counter:WorkRetirementCounter}
-impl CompositeRetirement{
-    pub fn terminal_is_empty(&self)->bool{self.job.is_none()}
-    fn step(&mut self){
-        let Some(job)=self.job.as_mut()else{return;};
-        match self.slot{
-            0=>{if job.commands.pop().is_some(){return;}job.commands=Vec::new();}
-            1=>{if job.buffers.pop().is_some(){return;}job.buffers=Vec::new();}
-            2=>job.candidate=None,
-            3=>{},
-            _=>unreachable!(),
-        }
-        self.slot+=1;if self.slot==4{self.job=None;}
-    }
-    pub fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,PixelEditError>{
-        let mut counter=self.counter;let progress=counter.advance(grant,||{self.step();self.terminal_is_empty()});self.counter=counter;progress.map_err(PixelEditError::Invalid)
-    }
-}
+semio_framework_value::artifact_retire_leaf!(CompositeBlend);
+physical_work_retirement!(CompositeRetirement,CompositeJob,PixelEditError,|_:&str|PixelEditError::Invalid("Compositor retirement refused its physical grant"));
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

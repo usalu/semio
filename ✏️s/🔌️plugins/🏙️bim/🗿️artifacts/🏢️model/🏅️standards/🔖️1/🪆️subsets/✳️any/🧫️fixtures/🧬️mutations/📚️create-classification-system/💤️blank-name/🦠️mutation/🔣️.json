@@ -1,0 +1,9 @@
+{
+  "mutation": "createClassificationSystem",
+  "id": "cs-new",
+  "system": {
+    "name": " ",
+    "edition": "1",
+    "entries": []
+  }
+}

@@ -4,29 +4,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "startX",
-    "startY",
-    "endX",
-    "endY",
-    "depth",
+    "view",
     "framed",
     "viewport"
   ],
   "properties": {
-    "startX": {
-      "type": "number"
-    },
-    "startY": {
-      "type": "number"
-    },
-    "endX": {
-      "type": "number"
-    },
-    "endY": {
-      "type": "number"
-    },
-    "depth": {
-      "type": "number"
+    "view": {
+      "type": "string"
     },
     "framed": {
       "type": "boolean"

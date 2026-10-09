@@ -634,7 +634,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         session: None,
         session_rejected: None,
         reserved_producer: None, completion: None,
-        raw_input: None,
+        completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
         output_chunks: None,
         cancellation_lease: Some(lease),
         terminal_outcome: None,

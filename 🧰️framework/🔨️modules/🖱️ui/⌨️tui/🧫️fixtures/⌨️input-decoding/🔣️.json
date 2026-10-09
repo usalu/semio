@@ -1,4 +1,14 @@
 {
+  "consoleControls": [
+    { "id": "conpty-nul", "records": [{ "key": 16, "unit": 0, "down": true, "control": 16 }, { "key": 17, "unit": 0, "down": true, "control": 24 }, { "key": 50, "unit": 0, "down": true, "control": 24 }, { "key": 50, "unit": 0, "down": false, "control": 24 }, { "key": 17, "unit": 0, "down": false, "control": 16 }, { "key": 16, "unit": 0, "down": false, "control": 0 }], "text": "\u0000" },
+    { "id": "left-control-space", "records": [{ "key": 17, "unit": 0, "down": true, "control": 8 }, { "key": 32, "unit": 0, "down": true, "control": 8 }, { "key": 32, "unit": 0, "down": false, "control": 8 }, { "key": 17, "unit": 0, "down": false, "control": 0 }], "text": "\u0000" },
+    { "id": "right-control-space", "records": [{ "key": 32, "unit": 0, "down": true, "control": 4 }], "text": "\u0000" },
+    { "id": "empty-modifiers", "records": [{ "key": 16, "unit": 0, "down": true, "control": 16 }, { "key": 17, "unit": 0, "down": true, "control": 8 }, { "key": 18, "unit": 0, "down": true, "control": 2 }, { "key": 32, "unit": 0, "down": true, "control": 0 }], "text": "" }
+  ],
+  "consoleCommits": [
+    { "records": [{"unit":101,"down":true,"key":0},{"unit":101,"down":false,"key":69},{"unit":0,"down":true,"key":18},{"unit":769,"down":false,"key":18},{"unit":0,"down":false,"key":18}], "text":"é" },
+    { "records": [{"unit":8364,"down":false,"key":18},{"unit":120,"down":true,"key":0},{"unit":120,"down":false,"key":88}], "text":"€x" }
+  ],
   "grammar": {
     "key": "key:<name>[+ctrl][+alt][+shift]; <name> is the character itself, Space, Plus, or Enter Esc Tab BackTab Backspace Delete Insert Up Down Left Right Home End PageUp PageDown F1..F20, or Keypad0..Keypad9 KeypadEnter KeypadPlus KeypadMinus KeypadMultiply KeypadDivide KeypadDecimal KeypadEqual KeypadSeparator",
     "mouse": "mouse:<down|up|drag>:<left|middle|right>@<x>,<y>#<clicks>[mods] | mouse:move@<x>,<y>#<clicks>[mods] | mouse:scroll:<dx>,<dy>@<x>,<y>#<clicks>[mods]",

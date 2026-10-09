@@ -44,7 +44,7 @@
     },
     "Ready": {
       "type": "object",
-      "description": "The task is ready when its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the port ends there; the ready URL is that match plus `path`, or with `printed` the whole printed address up to the next whitespace.",
+      "description": "The task is ready after its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the exact ready URL answers HTTP with a 2xx or 3xx status and the port ends there; the ready URL is that match plus `path`, or with `printed` the whole printed address up to the next whitespace.",
       "required": ["port", "path"],
       "properties": {
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 },

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-schedule/schema.json",
+  "title": "DeleteSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteSchedule"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Schedule",
+          "de": "Bauteilliste"
+        },
+        "ref": {
+          "kind": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

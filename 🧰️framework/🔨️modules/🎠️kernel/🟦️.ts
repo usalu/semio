@@ -1,4 +1,5 @@
 import { type ArtifactDialect } from "../🧬️schema/🗿️artifact-reference/🟦️.ts";
+export {CLIPBOARD_TEXT_MAX_BYTES,CLIPBOARD_METADATA_MAX_WIRE_BYTES,CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES,CLIPBOARD_PASTE_MAX_WIRE_BYTES,clipboardJsonStringBytes} from "./📋️clipboard/🟦️.ts";
 import { dialectCoordinate, parseDialectCoordinate, type IoFidelity, type IoEntryDescriptor, type IoRoute } from "../🚪️io/🧬️schema/🟦️.ts";
 import { base64StandardDecode } from "../🚪️io/🔤️base64/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../⏱️trace/🧮️memory/🟦️.ts";

@@ -287,11 +287,6 @@ type SetCurtainWall {
   axis: Axis
   base_offset: Float
   top: TopConstraint
-  u_spacing: Float
-  v_spacing: Float
-  mullion: Profile
-  panel_material: String
-  mullion_material: String
   name: String
 }
 
@@ -326,9 +321,8 @@ type DeleteBeam {
 type SetBeam {
   id: String!
   beam_type: String
-  start: Point2
-  end: Point2
   top_offset: Float
+  end_top_offset: JSON
   name: String
 }
 
@@ -400,6 +394,8 @@ type SetOpening {
   flip_hand: Boolean
   flip_facing: Boolean
   name: String
+  reveal_depth: JSON
+  reveal_material: JSON
 }
 
 type CreateStair {
@@ -446,6 +442,7 @@ type SetRailing {
   post_profile: Profile
   baluster: Baluster
   infill: Infill
+  host: RailingHost
   material: String
   base_offset: Float
   name: String
@@ -466,6 +463,10 @@ type SetSpace {
   name: String
   boundary: SpaceBoundary
   usage: String
+  zone: JSON
+  floor_finish: JSON
+  wall_finish: JSON
+  ceiling_finish: JSON
 }
 
 type MoveElements {
@@ -503,15 +504,536 @@ type RemoveElementProperty {
 
 type SetElementClassification {
   id: String!
-  classification: Classification!
+  system: String!
+  code: String!
 }
 
 type RemoveElementClassification {
   id: String!
+  system: String!
 }
 
 type PlaceElements {
   placements: JSON!
 }
 
-union ModelMutation = CreateSite | DeleteSite | CreateBuilding | DeleteBuilding | CreateStorey | RenameStorey | SetStoreyHeight | SetStoreyLevel | DeleteStorey | CreateWall | DeleteWall | SetWallTop | SetStoreyCutHeight | CreateMaterial | DeleteMaterial | SetMaterial | CreateWallType | DeleteWallType | SetWallType | CreateSlabType | DeleteSlabType | SetSlabType | CreateRoofType | DeleteRoofType | SetRoofType | CreateColumnType | DeleteColumnType | SetColumnType | CreateBeamType | DeleteBeamType | SetBeamType | CreateWindowType | DeleteWindowType | SetWindowType | CreateDoorType | DeleteDoorType | SetDoorType | SetProjectInfo | SetSite | SetBuilding | CreateGridLine | DeleteGridLine | SetGridLine | SetWallAxis | SetWallBaseOffset | SetWallTypeOf | SetWallLocation | FlipWall | SplitWall | CreateCurtainWall | DeleteCurtainWall | SetCurtainWall | CreateColumn | DeleteColumn | SetColumn | CreateBeam | DeleteBeam | SetBeam | CreateSlab | DeleteSlab | SetSlabBoundary | SetSlab | CreateRoof | DeleteRoof | SetRoofFootprint | SetRoofShape | CreateOpening | DeleteOpening | MoveOpening | SetOpening | CreateStair | DeleteStair | SetStair | CreateRailing | DeleteRailing | SetRailing | CreateSpace | DeleteSpace | SetSpace | MoveElements | RotateElements | DeleteElements | RenameElement | SetElementProperty | RemoveElementProperty | SetElementClassification | RemoveElementClassification | PlaceElements
+type SetElementStorey {
+  id: String!
+  storey: String!
+}
+
+type SetElementPhase {
+  id: String!
+  phase: Phase!
+}
+
+type SetWallEndJoin {
+  id: String!
+  end: String!
+  join: EndJoin
+}
+
+type CopyElements {
+  ids: [String!]!
+  vector: Point2!
+  prefix: String!
+}
+
+type MirrorElements {
+  ids: [String!]!
+  line_start: Point2!
+  line_end: Point2!
+  prefix: String
+}
+
+type ArrayElements {
+  ids: [String!]!
+  prefix: String!
+  pattern: JSON!
+}
+
+type AlignElements {
+  ids: [String!]!
+  axis: String!
+  edge: String!
+  target: Float!
+}
+
+type OffsetWall {
+  id: String!
+  new_id: String!
+  distance: Float!
+}
+
+type TrimExtendWall {
+  id: String!
+  end: String!
+  target: String!
+}
+
+type SplitSlab {
+  id: String!
+  new_id: String!
+  line_start: Point2!
+  line_end: Point2!
+}
+
+type SplitBeam {
+  id: String!
+  t: Float!
+  new_id: String!
+}
+
+type CreateCeilingType {
+  id: String!
+  ceiling_type: CeilingType!
+}
+
+type DeleteCeilingType {
+  id: String!
+}
+
+type SetCeilingType {
+  id: String!
+  name: String
+  layers: [Layer!]
+}
+
+type CreateCeiling {
+  id: String!
+  ceiling: Ceiling!
+}
+
+type DeleteCeiling {
+  id: String!
+}
+
+type SetCeilingBoundary {
+  id: String!
+  boundary: [Vertex!]!
+  holes: [[Vertex!]!]!
+}
+
+type SetCeiling {
+  id: String!
+  ceiling_type: String
+  offset: Float
+  slope: Slope
+  name: String
+}
+
+type CreateZone {
+  id: String!
+  zone: Zone!
+}
+
+type SetZone {
+  id: String!
+  name: String!
+  category: String!
+  occupancy_density: Float!
+}
+
+type DeleteZone {
+  id: String!
+}
+
+type CreateAreaScheme {
+  id: String!
+  area_scheme: AreaScheme!
+}
+
+type SetAreaScheme {
+  id: String!
+  name: String!
+  measure: AreaMeasure!
+  usages: [String!]!
+  zones: [String!]!
+}
+
+type DeleteAreaScheme {
+  id: String!
+}
+
+type CreateWallSweep {
+  id: String!
+  wall_sweep: WallSweep!
+}
+
+type SetWallSweep {
+  id: String!
+  host: String
+  side: WallSide
+  profile: Profile
+  height: Float
+  inset: Float
+  material: String
+  name: String
+}
+
+type DeleteWallSweep {
+  id: String!
+}
+
+type SetWallBaseSlab {
+  id: String!
+  slab: String
+}
+
+type CreateRamp {
+  id: String!
+  ramp: Ramp!
+}
+
+type SetRamp {
+  id: String!
+  path: [Vertex!]!
+  width: Float!
+  landing_start: Float!
+  landing_end: Float!
+  landing_turn: Float!
+  max_slope: Float!
+  thickness: Float!
+  material: String!
+  base_offset: Float!
+  top: TopConstraint!
+  railing_left: Boolean!
+  railing_right: Boolean!
+  name: String!
+}
+
+type DeleteRamp {
+  id: String!
+}
+
+type CreateDimension {
+  id: String!
+  dimension: Dimension!
+}
+
+type DeleteDimension {
+  id: String!
+}
+
+type SetDimension {
+  id: String!
+  anchors: [AnnotationAnchor!]
+  angle: Float
+  offset: Float
+  style: String
+  lock: JSON
+  name: String
+}
+
+type CreateTag {
+  id: String!
+  tag: Tag!
+}
+
+type DeleteTag {
+  id: String!
+}
+
+type SetTag {
+  id: String!
+  element: String
+  category: TagCategory
+  offset: Point2
+  style: String
+}
+
+type CreateTextNote {
+  id: String!
+  text_note: TextNote!
+}
+
+type DeleteTextNote {
+  id: String!
+}
+
+type SetTextNote {
+  id: String!
+  position: Point2
+  text: String
+  rotation: Float
+  style: String
+}
+
+type CreateLeader {
+  id: String!
+  leader: Leader!
+}
+
+type DeleteLeader {
+  id: String!
+}
+
+type SetLeader {
+  id: String!
+  anchor: AnnotationAnchor
+  offset: Point2
+  text: String
+  style: String
+}
+
+type CreateAnnotationStyle {
+  id: String!
+  annotation_style: AnnotationStyle!
+}
+
+type DeleteAnnotationStyle {
+  id: String!
+}
+
+type SetAnnotationStyle {
+  id: String!
+  name: String
+  text_height: Float
+  terminator: Terminator
+  unit: DimensionUnit
+  precision: Int
+  mark_size: Float
+  gap: Float
+  overshoot: Float
+}
+
+type CreateView {
+  id: String!
+  view: View!
+}
+
+type SetView {
+  id: String!
+  name: String
+  storey: String
+  plane: ViewPlane
+  camera: ViewCamera
+  cut_height: JSON
+  depth: Float
+  crop: ViewCrop
+  hidden: [ViewCategory!]
+  phase: Phase
+  scale: Int
+  detail: DetailLevel
+}
+
+type DeleteView {
+  id: String!
+}
+
+type CreateSchedule {
+  id: String!
+  schedule: Schedule!
+}
+
+type SetSchedule {
+  id: String!
+  name: String
+  category: ScheduleCategory
+  columns: [ScheduleColumn!]
+  sort: [ScheduleSort!]
+  filter: [ScheduleFilter!]
+  group: [ScheduleGroup!]
+  itemize: Boolean
+  storeys: [String!]
+  phases: [Phase!]
+}
+
+type DeleteSchedule {
+  id: String!
+}
+
+type CreateSheet {
+  id: String!
+  sheet: Sheet!
+}
+
+type SetSheet {
+  id: String!
+  number: String
+  name: String
+  paper: Paper
+  orientation: Orientation
+  project: String
+  drawn_by: String
+  checked_by: String
+  date: String
+  revision: String
+  scale_label: String
+}
+
+type DeleteSheet {
+  id: String!
+}
+
+type CreateViewport {
+  id: String!
+  viewport: Viewport!
+}
+
+type SetViewport {
+  id: String!
+  sheet: String
+  view: String
+  position: Point2
+  scale: Int
+  crop: ViewCrop
+  label: JSON
+}
+
+type DeleteViewport {
+  id: String!
+}
+
+type CreateSheetRevision {
+  id: String!
+  sheet_revision: SheetRevision!
+}
+
+type SetSheetRevision {
+  id: String!
+  number: String
+  date: String
+  description: String
+  author: String
+}
+
+type DeleteSheetRevision {
+  id: String!
+}
+
+type CreatePropertyTemplate {
+  id: String!
+  template: PropertyTemplate!
+}
+
+type SetPropertyTemplate {
+  id: String!
+  name: String
+  applies_to: [TemplateTarget!]
+  properties: [PropertyDef!]
+}
+
+type DeletePropertyTemplate {
+  id: String!
+}
+
+type CreateClassificationSystem {
+  id: String!
+  system: ClassificationSystem!
+}
+
+type SetClassificationSystem {
+  id: String!
+  name: String
+  edition: String
+  source: JSON
+  entries: [ClassificationItem!]
+}
+
+type DeleteClassificationSystem {
+  id: String!
+}
+
+type SetBeamAxis {
+  id: String!
+  axis: Axis!
+}
+
+type SetColumnTilt {
+  id: String!
+  tilt: Slope
+}
+
+type CreateCurtainWallType {
+  id: String!
+  curtain_wall_type: CurtainWallType!
+}
+
+type SetCurtainWallType {
+  id: String!
+  name: String
+  u_grid: CurtainGrid
+  v_grid: CurtainGrid
+  interior_mullion: Profile
+  border_mullion: Profile
+  panel: CurtainPanel
+  panel_material: String
+  mullion_material: String
+}
+
+type DeleteCurtainWallType {
+  id: String!
+}
+
+type SetCurtainWallTypeOf {
+  id: String!
+  curtain_wall_type: String!
+}
+
+type SetCurtainWallGrid {
+  id: String!
+  u_grid: CurtainGrid
+  v_grid: CurtainGrid
+}
+
+type CreateCurtainPanelOverride {
+  id: String!
+  curtain_panel_override: CurtainPanelOverride!
+}
+
+type SetCurtainPanelOverride {
+  id: String!
+  panel: CurtainPanel!
+}
+
+type DeleteCurtainPanelOverride {
+  id: String!
+}
+
+type CreateFamily {
+  id: String!
+  family: Family!
+}
+
+type DeleteFamily {
+  id: String!
+}
+
+type SetFamily {
+  id: String!
+  name: String
+  category: FamilyCategory
+}
+
+type SetFamilyParameter {
+  family: String!
+  name: String!
+  kind: ParameterKind
+  value: String
+}
+
+type RemoveFamilyParameter {
+  family: String!
+  name: String!
+}
+
+type CreateFamilySolid {
+  id: String!
+  solid: FamilySolid!
+}
+
+type DeleteFamilySolid {
+  id: String!
+}
+
+type SetFamilySolid {
+  id: String!
+  name: String
+  shape: SolidShape
+  material: String
+  visible: String
+  offset: ExprPoint3
+}
+
+union ModelMutation = CreateSite | DeleteSite | CreateBuilding | DeleteBuilding | CreateStorey | RenameStorey | SetStoreyHeight | SetStoreyLevel | DeleteStorey | CreateWall | DeleteWall | SetWallTop | SetStoreyCutHeight | CreateMaterial | DeleteMaterial | SetMaterial | CreateWallType | DeleteWallType | SetWallType | CreateSlabType | DeleteSlabType | SetSlabType | CreateRoofType | DeleteRoofType | SetRoofType | CreateColumnType | DeleteColumnType | SetColumnType | CreateBeamType | DeleteBeamType | SetBeamType | CreateWindowType | DeleteWindowType | SetWindowType | CreateDoorType | DeleteDoorType | SetDoorType | SetProjectInfo | SetSite | SetBuilding | CreateGridLine | DeleteGridLine | SetGridLine | SetWallAxis | SetWallBaseOffset | SetWallTypeOf | SetWallLocation | FlipWall | SplitWall | CreateCurtainWall | DeleteCurtainWall | SetCurtainWall | CreateColumn | DeleteColumn | SetColumn | CreateBeam | DeleteBeam | SetBeam | CreateSlab | DeleteSlab | SetSlabBoundary | SetSlab | CreateRoof | DeleteRoof | SetRoofFootprint | SetRoofShape | CreateOpening | DeleteOpening | MoveOpening | SetOpening | CreateStair | DeleteStair | SetStair | CreateRailing | DeleteRailing | SetRailing | CreateSpace | DeleteSpace | SetSpace | MoveElements | RotateElements | DeleteElements | RenameElement | SetElementProperty | RemoveElementProperty | SetElementClassification | RemoveElementClassification | PlaceElements | SetElementStorey | SetElementPhase | SetWallEndJoin | CopyElements | MirrorElements | ArrayElements | AlignElements | OffsetWall | TrimExtendWall | SplitSlab | SplitBeam | CreateCeilingType | DeleteCeilingType | SetCeilingType | CreateCeiling | DeleteCeiling | SetCeilingBoundary | SetCeiling | CreateZone | SetZone | DeleteZone | CreateAreaScheme | SetAreaScheme | DeleteAreaScheme | CreateWallSweep | SetWallSweep | DeleteWallSweep | SetWallBaseSlab | CreateRamp | SetRamp | DeleteRamp | CreateDimension | DeleteDimension | SetDimension | CreateTag | DeleteTag | SetTag | CreateTextNote | DeleteTextNote | SetTextNote | CreateLeader | DeleteLeader | SetLeader | CreateAnnotationStyle | DeleteAnnotationStyle | SetAnnotationStyle | CreateView | SetView | DeleteView | CreateSchedule | SetSchedule | DeleteSchedule | CreateSheet | SetSheet | DeleteSheet | CreateViewport | SetViewport | DeleteViewport | CreateSheetRevision | SetSheetRevision | DeleteSheetRevision | CreatePropertyTemplate | SetPropertyTemplate | DeletePropertyTemplate | CreateClassificationSystem | SetClassificationSystem | DeleteClassificationSystem | SetBeamAxis | SetColumnTilt | CreateCurtainWallType | SetCurtainWallType | DeleteCurtainWallType | SetCurtainWallTypeOf | SetCurtainWallGrid | CreateCurtainPanelOverride | SetCurtainPanelOverride | DeleteCurtainPanelOverride | CreateFamily | DeleteFamily | SetFamily | SetFamilyParameter | RemoveFamilyParameter | CreateFamilySolid | DeleteFamilySolid | SetFamilySolid

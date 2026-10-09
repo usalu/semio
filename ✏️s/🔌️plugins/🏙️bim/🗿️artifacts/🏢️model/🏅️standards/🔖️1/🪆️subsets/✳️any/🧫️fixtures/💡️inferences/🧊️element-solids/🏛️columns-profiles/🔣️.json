@@ -204,6 +204,7 @@
             "offset": 0.0
           }
         },
+        "phase": "New",
         "name": "Rect"
       },
       "c-circle": {
@@ -221,6 +222,7 @@
             "offset": -0.2
           }
         },
+        "phase": "New",
         "name": "Circle"
       },
       "c-i": {
@@ -237,6 +239,7 @@
             "height": 2.0
           }
         },
+        "phase": "New",
         "name": "I"
       },
       "c-custom": {
@@ -253,6 +256,7 @@
             "offset": 0.5
           }
         },
+        "phase": "New",
         "name": "Custom"
       },
       "c-bad-type": {
@@ -269,6 +273,7 @@
             "offset": 0.0
           }
         },
+        "phase": "New",
         "name": "Bad type"
       },
       "c-flat": {
@@ -285,6 +290,7 @@
             "height": 0.0
           }
         },
+        "phase": "New",
         "name": "No height"
       },
       "c-unknown-type": {
@@ -301,6 +307,7 @@
             "offset": 0.0
           }
         },
+        "phase": "New",
         "name": "Unknown type"
       }
     }

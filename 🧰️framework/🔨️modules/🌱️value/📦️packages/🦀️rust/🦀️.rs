@@ -21,6 +21,7 @@ pub use retirement::shared::{shared_retirement_birth_bytes, admit_shared_retirem
 mod factory_retirement;
 pub use factory_retirement::{FactoryPayloadRetirement, FactoryRetirement, FactoryAuthority, FactoryChildTickets, factory_arc_birth_bytes, factory_retirement_frame_bytes, factory_constructor_birth_bytes, factory_ticket_demands, close_factory_ticket};
 pub use factory_retirement::owned::FactoryOwnedRetirement;
+pub use factory_retirement::boxed::{FactoryBoxedValue,FactoryBoxedPublication};
 #[path = "../../🧬️retained-clone/🦀️.rs"]
 pub mod retained_clone;
 

@@ -1,0 +1,11 @@
+{
+  "mutation": "createPropertyTemplate",
+  "id": "pt-new",
+  "template": {
+    "name": "Pset_WallCommon",
+    "applies_to": [
+      "Slab"
+    ],
+    "properties": []
+  }
+}

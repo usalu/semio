@@ -4,7 +4,7 @@
  * test file per case and the fixture quintet per case (`after` and `diff` of applied cases are placeholders until blessed
  * with `BIM_BLESS=1 cargo test`). It also returns the mount lines to paste into the artifact root `🦀️.rs`.
  */
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { artifact, em, fixtures, JSONF, mutations, RS, rel } from "./r3-f1-paths.ts";
 
@@ -33,6 +33,7 @@ const writeOnce = (dir: string, leaf: string, body: string) => {
 };
 const write = (dir: string, leaf: string, body: string) => {
   mkdirSync(dir, { recursive: true });
+  rmSync(join(dir, leaf), { force: true });
   writeFileSync(join(dir, leaf), body);
 };
 const json = (value: unknown) => JSON.stringify(value, null, 2) + "\n";

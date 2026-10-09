@@ -61,6 +61,64 @@
       "material": "m-brick"
     }
   },
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 1.5 x 1.2",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.2
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.08,
+          "width": 0.06
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.08,
+          "width": 0.06
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-brick",
+      "mullion_material": "m-brick"
+    },
+    "cwt-2": {
+      "name": "Curtain wall 1.5 x 1.2",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.2
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.08
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.08
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-brick",
+      "mullion_material": "m-brick"
+    }
+  },
   "sites": {
     "site-1": {
       "name": "Plot",
@@ -153,6 +211,7 @@
   "curtain_walls": {
     "cw-1": {
       "storey": "st-ground",
+      "curtain_wall_type": "cwt-2",
       "axis": {
         "Line": {
           "start": {
@@ -171,16 +230,7 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.2,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.06,
-          "depth": 0.08
-        }
-      },
-      "panel_material": "m-brick",
-      "mullion_material": "m-brick",
+      "phase": "New",
       "name": "Facade"
     }
   },
@@ -215,6 +265,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1,
+      "phase": "New",
       "name": "Main stair"
     }
   },

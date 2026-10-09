@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-viewport/schema.json",
+  "title": "SetViewport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setViewport"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Viewport",
+          "de": "Ansichtsfenster"
+        },
+        "ref": {
+          "kind": "viewport"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "sheet": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Sheet",
+          "de": "Blatt"
+        },
+        "group": "value",
+        "order": 20,
+        "ref": {
+          "kind": "sheet"
+        }
+      }
+    },
+    "view": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "View",
+          "de": "Ansicht"
+        },
+        "group": "value",
+        "order": 30,
+        "ref": {
+          "kind": "view"
+        }
+      }
+    },
+    "position": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Position (mm)",
+          "de": "Position (mm)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "scale": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "x-semio-ui": {
+        "widget": "integer",
+        "role": "value",
+        "label": {
+          "en": "Scale 1:n",
+          "de": "Massstab 1:n"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "crop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ViewCrop"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Crop (empty = none)",
+          "de": "Zuschnitt (leer = keiner)"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label (empty = view name)",
+          "de": "Beschriftung (leer = Ansichtsname)"
+        },
+        "group": "value",
+        "order": 70
+      }
+    }
+  }
+}

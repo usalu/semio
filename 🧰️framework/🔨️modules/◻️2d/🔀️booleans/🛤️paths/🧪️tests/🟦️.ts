@@ -59,7 +59,7 @@ test("path boolean retirement composes children and preserves only completed out
    for(let at=0;at<row.offset;at++)job.advance(1);
   }
   const privateBefore=state.local.length+state.world.length+state.prepared.length;if(row.phase==="failure"&&"maxWork" in row)expect(state.current).not.toBe(null);
-  if(row.phase==="cancelled")job.cancel();const published=row.phase==="complete"?job.result():null,transferred=job.intoRetirement();expect(transferred.output).toBe(published);
+  if(row.phase==="cancelled")job.cancel();const published=state.phase==="complete"&&!state.cancelled&&!state.failure?job.result():null,transferred=job.intoRetirement();expect(transferred.output).toBe(published);
   expect(()=>job.advance(1)).toThrow(/cancel/i);expect(()=>job.result()).toThrow(/cancel/i);expect(()=>job.intoRetirement()).toThrow(/transferred/i);job.cancel();
   for(const n of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>transferred.job.advance(n)).toThrow(/grant/i);
   let work=0,done=false;for(let at=0;at<100000;at++){const beforeWorld=state.world.length,p=transferred.job.advance(grant);expect(beforeWorld-state.world.length).toBeLessThanOrEqual(grant);expect(validRetirement(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done){done=true;break;}}

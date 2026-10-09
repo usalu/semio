@@ -1,0 +1,25 @@
+{
+  "mutation": "createFamilySolid",
+  "id": "s-top",
+  "solid": {
+    "family": "fam-table",
+    "name": "Top",
+    "shape": {
+      "Cuboid": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m",
+        "width": "1 m",
+        "depth": "1 m",
+        "height": "1 m"
+      }
+    },
+    "material": "\"m-brick\"",
+    "visible": "true",
+    "offset": {
+      "x": "0 m",
+      "y": "0 m",
+      "z": "0 m"
+    }
+  }
+}

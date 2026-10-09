@@ -724,7 +724,7 @@ impl ArtifactEditor for ShootingPlayApp {
         };
         #[cfg(test)]
         eprintln!("[DEBUG] Shooting retained request command={} selection={:?}", request.command.command_id(), request.interaction_state.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| (&selection.granularity, &selection.ids)));
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -740,7 +740,7 @@ impl ArtifactEditor for ShootingPlayApp {
             SHOOTING_BOUNDED_RAW_BYTES,
             SHOOTING_BOUNDED_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

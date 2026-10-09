@@ -1,10 +1,10 @@
-//! 📐️ The sheet: the storey plans stacked top-down in one column (per building, the highest level first), each in a slot with a title band and a padded drawing area, and the
-//! fitted size of the whole sheet in paper millimetres.
+//! 📐️ The sheet: the drawn views stacked top-down in one column (per building the plans from the highest level down, then the ceiling plans, the sections and the elevations), each in a slot with a title band and a padded drawing area at the
+//! scale of its view, and the fitted size of the whole sheet in paper millimetres. A camera view draws nothing and gets no slot.
 //! 📎 https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute
 
-use super::path::{Frame, MM_PER_METRE};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
-use crate::ModelSnapshot;
+use super::path::{mm_per_metre, Frame};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use crate::{ModelSnapshot, ViewKind};
 use std::collections::BTreeMap;
 
 /// 📏️ Space around the whole sheet.
@@ -16,13 +16,15 @@ pub const TITLE_BAND: f64 = 8.0;
 /// 📏️ Space between two slots.
 pub const GAP: f64 = 6.0;
 
-/// 🧩️ The place of one storey plan on the sheet.
+/// 🧩️ The place of one view on the sheet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Slot {
-    pub storey: String,
+    pub view: String,
     pub building: String,
     pub name: String,
-    pub level: i32,
+    pub kind: ViewKind,
+    pub storey: Option<String>,
+    pub scale: u32,
     pub x: f64,
     pub y: f64,
     pub width: f64,
@@ -38,16 +40,32 @@ pub struct Layout {
     pub height: f64,
 }
 
-/// 📐️ The layout of the plans of `snapshot`: only storeys that have a plan get a slot.
-pub fn layout(snapshot: &ModelSnapshot, plans: &BTreeMap<String, PlanLinework>) -> Layout {
-    let mut order: Vec<(&String, &crate::Storey)> = snapshot.storeys.iter().filter(|(id, _)| plans.contains_key(*id)).collect();
-    order.sort_by(|a, b| (&a.1.building, std::cmp::Reverse(a.1.level), a.0).cmp(&(&b.1.building, std::cmp::Reverse(b.1.level), b.0)));
+/// 🖼️ Whether a kind of view is drawn on paper: the plans, sections and elevations are, the cameras are rendered by the 3D window.
+pub fn is_drawn(kind: ViewKind) -> bool {
+    matches!(kind, ViewKind::Plan | ViewKind::CeilingPlan | ViewKind::Section | ViewKind::Elevation)
+}
+
+fn rank(kind: ViewKind) -> u8 {
+    match kind {
+        ViewKind::Plan => 0,
+        ViewKind::CeilingPlan => 1,
+        ViewKind::Section => 2,
+        _ => 3,
+    }
+}
+
+/// 📐️ The layout of the views of `snapshot` that have a drawing: plans highest level first, then ceiling plans, sections and elevations, each by name and id.
+pub fn layout(snapshot: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinework>) -> Layout {
+    let level = |id: &str| snapshot.views[id].storey.as_deref().and_then(|storey| snapshot.storeys.get(storey)).map_or(0, |storey| storey.level);
+    let mut order: Vec<(&String, &crate::View)> = snapshot.views.iter().filter(|(id, view)| is_drawn(view.kind) && drawings.contains_key(*id)).collect();
+    order.sort_by(|a, b| (&a.1.building, rank(a.1.kind), std::cmp::Reverse(level(a.0)), &a.1.name, a.0).cmp(&(&b.1.building, rank(b.1.kind), std::cmp::Reverse(level(b.0)), &b.1.name, b.0)));
     let (mut slots, mut y, mut widest) = (Vec::new(), MARGIN, 0.0_f64);
-    for (id, storey) in order {
-        let plan = &plans[id];
-        let (width, height) = ((plan.bounds.max_x - plan.bounds.min_x) * MM_PER_METRE + 2.0 * PADDING, (plan.bounds.max_y - plan.bounds.min_y) * MM_PER_METRE + 2.0 * PADDING + TITLE_BAND);
-        let frame = Frame { min_x: plan.bounds.min_x, max_y: plan.bounds.max_y, left: PADDING, top: TITLE_BAND + PADDING };
-        slots.push(Slot { storey: id.clone(), building: storey.building.clone(), name: storey.name.clone(), level: storey.level, x: MARGIN, y, width, height, frame });
+    for (id, view) in order {
+        let bounds = drawings[id].lines.bounds;
+        let mm = mm_per_metre(view.scale);
+        let (width, height) = ((bounds.max_x - bounds.min_x) * mm + 2.0 * PADDING, (bounds.max_y - bounds.min_y) * mm + 2.0 * PADDING + TITLE_BAND);
+        let frame = Frame { min_x: bounds.min_x, max_y: bounds.max_y, left: PADDING, top: TITLE_BAND + PADDING, mm };
+        slots.push(Slot { view: id.clone(), building: view.building.clone(), name: view.name.clone(), kind: view.kind, storey: view.storey.clone(), scale: view.scale, x: MARGIN, y, width, height, frame });
         y += height + GAP;
         widest = widest.max(width);
     }

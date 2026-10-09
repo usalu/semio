@@ -683,7 +683,7 @@ impl UiFramePaintCensus {
             }
             for instance in layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()) {
                 census.quads += 1;
-                if instance.params[2] == crate::wgpu::draw_types::KIND_GLYPH {
+                if instance.params[2] == crate::wgpu::draw_types::KIND_GLYPH || instance.params[2] == crate::wgpu::draw_types::KIND_AFFINE_GLYPH {
                     census.glyphs += 1;
                 }
             }

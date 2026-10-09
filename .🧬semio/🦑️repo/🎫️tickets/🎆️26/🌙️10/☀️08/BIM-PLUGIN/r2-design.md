@@ -180,14 +180,15 @@ reproduce the committed `🧫️fixtures/💡️inferences/**/🔣️.json` outp
 ## 6. Editor / viewer (`✏️editor`, `👁️viewer`)
 
 - Editor `BimModelApp: ArtifactEditor`, mode `✏️edit` with windows `🗺️plan` (Canvas2d, window config: storey id,
-  `Viewport2d`, cut height display), `🧊️world` (World3d, window config: `Viewport3dOrbit`, projection preset, section box,
-  storey isolation), `📐️section` (Canvas2d, section line config). Panels: `🌳️outliner` (model→site→building→storey→
+  `Viewport2d`, cut height display), `🧊️world` (World3d, window config: `Viewport3dOrbit`, projection preset, section plane,
+  storey isolation, per-storey hide toggles), `📐️section` (Canvas2d, section line config). Panels: `🌳️outliner` (model→site→building→storey→
   elements, PanelTreeBuilder), `🔍️properties` (Field table of the selected entity's authored parameters + read-only
-  inferred values), `🛍️library` (types and materials), `🧮️schedule` (quantities table from inference).
-- Utilities (tools): select, wall (line/arc), curtain wall, column, beam, slab (polygon/rectangle/pick walls), roof,
-  window, door, opening, stair, railing, space (pick seed), grid, measure. Gestures = `InteractiveJob`s emitting
+  inferred values), `🛍️library` (types and materials). The quantities table from inference is the window `🧮️schedule` (a Table surface, a window kind, not a panel).
+- Utilities (tools): select, move, rotate, wall (line/arc), curtain wall, column, beam, slab (polygon/rectangle/pick walls), roof,
+  window, door, opening, stair, railing, space (pick seed), grid, measure, split wall. Every tool also takes a typed point from the window's
+  entry field (`x, y`, `@dx, dy`, `length<angle`, `length`), so geometry can be placed from the keyboard alone. Gestures = `InteractiveJob`s emitting
   `create-*`/`move-elements`/`set-wall-axis` (drag bulge handle to curve a wall) with previews in window transient.
-- Presence `BimPresence { camera, storey, engagement_input }`. Terminology `BimLabels` (`app_labels!`, en + de).
+- Presence `BimPresence { camera, storey, engagement_input }`, where `engagement_input` is the line being typed into a window's entry field (the window transient keeps the same line for that window alone). Terminology `BimLabels` (`app_labels!`, en + de).
 - Keybindings: undo/redo, delete, escape, tool hotkeys (W wall, D door, N window, C column, S slab, R roof).
 - Viewer `BimModelViewer: ArtifactViewer`, mode `👁️view`: 3D + plan windows, camera commands only.
 

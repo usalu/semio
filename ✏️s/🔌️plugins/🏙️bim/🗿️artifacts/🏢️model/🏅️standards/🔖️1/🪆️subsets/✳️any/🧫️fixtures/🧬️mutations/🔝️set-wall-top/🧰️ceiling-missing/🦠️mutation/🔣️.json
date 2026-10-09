@@ -1,0 +1,10 @@
+{
+  "mutation": "setWallTop",
+  "id": "w-east",
+  "top": {
+    "Ceiling": {
+      "ceiling": "ce-gone",
+      "offset": 0
+    }
+  }
+}

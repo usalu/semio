@@ -5,7 +5,7 @@
 
 use crate::render::world::{scene, WorldView};
 use crate::viewer::bim::terminology::BimViewerLabels;
-use crate::ModelSnapshot;
+use crate::{ModelInference, ModelSnapshot};
 use semio_framework_plugin::{scene_surface, world3d_projection_measures, ActionDescriptor, BuiltNode, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
-        label: LocalizedLabel::native("World", "Welt"),
+        label: LocalizedLabel::native(BimViewerLabels::NATIVE_EN.window_world.as_str(), BimViewerLabels::NATIVE_DE.window_world.as_str()),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "bim-world".into(),
@@ -50,11 +50,10 @@ pub struct Marks {
     pub hovered: Vec<String>,
 }
 
-/// 👁️ Pure `ModelSnapshot × window configuration × marks -> World3d surface`.
-pub fn render(snapshot: &ModelSnapshot, config: &config::BimViewerWorldWindowConfig, marks: &Marks) -> UiAssemblyResult<BuiltNode> {
-    let solids = crate::render::solids(snapshot);
+/// 👁️ Pure `ModelSnapshot × ModelInference × window configuration × marks -> World3d surface`.
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerWorldWindowConfig, marks: &Marks) -> UiAssemblyResult<BuiltNode> {
     let view = WorldView { orbit: config.framed.then_some(&config.orbit), projection: &config.projection, hidden_storeys: &config.hidden_storeys, selected: &marks.selected, hovered: &marks.hovered };
-    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene(snapshot, &solids, &view))
+    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene(snapshot, &inference.element_solids, &view))
 }
 //#endregion 🔖️Render
 

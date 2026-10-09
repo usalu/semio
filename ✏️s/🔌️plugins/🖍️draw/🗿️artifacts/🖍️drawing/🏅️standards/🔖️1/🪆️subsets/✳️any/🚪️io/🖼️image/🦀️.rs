@@ -5,24 +5,26 @@ use semio_framework_pixels::{RasterImage,image_decoding::{ImageDecodeInput,Image
 #[derive(Clone,Copy,Debug)]
 pub struct DrawingImageAdmissionProgress{pub decoding:Option<ImageDecodeProgress>,pub samples:usize,pub total_samples:usize,pub work:u64,pub done:bool}
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct DrawingImageAdmissionJob{decoder:Option<ImageDecodeJob>,decoding:Option<ImageDecodeProgress>,image:Option<RasterImage>,asset:Option<DrawingImageAsset>,samples:usize,work:u64,cancelled:bool,failure:Option<ImageDecodeError>,done:bool}
+semio_framework_value::artifact_retire_leaf!(DrawingImageAdmissionProgress);
 impl DrawingImageAdmissionJob{
  pub fn new(input:ImageDecodeInput)->Result<Self,ImageDecodeError>{Ok(Self{decoder:Some(ImageDecodeJob::new(input)?),decoding:None,image:None,asset:None,samples:0,work:0,cancelled:false,failure:None,done:false})}
- fn check(&self)->Result<(),ImageDecodeError>{if self.cancelled{return Err(ImageDecodeError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}Ok(())}
+ fn check(&self)->Result<(),ImageDecodeError>{if self.cancelled{return Err(ImageDecodeError::Cancelled);}if self.done&&self.asset.is_none(){return Err(ImageDecodeError::Incomplete);}if let Some(error)=&self.failure{return Err(error.clone());}Ok(())}
  fn step(&mut self)->Result<(),ImageDecodeError>{
-  if let Some(decoder)=&mut self.decoder{let progress=decoder.advance(1)?;self.decoding=Some(progress);if progress.done{let image=self.decoder.take().unwrap().into_result()?;self.asset=Some(DrawingImageAsset{width:image.width,height:image.height,samples:Default::default()});self.image=Some(image);}return Ok(());}
+  if self.asset.is_none(){let decoder=self.decoder.as_mut().unwrap();let progress=decoder.advance(1)?;self.decoding=Some(progress);if progress.done{let image=self.decoder.as_mut().unwrap().take_result()?;self.asset=Some(DrawingImageAsset{width:image.width,height:image.height,samples:Default::default()});self.image=Some(image);}return Ok(());}
   let image=self.image.as_ref().unwrap();let at=self.samples*4;
-  if at==image.pixels.len(){self.image=None;self.done=true;return Ok(());}
+  if at==image.pixels.len(){self.done=true;return Ok(());}
   self.asset.as_mut().unwrap().samples.push(image.pixels[at..at+4].try_into().unwrap());self.samples+=1;Ok(())
  }
  pub fn advance(&mut self,grant:usize)->Result<DrawingImageAdmissionProgress,ImageDecodeError>{
   if grant==0||grant as u128>9_007_199_254_740_991{return Err(ImageDecodeError::Invalid("Invalid drawing image admission work grant".into()));}self.check()?;
-  for _ in 0..grant{if self.done{break;}if let Err(error)=self.step(){self.failure=Some(error.clone());self.release();return Err(error);}self.work+=1;}
+  for _ in 0..grant{if self.done{break;}if let Err(error)=self.step(){self.failure=Some(error.clone());return Err(error);}self.work+=1;}
   let total_samples=self.asset.as_ref().map_or(0,|asset|asset.width as usize*asset.height as usize);Ok(DrawingImageAdmissionProgress{decoding:self.decoding,samples:self.samples,total_samples,work:self.work,done:self.done})
  }
- fn release(&mut self){if let Some(decoder)=&mut self.decoder{decoder.cancel();}self.decoder=None;self.image=None;self.asset=None;}
- pub fn cancel(&mut self){self.cancelled=true;self.release();}
+ pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&self)->Result<&DrawingImageAsset,ImageDecodeError>{self.check()?;if !self.done{return Err(ImageDecodeError::Incomplete);}self.asset.as_ref().ok_or(ImageDecodeError::Incomplete)}
+ pub fn take_result(&mut self)->Result<DrawingImageAsset,ImageDecodeError>{self.result()?;Ok(self.asset.take().unwrap())}
  pub fn into_result(mut self)->Result<DrawingImageAsset,ImageDecodeError>{self.result()?;Ok(self.asset.take().unwrap())}
 }
 
@@ -47,12 +49,13 @@ impl<'a> DrawingImageEmissionJob<'a>{
  }
  pub fn advance(&mut self,grant:usize)->Result<DrawingImageEmissionProgress,String>{
   if grant==0||grant as u128>9_007_199_254_740_991{return Err("Invalid drawing image emission work grant".into());}self.check()?;
-  for _ in 0..grant{if self.phase=="complete"{break;}if let Err(error)=self.step(){self.failure=Some(error.clone());self.release();return Err(error);}self.work+=1;}
+  for _ in 0..grant{if self.phase=="complete"{break;}if let Err(error)=self.step(){self.failure=Some(error.clone());return Err(error);}self.work+=1;}
   Ok(DrawingImageEmissionProgress{phase:self.phase,samples:self.samples,total_samples:self.asset.samples.len(),encoded_bytes:self.bytes.as_ref().map_or(0,Vec::len),work:self.work,done:self.phase=="complete"})
  }
  fn release(&mut self){if let Some(encoder)=&mut self.encoder{encoder.cancel();}self.encoder=None;self.pixels=Vec::new();self.bytes=None;}
  pub fn cancel(&mut self){self.cancelled=true;self.release();}
  pub fn result(&self)->Result<&[u8],String>{self.check()?;self.bytes.as_deref().ok_or_else(||"Drawing image emission incomplete".into())}
+ pub fn take_result(&mut self)->Result<DrawingImageAsset,ImageDecodeError>{self.result()?;Ok(self.asset.take().unwrap())}
  pub fn into_result(mut self)->Result<Vec<u8>,String>{self.result()?;Ok(self.bytes.take().unwrap())}
 }
 

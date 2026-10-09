@@ -1,0 +1,8 @@
+{
+  "mutation": "createFamily",
+  "id": "fam-new",
+  "family": {
+    "name": " ",
+    "category": "Furniture"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "mutation": "setLeader",
+  "id": "lead-1",
+  "anchor": {
+    "OpeningCentre": {
+      "opening": "o-ghost"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "mutation": "createSchedule",
+  "id": "sch-walls",
+  "schedule": {
+    "name": "Walls",
+    "category": "Wall",
+    "columns": [
+      {
+        "key": {
+          "Field": {
+            "field": "Name"
+          }
+        },
+        "total": false
+      },
+      {
+        "key": {
+          "Field": {
+            "field": "Length"
+          }
+        },
+        "total": true
+      }
+    ],
+    "sort": [],
+    "filter": [
+      {
+        "key": {
+          "Field": {
+            "field": "Length"
+          }
+        },
+        "op": "Greater",
+        "value": ""
+      }
+    ],
+    "group": [],
+    "itemize": true,
+    "storeys": [],
+    "phases": []
+  }
+}

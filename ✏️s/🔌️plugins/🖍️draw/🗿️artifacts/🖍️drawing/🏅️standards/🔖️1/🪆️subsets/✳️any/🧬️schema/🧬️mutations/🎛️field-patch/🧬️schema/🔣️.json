@@ -8,7 +8,8 @@
         "field": {
           "enum": [
             "name",
-            "textContent"
+            "textContent",
+            "imageKey"
           ]
         },
         "value": {
@@ -178,9 +179,9 @@
         "value": {
           "enum": [
             "union",
-            "intersect",
-            "subtract",
-            "exclude"
+            "intersection",
+            "difference",
+            "xor"
           ]
         }
       },
@@ -320,6 +321,100 @@
             "evenodd",
             "nonzero"
           ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "enum": [
+            "imageWidth",
+            "imageHeight"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "enum": [
+            "rectWidth",
+            "rectHeight",
+            "ellipseRx",
+            "ellipseRy",
+            "circleR"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "enum": [
+            "rectX",
+            "rectY",
+            "ellipseCx",
+            "ellipseCy",
+            "circleCx",
+            "circleCy",
+            "lineX1",
+            "lineY1",
+            "lineX2",
+            "lineY2"
+          ]
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "index",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "enum": [
+            "polygonX",
+            "polygonY"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "type": "number"
         }
       }
     }

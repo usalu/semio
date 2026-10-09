@@ -1,0 +1,6 @@
+{
+  "mutation": "setTextNote",
+  "id": "note-1",
+  "rotation": 0,
+  "text": "Verify again"
+}

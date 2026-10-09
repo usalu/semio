@@ -1,58 +1,47 @@
 [
   {
     "source": "single pixel",
-    "phase": "fresh",
-    "work": 13
+    "phase": "fresh"
   },
   {
     "source": "staircase simplification",
-    "phase": "scan",
-    "work": 16
+    "phase": "scan"
   },
   {
     "source": "staircase simplification",
-    "phase": "contours",
-    "work": 29
+    "phase": "contours"
   },
   {
     "source": "staircase simplification",
-    "phase": "compact",
-    "work": 46
+    "phase": "compact"
   },
   {
     "source": "staircase simplification",
-    "phase": "simplify",
-    "work": 30
+    "phase": "simplify"
   },
   {
     "source": "staircase simplification",
-    "phase": "topology",
-    "work": 34
+    "phase": "topology"
   },
   {
     "source": "staircase simplification",
-    "phase": "coverage",
-    "work": 34
+    "phase": "coverage"
   },
   {
     "source": "staircase simplification",
-    "phase": "emit",
-    "work": 33
+    "phase": "emit"
   },
   {
     "source": "staircase simplification",
-    "phase": "complete",
-    "work": 33
+    "phase": "complete"
   },
   {
     "source": "single pixel",
     "phase": "failure",
-    "maxEdges": 3,
-    "work": 16
+    "maxEdges": 3
   },
   {
     "source": "single pixel",
-    "phase": "cancelled",
-    "work": 13
+    "phase": "cancelled"
   }
 ]

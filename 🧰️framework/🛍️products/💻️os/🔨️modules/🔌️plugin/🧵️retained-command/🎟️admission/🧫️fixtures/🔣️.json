@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "ready",
+      "maximumRawBytes": 4096,
+      "maximumWorkItems": 1,
+      "expectedRefusal": null,
+      "expectedRawCapacity": 4096
+    },
+    {
+      "id": "zero-raw",
+      "maximumRawBytes": 0,
+      "maximumWorkItems": 1,
+      "expectedRefusal": "capacity-is-zero",
+      "expectedRawCapacity": 0
+    },
+    {
+      "id": "zero-work",
+      "maximumRawBytes": 4096,
+      "maximumWorkItems": 0,
+      "expectedRefusal": "capacity-is-zero",
+      "expectedRawCapacity": 0
+    },
+    {
+      "id": "impossible-allocation",
+      "maximumRawBytes": "usize-max",
+      "maximumWorkItems": 1,
+      "expectedRefusal": "raw-capacity-rejected",
+      "expectedRawCapacity": 0
+    }
+  ],
+  "preservedOwners": [
+    "command",
+    "snapshot",
+    "config",
+    "history",
+    "interactionState",
+    "interactionHover",
+    "context",
+    "operation",
+    "completion",
+    "work"
+  ]
+}

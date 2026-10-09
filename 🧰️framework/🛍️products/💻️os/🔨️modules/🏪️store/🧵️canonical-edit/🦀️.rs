@@ -839,7 +839,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         if !self.encoder.terminal_is_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if let Some(active) = self.active_retirement.as_ref() { let mut demand = super::artifact_retirement_box_demands(active, maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(depth_error)?; return Ok(demand); }
         if let Some(bytes) = self.identities.iter().find(|bytes| bytes.capacity() != 0) { return Ok(RetirementDemand { release_bytes: bytes.capacity(), depth: 1, ..Default::default() }); }
-        if self.prepared.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        if self.prepared.is_some() { let birth=ArtifactStoreOneItemPrepared::<P,M>::retirement_birth_demand();return Ok(RetirementDemand { capacity_bytes:birth.capacity_bytes,depth:birth.depth+1, ..Default::default() }); }
         if self.edit.is_some() { return Ok(RetirementDemand { release_bytes: std::mem::size_of::<Edit<M>>(), depth: 1, ..Default::default() }); }
         if self.unboxed_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
         if let Some(post) = self.post.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.snapshot_retirement.as_ref().expect("original sealer snapshot factory").retirement_birth_bytes(post), depth: 2, ..Default::default() }); }
@@ -864,10 +864,8 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
         }
         if let Some(prepared) = self.prepared.take() {
-            self.edit = Some(prepared.edit);
-            self.post = Some(prepared.post_snapshot);
-            self.retirement_strings = [prepared.local_actor, Some(prepared.applied_edit_id), Some(prepared.tail_edit_id)];
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            let mutation_factory=self.mutation_retirement.take().expect("original sealer mutation issuer");let snapshot_factory=self.snapshot_retirement.take().expect("original sealer root issuer");
+            return match prepared.admit_retirement(mutation_factory,snapshot_factory,child){Ok((owner,receipt))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original,mutations,snapshots))=>{self.prepared=Some(original);self.mutation_retirement=Some(mutations);self.snapshot_retirement=Some(snapshots);Err(error)}};
         }
         if let Some(edit) = self.edit.take() {
             self.unboxed_edit = Some(*edit);

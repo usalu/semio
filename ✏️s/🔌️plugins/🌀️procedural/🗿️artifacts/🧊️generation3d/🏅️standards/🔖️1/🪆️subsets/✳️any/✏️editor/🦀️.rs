@@ -478,7 +478,7 @@ const GENERATION3D_PREVIEW_TOOL_IDS: &[&str] = &["setActiveExample", "addGenerat
 /// 🧮️ The ONE declared quantity of every generation3d retained route: at most 32 point-invertible
 /// durable items per gesture. Everything the runtime compares is read off it and nothing is ever
 /// spelled again — the preflight ceiling ([`GENERATION3D_RETAINED_WORK_ITEMS`], handed to
-/// `ArtifactRetainedCommandPayload::try_new`), the extent every `ArtifactCommandWork` answers, the
+/// `ArtifactRetainedCommandPayload::new`), the extent every `ArtifactCommandWork` answers, the
 /// one-item store footprint both durable preflights declare, and the bounded proof's work units.
 /// They used to be three literals in two units — a two-row footprint, a one-ITEM extent and a
 /// 32-ITEM ceiling — so nothing could compare them and only the store ever measured rows
@@ -2190,7 +2190,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -2214,7 +2214,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             },
             GENERATION3D_RETAINED_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

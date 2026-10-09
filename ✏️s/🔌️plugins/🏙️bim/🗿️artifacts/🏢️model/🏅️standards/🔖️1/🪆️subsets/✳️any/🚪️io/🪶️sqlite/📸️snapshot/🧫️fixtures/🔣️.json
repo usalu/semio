@@ -424,6 +424,40 @@
             "material": "external/wood"
           }
         },
+        "curtain_wall_types": {
+          "cwt-1": {
+            "name": "Curtain wall 1 x 2",
+            "u_grid": {
+              "Spacing": {
+                "spacing": 1
+              }
+            },
+            "v_grid": {
+              "Spacing": {
+                "spacing": 2
+              }
+            },
+            "interior_mullion": {
+              "IShape": {
+                "width": 0.3,
+                "depth": 0.5,
+                "web": 0.02,
+                "flange": 0.03
+              }
+            },
+            "border_mullion": {
+              "IShape": {
+                "width": 0.3,
+                "depth": 0.5,
+                "web": 0.02,
+                "flange": 0.03
+              }
+            },
+            "panel": "Glass",
+            "panel_material": "external/panel",
+            "mullion_material": "external/mullion"
+          }
+        },
         "sites": {
           "site/λ": {
             "name": "Site",
@@ -596,6 +630,7 @@
         "curtain_walls": {
           "curtain/λ": {
             "storey": "external/storey",
+            "curtain_wall_type": "cwt-1",
             "axis": {
               "Arc": {
                 "start": {
@@ -616,18 +651,6 @@
                 "offset": -0.25
               }
             },
-            "u_spacing": 1,
-            "v_spacing": 2,
-            "mullion": {
-              "IShape": {
-                "width": 0.3,
-                "depth": 0.5,
-                "web": 0.02,
-                "flange": 0.03
-              }
-            },
-            "panel_material": "external/panel",
-            "mullion_material": "external/mullion",
             "name": "Curtain"
           }
         },
@@ -654,13 +677,17 @@
           "beam/λ": {
             "storey": "external/storey",
             "beam_type": "external/beam-type",
-            "start": {
-              "x": 1,
-              "y": 2
-            },
-            "end": {
-              "x": 4,
-              "y": 5
+            "axis": {
+              "Line": {
+                "start": {
+                  "x": 1,
+                  "y": 2
+                },
+                "end": {
+                  "x": 4,
+                  "y": 5
+                }
+              }
             },
             "top_offset": -0.3,
             "name": "Beam"

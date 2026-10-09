@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""🎨️ Third-party ORACLE (lxml + shapely) for the SVG 1.1 floor plans of the BIM house.
+"""🎨️ Third-party ORACLE (lxml + shapely) for the SVG 1.1 views of the BIM house: its plans, sections and elevations.
 
 lxml (libxml2) and shapely (GEOS) have never seen this repository's writer. They open the committed file
-`🧫️fixtures/🚪️svg/🏠️house/🏠️house.svg`, and:
+`🧫️fixtures/🚪️svg/🏠️house/🏠️house.svg` and `🧫️fixtures/🚪️svg/🪧️notated/🪧️notated.svg`, and:
 
-* parse it as namespaced XML, require the SVG root with version 1.1, a millimetre size equal to its viewBox and the 1:100 scale;
-* find one `g.storey` per storey (unique id `storey-<id>`, the model storey in `data-storey`) with a title and its three layers;
-* count the regions, lines and texts of every storey, the paths per line-style class (cut, projection, hidden, annotation) and the arc commands;
+* parse it as namespaced XML, require the SVG root with version 1.1 and a millimetre size equal to its viewBox;
+* find one `g.view` per drawn view (a plan, ceiling plan, section or elevation of the model, never a camera; unique id `view-<id>`, the model view in `data-view`, its kind, scale and storey) with a title and its three layers;
+* count the regions, lines and texts of every view (the texts of the text layer and of the annotation layer), the paths per line-style class (cut, projection, hidden, annotation) and the arc commands;
+* measure the annotation layer of a notated plan: per kind (dimension, extension and leader lines and marks, the texts of dimensions, tags, notes and leaders) the number of paths or texts
+  and the straight length of the paths, and the sorted texts the layer prints;
 * read every path's `d` with an own SVG path reader (M, L, A, Z) and measure with GEOS: the area of the straight cut poche regions
-  (even-odd, so the holes subtract) and the length of the straight lines per style, in metres at the drawing scale;
+  (even-odd, so the holes subtract) and the length of the straight lines per style, in metres at the scale of the view;
 * sample every arc (SVG endpoint-to-centre conversion, 2048 chords per full circle) and measure the poche area of the regions that contain arcs;
   that audit value is committed beside the table, never compared at 1e-9.
 
@@ -40,14 +42,23 @@ NS = {"svg": "http://www.w3.org/2000/svg"}
 STYLES = ["cut", "projection", "hidden", "annotation"]
 """🖊️ The four line-style classes."""
 
-SCALE = 100.0
-"""📐️ The drawing scale denominator: paper millimetres per model metre are 1000 / SCALE."""
-
-MM_PER_METRE = 1000.0 / SCALE
+KINDS = {"Plan": "plan", "CeilingPlan": "ceiling-plan", "Section": "section", "Elevation": "elevation"}
+"""🖼️ The kinds of view the sheet draws, by the class of their group; a camera is rendered by the 3D window."""
+VIEW = "svg:g[contains(concat(' ', normalize-space(@class), ' '), ' view ')]"
+NOTATION = ["dimension-line", "dimension-extension", "dimension-mark", "dimension-text", "tag-text", "note-text", "leader-line", "leader-mark", "leader-text"]
+"""🪧️ The kinds of the annotation layer."""
+LAYERS = ["layer regions", "layer lines", "layer texts"]
+CASES = {"🏠️house": "🏠️house.svg", "🪧️notated": "🪧️notated.svg"}
+SNAPSHOTS = {"🏠️house": ("🏗️ifc", "🏠️house", "📸️snapshot"), "🪧️notated": ("💡️inferences", "🪧️annotation-layout", "🏠️room", "📸️snapshot")}
 CHORDS = 2048
 """🌀️ Chords per full circle when an arc is sampled."""
 
 TOKEN = re.compile(r"[MLAZ]|-?\d+(?:\.\d+)?")
+
+
+def mm_per_metre(group):
+    """📐️ Paper millimetres per model metre at the scale `1:n` of a view group."""
+    return 1000.0 / int(group.get("data-scale"))
 
 
 def classes(element):
@@ -139,21 +150,28 @@ def line_length(d):
 
 
 # region 🔖️Measurement
+def kind_of(element):
+    """🪧️ The annotation kind class of a path or text, or `None` for any other primitive."""
+    return next((token for token in classes(element) if token in NOTATION), None)
+
+
 def measure(document):
     """🎨️ The oracle table of an SVG document plus the audit values that are not compared at 1e-9."""
     root = etree.fromstring(document)
     view = [float(part) for part in root.get("viewBox").split()]
-    table = {"width": view[2], "height": view[3], "storeys": {}}
+    table = {"width": view[2], "height": view[3], "views": {}}
     sampled = {}
-    for group in root.xpath("svg:g[@class='storey']", namespaces=NS):
-        storey = group.get("data-storey")
+    for group in root.xpath(VIEW, namespaces=NS):
+        scale = mm_per_metre(group)
+        identity = group.get("data-view")
         paths = group.xpath(".//svg:path", namespaces=NS)
         regions = [path for path in paths if "region" in classes(path)]
         lines = [path for path in paths if "line" in classes(path)]
-        texts = group.xpath("svg:g[@class='layer texts']/svg:text", namespaces=NS)
+        texts = group.xpath("svg:g[@class='layer texts' or @class='layer annotations']/svg:text", namespaces=NS)
         row = {
             "name": group.get("data-name"),
-            "level": int(group.get("data-level")),
+            "kind": group.get("data-kind"),
+            "scale": int(group.get("data-scale")),
             "regions": len(regions),
             "lines": len(lines),
             "texts": len(texts),
@@ -161,16 +179,26 @@ def measure(document):
             "arcs": sum(path.get("d").count("A") for path in paths),
             "pocheArea": 0.0,
             "lineLength": {style: 0.0 for style in STYLES},
+            "notation": {},
+            "printed": sorted("".join(text.itertext()) for text in texts if kind_of(text)),
         }
+        for element in paths + texts:
+            kind = kind_of(element)
+            if kind:
+                found = row["notation"].setdefault(kind, {"count": 0, "length": 0.0})
+                found["count"] += 1
+                if element.tag.endswith("path") and "A" not in element.get("d"):
+                    found["length"] += line_length(element.get("d")) / scale
+        row["notation"] = dict(sorted(row["notation"].items()))
         for path in regions:
             if "cut" in classes(path) and "A" not in path.get("d"):
-                row["pocheArea"] += region_area(path.get("d"), False) / (MM_PER_METRE * MM_PER_METRE)
+                row["pocheArea"] += region_area(path.get("d"), False) / (scale * scale)
         for path in lines:
             if "A" not in path.get("d"):
                 style = next(style for style in STYLES if style in classes(path))
-                row["lineLength"][style] += line_length(path.get("d")) / MM_PER_METRE
-        sampled[storey] = sum(region_area(path.get("d"), True) for path in regions if "cut" in classes(path)) / (MM_PER_METRE * MM_PER_METRE)
-        table["storeys"][storey] = row
+                row["lineLength"][style] += line_length(path.get("d")) / scale
+        sampled[identity] = sum(region_area(path.get("d"), True) for path in regions if "cut" in classes(path)) / (scale * scale)
+        table["views"][identity] = row
     return table, sampled
 
 
@@ -185,40 +213,59 @@ def audit(document, snapshot, table):
     view = root.get("viewBox").split()
     if view[:2] != ["0", "0"] or root.get("width") != "%smm" % view[2] or root.get("height") != "%smm" % view[3]:
         problems.append("the size %s x %s does not follow the viewBox %s in millimetres" % (root.get("width"), root.get("height"), root.get("viewBox")))
-    if root.get("data-scale") != "100" or root.get("data-unit") != "mm":
-        problems.append("the scale is not declared as 1:100 in millimetres")
-    groups = root.xpath("svg:g[@class='storey']", namespaces=NS)
-    if sorted(group.get("data-storey") for group in groups) != sorted(snapshot["storeys"]):
-        problems.append("the storey groups are %s, the model has %s" % (sorted(group.get("data-storey") for group in groups), sorted(snapshot["storeys"])))
+    if root.get("data-unit") != "mm" or "sheet" not in classes(root):
+        problems.append("the sheet does not declare paper millimetres")
+    groups = root.xpath(VIEW, namespaces=NS)
+    drawn = {identity: view for identity, view in snapshot["views"].items() if view["kind"] in KINDS}
+    if sorted(group.get("data-view") for group in groups) != sorted(drawn):
+        problems.append("the view groups are %s, the model draws %s" % (sorted(group.get("data-view") for group in groups), sorted(drawn)))
     ids = [group.get("id") for group in groups]
     if len(set(ids)) != len(ids):
-        problems.append("the storey group ids are not unique")
+        problems.append("the view group ids are not unique")
     for group in groups:
-        storey = group.get("data-storey")
-        if group.get("id") != "storey-" + re.sub(r"[^A-Za-z0-9_.-]", "_", storey):
-            problems.append("%s: the group id is %s" % (storey, group.get("id")))
-        if len(group.xpath("svg:title", namespaces=NS)) != 1 or [layer.get("class") for layer in group.xpath("svg:g", namespaces=NS)] != ["layer regions", "layer lines", "layer texts"]:
-            problems.append("%s: the group lacks its title or its three layers" % storey)
-        if group.get("data-name") != snapshot["storeys"][storey]["name"] or int(group.get("data-level")) != snapshot["storeys"][storey]["level"]:
-            problems.append("%s: name or level differ from the model" % storey)
+        identity = group.get("data-view")
+        view = drawn.get(identity)
+        if view is None:
+            continue
+        if group.get("id") != "view-" + re.sub(r"[^A-Za-z0-9_.-]", "_", identity):
+            problems.append("%s: the group id is %s" % (identity, group.get("id")))
+        layers = [layer.get("class") for layer in group.xpath("svg:g", namespaces=NS)]
+        notated = bool(table["views"][identity]["notation"])
+        if len(group.xpath("svg:title", namespaces=NS)) != 1 or layers != LAYERS + (["layer annotations"] if notated else []):
+            problems.append("%s: the group lacks its title or its layers (%s)" % (identity, layers))
+        for element in group.xpath("svg:g[@class!='layer annotations']//*[self::svg:path or self::svg:text]", namespaces=NS):
+            if kind_of(element):
+                problems.append("%s: an annotation primitive sits outside the annotation layer" % identity)
+        for element in group.xpath("svg:g[@class='layer annotations']//*[self::svg:path or self::svg:text]", namespaces=NS):
+            if not kind_of(element) or "annotation" not in classes(element):
+                problems.append("%s: a primitive of the annotation layer is not an annotation" % identity)
+        for text in group.xpath("svg:g[@class='layer annotations']/svg:text", namespaces=NS):
+            if len(text) or text.get("text-anchor") != "middle" or not text.get("font-size"):
+                problems.append("%s: an annotation text is not one run, middle anchored, with its own size" % identity)
+        if group.get("class").split() != ["view", KINDS[view["kind"]]] or group.get("data-kind") != KINDS[view["kind"]]:
+            problems.append("%s: the kind differs from the model" % identity)
+        if group.get("data-name") != view["name"] or group.get("data-building") != view["building"] or group.get("aria-label") != view["name"]:
+            problems.append("%s: name or building differ from the model" % identity)
+        if int(group.get("data-scale")) != view["scale"] or group.get("data-storey") != view.get("storey"):
+            problems.append("%s: scale or storey differ from the model" % identity)
         for path in group.xpath(".//svg:path", namespaces=NS):
             if sum(style in classes(path) for style in STYLES) != 1:
-                problems.append("%s: a path has not exactly one style class" % storey)
+                problems.append("%s: a path has not exactly one style class" % identity)
             subpaths(path.get("d"))
         for text in group.xpath(".//svg:text", namespaces=NS):
             if not (math.isfinite(float(text.get("x"))) and math.isfinite(float(text.get("y")))):
-                problems.append("%s: a text has no position" % storey)
-        counted = sum(table["storeys"][storey]["styles"].values())
-        if counted != table["storeys"][storey]["regions"] + table["storeys"][storey]["lines"]:
-            problems.append("%s: %d styled paths for %d regions and lines" % (storey, counted, table["storeys"][storey]["regions"] + table["storeys"][storey]["lines"]))
+                problems.append("%s: a text has no position" % identity)
+        counted = sum(table["views"][identity]["styles"].values())
+        if counted != table["views"][identity]["regions"] + table["views"][identity]["lines"]:
+            problems.append("%s: %d styled paths for %d regions and lines" % (identity, counted, table["views"][identity]["regions"] + table["views"][identity]["lines"]))
     return problems
 
 
-def open_case(root):
-    """📂️ The committed snapshot, the committed file and the committed table of the house case."""
-    case = Path(root) / "🏠️house"
-    snapshot = json.loads((Path(root).parent / "🏗️ifc" / "🏠️house" / "📸️snapshot" / "🔣️.json").read_text(encoding="utf-8"))
-    return case, snapshot, (case / "🏠️house.svg").read_bytes()
+def open_case(root, name):
+    """📂️ The committed snapshot, the committed file and the directory of the committed table of a case."""
+    case = Path(root) / name
+    snapshot = json.loads(Path(root).parent.joinpath(*SNAPSHOTS[name], "🔣️.json").read_text(encoding="utf-8"))
+    return case, snapshot, (case / CASES[name]).read_bytes()
 
 
 # endregion 🔖️Measurement
@@ -238,7 +285,7 @@ def adapter():
     """🧭️ Registration in the ORACLE role only, by the feature's scenario id."""
     from semio_repo_test import Adapter
 
-    return Adapter("python").oracle("export-svg-house", export_handler)
+    return Adapter("python").oracle("export-svg-house", export_handler).oracle("export-svg-notated", export_handler)
 
 
 # endregion 🔖️Handlers
@@ -247,25 +294,27 @@ def adapter():
 # region 🔖️Standalone
 def committed_form(table, sampled):
     """🧾️ The committed file: the compared table plus the audit values beside it."""
-    return {**table, "audit": {"sampledPocheArea": {storey: round(area, 9) for storey, area in sampled.items()}}}
+    return {**table, "audit": {"sampledPocheArea": {view: round(area, 9) for view, area in sampled.items()}}}
 
 
 def main(arguments):
     """🏃️ `check` audits the committed file against the committed table; `write` rewrites the table from the file."""
     command, root = arguments[0], arguments[1]
-    case, snapshot, document = open_case(root)
-    table, sampled = measure(document)
-    problems = audit(document, snapshot, table)
-    path = case / "🔬️measure" / "🔣️.json"
-    expected = committed_form(table, sampled)
-    if command == "write":
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(expected, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
-        print("wrote the table of %d storeys" % len(table["storeys"]))
-    else:
-        committed = json.loads(path.read_text(encoding="utf-8"))
-        if committed != json.loads(json.dumps(expected)):
-            problems.append("the committed table differs from the measurement of the committed file")
+    problems = []
+    for name in arguments[2:] or CASES:
+        case, snapshot, document = open_case(root, name)
+        table, sampled = measure(document)
+        problems += audit(document, snapshot, table)
+        path = case / "🔬️measure" / "🔣️.json"
+        expected = committed_form(table, sampled)
+        if command == "write":
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(expected, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+            print("%s: wrote the table of %d views" % (name, len(table["views"])))
+        else:
+            committed = json.loads(path.read_text(encoding="utf-8"))
+            if committed != json.loads(json.dumps(expected)):
+                problems.append("%s: the committed table differs from the measurement of the committed file" % name)
     for problem in problems:
         print("[FAIL] %s" % problem)
     print("%s: %s (lxml %s, shapely %s)" % (command, "%d problem(s)" % len(problems) if problems else "oracle agrees", etree.LXML_VERSION, __import__("shapely").__version__))

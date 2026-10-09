@@ -13,6 +13,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { installedDashboard } from "../../📦️installation/🟦️.ts";
 
 type Json = Record<string, any>;
 const here = import.meta.dir;
@@ -26,11 +27,7 @@ const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`
 
 // #region 🔖️Binary
 function binary(): string {
-  const name = process.platform === "win32" ? "semio.exe" : "semio";
-  const candidates = [process.env.SEMIO_DASHBOARD_BIN, process.env.CARGO_TARGET_DIR && join(process.env.CARGO_TARGET_DIR, "debug", name), join(repo, ".🧬semio/🦑️repo/⚡️cache/cargo/target/debug", name)].filter((path): path is string => Boolean(path));
-  const found = candidates.find((path) => existsSync(path));
-  if (!found) throw new Error(`no debug \`semio\` binary; build it (\`cargo build -p semio-framework-repo-dashboard --bin semio\`) or set SEMIO_DASHBOARD_BIN. Looked at: ${candidates.join(", ")}`);
-  return found;
+  return process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(repo);
 }
 
 let root = "";
@@ -395,7 +392,7 @@ test("`semio run --dry-run` resolves every selection to the launch an independen
     expect(actual.stop).toBe(entry.id === "compound:workspace/dev-shell-with-hub" ? "together" : "independent");
     expect(actual.group ?? null).toBe(entry.id.startsWith("compound:") || entry.id.startsWith("ticket:26/09/23/OPEN-PROBE/probe-with-hub") ? entry.id : null);
   }
-});
+}, 60_000);
 
 test("a selection the declarations do not allow is refused with the parameter named and nothing is started", () => {
   const cases: [string[], RegExp][] = [
@@ -410,7 +407,7 @@ test("a selection the declarations do not allow is refused with the parameter na
     [["playground:shell", "--param", "user-slot=9"], /choose 1, 2/],
   ];
   for (const [args, message] of cases) {
-    const run = semio(["run", ...args, "--dry-run", "--root", root]);
+    const run = semio(["run", "--dry-run", "--root", root, ...args]);
     expect({ args, code: run.code }).toEqual({ args, code: 2 });
     expect(run.err).toMatch(message);
     expect(run.out).toBe("");

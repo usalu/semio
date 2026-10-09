@@ -1,0 +1,15 @@
+{
+  "mutation": "setClassificationSystem",
+  "id": "cs-din",
+  "entries": [
+    {
+      "code": "300",
+      "title": "Bauwerk - Baukonstruktionen"
+    },
+    {
+      "code": "340",
+      "title": "Innenwaende",
+      "parent": "300"
+    }
+  ]
+}

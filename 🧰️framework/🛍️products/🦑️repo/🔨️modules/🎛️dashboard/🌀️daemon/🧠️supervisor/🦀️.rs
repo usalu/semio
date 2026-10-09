@@ -15,6 +15,7 @@ use crate::terminal::labels::DashboardLabels;
 use std::collections::{BTreeMap, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, mpsc};
 use std::time::{Duration, Instant};
 use ui_tui::tui::pty::{Pty, PtyRead, PtySize, StopStage};
 
@@ -28,7 +29,7 @@ const GIVE_UP_AFTER: Duration = Duration::from_secs(9);
 const READY_SETTLE: Duration = Duration::from_millis(100);
 const PROBE_FIRST: Duration = Duration::from_millis(50);
 const PROBE_LAST: Duration = Duration::from_secs(1);
-const PROBE_CONNECT: Duration = Duration::from_millis(100);
+const MAX_PROBES: usize = 16;
 const TITLE_INTERVAL: Duration = Duration::from_millis(200);
 const FLUSH_INTERVAL: Duration = Duration::from_millis(250);
 const SHUTDOWN_GRACE: Duration = Duration::from_secs(3);
@@ -76,6 +77,7 @@ pub struct Live {
     title_due: Option<Instant>,
     candidate: Option<String>,
     probe_due: Instant,
+    probe: Option<Probe>,
     probe_delay: Duration,
     announced_wait: bool,
     flushed: Instant,
@@ -85,12 +87,12 @@ pub struct Live {
 impl Live {
     fn new(info: SessionInfo, log: SessionLog) -> Self {
         let created = info.started_ms.max(1);
-        Self { info, log, pty: None, input: VecDeque::new(), input_owner: None, input_progress: Instant::now(), stopping: None, stage: None, forced: None, ended: None, closed: false, finishing: None, last_output: Instant::now(), title_due: None, candidate: None, probe_due: Instant::now(), probe_delay: PROBE_FIRST, announced_wait: false, flushed: Instant::now(), created }
+        Self { info, log, pty: None, input: VecDeque::new(), input_owner: None, input_progress: Instant::now(), stopping: None, stage: None, forced: None, ended: None, closed: false, finishing: None, last_output: Instant::now(), title_due: None, candidate: None, probe: None, probe_due: Instant::now(), probe_delay: PROBE_FIRST, announced_wait: false, flushed: Instant::now(), created }
     }
 }
 
 impl Live {
-    /// 🟢️ An address the output showed is only a candidate: the session is ready once something listens on its port.
+    /// 🟢️ An address the output showed is only a candidate: the session is ready once its HTTP endpoint answers successfully.
     fn offer(&mut self, url: String) {
         self.candidate = Some(url);
         self.probe_due = Instant::now();
@@ -98,12 +100,11 @@ impl Live {
     }
 }
 
-/// 🔌 Whether something accepts connections on the loopback port, on either address family.
-fn listening(port: u16) -> bool {
-    use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpStream};
-    port != 0 && [IpAddr::V4(Ipv4Addr::LOCALHOST), IpAddr::V6(Ipv6Addr::LOCALHOST)].into_iter().any(|address| TcpStream::connect_timeout(&SocketAddr::new(address, port), PROBE_CONNECT).is_ok())
-}
+struct Probe { id: u64, cancelled: Arc<AtomicBool> }
 
+impl Drop for Probe {
+    fn drop(&mut self) { self.cancelled.store(true, Ordering::Release); }
+}
 impl Outputs for BTreeMap<String, Live> {
     fn log(&mut self, session_id: &str) -> Option<&mut SessionLog> { self.get_mut(session_id).map(|live| &mut live.log) }
 
@@ -146,6 +147,10 @@ pub struct Supervisor {
     poller: Poller,
     waker: Waker,
     next_client: u64,
+    probe_send: mpsc::Sender<(String, u64, bool)>,
+    probe_results: mpsc::Receiver<(String, u64, bool)>,
+    probing: usize,
+    next_probe: u64,
     shutdown_at: Option<Instant>,
     shutdown: bool,
     behind: bool,
@@ -171,7 +176,8 @@ impl Supervisor {
         replay::sweep_logs(&log_dir, &sessions.keys().map(|id| replay::log_stem(id)).collect());
         let poller = Poller::new()?;
         let waker = poller.waker();
-        Ok(Self { root: root.to_path_buf(), log_dir, journal, sessions, clients: BTreeMap::new(), groups: BTreeMap::new(), listener, poller, waker, next_client: 1, shutdown_at: None, shutdown: false, behind: false })
+        let (probe_send, probe_results) = mpsc::channel();
+        Ok(Self { root: root.to_path_buf(), log_dir, journal, sessions, clients: BTreeMap::new(), groups: BTreeMap::new(), listener, poller, waker, next_client: 1, probe_send, probe_results, probing: 0, next_probe: 1, shutdown_at: None, shutdown: false, behind: false })
     }
 
     /// 📋 The sessions in the order they were created.
@@ -209,7 +215,7 @@ impl Supervisor {
         let mut timeout = Duration::from_secs(1);
         for live in self.sessions.values() {
             if live.pty.is_some() { timeout = timeout.min(Duration::from_millis(100)); }
-            if live.candidate.is_some() { timeout = timeout.min(live.probe_due.saturating_duration_since(Instant::now()).max(Duration::from_millis(5))); }
+            if live.candidate.is_some() && live.probe.is_none() && live.info.status == SessionStatus::Running { timeout = timeout.min(live.probe_due.saturating_duration_since(Instant::now()).max(Duration::from_millis(5))); }
             if !live.input.is_empty() || live.stopping.is_some() || live.ended.is_some() { timeout = timeout.min(Duration::from_millis(20)); }
         }
         if self.shutdown_at.is_some() { timeout = timeout.min(Duration::from_millis(20)); }
@@ -441,6 +447,7 @@ impl Supervisor {
         live.announced_wait = false;
         live.closed = false;
         live.finishing = None;
+        live.probe = None;
         live.candidate = None;
         live.input_owner = requester;
         (live.stopping, live.stage, live.forced, live.ended, live.title_due) = (None, None, None, None, None);
@@ -515,6 +522,7 @@ impl Supervisor {
         match live.info.status {
             SessionStatus::Pending => { self.cancel(session_id, "stopped before it started"); Ok(()) }
             SessionStatus::Running => {
+                live.probe = None;
                 live.info.status = SessionStatus::Stopping;
                 live.stopping = Some(Instant::now());
                 live.stage = Some(StopStage::Interrupt);
@@ -533,6 +541,7 @@ impl Supervisor {
             SessionStatus::Pending => { self.cancel(session_id, "killed before it started"); Ok(()) }
             SessionStatus::Running | SessionStatus::Stopping => {
                 let announce = live.info.status == SessionStatus::Running;
+                live.probe = None;
                 live.info.status = SessionStatus::Stopping;
                 live.stopping.get_or_insert_with(Instant::now);
                 live.stage = Some(StopStage::Kill);
@@ -587,6 +596,20 @@ impl Supervisor {
         let mut publish = Vec::new();
         let mut finished = Vec::new();
         let mut stalled = Vec::new();
+        while let Ok((id, probe, healthy)) = self.probe_results.try_recv() {
+            self.probing = self.probing.saturating_sub(1);
+            let Some(live) = self.sessions.get_mut(&id) else { continue };
+            if !live.probe.as_ref().is_some_and(|active| active.id == probe) { continue; }
+            live.probe = None;
+            if live.info.status != SessionStatus::Running || live.ended.is_some() { continue; }
+            if healthy {
+                live.info.ready_url = live.candidate.take();
+                publish.push(id);
+            } else {
+                live.probe_delay = (live.probe_delay * 2).min(PROBE_LAST);
+                live.probe_due = now + live.probe_delay;
+            }
+        }
         for id in ids {
             let Some(live) = self.sessions.get_mut(&id) else { continue };
             if live.pty.is_some() {
@@ -616,14 +639,21 @@ impl Supervisor {
                     live.log.tracker().settle_ready();
                     if let Some(url) = live.log.tracker().take_ready() { live.offer(url); }
                 }
-                if live.info.ready_url.is_none() && live.candidate.is_some() && now >= live.probe_due {
-                    let port = live.info.command.ready.as_ref().map_or(0, |ready| ready.port);
-                    if listening(port) {
-                        live.info.ready_url = live.candidate.take();
-                        publish.push(id.clone());
-                    } else {
-                        live.probe_delay = (live.probe_delay * 2).min(PROBE_LAST);
-                        live.probe_due = now + live.probe_delay;
+                if live.info.status == SessionStatus::Running && live.ended.is_none() && live.info.ready_url.is_none() && live.probe.is_none() && live.candidate.is_some() && now >= live.probe_due {
+                    live.probe_due = now + PROBE_FIRST;
+                    if self.probing < MAX_PROBES {
+                        let probe = self.next_probe;
+                        self.next_probe = self.next_probe.wrapping_add(1);
+                        let cancelled = Arc::new(AtomicBool::new(false));
+                        let (check, send, wake, session, url) = (cancelled.clone(), self.probe_send.clone(), self.waker.clone(), id.clone(), live.candidate.clone().unwrap());
+                        if std::thread::Builder::new().name("dashboard-http-ready".into()).spawn(move || {
+                            let healthy = super::ready::http::probe(&url, &check);
+                            let _ = send.send((session, probe, healthy));
+                            wake.wake();
+                        }).is_ok() {
+                            live.probe = Some(Probe { id: probe, cancelled });
+                            self.probing += 1;
+                        }
                     }
                 }
             }
@@ -667,6 +697,7 @@ impl Supervisor {
         live.info.code = Some(live.forced.take().unwrap_or(status));
         live.info.ended_ms = Some(ipc::now_ms());
         live.info.ready_url = None;
+        live.probe = None;
         live.candidate = None;
         live.log.cool();
         self.publish(session_id);

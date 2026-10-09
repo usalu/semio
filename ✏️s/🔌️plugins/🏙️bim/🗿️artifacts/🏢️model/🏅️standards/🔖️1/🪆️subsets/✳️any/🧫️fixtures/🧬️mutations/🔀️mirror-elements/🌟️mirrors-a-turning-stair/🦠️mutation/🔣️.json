@@ -1,0 +1,14 @@
+{
+  "mutation": "mirrorElements",
+  "ids": [
+    "s-l"
+  ],
+  "line_start": {
+    "x": 0,
+    "y": 0
+  },
+  "line_end": {
+    "x": 1,
+    "y": 1
+  }
+}

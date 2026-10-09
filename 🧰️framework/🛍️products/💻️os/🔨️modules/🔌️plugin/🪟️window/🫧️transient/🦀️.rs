@@ -5,6 +5,8 @@ use super::transient_publication::transient_store_disposer;
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultOrigin, ViewModel};
 use std::any::Any;
+use super::window_mutation::ErasedWindowMutationValue;
+use semio_framework_value::{FactoryBoxedValue,FactoryBoxedPublication,retirement::controlled::ControlledRetirement};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -12,8 +14,9 @@ use std::sync::Arc;
 pub trait WindowTransientOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
     type State: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + store::ArtifactPack + 'static;
-    type Mutation: protocol::Mutation<Self::State> + PartialEq + Send + protocol::OpText + protocol::OpBinary + 'static;
+    type Mutation: protocol::Mutation<Self::State> + PartialEq + Send + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
 
+    fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default())}
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation>;
 }
 
@@ -34,10 +37,11 @@ impl<P, M> WindowTransientOwnerBundle<P, M> {
 }
 
 /// 📬️ One typed mutation addressed to one exact concrete window instance.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct WindowTransientMutation {
     window_id: String,
     window_kind_id: &'static str,
-    mutation: Box<dyn Any + Send>,
+    mutation: Box<dyn ErasedWindowMutationValue>,
 }
 
 impl std::fmt::Debug for WindowTransientMutation {
@@ -56,8 +60,10 @@ pub(crate) struct RejectedWindowTransientEmission {
 
 impl WindowTransientMutation {
     pub fn of<O: WindowTransientOwner>(window_id: impl Into<String>, mutation: O::Mutation) -> Self {
-        Self { window_id: window_id.into(), window_kind_id: O::WINDOW_KIND_ID, mutation: Box::new(mutation) }
+        Self::from_issued(window_id,O::WINDOW_KIND_ID,mutation,O::build_mutation_retirement_factory())
     }
+
+    pub(crate) fn from_issued<T:Clone+Send+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
 
     pub fn window_id(&self) -> &str {
         &self.window_id
@@ -116,7 +122,10 @@ pub(crate) trait ErasedWindowTransientPublication: Send {
     fn fault(&self) -> Option<&str>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError>;
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError>;
+    fn ingress_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
+    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
+    fn close_ingress(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -124,6 +133,7 @@ struct TypedWindowTransientPublication<O: WindowTransientOwner> {
     window_id: String,
     document_generation: u64,
     publication: store::ArtifactEphemeralOneItemPublication<O::State, O::Mutation>,
+    ingress:ControlledRetirement<FactoryBoxedPublication<O::Mutation>>,
 }
 
 impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTransientPublication<O> {
@@ -155,12 +165,16 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
         self.publication.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
+        if !self.ingress.terminal_is_empty(){return self.ingress.step(grant).map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));}
         self.publication.close_step(grant)
     }
 
+    fn ingress_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:self.ingress.next_copy_byte_demand()?,capacity_bytes:self.ingress.next_capacity_byte_demand(body)?,release_bytes:self.ingress.next_release_byte_demand()?,depth:self.ingress.next_depth_demand()?})}
+    fn close_ingress(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.ingress.step(grant)}
+    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if !self.ingress.terminal_is_empty(){self.ingress_demands(body)}else{self.publication.retirement_demands(body)}}
     fn terminal_is_empty(&self) -> bool {
-        self.publication.terminal_is_empty()
+        self.publication.terminal_is_empty()&&self.ingress.terminal_is_empty()
     }
 }
 
@@ -224,22 +238,18 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
 
     fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission> {
         let WindowTransientMutation { window_id, window_kind_id, mutation } = mutation;
-        let typed = match mutation.downcast::<O::Mutation>() {
-            Ok(typed) => typed,
-            Err(mutation) => {
-                let fault = Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.mutation-type"), "window transient mutation did not match its registered window owner");
-                return Err(RejectedWindowTransientEmission { mutation: WindowTransientMutation { window_id, window_kind_id, mutation }, fault });
-            }
-        };
+        if !mutation.as_any().is::<O::Mutation>(){return Err(RejectedWindowTransientEmission{mutation:WindowTransientMutation{window_id,window_kind_id,mutation},fault:Fault::new(FaultOrigin::Framework,FaultCode::new("window-transient.mutation-type"),"window transient mutation did not match its registered window owner")});}
+        let typed=mutation.into_any().downcast::<FactoryBoxedValue<O::Mutation>>().expect("registered payload carrier preserves its typed owner");
+        let (typed,ingress)=typed.take_for_publication();
         let preparation = self.owners.preparation.clone();
         let retirement = self.owners.state_retirement.clone();
         let partition = self.partition(&window_id);
-        match partition.store.begin_publish_one_leased(operation, expected_generation, *typed, preparation.as_ref(), retirement) {
-            Ok(publication) => Ok(Box::new(TypedWindowTransientPublication::<O> { window_id, document_generation, publication })),
+        match partition.store.begin_publish_one_leased(operation, expected_generation, typed, preparation.as_ref(), retirement) {
+            Ok(publication) => Ok(Box::new(TypedWindowTransientPublication::<O> { window_id, document_generation, publication,ingress:ControlledRetirement::new(ingress).map_err(|(error,_)|error).expect("typed ingress owns genuine facets") })),
             Err(rejected) => {
                 let (reason, mutation) = rejected.into_owners();
                 let fault = Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), reason);
-                Err(RejectedWindowTransientEmission { mutation: WindowTransientMutation { window_id, window_kind_id, mutation: Box::new(mutation) }, fault })
+                Err(RejectedWindowTransientEmission { mutation: WindowTransientMutation { window_id, window_kind_id, mutation: ingress.restore(mutation) }, fault })
             }
         }
     }

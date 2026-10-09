@@ -1,9 +1,76 @@
 {
-  "$schema":"http://json-schema.org/draft-07/schema#",
-  "title":"Incremental PNG Encoding",
-  "description":"An owned RGBA8 image is encoded in fixed 4096-byte scanline blocks. Each advance processes one block and yields. Only a completed job exposes a PNG; cancellation discards the unpublished candidate. PNG uses color type 6, bit depth 8, filter None, fixed-Huffman DEFLATE blocks, and validated CRC/Adler checksums.",
-  "type":"object",
-  "required":["completed","total","done"],
-  "additionalProperties":false,
-  "properties":{"completed":{"type":"integer","minimum":0},"total":{"type":"integer","minimum":1},"done":{"type":"boolean"}}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Incremental PNG Encoding",
+  "description": "An owned RGBA8 image is encoded in fixed 4096-byte scanline blocks. Refusal returns original source custody. Only completion exposes a PNG; cancellation retains unpublished backing until caller-funded close. PNG uses color type 6, bit depth 8, filter None, DEFLATE blocks, and validated CRC/Adler checksums.",
+  "type": "object",
+  "required": [
+    "completed",
+    "total",
+    "done"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "completed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "done": {
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+    "admissionFixture": {
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 8
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "minimum": 0,
+            "type": "integer",
+            "maximum": 255
+          }
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expectedRefusal": {
+          "const": true
+        },
+        "sourceAuthorities": {
+          "uniqueItems": true,
+          "minItems": 2,
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "enum": [
+              "owned",
+              "shared"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "pixels",
+        "maximumBytes",
+        "expectedRefusal",
+        "sourceAuthorities"
+      ]
+    }
+  }
 }

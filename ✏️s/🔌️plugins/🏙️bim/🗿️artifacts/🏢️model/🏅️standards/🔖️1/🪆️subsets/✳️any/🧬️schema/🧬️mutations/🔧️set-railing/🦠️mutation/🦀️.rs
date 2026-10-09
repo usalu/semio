@@ -1,6 +1,6 @@
-//! 🔧️ `set-railing` payload. Sets any of a railing's authored path, height, post spacing, rail and post sections, baluster row (an assigned null removes it), infill, material, base offset and name; absent fields stay untouched.
+//! 🔧️ `set-railing` payload. Sets any of a railing's authored path, height, post spacing, rail and post sections, baluster row (an assigned null removes it), infill, host (an assigned null releases it), material, base offset and name; absent fields stay untouched.
 
-use crate::{Assigned, Baluster, Infill, ModelDiff, ModelMutation, ModelSnapshot, Point2, Profile, RailingPatch};
+use crate::{Assigned, Baluster, Infill, ModelDiff, ModelMutation, ModelSnapshot, Point2, Profile, RailingHost, RailingPatch};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -22,6 +22,8 @@ pub struct SetRailing {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub infill: Option<Infill>,
     #[value(default, skip_serializing_if = "Option::is_none")]
+    pub host: Option<Assigned<Option<RailingHost>>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub material: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub base_offset: Option<f64>,
@@ -32,12 +34,12 @@ pub struct SetRailing {
 impl SetRailing {
     /// 🩹 The sparse entity patch this payload names: every provided field, restated values included.
     pub fn patch(&self) -> RailingPatch {
-        RailingPatch { path: self.path.clone(), height: self.height.clone(), post_spacing: self.post_spacing.clone(), profile: self.profile.clone(), post_profile: self.post_profile.clone(), baluster: self.baluster.clone(), infill: self.infill.clone(), material: self.material.clone(), base_offset: self.base_offset.clone(), name: self.name.clone(), ..Default::default() }
+        RailingPatch { path: self.path.clone(), height: self.height.clone(), post_spacing: self.post_spacing.clone(), profile: self.profile.clone(), post_profile: self.post_profile.clone(), baluster: self.baluster.clone(), infill: self.infill.clone(), host: self.host.clone(), material: self.material.clone(), base_offset: self.base_offset.clone(), name: self.name.clone(), ..Default::default() }
     }
 
     /// 🧩 The payload that provides exactly the fields `patch` names.
     pub fn from_patch(id: String, patch: RailingPatch) -> Self {
-        Self { id, path: patch.path, height: patch.height, post_spacing: patch.post_spacing, profile: patch.profile, post_profile: patch.post_profile, baluster: patch.baluster, infill: patch.infill, material: patch.material, base_offset: patch.base_offset, name: patch.name }
+        Self { id, path: patch.path, height: patch.height, post_spacing: patch.post_spacing, profile: patch.profile, post_profile: patch.post_profile, baluster: patch.baluster, infill: patch.infill, host: patch.host, material: patch.material, base_offset: patch.base_offset, name: patch.name }
     }
 }
 

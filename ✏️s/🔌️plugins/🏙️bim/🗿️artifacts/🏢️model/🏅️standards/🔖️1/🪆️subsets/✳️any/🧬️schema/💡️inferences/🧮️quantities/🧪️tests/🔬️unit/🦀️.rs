@@ -29,7 +29,7 @@ fn layer(material: &str, thickness: f64, function: LayerFunction) -> Layer {
 }
 
 fn wall(axis: Axis) -> Wall {
-    Wall { storey: "st-0".into(), wall_type: "wt".into(), axis, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: "Wall".into() }
+    Wall { storey: "st-0".into(), wall_type: "wt".into(), axis, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, start_join: None, end_join: None, base_slab: None, name: "Wall".into() }
 }
 
 fn material(density: f64) -> Material {
@@ -62,8 +62,8 @@ fn single_wall() -> ModelSnapshot {
 
 fn with_openings() -> ModelSnapshot {
     let mut snapshot = single_wall();
-    snapshot.openings.insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 1.5, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: "Window".into() });
-    snapshot.openings.insert("o-door".into(), Opening { host: "w".into(), kind: OpeningKind::Door { door_type: "door".into() }, offset: 3.8, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: "Door".into() });
+    snapshot.openings.insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 1.5, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
+    snapshot.openings.insert("o-door".into(), Opening { host: "w".into(), kind: OpeningKind::Door { door_type: "door".into() }, offset: 3.8, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Door".into() });
     snapshot
 }
 
@@ -123,7 +123,7 @@ async fn curved_walls_use_the_arc_length_and_the_layer_areas_of_the_annulus() {
 #[semio_framework_async_macros::async_test]
 async fn a_slab_with_a_hole_and_a_slope() {
     let mut snapshot = base();
-    snapshot.slabs.insert("sl".into(), Slab { storey: "st-0".into(), slab_type: "slt".into(), boundary: vec![corner(0.0, 0.0), corner(6.0, 0.0), corner(6.0, 4.0), corner(0.0, 4.0)], holes: vec![vec![corner(1.0, 1.0), corner(2.0, 1.0), corner(2.0, 2.0), corner(1.0, 2.0)]], offset: 0.0, slope: Some(Slope { direction: 0.0, angle: 0.1 }), name: "Slab".into() });
+    snapshot.slabs.insert("sl".into(), Slab { phase: crate::Phase::New, storey: "st-0".into(), slab_type: "slt".into(), boundary: vec![corner(0.0, 0.0), corner(6.0, 0.0), corner(6.0, 4.0), corner(0.0, 4.0)], holes: vec![vec![corner(1.0, 1.0), corner(2.0, 1.0), corner(2.0, 2.0), corner(1.0, 2.0)]], offset: 0.0, slope: Some(Slope { direction: 0.0, angle: 0.1 }), name: "Slab".into() });
     let inferred = crate::ModelInference::infer(&snapshot).expect("infers");
     let slab = &inferred.quantities.elements["sl"];
     assert!(close(slab.gross_area, 24.0) && close(slab.net_area, 23.0) && close(slab.perimeter, 20.0 + 4.0) && close(slab.width, 0.25));
@@ -135,11 +135,11 @@ async fn a_slab_with_a_hole_and_a_slope() {
 #[semio_framework_async_macros::async_test]
 async fn columns_beams_stairs_railings_and_spaces() {
     let mut snapshot = single_wall();
-    snapshot.columns.insert("c".into(), Column { storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.4, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
-    snapshot.beams.insert("b".into(), Beam { storey: "st-0".into(), beam_type: "bt".into(), start: point(0.0, 3.0), end: point(4.0, 0.0), top_offset: 0.0, name: "Beam".into() });
-    snapshot.stairs.insert("s".into(), Stair { storey: "st-0".into(), start: point(1.0, 2.0), direction: 0.0, width: 1.0, flight: StairFlight::Straight, top: TopConstraint::StoreyTop { offset: 0.0 }, max_riser: 0.1875, min_tread: 0.25, stringer: crate::STANDARD_STRINGER, nosing: 0.0, tread_thickness: crate::STANDARD_TREAD_THICKNESS, riser: crate::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() });
-    snapshot.railings.insert("r".into(), Railing { storey: "st-0".into(), path: vec![point(0.0, 0.0), point(3.0, 0.0), point(3.0, 4.0)], height: 1.0, post_spacing: 1.0, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material: "m-concrete".into(), base_offset: 0.0, name: "Railing".into() });
-    snapshot.spaces.insert("sp".into(), crate::Space { storey: "st-0".into(), number: "1".into(), name: "Hall".into(), boundary: SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)] }, usage: "hall".into() });
+    snapshot.columns.insert("c".into(), Column { phase: crate::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.4, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
+    snapshot.beams.insert("b".into(), Beam { phase: crate::Phase::New, storey: "st-0".into(), beam_type: "bt".into(), axis: crate::Axis::Line { start: crate::Point2 { x: 0.0, y: 3.0 }, end: crate::Point2 { x: 4.0, y: 0.0 } }, top_offset: 0.0, end_top_offset: None, name: "Beam".into() });
+    snapshot.stairs.insert("s".into(), Stair { phase: crate::Phase::New, storey: "st-0".into(), start: point(1.0, 2.0), direction: 0.0, width: 1.0, flight: StairFlight::Straight, top: TopConstraint::StoreyTop { offset: 0.0 }, max_riser: 0.1875, min_tread: 0.25, stringer: crate::STANDARD_STRINGER, nosing: 0.0, tread_thickness: crate::STANDARD_TREAD_THICKNESS, riser: crate::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() });
+    snapshot.railings.insert("r".into(), Railing { phase: crate::Phase::New, storey: "st-0".into(), path: vec![point(0.0, 0.0), point(3.0, 0.0), point(3.0, 4.0)], height: 1.0, post_spacing: 1.0, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material: "m-concrete".into(), base_offset: 0.0, host: None, name: "Railing".into() });
+    snapshot.spaces.insert("sp".into(), crate::Space { phase: crate::Phase::New, storey: "st-0".into(), number: "1".into(), name: "Hall".into(), boundary: SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)] }, usage: "hall".into(), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
     let found = quantities(&snapshot);
     let (column, beam, stair, railing, space) = (&found.elements["c"], &found.elements["b"], &found.elements["s"], &found.elements["r"], &found.elements["sp"]);
     assert!(close(column.length, 2.5) && close(column.gross_area, 0.09) && close(column.net_volume, 0.225) && close(column.mass, 0.225 * 2400.0) && close(column.perimeter, 1.2));
@@ -158,7 +158,7 @@ fn stair_tread(snapshot: &ModelSnapshot) -> f64 {
 #[semio_framework_async_macros::async_test]
 async fn totals_add_up_per_kind_type_material_storey_building_and_project() {
     let mut snapshot = with_openings();
-    snapshot.columns.insert("c".into(), Column { storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.0, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
+    snapshot.columns.insert("c".into(), Column { phase: crate::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
     snapshot.walls.insert("w-up".into(), Wall { storey: "st-1".into(), ..wall(line((0.0, 0.0), (2.0, 0.0))) });
     let found = quantities(&snapshot);
     let walls: Vec<&ElementQuantity> = found.elements.values().filter(|element| element.kind == QuantityKind::Wall).collect();
@@ -277,7 +277,7 @@ async fn the_take_off_subtracts_exactly_the_holes_the_solid_cuts() {
 #[semio_framework_async_macros::async_test]
 async fn a_window_flush_with_the_wall_end_is_reported_and_not_cut() {
     let mut snapshot = single_wall();
-    snapshot.openings.insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 0.6, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: String::new() });
+    snapshot.openings.insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 0.6, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() });
     let flush = crate::ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(flush.opening_frames["o-win"].issues, vec![crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue::OutsideTrimmedExtent]);
     assert!(close(flush.quantities.elements["w"].opening_area, 0.0) && close(flush.element_solids["w"].volume, flush.quantities.elements["w"].gross_volume));
@@ -285,4 +285,84 @@ async fn a_window_flush_with_the_wall_end_is_reported_and_not_cut() {
     snapshot.openings.get_mut("o-win").expect("opening").offset = 0.7;
     let clear = crate::ModelInference::infer(&snapshot).expect("infers");
     assert!(clear.opening_frames["o-win"].valid && close(clear.quantities.elements["w"].opening_area, 1.2));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_density_edit_recomputes_only_the_quantities_that_use_the_material_and_a_height_edit_follows() {
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use crate::{Entry, MaterialPatch, ModelDiff, StoreyPatch};
+    let mut snapshot = with_openings();
+    snapshot.columns.insert("c".into(), crate::Column { phase: crate::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(8.0, 8.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: String::new() });
+    let mut session = ModelInferenceSession::new();
+    let first = session.update(&snapshot, &ModelDiff::default()).quantities.clone();
+    let wool = ModelDiff::materials("m-wool", Entry::Patched(MaterialPatch { density: Some(80.0), ..Default::default() }));
+    let edited = protocol::apply_diff(&wool, &snapshot).expect("applies");
+    let second = session.update(&edited, &wool).quantities.clone();
+    assert!(second.elements["w"].mass > first.elements["w"].mass, "the wall has a wool layer");
+    assert_eq!(second.elements["c"], first.elements["c"], "the concrete column does not");
+    assert_eq!(session.report().computed_by_kind.get("quantity"), Some(&3), "the wall, the window and the door (all wool); no column, no slab");
+    let height = ModelDiff::storeys("st-0", Entry::Patched(StoreyPatch { height: Some(3.0), ..Default::default() }));
+    let raised = protocol::apply_diff(&height, &edited).expect("applies");
+    let third = session.update(&raised, &height).quantities.clone();
+    assert!(close(third.elements["w"].height, 3.0) && close(third.elements["c"].height, 3.0), "the take-off follows the storey height");
+}
+
+fn ramp(path: Vec<Vertex>, top: TopConstraint) -> crate::Ramp {
+    crate::Ramp { storey: "st-0".into(), path, width: 1.2, landing_start: 1.5, landing_end: 1.5, landing_turn: 1.5, max_slope: 1.0 / 12.0, thickness: 0.2, material: "m-concrete".into(), base_offset: 0.0, top, railing_left: false, railing_right: false, name: "Ramp".into() }
+}
+
+fn with_ramp(ramp: crate::Ramp) -> ModelSnapshot {
+    let mut snapshot = base();
+    snapshot.ramps.insert("rp".into(), ramp);
+    snapshot
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ramp_measures_its_path_strip_rise_slab_walking_surface_and_mass() {
+    let found = quantities(&with_ramp(ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 })));
+    let ramp = &found.elements["rp"];
+    assert_eq!((ramp.kind, ramp.storey.as_str(), ramp.count, ramp.phase), (QuantityKind::Ramp, "st-0", 1, Phase::New));
+    assert!(close(ramp.length, 10.0) && close(ramp.width, 1.2) && close(ramp.height, 0.5), "path, authored width and rise");
+    assert!(close(ramp.gross_area, 12.0) && close(ramp.net_area, 12.0) && close(ramp.perimeter, 22.4), "the plan strip");
+    assert!(close(ramp.gross_volume, 2.4) && close(ramp.net_volume, 2.4), "the slab is the strip times the vertical thickness");
+    assert!(close(ramp.surface_area, 1.2 * (3.0 + (49.0f64 + 0.25).sqrt())), "two flat landings and one sloped flight: {}", ramp.surface_area);
+    assert!(close(ramp.mass, 2.4 * 2400.0));
+    assert_eq!(ramp.layers.len(), 1);
+    assert!(ramp.layers[0].material == "m-concrete" && close(ramp.layers[0].thickness, 0.2) && close(ramp.layers[0].area, 12.0) && close(ramp.layers[0].volume, 2.4));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_side_railings_of_a_ramp_do_not_count_as_slab() {
+    let bare = quantities(&with_ramp(ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 })));
+    let railed = quantities(&with_ramp(crate::Ramp { railing_left: true, railing_right: true, ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 }) }));
+    assert!(close(railed.elements["rp"].net_volume, bare.elements["rp"].net_volume) && close(railed.elements["rp"].mass, bare.elements["rp"].mass));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_bent_ramp_measures_the_mitred_strip_and_a_descending_ramp_a_negative_rise() {
+    let bent = quantities(&with_ramp(ramp(vec![corner(0.0, 0.0), corner(6.0, 0.0), corner(6.0, 5.0)], TopConstraint::Unconnected { height: 0.6 })));
+    assert!(close(bent.elements["rp"].length, 11.0) && close(bent.elements["rp"].gross_area, 13.2) && close(bent.elements["rp"].net_volume, 2.64));
+    let down = quantities(&with_ramp(crate::Ramp { base_offset: 0.5, ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: -0.5 }) }));
+    assert!(close(down.elements["rp"].height, -0.5) && close(down.elements["rp"].net_volume, 2.4));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn ramps_join_the_totals_and_follow_the_storey_they_climb_to() {
+    let climbing = with_ramp(ramp(vec![corner(0.0, 0.0), corner(40.0, 0.0)], TopConstraint::Storey { storey: "st-1".into(), offset: 0.0 }));
+    let found = quantities(&climbing);
+    assert_eq!(found.project.kinds["ramp"].count, 1);
+    assert!(close(found.project.kinds["ramp"].length, 40.0) && close(found.project.kinds["ramp"].volume, 1.2 * 40.0 * 0.2));
+    assert!(close(found.project.materials["m-concrete"].volume, 1.2 * 40.0 * 0.2) && found.storeys["st-0"].kinds.contains_key("ramp"));
+    assert!(close(found.elements["rp"].height, 2.5), "the rise is the height of the storey below the target");
+    let mut taller = climbing.clone();
+    taller.storeys.get_mut("st-0").expect("storey").height = 3.5;
+    assert!(close(quantities(&taller).elements["rp"].height, 3.5), "the take-off follows the storey height");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ramp_without_a_path_or_on_a_missing_storey_has_no_volume_or_no_row() {
+    let found = quantities(&with_ramp(ramp(vec![corner(1.0, 1.0), corner(1.0, 1.0)], TopConstraint::Unconnected { height: 0.3 })));
+    assert!(close(found.elements["rp"].net_volume, 0.0) && close(found.elements["rp"].length, 0.0) && close(found.elements["rp"].gross_area, 0.0));
+    let lost = quantities(&with_ramp(crate::Ramp { storey: "st-nowhere".into(), ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 }) }));
+    assert!(!lost.elements.contains_key("rp"));
 }

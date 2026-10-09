@@ -22,7 +22,7 @@ impl OperationIdentityCursor{
     }
 }
 impl ErasedSnapshotRetirement for OperationIdentityCursor{
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let step=self.cursor.close(grant).map_err(|error|error.reason)?;self.terminal=step.complete;let progress=RetainedCloneProgress{copied_items:step.processed_items,copied_bytes:step.copied_bytes,retained_capacity_bytes:step.retained_capacity_bytes,released_bytes:step.released_bytes};Ok(if step.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Pending(progress)})}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let step=self.cursor.close(grant).map_err(|error|error.reason)?;self.terminal=step.complete;let progress=RetainedCloneProgress{copied_items:step.processed_items,copied_bytes:step.copied_bytes,retained_capacity_bytes:step.retained_capacity_bytes,released_bytes:step.released_bytes};Ok(if step.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn next_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError>{Ok(0)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.cursor.next_close_byte_demand()}

@@ -1,8 +1,10 @@
 //! 🟢️ Readiness of a long-running task: the local web address its output announces. A task declares the
-//! port it serves on; it is ready when its visible output shows `http://127.0.0.1:<port>`,
+//! port it serves on; it offers a candidate when its visible output shows `http://127.0.0.1:<port>`,
 //! `http://localhost:<port>` or `http://0.0.0.0:<port>` and the digits of the port end there. The ready
 //! address is that match followed by the declared path, or with `printed` the whole printed address up
 //! to the next whitespace.
+//! The supervisor publishes readiness only after that exact local HTTP address responds with a 2xx
+//! or 3xx status. Bounded concurrent probes run outside its event loop and cancel on stop or restart.
 //!
 //! The matcher reads visible text only and never sees terminal control sequences, so an address whose
 //! port is drawn in bold is found like any other. It reads text in arbitrary chunks: an address that
@@ -10,6 +12,9 @@
 //! [`ReadyMatcher::settle`].
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🟢️ready/🥒️.feature
+
+#[path = "📡️http/🦀️.rs"]
+pub(super) mod http;
 
 use super::ipc::Ready;
 

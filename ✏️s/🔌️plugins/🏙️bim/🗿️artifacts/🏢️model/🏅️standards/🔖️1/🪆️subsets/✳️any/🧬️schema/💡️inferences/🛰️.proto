@@ -9,6 +9,8 @@ message ModelInference {
   // @derived
   map<string, StairRun> stair_runs = 5;
   // @derived
+  map<string, RampRun> ramp_runs = 11;
+  // @derived
   map<string, SpaceRoom> spaces = 6;
   // @derived
   ModelQuantities quantities = 7;
@@ -24,6 +26,32 @@ message ModelInference {
   map<string, PlanLinework> plan_linework = 9;
   // @derived
   repeated Diagnostic diagnostics = 10;
+  // @derived
+  map<string, ZoneTotals> zone_totals = 12;
+  // @derived
+  map<string, SchemeTotals> scheme_totals = 13;
+  // @derived
+  DiagnosticIndex diagnostic_index = 14;
+}
+
+message ZoneTotals {
+  uint32 spaces = 1;
+  uint32 resolved = 2;
+  double area = 3;
+  double net_area = 4;
+  double volume = 5;
+  double occupancy = 6;
+  double floor_finish_area = 7;
+  double wall_finish_area = 8;
+  double ceiling_finish_area = 9;
+}
+
+message SchemeTotals {
+  uint32 spaces = 1;
+  uint32 resolved = 2;
+  double area = 3;
+  double volume = 4;
+  double occupancy = 5;
 }
 
 message StoreyLevel {
@@ -114,10 +142,12 @@ enum OpeningIssue {
   OPENING_ISSUE_HOST_MISSING = 0;
   OPENING_ISSUE_TYPE_MISSING = 1;
   OPENING_ISSUE_NON_POSITIVE_SIZE = 2;
-  OPENING_ISSUE_OUTSIDE_HOST_EXTENT = 3;
-  OPENING_ISSUE_BELOW_HOST_BASE = 4;
-  OPENING_ISSUE_ABOVE_HOST_TOP = 5;
-  OPENING_ISSUE_OVERLAPS_SIBLING = 6;
+  OPENING_ISSUE_HOST_DEGENERATE = 3;
+  OPENING_ISSUE_OUTSIDE_HOST_EXTENT = 4;
+  OPENING_ISSUE_BELOW_HOST_BASE = 5;
+  OPENING_ISSUE_ABOVE_HOST_TOP = 6;
+  OPENING_ISSUE_OUTSIDE_TRIMMED_EXTENT = 7;
+  OPENING_ISSUE_OVERLAPS_SIBLING = 8;
 }
 
 enum PlanRole {
@@ -244,6 +274,41 @@ message StairCompliance {
   bool compliant = 5;
 }
 
+message RampRun {
+  double base_z = 1;
+  double top_z = 2;
+  double rise = 3;
+  double length = 4;
+  double run_length = 5;
+  double slope = 6;
+  double angle = 7;
+  double width = 8;
+  repeated RampFlight flights = 9;
+  repeated RampLanding landings = 10;
+  RampCompliance compliance = 11;
+}
+
+message RampFlight {
+  double from = 1;
+  double to = 2;
+  double length = 3;
+  double z_from = 4;
+  double z_to = 5;
+}
+
+message RampLanding {
+  double from = 1;
+  double to = 2;
+  double length = 3;
+  double z = 4;
+}
+
+message RampCompliance {
+  bool run_ok = 1;
+  bool slope_ok = 2;
+  bool compliant = 3;
+}
+
 message SpaceRoom {
   SpaceStatus status = 1;
   repeated Vertex outline = 2;
@@ -257,6 +322,7 @@ message SpaceRoom {
   double volume = 10;
   string ceiling_slab = 11;
   repeated string bounding_walls = 12;
+  string ceiling = 13;
 }
 
 enum SpaceStatus {
@@ -294,6 +360,8 @@ message ElementQuantity {
   double mass = 17;
   uint32 risers = 18;
   repeated LayerQuantity layers = 19;
+  repeated FinishQuantity finishes = 20;
+  optional uint32 balusters = 21;
 }
 
 enum QuantityKind {
@@ -308,7 +376,21 @@ enum QuantityKind {
   QUANTITY_KIND_VOID = 8;
   QUANTITY_KIND_STAIR = 9;
   QUANTITY_KIND_RAILING = 10;
-  QUANTITY_KIND_SPACE = 11;
+  QUANTITY_KIND_RAMP = 11;
+  QUANTITY_KIND_SPACE = 12;
+  QUANTITY_KIND_CEILING = 13;
+}
+
+enum FinishSurface {
+  FINISH_SURFACE_FLOOR = 0;
+  FINISH_SURFACE_WALL = 1;
+  FINISH_SURFACE_CEILING = 2;
+}
+
+message FinishQuantity {
+  FinishSurface surface = 1;
+  string material = 2;
+  double area = 3;
 }
 
 message LayerQuantity {
@@ -323,6 +405,7 @@ message QuantityTotals {
   map<string, Totals> kinds = 1;
   map<string, Totals> types = 2;
   map<string, Totals> materials = 3;
+  map<string, Totals> finishes = 4;
 }
 
 message Totals {
@@ -347,7 +430,9 @@ enum SolidFamily {
   SOLID_FAMILY_SLAB = 6;
   SOLID_FAMILY_ROOF = 7;
   SOLID_FAMILY_STAIR = 8;
-  SOLID_FAMILY_RAILING = 9;
+  SOLID_FAMILY_RAMP = 9;
+  SOLID_FAMILY_RAILING = 10;
+  SOLID_FAMILY_CEILING = 11;
 }
 
 message SolidPoint {
@@ -427,6 +512,17 @@ enum PlanKind {
   PLAN_KIND_GRID_LINE = 24;
   PLAN_KIND_GRID_BUBBLE = 25;
   PLAN_KIND_GRID_LABEL = 26;
+  PLAN_KIND_SECTION_CUT = 27;
+  PLAN_KIND_SILHOUETTE = 28;
+  PLAN_KIND_EDGE = 29;
+  PLAN_KIND_DATUM = 30;
+  PLAN_KIND_DATUM_LABEL = 31;
+  PLAN_KIND_CEILING_EDGE = 32;
+  PLAN_KIND_CEILING_HOLE = 33;
+  PLAN_KIND_RAMP_OUTLINE = 34;
+  PLAN_KIND_RAMP_LANDING = 35;
+  PLAN_KIND_RAMP_ARROW = 36;
+  PLAN_KIND_RAMP_TAG = 37;
 }
 
 message PlanVertex {
@@ -524,26 +620,68 @@ enum DiagnosticCode {
   DIAGNOSTIC_CODE_OPENING_ABOVE_TOP = 31;
   DIAGNOSTIC_CODE_OPENING_OVERLAP = 32;
   DIAGNOSTIC_CODE_OPENING_SIZE = 33;
-  DIAGNOSTIC_CODE_DEGENERATE_AXIS = 34;
-  DIAGNOSTIC_CODE_DEGENERATE_THICKNESS = 35;
-  DIAGNOSTIC_CODE_DEGENERATE_HEIGHT = 36;
-  DIAGNOSTIC_CODE_DEGENERATE_PROFILE = 37;
-  DIAGNOSTIC_CODE_DEGENERATE_LOOP = 38;
-  DIAGNOSTIC_CODE_SELF_INTERSECTING_LOOP = 39;
-  DIAGNOSTIC_CODE_DEGENERATE_PATH = 40;
-  DIAGNOSTIC_CODE_NON_FINITE = 41;
-  DIAGNOSTIC_CODE_DEGENERATE_SPACING = 42;
-  DIAGNOSTIC_CODE_DEGENERATE_STOREY = 43;
-  DIAGNOSTIC_CODE_STOREY_LEVEL_GAP = 44;
-  DIAGNOSTIC_CODE_STOREY_LEVEL_DUPLICATE = 45;
-  DIAGNOSTIC_CODE_STOREY_NO_DATUM = 46;
-  DIAGNOSTIC_CODE_STAIR_NO_RISE = 47;
-  DIAGNOSTIC_CODE_STAIR_RISER_HEIGHT = 48;
-  DIAGNOSTIC_CODE_STAIR_TREAD_DEPTH = 49;
-  DIAGNOSTIC_CODE_STAIR_COMFORT = 50;
-  DIAGNOSTIC_CODE_SPACE_NOT_ENCLOSED = 51;
-  DIAGNOSTIC_CODE_SPACE_SEED_IN_WALL = 52;
-  DIAGNOSTIC_CODE_SPACE_DUPLICATE_NUMBER = 53;
+  DIAGNOSTIC_CODE_OPENING_OUTSIDE_TRIMMED = 34;
+  DIAGNOSTIC_CODE_DEGENERATE_AXIS = 35;
+  DIAGNOSTIC_CODE_DEGENERATE_THICKNESS = 36;
+  DIAGNOSTIC_CODE_DEGENERATE_HEIGHT = 37;
+  DIAGNOSTIC_CODE_DEGENERATE_PROFILE = 38;
+  DIAGNOSTIC_CODE_DEGENERATE_LOOP = 39;
+  DIAGNOSTIC_CODE_SELF_INTERSECTING_LOOP = 40;
+  DIAGNOSTIC_CODE_DEGENERATE_PATH = 41;
+  DIAGNOSTIC_CODE_NON_FINITE = 42;
+  DIAGNOSTIC_CODE_DEGENERATE_SPACING = 43;
+  DIAGNOSTIC_CODE_DEGENERATE_STOREY = 44;
+  DIAGNOSTIC_CODE_STOREY_LEVEL_GAP = 45;
+  DIAGNOSTIC_CODE_STOREY_LEVEL_DUPLICATE = 46;
+  DIAGNOSTIC_CODE_STOREY_NO_DATUM = 47;
+  DIAGNOSTIC_CODE_STAIR_NO_RISE = 48;
+  DIAGNOSTIC_CODE_STAIR_RISER_HEIGHT = 49;
+  DIAGNOSTIC_CODE_STAIR_TREAD_DEPTH = 50;
+  DIAGNOSTIC_CODE_STAIR_COMFORT = 51;
+  DIAGNOSTIC_CODE_STAIR_STRINGER_IGNORED = 52;
+  DIAGNOSTIC_CODE_SPACE_NOT_ENCLOSED = 53;
+  DIAGNOSTIC_CODE_SPACE_SEED_IN_WALL = 54;
+  DIAGNOSTIC_CODE_SPACE_DUPLICATE_NUMBER = 55;
+  DIAGNOSTIC_CODE_ROOF_FLAT_CURVED = 56;
+  DIAGNOSTIC_CODE_ROOF_FLAT_SKELETON = 57;
+  DIAGNOSTIC_CODE_ROOF_FLAT_DEGENERATE = 58;
+  DIAGNOSTIC_CODE_ROOF_FLAT_PITCH = 59;
+  DIAGNOSTIC_CODE_ROOF_OVERHANG_COLLAPSED = 60;
+  DIAGNOSTIC_CODE_ROOF_GABLE_TO_HIP = 61;
+  DIAGNOSTIC_CODE_ANNOTATION_ANCHOR_MISSING = 62;
+  DIAGNOSTIC_CODE_ANNOTATION_ANCHOR_UNRESOLVED = 63;
+  DIAGNOSTIC_CODE_ANNOTATION_STYLE_MISSING = 64;
+  DIAGNOSTIC_CODE_DIMENSION_ZERO = 65;
+  DIAGNOSTIC_CODE_DIMENSION_LOCK_VIOLATED = 66;
+  DIAGNOSTIC_CODE_TAG_EMPTY = 67;
+  DIAGNOSTIC_CODE_CLASH_BEAM_CEILING = 68;
+  DIAGNOSTIC_CODE_CLASH_CEILING_CEILING = 69;
+  DIAGNOSTIC_CODE_REF_CEILING_TYPE = 70;
+  DIAGNOSTIC_CODE_CEILING_OUTSIDE_STOREY = 71;
+  DIAGNOSTIC_CODE_RAMP_SLOPE = 72;
+  DIAGNOSTIC_CODE_RAMP_NO_RUN = 73;
+  DIAGNOSTIC_CODE_REF_RAILING_HOST = 74;
+  DIAGNOSTIC_CODE_RAILING_HOST_UNRESOLVED = 75;
+}
+
+message SeverityCounts {
+  uint32 error = 1;
+  uint32 warning = 2;
+  uint32 info = 3;
+}
+
+message ElementFindings {
+  Severity severity = 1;
+  uint32 count = 2;
+  repeated DiagnosticCode codes = 3;
+}
+
+message DiagnosticIndex {
+  SeverityCounts total = 1;
+  map<string, ElementFindings> elements = 2;
+  map<string, SeverityCounts> categories = 3;
+  map<string, uint32> codes = 4;
+  map<string, SeverityCounts> storeys = 5;
 }
 
 message Diagnostic {

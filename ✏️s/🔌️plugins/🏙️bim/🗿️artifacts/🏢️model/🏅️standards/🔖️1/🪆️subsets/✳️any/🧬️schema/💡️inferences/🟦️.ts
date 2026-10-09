@@ -58,6 +58,15 @@ export interface WallLayout {
   joins: WallJoin[];
 }
 
+export type CurtainPanel = "Glass" | "Empty" | { Solid: { material: string } } | { Door: { door_type: string } } | { Window: { window_type: string } };
+
+export interface CellPanel {
+  u: number;
+  v: number;
+  panel: CurtainPanel;
+  id: string;
+}
+
 export interface CurtainLayout {
   base_z: number;
   top_z: number;
@@ -66,13 +75,19 @@ export interface CurtainLayout {
   area: number;
   u_panels: number;
   v_panels: number;
-  panel_width: number;
-  panel_height: number;
+  u_edges: number[];
+  v_edges: number[];
+  panel?: CurtainPanel;
+  overrides: CellPanel[];
+  stray: string[];
+  repeated: string[];
+  ignored_u: number[];
+  ignored_v: number[];
 }
 
 export type Swing = "Left" | "Right";
 
-export type OpeningIssue = "HostMissing" | "TypeMissing" | "NonPositiveSize" | "OutsideHostExtent" | "BelowHostBase" | "AboveHostTop" | "OverlapsSibling";
+export type OpeningIssue = "HostMissing" | "TypeMissing" | "NonPositiveSize" | "HostDegenerate" | "OutsideHostExtent" | "BelowHostBase" | "AboveHostTop" | "OutsideTrimmedExtent" | "OverlapsSibling";
 
 export type PlanRole = "Leaf" | "Swing" | "Glazing";
 
@@ -179,6 +194,41 @@ export interface StairCompliance {
   compliant: boolean;
 }
 
+export interface RampRun {
+  base_z: number;
+  top_z: number;
+  rise: number;
+  length: number;
+  run_length: number;
+  slope: number;
+  angle: number;
+  width: number;
+  flights: RampFlight[];
+  landings: RampLanding[];
+  compliance: RampCompliance;
+}
+
+export interface RampFlight {
+  from: number;
+  to: number;
+  length: number;
+  z_from: number;
+  z_to: number;
+}
+
+export interface RampLanding {
+  from: number;
+  to: number;
+  length: number;
+  z: number;
+}
+
+export interface RampCompliance {
+  run_ok: boolean;
+  slope_ok: boolean;
+  compliant: boolean;
+}
+
 export interface SpaceRoom {
   status: SpaceStatus;
   outline: Vertex[];
@@ -191,6 +241,7 @@ export interface SpaceRoom {
   clear_height: number;
   volume: number;
   ceiling_slab: string;
+  ceiling: string;
   bounding_walls: string[];
 }
 
@@ -201,6 +252,18 @@ export interface ModelQuantities {
   storeys: Record<string, QuantityTotals>;
   buildings: Record<string, QuantityTotals>;
   project: QuantityTotals;
+}
+
+export interface PanelQuantity {
+  kind: string;
+  count: number;
+  area: number;
+}
+
+export interface MullionQuantity {
+  kind: string;
+  count: number;
+  length: number;
 }
 
 export interface ElementQuantity {
@@ -222,10 +285,22 @@ export interface ElementQuantity {
   net_volume: number;
   mass: number;
   risers: number;
+  balusters?: number;
   layers: LayerQuantity[];
+  finishes: FinishQuantity[];
+  panels?: PanelQuantity[];
+  mullions?: MullionQuantity[];
 }
 
-export type QuantityKind = "Wall" | "CurtainWall" | "Slab" | "Roof" | "Column" | "Beam" | "Window" | "Door" | "Void" | "Stair" | "Railing" | "Space";
+export type QuantityKind = "Wall" | "CurtainWall" | "Slab" | "Roof" | "Column" | "Beam" | "Window" | "Door" | "Void" | "Stair" | "Railing" | "Ramp" | "Space" | "Ceiling";
+
+export type FinishSurface = "Floor" | "Wall" | "Ceiling";
+
+export interface FinishQuantity {
+  surface: FinishSurface;
+  material: string;
+  area: number;
+}
 
 export interface LayerQuantity {
   material: string;
@@ -239,6 +314,27 @@ export interface QuantityTotals {
   kinds: Record<string, Totals>;
   types: Record<string, Totals>;
   materials: Record<string, Totals>;
+  finishes: Record<string, Totals>;
+}
+
+export interface ZoneTotals {
+  spaces: number;
+  resolved: number;
+  area: number;
+  net_area: number;
+  volume: number;
+  occupancy: number;
+  floor_finish_area: number;
+  wall_finish_area: number;
+  ceiling_finish_area: number;
+}
+
+export interface SchemeTotals {
+  spaces: number;
+  resolved: number;
+  area: number;
+  volume: number;
+  occupancy: number;
 }
 
 export interface Totals {
@@ -249,7 +345,7 @@ export interface Totals {
   mass: number;
 }
 
-export type SolidFamily = "Wall" | "CurtainWall" | "Window" | "Door" | "Column" | "Beam" | "Slab" | "Roof" | "Stair" | "Railing";
+export type SolidFamily = "Wall" | "CurtainWall" | "Window" | "Door" | "Column" | "Beam" | "Slab" | "Roof" | "Stair" | "Ramp" | "Railing" | "Ceiling";
 
 export interface SolidPoint {
   x: number;
@@ -291,7 +387,7 @@ export interface ElementSolid {
 
 export type PlanStyle = "Cut" | "Projection" | "Hidden" | "Annotation";
 
-export type PlanKind = "WallCut" | "WallLayer" | "WallOutline" | "CurtainAxis" | "CurtainMullion" | "WindowFrame" | "WindowGlazing" | "WindowSill" | "DoorLeaf" | "DoorSwing" | "ColumnCut" | "ColumnOutline" | "BeamOutline" | "SlabEdge" | "SlabHole" | "RoofOutline" | "StairOutline" | "StairRiser" | "StairCutLine" | "StairArrow" | "StairLanding" | "RailingPath" | "SpaceOutline" | "SpaceTag" | "GridLine" | "GridBubble" | "GridLabel";
+export type PlanKind = "WallCut" | "WallLayer" | "WallOutline" | "CurtainAxis" | "CurtainMullion" | "WindowFrame" | "WindowGlazing" | "WindowSill" | "DoorLeaf" | "DoorSwing" | "ColumnCut" | "ColumnOutline" | "BeamOutline" | "SlabEdge" | "SlabHole" | "RoofOutline" | "StairOutline" | "StairRiser" | "StairCutLine" | "StairArrow" | "StairLanding" | "RailingPath" | "SpaceOutline" | "SpaceTag" | "GridLine" | "GridBubble" | "GridLabel" | "SectionCut" | "Silhouette" | "Edge" | "Datum" | "DatumLabel" | "CeilingEdge" | "CeilingHole" | "RampOutline" | "RampLanding" | "RampArrow" | "RampTag";
 
 export interface PlanVertex {
   x: number;
@@ -349,7 +445,27 @@ export interface PlanLinework {
 
 export type Severity = "Info" | "Warning" | "Error";
 
-export type DiagnosticCode = "ClashWallWall" | "ClashWallColumn" | "ClashColumnColumn" | "ClashWallBeam" | "ClashBeamColumn" | "ClashBeamBeam" | "ClashBeamSlab" | "ClashStairWall" | "ClashStairColumn" | "ClashStairBeam" | "ClashStairStair" | "ClashSlabSlab" | "RefWallType" | "RefColumnType" | "RefBeamType" | "RefSlabType" | "RefRoofType" | "RefWindowType" | "RefDoorType" | "RefTopStorey" | "RefOpeningHost" | "RefElementStorey" | "RefStoreyBuilding" | "RefBuildingSite" | "RefGridBuilding" | "RefLayerMaterial" | "RefTypeMaterial" | "RefPropertyElement" | "DuplicateId" | "OpeningOutsideHost" | "OpeningBelowBase" | "OpeningAboveTop" | "OpeningOverlap" | "OpeningSize" | "DegenerateAxis" | "DegenerateThickness" | "DegenerateHeight" | "DegenerateProfile" | "DegenerateLoop" | "SelfIntersectingLoop" | "DegeneratePath" | "NonFinite" | "DegenerateSpacing" | "DegenerateStorey" | "StoreyLevelGap" | "StoreyLevelDuplicate" | "StoreyNoDatum" | "StairNoRise" | "StairRiserHeight" | "StairTreadDepth" | "StairComfort" | "SpaceNotEnclosed" | "SpaceSeedInWall" | "SpaceDuplicateNumber";
+export type DiagnosticCode = "ClashWallWall" | "ClashWallColumn" | "ClashColumnColumn" | "ClashWallBeam" | "ClashBeamColumn" | "ClashBeamBeam" | "ClashBeamSlab" | "ClashStairWall" | "ClashStairColumn" | "ClashStairBeam" | "ClashStairStair" | "ClashSlabSlab" | "RefWallType" | "RefColumnType" | "RefBeamType" | "RefSlabType" | "RefRoofType" | "RefWindowType" | "RefDoorType" | "RefTopStorey" | "RefOpeningHost" | "RefElementStorey" | "RefStoreyBuilding" | "RefBuildingSite" | "RefGridBuilding" | "RefLayerMaterial" | "RefTypeMaterial" | "RefPropertyElement" | "DuplicateId" | "OpeningOutsideHost" | "OpeningBelowBase" | "OpeningAboveTop" | "OpeningOverlap" | "OpeningSize" | "OpeningOutsideTrimmed" | "DegenerateAxis" | "DegenerateThickness" | "DegenerateHeight" | "DegenerateProfile" | "DegenerateLoop" | "SelfIntersectingLoop" | "DegeneratePath" | "NonFinite" | "DegenerateSpacing" | "DegenerateStorey" | "StoreyLevelGap" | "StoreyLevelDuplicate" | "StoreyNoDatum" | "StairNoRise" | "StairRiserHeight" | "StairTreadDepth" | "StairComfort" | "StairStringerIgnored" | "SpaceNotEnclosed" | "SpaceSeedInWall" | "SpaceDuplicateNumber" | "RoofFlatCurved" | "RoofFlatSkeleton" | "RoofFlatDegenerate" | "RoofFlatPitch" | "RoofOverhangCollapsed" | "RoofGableToHip" | "AnnotationAnchorMissing" | "AnnotationAnchorUnresolved" | "AnnotationStyleMissing" | "DimensionZero" | "DimensionLockViolated" | "TagEmpty" | "ClashBeamCeiling" | "ClashCeilingCeiling" | "RefCeilingType" | "CurtainOverrideOutOfGrid" | "CurtainDoorNotAtBase" | "CurtainGridLineOutside" | "CurtainDuplicateOverride" | "RefCurtainWallType" | "RefCurtainPanel" | "RefCurtainOverrideHost" | "ColumnTiltInvalid" | "CeilingOutsideStorey" | "RampSlope" | "RampNoRun" | "RefRailingHost" | "RailingHostUnresolved";
+
+export interface SeverityCounts {
+  error: number;
+  warning: number;
+  info: number;
+}
+
+export interface ElementFindings {
+  severity: Severity;
+  count: number;
+  codes: DiagnosticCode[];
+}
+
+export interface DiagnosticIndex {
+  total: SeverityCounts;
+  elements: Record<string, ElementFindings>;
+  categories: Record<string, SeverityCounts>;
+  codes: Record<string, number>;
+  storeys: Record<string, SeverityCounts>;
+}
 
 export interface Diagnostic {
   code: DiagnosticCode;
@@ -367,6 +483,8 @@ export interface ModelInference {
   /** @derived */
   stair_runs: Record<string, StairRun>;
   /** @derived */
+  ramp_runs: Record<string, RampRun>;
+  /** @derived */
   spaces: Record<string, SpaceRoom>;
   /** @derived */
   quantities: ModelQuantities;
@@ -382,4 +500,10 @@ export interface ModelInference {
   plan_linework: Record<string, PlanLinework>;
   /** @derived */
   diagnostics: Diagnostic[];
+  /** @derived */
+  zone_totals: Record<string, ZoneTotals>;
+  /** @derived */
+  scheme_totals: Record<string, SchemeTotals>;
+  /** @derived */
+  diagnostic_index: DiagnosticIndex;
 }

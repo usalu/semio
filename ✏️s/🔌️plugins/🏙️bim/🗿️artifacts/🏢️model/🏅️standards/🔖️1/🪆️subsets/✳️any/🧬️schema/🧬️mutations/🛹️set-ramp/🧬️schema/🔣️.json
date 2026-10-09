@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-ramp/schema.json",
+  "title": "SetRamp",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "path",
+    "width",
+    "landing_start",
+    "landing_end",
+    "landing_turn",
+    "max_slope",
+    "thickness",
+    "material",
+    "base_offset",
+    "top",
+    "railing_left",
+    "railing_right",
+    "name"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setRamp"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ramp",
+          "de": "Rampe"
+        },
+        "ref": {
+          "kind": "ramp"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "path": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Path",
+          "de": "Verlauf"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "width": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Width (m)",
+          "de": "Breite (m)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "landing_start": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Foot landing (m)",
+          "de": "Antrittspodest (m)"
+        },
+        "group": "value",
+        "order": 31
+      }
+    },
+    "landing_end": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Head landing (m)",
+          "de": "Austrittspodest (m)"
+        },
+        "group": "value",
+        "order": 32
+      }
+    },
+    "landing_turn": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Turn landing (m)",
+          "de": "Wendepodest (m)"
+        },
+        "group": "value",
+        "order": 33
+      }
+    },
+    "max_slope": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Slope limit (rise per run)",
+          "de": "Neigungsgrenze (Höhe je Länge)"
+        },
+        "group": "value",
+        "order": 34
+      }
+    },
+    "thickness": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Thickness (m)",
+          "de": "Dicke (m)"
+        },
+        "group": "value",
+        "order": 35
+      }
+    },
+    "material": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "value",
+        "order": 36
+      }
+    },
+    "base_offset": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Base offset (m)",
+          "de": "Fußversatz (m)"
+        },
+        "group": "value",
+        "order": 37
+      }
+    },
+    "top": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TopConstraint",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Top constraint",
+          "de": "Oberkante"
+        },
+        "group": "value",
+        "order": 38
+      }
+    },
+    "railing_left": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Left railing",
+          "de": "Geländer links"
+        },
+        "group": "value",
+        "order": 39
+      }
+    },
+    "railing_right": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Right railing",
+          "de": "Geländer rechts"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 50
+      }
+    }
+  }
+}

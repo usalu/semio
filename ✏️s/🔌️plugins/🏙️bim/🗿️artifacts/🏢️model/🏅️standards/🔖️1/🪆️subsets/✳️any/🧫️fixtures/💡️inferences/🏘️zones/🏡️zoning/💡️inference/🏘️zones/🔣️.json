@@ -1,0 +1,56 @@
+{
+  "zones": {
+    "z-day": {
+      "spaces": 2,
+      "resolved": 1,
+      "area": 21.09,
+      "net_area": 21.09,
+      "volume": 51.40423611107966,
+      "occupancy": 2.109,
+      "floor_finish_area": 21.09,
+      "wall_finish_area": 42.492647647619606,
+      "ceiling_finish_area": 21.11032742387045
+    },
+    "z-night": {
+      "spaces": 2,
+      "resolved": 2,
+      "area": 32.78999999999999,
+      "net_area": 32.629999999999995,
+      "volume": 86.60058433468694,
+      "occupancy": 1.6314999999999997,
+      "floor_finish_area": 32.629999999999995,
+      "wall_finish_area": 90.42567603474271,
+      "ceiling_finish_area": 32.74124050987176
+    }
+  },
+  "schemes": {
+    "as-gfa": {
+      "spaces": 4,
+      "resolved": 3,
+      "area": 53.879999999999995,
+      "volume": 138.0048204457666,
+      "occupancy": 3.7405
+    },
+    "as-nsa": {
+      "spaces": 3,
+      "resolved": 2,
+      "area": 41.71999999999999,
+      "volume": 104.4048204457666,
+      "occupancy": 3.1404999999999994
+    },
+    "as-day": {
+      "spaces": 2,
+      "resolved": 1,
+      "area": 21.09,
+      "volume": 51.40423611107966,
+      "occupancy": 2.109
+    },
+    "as-sleep": {
+      "spaces": 1,
+      "resolved": 1,
+      "area": 12.0,
+      "volume": 33.599999999999994,
+      "occupancy": 0.6000000000000001
+    }
+  }
+}

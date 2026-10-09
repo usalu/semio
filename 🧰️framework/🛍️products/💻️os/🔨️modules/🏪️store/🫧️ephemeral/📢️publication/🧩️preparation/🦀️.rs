@@ -46,7 +46,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTaskPreparati
         if let Some(mutation) = self.mutation.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.mutation_retirement.as_ref().expect("original mutation factory").retirement_birth_bytes(mutation), depth: 2, ..Default::default() }); }
         if self.prepared.is_some() || self.base.as_ref().is_some_and(|base| matches!(base.0, ArtifactEphemeralBaseOwner::Transient(_))) { return Ok(RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(), depth: 2, ..Default::default() }); }
         if self.base.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        if let Some(registry) = self.base_registry.as_ref() { if Arc::strong_count(registry) == 1 && registry.has_returned() { return nested(registry.returned_admission_demands::<P>(|_| RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(), depth: 1, ..Default::default() }).map_err(crate::os_store::SnapshotReadLeaseRefusal::into_value_error)?); } return crate::os_store::snapshot_registry_alias_demands(&self.base_registry); }
+        if let Some(registry) = self.base_registry.as_ref() { if registry.strong_count() == 1 && registry.has_returned() { return nested(registry.returned_admission_demands::<P>(|_| RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(), depth: 1, ..Default::default() }).map_err(crate::os_store::SnapshotReadLeaseRefusal::into_value_error)?); } return crate::os_store::snapshot_registry_alias_demands(&self.base_registry); }
         if self.state_retirement.is_some() || self.mutation_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(factory) = self.factory_close.iter().flatten().next() { return nested(factory.demands(body)?); }
         Ok(Default::default())
@@ -78,7 +78,7 @@ pub(super) struct ArtifactEphemeralTaskPreparation<P, M> {
     retirement: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     state_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
     mutation_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,
-    base_registry: ManuallyDrop<Option<Arc<crate::os_store::SnapshotReadLeaseRegistry>>>,
+    base_registry: ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryHandle>>,
     factory_close: [Option<semio_framework_value::FactoryAuthority>; 2],
     checkpoint: ArtifactStoreOneItemCheckpoint,
     constructed: bool,
@@ -211,7 +211,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
             }
         }
         if let Some(registry) = self.base_registry.as_ref() {
-            if Arc::strong_count(registry) == 1 && registry.has_returned() { return crate::os_store::advance_returned_snapshot_read(registry, &mut self.retirement, self.state_retirement.as_ref().expect("original state factory"), child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+            if registry.strong_count() == 1 && registry.has_returned() { return crate::os_store::advance_returned_snapshot_read(registry, &mut self.retirement, self.state_retirement.as_ref().expect("original state factory"), child).map(|step| RetainedCloneStep::Progress(step.progress())); }
             return crate::os_store::snapshot_registry_alias_close_step(&mut self.base_registry, grant.retained_grant()).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(factory) = self.mutation_retirement.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }

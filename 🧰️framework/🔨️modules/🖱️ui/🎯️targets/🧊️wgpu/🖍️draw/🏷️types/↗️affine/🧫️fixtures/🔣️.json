@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"name":"identity", "rect":[2,3,4,5], "matrix":[1,0,0,1,0,0], "corners":[[2,3],[6,3],[6,8],[2,8]]},
+    {"name":"quarter turn", "rect":[2,3,4,5], "matrix":[0,1,-1,0,10,20], "corners":[[7,22],[7,26],[2,26],[2,22]]},
+    {"name":"sheared reflection", "rect":[-2,3,4,5], "matrix":[-2,1,0.5,3,10,-7], "corners":[[15.5,0],[7.5,4],[10,19],[18,15]]},
+    {"name":"nonuniform scale", "rect":[0,0,10,6], "matrix":[2,0,0,0.5,4,8], "corners":[[4,8],[24,8],[24,11],[4,11]]},
+    {"name":"flat projection", "rect":[1,2,4,5], "matrix":[1,0,2,0,3,4], "corners":[[8,4],[12,4],[22,4],[18,4]]}
+  ]
+}

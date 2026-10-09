@@ -63,7 +63,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
-            match open.step(&mut context) {
+            match open.step(&mut context, semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }) {
                 store::PersistedDocumentHydrationStep::Pending(_) => {}
                 store::PersistedDocumentHydrationStep::Ready(store::PersistedDocumentHydrationOutput::Store(member)) => {
                     ready = Some(*member);

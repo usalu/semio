@@ -1,0 +1,9 @@
+{
+  "mutation": "createZone",
+  "id": "z-office",
+  "zone": {
+    "name": "Office wing",
+    "category": "Tenant",
+    "occupancy_density": 0.1
+  }
+}

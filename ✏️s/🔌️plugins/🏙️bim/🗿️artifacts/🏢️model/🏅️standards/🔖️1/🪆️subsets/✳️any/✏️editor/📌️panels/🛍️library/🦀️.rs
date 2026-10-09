@@ -41,11 +41,15 @@ pub fn definition() -> PanelTabDefinition {
 /// 🛍️ One row of a family's roster.
 enum Row {
     Add(&'static EntityKind),
+    Preset(&'static str),
     Entry(String),
 }
 
 fn roster(snapshot: &ModelSnapshot, family: &'static EntityKind) -> Vec<Row> {
     let mut rows: Vec<Row> = family.create.iter().map(|_| Row::Add(family)).collect();
+    if family.kind == "schedule" {
+        rows.extend(crate::editor::bim::modes::edit::windows::schedule::edit::presets().iter().copied().map(Row::Preset));
+    }
     rows.extend((family.ids)(snapshot).into_iter().map(Row::Entry));
     rows
 }
@@ -65,6 +69,11 @@ fn add_row(family: &EntityKind, labels: &BimLabels) -> UiAssemblyResult<BuiltNod
     let args = ui_value_map([("kind", ui_value_text(family.kind)?), ("parent", ui_value_text("")?), ("name", ui_value_text("")?)])?;
     tree_item_with_icon(format!("{ROOT}.add.{}", family.kind), Label::data(BimLabels::named(labels.action_add_named, (family.label)(labels).as_str())), "plus", bim_action("createEntity", Some(args)))
 }
+fn preset_row(key: &str, labels: &BimLabels) -> UiAssemblyResult<BuiltNode> {
+    let name = crate::editor::bim::modes::edit::windows::schedule::preset_label(labels, key);
+    let args = ui_value_map([("kind", ui_value_text("schedule")?), ("parent", ui_value_text(key)?), ("name", ui_value_text(&name)?)])?;
+    tree_item_with_icon(format!("{ROOT}.preset.{key}"), Label::data(BimLabels::named(labels.act_new_named, &name)), "plus", bim_action("createEntity", Some(args)))
+}
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
@@ -75,6 +84,7 @@ pub fn render(snapshot: &ModelSnapshot, labels: &BimLabels, windows: &TreeWindow
         let rows = roster(snapshot, family);
         builder = builder.window_section(windows, &format!("{ROOT}.{}", family.kind), Some(ui_label((family.group)(labels).as_str())?), true, &rows, |row| match row {
             Row::Add(family) => add_row(family, labels),
+            Row::Preset(key) => preset_row(key, labels),
             Row::Entry(id) => entry_row(snapshot, family, id),
         })?;
     }

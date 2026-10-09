@@ -1,0 +1,13 @@
+{
+  "mutation": "setSpace",
+  "id": "sp-1",
+  "floor_finish": {
+    "value": "m-tile"
+  },
+  "wall_finish": {
+    "value": "m-paint"
+  },
+  "ceiling_finish": {
+    "value": "m-paint"
+  }
+}

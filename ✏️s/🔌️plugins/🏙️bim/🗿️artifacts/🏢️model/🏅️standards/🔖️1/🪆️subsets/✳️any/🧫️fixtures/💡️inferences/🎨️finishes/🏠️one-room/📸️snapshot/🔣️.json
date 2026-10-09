@@ -1,0 +1,300 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "One room",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-paint": {
+      "name": "paint",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-tile": {
+      "name": "tile",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-wood": {
+      "name": "wood",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {
+    "win-120": {
+      "name": "Window 120",
+      "width": 1.2,
+      "height": 1.2,
+      "sill": 0.9,
+      "frame_width": 0.05,
+      "frame_depth": 0.1,
+      "panes": 2,
+      "material": "m-wood"
+    }
+  },
+  "door_types": {
+    "door-90": {
+      "name": "Door 90",
+      "width": 0.9,
+      "height": 2.1,
+      "frame_width": 0.05,
+      "frame_depth": 0.1,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m-wood"
+    }
+  },
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 0,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "w-south"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 4
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "w-east"
+    },
+    "w-north": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 4
+          },
+          "end": {
+            "x": 0,
+            "y": 4
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "w-north"
+    },
+    "w-west": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 4
+          },
+          "end": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "w-west"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {
+    "o-win-south": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "win-120"
+        }
+      },
+      "offset": 1.5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "South window"
+    },
+    "o-win-north": {
+      "host": "w-north",
+      "kind": {
+        "Window": {
+          "window_type": "win-120"
+        }
+      },
+      "offset": 4,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "North window"
+    },
+    "o-door-east": {
+      "host": "w-east",
+      "kind": {
+        "Door": {
+          "door_type": "door-90"
+        }
+      },
+      "offset": 2,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "East door"
+    }
+  },
+  "stairs": {},
+  "railings": {},
+  "spaces": {
+    "sp-room": {
+      "storey": "st-ground",
+      "number": "0.01",
+      "name": "Room",
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 3,
+            "y": 2
+          }
+        }
+      },
+      "usage": "Living",
+      "phase": "New",
+      "floor_finish": "m-tile",
+      "wall_finish": "m-paint",
+      "ceiling_finish": "m-paint"
+    }
+  },
+  "properties": {},
+  "classifications": {}
+}

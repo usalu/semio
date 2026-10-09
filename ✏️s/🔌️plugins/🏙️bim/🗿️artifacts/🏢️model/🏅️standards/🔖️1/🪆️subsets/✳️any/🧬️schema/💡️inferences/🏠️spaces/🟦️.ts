@@ -24,5 +24,6 @@ export interface SpaceRoom {
   clear_height: number;
   volume: number;
   ceiling_slab: string;
+  ceiling: string;
   bounding_walls: string[];
 }

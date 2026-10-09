@@ -793,6 +793,18 @@ pub mod standards {
                     #[path = "."]
                     pub mod mutations {
                         #[path = "."]
+                        pub mod update_image {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🧪️tests/🔬️unit/🦀️.rs"]
+                            mod tests;
+                        }
+                        #[path = "."]
                         pub mod update_text {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
@@ -885,6 +897,18 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod mutations {
+                        #[path = "."]
+                        pub mod shape_coordinate {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate/🧪️tests/🔬️unit/🦀️.rs"]
+                            mod tests;
+                        }
                         #[path = "."]
                         pub mod update_path_geometry {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🔺️diff/🦀️.rs"]
@@ -1106,6 +1130,8 @@ pub mod editor {
         pub mod commands {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-layer/🦀️.rs"]
             pub mod add_layer;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🦀️.rs"]
+            pub mod import_image;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️canvas-commit-draft/🦀️.rs"]
             pub mod canvas_commit_draft;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-double-click/🦀️.rs"]

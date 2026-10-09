@@ -15,3 +15,6 @@ pub mod compositing;
 pub mod coverage;
 #[path = "../../🎨️sampling/↗️affine/🦀️.rs"]
 pub mod affine_sampling;
+
+#[path="../../♻️retirement/🦀️.rs"]
+pub mod retirement;

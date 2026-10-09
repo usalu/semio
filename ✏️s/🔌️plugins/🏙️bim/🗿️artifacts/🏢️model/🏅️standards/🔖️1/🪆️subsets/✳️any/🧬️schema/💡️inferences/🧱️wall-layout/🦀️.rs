@@ -25,6 +25,8 @@ use std::collections::BTreeMap;
 
 #[path = "🔗️joins/🦀️.rs"]
 pub mod joins;
+#[path = "🔗️attach/🦀️.rs"]
+pub mod attach;
 
 use joins::{Band, JOIN_TOLERANCE};
 
@@ -98,6 +100,34 @@ pub struct WallLayout {
     pub footprint_area: f64,
     pub volume: f64,
     pub joins: Vec<WallJoin>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub base_profile: Vec<attach::ElevationPoint>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub top_profile: Vec<attach::ElevationPoint>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub top_attach: Option<attach::AttachState>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub base_attach: Option<attach::AttachState>,
+}
+
+impl WallLayout {
+    /// 📈️ The absolute height of the top of the wall at arc length `s` along its axis: the elevation edge for an attached top, the flat top otherwise.
+    pub fn top_at(&self, s: f64) -> f64 {
+        if self.top_profile.is_empty() {
+            self.top_z
+        } else {
+            attach::elevation_at(&self.top_profile, s)
+        }
+    }
+
+    /// 📈️ The absolute height of the base of the wall at arc length `s` along its axis: the elevation edge for an attached base, the flat base otherwise.
+    pub fn base_at(&self, s: f64) -> f64 {
+        if self.base_profile.is_empty() {
+            self.base_z
+        } else {
+            attach::elevation_at(&self.base_profile, s)
+        }
+    }
 }
 
 /// ↔️ Distances from a wall axis to its faces: `layers` are the signed interface offsets (left positive), `layers + 1` of them.
@@ -165,7 +195,7 @@ pub fn offsets_of(snapshot: &ModelSnapshot, wall: &Wall) -> Offsets {
 pub fn band_of(snapshot: &ModelSnapshot, wall: &Wall) -> Option<Band> {
     let axis = seg(&wall.axis);
     let offsets = offsets_of(snapshot, wall);
-    (axis.length() > JOIN_TOLERANCE).then(|| Band { axis, left: offsets.left, right: offsets.right })
+    (axis.length() > JOIN_TOLERANCE).then(|| Band { axis, left: offsets.left, right: offsets.right, start_join: wall.start_join, end_join: wall.end_join })
 }
 
 /// 🧱️ The plan bands of the walls of one storey, keyed by wall id: the whole-storey reference the neighbourhood-based layouts are tested against.
@@ -240,11 +270,13 @@ pub fn dependency(snapshot: &ModelSnapshot, wall: &Wall) -> DslValue {
     ])
 }
 
-/// 🔑️ What a `Band` reads of a wall: its axis, its location line and the layers of its type.
+/// 🔑️ What a `Band` reads of a wall: its axis, its location line, the join preference of each end and the layers of its type.
 pub fn band_dependency(snapshot: &ModelSnapshot, wall: &Wall) -> DslValue {
     DslValue::object([
         ("axis".to_string(), semio_framework_value::ToValue::to_value(&wall.axis)),
         ("location".to_string(), semio_framework_value::ToValue::to_value(&wall.location)),
+        ("start_join".to_string(), semio_framework_value::ToValue::to_value(&wall.start_join)),
+        ("end_join".to_string(), semio_framework_value::ToValue::to_value(&wall.end_join)),
         ("layers".to_string(), semio_framework_value::ToValue::to_value(&snapshot.wall_types.get(&wall.wall_type).map(|kind| kind.layers.clone()))),
     ])
 }
@@ -252,6 +284,7 @@ pub fn band_dependency(snapshot: &ModelSnapshot, wall: &Wall) -> DslValue {
 
 //#region 🔖️Projection
 /// 🧱️ The layout of every wall (the `WallLayout` nodes of the model graph).
+#[cfg(test)]
 pub fn compute_wall_layout(snapshot: &ModelSnapshot) -> BTreeMap<String, WallLayout> {
     std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::LAYOUTS }>(snapshot).wall_layout)
 }

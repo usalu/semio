@@ -334,6 +334,47 @@ fn the_keyboard_help_lists_every_binding_of_the_effective_keymap() {
 }
 
 #[test]
+fn the_launcher_gives_text_editors_a_visible_cursor() {
+    let (mut dashboard, mut tui) = view();
+    press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
+    press(&mut dashboard, &mut tui, &type_text("serve docs"));
+    press(&mut dashboard, &mut tui, &[named(Key::Enter)]);
+    tui.render();
+    let index = dashboard.focused_index(&tui);
+    assert_eq!(tui.focus(), dashboard.windows[index].input);
+    assert!(tui.cursor().is_some(), "the focused parameter editor has a hardware cursor");
+    press(&mut dashboard, &mut tui, &[named(Key::PageDown)]);
+    tui.render();
+    assert_eq!(tui.focus(), Some(dashboard.windows[index].list));
+    assert!(tui.cursor().is_none());
+}
+
+#[test]
+fn launcher_text_editing_follows_the_shared_input_caret() {
+    let (mut dashboard, mut tui) = view();
+    press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
+    press(&mut dashboard, &mut tui, &type_text("serve docs"));
+    press(&mut dashboard, &mut tui, &[named(Key::Enter)]);
+    press(&mut dashboard, &mut tui, &type_text("A界e\u{301}"));
+    assert!(tui.render_full().0.contains("A界e\u{301}"), "the composed dashboard frame retains combining marks");
+    press(&mut dashboard, &mut tui, &[named(Key::Left), key('x')]);
+    let index = dashboard.focused_index(&tui);
+    let input = dashboard.windows[index].input.unwrap();
+    let value = |tui: &Tui| match &tui.scene.node(input).content { ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::Input(state)) => state.value.clone(), _ => panic!("editor expected") };
+    assert_eq!(value(&tui), "A界xe\u{301}");
+    press(&mut dashboard, &mut tui, &[named(Key::Backspace), named(Key::Delete)]);
+    assert_eq!(value(&tui), "A界");
+    press(&mut dashboard, &mut tui, &[named(Key::Home), Event::Paste("Z\nQ".into())]);
+    assert_eq!(value(&tui), "Z QA界");
+    tui.render();
+    let rect = tui.scene.rect(input);
+    press(&mut dashboard, &mut tui, &[Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: rect.x, y: rect.y }, mods: 0, clicks: 1 }), key('!')]);
+    assert_eq!(value(&tui), "!Z QA界");
+    press(&mut dashboard, &mut tui, &[named(Key::PageDown), named(Key::Enter)]);
+    assert!(spawned(&dashboard).iter().any(|(_, command)| command.args.iter().any(|arg| arg == "!Z QA界")));
+}
+
+#[test]
 fn tabs_and_titles_come_from_the_task_label_with_status_as_a_glyph() {
     let (mut dashboard, mut tui) = view();
     dashboard.update_session(&mut tui, session("a", label("dev", "puzzle3d·react", "#sphere"), SessionStatus::Running, None));
@@ -351,6 +392,28 @@ fn tabs_and_titles_come_from_the_task_label_with_status_as_a_glyph() {
     assert!(title.contains("test") && title.contains("quiz") && title.contains("exit 3"), "{title}");
     dashboard.frame(&mut tui);
     assert!(tui.render_full().0.contains("exit 3"), "the long title of the focused task is in the footer");
+}
+
+#[test]
+fn confirmation_is_operable_with_the_mouse() {
+    let (mut dashboard, mut tui) = view();
+    press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
+    press(&mut dashboard, &mut tui, &type_text("ticket.close"));
+    press(&mut dashboard, &mut tui, &[named(Key::Enter), named(Key::PageDown), named(Key::Enter)]);
+    let index = dashboard.focused_index(&tui);
+    assert!(matches!(&dashboard.windows[index].body, Body::Launcher(launcher) if launcher.stage() == super::launcher::Stage::Confirm));
+    assert!(spawned(&dashboard).is_empty());
+    tui.render();
+    let rect = tui.scene.rect(dashboard.windows[index].list);
+    let click = |row| Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: rect.x + 2, y: rect.y + row }, mods: 0, clicks: 1 });
+    press(&mut dashboard, &mut tui, &[click(0)]);
+    assert!(spawned(&dashboard).is_empty());
+    let row = match &tui.scene.node(dashboard.windows[index].list).content {
+        ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
+        _ => panic!("confirmation list expected"),
+    };
+    press(&mut dashboard, &mut tui, &[click(row as u16)]);
+    assert_eq!(spawned(&dashboard).len(), 1);
 }
 
 #[test]
@@ -747,6 +810,13 @@ fn every_scenario_of_the_window_view_features_is_proved_by_a_test() {
         ("The keyboard help lists every binding of the effective keymap", &["the_keyboard_help_lists_every_binding_of_the_effective_keymap"]),
         ("The usage text is generated from the keymap in both languages", &["the_usage_text_is_generated_from_the_keymap_in_both_languages"]),
         ("Hints fit whole at eighty columns in both languages", &["p1_11_hints_fit_whole_at_eighty_columns_in_both_languages"]),
+        ("The launcher gives text editors a visible cursor", &["the_launcher_gives_text_editors_a_visible_cursor"]),
+        ("Launcher text editing follows the shared input caret", &["launcher_text_editing_follows_the_shared_input_caret"]),
+        ("Confirmation is operable with the mouse", &["confirmation_is_operable_with_the_mouse"]),
+        ("The configured start action needs one click", &["the_configured_start_action_needs_one_click"]),
+        ("Glyph capabilities preserve the framework width policy", &["glyph_capabilities_preserve_the_framework_width_policy"]),
+        ("A pending action is visible before routine footer status", &["an_armed_prefix_notice_precedes_routine_footer_status"]),
+        ("Restore requested before the first snapshot raises the replayed task", &["restoring_before_the_first_snapshot_focuses_the_replayed_task"]),
     ]);
 }
 
@@ -764,6 +834,8 @@ fn restoring_all_task_views_raises_and_focuses_the_most_recent_one() {
     let focused = dashboard.focused_index(&tui);
     assert_eq!(dashboard.windows[focused].session().map(|session| session.session_id.as_str()), Some("b"), "the newest task is in front");
     assert!(dashboard.terminal_has_keyboard(&tui), "and takes the keys without another Tab");
+    for _ in 0..3 { tui.render(); dashboard.frame(&mut tui); }
+    assert_eq!(dashboard.windows[dashboard.focused_index(&tui)].session().map(|session| session.session_id.as_str()), Some("b"), "layout and repaint retain the restored task focus");
 }
 
 #[test]
@@ -771,4 +843,67 @@ fn nothing_the_view_does_prints_into_the_terminal_it_draws_on() {
     for (name, source) in [("sessions", include_str!("../../📡️sessions/🦀️.rs")), ("controls", include_str!("../../⌨️controls/🦀️.rs")), ("windows", include_str!("../../🪟️windows/🦀️.rs")), ("panes", include_str!("../../📋️panes/🦀️.rs"))] {
         for forbidden in ["println!", "eprintln!", "print!(", "start_detached"] { assert!(!source.contains(forbidden), "{name} uses {forbidden}, which writes under the screen"); }
     }
+}
+
+#[test]
+fn the_configured_start_action_needs_one_click() {
+    let (mut dashboard, mut tui) = view();
+    press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
+    press(&mut dashboard, &mut tui, &type_text("serve docs"));
+    press(&mut dashboard, &mut tui, &[named(Key::Enter)]);
+    press(&mut dashboard, &mut tui, &type_text("docs"));
+    let index = dashboard.focused_index(&tui);
+    tui.render();
+    let rect = tui.scene.rect(dashboard.windows[index].list);
+    let row = match &tui.scene.node(dashboard.windows[index].list).content {
+        ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
+        _ => panic!("configuration list expected"),
+    };
+    press(&mut dashboard, &mut tui, &[Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: rect.x + 2, y: rect.y + row as u16 }, mods: 0, clicks: 1 })]);
+    let commands = spawned(&dashboard);
+    assert_eq!(commands.len(), 1);
+    assert!(commands[0].1.args.iter().any(|arg| arg == "docs"));
+}
+
+#[test]
+fn glyph_capabilities_preserve_the_framework_width_policy() {
+    use ui_tui::tui::text::WidthMode;
+    let (mut dashboard, mut tui) = view();
+    dashboard.apply_capabilities(&mut tui, true);
+    assert_eq!(tui.width_mode(), WidthMode::Scalar);
+    tui.set_width_mode(WidthMode::Cluster);
+    dashboard.apply_capabilities(&mut tui, true);
+    assert_eq!(tui.width_mode(), WidthMode::Cluster);
+    dashboard.apply_capabilities(&mut tui, false);
+    assert_eq!(tui.width_mode(), WidthMode::Cluster);
+}
+
+#[test]
+fn an_armed_prefix_notice_precedes_routine_footer_status() {
+    for language in ["en", "de"] {
+        let (mut dashboard, mut tui) = small_view(language);
+        press(&mut dashboard, &mut tui, &[ctrl('b')]);
+        let notice = dashboard.text().key_armed.as_str();
+        let status = match &tui.scene.node(dashboard.shell.footer).content {
+            ui_tui::tui::scene::NodeContent::Chrome(ChromeState::Footer(footer)) => &footer.status,
+            _ => panic!("footer expected"),
+        };
+        assert!(status.starts_with(notice), "the pending action must fit before routine status: {status}");
+        assert!(tui.render_full().0.contains(notice), "the pending prefix is actually visible in {language}");
+    }
+}
+#[test]
+fn restoring_before_the_first_snapshot_focuses_the_replayed_task() {
+    let (mut dashboard, mut tui) = view();
+    press(&mut dashboard, &mut tui, &[ctrl('b'), key('s')]);
+    let mut info = session("late", label("test", "late", ""), SessionStatus::Running, None);
+    info.started_ms = 30;
+    dashboard.apply(&mut tui, Message::Control(ServerMsg::Sessions { sessions: vec![info], more: true }));
+    assert!(dashboard.windows[dashboard.focused_index(&tui)].session().is_none(), "restore waits for the final snapshot page");
+    let mut older = session("older", label("test", "older", ""), SessionStatus::Running, None);
+    older.started_ms = 10;
+    dashboard.apply(&mut tui, Message::Control(ServerMsg::Sessions { sessions: vec![older], more: false }));
+    for _ in 0..3 { tui.render(); dashboard.frame(&mut tui); }
+    assert_eq!(dashboard.windows[dashboard.focused_index(&tui)].session().map(|session| session.session_id.as_str()), Some("late"));
+    assert!(dashboard.terminal_has_keyboard(&tui));
 }

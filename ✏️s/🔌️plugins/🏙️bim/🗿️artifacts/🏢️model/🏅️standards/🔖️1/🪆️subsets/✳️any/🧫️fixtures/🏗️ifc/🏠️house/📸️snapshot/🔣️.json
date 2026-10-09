@@ -19,9 +19,9 @@
         "g": 0.35,
         "b": 0.25
       },
-      "density": 1800.0,
+      "density": 1800,
       "conductivity": 0.8,
-      "specific_heat": 900.0
+      "specific_heat": 900
     },
     "m-wool": {
       "name": "Mineral Wool",
@@ -31,9 +31,9 @@
         "g": 0.85,
         "b": 0.3
       },
-      "density": 40.0,
+      "density": 40,
       "conductivity": 0.035,
-      "specific_heat": 1030.0
+      "specific_heat": 1030
     },
     "m-conc": {
       "name": "Concrete",
@@ -43,9 +43,9 @@
         "g": 0.6,
         "b": 0.6
       },
-      "density": 2400.0,
+      "density": 2400,
       "conductivity": 1.6,
-      "specific_heat": 880.0
+      "specific_heat": 880
     },
     "m-wood": {
       "name": "Oak",
@@ -55,9 +55,9 @@
         "g": 0.4,
         "b": 0.2
       },
-      "density": 700.0,
+      "density": 700,
       "conductivity": 0.18,
-      "specific_heat": 1600.0
+      "specific_heat": 1600
     },
     "m-steel": {
       "name": "Steel",
@@ -67,9 +67,9 @@
         "g": 0.55,
         "b": 0.6
       },
-      "density": 7850.0,
-      "conductivity": 50.0,
-      "specific_heat": 470.0
+      "density": 7850,
+      "conductivity": 50,
+      "specific_heat": 470
     }
   },
   "wall_types": {
@@ -212,12 +212,42 @@
       "material": "m-wood"
     }
   },
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 1.5 x 1.4",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.4
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.1
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.1
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-wool",
+      "mullion_material": "m-steel"
+    }
+  },
   "sites": {
     "site-1": {
       "name": "Plot",
       "latitude": 47.3769,
       "longitude": 8.5417,
-      "elevation": 408.0,
+      "elevation": 408,
       "true_north": 0.2,
       "boundary": [
         {
@@ -244,8 +274,8 @@
       "site": "site-1",
       "name": "House",
       "origin": {
-        "x": 2.0,
-        "y": 3.0
+        "x": 2,
+        "y": 3
       },
       "rotation": 0.1,
       "elevation": 0.5
@@ -262,7 +292,7 @@
       "building": "bldg-1",
       "name": "Ground",
       "level": 0,
-      "height": 3.0
+      "height": 3
     },
     "st-first": {
       "building": "bldg-1",
@@ -332,10 +362,10 @@
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -357,10 +387,10 @@
         }
       },
       "location": "Exterior",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -382,10 +412,10 @@
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -407,10 +437,10 @@
         }
       },
       "location": "Interior",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -458,10 +488,10 @@
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -483,19 +513,20 @@
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
-      "phase": "New",
+      "phase": "Demolished",
       "name": "First South"
     }
   },
   "curtain_walls": {
     "cw-1": {
       "storey": "st-first",
+      "curtain_wall_type": "cwt-1",
       "axis": {
         "Line": {
           "start": {
@@ -508,22 +539,13 @@
           }
         }
       },
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.4,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.1
-        }
-      },
-      "panel_material": "m-wool",
-      "mullion_material": "m-steel",
+      "phase": "Demolished",
       "name": "Facade"
     }
   },
@@ -536,12 +558,13 @@
         "y": 3
       },
       "rotation": 0.3,
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
+      "phase": "New",
       "name": "C1"
     },
     "c-2": {
@@ -551,13 +574,14 @@
         "x": 6,
         "y": 3
       },
-      "rotation": 0.0,
+      "rotation": 0,
       "base_offset": 0.2,
       "top": {
         "Unconnected": {
           "height": 2.5
         }
       },
+      "phase": "Temporary",
       "name": "C2"
     }
   },
@@ -565,29 +589,39 @@
     "b-1": {
       "storey": "st-ground",
       "beam_type": "bt-i",
-      "start": {
-        "x": 4,
-        "y": 3
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 4,
+            "y": 3
+          },
+          "end": {
+            "x": 6,
+            "y": 3
+          }
+        }
       },
-      "end": {
-        "x": 6,
-        "y": 3
-      },
-      "top_offset": 0.0,
+      "top_offset": 0,
+      "phase": "New",
       "name": "B1"
     },
     "b-2": {
       "storey": "st-ground",
       "beam_type": "bt-rect",
-      "start": {
-        "x": 0,
-        "y": 3
-      },
-      "end": {
-        "x": 4,
-        "y": 3
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 3
+          },
+          "end": {
+            "x": 4,
+            "y": 3
+          }
+        }
       },
       "top_offset": -0.1,
+      "phase": "Demolished",
       "name": "B2"
     }
   },
@@ -601,28 +635,28 @@
             "x": 0,
             "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 8,
             "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 8,
             "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 0,
             "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         }
       ],
       "holes": [
@@ -632,32 +666,33 @@
               "x": 5.5,
               "y": 4
             },
-            "bulge": 0.0
+            "bulge": 0
           },
           {
             "point": {
               "x": 6.5,
               "y": 4
             },
-            "bulge": 0.0
+            "bulge": 0
           },
           {
             "point": {
               "x": 6.5,
               "y": 5
             },
-            "bulge": 0.0
+            "bulge": 0
           },
           {
             "point": {
               "x": 5.5,
               "y": 5
             },
-            "bulge": 0.0
+            "bulge": 0
           }
         ]
       ],
-      "offset": 0.0,
+      "offset": 0,
+      "phase": "New",
       "name": "Ground slab"
     },
     "sl-first": {
@@ -669,32 +704,33 @@
             "x": 0,
             "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 8,
             "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 8,
             "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 0,
             "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         }
       ],
       "holes": [],
-      "offset": 0.0,
+      "offset": 0,
+      "phase": "New",
       "name": "First slab"
     },
     "sl-balcony": {
@@ -706,36 +742,37 @@
             "x": 8,
             "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 10,
             "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 10,
             "y": 2
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 8,
             "y": 2
           },
-          "bulge": 0.0
+          "bulge": 0
         }
       ],
       "holes": [],
-      "offset": 0.0,
+      "offset": 0,
       "slope": {
-        "direction": 0.0,
+        "direction": 0,
         "angle": 0.05
       },
+      "phase": "Existing",
       "name": "Balcony"
     }
   },
@@ -749,38 +786,39 @@
             "x": 0,
             "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 8,
             "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 8,
             "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
             "x": 0,
             "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         }
       ],
       "shape": {
         "Gable": {
           "pitch": 0.5,
-          "ridge_direction": 0.0
+          "ridge_direction": 0
         }
       },
       "overhang": 0.3,
-      "base_offset": 0.0,
+      "base_offset": 0,
+      "phase": "New",
       "name": "Roof"
     }
   },
@@ -792,7 +830,7 @@
           "window_type": "wnd-120"
         }
       },
-      "offset": 2.0,
+      "offset": 2,
       "flip_hand": false,
       "flip_facing": false,
       "name": "Window 1"
@@ -804,7 +842,7 @@
           "door_type": "dr-90"
         }
       },
-      "offset": 6.0,
+      "offset": 6,
       "flip_hand": true,
       "flip_facing": false,
       "name": "Door 1"
@@ -816,12 +854,12 @@
           "window_type": "wnd-120"
         }
       },
-      "offset": 4.0,
+      "offset": 4,
       "sill_override": 1,
       "flip_hand": false,
       "flip_facing": true,
       "name": "Window 2",
-      "width": 1.0
+      "width": 1
     },
     "o-void-1": {
       "host": "w-east",
@@ -831,7 +869,7 @@
           "height": 0.8
         }
       },
-      "offset": 3.0,
+      "offset": 3,
       "sill_override": 1,
       "flip_hand": false,
       "flip_facing": false,
@@ -856,7 +894,7 @@
           "door_type": "dr-180"
         }
       },
-      "offset": 4.0,
+      "offset": 4,
       "flip_hand": false,
       "flip_facing": false,
       "name": "Double door"
@@ -869,12 +907,12 @@
         "x": 1,
         "y": 1
       },
-      "direction": 0.0,
-      "width": 1.0,
+      "direction": 0,
+      "width": 1,
       "flight": "Straight",
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "max_riser": 0.18,
@@ -887,7 +925,8 @@
       "nosing": 0,
       "tread_thickness": 0.04,
       "riser": "Closed",
-      "landing_depth": 1.0,
+      "landing_depth": 1,
+      "phase": "New",
       "name": "Stair 1"
     },
     "s-2": {
@@ -896,8 +935,8 @@
         "x": 1,
         "y": 4
       },
-      "direction": 0.0,
-      "width": 1.0,
+      "direction": 0,
+      "width": 1,
       "flight": {
         "LTurn": {
           "split": 0.5,
@@ -906,7 +945,7 @@
       },
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "max_riser": 0.18,
@@ -919,7 +958,8 @@
       "nosing": 0,
       "tread_thickness": 0.04,
       "riser": "Closed",
-      "landing_depth": 1.0,
+      "landing_depth": 1,
+      "phase": "Demolished",
       "name": "Stair 2"
     }
   },
@@ -940,8 +980,8 @@
           "y": 2
         }
       ],
-      "height": 1.0,
-      "post_spacing": 1.0,
+      "height": 1,
+      "post_spacing": 1,
       "profile": {
         "Rectangle": {
           "width": 0.06,
@@ -956,7 +996,8 @@
       },
       "infill": "None",
       "material": "m-steel",
-      "base_offset": 0.0,
+      "base_offset": 0,
+      "phase": "Temporary",
       "name": "Railing"
     }
   },
@@ -969,11 +1010,12 @@
         "Bounded": {
           "seed": {
             "x": 6.8,
-            "y": 5.0
+            "y": 5
           }
         }
       },
-      "usage": "living"
+      "usage": "living",
+      "phase": "New"
     },
     "sp-2": {
       "storey": "st-first",
@@ -987,33 +1029,34 @@
                 "x": 0.2,
                 "y": 0.2
               },
-              "bulge": 0.0
+              "bulge": 0
             },
             {
               "point": {
                 "x": 3.8,
                 "y": 0.2
               },
-              "bulge": 0.0
+              "bulge": 0
             },
             {
               "point": {
                 "x": 3.8,
                 "y": 5.8
               },
-              "bulge": 0.0
+              "bulge": 0
             },
             {
               "point": {
                 "x": 0.2,
                 "y": 5.8
               },
-              "bulge": 0.0
+              "bulge": 0
             }
           ]
         }
       },
-      "usage": "bedroom"
+      "usage": "bedroom",
+      "phase": "Existing"
     }
   },
   "properties": {
@@ -1052,7 +1095,7 @@
       "Custom": {
         "Span": {
           "Length": {
-            "value": 3.0
+            "value": 3
           }
         },
         "Footprint": {
@@ -1080,19 +1123,210 @@
   },
   "classifications": {
     "w-south": {
-      "system": "Uniclass 2015",
-      "code": "EF_25_10",
-      "title": "Walls"
+      "cs-uniclass-2015": "EF_25_10"
     },
     "w-east": {
-      "system": "Uniclass 2015",
-      "code": "EF_25_10",
-      "title": "Walls"
+      "cs-uniclass-2015": "EF_25_10"
     },
     "c-1": {
-      "system": "Omniclass",
-      "code": "21-02 10 10",
-      "title": "Columns"
+      "cs-omniclass": "21-02 10 10"
+    }
+  },
+  "views": {
+    "v-plan-st-base": {
+      "building": "bldg-1",
+      "name": "Plan Basement",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-base"
+    },
+    "v-plan-st-ground": {
+      "building": "bldg-1",
+      "name": "Plan Ground",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-ground"
+    },
+    "v-plan-st-first": {
+      "building": "bldg-1",
+      "name": "Plan First",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-first"
+    },
+    "v-plan-st-roof": {
+      "building": "bldg-1",
+      "name": "Plan Roof",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-roof"
+    },
+    "v-section-a": {
+      "building": "bldg-1",
+      "name": "Section A",
+      "kind": "Section",
+      "depth": 5.15,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": 3
+        },
+        "end": {
+          "x": 12.15,
+          "y": 3
+        }
+      }
+    },
+    "v-section-b": {
+      "building": "bldg-1",
+      "name": "Section B",
+      "kind": "Section",
+      "depth": 7.15,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 5,
+          "y": -2.15
+        },
+        "end": {
+          "x": 5,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-south": {
+      "building": "bldg-1",
+      "name": "South",
+      "kind": "Elevation",
+      "depth": 9.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": -2.15
+        },
+        "end": {
+          "x": 12.15,
+          "y": -2.15
+        }
+      }
+    },
+    "v-elevation-east": {
+      "building": "bldg-1",
+      "name": "East",
+      "kind": "Elevation",
+      "depth": 13.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 12.15,
+          "y": -2.15
+        },
+        "end": {
+          "x": 12.15,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-north": {
+      "building": "bldg-1",
+      "name": "North",
+      "kind": "Elevation",
+      "depth": 9.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 12.15,
+          "y": 8.15
+        },
+        "end": {
+          "x": -2.15,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-west": {
+      "building": "bldg-1",
+      "name": "West",
+      "kind": "Elevation",
+      "depth": 13.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": 8.15
+        },
+        "end": {
+          "x": -2.15,
+          "y": -2.15
+        }
+      }
+    },
+    "v-3d": {
+      "building": "bldg-1",
+      "name": "3D view",
+      "kind": "Perspective",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "camera": {
+        "target": {
+          "x": 5,
+          "y": 3
+        },
+        "target_height": 3.15,
+        "azimuth": 0.7853981633974483,
+        "pitch": 0.5,
+        "distance": 25.6
+      }
+    }
+  },
+  "classification_systems": {
+    "cs-uniclass-2015": {
+      "name": "Uniclass 2015",
+      "edition": "",
+      "entries": [
+        {
+          "code": "EF_25_10",
+          "title": "Walls"
+        }
+      ]
+    },
+    "cs-omniclass": {
+      "name": "Omniclass",
+      "edition": "",
+      "entries": [
+        {
+          "code": "21-02 10 10",
+          "title": "Columns"
+        }
+      ]
     }
   }
 }

@@ -3,6 +3,19 @@
 semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the drawing app; one field per label makes every locale combination compile-checked.
     pub struct DrawingPlayLabels {
+        add_ellipse: native_en "Add Ellipse", native_de "Ellipse hinzufügen", reuse_en "Add Ellipse", reuse_de "Ellipse hinzufügen";
+        add_line: native_en "Add Line", native_de "Linie hinzufügen", reuse_en "Add Line", reuse_de "Linie hinzufügen";
+        add_polygon: native_en "Add Polygon", native_de "Polygon hinzufügen", reuse_en "Add Polygon", reuse_de "Polygon hinzufügen";
+        add_image: native_en "Add Image", native_de "Bild hinzufügen", reuse_en "Add Image", reuse_de "Bild hinzufügen";
+        add_trace: native_en "Add Trace", native_de "Nachzeichnung hinzufügen", reuse_en "Add Trace", reuse_de "Nachzeichnung hinzufügen";
+        radius_x: native_en "Radius X", native_de "Radius X", reuse_en "Radius X", reuse_de "Radius X";
+        radius_y: native_en "Radius Y", native_de "Radius Y", reuse_en "Radius Y", reuse_de "Radius Y";
+        polygon_points: native_en "Polygon Points (JSON coordinate pairs)", native_de "Polygonpunkte (JSON-Koordinatenpaare)", reuse_en "Polygon Points (JSON coordinate pairs)", reuse_de "Polygonpunkte (JSON-Koordinatenpaare)";
+        image_key: native_en "Image Asset Key", native_de "Bildressourcenschlüssel", reuse_en "Image Asset Key", reuse_de "Bildressourcenschlüssel";
+        node_corner: native_en "Corner Node", native_de "Eckknoten", reuse_en "Corner Node", reuse_de "Eckknoten";
+        node_smooth: native_en "Smooth Node", native_de "Glatter Knoten", reuse_en "Smooth Node", reuse_de "Glatter Knoten";
+        node_symmetric: native_en "Symmetric Node", native_de "Symmetrischer Knoten", reuse_en "Symmetric Node", reuse_de "Symmetrischer Knoten";
+        simplify_tolerance: native_en "Simplify Tolerance (Document Units)", native_de "Vereinfachungstoleranz (Dokumenteinheiten)", reuse_en "Simplify Tolerance (Document Units)", reuse_de "Vereinfachungstoleranz (Dokumenteinheiten)";
         layer_count_one: native_en "{count} layer", native_de "{count} Ebene", reuse_en "{count} layer", reuse_de "{count} Ebene";
         layer_count_many: native_en "{count} layers", native_de "{count} Ebenen", reuse_en "{count} layers", reuse_de "{count} Ebenen";
         selection_count: native_en "{count} selected", native_de "{count} ausgewählt", reuse_en "{count} selected", reuse_de "{count} ausgewählt";

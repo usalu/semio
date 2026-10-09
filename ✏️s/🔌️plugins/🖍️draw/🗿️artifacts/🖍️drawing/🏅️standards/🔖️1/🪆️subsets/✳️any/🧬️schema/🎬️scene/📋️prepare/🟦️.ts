@@ -13,6 +13,8 @@ import {DocumentBooleanJob,type DocumentBooleanLimits,type DocumentBooleanProgre
 import {DocumentTraceJob,type DocumentTraceLimits,type DocumentTraceProgress} from "../🔍️trace/🟦️.ts";
 import {ScenePlanCloseJob} from "../🧹️retire/🟦️.ts";
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+/** 👁️ Actual roots and assets supply scene work without a fabricated complete document. */
+export type DrawingSceneSource=Pick<DrawingArtifact,"layers"|"assets">&{rootVisible?:(index:number)=>boolean};
 export type DocumentSceneRetirement=WorkRetirement;
 export type DocumentVectorRetirement=WorkRetirement;
 export type DocumentSceneRetirementProgress=WorkRetirementProgress;
@@ -28,11 +30,11 @@ const initialVectorProgress=():DocumentVectorProgress=>({phase:"preparing",prepa
 /** 🎬️ Resolves authored algorithms into a complete vector plan while preserving semantic text. */
 export class DocumentVectorJob{
  private preparation:DocumentSceneJob|null;private traces:DocumentTraceJob|null=null;private algorithms:DocumentBooleanJob|null=null;private progress:DocumentVectorProgress=initialVectorProgress();
- private output:DocumentScenePlan|null=null;private failure:unknown=null;private aborted=false;private transferred=false;private readonly limits:DocumentAlgorithmLimits;private closing:WorkRetirement|null=null;private discard:ScenePlanCloseJob|null=null;private handoff:DocumentScenePlan|null=null;
- constructor(document:DrawingArtifact,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits){if(!Number.isSafeInteger(algorithms.maxWork)||algorithms.maxWork<1||algorithms.maxWork>1e9)fail("Invalid document vector work limit");this.limits={booleans:{...algorithms.booleans},trace:{...algorithms.trace},maxWork:algorithms.maxWork};const boolean=new DocumentBooleanJob({plan:{assets:[],nodes:[]},limits:this.limits.booleans});boolean.cancel();const trace=new DocumentTraceJob({plan:{assets:[],nodes:[]},limits:this.limits.trace});trace.cancel();this.preparation=new DocumentSceneJob(document,limits);}
+ private retiredChildren:WorkRetirement[]=[];private retiredPlans:ScenePlanCloseJob[]=[];private output:DocumentScenePlan|null=null;private failure:unknown=null;private aborted=false;private transferred=false;private readonly limits:DocumentAlgorithmLimits;private closing:WorkRetirement|null=null;private discard:ScenePlanCloseJob|null=null;private handoff:DocumentScenePlan|null=null;
+ constructor(document:DrawingSceneSource,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits){if(!Number.isSafeInteger(algorithms.maxWork)||algorithms.maxWork<1||algorithms.maxWork>1e9)fail("Invalid document vector work limit");this.limits={booleans:{...algorithms.booleans},trace:{...algorithms.trace},maxWork:algorithms.maxWork};const boolean=new DocumentBooleanJob({plan:{assets:[],nodes:[]},limits:this.limits.booleans});boolean.cancel();const trace=new DocumentTraceJob({plan:{assets:[],nodes:[]},limits:this.limits.trace});trace.cancel();this.preparation=new DocumentSceneJob(document,limits);}
  private step():void{
-  if(this.closing){if(this.closing.advance(1).done)this.closing=null;return;}
-  if(this.discard){if(this.discard.advance(1).done)this.discard=null;return;}
+  if(this.closing){this.retiredChildren.push(this.closing);this.closing=null;return;}
+  if(this.discard){this.retiredPlans.push(this.discard);this.discard=null;return;}
   if(this.handoff){const plan=this.handoff;this.handoff=null;if(this.progress.phase==="preparing"){this.traces=new DocumentTraceJob({plan,limits:this.limits.trace});this.progress.phase="tracing";}else if(this.progress.phase==="tracing"){this.algorithms=new DocumentBooleanJob({plan,limits:this.limits.booleans});this.progress.phase="algorithms";}else{this.output=plan;this.progress.phase="complete";this.progress.done=true;}return;}
   if(this.progress.phase==="preparing"){this.progress.preparation=this.preparation!.advance(1);if(this.progress.preparation.done){const moved=this.preparation!.intoRetirement();this.closing=moved.job;this.handoff=moved.output!;this.preparation=null;}return;}
   if(this.progress.phase==="tracing"){this.progress.tracing=this.traces!.advance(1);if(this.progress.tracing.done){const moved=this.traces!.intoRetirement();this.closing=moved.job;this.handoff=moved.output!;this.discard=new ScenePlanCloseJob(moved.input);this.traces=null;}return;}
@@ -41,40 +43,64 @@ export class DocumentVectorJob{
  advance(budget:number):DocumentVectorProgress{if(!Number.isSafeInteger(budget)||budget<1)fail("Invalid document vector work grant");if(this.aborted)cancel();if(this.failure)throw this.failure;try{for(let at=0;at<budget&&!this.progress.done;at++){if(this.progress.work>=this.limits.maxWork)fail("Document vector work limit exceeded");this.step();this.progress.work++;}}catch(error){this.failure=error;throw error;}return{...this.progress};}
  /** 🧹️ Adopt every child and intermediate source plan before relinquishing vector ownership. */
  intoRetirement():{job:DocumentVectorRetirement;output:DocumentScenePlan|null}{
-  if(this.transferred)throw Error("Vector ownership already transferred");this.transferred=true;let child=this.closing;this.closing=null;const plans:ScenePlanCloseJob[]=[];if(this.discard){plans.push(this.discard);this.discard=null;}const adopt=(plan:DocumentScenePlan|null)=>{if(plan)plans.push(new ScenePlanCloseJob(plan));};
+  if(this.transferred)throw Error("Vector ownership already transferred");this.transferred=true;let child=this.closing;this.closing=null;const plans=this.retiredPlans;this.retiredPlans=[];const children=this.retiredChildren;this.retiredChildren=[];if(this.discard){plans.push(this.discard);this.discard=null;}const adopt=(plan:DocumentScenePlan|null)=>{if(plan)plans.push(new ScenePlanCloseJob(plan));};
   if(this.preparation){const moved=this.preparation.intoRetirement();child=moved.job;adopt(moved.output);this.preparation=null;}
   if(this.traces){const moved=this.traces.intoRetirement();child=moved.job;adopt(moved.input);adopt(moved.output);this.traces=null;}
   if(this.algorithms){const moved=this.algorithms.intoRetirement();child=moved.job;adopt(moved.input);adopt(moved.output);this.algorithms=null;}
   adopt(this.handoff);this.handoff=null;const output=this.progress.done&&!this.aborted&&!this.failure?this.output:null;if(!output)adopt(this.output);this.output=null;this.aborted=true;
-  let slot=0;const job=new UnitRetirement(()=>{switch(slot){case 0:if(child){if(!child.advance(1).done)return false;child=null;}break;case 1:{const plan=plans.at(-1);if(plan){if(plan.advance(1).done)plans.pop();return false;}break;}case 2:break;}return ++slot===3;});return{job,output};
+  if(child)children.push(child);child=null;let slot=0;const job=new UnitRetirement(()=>{switch(slot){case 0:{const retained=children.at(-1);if(retained){if(retained.advance(1).done)children.pop();return false;}break;}case 1:{const plan=plans.at(-1);if(plan){if(plan.advance(1).done)plans.pop();return false;}break;}case 2:break;}return ++slot===3;});return{job,output};
  }
- private clear():void{this.preparation?.cancel();this.traces?.cancel();this.algorithms?.cancel();this.preparation=null;this.traces=null;this.algorithms=null;this.closing=null;this.discard=null;this.handoff=null;this.output=null;}
- cancel():void{this.aborted=true;if(!this.transferred)this.clear();}
+ cancel():void{this.aborted=true;}
  result():DocumentScenePlan{if(this.aborted)cancel();if(this.failure)throw this.failure;if(!this.progress.done)fail("Document vector incomplete");return this.output!;}
+}
+/** 👁️ Borrowed root and asset identities remain explicit for every producer turn. */
+export class DocumentVectorPreparationJob{
+ private job:DocumentVectorJob;private layers:DrawingSceneSource["layers"];private assets:DrawingSceneSource["assets"];
+ constructor(source:DrawingSceneSource,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits){this.layers=source.layers;this.assets=source.assets;this.job=new DocumentVectorJob(source,limits,algorithms);}
+ advance(source:DrawingSceneSource,grant:number):DocumentVectorProgress{if(source.layers!==this.layers||source.assets!==this.assets)fail("Captured scene source ownership changed");return this.job.advance(grant);}
+ cancel():void{this.job.cancel();}
+ result():DocumentScenePlan{return this.job.result();}
+ intoRetirement():{job:WorkRetirement;output:DocumentScenePlan|null}{const moved=this.job.intoRetirement();this.layers=[];this.assets={};return moved;}
+}/** 🧺️ Keeps completed or refused producer ownership until explicit yielded close finishes. */
+async function completeSceneProducer<T,P extends {done:boolean}>(job:{advance:(grant:number)=>P;cancel:()=>void;intoRetirement:()=>{job:WorkRetirement;output:T|null}},options:{signal?:AbortSignal;workBudget?:number;onProgress?:(progress:P)=>void},check:()=>void):Promise<T>{
+ let close:WorkRetirement|null=null,transferred=false;
+ try{for(;;){check();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);check();if(progress.done){const moved=job.intoRetirement();transferred=true;close=moved.job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));close=null;check();return moved.output!;}await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();if(!transferred)close=job.intoRetirement().job;while(close&&!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));throw error;}
 }
 /** ⏳️ Publishes complete vector geometry after yielded work and observer cancellation checks. */
 export async function prepareDocumentVector(document:DrawingArtifact,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits,options:DocumentVectorOptions={}):Promise<DocumentScenePlan>{
- const check=()=>{if(options.signal?.aborted)cancel();};check();const job=new DocumentVectorJob(document,limits,algorithms);try{for(;;){check();const p=job.advance(options.workBudget??4096);options.onProgress?.(p);check();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}
+ const check=()=>{if(options.signal?.aborted)cancel();};check();const job=new DocumentVectorJob(document,limits,algorithms);return completeSceneProducer(job,options,check);
 }
 /** 📷️ Uses the same complete vector producer before per-record raster admission. */
 export class DocumentRasterJob{
  private vector:DocumentVectorJob|null;private prepared:DocumentVectorProgress=initialVectorProgress();
  private source:readonly DocumentSceneNode[]=[];private assets:readonly RasterSceneAsset[]=[];private nodes:RasterSceneNode[]=[];private at=0;private work=0;private phase:DocumentRasterProgress["phase"]="preparing";
- private raster:RasterSceneJob|null=null;private rendered:RasterSceneProgress|null=null;private output:PixelImage|null=null;private failure:unknown=null;private aborted=false;private readonly viewport:DocumentSceneViewport;private readonly maxWork:number;
+ private retiredChildren:WorkRetirement[]=[];private raster:RasterSceneJob|null=null;private rendered:RasterSceneProgress|null=null;private output:PixelImage|null=null;private failure:unknown=null;private aborted=false;private readonly viewport:DocumentSceneViewport;private readonly maxWork:number;private closing:WorkRetirement|null=null;private handoff:DocumentScenePlan|null=null;private transferred=false;
  constructor(document:DrawingArtifact,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,resolutionLimits:DocumentAlgorithmLimits){this.viewport={...viewport,origin:[...viewport.origin]};const check=new RasterSceneJob({...this.viewport,assets:[],nodes:[]});check.cancel();this.vector=new DocumentVectorJob(document,limits,resolutionLimits);this.maxWork=resolutionLimits.maxWork;}
+ private pixelScale:readonly[number,number]=[1,1];
+ /** 🔍️ Maps the immutable artboard world extent to requested output pixel dimensions. */
+ setPixelScale(x:number,y:number):void{if(this.work!==0||![x,y].every(n=>Number.isFinite(n)&&n>0))fail("Invalid document pixel scale");this.pixelScale=[x,y];}
  private step():void{
-  if(this.vector){this.prepared=this.vector.advance(1);if(this.prepared.done){const plan=this.vector.result();this.source=plan.nodes;this.assets=plan.assets;this.vector=null;this.phase="resolving";}else this.phase=this.prepared.phase;return;}
-  if(this.phase==="resolving"){const n=this.source[this.at++];if(!n){this.source=[];this.raster=new RasterSceneJob({...this.viewport,assets:this.assets,nodes:this.nodes});this.assets=[];this.nodes=[];this.phase="raster";return;}if(n.content.kind==="group")return;this.nodes.push(rasterNode(n));return;}
-  if(this.phase==="raster"){this.rendered=this.raster!.advance(1);if(this.rendered.done){this.output=this.raster!.result();this.raster=null;this.phase="complete";}}
+  if(this.closing){this.retiredChildren.push(this.closing);this.closing=null;return;}
+  if(this.handoff){this.source=this.handoff.nodes;this.assets=this.handoff.assets;this.handoff=null;return;}
+  if(this.vector){this.prepared=this.vector.advance(1);if(this.prepared.done){const moved=this.vector.intoRetirement();this.closing=moved.job;this.handoff=moved.output!;this.vector=null;this.phase="resolving";}else this.phase=this.prepared.phase;return;}
+  if(this.phase==="resolving"){const n=this.source[this.at++];if(!n){this.raster=new RasterSceneJob({...this.viewport,assets:this.assets,nodes:this.nodes});this.phase="raster";return;}if(n.content.kind==="group")return;const node=rasterNode(n),m=node.transform,[x,y]=this.pixelScale;this.nodes.push({...node,transform:[m[0]*x,m[1]*y,m[2]*x,m[3]*y,m[4]*x,m[5]*y]});return;}
+  if(this.phase==="raster"){this.rendered=this.raster!.advance(1);if(this.rendered.done){const moved=this.raster!.intoRetirement();this.output=moved.output;this.closing=moved.job;this.raster=null;this.phase="complete";}}
  }
- advance(budget:number):DocumentRasterProgress{if(!Number.isSafeInteger(budget)||budget<1)fail("Invalid document raster work grant");if(this.aborted)cancel();if(this.failure)throw this.failure;try{for(let at=0;at<budget&&this.phase!=="complete";at++){if(this.work>=this.maxWork)fail("Document raster work limit exceeded");this.step();this.work++;}}catch(error){this.failure=error;this.clear();throw error;}return{phase:this.phase,preparation:this.prepared.preparation,tracing:this.prepared.tracing,resolution:this.prepared.resolution,raster:this.rendered,nodes:Math.min(this.at,this.prepared.preparation.layers),work:this.work,done:this.phase==="complete"};}
- private clear():void{this.vector?.cancel();this.raster?.cancel();this.vector=null;this.raster=null;this.source=[];this.assets=[];this.nodes=[];this.output=null;}
- cancel():void{this.aborted=true;this.clear();}
+ advance(budget:number):DocumentRasterProgress{if(!Number.isSafeInteger(budget)||budget<1)fail("Invalid document raster work grant");if(this.aborted)cancel();if(this.failure)throw this.failure;try{for(let at=0;at<budget&&this.phase!=="complete";at++){if(this.work>=this.maxWork)fail("Document raster work limit exceeded");this.step();this.work++;}}catch(error){this.failure=error;throw error;}return{phase:this.phase,preparation:this.prepared.preparation,tracing:this.prepared.tracing,resolution:this.prepared.resolution,raster:this.rendered,nodes:Math.min(this.at,this.prepared.preparation.layers),work:this.work,done:this.phase==="complete"};}
+ /** 🧹️ Composes the actual preparation, raster, remaining plan and unpublished pixel owners. */
+ intoRetirement():{job:WorkRetirement;output:PixelImage|null}{
+  if(this.transferred)throw Error("Document raster ownership already transferred");this.transferred=true;const children=this.retiredChildren;this.retiredChildren=[];const plans:ScenePlanCloseJob[]=[];const images:PixelImage[]=[];
+  if(this.closing)children.push(this.closing);this.closing=null;if(this.vector){const moved=this.vector.intoRetirement();children.push(moved.job);if(moved.output)plans.push(new ScenePlanCloseJob(moved.output));this.vector=null;}if(this.raster){const moved=this.raster.intoRetirement();children.push(moved.job);if(moved.output)images.push(moved.output);this.raster=null;}
+  if(this.handoff)plans.push(new ScenePlanCloseJob(this.handoff));this.handoff=null;let source=this.source,assets=this.assets,nodes=this.nodes;this.source=[];this.assets=[];this.nodes=[];let at=0,assetAt=0;
+  const output=this.phase==="complete"&&!this.aborted&&!this.failure?this.output:null;if(this.output&&!output)images.push(this.output);this.output=null;this.aborted=true;let slot=0;
+  return{output,job:new UnitRetirement(()=>{switch(slot){case 0:{const child=children.at(-1);if(child){if(child.advance(1).done)children.pop();return false;}break;}case 1:{const plan=plans.at(-1);if(plan){if(plan.advance(1).done)plans.pop();return false;}break;}case 2:if(at++<source.length)return false;source=[];break;case 3:if(assetAt++<assets.length)return false;assets=[];break;case 4:if(nodes.pop())return false;nodes=[];break;case 5:if(images.pop())return false;break;}return ++slot===6;})};
+ }
+ cancel():void{this.aborted=true;}
  result():PixelImage{if(this.aborted)cancel();if(this.failure)throw this.failure;if(this.phase!=="complete")fail("Document raster incomplete");return this.output!;}
 }
 /** ⏳️ Publishes document pixels only after responsive preparation and raster completion. */
 export async function rasterizeDocument(document:DrawingArtifact,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,resolutionLimits:DocumentAlgorithmLimits,options:DocumentRasterOptions={}):Promise<PixelImage>{
- const check=()=>{if(options.signal?.aborted)cancel();};check();const job=new DocumentRasterJob(document,limits,viewport,resolutionLimits);try{for(;;){check();const p=job.advance(options.workBudget??4096);options.onProgress?.(p);check();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}
+ const check=()=>{if(options.signal?.aborted)cancel();};check();const job=new DocumentRasterJob(document,limits,viewport,resolutionLimits);return completeSceneProducer(job,options,check);
 }
 export type DocumentSceneContent=({kind:"path";segments:PathSegment[]}&Paint)|Extract<RasterSceneContent,{kind:"image"}>|{kind:"group";children:string[];isolation:boolean}|({kind:"text";content:string;x:number;y:number;size:number}&Paint)|({kind:"boolean";operation:"union"|"difference"|"intersection"|"xor";children:string[];referenceTransform:Matrix}&Paint)|({kind:"trace";source:string;threshold:number;simplifyEpsilon:number}&Paint);
 export type DocumentSceneNode=Omit<RasterSceneNode,"content"|"groups">&{sourcePath:number[];lockedAncestors:number;groups:RasterSceneGroup[];content:DocumentSceneContent};
@@ -109,13 +135,13 @@ function shapeSegment(layer:Extract<DrawingLayerNode,{kind:"shape"}>,at:number):
 }
 /** 🧱️ Traverses the entire document without recursive flattening or duplicated image sources. */
 export class DocumentSceneJob {
- private source:DrawingArtifact["assets"];private assetKeys:string[];private assetAt=0;private assetChar=0;private assetCurrent:RasterSceneAsset|null=null;private sourceBytes=0;private frames:Frame[];private plan:DocumentScenePlan={assets:[],nodes:[]};private ids=new Map<string,number>();private assetIds=new Set<string>();
+ private rootVisible:((index:number)=>boolean)|undefined;private source:DrawingArtifact["assets"];private assetKeys:string[];private assetAt=0;private assetChar=0;private assetCurrent:RasterSceneAsset|null=null;private sourceBytes=0;private frames:Frame[];private plan:DocumentScenePlan={assets:[],nodes:[]};private ids=new Map<string,number>();private assetIds=new Set<string>();
  private current:DrawingLayerNode|null=null;private node:DocumentSceneNode|null=null;private frame:Frame|null=null;private at=0;private strokeAt=0;private textAt=0;private textChars=0;private phase:DocumentSceneProgress["phase"]="assets";private work=0;private segments=0;private references=0;private layers=0;private assets=0;private failure:unknown=null;private aborted=false;
  private validateAt=0;private refAt=0;private cycleAt=0;private graph:{index:number;at:number}[]=[];private visited=new Set<number>();private visiting=new Set<number>();private readonly limits:DocumentSceneLimits;private transferred=false;private cleanupSlot=0;private cleanupEntries:Iterator<unknown>|null=null;
- constructor(document:DrawingArtifact,limits:DocumentSceneLimits){
+ constructor(document:DrawingSceneSource,limits:DocumentSceneLimits){
   for(const [key,cap] of [["maxNodes",1024],["maxDepth",32],["maxSegments",65536],["maxReferences",32768],["maxSourceBytes",268439552]] as const)if(!Number.isSafeInteger(limits[key])||limits[key]<1||limits[key]>cap)fail("Invalid scene preparation limits");
   if(!Array.isArray(document.layers)||document.layers.length>limits.maxNodes||!document.assets||typeof document.assets!=="object"||Array.isArray(document.assets))fail("Invalid drawing document scene input");
-  this.limits={...limits};this.source=document.assets;this.assetKeys=Object.keys(this.source).sort();if(this.assetKeys.length>1024)fail("Scene asset catalog exceeds limit");
+  this.limits={...limits};this.rootVisible=document.rootVisible;this.source=document.assets;this.assetKeys=Object.keys(this.source).sort();if(this.assetKeys.length>1024)fail("Scene asset catalog exceeds limit");
   this.frames=[{path:[],lockedAncestors:0,layers:document.layers,at:0,matrix:identity,visible:true,groups:[]}];
  }
  private start(layer:DrawingLayerNode,frame:Frame):void{
@@ -132,7 +158,7 @@ export class DocumentSceneJob {
    default:return fail("Unknown document layer kind");
   }
   if(frame.path.length>=this.limits.maxDepth||typeof layer.locked!=="boolean")fail("Invalid scene source ancestry");
-  this.current=layer;this.frame=frame;this.node={sourcePath:[...frame.path,frame.at-1],lockedAncestors:frame.lockedAncestors+(layer.locked?2**frame.path.length:0),id:layer.id,groups:frame.groups.slice(),transform:matrix,opacity,blendMode:mode,visible:frame.visible&&layer.visible,content};this.at=0;this.strokeAt=0;this.textAt=0;this.textChars=0;this.phase="paint";
+  this.current=layer;this.frame=frame;this.node={sourcePath:[...frame.path,frame.at-1],lockedAncestors:frame.lockedAncestors+(layer.locked?2**frame.path.length:0),id:layer.id,groups:frame.groups.slice(),transform:matrix,opacity,blendMode:mode,visible:frame.visible&&layer.visible&&(frame.path.length!==0||(this.rootVisible?.(frame.at-1)??true)),content};this.at=0;this.strokeAt=0;this.textAt=0;this.textChars=0;this.phase="paint";
  }
  private paint():void{
   const attrs=this.current!.attributes,c=this.node!.content;
@@ -185,13 +211,12 @@ export class DocumentSceneJob {
    case 7:this.graph=[];break;case 8:this.current=null;break;case 9:this.assetKeys=[];this.assetCurrent=null;break;case 10:this.source={};break;case 11:this.plan={assets:[],nodes:[]};break;
   }return ++slot===12;});return{job,output};
  }
- private clear():void{this.source={};this.assetKeys=[];this.assetCurrent=null;this.frames=[];this.current=null;this.node=null;this.frame=null;this.plan={assets:[],nodes:[]};this.ids.clear();this.assetIds.clear();this.graph=[];this.visited.clear();this.visiting.clear();}
- cancel():void{this.aborted=true;if(!this.transferred)this.clear();}
+ cancel():void{this.aborted=true;}
  result():DocumentScenePlan{if(this.aborted)cancel();if(this.failure)throw this.failure;if(this.phase!=="complete")fail("Document scene preparation incomplete");return this.plan;}
 }
 /** ⏳️ Yields preparation between grants and checks observers before publication. */
 export async function prepareDocumentScene(document:DrawingArtifact,limits:DocumentSceneLimits,options:DocumentSceneOptions={}):Promise<DocumentScenePlan>{
- const check=()=>{if(options.signal?.aborted)cancel();};check();const job=new DocumentSceneJob(document,limits);try{for(;;){check();const p=job.advance(options.workBudget??4096);options.onProgress?.(p);check();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}
+ const check=()=>{if(options.signal?.aborted)cancel();};check();const job=new DocumentSceneJob(document,limits);return completeSceneProducer(job,options,check);
 }
 function rasterNode(node:DocumentSceneNode):RasterSceneNode{const content=node.content;if(content.kind!=="path"&&content.kind!=="image")fail("Unresolved "+content.kind+" layer: "+node.id);return{id:node.id,groups:node.groups,transform:node.transform,opacity:node.opacity,blendMode:node.blendMode,visible:node.visible,content};}
 /** 🚪️ Hands prepared paths/images to raster; unresolved work is an explicit refusal. */

@@ -1,0 +1,5 @@
+{
+  "mutation": "setRamp",
+  "id": "rp-1",
+  "max_slope": 0
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️remove-image-asset",
+  "semanticKind": "remove-image-asset",
+  "displayName": "Remove Image Asset",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemoveImageAsset",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-image-asset",
+  "binaryTag": 25,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

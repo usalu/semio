@@ -1,0 +1,231 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-view/schema.json",
+  "title": "SetView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setView"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "View",
+          "de": "Ansicht"
+        },
+        "ref": {
+          "kind": "view"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "storey": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "group": "value",
+        "order": 30,
+        "ref": {
+          "kind": "storey"
+        }
+      }
+    },
+    "plane": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ViewPlane",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Plane",
+          "de": "Ebene"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "camera": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ViewCamera",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Camera",
+          "de": "Kamera"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "cut_height": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Cut height (m, empty = convention)",
+          "de": "Schnitthöhe (m, leer = Vorgabe)"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "depth": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Depth (m)",
+          "de": "Tiefe (m)"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "crop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ViewCrop"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Crop (empty = none)",
+          "de": "Zuschnitt (leer = keiner)"
+        },
+        "group": "value",
+        "order": 80
+      }
+    },
+    "hidden": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ViewCategory"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Hidden categories",
+          "de": "Ausgeblendete Kategorien"
+        },
+        "group": "value",
+        "order": 90
+      }
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Phase"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Phase filter (empty = all)",
+          "de": "Phasenfilter (leer = alle)"
+        },
+        "group": "value",
+        "order": 100
+      }
+    },
+    "scale": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "x-semio-ui": {
+        "widget": "integer",
+        "role": "value",
+        "label": {
+          "en": "Scale 1:n",
+          "de": "Massstab 1:n"
+        },
+        "group": "value",
+        "order": 110
+      }
+    },
+    "detail": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/DetailLevel",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Detail level",
+          "de": "Detailgrad"
+        },
+        "group": "value",
+        "order": 120
+      }
+    }
+  }
+}

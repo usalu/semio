@@ -1,5 +1,9 @@
 //! ✏️ Pure path-local edits shared by numeric controls and canvas gestures.
 use crate::PathSegment;
+#[path="🎛️node/🦀️.rs"]
+mod node;
+#[path="📉️simplify/🦀️.rs"]
+pub mod simplify;
 
 /// 📐️ Borrows ordinal path geometry from persisted pages or computed geometry buffers.
 pub trait PathGeometrySource {
@@ -35,6 +39,8 @@ impl PathGeometrySource for std::borrow::Cow<'_, [PathSegment]> {
 #[value(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
 pub enum PathEdit {
+    Node { index: usize, mode: NodeMode },
+    Simplify { tolerance: f64 },
     DeletePoints { points: Vec<PathPointRef> },
     Translate { points: Vec<PathPointRef>, delta: [f64;2] },
     Position { index: usize, point: PathPoint, to: [f64;2] },
@@ -61,6 +67,12 @@ pub struct PathPointRef {
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum SegmentType { Line, Cubic }
+
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[value(rename_all="camelCase")]
+#[cfg_attr(test, serde(rename_all="camelCase"))]
+pub enum NodeMode { Corner, Smooth, Symmetric }
 
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
@@ -121,6 +133,12 @@ fn reverse_path_ranges(source: &(impl PathGeometrySource + ?Sized), ranges: &[(u
 pub fn edit_path(source: &(impl PathGeometrySource + ?Sized), operation: &PathEdit) -> Result<Vec<PathSegment>, &'static str> {
     if !source.path_segments().all(crate::schema::valid_path_segment) { return Err("Invalid path geometry"); }
     let ranges = contours(source)?;
+    if let PathEdit::Node {index,mode}=*operation {return node::edit(source,index,mode);}
+    if let PathEdit::Simplify {tolerance}=*operation {
+        let mut job=simplify::PathSimplifyJob::new(source.path_segments().cloned().collect(),tolerance)?;
+        if !job.advance(262144)?.done {return Err("Path simplification exceeds interactive planning capacity");}
+        return job.into_result();
+    }
     if let PathEdit::Translate {points,delta}=operation {return translate_path_points(source,points,*delta);}
     if let PathEdit::DeletePoints {points}=operation {
         if points.is_empty() {return Ok(source.path_segments().cloned().collect());}
@@ -174,7 +192,7 @@ pub fn edit_path(source: &(impl PathGeometrySource + ?Sized), operation: &PathEd
         return Ok(output);
     }
     if matches!(operation, PathEdit::Reverse) { return reverse_path_ranges(source, &ranges); }
-    let index = match operation { PathEdit::Coordinate { index, .. } | PathEdit::Position { index, .. } | PathEdit::Split { index, .. } | PathEdit::Delete { index } | PathEdit::Close { index } | PathEdit::Open { index } | PathEdit::Convert { index, .. } => *index, PathEdit::Reverse | PathEdit::Join { .. } | PathEdit::Translate { .. } | PathEdit::DeletePoints { .. } => unreachable!() };
+    let index = match operation { PathEdit::Coordinate { index, .. } | PathEdit::Position { index, .. } | PathEdit::Split { index, .. } | PathEdit::Delete { index } | PathEdit::Close { index } | PathEdit::Open { index } | PathEdit::Convert { index, .. } => *index, PathEdit::Node {..}|PathEdit::Simplify {..}|PathEdit::Reverse | PathEdit::Join { .. } | PathEdit::Translate { .. } | PathEdit::DeletePoints { .. } => unreachable!() };
     let item = source.path_segment(index).ok_or("Missing path node")?;
     let (start, end) = ranges.into_iter().find(|(start, end)| index >= *start && index < *end).ok_or("Missing contour")?;
     let mut output: Vec<PathSegment> = source.path_segments().cloned().collect();
@@ -254,8 +272,9 @@ pub fn edit_path(source: &(impl PathGeometrySource + ?Sized), operation: &PathEd
             };
             output.splice(index..index + 1, replacements);
         }
-        PathEdit::Reverse | PathEdit::Join { .. } | PathEdit::Translate { .. } | PathEdit::DeletePoints { .. } => unreachable!(),
+        PathEdit::Node {..}|PathEdit::Simplify {..}|PathEdit::Reverse | PathEdit::Join { .. } | PathEdit::Translate { .. } | PathEdit::DeletePoints { .. } => unreachable!(),
     }
+    if matches!(operation,PathEdit::Delete {..}) && end-start==3 && matches!(source.path_segment(end-1),Some(PathSegment::Close)) {output.remove(start+1);}
     if !output.iter().all(crate::schema::valid_path_segment) { return Err("The edit exceeds finite coordinates"); }
     Ok(output)
 }

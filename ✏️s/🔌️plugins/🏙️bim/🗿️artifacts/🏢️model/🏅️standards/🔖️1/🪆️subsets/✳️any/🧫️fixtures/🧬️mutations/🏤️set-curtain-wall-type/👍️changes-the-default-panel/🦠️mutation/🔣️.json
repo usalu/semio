@@ -1,0 +1,9 @@
+{
+  "mutation": "setCurtainWallType",
+  "id": "cwt-1",
+  "panel": {
+    "Window": {
+      "window_type": "win-1"
+    }
+  }
+}

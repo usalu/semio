@@ -30,6 +30,14 @@
       ],
       "outputs": [],
       "dependsOn": []
+    },
+    "test-shared-unique": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test shared-unique"
+      }
     }
   }
 }

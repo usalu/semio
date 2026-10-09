@@ -5,7 +5,7 @@
 
 use crate::render::plan::scene;
 use crate::viewer::bim::terminology::BimViewerLabels;
-use crate::ModelSnapshot;
+use crate::{ModelInference, ModelSnapshot};
 use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
-        label: LocalizedLabel::native("Plan", "Grundriss"),
+        label: LocalizedLabel::native(BimViewerLabels::NATIVE_EN.window_plan.as_str(), BimViewerLabels::NATIVE_DE.window_plan.as_str()),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "bim-plan".into(),
@@ -43,10 +43,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🗺️ Pure `ModelSnapshot × window configuration × selected element ids -> Canvas2d surface` of the plan of the configured storey.
-pub fn render(snapshot: &ModelSnapshot, config: &config::BimViewerPlanWindowConfig, selected: &[String]) -> UiAssemblyResult<BuiltNode> {
-    let plans = crate::render::plans(snapshot);
-    let plan = crate::render::plan_storey(snapshot, &config.storey).and_then(|storey| plans.get(&storey));
+/// 🗺️ Pure `ModelSnapshot × ModelInference × window configuration × selected element ids -> Canvas2d surface` of the plan of the configured storey.
+pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerPlanWindowConfig, selected: &[String]) -> UiAssemblyResult<BuiltNode> {
+    let plan = crate::render::plan_storey(snapshot, &config.storey).and_then(|storey| inference.plan_linework.get(&storey));
     scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene(plan, &config.viewport, config.framed, selected))
 }
 //#endregion 🔖️Render

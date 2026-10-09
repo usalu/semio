@@ -246,6 +246,7 @@
         "direction": 0,
         "angle": 0.05
       },
+      "phase": "New",
       "name": "Ground slab"
     }
   },

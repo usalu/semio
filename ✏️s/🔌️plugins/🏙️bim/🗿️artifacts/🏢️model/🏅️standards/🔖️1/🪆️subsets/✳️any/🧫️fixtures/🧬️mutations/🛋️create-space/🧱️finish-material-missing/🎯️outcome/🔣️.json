@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "space",
+    "wall_finish"
+  ]
+}

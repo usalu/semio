@@ -20,11 +20,14 @@ async fn the_windows_accept_their_tools_and_the_schedule_none() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn every_utility_has_an_english_and_a_german_label_and_the_hotkeys_are_single_letters() {
+async fn every_utility_has_an_english_and_a_german_label_and_the_hotkeys_are_a_letter_or_shift_and_a_letter() {
     for row in UTILITIES {
-        assert!(!row.label.0.is_empty() && !row.label.1.is_empty(), "{}", row.id);
+        let (english, german) = ((row.label)(&BimLabels::NATIVE_EN), (row.label)(&BimLabels::NATIVE_DE));
+        assert!(!english.as_str().is_empty() && !german.as_str().is_empty(), "{}", row.id);
         assert_eq!(row.keys.is_some(), row.arm.is_some(), "{}: a hotkey and its arming command come together", row.id);
-        assert!(row.keys.is_none_or(|keys| keys.len() == 1 && keys.chars().all(|ch| ch.is_ascii_lowercase())), "{}", row.id);
+        assert!(row.keys.is_none_or(|keys| keys.strip_prefix("shift+").unwrap_or(keys).len() == 1 && keys.strip_prefix("shift+").unwrap_or(keys).chars().all(|ch| ch.is_ascii_lowercase())), "{}", row.id);
     }
+    let move_rotate_slab_walls_and_split = ["move", "rotate", "slab-walls", "split-wall"].map(|id| UTILITIES.iter().find(|row| row.id == id).and_then(|row| row.keys));
+    assert_eq!(move_rotate_slab_walls_and_split, [Some("e"), Some("q"), Some("shift+s"), Some("shift+w")], "the tools the audit found without a key have one");
     assert!(draws("wall") && !draws(DEFAULT_UTILITY));
 }

@@ -21,6 +21,7 @@ fn catalog() -> Catalog {
         schema: CATALOG_SCHEMA.to_string(),
         id: "architecture".to_string(),
         title: text("Architecture"),
+        short: None,
         introduction: Introduction { title: text("Welcome"), paragraphs: vec![text("Hello")] },
         quizzes: vec!["energy/🔣️.json".to_string()],
         badges: vec![badge("perfect-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string(), challenge: None }), badge("sorter", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None, challenge: Some(Challenge::Medium) }), badge("done", BadgeRule::CompletedQuizzes {})],
@@ -167,6 +168,21 @@ fn short_labels_hold_one_to_forty_code_points_in_each_language() {
             issue("/tasks/2/items/1/short/en", IssueCode::LengthInvalid),
         ]
     );
+}
+
+#[test]
+fn quiz_and_catalog_short_labels_hold_at_most_forty_code_points() {
+    let mut valid = quiz();
+    valid.short = Some(Text { en: "Physics".to_string(), de: "Physik".to_string() });
+    assert_eq!(quiz_issues(&valid), []);
+    let mut invalid = quiz();
+    invalid.short = Some(Text { en: "p".repeat(41), de: "Physik".to_string() });
+    assert_eq!(quiz_issues(&invalid), [issue("/short/en", IssueCode::LengthInvalid)]);
+    let mut document = catalog();
+    document.short = Some(Text { en: "A&T".to_string(), de: "A&T".to_string() });
+    assert_eq!(catalog_issues(&document, &[quiz()]), []);
+    document.short = Some(Text { en: "A&T".to_string(), de: "q".repeat(41) });
+    assert_eq!(catalog_issues(&document, &[quiz()]), [issue("/short/de", IssueCode::LengthInvalid)]);
 }
 
 #[test]

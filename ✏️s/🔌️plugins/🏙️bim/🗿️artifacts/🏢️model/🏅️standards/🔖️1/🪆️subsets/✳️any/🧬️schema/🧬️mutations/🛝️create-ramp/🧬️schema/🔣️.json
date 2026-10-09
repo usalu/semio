@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-ramp/schema.json",
+  "title": "CreateRamp",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "ramp"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createRamp"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Ramp id",
+          "de": "Rampen-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "ramp": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Ramp",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Ramp",
+          "de": "Rampe"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

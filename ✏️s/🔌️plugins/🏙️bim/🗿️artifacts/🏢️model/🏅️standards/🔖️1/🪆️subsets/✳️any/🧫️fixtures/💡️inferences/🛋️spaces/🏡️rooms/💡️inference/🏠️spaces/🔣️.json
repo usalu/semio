@@ -4,10 +4,11 @@
     "area": 28.410000000000004,
     "perimeter": 24.9,
     "net_floor_area": 28.320000000178165,
-    "clear_height": 2.7,
-    "volume": 76.70700000000002,
+    "clear_height": 2.5875,
+    "volume": 73.51087500000001,
     "hole_count": 1,
     "ceiling_slab": "sl-over-living",
+    "ceiling": "ce-living",
     "bounding_walls": [
       "ground-island",
       "ground-north",
@@ -21,10 +22,11 @@
     "area": 16.530000000000005,
     "perimeter": 17.300000000000004,
     "net_floor_area": 16.530000000000005,
-    "clear_height": 3.0,
-    "volume": 49.59000000000002,
+    "clear_height": 2.599497991871824,
+    "volume": 42.969701805641265,
     "hole_count": 0,
     "ceiling_slab": "",
+    "ceiling": "ce-kitchen",
     "bounding_walls": [
       "ground-east",
       "ground-north",
@@ -41,6 +43,7 @@
     "volume": 0.0,
     "hole_count": 0,
     "ceiling_slab": "",
+    "ceiling": "",
     "bounding_walls": []
   },
   "sp-in-wall": {
@@ -52,6 +55,7 @@
     "volume": 0.0,
     "hole_count": 0,
     "ceiling_slab": "",
+    "ceiling": "",
     "bounding_walls": []
   },
   "sp-round": {
@@ -63,6 +67,7 @@
     "volume": 9.42477796076938,
     "hole_count": 0,
     "ceiling_slab": "",
+    "ceiling": "",
     "bounding_walls": []
   },
   "sp-box": {
@@ -74,6 +79,7 @@
     "volume": 12.0,
     "hole_count": 0,
     "ceiling_slab": "",
+    "ceiling": "",
     "bounding_walls": []
   },
   "sp-upper": {
@@ -81,10 +87,11 @@
     "area": 10.639999999999999,
     "perimeter": 13.2,
     "net_floor_area": 10.639999999999999,
-    "clear_height": 2.8,
-    "volume": 29.791999999999994,
+    "clear_height": 2.75,
+    "volume": 29.259999999999998,
     "hole_count": 0,
     "ceiling_slab": "",
+    "ceiling": "ce-upper",
     "bounding_walls": [
       "first-east",
       "first-north",

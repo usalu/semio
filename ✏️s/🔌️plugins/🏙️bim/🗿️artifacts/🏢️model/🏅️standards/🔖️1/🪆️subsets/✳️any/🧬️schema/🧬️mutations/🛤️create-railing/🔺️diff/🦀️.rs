@@ -1,7 +1,8 @@
 //! 🔺️ Diff constructor for `CreateRailing`: one created railing entry. The storey and the material must exist, the path needs at
-//! least two finite points that are not all the same, height and post spacing are positive lengths, the rail and post sections, the baluster row and the infill are sound. Posts, rails and extent are inferred.
+//! least two finite points that are not all the same (a hosted railing has none: it names a stair, ramp or slab edge of the same building instead), height and post spacing are positive lengths, the rail and post sections, the baluster row and the infill are sound. Posts, rails and extent are inferred.
 
 use super::super::elements;
+use super::super::placement::{host_issue, refuse_stair};
 use super::CreateRailing;
 use crate::{railing_construction_problem, Entry, ModelDiff, ModelSnapshot, Point2};
 use protocol::{MutationOutcome, OutcomeCode};
@@ -25,7 +26,7 @@ pub fn diff(payload: &CreateRailing, base: &ModelSnapshot) -> MutationOutcome<Mo
     if !base.materials.contains_key(&railing.material) {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Material \"{}\" does not exist.", railing.material), ["railing", "material"]);
     }
-    if !traceable(&railing.path) {
+    if railing.host.is_none() && !traceable(&railing.path) {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A railing path needs at least two distinct finite points.", ["railing", "path"]);
     }
     if !positive(railing.height) {
@@ -39,6 +40,9 @@ pub fn diff(payload: &CreateRailing, base: &ModelSnapshot) -> MutationOutcome<Mo
     }
     if let Some((field, message)) = railing_construction_problem(railing) {
         return MutationOutcome::refuse(OutcomeCode::Invariant, message, ["railing", field]);
+    }
+    if let Some(issue) = host_issue(base, railing) {
+        return refuse_stair(issue, &["railing"]);
     }
     MutationOutcome::new(ModelDiff::railings(payload.id.clone(), Entry::Created(railing.clone())))
 }

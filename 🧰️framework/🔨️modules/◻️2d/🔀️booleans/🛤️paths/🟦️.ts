@@ -27,6 +27,7 @@ export class PathBooleanJob{
  private phase:PathBooleanProgress["phase"]="admitting";private work=0;private operands=0;private sourceSegments=0;private points=0;private at=0;private contourAt=0;private pointAt=0;
  private current:PathBooleanOperand|null=null;private admitted:PathSegment[]=[];private local:(FlatContour|null)[]=[];private world:Vec2[][]=[];private contour:Vec2[]|null=null;private prepared:BooleanOperand[]=[];
  private flatten:PathFlattenJob|null=null;private flatProgress:PathFlattenProgress|null=null;private boolean:BooleanJob|null=null;private booleanProgress:BooleanProgress|null=null;private output:PathSegment[]=[];
+ private retiredFlats:WorkRetirement[]=[];private retiredLocals:(FlatContour|null)[][]=[];private retiredContours:FlatContour[]=[];private closingContour:FlatContour|null=null;
  private flatRetirement:WorkRetirement|null=null;private booleanRetirement:WorkRetirement|null=null;private retained:BooleanOperand[]=[];private retainedOperand:BooleanOperand|null=null;
  private cancelled=false;private transferred=false;private failure:unknown=null;
  constructor(private input:PathBooleanInput){
@@ -44,20 +45,20 @@ export class PathBooleanJob{
    this.flatten=new PathFlattenJob({...this.current,segments:this.admitted});this.admitted=[];this.phase="flattening";return;
   }
   if(this.phase==="flattening"){
-   if(this.flatRetirement){if(this.flatRetirement.advance(1).done){this.flatRetirement=null;this.phase="transforming";}return;}
+
    const p=this.flatten!.advance(1);this.flatProgress=p;if(this.points+p.points>this.input.maxEdges)invalid("Boolean paths exceed flattened point budget");
-   if(p.done){const transferred=this.flatten!.intoRetirement();this.local=transferred.output!;this.flatRetirement=transferred.job;this.flatten=null;this.world=[];this.contour=null;this.contourAt=0;this.pointAt=0;}return;
+   if(p.done){const transferred=this.flatten!.intoRetirement();this.retiredLocals.push(this.local);this.local=transferred.output!;if(this.flatRetirement)this.retiredFlats.push(this.flatRetirement);this.flatRetirement=transferred.job;this.phase="transforming";this.flatten=null;this.world=[];this.contour=null;this.contourAt=0;this.pointAt=0;}return;
   }
   if(this.phase==="transforming"){
-   const local=this.local[this.contourAt];if(!local){this.prepared.push({contours:this.world,fillRule:this.current!.fillRule});this.local=[];this.world=[];this.current=null;this.operands++;this.phase="admitting";return;}
+   const local=this.local[this.contourAt];if(!local){this.prepared.push({contours:this.world,fillRule:this.current!.fillRule});this.retiredLocals.push(this.local);this.local=[];this.world=[];this.current=null;this.operands++;this.phase="admitting";return;}
    if(!this.contour){this.contour=[];this.world.push(this.contour);return;}
    const p=local.points[this.pointAt++];if(p){const m=this.current!.transform,q:Vec2=[m[0]!*p[0]+m[2]!*p[1]+m[4]!,m[1]!*p[0]+m[3]!*p[1]+m[5]!];if(!q.every(n=>Number.isFinite(n)&&Math.abs(n)<=1e9))invalid("Boolean world point exceeds coordinate budget");if(this.points>=this.input.maxEdges)invalid("Boolean paths exceed flattened point budget");this.contour.push(q);this.points++;return;}
-   this.local[this.contourAt]=null;this.contourAt++;this.pointAt=0;this.contour=null;return;
+   this.retiredContours.push(local);this.local[this.contourAt]=null;this.contourAt++;this.pointAt=0;this.contour=null;return;
   }
   if(this.phase==="boolean"){
-   if(this.booleanRetirement){if(this.booleanRetirement.advance(1).done)this.booleanRetirement=null;return;}
-   if(!this.boolean){if(this.retireOperands(this.retained))this.phase="complete";return;}
-   this.booleanProgress=this.boolean.advance(1);if(this.booleanProgress.done){const transferred=this.boolean.intoRetirement();this.output=transferred.output!;this.booleanRetirement=transferred.job;this.retained=transferred.operands as BooleanOperand[];this.boolean=null;}
+
+
+   this.booleanProgress=this.boolean!.advance(1);if(this.booleanProgress.done){const transferred=this.boolean!.intoRetirement();this.output=transferred.output!;this.booleanRetirement=transferred.job;this.retained=transferred.operands as BooleanOperand[];this.boolean=null;this.phase="complete";}
   }
  }
  advance(budget:number):PathBooleanProgress{
@@ -73,18 +74,18 @@ export class PathBooleanJob{
  /** 🧹️ Compose child cursors while private results remain unavailable to callers. */
  intoRetirement():{job:PathBooleanRetirement;output:PathSegment[]|null}{
   if(this.transferred)throw Error("Path boolean ownership already transferred");this.transferred=true;
-  if(this.flatten){const moved=this.flatten.intoRetirement();this.flatRetirement=moved.job;if(moved.output)this.local=moved.output;this.flatten=null;}
+  if(this.flatten){const moved=this.flatten.intoRetirement();if(this.flatRetirement)this.retiredFlats.push(this.flatRetirement);this.flatRetirement=moved.job;if(moved.output){this.retiredLocals.push(this.local);this.local=moved.output;}this.flatten=null;}
   if(this.boolean){const moved=this.boolean.intoRetirement();this.booleanRetirement=moved.job;this.retained=moved.operands as BooleanOperand[];if(moved.output)this.output=moved.output;this.boolean=null;}
   const output=this.phase==="complete"&&!this.cancelled&&!this.failure?this.output:null;if(output)this.output=[];this.cancelled=true;
   let slot=0;const job=new UnitRetirement(()=>{
    switch(slot){
-    case 0:if(this.flatRetirement){if(!this.flatRetirement.advance(1).done)return false;this.flatRetirement=null;}break;
+    case 0:if(this.retiredFlats.length){const child=this.retiredFlats[this.retiredFlats.length-1]!;if(child.advance(1).done)this.retiredFlats.pop();return false;}this.retiredFlats=[];if(this.flatRetirement){if(!this.flatRetirement.advance(1).done)return false;this.flatRetirement=null;}break;
     case 1:if(this.booleanRetirement){if(!this.booleanRetirement.advance(1).done)return false;this.booleanRetirement=null;}break;
     case 2:if(!this.retireOperands(this.retained))return false;this.retained=[];break;
     case 3:this.input={...this.input,operands:[]};break;
     case 4:this.current=null;break;
     case 5:this.admitted=[];break;
-    case 6:if(this.local.length){this.local.pop();return false;}this.local=[];break;
+    case 6:if(this.closingContour){if(this.closingContour.points.length){this.closingContour.points.pop();return false;}this.closingContour=null;return false;}if(this.retiredContours.length){this.closingContour=this.retiredContours.pop()!;return false;}if(this.retiredLocals.length){const local=this.retiredLocals[this.retiredLocals.length-1]!;if(local.length){this.closingContour=local.pop()??null;return false;}this.retiredLocals.pop();return false;}if(this.local.length){this.closingContour=this.local.pop()??null;return false;}this.local=[];this.retiredLocals=[];this.retiredContours=[];break;
     case 7:this.contour=null;break;
     case 8:if(this.world.length){this.world.pop();return false;}this.world=[];break;
     case 9:if(!this.retireOperands(this.prepared))return false;this.prepared=[];break;
@@ -94,11 +95,10 @@ export class PathBooleanJob{
    return ++slot===12;
   });return{job,output};
  }
- private clear():void{this.flatten?.cancel();this.boolean?.cancel();this.flatten=null;this.boolean=null;this.flatRetirement=null;this.booleanRetirement=null;this.retained=[];this.retainedOperand=null;this.current=null;this.input={...this.input,operands:[]};this.admitted=[];this.local=[];this.world=[];this.contour=null;this.prepared=[];this.output=[];}
- cancel():void{this.cancelled=true;if(!this.transferred)this.clear();}
+ cancel():void{this.cancelled=true;}
 }
 /** ⏳️ Publishes only complete paths after observers and cancellation checks. */
 export async function booleanPaths(input:PathBooleanInput,options:PathBooleanOptions={}):Promise<PathSegment[]>{
  const abort=()=>{if(options.signal?.aborted)throw new DOMException("Path boolean cancelled","AbortError");};abort();const job=new PathBooleanJob(input);
- try{for(;;){abort();const p=job.advance(options.workBudget??4096);options.onProgress?.(p);abort();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}
+ try{for(;;){abort();const p=job.advance(options.workBudget??4096);options.onProgress?.(p);abort();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const close=job.intoRetirement().job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
 }

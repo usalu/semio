@@ -1,0 +1,7 @@
+{
+  "mutation": "setViewport",
+  "id": "vp-2",
+  "label": {
+    "value": null
+  }
+}

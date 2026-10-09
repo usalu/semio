@@ -52,7 +52,7 @@ export class AffineImageJob {
  }
  private step():void {
   if(this.phase==="coverage"){if(this.coverage!.advance(1).done){const retired=this.coverage!.intoRetirement();this.mask=retired.output;this.coverageRetirement=retired.job;this.coverage=null;this.phase="coverageCleanup";}return;}
-  if(this.phase==="coverageCleanup"){if(this.coverageRetirement){if(!this.coverageRetirement.terminalIsEmpty())this.coverageRetirement.advance(1);else this.coverageRetirement=null;}else if(this.coverageContour){if(this.coverageContour.length)this.coverageContour.pop();else this.coverageContour=null;}else this.phase="sampling";return;}
+  if(this.phase==="coverageCleanup"){this.phase="sampling";return;}
   if(this.active) {
    this.accumulate(this.x,this.y,this.area(this.x,this.y));this.sampled++;this.x++;
    if(this.x>=this.right){this.x=this.left;this.y++;}if(this.y>=this.bottom)this.write(this.sums[3]!*this.determinant);return;

@@ -8,7 +8,7 @@ use semio_repo_test_host::Adapter;
 
 /// 🗂️ The fixture cases of these families.
 #[allow(dead_code)]
-const CASES: [&str; 6] = ["columns-profiles", "beams-profiles", "slabs-holes-slope", "roofs-shapes", "stairs-flights", "railings-posts"];
+const CASES: [&str; 8] = ["columns-profiles", "beams-profiles", "slabs-holes-slope", "ceilings-holes-slope", "ceilings-meshes", "roofs-shapes", "stairs-flights", "railings-posts"];
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
@@ -22,7 +22,7 @@ mod subject {
         let uris = ctx.step_input_uris();
         let mut tables = Vec::new();
         for case in CASES {
-            let Some(uri) = uris.iter().find(|uri| uri.contains(&format!("/{case}/"))) else { continue };
+            let Some(uri) = uris.iter().find(|uri| uri.trim_end_matches('/').rsplit('/').nth(1).is_some_and(|folder| folder.ends_with(case))) else { continue };
             let text = String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("the committed case {case} is not UTF-8: {error}"))?;
             let document = parse_json(&text)?;
             let snapshot = decode_model_snapshot_json(&document.get("snapshot").ok_or_else(|| format!("the case {case} has no snapshot"))?.to_string())?;

@@ -197,6 +197,7 @@ describe("quizIssues", () => {
     ["a short category label without German", (quiz) => (quiz.tasks[0].categories[0].short = { en: "Passive" }), [{ path: "/tasks/0/categories/0/short/de", code: "required" }]],
     ["a short label that is no text", (quiz) => (quiz.tasks[0].items[0].short = "Villa"), [{ path: "/tasks/0/items/0/short", code: "type-invalid" }]],
     ["a short label on a matching item with a third language", (quiz) => (quiz.tasks[2].items[1].short = { en: "Passive", de: "Passiv", fr: "Passif" }), [{ path: "/tasks/2/items/1/short/fr", code: "property-unknown" }]],
+    ["a short quiz label of 41 code points", (quiz) => (quiz.short = T("t".repeat(41), "Physik")), [{ path: "/short/en", code: "length-invalid" }]],
     ["a short label on a task", (quiz) => (quiz.tasks[1].short = T("Power")), [{ path: "/tasks/1/short", code: "property-unknown" }]],
     ["a non-boolean familiar flag", (quiz) => (quiz.tasks[2].items[0].familiar = "yes"), [{ path: "/tasks/2/items/0/familiar", code: "type-invalid" }]],
     ["a familiar flag on a classification item", (quiz) => (quiz.tasks[0].items[0].familiar = true), [{ path: "/tasks/0/items/0/familiar", code: "property-unknown" }]],

@@ -1,0 +1,30 @@
+{
+  "version": "6.0",
+  "nxVersion": "23.2.0",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {
+      "draw-ticket-verification": [
+        {
+          "file": "nx.json",
+          "hash": "3282376060806532299"
+        },
+        {
+          "file": "package.json",
+          "hash": "6995482293474241450"
+        },
+        {
+          "file": "project.json",
+          "hash": "12237507340357368663"
+        },
+        {
+          "file": "📜️script.ts",
+          "hash": "1603264695294159084"
+        }
+      ]
+    },
+    "nonProjectFiles": []
+  },
+  "externalNodesHash": "3244421341483603138"
+}

@@ -192,7 +192,7 @@ export const leaves: Leaf[] = [
     kind: "delete-elements", emoji: 0x1f4a3, variant: "DeleteElements", verb: "delete", entity: "elements", binaryTag: 902, displayName: "Delete Elements",
     doc: "Removes any set of elements together with everything that depends on them (buildings of a site, storeys and grid lines of a building, the contents of a storey, openings of walls and curtain walls) and with their properties and classifications; refuses while a surviving element's top constraint still points at a removed storey.",
     props: [ids()],
-    inverseRows: { bounded: 65536 },
+    inverseRows: { bounded: 8191 },
     label: { en: 'format!("Delete {} element(s) with their dependants", self.ids.len())', de: 'format!("{} Element(e) samt Abhängigen löschen", self.ids.len())' },
     target,
     cases: [

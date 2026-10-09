@@ -8,6 +8,7 @@
     "projection",
     "isolatedStorey",
     "hiddenStoreys",
+    "viewPhase",
     "sectionEnabled",
     "sectionAxis",
     "sectionOffset",
@@ -28,6 +29,9 @@
       "items": {
         "type": "string"
       }
+    },
+    "viewPhase": {
+      "type": "string"
     },
     "sectionEnabled": {
       "type": "boolean"

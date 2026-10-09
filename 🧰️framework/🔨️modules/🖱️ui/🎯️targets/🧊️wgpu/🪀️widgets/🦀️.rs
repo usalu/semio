@@ -859,9 +859,32 @@ pub fn draw_text_face_on(draw: &mut DrawList, atlas: &mut FontAtlas, face: TextF
     pen_glyph_run(draw, atlas, face, text, (x, y), size, color, false);
 }
 
+/// ↗️ Pens a run in local coordinates and transforms every sampled glyph's complete quad.
+#[allow(clippy::too_many_arguments,reason="one argument per authored text paint input")]
+pub fn draw_text_face_affine_on(draw:&mut DrawList,atlas:&mut FontAtlas,face:TextFace,text:&str,origin:(f32,f32),size:f32,color:Rgba,matrix:[f32;6]) {
+    let atlas_w=atlas.width as f32;
+    let atlas_h=atlas.height as f32;
+    let (mut cursor_x,mut previous)=(origin.0,None);
+    for ch in text.chars() {
+        cursor_x+=atlas.pen_kerning(face,previous,cursor_x-origin.0,ch,size);
+        previous=Some(ch);
+        let glyph=*atlas.ensure_glyph_for(face,ch,size);
+        let width=glyph.logical_width();
+        let height=glyph.logical_height();
+        let rect=[cursor_x+glyph.bearing_x,origin.1-height-glyph.bearing_y,width.max(1.0),height.max(1.0)];
+        let uv_rect=[glyph.atlas_x as f32/atlas_w,glyph.atlas_y as f32/atlas_h,(glyph.atlas_x+glyph.width) as f32/atlas_w,(glyph.atlas_y+glyph.height) as f32/atlas_h];
+        draw.push_glyph_affine(rect,color,uv_rect,matrix);
+        cursor_x+=glyph.advance;
+    }
+}
+
 pub fn draw_text_overlay_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     pen_glyph_run(draw, atlas, TextFace::Sans, text, (x, y), size, color, true);
 }
+
+#[cfg(test)]
+#[path="↗️affine/🧪️tests/🔬️unit/🦀️.rs"]
+mod affine_glyph_tests;
 
 /// ✒️ Pens one single-line run from its baseline `origin`, glyph by glyph — each glyph's advance plus its pair kerning with the
 /// glyph before it ([`FontAtlas::pen_kerning`], the rule [`FontAtlas::measure_text_face`] sums by) — onto the draw list's

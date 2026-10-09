@@ -13,6 +13,10 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const [language = "typescript", ...rest] = segments;
     if (language === "typescript") {
+      if(rest[0]==="physical-retirement") {
+        await runOwnedCommand(process.execPath,["test","--timeout","120000",join(this.root,"♻️retirement/🧪️tests/🟦️.ts"),join(this.root,"../◻️2d/🔀️booleans/🧪️tests/🟦️.ts"),join(this.root,"../◻️2d/🛤️path/📏️flatten/🧪️tests/🟦️.ts"),join(this.root,"../◻️2d/🔀️booleans/🛤️paths/🧪️tests/🟦️.ts"),join(this.root,"../◻️2d/🔍️trace/🧪️tests/🟦️.ts"),...rest.slice(1)],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+        await runOwnedCommand(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",join(this.root,"../🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts"),join(this.root,"../◻️2d/🔀️booleans/🟦️.ts"),join(this.root,"../◻️2d/🛤️path/📏️flatten/🟦️.ts"),join(this.root,"../◻️2d/🔀️booleans/🛤️paths/🟦️.ts"),join(this.root,"../◻️2d/🔍️trace/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});return;
+      }
       const affine = join(this.root,"🎨️sampling/↗️affine");
       const png = join(this.root,"📷️png/📥️decode");
       const image = join(this.root,"🖼️image/📥️decode");

@@ -1,0 +1,392 @@
+{
+  "name": "dashboard-authority-verification",
+  "targets": {
+    "authority": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts verify authority",
+        "cwd": ".",
+        "usePty": false
+      },
+      "cache": false
+    },
+    "lock": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts lock",
+        "cwd": ".",
+        "usePty": false
+      },
+      "cache": false
+    },
+    "cursor": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts verify unit quick terminal::tests::the_launcher_gives_text_editors_a_visible_cursor",
+        "cwd": ".",
+        "usePty": false
+      },
+      "cache": false
+    },
+    "unit": {
+      "options": {
+        "command": "bun ../📜️script.ts verify unit quick",
+        "cwd": ".",
+        "usePty": false
+      },
+      "executor": "nx:run-commands",
+      "cache": false
+    },
+    "terminal": {
+      "options": {
+        "command": "bun ../📜️script.ts verify unit quick terminal::",
+        "cwd": ".",
+        "usePty": false
+      },
+      "executor": "nx:run-commands",
+      "cache": false
+    },
+    "editing": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts verify unit quick terminal::tests::launcher_text_editing_follows_the_shared_input_caret",
+        "usePty": false
+      },
+      "cache": false
+    },
+    "inspect": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts inspect",
+        "usePty": false
+      }
+    },
+    "pty": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty",
+        "usePty": false
+      }
+    },
+    "ptyload": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty-load",
+        "usePty": false
+      }
+    },
+    "layout": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty the_launcher_uses_all_available_window_space",
+        "usePty": false
+      }
+    },
+    "uilayout": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts ui hidden_children_reserve_neither_size_nor_gaps",
+        "usePty": false
+      }
+    },
+    "hover": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty hover_and_selection_are_visible_and_select_the_clicked_command",
+        "usePty": false
+      }
+    },
+    "click": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty a_configured_command_starts_with_one_click",
+        "usePty": false
+      }
+    },
+    "prefix": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty a_control_space_prefix_arms_the_next_key",
+        "usePty": false
+      }
+    },
+    "ptyall": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty all",
+        "usePty": false
+      }
+    },
+    "borders": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty rendered_form_text_remains_inside_its_window",
+        "usePty": false
+      }
+    },
+    "unicode": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty the_terminal_driver_preserves_committed_unicode_text",
+        "usePty": false
+      }
+    },
+    "unicodeinput": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts pty launcher_text_editing_follows_the_visible_hardware_cursor",
+        "usePty": false
+      }
+    },
+    "confirm": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts verify unit quick terminal::tests::confirmation_is_operable_with_the_mouse",
+        "usePty": false
+      }
+    },
+    "button": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts verify unit quick terminal::tests::the_configured_start_action_needs_one_click",
+        "usePty": false
+      }
+    },
+    "smokefinite": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts battle smoke finite",
+        "usePty": false
+      }
+    },
+    "smoke": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts battle smoke",
+        "usePty": false
+      }
+    },
+    "combined": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts verify quick",
+        "usePty": false
+      }
+    },
+    "canonicaljourneys": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts verify journeys",
+        "usePty": false
+      }
+    },
+    "canonicalload": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts verify load",
+        "usePty": false
+      }
+    },
+    "coverage": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts battle coverage",
+        "usePty": false
+      }
+    },
+    "journeys": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts battle journeys",
+        "usePty": false
+      }
+    },
+    "load": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts battle load",
+        "usePty": false
+      }
+    },
+    "scalar": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts ui scalar_width_rendering_preserves_combining_marks",
+        "usePty": false
+      }
+    },
+    "ui": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts ui tui::",
+        "usePty": false
+      }
+    },
+    "script": {
+      "options": {
+        "cwd": ".",
+        "usePty": false,
+        "command": "bun ../📜️script.ts script-run"
+      },
+      "cache": false,
+      "executor": "nx:run-commands"
+    },
+    "scriptlogs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts script-run logs",
+        "cwd": ".",
+        "usePty": false
+      },
+      "cache": false
+    },
+    "smokeserver": {
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts battle smoke server",
+        "usePty": false
+      },
+      "cache": false,
+      "executor": "nx:run-commands"
+    },
+    "batch": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ../📜️script.ts verify unit quick daemon::integration::windows::interrupting_a_batch_file_ends_it_and_leaves_no_prompt",
+        "usePty": false
+      }
+    },
+    "notice": {
+      "executor": "nx:run-commands",
+      "options": {
+        "usePty": false,
+        "command": "bun ../📜️script.ts verify unit quick an_armed_prefix_notice_precedes_routine_footer_status",
+        "cwd": "."
+      },
+      "cache": false
+    },
+    "httpready": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts battle journeys listening",
+        "cwd": ".",
+        "usePty": false
+      }
+    },
+    "restore": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts verify unit quick restoring_all_task_views_raises_and_focuses_the_most_recent_one",
+        "cwd": ".",
+        "usePty": false
+      }
+    },
+    "restorered": {
+      "options": {
+        "command": "bun ../📜️script.ts verify unit quick restoring_before_the_first_snapshot_focuses_the_replayed_task",
+        "usePty": false,
+        "cwd": "."
+      },
+      "executor": "nx:run-commands",
+      "cache": false
+    },
+    "ready": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ../📜️script.ts verify unit quick text_alone_never_declares_readiness_a_successful_http_response_does",
+        "cwd": ".",
+        "usePty": false
+      }
+    },
+    "smokebuild": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts battle smoke build",
+        "usePty": false,
+        "cwd": "."
+      }
+    },
+    "freshness": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ../📜️script.ts freshness",
+        "cwd": ".",
+        "usePty": false
+      }
+    },
+    "close": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts close",
+        "cwd": ".",
+        "usePty": false
+      },
+      "cache": false
+    },
+    "purge-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ../📜️script.ts purge-generated",
+        "cwd": ".",
+        "usePty": false
+      },
+      "cache": false
+    }
+  }
+}

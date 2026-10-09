@@ -1,0 +1,16 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const file = process.argv[2];
+let text = readFileSync(file, "utf8");
+const swap = (from, to) => { if (!text.includes(from)) throw new Error("missing " + from.slice(0, 70)); text = text.replace(from, to); };
+swap('assert_eq!(names, ["9", "10", "D1", "D02", "D2", "d2", "D10", "Door"].map(String::from), ', 'assert_eq!(names, ["9", "10", "D1", "D02", "D2", "d2", "D10", "Door"], ');
+swap('    assert!(passes(&ScheduleCell::number(5.0), ScheduleOp::Equals, "five") == false, "a number against a word compares as text");', '    assert!(!passes(&ScheduleCell::number(5.0), ScheduleOp::Equals, "five"), "a number against a word compares as text");');
+swap('(ScheduleField::Id, false), (ScheduleField::Host, false)]);\n    schedule.sort = vec![sort(ScheduleField::Id, true)];', '(ScheduleField::Id, false), (ScheduleField::Name, false)]);\n    schedule.sort = vec![sort(ScheduleField::Id, true)];');
+swap('    assert_eq!(table.rows[0].cells[1].display(), table.rows[0].cells[1].display());\n', '');
+swap('    assert_eq!(inferred.schedules["sch-finish"].items as usize, 3 * snapshot.spaces.len());\n', '    let resolved = snapshot.spaces.keys().filter(|id| inferred.quantities.elements.get(*id).is_some_and(|quantity| !quantity.finishes.is_empty())).count();\n    assert_eq!(inferred.schedules["sch-finish"].items as usize, 3 * resolved);\n');
+swap('    assert_eq!((first["kind"].as_str(), first["level"].as_u64()), (Some("Item"), Some(1).or(Some(0))));', '    assert_eq!((first["kind"].as_str(), first["level"].as_u64()), (Some("Item"), Some(0)), "an ungrouped table has item rows at level 0");');
+swap(`    let windows = &json["sch-window"]["rows"][0]["cells"];
+    assert!(windows.as_array().expect("cells").iter().any(|cell| cell.is_null()) || !windows.as_array().expect("cells").is_empty());`, `    let window = &json["sch-window"]["rows"][0]["cells"];
+    assert_eq!((window[0].as_str(), window[5].as_f64()), (Some("Curved window"), Some(2.0)), "the first window by storey and name, with its two panes");
+    let rooms = &json["sch-room"]["rows"][0]["cells"];
+    assert!(rooms.as_array().expect("cells").iter().any(|cell| cell.is_null()) || json["sch-room"]["items"] == 0, "a cell with no value is null");`);
+writeFileSync(file, text);

@@ -109,7 +109,8 @@
       "name": "Hall",
       "number": "0.02",
       "storey": "st-ground",
-      "usage": "Circulation"
+      "usage": "Circulation",
+      "phase": "New"
     }
   },
   "stairs": {},

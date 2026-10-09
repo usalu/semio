@@ -1,0 +1,6 @@
+{
+  "mutation": "setWallSweep",
+  "id": "ws-base",
+  "name": "Baseboard",
+  "height": 0
+}

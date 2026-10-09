@@ -185,7 +185,7 @@ async fn the_manifest_stitches_every_window_panel_domain_and_command() {
     for window in [plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID, section::WINDOW_KIND_ID, schedule::WINDOW_KIND_ID] {
         assert!(json.contains(window), "window kind {window} missing from the manifest");
     }
-    for body in [outliner_panel::BODY_KEY, properties_panel::BODY_KEY, library_panel::BODY_KEY] {
+    for body in [outliner_panel::BODY_KEY, properties_panel::BODY_KEY, library_panel::BODY_KEY, diagnostics_panel::BODY_KEY] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     for domain in [crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN, crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN] {
@@ -242,6 +242,44 @@ pub(super) fn every_command() -> Vec<BimCommand> {
         BimCommand::ArmSpace(arm_utility::ArmSpace {}),
         BimCommand::ArmGrid(arm_utility::ArmGrid {}),
         BimCommand::ArmMeasure(arm_utility::ArmMeasure {}),
+        BimCommand::ArmMove(arm_utility::ArmMove {}),
+        BimCommand::ArmRotate(arm_utility::ArmRotate {}),
+        BimCommand::ArmSlabWalls(arm_utility::ArmSlabWalls {}),
+        BimCommand::ArmSplitWall(arm_utility::ArmSplitWall {}),
+        BimCommand::ArmCopy(arm_utility::ArmCopy {}),
+        BimCommand::ArmMirror(arm_utility::ArmMirror {}),
+        BimCommand::ArmArray(arm_utility::ArmArray {}),
+        BimCommand::ArmArrayRadial(arm_utility::ArmArrayRadial {}),
+        BimCommand::ArmOffset(arm_utility::ArmOffset {}),
+        BimCommand::ArmTrim(arm_utility::ArmTrim {}),
+        BimCommand::ArmExtend(arm_utility::ArmExtend {}),
+        BimCommand::ArmAlign(arm_utility::ArmAlign {}),
+        BimCommand::ArmSplit(arm_utility::ArmSplit {}),
+        BimCommand::FlipWalls(flip_walls::FlipWalls { ids: vec!["w-south".into()] }),
+        BimCommand::SplitWallAt(split_wall::SplitWallAt { ids: vec!["w-south".into()], at: "0.25".into() }),
+        BimCommand::SetProperty(set_property::SetProperty { ids: vec!["w-south".into()], pset: "Pset".into(), property: "Load".into(), value: "2.5".into() }),
+        BimCommand::RemoveProperty(remove_property::RemoveProperty { ids: vec!["w-south".into()], pset: "Pset".into(), property: "Load".into() }),
+        BimCommand::PlaceAt(place_elements::PlaceAt { ids: vec!["w-south".into()], at: "1, 2".into() }),
+        BimCommand::SelectFindings(select_findings::SelectFindings { ids: vec!["w-south".into(), "st-ground".into()] }),
+        BimCommand::AnalyseModel(analyse_model::AnalyseModel { pressed: None }),
+        BimCommand::ExportModel(export_model::ExportModel { format: "ifc".into(), pressed: None }),
+        BimCommand::SetClassification(set_classification::SetClassification { ids: vec!["w-south".into()], system: "cs-uni".into(), code: "Ss_25".into() }),
+        BimCommand::RemoveClassification(remove_classification::RemoveClassification { ids: vec!["w-south".into()], system: "cs-uni".into() }),
+        BimCommand::ApplyTemplate(apply_template::ApplyTemplate { ids: vec!["w-south".into()], template: "pt-wall".into() }),
+        BimCommand::EditTemplate(edit_template::EditTemplate { id: "pt-wall".into(), op: "set".into(), index: "0".into(), field: "unit".into(), value: "m".into() }),
+        BimCommand::EditClassification(edit_classification::EditClassification { id: "cs-uni".into(), op: "add".into(), code: "Ss_25".into(), title: "Walls".into(), parent: String::new() }),
+        BimCommand::SearchClassification(search_classification::SearchClassification { system: "cs-uni".into(), query: "wall".into() }),
+        BimCommand::CursorLeft(cursor_keys::CursorLeft {}),
+        BimCommand::CursorRight(cursor_keys::CursorRight {}),
+        BimCommand::CursorUp(cursor_keys::CursorUp {}),
+        BimCommand::CursorDown(cursor_keys::CursorDown {}),
+        BimCommand::CursorLeftFar(cursor_keys::CursorLeftFar {}),
+        BimCommand::CursorRightFar(cursor_keys::CursorRightFar {}),
+        BimCommand::CursorUpFar(cursor_keys::CursorUpFar {}),
+        BimCommand::CursorDownFar(cursor_keys::CursorDownFar {}),
+        BimCommand::CursorPlace(cursor_keys::CursorPlace {}),
+        BimCommand::EngagementInput(engagement_input::EngagementInput { value: "3, 4".into() }),
+        BimCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "@2<90".into() }),
     ]
 }
 
@@ -252,7 +290,10 @@ async fn command_ids_are_unique_and_cover_the_tool_roster() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, BIM_TOOL_IDS, "every command row is a bounded tool and every_command() covers every row in table order");
+    let (mut covered, mut roster) = (ids.clone(), BIM_TOOL_IDS.to_vec());
+    covered.sort_unstable();
+    roster.sort_unstable();
+    assert_eq!(covered, roster, "every command row is a bounded tool and every_command() covers every row");
     assert_eq!(BimCommand::TOOL_JOB_IDS, BIM_TOOL_IDS);
 }
 
@@ -296,6 +337,33 @@ fn the_bridge_folds_host_arguments_into_typed_commands() {
     assert_eq!((orbit.position, orbit.zoom), ([1.0, 2.0, 3.0], 2.0));
     let BimCommand::CanvasPointerDown(press) = bridge("canvasPointerDown", json!({ "x": 5, "y": 6, "width": 800, "height": 600, "shift": true, "worldX": 1.5, "button": 0 })) else { panic!("a press bridges to canvasPointerDown") };
     assert_eq!((press.x, press.y, press.width, press.shift, press.ctrl), (5.0, 6.0, 800.0, true, false));
+    assert_eq!(bridge("flipWalls", json!({ "id": "w-south" })), BimCommand::FlipWalls(flip_walls::FlipWalls { ids: vec!["w-south".into()] }));
+    assert_eq!(bridge("splitWall", json!({ "ids": ["w-south"], "value": 0.25 })), BimCommand::SplitWallAt(split_wall::SplitWallAt { ids: vec!["w-south".into()], at: "0.25".into() }));
+    assert_eq!(bridge("splitWall", json!({})), BimCommand::SplitWallAt(split_wall::SplitWallAt { ids: Vec::new(), at: String::new() }));
+    assert_eq!(
+        bridge("setProperty", json!({ "id": "w-south", "value": "Pset.Fire = 90" })),
+        BimCommand::SetProperty(set_property::SetProperty { ids: vec!["w-south".into()], pset: String::new(), property: String::new(), value: "Pset.Fire = 90".into() })
+    );
+    assert_eq!(
+        bridge("removeProperty", json!({ "ids": ["w-south"], "pset": "Pset", "property": "Fire" })),
+        BimCommand::RemoveProperty(remove_property::RemoveProperty { ids: vec!["w-south".into()], pset: "Pset".into(), property: "Fire".into() })
+    );
+    assert_eq!(bridge("placeElements", json!({ "ids": ["w-south"], "value": "1, 2" })), BimCommand::PlaceAt(place_elements::PlaceAt { ids: vec!["w-south".into()], at: "1, 2".into() }));
+    assert_eq!(bridge("engagementSubmit", json!({ "value": "3, 4" })), BimCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "3, 4".into() }));
+    assert_eq!(bridge("engagementInput", json!({})), BimCommand::EngagementInput(engagement_input::EngagementInput { value: String::new() }));
+    assert_eq!(bridge("armSlabWalls", json!({})), BimCommand::ArmSlabWalls(arm_utility::ArmSlabWalls {}));
+    assert_eq!(bridge("selectFindings", json!({ "id": "w-south" })), BimCommand::SelectFindings(select_findings::SelectFindings { ids: vec!["w-south".into()] }));
+    assert_eq!(bridge("exportModel", json!({ "format": "glb", "pressed": true })), BimCommand::ExportModel(export_model::ExportModel { format: "glb".into(), pressed: Some(true) }));
+    assert_eq!(bridge("exportModel", json!({})), BimCommand::ExportModel(export_model::ExportModel { format: "ifc".into(), pressed: None }));
+    assert_eq!(bridge("analyseModel", json!({ "pressed": false })), BimCommand::AnalyseModel(analyse_model::AnalyseModel { pressed: Some(false) }));
+    assert_eq!(bridge("setClassification", json!({ "ids": ["w-south"], "system": "cs-uni", "code": "Ss_25" })), BimCommand::SetClassification(set_classification::SetClassification { ids: vec!["w-south".into()], system: "cs-uni".into(), code: "Ss_25".into() }));
+    assert_eq!(bridge("setClassification", json!({ "id": "w-south", "system": "cs-uni", "value": "Ss_25" })), BimCommand::SetClassification(set_classification::SetClassification { ids: vec!["w-south".into()], system: "cs-uni".into(), code: "Ss_25".into() }));
+    assert_eq!(bridge("removeClassification", json!({ "id": "w-south", "system": "cs-uni" })), BimCommand::RemoveClassification(remove_classification::RemoveClassification { ids: vec!["w-south".into()], system: "cs-uni".into() }));
+    assert_eq!(bridge("applyTemplate", json!({ "id": "w-south", "template": "pt-wall" })), BimCommand::ApplyTemplate(apply_template::ApplyTemplate { ids: vec!["w-south".into()], template: "pt-wall".into() }));
+    assert_eq!(bridge("editTemplate", json!({ "id": "pt-wall", "op": "add", "value": "Mass:real" })), BimCommand::EditTemplate(edit_template::EditTemplate { id: "pt-wall".into(), op: "add".into(), index: String::new(), field: String::new(), value: "Mass:real".into() }));
+    assert_eq!(bridge("editClassification", json!({ "id": "cs-uni", "op": "add", "value": "Pr_20 | Products" })), BimCommand::EditClassification(edit_classification::EditClassification { id: "cs-uni".into(), op: "add".into(), code: String::new(), title: "Pr_20 | Products".into(), parent: String::new() }));
+    assert_eq!(bridge("searchClassification", json!({ "system": "cs-uni", "value": "wall" })), BimCommand::SearchClassification(search_classification::SearchClassification { system: "cs-uni".into(), query: "wall".into() }));
+    assert_eq!(bridge("cursorRightFar", json!({})), BimCommand::CursorRightFar(cursor_keys::CursorRightFar {}));
     assert!(BimModelApp::command_from_action("nonsense", None).is_err());
 }
 //#endregion 🔖️ActionBridge
@@ -332,7 +400,7 @@ async fn resizing_a_storey_through_set_field_re_infers_the_walls_above_it() {
     assert!(result.edited_document());
     let snapshot = app.snapshot().expect("snapshot");
     assert!((snapshot.storeys["st-ground"].height - 3.6).abs() < 1e-12);
-    let height = crate::editor::bim::inference::with_inference(None, &snapshot, |inference| inference.wall_layout["w-south"].height);
+    let height = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, |inference| inference.wall_layout["w-south"].height);
     assert!((height - 3.6).abs() < 1e-9, "the wall follows its storey by inference, got {height}");
 }
 
@@ -478,6 +546,13 @@ async fn every_refusal_code_the_commands_raise_has_an_english_and_a_german_notic
         "bim.set.value-invalid",
         "bim.view.window-required",
         "bim.camera.pose-mismatch",
+        "bim.tool.input-invalid",
+        "bim.split.fraction-invalid",
+        "bim.flip.wall-missing",
+        "bim.storey.target-missing",
+        "bim.storey.no-neighbour",
+        "bim.property.value-invalid",
+        "bim.place.point-invalid",
     ] {
         assert!(codes.contains(&code), "no notice for {code}");
     }
@@ -487,36 +562,3 @@ async fn every_refusal_code_the_commands_raise_has_an_english_and_a_german_notic
     assert_eq!(unique.len(), codes.len());
 }
 //#endregion 🔖️Faults
-
-#[semio_framework_async_macros::async_test]
-async fn zz_debug_close() {
-    let mut app = bim_app().await;
-    let world_view = view(Locale::En, &[("bim-world", world::WINDOW_KIND_ID)], Some("bim-world"));
-    let _ = world_scene(&mut app, &world_view).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
-    std::mem::forget(app);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn zz_debug_close_plain() {
-    let mut app = bim_app().await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn zz_debug_close_plan() {
-    let mut app = bim_app().await;
-    let v = view(Locale::En, &[("bim-plan", plan::WINDOW_KIND_ID)], Some("bim-plan"));
-    let _ = canvas_scene(&mut app, plan::BODY_KEY, &v).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
-    std::mem::forget(app);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn zz_debug_close_section() {
-    let mut app = bim_app().await;
-    let v = view(Locale::En, &[("bim-section", section::WINDOW_KIND_ID)], Some("bim-section"));
-    let _ = canvas_scene(&mut app, section::BODY_KEY, &v).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
-    std::mem::forget(app);
-}

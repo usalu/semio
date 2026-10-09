@@ -12,7 +12,7 @@ fn press_at(model: (f64, f64), shift: bool) -> CanvasPointerDown {
 fn window(kind: &str, utility: &str) -> BimDispatchCtx {
     let view = view(Locale::En, &[("window", kind)], Some("window"));
     let mut ctx = BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&view), None, None);
-    ctx.plan.storey = "st-ground".into();
+    ctx.plan.view = "v-plan-st-ground".into();
     ctx.utility = utility.into();
     ctx
 }

@@ -37,14 +37,10 @@ test("actual affine owners survive interruptions and drain genuine coverage befo
  }
  console.error(`[DEBUG] Affine preserved output matched ${comparisons} independent polygon and canvas comparisons`);
 });
-test("normal affine sampling waits for actual coverage retirement before touching output",()=>{
- const v=input(fixture[9]!.input),before=structuredClone(v),job=new AffineImageJob(v),state=job as any;let adopted=0,work=0,closed:any=null;
- const original=CoverageJob.prototype.intoRetirement,spy=spyOn(CoverageJob.prototype,"intoRetirement").mockImplementation(function(this:CoverageJob){
-  const mask=this.result(),retired=original.call(this);closed=retired;adopted++;expect(retired.output).toBe(mask);const advance=retired.job.advance.bind(retired.job);
-  retired.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe("coverageCleanup");expect(state.coverage).toBeNull();expect(state.mask).toBe(mask);expect(state.at).toBe(0);expect(state.output.pixels.every((v:number)=>v===0)).toBe(true);const p=advance(unit);expect(p.work-work).toBe(1);work=p.work;return p;};return retired;
- });
- try{let done=false;for(let at=0;at<2000000;at++){const p=job.advance(1);expect(validateProgress(p)).toBe(true);if(p.phase==="sampling"){expect(closed.job.terminalIsEmpty()).toBe(true);expect(state.coverageContour).toBeNull();expect(state.coverageRetirement).toBeNull();}if(p.done){done=true;break;}}expect(done).toBe(true);}finally{spy.mockRestore();}
- expect(adopted).toBe(1);expect(work).toBeGreaterThanOrEqual(14);expect([...job.result().pixels]).toEqual(fixture[9]!.expected);expect(v).toEqual(before);console.error(`[DEBUG] Actual affine coverage handoff: ${work} one-unit grants; untouched pixels until child terminal`);
+test("normal affine sampling retains coverage ownership through sealed publication",()=>{
+ const v=input(fixture[9]!.input),before=structuredClone(v),job=new AffineImageJob(v),state=job as any;let reached=false;
+ for(let at=0;at<2000000;at++){const p=job.advance(1);expect(validateProgress(p)).toBe(true);if(p.phase==="coverageCleanup"){reached=true;break;}}expect(reached).toBe(true);const child=state.coverageRetirement,mask=state.mask;expect(child.terminalIsEmpty()).toBe(false);
+ job.advance(1);expect(state.phase).toBe("sampling");expect(state.at).toBe(0);expect(state.mask).toBe(mask);while(!job.advance(4096).done){}expect(child.terminalIsEmpty()).toBe(false);expect([...job.result().pixels]).toEqual(fixture[9]!.expected);const retired=job.intoRetirement();while(!retired.job.advance(4096).done){}expect(child.terminalIsEmpty()).toBe(true);expect(v).toEqual(before);console.error("[DEBUG] Affine coverage backing survived completed publication and retired only during final close");
 });
 test("async affine finally drains genuine parent after completion abort and callback failure",async()=>{
  const original=(AffineImageJob.prototype as any).intoRetirement;

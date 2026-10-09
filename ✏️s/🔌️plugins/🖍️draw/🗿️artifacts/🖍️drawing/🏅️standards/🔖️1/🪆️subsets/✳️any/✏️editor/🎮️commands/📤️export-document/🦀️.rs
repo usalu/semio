@@ -1,13 +1,10 @@
-//! 📤️ Drawing play app commands command — `export-document`: hands the document to the host as a
-//! download (`Effect::DownloadMediaExport`) in one of the drawing's declared export dialects.
-//! `pdf` paints the vector page (`io::export::…::pdf`), `svg` runs the stdio drawing→svg bridge.
+//! 📤️ Declares owned PNG, SVG and PDF downloads through the retained export command route.
 
 use crate::op::DrawingMutation;
 use crate::DrawingSnapshot;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
-use semio_framework_plugin::{kernel::Effect, ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
 
 /// 📄️ The default when the palette dispatches the verb without arguments.
 pub const DEFAULT_EXPORT_FORMAT: &str = "pdf";
@@ -16,35 +13,25 @@ pub const DEFAULT_EXPORT_FORMAT: &str = "pdf";
 #[dsl(keyword = "export-document")]
 pub struct ExportDocument {
     pub format: String,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+    pub transparent: Option<bool>,
 }
+impl Default for ExportDocument{fn default()->Self{Self{format:DEFAULT_EXPORT_FORMAT.into(),width:None,height:None,transparent:None}}}
 
-/// 📎️ A filename-safe stem from the document id (or title), so `semio` exports as `semio.pdf`.
-fn export_stem(document: &DrawingSnapshot) -> String {
-    let source = if document.id.chars().all(char::is_whitespace) { document.title.as_ref() } else { Some(&document.id) };
-    let stem: String = source.map(|source| source.chars().map(|ch| if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') { ch } else { '-' }).collect()).unwrap_or_else(|| "drawing".into());
+/// 📎️ A fixed header copies at most 256 authored filename scalars.
+pub(super) fn export_stem(document: &DrawingSnapshot) -> String {
+    let source = if document.id.chars().take(256).all(char::is_whitespace) { document.title.as_ref() } else { Some(&document.id) };
+    let stem: String = source.map(|source| source.chars().take(256).map(|ch| if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') { ch } else { '-' }).collect()).unwrap_or_else(|| "drawing".into());
     let stem = stem.trim_matches(['-', '.']).to_owned();
     if stem.is_empty() { "drawing".into() } else { stem }
 }
 
 pub fn handle(
-    payload: &ExportDocument,
-    doc: &ArtifactView<'_, DrawingSnapshot>,
+    _payload: &ExportDocument,
+    _doc: &ArtifactView<'_, DrawingSnapshot>,
     _cfg: &ConfigView<'_, NoConfig>,
     _session: &mut crate::editor::drawing::commands::canvas_pointer_down::DrawingSession,
 ) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-    let format = if payload.format.trim().is_empty() { DEFAULT_EXPORT_FORMAT } else { payload.format.trim() };
-    let stem = export_stem(doc.snapshot);
-    let effect = match format {
-        "pdf" => {
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::any::drawing_document_to_pdf(doc.snapshot)
-                .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.export.pdf"), format!("PDF export failed: {error}")))?;
-            Effect::DownloadMediaExport { filename: format!("{stem}.pdf"), mime_type: "application/pdf".into(), data: base64_codec::base64_standard_encode(&bytes), encoding: Some(MEDIA_EXPORT_BASE64_ENCODING.into()) }
-        }
-        "svg" => {
-            let (svg, _width, _height) = crate::standards::v1::subsets::any::io::drawing_document_to_svg(doc.snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.export.svg"), format!("SVG export failed: {error}")))?;
-            Effect::DownloadMediaExport { filename: format!("{stem}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None }
-        }
-        other => return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.export.format"), format!("Drawing exports to pdf or svg, not '{other}'"))),
-    };
-    Ok(Emit { effects: vec![effect], ..Default::default() })
+    Err(Fault::new(FaultOrigin::App,FaultCode::new("drawing.export.owned-route-required"),"Drawing export requires its registered owned command factory"))
 }

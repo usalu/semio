@@ -6,9 +6,43 @@
   "noOracleDecisions": [],
   "mutationCatalogs": [],
   "oracleHostPackages": [
-    { "implementation": "python", "package": "shapely", "version": "2.1.2", "module": "shapely" },
-    { "implementation": "python", "package": "ifcopenshell", "version": "0.8.4.post1", "module": "ifcopenshell" },
-    { "implementation": "python", "package": "lxml", "version": "6.1.3", "module": "lxml" },
-    { "implementation": "typescript", "package": "three", "version": "0.182.0" }
+    {
+      "implementation": "python",
+      "package": "shapely",
+      "version": "2.1.2",
+      "module": "shapely"
+    },
+    {
+      "implementation": "python",
+      "package": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "module": "ifcopenshell"
+    },
+    {
+      "implementation": "python",
+      "package": "lxml",
+      "version": "6.1.3",
+      "module": "lxml"
+    },
+    {
+      "implementation": "typescript",
+      "package": "three",
+      "version": "0.182.0"
+    },
+    {
+      "implementation": "python",
+      "package": "jsonpatch",
+      "version": "1.33"
+    },
+    {
+      "implementation": "python",
+      "package": "deepdiff",
+      "version": "9.1.0"
+    },
+    {
+      "implementation": "python",
+      "package": "jsonschema",
+      "version": "4.26.0"
+    }
   ]
 }

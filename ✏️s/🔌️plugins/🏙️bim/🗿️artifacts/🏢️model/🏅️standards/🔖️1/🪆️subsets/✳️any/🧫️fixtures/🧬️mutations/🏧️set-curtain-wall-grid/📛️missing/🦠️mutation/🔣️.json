@@ -1,0 +1,13 @@
+{
+  "mutation": "setCurtainWallGrid",
+  "id": "cw-9",
+  "u_grid": {
+    "value": {
+      "Lines": {
+        "positions": [
+          2
+        ]
+      }
+    }
+  }
+}

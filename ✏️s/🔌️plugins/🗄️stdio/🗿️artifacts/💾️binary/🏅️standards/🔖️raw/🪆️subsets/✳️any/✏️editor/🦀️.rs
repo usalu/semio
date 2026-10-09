@@ -309,7 +309,7 @@ fn build_binary_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Bin
         canonical_base_revision: request.canonical_base_revision,
         authoring_seed: request.authoring_seed.clone(),
     };
-    let payload = ArtifactRetainedCommandPayload::try_new(
+    let payload = ArtifactRetainedCommandPayload::new(
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
@@ -325,7 +325,7 @@ fn build_binary_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Bin
         BINARY_TEXT_MAXIMUM_RAW_BYTES,
         main::HEX_EDITOR_MAX_BYTES,
         Box::new(BoundedArtifactCommandWork::new(tool_id, binary_text_reduce, binary_text_extent)),
-    )?;
+    );
     Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
 }
 //#endregion 🧵️RetainedTextRoute

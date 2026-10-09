@@ -9,6 +9,21 @@
     "family:os-plugin"
   ],
   "targets": {
+    "test-retained-metadata": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🌐️locale/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-retained-metadata"
+      }
+    },
     "test-output-retirement-native": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -136,7 +151,6 @@
       "outputs": []
     },
     "test": {
-
       "executor": "nx:run-commands",
       "options": {
         "command": "bun 📜️script.ts test",
@@ -222,6 +236,32 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite-refusal host-native"
+      }
+    },
+    "test-retained-raw-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-retained-raw source"
+      }
+    },
+    "test-retained-raw-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-retained-raw native"
       }
     }
   }

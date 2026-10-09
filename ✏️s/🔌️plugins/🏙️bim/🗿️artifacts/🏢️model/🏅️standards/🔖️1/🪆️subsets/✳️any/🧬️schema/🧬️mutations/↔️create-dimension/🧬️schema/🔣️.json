@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-dimension/schema.json",
+  "title": "CreateDimension",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "dimension"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createDimension"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Dimension id",
+          "de": "Bemaßungs-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "dimension": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Dimension",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Dimension",
+          "de": "Bemaßung"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

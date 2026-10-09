@@ -192,6 +192,7 @@
           ]
         ],
         "offset": 0.0,
+        "phase": "New",
         "name": "Holed"
       },
       "s-sloped": {
@@ -229,6 +230,7 @@
         ],
         "holes": [],
         "offset": -0.05,
+        "phase": "New",
         "name": "Sloped",
         "slope": {
           "direction": 0.0,
@@ -270,6 +272,7 @@
         ],
         "holes": [],
         "offset": -0.1,
+        "phase": "New",
         "name": "Diagonal fall",
         "slope": {
           "direction": 1.0471975511965976,
@@ -328,6 +331,7 @@
           ]
         ],
         "offset": -0.1,
+        "phase": "New",
         "name": "Curved with round hole"
       },
       "s-bare": {
@@ -365,6 +369,7 @@
         ],
         "holes": [],
         "offset": 0.0,
+        "phase": "New",
         "name": "No layers"
       },
       "s-unknown-type": {
@@ -402,6 +407,7 @@
         ],
         "holes": [],
         "offset": 0.0,
+        "phase": "New",
         "name": "Unknown type"
       }
     }

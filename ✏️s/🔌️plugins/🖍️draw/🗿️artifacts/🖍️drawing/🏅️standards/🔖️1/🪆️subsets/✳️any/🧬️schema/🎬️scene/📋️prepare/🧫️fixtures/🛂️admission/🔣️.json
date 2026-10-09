@@ -1,0 +1,7 @@
+[
+ {"source":"rectangle","producer":"vector","limit":"maxWork","value":0,"expectedRefusal":true,"expectedSourceUnchanged":true},
+ {"source":"rectangle","producer":"vector","limit":"maxNodes","value":0,"expectedRefusal":true,"expectedSourceUnchanged":true},
+ {"source":"rectangle","producer":"vector","limit":"maxEdges","value":0,"expectedRefusal":true,"expectedSourceUnchanged":true},
+ {"source":"rectangle","producer":"raster","limit":"width","value":0,"expectedRefusal":true,"expectedSourceUnchanged":true},
+ {"source":"rectangle","producer":"raster","limit":"maxPixels","value":0,"expectedRefusal":true,"expectedSourceUnchanged":true}
+]

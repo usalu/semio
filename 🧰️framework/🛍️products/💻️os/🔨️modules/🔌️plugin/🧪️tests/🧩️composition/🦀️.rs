@@ -2157,10 +2157,6 @@ impl store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtur
         self.inner.finish_record(cx)
     }
 
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        self.inner.next_close_byte_demand()
-    }
-
     fn maximum_close_byte_demand(&self) -> usize {
         self.inner.maximum_close_byte_demand()
     }
@@ -2169,8 +2165,24 @@ impl store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtur
         self.inner.maximum_retained_close_bytes()
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        self.inner.close_step(maximum_items, maximum_bytes)
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.inner.next_close_copy_byte_demand()
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.inner.next_close_capacity_byte_demand(maximum_copy_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.inner.next_close_release_byte_demand()
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.inner.next_close_depth_demand()
+    }
+
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        self.inner.close_step(grant)
     }
 
     fn terminal_is_empty(&self) -> bool {

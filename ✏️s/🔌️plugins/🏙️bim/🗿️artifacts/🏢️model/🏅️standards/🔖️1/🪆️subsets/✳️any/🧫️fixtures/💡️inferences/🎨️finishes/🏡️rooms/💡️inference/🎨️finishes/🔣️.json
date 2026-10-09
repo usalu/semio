@@ -1,0 +1,23 @@
+{
+  "sp-west": {
+    "floor_area": 21.09,
+    "wall_gross_area": 45.822647647619604,
+    "wall_opening_area": 3.33,
+    "wall_area": 42.492647647619606,
+    "ceiling_area": 21.11032742387045
+  },
+  "sp-east": {
+    "floor_area": 20.629999999999992,
+    "wall_gross_area": 54.55567603474271,
+    "wall_opening_area": 3.33,
+    "wall_area": 51.22567603474271,
+    "ceiling_area": 20.741240509871755
+  },
+  "sp-up": {
+    "floor_area": 12.0,
+    "wall_gross_area": 39.199999999999996,
+    "wall_opening_area": 0.0,
+    "wall_area": 39.199999999999996,
+    "ceiling_area": 12.0
+  }
+}

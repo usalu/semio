@@ -198,3 +198,6 @@ pub mod sqlite;
 
 #[path="🖼️image/🦀️.rs"]
 pub mod image;
+
+#[path="🧵️write/🦀️.rs"]
+pub mod byte_writer;

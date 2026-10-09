@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
-use crate::{Entry, ModelDiff, StoreyPatch};
+use crate::{CurtainGrid, CurtainPanel, Entry, ModelDiff, StoreyPatch};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
@@ -8,20 +8,28 @@ const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferenc
 fn curtain(storey: &str, top: serde_json::Value, base_offset: f64, length: f64) -> serde_json::Value {
     serde_json::json!({
         "storey": storey,
+        "curtain_wall_type": "cwt",
         "axis": { "Line": { "start": { "x": 0.0, "y": 10.0 }, "end": { "x": length, "y": 10.0 } } },
         "base_offset": base_offset,
         "top": top,
-        "u_spacing": 1.5,
-        "v_spacing": 1.0,
-        "mullion": { "Rectangle": { "width": 0.05, "depth": 0.1 } },
-        "panel_material": "m-brick",
-        "mullion_material": "m-insulation",
         "name": "Curtain"
     })
 }
 
 fn model() -> ModelSnapshot {
     let mut value: serde_json::Value = serde_json::from_str(HOUSE).expect("house is JSON");
+    value["curtain_wall_types"] = serde_json::json!({
+        "cwt": {
+            "name": "Facade",
+            "u_grid": { "Spacing": { "spacing": 1.5 } },
+            "v_grid": { "Spacing": { "spacing": 1.0 } },
+            "interior_mullion": { "Rectangle": { "width": 0.05, "depth": 0.1 } },
+            "border_mullion": { "Rectangle": { "width": 0.05, "depth": 0.1 } },
+            "panel": "Glass",
+            "panel_material": "m-brick",
+            "mullion_material": "m-insulation"
+        }
+    });
     value["curtain_walls"] = serde_json::json!({
         "cw-ground": curtain("st-ground", serde_json::json!({ "StoreyTop": { "offset": 0.0 } }), 0.0, 7.5),
         "cw-first": curtain("st-first", serde_json::json!({ "Storey": { "storey": "st-roof", "offset": 0.0 } }), 0.2, 6.0),
@@ -44,14 +52,16 @@ fn close(left: f64, right: f64) -> bool {
 async fn curtain_walls_resolve_extent_length_and_panel_grid() {
     let layouts = compute_curtain_layout(&model());
     assert_eq!(layouts.keys().map(String::as_str).collect::<Vec<_>>(), ["cw-first", "cw-free", "cw-ground"], "a curtain wall on a missing storey has no layout");
-    let ground = layouts["cw-ground"];
+    let ground = layouts["cw-ground"].clone();
     assert!(close(ground.base_z, 0.0) && close(ground.top_z, 3.0) && close(ground.height, 3.0) && close(ground.length, 7.5) && close(ground.area, 22.5));
     assert_eq!((ground.u_panels, ground.v_panels), (5, 3));
-    assert!(close(ground.panel_width, 1.5) && close(ground.panel_height, 1.0));
-    let first = layouts["cw-first"];
+    assert_eq!(ground.u_edges.len(), 6);
+    assert!(ground.u_edges.windows(2).all(|pair| close(pair[1] - pair[0], 1.5)) && ground.v_edges.windows(2).all(|pair| close(pair[1] - pair[0], 1.0)));
+    assert_eq!((ground.panel.clone(), ground.overrides.len(), ground.stray.len()), (Some(CurtainPanel::Glass), 0, 0));
+    let first = layouts["cw-first"].clone();
     assert!(close(first.base_z, 3.2) && close(first.top_z, 5.8), "resolved against the elevation of the roof storey: 3.0 + 2.8 = 5.8, base 3.0 + 0.2");
     assert_eq!((first.u_panels, first.v_panels), (4, 3));
-    let free = layouts["cw-free"];
+    let free = layouts["cw-free"].clone();
     assert!(close(free.base_z, 0.0) && close(free.height, 2.0) && close(free.length, 3.0));
     assert_eq!((free.u_panels, free.v_panels), (2, 2));
 }
@@ -61,7 +71,7 @@ async fn changing_a_storey_height_re_infers_exactly_the_curtain_walls_resolved_b
     let (before, after) = (compute_curtain_layout(&model()), compute_curtain_layout(&raised(&model(), 0.4)));
     assert!(close(after["cw-ground"].height - before["cw-ground"].height, 0.4), "a StoreyTop curtain wall grows with its storey");
     assert_eq!(after["cw-ground"].v_panels, 4, "3.4 m at 1 m spacing needs four rows");
-    assert!(close(after["cw-ground"].panel_height, 3.4 / 4.0));
+    assert!(close(after["cw-ground"].v_edges[1], 3.4 / 4.0));
     assert!(close(after["cw-first"].base_z - before["cw-first"].base_z, 0.4) && close(after["cw-first"].height, before["cw-first"].height), "curtain walls above are lifted, not stretched");
     assert_eq!(after["cw-free"], before["cw-free"], "another building is untouched");
 }
@@ -85,4 +95,57 @@ async fn a_curtain_wall_depends_on_its_storey_and_the_storey_its_top_targets() {
     assert_eq!(parents("cw-ground"), vec![ModelNode::Storey("st-ground".into())]);
     assert_eq!(parents("cw-first"), vec![ModelNode::Storey("st-first".into()), ModelNode::Storey("st-roof".into())]);
     assert!(steps.iter().all(|step| step.key != ModelNode::CurtainLayout("cw-orphan".into())));
+}
+
+fn with_override(snapshot: &mut ModelSnapshot, id: &str, curtain: &str, u: u32, v: u32, panel: CurtainPanel) {
+    snapshot.curtain_panel_overrides.insert(id.into(), crate::CurtainPanelOverride { curtain: curtain.into(), u, v, panel });
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_grid_rule_of_the_wall_replaces_the_rule_of_its_type_and_lines_cut_unequal_cells() {
+    let mut snapshot = model();
+    snapshot.curtain_walls.get_mut("cw-ground").expect("wall").u_grid = Some(CurtainGrid::Lines { positions: vec![1.0, 2.5, 6.0] });
+    snapshot.curtain_walls.get_mut("cw-ground").expect("wall").v_grid = Some(CurtainGrid::Spacing { spacing: 3.0 });
+    let layout = &compute_curtain_layout(&snapshot)["cw-ground"];
+    assert_eq!(layout.u_panels, 4, "three lines cut four cells");
+    assert!(layout.u_edges.iter().zip([0.0, 1.0, 2.5, 6.0, 7.5]).all(|(edge, want)| close(*edge, want)));
+    assert_eq!(layout.v_panels, 1);
+    assert_eq!((layout.ignored_u.len(), layout.ignored_v.len()), (0, 0));
+    snapshot.curtain_walls.get_mut("cw-ground").expect("wall").u_grid = Some(CurtainGrid::Lines { positions: vec![0.0, 3.0, 3.0, 9.0, 4.0] });
+    let sloppy = &compute_curtain_layout(&snapshot)["cw-ground"];
+    assert!(sloppy.u_edges.iter().zip([0.0, 3.0, 4.0, 7.5]).all(|(edge, want)| close(*edge, want)), "lines at the border, repeated or beyond the extent are left out and sorted: {:?}", sloppy.u_edges);
+    assert_eq!(sloppy.ignored_u.len(), 3);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn overrides_resolve_per_cell_and_the_ones_outside_the_grid_are_reported() {
+    let mut snapshot = model();
+    with_override(&mut snapshot, "ov-door", "cw-ground", 2, 0, CurtainPanel::Door { door_type: "d".into() });
+    with_override(&mut snapshot, "ov-solid", "cw-ground", 0, 1, CurtainPanel::Solid { material: "m-brick".into() });
+    with_override(&mut snapshot, "ov-far", "cw-ground", 9, 0, CurtainPanel::Empty);
+    with_override(&mut snapshot, "ov-twice", "cw-ground", 2, 0, CurtainPanel::Empty);
+    with_override(&mut snapshot, "ov-other", "cw-first", 0, 0, CurtainPanel::Empty);
+    let layouts = compute_curtain_layout(&snapshot);
+    let ground = &layouts["cw-ground"];
+    assert_eq!(ground.overrides.iter().map(|cell| (cell.u, cell.v, cell.id.as_str())).collect::<Vec<_>>(), [(2, 0, "ov-door"), (0, 1, "ov-solid")], "ordered by row then column; the first id wins a cell");
+    assert_eq!((ground.stray.clone(), ground.repeated.clone()), (vec!["ov-far".to_string()], vec!["ov-twice".to_string()]));
+    assert_eq!(ground.panel_of(2, 0), Some(&CurtainPanel::Door { door_type: "d".into() }));
+    assert_eq!(ground.panel_of(1, 0), Some(&CurtainPanel::Glass), "a cell without override holds the default panel of the type");
+    assert_eq!(layouts["cw-first"].overrides.len(), 1, "an override belongs to its own curtain wall");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_missing_type_leaves_one_cell_and_no_default_panel() {
+    let mut snapshot = model();
+    snapshot.curtain_wall_types.clear();
+    let ground = &compute_curtain_layout(&snapshot)["cw-ground"];
+    assert_eq!((ground.u_panels, ground.v_panels, ground.panel.clone()), (1, 1, None));
+}
+
+#[test]
+fn the_edges_follow_the_rule() {
+    assert_eq!(edges_of(3.0, None).0, vec![0.0, 3.0]);
+    assert_eq!(edges_of(3.0, Some(&CurtainGrid::Spacing { spacing: 1.0 })).0, vec![0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(edges_of(3.0, Some(&CurtainGrid::Lines { positions: vec![2.0, 1.0] })).0, vec![0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(edges_of(3.0, Some(&CurtainGrid::Lines { positions: vec![3.0, -1.0, f64::NAN] })).1.len(), 3);
 }

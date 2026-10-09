@@ -34,6 +34,7 @@ impl Terminal {
         command.cwd(cwd);
         command.env("TERM", "xterm-256color");
         command.env("COLORTERM", "truecolor");
+        command.env_remove("NO_COLOR");
         for (key, value) in env { command.env(key, value); }
         let child = pair.slave.spawn_command(command).expect("start the binary in the pseudo-terminal");
         drop(pair.slave);
@@ -99,8 +100,16 @@ impl Terminal {
         (0..cols).map(|col| screen.screen().cell(row, col).map_or('?', |cell| if cell.inverse() { 'I' } else if !matches!(cell.bgcolor(), vt100::Color::Default) { 'b' } else if cell.bold() { 'B' } else { '.' })).collect()
     }
 
+    /// 🎨️ Exact independent cell attributes for a row, encoded without exposing the oracle's types.
+    pub fn attributes(&self, row: u16, cols: u16) -> Vec<String> {
+        let screen = self.screen.lock().unwrap();
+        (0..cols).map(|col| screen.screen().cell(row, col).map_or_else(String::new, |cell| format!("{:?}/{:?}/{}/{}", cell.fgcolor(), cell.bgcolor(), cell.inverse(), cell.bold()))).collect()
+    }
     /// 📐 The size the terminal model has.
     pub fn size(&self) -> (u16, u16) { self.screen.lock().unwrap().screen().size() }
+
+    /// 🕯️ The independent screen model's hardware cursor state and position.
+    pub fn cursor(&self) -> (bool, (u16, u16)) { let screen = self.screen.lock().unwrap(); (!screen.screen().hide_cursor(), screen.screen().cursor_position()) }
 
     /// 📜️ Every byte received so far.
     pub fn raw_bytes(&self) -> Vec<u8> { self.raw.lock().unwrap().clone() }
@@ -119,7 +128,15 @@ impl Terminal {
         loop {
             let text = self.text();
             if accept(&text) { return Ok(text); }
-            if Instant::now() >= deadline { return Err(format!("timed out after {limit:?} waiting for {what}; the screen shows:\n{text}")); }
+            if Instant::now() >= deadline {
+                if let Some(directory) = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR") {
+                    let directory = std::path::PathBuf::from(directory);
+                    let _ = std::fs::create_dir_all(&directory);
+                    let _ = std::fs::write(directory.join(format!("pty-{}-failure.bin", std::process::id())), self.raw_bytes());
+                    let _ = std::fs::write(directory.join(format!("pty-{}-failure.txt", std::process::id())), &text);
+                }
+                return Err(format!("timed out after {limit:?} waiting for {what}; the screen shows:\n{text}"));
+            }
             std::thread::sleep(Duration::from_millis(40));
         }
     }

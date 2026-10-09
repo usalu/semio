@@ -1,0 +1,16 @@
+{
+  "mutation": "arrayElements",
+  "ids": [
+    "w-south"
+  ],
+  "prefix": "ar",
+  "pattern": {
+    "Linear": {
+      "count": 2,
+      "spacing": {
+        "x": 0,
+        "y": 4
+      }
+    }
+  }
+}

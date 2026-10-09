@@ -1,0 +1,6 @@
+{
+  "mutation": "offsetWall",
+  "id": "w-south",
+  "new_id": "w-east",
+  "distance": 2
+}

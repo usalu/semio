@@ -1,0 +1,13 @@
+import { readFileSync, writeFileSync } from "node:fs";
+let t = readFileSync("r11-w13-csv-wire.mjs", "utf8");
+t = t.replace(', ("pressed", DslValue::Null)]', ']');
+t = t.replace('import { readFileSync, writeFileSync } from "node:fs";', 'import { readdirSync, readFileSync, writeFileSync } from "node:fs";');
+t = t.replace(/const find = [^\n]*\nimport \{ readdirSync \} from "node:fs";\nfunction readdirSyncSafe\(path: string\) \{\n  return readdirSync\(path\);\n\}\n/, 'const find = (parent: string, suffix: string) => readdirSync(parent).find((name) => name.endsWith(suffix))!;\n');
+writeFileSync("r11-w13-csv-wire.mjs", t);
+const p = "C:/git/semio/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📊️export-schedule-csv/🦀️.rs";
+let c = readFileSync(p, "utf8");
+c = c.replace("    pub id: String,\n}", "    pub id: String,\n    /// The state a toggle that triggers the export reports; the export ignores it.\n    #[value(default, skip_serializing_if = \"Option::is_none\")]\n    pub pressed: Option<bool>,\n}");
+writeFileSync(p, c);
+const q = p.replace("🦀️.rs", "🧪️tests/🔬️unit/🦀️.rs");
+let u = readFileSync(q, "utf8").replaceAll("ExportScheduleCsv { id: String::new() }", "ExportScheduleCsv { id: String::new(), pressed: None }").replaceAll('ExportScheduleCsv { id: "sch-nope".into() }', 'ExportScheduleCsv { id: "sch-nope".into(), pressed: Some(true) }');
+writeFileSync(q, u);

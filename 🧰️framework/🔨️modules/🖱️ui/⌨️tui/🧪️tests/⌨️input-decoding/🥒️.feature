@@ -1,5 +1,11 @@
 Feature: Terminal Input Decoding And Output Degradation
   The terminal target decodes raw terminal bytes into keys, pointer reports, pastes and focus changes
+
+  Scenario: Committed Alt-code text is delivered once
+    Given native console records with ordinary key releases and text committed on Alt release
+    When the terminal backend decodes the records
+    Then the committed Unicode character reaches the editor exactly once
+    And ordinary key releases add no duplicate characters
   and degrades painted frames to what the attached terminal renders. The shared fixture lists every
   byte stream with the events it must produce and every environment with the capabilities it must
   detect; the Rust adapter, a Node readline oracle, a Python prompt_toolkit oracle, a TextDecoder
@@ -62,3 +68,9 @@ Feature: Terminal Input Decoding And Output Degradation
     When the frame is presented
     Then the cursor is hidden while painting, then positioned, shaped and shown, and repeated frames write nothing
     And terminals that support synchronized output receive the frame inside one update
+  Scenario: Native control-space delivers the NUL key once
+    Given console records for left and right control-space and empty modifier presses
+    When the native backend translates those records
+    Then each control-space press delivers one NUL byte
+    And releases and empty modifier presses deliver nothing
+    And readline and prompt_toolkit decode the shared NUL vector as control-space

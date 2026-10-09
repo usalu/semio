@@ -1,4 +1,4 @@
-//! 🎚️ Persisted local state for one exact BIM world window: its orbit camera, projection preset, storey visibility and the section plane.
+//! 🎚️ Persisted local state for one exact BIM world window: its orbit camera, projection preset, storey visibility, phase filter (`all`, `existing`, `new`, `demolished`, `temporary`; empty means all) and the section plane.
 
 use crate::editor::bim::kit::window_config;
 
@@ -16,6 +16,7 @@ window_config! {
     projection: semio_framework_plugin::WorldProjectionConfig = semio_framework_plugin::WorldProjectionConfig::default();
     isolated_storey: String = String::new();
     hidden_storeys: Vec<String> = Vec::new();
+    view_phase: String = String::new();
     section_enabled: bool = false;
     section_axis: String = "z".to_string();
     section_offset: f64 = 1.2;

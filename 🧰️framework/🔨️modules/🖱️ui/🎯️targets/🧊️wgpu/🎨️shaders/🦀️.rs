@@ -39,7 +39,9 @@ struct VertexOutput {
 @vertex
 fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
 var out: VertexOutput;
-let pos = instance.rect.xy + vertex.corner * instance.rect.zw;
+let kind = i32(instance.params.z + 0.5);
+let affine = kind == 10 || kind == 11;
+let pos = select(instance.rect.xy + vertex.corner * instance.rect.zw, instance.rect.xy + vertex.corner.x * instance.rect.zw + vertex.corner.y * instance.params.xy, affine);
 let ndc = (pos / globals.screen_size) * 2.0 - vec2<f32>(1.0, 1.0);
 out.clip_position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 out.local = vertex.corner * instance.rect.zw;
@@ -142,12 +144,12 @@ if (kind == 9) {
     let alpha = border_alpha * pulse * in.color.a;
     return vec4<f32>(in.color.rgb, alpha);
 }
-if (kind == 2) {
+if (kind == 2 || kind == 10) {
     return vec4<f32>(in.color.rgb, glyph.r * in.color.a);
 }
-if (kind == 4 || kind == 5) {
+if (kind == 4 || kind == 5 || kind == 11) {
     var coverage = 1.0;
-    if (in.params.x > 0.0) {
+    if (kind != 11 && in.params.x > 0.0) {
         let half = in.size * 0.5;
         let dist = sdf_rounded_rect(in.local - half, half, in.params.x);
         coverage = 1.0 - smoothstep(-1.0, 0.0, dist);

@@ -1,0 +1,8 @@
+{
+  "mutation": "createCeilingType",
+  "id": "ct-mineral",
+  "ceiling_type": {
+    "name": "Hollow",
+    "layers": []
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "mutation": "createCurtainWall",
+  "id": "cw-2",
+  "curtain_wall": {
+    "storey": "st-ground",
+    "curtain_wall_type": "cwt-1",
+    "axis": {
+      "Line": {
+        "start": {
+          "x": 1,
+          "y": 1
+        },
+        "end": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    },
+    "base_offset": 0,
+    "top": {
+      "StoreyTop": {
+        "offset": 0
+      }
+    },
+    "phase": "New",
+    "name": "Flat"
+  }
+}

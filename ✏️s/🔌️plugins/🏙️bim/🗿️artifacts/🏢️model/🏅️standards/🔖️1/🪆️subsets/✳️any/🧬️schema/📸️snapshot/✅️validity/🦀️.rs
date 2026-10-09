@@ -1,6 +1,6 @@
 //! ✅️ Authored-value validity rules shared by every leaf that writes a length, a profile or an outline: pure, total and base-free.
 
-use super::{Baluster, Infill, Point2, Profile, Railing, RiserKind, Stair, StairStringer, StringerKind, Vertex};
+use super::{Baluster, Infill, Point2, Profile, Railing, Ramp, RiserKind, Stair, StairStringer, StringerKind, Vertex};
 
 const AREA_EPSILON: f64 = 1e-9;
 
@@ -82,6 +82,7 @@ pub fn profile_problem(profile: &Profile) -> Option<&'static str> {
             }
         }
         Profile::Custom { outline } => outline_problem(outline),
+        Profile::Family { family } => family.trim().is_empty().then_some("A family profile needs the id of a profile family."),
     }
 }
 
@@ -144,8 +145,16 @@ fn baluster_problem(baluster: &Baluster) -> Option<(&'static str, &'static str)>
 }
 
 /// 🛤️ Why the construction of a railing is refused, as the field below the railing record and the message, none when it holds: sound
-/// top rail and post sections, a baluster row with a sound section and a positive spacing, a positive infill thickness.
+/// top rail and post sections, a baluster row with a sound section and a positive spacing, a positive infill thickness, and for a hosted railing no path of its own and a non-negative inset.
 pub fn railing_construction_problem(railing: &Railing) -> Option<(&'static str, &'static str)> {
+    if let Some(host) = &railing.host {
+        if !railing.path.is_empty() {
+            return Some(("path", "A hosted railing has no path of its own."));
+        }
+        if !is_non_negative_length(host.inset) {
+            return Some(("host", "A railing host inset must be a non-negative length."));
+        }
+    }
     if let Some(message) = profile_problem(&railing.profile) {
         return Some(("profile", message));
     }
@@ -161,6 +170,45 @@ pub fn railing_construction_problem(railing: &Railing) -> Option<(&'static str, 
     }
 }
 //#endregion 🔖️RailingConstruction
+
+//#region 🔖️RampConstruction
+/// 🛝️ Largest slope of a new ramp: 1:12, the usual accessibility limit.
+pub const STANDARD_RAMP_MAX_SLOPE: f64 = 1.0 / 12.0;
+
+/// 🛝️ Clear width of a new ramp, in metres.
+pub const STANDARD_RAMP_WIDTH: f64 = 1.2;
+
+/// 🛝️ Slab thickness of a new ramp, in metres.
+pub const STANDARD_RAMP_THICKNESS: f64 = 0.2;
+
+/// 🛝️ Length of a new ramp's flat landings, in metres.
+pub const STANDARD_RAMP_LANDING: f64 = 1.5;
+
+/// 🛝️ Why the construction of a ramp is refused, as the field below the ramp record and the message, none when it holds: a path of at
+/// least two finite vertices that are not all the same, a positive width, thickness and slope limit, finite non-negative landings and a finite base offset.
+pub fn ramp_construction_problem(ramp: &Ramp) -> Option<(&'static str, &'static str)> {
+    let traceable = ramp.path.len() >= 2 && ramp.path.iter().all(|vertex| vertex.point.x.is_finite() && vertex.point.y.is_finite() && vertex.bulge.is_finite()) && ramp.path.windows(2).any(|pair| pair[0].point != pair[1].point);
+    if !traceable {
+        return Some(("path", "A ramp path needs at least two finite vertices that are not all the same."));
+    }
+    if !is_positive_length(ramp.width) {
+        return Some(("width", "A ramp width must be a positive length."));
+    }
+    if !is_positive_length(ramp.thickness) {
+        return Some(("thickness", "A ramp thickness must be a positive length."));
+    }
+    if !is_positive_length(ramp.max_slope) {
+        return Some(("max_slope", "A ramp slope limit must be a positive ratio of rise to run."));
+    }
+    if ![ramp.landing_start, ramp.landing_end, ramp.landing_turn].into_iter().all(is_non_negative_length) {
+        return Some(("landing_start", "A landing length must be a non-negative length."));
+    }
+    if !ramp.base_offset.is_finite() {
+        return Some(("base_offset", "A ramp base offset must be a finite length."));
+    }
+    None
+}
+//#endregion 🔖️RampConstruction
 
 //#region 🔖️CutHeight
 /// ✂️ Why a plan cut height is refused, none when it holds: a finite length above zero.

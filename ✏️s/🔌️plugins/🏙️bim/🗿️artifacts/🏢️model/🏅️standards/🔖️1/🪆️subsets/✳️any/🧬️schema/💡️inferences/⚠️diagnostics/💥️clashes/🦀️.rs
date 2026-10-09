@@ -7,7 +7,7 @@
 //! ends inside a column, wall or beam rests on it and does not clash with it.
 
 use super::{Diagnostic, DiagnosticCode, Inputs};
-use crate::standards::v1::subsets::any::schema::inferences::bodies::{storey_bodies, Body, BodyKind};
+use crate::standards::v1::subsets::any::schema::inferences::bodies::{ceiling_bodies, storey_bodies, Body, BodyKind};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
 use crate::ModelSnapshot;
 use semio_framework_2d::booleans::BooleanOperation;
@@ -38,6 +38,8 @@ pub fn code_of(a: BodyKind, b: BodyKind) -> Option<DiagnosticCode> {
         (Beam, Stair) => Some(ClashStairBeam),
         (Stair, Stair) => Some(ClashStairStair),
         (Slab, Slab) => Some(ClashSlabSlab),
+        (Beam, Ceiling) => Some(ClashBeamCeiling),
+        (Ceiling, Ceiling) => Some(ClashCeilingCeiling),
         _ => None,
     }
 }
@@ -68,7 +70,10 @@ fn inside(regions: &[Region], p: Point) -> bool {
 }
 
 fn ends_of(snapshot: &ModelSnapshot, id: &str) -> Option<[Point; 2]> {
-    snapshot.beams.get(id).map(|beam| [Point::new(beam.start.x, beam.start.y), Point::new(beam.end.x, beam.end.y)])
+    snapshot.beams.get(id).map(|beam| {
+        let (crate::Axis::Line { start, end } | crate::Axis::Arc { start, end, .. }) = &beam.axis;
+        [Point::new(start.x, start.y), Point::new(end.x, end.y)]
+    })
 }
 
 fn rests(snapshot: &ModelSnapshot, a: &Body, b: &Body) -> bool {
@@ -118,6 +123,11 @@ pub fn among(snapshot: &ModelSnapshot, bodies: &[Body]) -> Vec<Diagnostic> {
 
 /// 💥️ The clashes among the bodies of every storey of a building.
 pub fn building(snapshot: &ModelSnapshot, building: &str, inputs: &Inputs<'_>) -> Vec<Diagnostic> {
-    let bodies: Vec<Body> = snapshot.storeys.iter().filter(|(_, storey)| storey.building == building).flat_map(|(id, _)| storey_bodies(snapshot, id, &inputs.levels, &inputs.layouts, &inputs.runs)).collect();
+    let bodies: Vec<Body> = snapshot
+        .storeys
+        .iter()
+        .filter(|(_, storey)| storey.building == building)
+        .flat_map(|(id, _)| storey_bodies(snapshot, id, &inputs.levels, &inputs.layouts, &inputs.runs).into_iter().chain(ceiling_bodies(snapshot, id, &inputs.levels)))
+        .collect();
     among(snapshot, &bodies)
 }

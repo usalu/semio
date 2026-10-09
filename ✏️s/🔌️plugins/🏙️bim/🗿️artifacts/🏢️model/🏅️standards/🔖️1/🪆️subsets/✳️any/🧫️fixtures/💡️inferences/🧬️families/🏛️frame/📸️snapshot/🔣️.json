@@ -1,0 +1,412 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-steel": {
+      "name": "Steel",
+      "category": "Metal",
+      "color": {
+        "r": 0.6,
+        "g": 0.45,
+        "b": 0.3
+      },
+      "density": 7850,
+      "conductivity": 0.2,
+      "specific_heat": 1600
+    },
+    "m-oak": {
+      "name": "Oak",
+      "category": "Wood",
+      "color": {
+        "r": 0.6,
+        "g": 0.45,
+        "b": 0.3
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1600
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {
+    "ct-hea": {
+      "name": "HEA column",
+      "profile": {
+        "Family": {
+          "family": "fam-hea"
+        }
+      },
+      "material": "m-steel"
+    },
+    "ct-plain": {
+      "name": "Plain column",
+      "profile": {
+        "Rectangle": {
+          "width": 0.2,
+          "depth": 0.2
+        }
+      },
+      "material": "m-steel"
+    }
+  },
+  "beam_types": {
+    "bt-rhs": {
+      "name": "RHS beam",
+      "profile": {
+        "Family": {
+          "family": "fam-rhs"
+        }
+      },
+      "material": "m-steel"
+    }
+  },
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {
+    "col-hea": {
+      "storey": "st-ground",
+      "column_type": "ct-hea",
+      "position": {
+        "x": 1,
+        "y": 1
+      },
+      "rotation": 0,
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "HEA column"
+    },
+    "col-plain": {
+      "storey": "st-ground",
+      "column_type": "ct-plain",
+      "position": {
+        "x": 3,
+        "y": 1
+      },
+      "rotation": 0,
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Plain column"
+    }
+  },
+  "beams": {
+    "beam-rhs": {
+      "storey": "st-ground",
+      "beam_type": "bt-rhs",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 1,
+            "y": 1
+          },
+          "end": {
+            "x": 3,
+            "y": 1
+          }
+        }
+      },
+      "top_offset": 0,
+      "phase": "New",
+      "name": "RHS beam"
+    }
+  },
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {
+    "rail-rhs": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 3,
+          "y": 4
+        }
+      ],
+      "height": 1,
+      "post_spacing": 1.5,
+      "profile": {
+        "Family": {
+          "family": "fam-rhs"
+        }
+      },
+      "post_profile": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.05
+        }
+      },
+      "infill": "None",
+      "material": "m-steel",
+      "base_offset": 0,
+      "phase": "New",
+      "name": "Rail"
+    }
+  },
+  "spaces": {},
+  "properties": {},
+  "classifications": {},
+  "families": {
+    "fam-hea": {
+      "name": "HEA 200",
+      "category": "Profile"
+    },
+    "fam-rhs": {
+      "name": "RHS 100x60",
+      "category": "Profile"
+    },
+    "fam-table": {
+      "name": "Table",
+      "category": "Furniture"
+    }
+  },
+  "family_parameters": {
+    "fam-hea.h": {
+      "family": "fam-hea",
+      "name": "h",
+      "kind": "Length",
+      "value": "190 mm"
+    },
+    "fam-hea.b": {
+      "family": "fam-hea",
+      "name": "b",
+      "kind": "Length",
+      "value": "200 mm"
+    },
+    "fam-hea.tw": {
+      "family": "fam-hea",
+      "name": "tw",
+      "kind": "Length",
+      "value": "6.5 mm"
+    },
+    "fam-hea.tf": {
+      "family": "fam-hea",
+      "name": "tf",
+      "kind": "Length",
+      "value": "10 mm"
+    },
+    "fam-rhs.width": {
+      "family": "fam-rhs",
+      "name": "width",
+      "kind": "Length",
+      "value": "100 mm"
+    },
+    "fam-rhs.depth": {
+      "family": "fam-rhs",
+      "name": "depth",
+      "kind": "Length",
+      "value": "60 mm"
+    },
+    "fam-table.width": {
+      "family": "fam-table",
+      "name": "width",
+      "kind": "Length",
+      "value": "1.6 m"
+    }
+  },
+  "family_solids": {
+    "s-hea": {
+      "family": "fam-hea",
+      "name": "HEA 200",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "IShape": {
+              "width": "b",
+              "depth": "h",
+              "web": "tw",
+              "flange": "tf"
+            }
+          },
+          "base": "0 m",
+          "height": "1 m"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-rhs": {
+      "family": "fam-rhs",
+      "name": "RHS",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "Rectangle": {
+              "width": "width",
+              "depth": "depth"
+            }
+          },
+          "base": "0 m",
+          "height": "1 m"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-top": {
+      "family": "fam-table",
+      "name": "Top",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "width",
+          "depth": "width",
+          "height": "30 mm"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    }
+  }
+}

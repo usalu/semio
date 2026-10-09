@@ -34,6 +34,7 @@
           "y": 3.0
         }
       ],
+      "phase": "New",
       "post_profile": {
         "Rectangle": {
           "depth": 0.06,

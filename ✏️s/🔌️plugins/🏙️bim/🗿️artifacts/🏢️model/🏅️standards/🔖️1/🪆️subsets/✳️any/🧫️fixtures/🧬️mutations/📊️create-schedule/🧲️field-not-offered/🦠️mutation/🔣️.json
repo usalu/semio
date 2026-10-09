@@ -1,0 +1,24 @@
+{
+  "mutation": "createSchedule",
+  "id": "sch-walls",
+  "schedule": {
+    "name": "Walls",
+    "category": "Wall",
+    "columns": [
+      {
+        "key": {
+          "Field": {
+            "field": "Swing"
+          }
+        },
+        "total": false
+      }
+    ],
+    "sort": [],
+    "filter": [],
+    "group": [],
+    "itemize": true,
+    "storeys": [],
+    "phases": []
+  }
+}

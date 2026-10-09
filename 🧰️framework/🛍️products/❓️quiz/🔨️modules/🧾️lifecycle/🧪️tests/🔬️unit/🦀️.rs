@@ -20,6 +20,7 @@ pub(crate) fn catalog() -> Catalog {
         schema: "semio.quiz.catalog/v1".to_string(),
         id: "architecture".to_string(),
         title: text("Architecture"),
+        short: None,
         introduction: Introduction { title: text("Welcome"), paragraphs: vec![text("Hello")] },
         quizzes: vec!["energy/🔣️.json".to_string()],
         badges: vec![badge("perfect-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string(), challenge: None }), badge("sorter", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None, challenge: None }), badge("done", BadgeRule::CompletedQuizzes {})],

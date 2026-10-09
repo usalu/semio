@@ -5,7 +5,7 @@ use super::*;
 fn snapshot_read_retirement_skips_empty_slots_and_wraps_without_starvation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️snapshot-read-retirement/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
-        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let registry = crate::os_store::SnapshotReadRegistryHandle::new();
         let issued = row["issued"].as_u64().unwrap() as usize;
         let mut leases: Vec<_> = (0..issued)
             .map(|index| {

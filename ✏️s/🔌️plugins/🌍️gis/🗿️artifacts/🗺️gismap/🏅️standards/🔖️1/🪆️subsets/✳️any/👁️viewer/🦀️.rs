@@ -330,7 +330,7 @@ impl ArtifactViewer for GisMapViewer {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -346,7 +346,7 @@ impl ArtifactViewer for GisMapViewer {
             GIS_MAP_VIEW_RAW_BYTES,
             GIS_MAP_VIEW_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

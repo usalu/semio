@@ -428,7 +428,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
     };
     let tool_id = request.command.command_id();
     let work = Box::new(NoteCommandWork::new(tool_id, &request.command, &request.snapshot, &request.interaction_state, &operation)?);
-    let payload = ArtifactRetainedCommandPayload::try_new(
+    let payload = ArtifactRetainedCommandPayload::new(
         semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
@@ -444,7 +444,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
         NOTE_RETAINED_RAW_BYTES,
         NOTE_RETAINED_MAXIMUM_UNITS,
         work,
-    )?;
+    );
     Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
 }
 //#endregion 🏭️Factory

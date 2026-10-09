@@ -1,0 +1,14 @@
+{
+  "mutation": "setFamilySolid",
+  "id": "s-top",
+  "shape": {
+    "Cuboid": {
+      "x": "0 m",
+      "y": "0 m",
+      "z": "0.7 m",
+      "width": "width",
+      "depth": "depth",
+      "height": "60 mm"
+    }
+  }
+}

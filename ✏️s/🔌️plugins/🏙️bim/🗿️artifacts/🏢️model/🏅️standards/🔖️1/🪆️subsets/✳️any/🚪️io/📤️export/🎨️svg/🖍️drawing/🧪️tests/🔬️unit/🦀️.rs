@@ -3,14 +3,19 @@ use crate::standards::v1::subsets::any::io::export::svg::codec::{document_text, 
 use crate::standards::v1::subsets::any::io::export::svg::sheet::layout;
 use crate::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, tags};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::compute_plan_linework;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::compute_view_linework;
+use crate::ViewKind;
+
+fn view(id: &str) -> (SvgElement, PlanLinework, Slot) {
+    let model = house();
+    let drawings = compute_view_linework(&model);
+    let slot = layout(&model, &drawings).slots.into_iter().find(|slot| slot.view == id).expect("the slot of the view");
+    let plan = drawings[id].lines.clone();
+    (view_group(&slot, &plan), plan, slot)
+}
 
 fn ground() -> (SvgElement, PlanLinework, Slot) {
-    let model = house();
-    let plans = compute_plan_linework(&model);
-    let slot = layout(&model, &plans).slots.into_iter().find(|slot| slot.storey == "st-ground").expect("the ground slot");
-    let plan = plans["st-ground"].clone();
-    (storey_group(&slot, &plan), plan, slot)
+    view("v-plan-st-ground")
 }
 
 fn parts(element: &SvgElement) -> (&CommonAttrs, &[SvgElement]) {
@@ -42,16 +47,16 @@ fn document_of(group: SvgElement) -> String {
 
 #[test]
 fn ids_keep_safe_characters_and_replace_the_rest() {
-    assert_eq!(xml_id("storey", "st-ground"), "storey-st-ground");
-    assert_eq!(xml_id("storey", "a b:c/d"), "storey-a_b_c_d");
+    assert_eq!(xml_id("view", "v-plan-st-ground"), "view-v-plan-st-ground");
+    assert_eq!(xml_id("view", "a b:c/d"), "view-a_b_c_d");
 }
 
 #[test]
-fn the_group_names_its_storey_and_carries_a_title_for_assistive_technology() {
+fn the_group_names_its_view_and_carries_a_title_for_assistive_technology() {
     let (group, _, slot) = ground();
     let (common, children) = parts(&group);
-    assert_eq!(common.id.as_deref(), Some("storey-st-ground"));
-    assert_eq!((common.class.as_deref(), extra(common, "data-storey"), extra(common, "data-level")), (Some("storey"), Some("st-ground"), Some("0")));
+    assert_eq!(common.id.as_deref(), Some("view-v-plan-st-ground"));
+    assert_eq!((common.class.as_deref(), extra(common, "data-view"), extra(common, "data-kind"), extra(common, "data-storey"), extra(common, "data-scale")), (Some("view plan"), Some("v-plan-st-ground"), Some("plan"), Some("st-ground"), Some("100")));
     assert_eq!(extra(common, "aria-label"), Some(slot.name.as_str()));
     assert!(matches!(common.transform.as_deref(), Some([TransformOp::Translate { .. }])));
     assert!(matches!(&children[0], SvgElement::Unknown { name, .. } if name == "title"));
@@ -114,4 +119,17 @@ fn space_tags_stack_number_name_and_area_in_tspans_and_the_group_is_well_formed(
     assert!(stacked > 0);
     assert_eq!(found.iter().filter(|tag| tag.name == "path").count(), plan.regions.len() + plan.polylines.len());
     assert!(found.iter().filter(|tag| tag.name == "tspan").all(|tag| tag.attribute("x").is_some() && tag.attribute("dy").is_some()));
+}
+
+#[test]
+fn an_elevation_is_a_view_group_of_the_same_layers_without_a_storey() {
+    let (group, drawing, slot) = view("v-elevation-south");
+    let (common, _) = parts(&group);
+    assert_eq!(slot.kind, ViewKind::Elevation);
+    assert_eq!((common.class.as_deref(), extra(common, "data-kind"), extra(common, "data-storey"), extra(common, "data-scale")), (Some("view elevation"), Some("elevation"), None, Some("100")));
+    assert_eq!(extra(common, "aria-label"), Some("South"));
+    assert_eq!(layer(&group, "layer regions").len(), drawing.regions.len());
+    assert_eq!(layer(&group, "layer lines").len(), drawing.polylines.len());
+    assert!(!drawing.regions.is_empty() && !drawing.polylines.is_empty());
+    assert!(layer(&group, "layer lines").iter().any(|path| class_of(path).split(' ').any(|word| word == "edge")));
 }

@@ -1,0 +1,19 @@
+{
+  "mutation": "createCeilingType",
+  "id": "ct-mineral",
+  "ceiling_type": {
+    "name": "Mineral fibre",
+    "layers": [
+      {
+        "material": "m-board",
+        "thickness": 0.015,
+        "function": "Finish"
+      },
+      {
+        "material": "m-brick",
+        "thickness": 0.05,
+        "function": "Insulation"
+      }
+    ]
+  }
+}

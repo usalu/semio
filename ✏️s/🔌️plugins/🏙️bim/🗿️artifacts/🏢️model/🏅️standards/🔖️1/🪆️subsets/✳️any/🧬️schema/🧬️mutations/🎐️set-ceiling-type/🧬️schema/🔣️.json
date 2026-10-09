@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-ceiling-type/schema.json",
+  "title": "SetCeilingType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setCeilingType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ceiling type",
+          "de": "Unterdeckentyp"
+        },
+        "ref": {
+          "kind": "ceiling-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Layer"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Layers",
+          "de": "Schichten"
+        },
+        "group": "value",
+        "order": 30,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    }
+  }
+}

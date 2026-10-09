@@ -6,7 +6,7 @@ use std::{mem::ManuallyDrop,sync::Arc};
 struct SnapshotReadRetirement<T:RetireOwned+Sync> {
     read:ManuallyDrop<Option<SnapshotRead<T>>>,
     alias:ManuallyDrop<Option<SharedControlledRetirement<T>>>,
-    registry:ManuallyDrop<Option<Arc<SnapshotReadLeaseRegistry>>>,
+    registry:ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryHandle>>,
     active_returned:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
@@ -17,7 +17,7 @@ impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
         if let Some(alias)=self.alias.as_ref(){return if alias.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{nested(RetirementDemand{copy_bytes:alias.next_copy_byte_demand()?,capacity_bytes:alias.next_capacity_byte_demand(copy)?,release_bytes:alias.next_release_byte_demand()?,depth:alias.next_depth_demand()?})};}
         if self.read.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(active)=self.active_returned.as_ref(){return nested(artifact_retirement_box_demands(active,copy)?);}
-        if let Some(registry)=self.registry.as_ref(){if Arc::strong_count(registry)==1&&registry.has_returned(){return nested(registry.returned_admission_demands::<T>(|_|RetirementDemand{capacity_bytes:size_of::<SharedControlledRetirement<T>>(),depth:1,..Default::default()}).map_err(SnapshotReadLeaseRefusal::into_value_error)?);}}
+        if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return nested(registry.returned_admission_demands::<T>(|_|RetirementDemand{capacity_bytes:size_of::<SharedControlledRetirement<T>>(),depth:1,..Default::default()}).map_err(SnapshotReadLeaseRefusal::into_value_error)?);}}
         snapshot_registry_alias_demands(&self.registry)
     }
     fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
@@ -34,7 +34,7 @@ impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
         }
         if let Some(mut read)=self.read.take(){if let Some(mut lease)=read.lease.take(){lease.return_now();*self.registry=Some(lease.registry);}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
         if self.active_returned.is_some(){return artifact_retirement_box_close_step(&mut self.active_returned,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if let Some(registry)=self.registry.as_ref(){if Arc::strong_count(registry)==1&&registry.has_returned(){return match registry.try_admit_one_returned::<T,_>(child,|root,grant|admit_shared_retirement(root,grant,true)){Ok((owner,receipt))=>{*self.active_returned=owner;if !receipt.fits(child){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained read constructor exceeded its original grant"));}Ok(RetainedCloneStep::Progress(receipt))},Err(SnapshotReadLeaseRefusal::Busy)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(reason)=>Err(reason.into_value_error())};}}
+        if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return match registry.try_admit_one_returned::<T,_>(child,|root,grant|admit_shared_retirement(root,grant,true)){Ok((owner,receipt))=>{*self.active_returned=owner;if !receipt.fits(child){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained read constructor exceeded its original grant"));}Ok(RetainedCloneStep::Progress(receipt))},Err(SnapshotReadLeaseRefusal::Busy)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(reason)=>Err(reason.into_value_error())};}}
         snapshot_registry_alias_close_step(&mut self.registry,grant)
     }
 }

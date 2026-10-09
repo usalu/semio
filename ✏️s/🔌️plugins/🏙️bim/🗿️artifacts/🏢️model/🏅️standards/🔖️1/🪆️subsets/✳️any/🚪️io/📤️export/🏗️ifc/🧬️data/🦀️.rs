@@ -81,6 +81,7 @@ fn profile_rows(profile: &Profile) -> Vec<(&'static str, V)> {
         Profile::Circle { diameter } => vec![("ProfileKind", label("Circle")), ("Diameter", number(*diameter))],
         Profile::IShape { width, depth, web, flange } => vec![("ProfileKind", label("IShape")), ("Width", number(*width)), ("Depth", number(*depth)), ("Web", number(*web)), ("Flange", number(*flange))],
         Profile::Custom { .. } => vec![("ProfileKind", label("Custom"))],
+        Profile::Family { family } => vec![("ProfileKind", label("Family")), ("Family", label(family))],
     }
 }
 
@@ -108,6 +109,9 @@ pub fn emit_types(x: &mut Export<'_>) {
     }
     for (id, kind) in &model.slab_types {
         layered_type(x, "slab", "IFCSLABTYPE", id, &kind.name, &kind.layers, None, "FLOOR");
+    }
+    for (id, kind) in &model.ceiling_types {
+        layered_type(x, "ceiling", "IFCCOVERINGTYPE", id, &kind.name, &kind.layers, None, "CEILING");
     }
     for (id, kind) in &model.roof_types {
         layered_type(x, "roof", "IFCBUILDINGELEMENTPROXYTYPE", id, &kind.name, &kind.layers, Some("RoofType"), "USERDEFINED");
@@ -187,7 +191,11 @@ pub fn emit_links(x: &mut Export<'_>) {
         let set = x.ifc.rooted("IFCELEMENTQUANTITY", &format!("{}:{name}", key(entity)), name, "", vec![unset(), refs(&items)]);
         define(x, &format!("{}:{name}", key(entity)), &[entity], set);
     }
+    let mut authored: BTreeMap<u64, Vec<(&'static str, V)>> = BTreeMap::new();
     for (entity, rows) in std::mem::take(&mut x.links.authoring) {
+        authored.entry(entity).or_default().extend(rows);
+    }
+    for (entity, rows) in authored {
         let set = property_set(x, &format!("{}:authoring", key(entity)), "Semio_Authoring", rows);
         define(x, &format!("{}:authoring", key(entity)), &[entity], set);
     }

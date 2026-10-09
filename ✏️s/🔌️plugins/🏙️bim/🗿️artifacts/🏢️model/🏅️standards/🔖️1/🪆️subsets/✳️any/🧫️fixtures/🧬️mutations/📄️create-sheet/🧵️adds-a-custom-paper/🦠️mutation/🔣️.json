@@ -1,0 +1,21 @@
+{
+  "mutation": "createSheet",
+  "id": "sh-2",
+  "sheet": {
+    "number": "A-103",
+    "name": "Long section",
+    "paper": {
+      "Custom": {
+        "width": 1500,
+        "height": 420
+      }
+    },
+    "orientation": "Landscape",
+    "project": "",
+    "drawn_by": "",
+    "checked_by": "",
+    "date": "",
+    "revision": "",
+    "scale_label": ""
+  }
+}

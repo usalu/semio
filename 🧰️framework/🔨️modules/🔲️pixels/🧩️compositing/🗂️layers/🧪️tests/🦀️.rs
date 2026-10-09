@@ -42,6 +42,7 @@ fn raster_stack_deduplicates_mask_work_and_preserves_transparent_bounds(){
     let mut source=input(&fixture()["cases"][0]);let mut second=source.layers[0].clone();second.id="second".into();source.layers.push(second);
     let mut job=RasterStackJob::new(source).unwrap();
     for completed in 1..=12{assert_eq!(job.advance(1).unwrap(),PixelProgress {completed,total:12,done:false});}
+    while !job.advance(4096).unwrap().done{}
     let mut source=input(&fixture()["cases"][0]);let mut blank=source.layers.pop().unwrap();blank.mask=None;
     if let RasterStackContent::Pixel {image_key,..}=&mut blank.content{*image_key=None;}
     let transform=RasterStackTransform {x:0.0,y:0.0,a:1.0,b:0.0,c:0.0,d:1.0};
@@ -60,7 +61,7 @@ fn raster_stack_actual_compositor_retirement_before_publication(){
         let mut job=RasterStackJob::new(input(row)).unwrap();let mut moved=None;let mut observed=false;let mut done=false;
         for _ in 0..10000{
             let p=job.advance(grant).unwrap();
-            if let Some(child)=&job.composite_retirement{observed=true;assert!(job.composite.is_none());assert!(!p.done);assert!(!job.done);let image=job.output.as_ref().unwrap();if let Some(pointer)=moved{assert_eq!(image.pixels.as_ptr(),pointer);}else{moved=Some(image.pixels.as_ptr());}if let Some(owner)=&child.job{assert!(owner.candidate.is_none());}}
+            if let Some(child)=&job.composite_retirement{observed=true;assert!(job.composite.is_none());assert!(!p.done);assert!(!job.done);let image=job.output.as_ref().unwrap();if let Some(pointer)=moved{assert_eq!(image.pixels.as_ptr(),pointer);}else{moved=Some(image.pixels.as_ptr());}if let Some(owner)=child.owner.original(){assert!(owner.candidate.is_none());}}
             if p.done{done=true;break;}
         }
         assert!(done);assert!(job.composite_retirement.is_none());assert!(job.composite.is_none());assert!(job.done);

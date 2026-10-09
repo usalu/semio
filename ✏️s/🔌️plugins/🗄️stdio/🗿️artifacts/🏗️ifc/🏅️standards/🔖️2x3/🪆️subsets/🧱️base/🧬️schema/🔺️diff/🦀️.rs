@@ -174,7 +174,8 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
             }
         };
         after_order.retain(|id| !created.contains(id));
-        after_order.extend(upserted_instances.iter().map(|instance| instance.id).filter(|id| !after_order.contains(id)));
+        let missing: Vec<u64> = upserted_instances.iter().map(|instance| instance.id).filter(|id| !after_order.contains(id)).collect();
+        after_order.extend(missing);
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             header: self.header.as_ref().map(|_| base.document.header.clone()),

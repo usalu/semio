@@ -1,4 +1,4 @@
-//! 🗄️ `remove-element-classification` payload. Removes the classification reference of an element.
+//! 🗄️ `remove-element-classification` payload. Removes the classification of an element or type in one classification system; its other classifications stay.
 
 use crate::{ModelDiff, ModelMutation, ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
@@ -7,6 +7,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveElementClassification {
     pub id: String,
+    pub system: String,
 }
 
 impl MutationKind<ModelSnapshot, ModelMutation> for RemoveElementClassification {
@@ -18,7 +19,7 @@ impl MutationKind<ModelSnapshot, ModelMutation> for RemoveElementClassification 
         Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove classification of \"{}\"", self.id), &format!("Klassifizierung von \"{}\" entfernen", self.id))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove classification {} of \"{}\"", self.system, self.id), &format!("Klassifizierung {} von \"{}\" entfernen", self.system, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

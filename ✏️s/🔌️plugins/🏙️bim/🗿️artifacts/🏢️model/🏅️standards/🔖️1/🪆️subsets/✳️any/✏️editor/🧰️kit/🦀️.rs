@@ -73,6 +73,15 @@ pub fn tree_item_with_icon(id: impl AsRef<str>, label: impl TryInto<Label>, icon
     }
     Ok(node)
 }
+
+/// ♿️ Gives a built node its accessible name and, when there is one, its description: the name a reader announces for a canvas, a 3D view, a table or a panel that has no visible label of its own.
+pub fn accessible(mut node: BuiltNode, name: &str, description: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+    node.accessibility.label = Some(ui_label(name)?);
+    if let Some(description) = description {
+        node.accessibility.description = Some(ui_label(description)?);
+    }
+    Ok(node)
+}
 //#endregion 🔖️Admission
 
 //#region 🔖️Faults

@@ -1,4 +1,4 @@
-//! 🏬️ `create-curtain-wall` payload. Brings a new curtain wall onto a storey; its height is never stored, it is inferred from the top constraint.
+//! 🏬️ `create-curtain-wall` payload. Brings a new curtain wall onto a storey; its height is never stored, it is inferred from the top constraint, its grid, mullions and panels from its type.
 
 use crate::{CurtainWall, ModelDiff, ModelMutation, ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};

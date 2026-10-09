@@ -20,3 +20,9 @@ pub mod spaces;
 pub mod diagnostics;
 #[path = "🧊️element-solids/🦀️.rs"]
 pub mod element_solids;
+#[path = "🛝️ramp-runs/🦀️.rs"]
+pub mod ramp_runs;
+#[path = "🖼️view-linework/🦀️.rs"]
+pub mod view_linework;
+#[path = "📋️schedules/🦀️.rs"]
+pub mod schedules;

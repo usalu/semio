@@ -6,18 +6,38 @@ use std::sync::Arc;
 pub struct PngDecodeInput{pub data:Arc<Vec<u8>>,pub max_pixels:usize,pub max_bytes:usize,pub max_chunks:usize}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct PngDecodeProgress{pub phase:&'static str,pub bytes:usize,pub total_bytes:usize,pub pixels:usize,pub total_pixels:usize,pub work:u64,pub done:bool}
-#[derive(Clone,Debug,PartialEq,Eq)]
+#[derive(Clone,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub enum PngDecodeError{Invalid(String),Incomplete,Cancelled}
 impl std::fmt::Display for PngDecodeError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Invalid(v)=>f.write_str(v),Self::Incomplete=>f.write_str("PNG decode is incomplete"),Self::Cancelled=>f.write_str("PNG decode cancelled")}}}
 impl std::error::Error for PngDecodeError{}
 fn invalid(v:impl ToString)->PngDecodeError{PngDecodeError::Invalid(v.to_string())}
 fn be(data:&[u8],at:usize)->u32{u32::from_be_bytes(data[at..at+4].try_into().unwrap())}
+#[derive(semio_framework_value::RetireOwned)]
 struct Chunk{kind:[u8;4],start:usize,at:usize,end:usize,crc:u32}
 struct PngInflater(Inflater);
 impl std::ops::Deref for PngInflater{type Target=Inflater;fn deref(&self)->&Inflater{&self.0}}
 impl std::ops::DerefMut for PngInflater{fn deref_mut(&mut self)->&mut Inflater{&mut self.0}}
 impl Drop for PngInflater{fn drop(&mut self){for _ in 0..4{self.0.close_retained_step(1,usize::MAX);if self.0.retained_terminal_is_empty(){return;}}}}
+struct PngInflaterRetirement {owner:Option<PngInflater>}
+impl semio_framework_value::retirement::RetireOwned for PngInflater {
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(PngInflaterRetirement {owner:Some(self)})}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<PngInflaterRetirement>())}
+ fn controlled_retirement_supported()->bool{true}
+}
+impl semio_framework_value::retirement::RetirementCursor for PngInflaterRetirement {
+ fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
+  use semio_framework_value::{retirement::RetirementStep,retained_clone::RetainedCloneProgress};
+  let Some(owner)=self.owner.as_mut() else{return RetirementStep::Complete;};
+  if owner.retained_terminal_is_empty(){if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}self.owner=None;return RetirementStep::Advanced;}
+  match owner.close_retained_step(grant.maximum_items,grant.maximum_release_bytes){semio_framework_deflate::RetainedInflateCloseStep::Complete=>RetirementStep::Advanced,semio_framework_deflate::RetainedInflateCloseStep::Pending {released_items,released_bytes}=>{if released_items==0&&released_bytes==0{RetirementStep::BudgetExhausted}else{RetirementStep::Progress(RetainedCloneProgress {copied_items:released_items,released_bytes,..Default::default()})}}}
+ }
+ fn terminal_is_empty(&self)->bool{self.owner.is_none()}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(self.owner.as_ref().and_then(|owner|owner.next_retained_release_allocation_bytes()).unwrap_or(0))}
+ fn next_birth_bytes(&self,_maximum_bytes:usize)->Option<usize>{Some(0)}
+ fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+}
 /// 🧩️ Reconstruction consumes one chunk byte, inflated byte, or expanded pixel per work unit.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PngDecodeJob{
  source:Option<Arc<Vec<u8>>>,max_pixels:usize,max_chunks:usize,total_bytes:usize,phase:&'static str,work:u64,bytes:usize,pixels:usize,total_pixels:usize,
  at:usize,chunks:usize,chunk:Option<Chunk>,header:Option<Ihdr>,palette:Vec<[u8;3]>,alpha:Vec<u8>,gray_trans:Option<u32>,rgb_trans:Option<(u32,u32,u32)>,had_palette:bool,had_transparency:bool,
@@ -128,7 +148,7 @@ impl PngDecodeJob{
   if self.stream_done{
    if self.tail.len()<4{if let Some(b)=self.z_byte(){self.tail.push(b);}return Ok(());}
    if self.z_at!=self.z_length||be(&self.tail,0)!=((self.adler_b<<16)|self.adler_a)||self.raw_bytes!=self.expected_bytes||self.pass_width!=0||self.pixels!=self.total_pixels{return Err(invalid("PNG stream size or Adler mismatch"));}
-   self.phase="complete";self.source=None;self.ranges=Vec::new();self.current=Vec::new();self.previous=Vec::new();self.inflater=None;return Ok(());
+   self.phase="complete";return Ok(());
   }
   if self.inflater.as_ref().unwrap().next_retained_allocation_bytes().is_some(){self.inflater.as_mut().unwrap().reserve_retained_history(32768).map_err(|e|invalid(format!("DEFLATE allocation {e:?}")))?;return Ok(());}
   if self.pending.is_none()&&self.z_at<self.z_length-4{let Some(b)=self.z_byte()else{return Ok(());};self.pending=Some(b);}
@@ -140,15 +160,15 @@ impl PngDecodeJob{
   }
   Ok(())
  }
- fn check(&self)->Result<(),PngDecodeError>{if self.cancelled{return Err(PngDecodeError::Cancelled);}if let Some(e)=&self.failed{return Err(e.clone());}Ok(())}
- fn release(&mut self){self.source=None;self.ranges=Vec::new();self.current=Vec::new();self.previous=Vec::new();self.inflater=None;self.output.pixels=Vec::new();self.pending=None;}
+ fn check(&self)->Result<(),PngDecodeError>{if self.cancelled{return Err(PngDecodeError::Cancelled);}if self.phase=="transferred"{return Err(PngDecodeError::Incomplete);}if let Some(e)=&self.failed{return Err(e.clone());}Ok(())}
  pub fn advance(&mut self,budget:usize)->Result<PngDecodeProgress,PngDecodeError>{
   if budget==0||budget as u64>9007199254740991{return Err(invalid("PNG work grant must be a positive integer"));}self.check()?;
-  for _ in 0..budget{if self.phase=="complete"{break;}let result=match self.phase{"chunks"=>self.chunk_step(),"pixels"=>self.pixel_step(),_=>self.inflate_step()};if let Err(e)=result{self.failed=Some(e.clone());self.release();return Err(e);}self.work+=1;}
+  for _ in 0..budget{if self.phase=="complete"{break;}let result=match self.phase{"chunks"=>self.chunk_step(),"pixels"=>self.pixel_step(),_=>self.inflate_step()};if let Err(e)=result{self.failed=Some(e.clone());return Err(e);}self.work+=1;}
   Ok(PngDecodeProgress{phase:self.phase,bytes:self.bytes,total_bytes:self.total_bytes,pixels:self.pixels,total_pixels:self.total_pixels,work:self.work,done:self.phase=="complete"})
  }
- pub fn cancel(&mut self){self.cancelled=true;self.release();}
+ pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&self)->Result<&RasterImage,PngDecodeError>{self.check()?;if self.phase!="complete"{return Err(PngDecodeError::Incomplete);}Ok(&self.output)}
+ pub fn take_result(&mut self)->Result<RasterImage,PngDecodeError>{self.check()?;if self.phase!="complete"{return Err(PngDecodeError::Incomplete);}self.phase="transferred";Ok(std::mem::take(&mut self.output))}
  pub fn into_result(self)->Result<RasterImage,PngDecodeError>{self.check()?;if self.phase!="complete"{return Err(PngDecodeError::Incomplete);}Ok(self.output)}
 }
 #[cfg(test)]

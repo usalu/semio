@@ -1,0 +1,10 @@
+{
+  "mutation": "setCeiling",
+  "id": "ce-living",
+  "slope": {
+    "value": {
+      "direction": 1.57,
+      "angle": 0.05
+    }
+  }
+}

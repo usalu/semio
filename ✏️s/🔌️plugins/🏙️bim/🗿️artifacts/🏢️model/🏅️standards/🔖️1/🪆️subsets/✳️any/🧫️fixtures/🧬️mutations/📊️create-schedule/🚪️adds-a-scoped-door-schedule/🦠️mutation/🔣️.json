@@ -1,0 +1,71 @@
+{
+  "mutation": "createSchedule",
+  "id": "sch-doors",
+  "schedule": {
+    "name": "Doors",
+    "category": "Door",
+    "columns": [
+      {
+        "key": {
+          "Field": {
+            "field": "Name"
+          }
+        },
+        "total": false
+      },
+      {
+        "key": {
+          "Field": {
+            "field": "Type"
+          }
+        },
+        "total": false
+      },
+      {
+        "key": {
+          "Field": {
+            "field": "Swing"
+          }
+        },
+        "total": false
+      },
+      {
+        "key": {
+          "Property": {
+            "set": "Pset_DoorCommon",
+            "name": "FireRating"
+          }
+        },
+        "heading": "Fire rating",
+        "total": false
+      },
+      {
+        "key": {
+          "Field": {
+            "field": "Count"
+          }
+        },
+        "total": true
+      }
+    ],
+    "sort": [
+      {
+        "key": {
+          "Field": {
+            "field": "Name"
+          }
+        },
+        "descending": false
+      }
+    ],
+    "filter": [],
+    "group": [],
+    "itemize": true,
+    "storeys": [
+      "st-ground"
+    ],
+    "phases": [
+      "New"
+    ]
+  }
+}

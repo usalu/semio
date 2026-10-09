@@ -1,0 +1,7 @@
+{
+  "mutation": "setShapeCoordinate",
+  "layerId": "shape",
+  "field": "rectWidth",
+  "index": null,
+  "value": 64
+}

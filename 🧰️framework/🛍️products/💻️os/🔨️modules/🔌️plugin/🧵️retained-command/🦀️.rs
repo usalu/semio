@@ -6,7 +6,13 @@ use semio_framework::Fault;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use std::sync::Arc;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retirement::controlled::ControlledRetirement};
+
+#[path="♻️metadata/🦀️.rs"]
+mod metadata_retirement;
+#[path="🎟️admission/🦀️.rs"]
+mod admission;
+pub use admission::ArtifactRetainedAdmissionRefusal;
 
 //#region 🔖️Work
 pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;
@@ -177,6 +183,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
             Err(Fault::from("retained-command-work-checkpoint-unsupported"))
         }
     }
+    fn terminal_frame_release_bytes(&self)->Option<usize>{None}
     fn begin_close(&mut self) {}
     fn close_step(&mut self, _grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
         InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}
@@ -252,18 +259,16 @@ pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
     pub maximum_raw_bytes: usize,
     pub maximum_work_items: usize,
     pub raw: Vec<u8>,
+    pub admission_refusal:Option<ArtifactRetainedAdmissionRefusal>,
     pub work: Box<dyn ArtifactCommandWork<A>>,
 }
 
 impl<A: ArtifactApp> ArtifactRetainedCommandPayload<A> {
-    pub fn try_new(inputs: ArtifactRetainedCommandInputs<A>, command_id: fn(&A::Command) -> &'static str, maximum_raw_bytes: usize, maximum_work_items: usize, work: Box<dyn ArtifactCommandWork<A>>) -> Result<Self, Fault> {
+    pub fn new(inputs: ArtifactRetainedCommandInputs<A>, command_id: fn(&A::Command) -> &'static str, maximum_raw_bytes: usize, maximum_work_items: usize, work: Box<dyn ArtifactCommandWork<A>>) -> Self {
+        let (raw,admission_refusal)=admission::admit_raw(maximum_raw_bytes,maximum_work_items);
         let ArtifactRetainedCommandInputs { command, snapshot, config, history, interaction_state, interaction_hover, context, operation, completion } = inputs;
-        if maximum_raw_bytes == 0 || maximum_work_items == 0 {
-            return Err(Fault::from("retained-command-capacity-is-zero"));
-        }
-        let mut raw = Vec::new();
-        raw.try_reserve_exact(maximum_raw_bytes).map_err(|_| Fault::from("retained-command-raw-capacity-rejected"))?;
-        Ok(Self { command, snapshot, config, history, interaction_state, interaction_hover, context, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, raw, work })
+        Self { command, snapshot, config, history, interaction_state, interaction_hover, context, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, raw, admission_refusal,work }
+
     }
 }
 //#endregion 🧳️Payload
@@ -302,10 +307,12 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     checkpoint_page_cursor: usize,
     raw_input: Option<RetainedToolWireInput>,
     raw: Vec<u8>,
+    admission_refusal:Option<ArtifactRetainedAdmissionRefusal>,
     raw_page_cursor: usize,
     emit: Option<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>,
     download:Option<ArtifactDownloadOutput>,
-    download_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    download_retirement:Option<ControlledRetirement<ArtifactDownloadOutput>>,
+    completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
     ephemeral: Option<EphemeralEmit<A>>,
     phase: ArtifactRetainedCommandPhase,
     checkpoint_pending: bool,
@@ -314,6 +321,23 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
+    fn controlled_close_step(step:Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->InteractiveJobCloseStep{match step{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>InteractiveJobCloseStep::Refused(error.kind)}}
+    fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if self.admission_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if !self.raw.is_empty(){return Ok(RetirementDemand{copy_bytes:1,depth:1,..Default::default()});}
+        if self.raw.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.raw.capacity(),depth:1,..Default::default()});}
+        for input in [&self.checkpoint_input,&self.raw_input]{if let Some(owner)=input.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?});}}
+        if self.download.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if let Some(owner)=self.download_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
+        if self.emit.is_some()||self.ephemeral.is_some(){return Err(Self::unadmitted_input());}
+        if let Some(work)=self.work.as_ref(){return if work.terminal_is_empty(){Ok(RetirementDemand{release_bytes:work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?,depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:work.next_close_copy_byte_demand()?,capacity_bytes:work.next_close_capacity_byte_demand(copy)?,release_bytes:work.next_close_release_byte_demand()?,depth:work.next_close_depth_demand()?})};}
+        if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.context.is_some()||self.operation.is_some(){return Err(Self::unadmitted_input());}
+        if self.completion.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if let Some(owner)=self.completion_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
+        Ok(Default::default())
+    }
+    fn unadmitted_input()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"retained command input requires its original app-owned retirement authority")}
+
     pub fn new(payload: ArtifactRetainedCommandPayload<A>) -> Self {
         Self::from_payload(payload, None, None)
     }
@@ -327,7 +351,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     }
 
     fn from_payload(payload: ArtifactRetainedCommandPayload<A>, raw_input: Option<RetainedToolWireInput>, checkpoint_input: Option<RetainedToolWireInput>) -> Self {
-        let phase = if checkpoint_input.is_some() {
+        let phase = if payload.admission_refusal.is_some(){ArtifactRetainedCommandPhase::Fault}else if checkpoint_input.is_some() {
             ArtifactRetainedCommandPhase::CheckpointPages
         } else if raw_input.is_some() {
             ArtifactRetainedCommandPhase::WirePages
@@ -354,10 +378,12 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             checkpoint_page_cursor: 0,
             raw_input,
             raw: payload.raw,
+            admission_refusal:payload.admission_refusal,
             raw_page_cursor: 0,
             emit: None,
             download:None,
             download_retirement:None,
+            completion_retirement:None,
             ephemeral: None,
             phase,
             checkpoint_pending: false,
@@ -491,20 +517,8 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 self.preview(cx, br#"{"en":"Restoring command","de":"Befehl wird wiederhergestellt"}"#)
             }
             ArtifactRetainedCommandPhase::CheckpointRetire => {
-                cx.set_stage("retained-command-checkpoint-retire");
-                let Some(checkpoint) = self.checkpoint_input.as_mut() else {
-                    self.phase = ArtifactRetainedCommandPhase::WirePages;
-                    return self.checkpoint(cx);
-                };
-                let step = checkpoint.close_step(1, semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES);
-                if checkpoint.terminal_is_empty() {
-                    self.checkpoint_input = None;
-                    self.phase = ArtifactRetainedCommandPhase::WirePages;
-                }
-                match step {
-                    InteractiveJobCloseStep::Blocked => StepOutcome::Yield,
-                    InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete => self.preview(cx, b"{\"en\":\"Checkpoint restored\",\"de\":\"Pr\xC3\xBCfpunkt wiederhergestellt\"}"),
-                }
+                self.phase=ArtifactRetainedCommandPhase::WirePages;
+                self.checkpoint(cx)
             }
             ArtifactRetainedCommandPhase::WirePages => {
                 cx.set_stage("retained-command-wire-page");
@@ -623,7 +637,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
             }
             ArtifactRetainedCommandPhase::Complete => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
-            ArtifactRetainedCommandPhase::Fault => self.fault(cx, b"retained command remains faulted"),
+            ArtifactRetainedCommandPhase::Fault => self.fault(cx,self.admission_refusal.map(ArtifactRetainedAdmissionRefusal::detail).unwrap_or(b"retained command remains faulted")),
         }
     }
 
@@ -640,116 +654,32 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if !self.closing {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        if !self.raw.is_empty() {
-            if maximum_bytes == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            let released = self.raw.len().min(maximum_bytes);
-            self.raw.truncate(self.raw.len() - released);
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: released };
-        }
-        if self.raw.capacity() != 0 {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.raw = Vec::new();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(checkpoint) = self.checkpoint_input.as_mut() {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            let step = checkpoint.close_step(maximum_items.min(1), maximum_bytes);
-            if checkpoint.terminal_is_empty() {
-                self.checkpoint_input = None;
-                return match step {
-                    InteractiveJobCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    InteractiveJobCloseStep::Blocked => InteractiveJobCloseStep::Blocked,
-                    InteractiveJobCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                };
-            }
-            return step;
-        }
-        if let Some(input) = self.raw_input.as_mut() {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            let step = input.close_step(maximum_items.min(1), maximum_bytes);
-            if input.terminal_is_empty() {
-                self.raw_input = None;
-                return match step {
-                    InteractiveJobCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    InteractiveJobCloseStep::Blocked => InteractiveJobCloseStep::Blocked,
-                    InteractiveJobCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                };
-            }
-            return step;
-        }
-        macro_rules! retire_one {
-            ($field:ident) => {
-                if self.$field.is_some() {
-                    if maximum_items == 0 {
-                        return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                    }
-                    drop(self.$field.take());
-                    return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-            };
-        }
-        if let Some(emit) = self.emit.as_mut() {
-            if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                return match step {
-                    crate::app::PluginCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    crate::app::PluginCloseStep::Blocked { .. } | crate::app::PluginCloseStep::AwaitingInput { .. } => InteractiveJobCloseStep::Blocked,
-                    crate::app::PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
-                };
-            }
-        }
-        if self.download_retirement.is_none(){if let Some(download)=self.download.take(){self.download_retirement=Some(semio_framework_value::retirement::owned_retirement(download));}}
-        if let Some(retirement)=self.download_retirement.as_mut(){
-            return match retirement.close_step(maximum_items,maximum_bytes){Ok(semio_framework_value::SnapshotRetirementStep::Complete)=>{self.download_retirement.take();InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0}},Ok(semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes})=>InteractiveJobCloseStep::Pending{released_items,released_bytes},_=>InteractiveJobCloseStep::Blocked};
-        }
-        retire_one!(emit);
-        retire_one!(ephemeral);
-        if let Some(work) = self.work.as_mut() {
-            let step = work.close_step(maximum_items.min(1), maximum_bytes);
-            if work.terminal_is_empty() {
-                if maximum_items == 0 {
-                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                self.work = None;
-                return match step {
-                    InteractiveJobCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items: released_items.max(1), released_bytes },
-                    InteractiveJobCloseStep::Blocked => InteractiveJobCloseStep::Blocked,
-                    InteractiveJobCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                };
-            }
-            return step;
-        }
-        retire_one!(command);
-        retire_one!(snapshot);
-        retire_one!(config);
-        retire_one!(history);
-        retire_one!(interaction_state);
-        retire_one!(interaction_hover);
-        retire_one!(context);
-        retire_one!(operation);
-        if let Some(completion) = self.completion.as_ref() {
-            if maximum_items == 0 || !completion.has_mounted_consumer() {
-                return if maximum_items == 0 { InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { InteractiveJobCloseStep::Blocked };
-            }
-            self.completion = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        InteractiveJobCloseStep::Complete
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
+        if !self.closing{return InteractiveJobCloseStep::Blocked;}
+        if grant.maximum_items==0{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}
+        let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return InteractiveJobCloseStep::Refused(error.kind)};
+        if grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Refused(ValueRefusalKind::DepthLimit);}
+        if self.admission_refusal.take().is_some(){return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
+        if !self.raw.is_empty(){let bytes=self.raw.len().min(grant.maximum_copy_bytes);if bytes==0{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}self.raw.truncate(self.raw.len()-bytes);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};}
+        if self.raw.capacity()!=0{let bytes=self.raw.capacity();if grant.maximum_release_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}drop(std::mem::take(&mut self.raw));return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};}
+        for input in [&mut self.checkpoint_input,&mut self.raw_input]{if let Some(owner)=input.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){input.take();}return match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step};}}
+        if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return InteractiveJobCloseStep::Refused(error.kind);}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
+        if let Some(owner)=self.download_retirement.as_mut(){let step=owner.step(grant);if owner.terminal_is_empty(){self.download_retirement.take();}return Self::controlled_close_step(step);}
+        if self.emit.is_some()||self.ephemeral.is_some(){return InteractiveJobCloseStep::Refused(ValueRefusalKind::UnsupportedOwner);}
+        if let Some(work)=self.work.as_mut(){if !work.terminal_is_empty(){return work.close_step(grant);}let Some(bytes)=work.terminal_frame_release_bytes()else{return InteractiveJobCloseStep::Refused(ValueRefusalKind::UnsupportedOwner);};if grant.maximum_release_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}self.work.take();return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};}
+        if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.context.is_some()||self.operation.is_some(){return InteractiveJobCloseStep::Refused(ValueRefusalKind::UnsupportedOwner);}
+        if let Some(completion)=self.completion.take(){match ControlledRetirement::new(completion){Ok(owner)=>self.completion_retirement=Some(owner),Err((error,original))=>{self.completion=Some(original);return InteractiveJobCloseStep::Refused(error.kind);}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
+        if let Some(owner)=self.completion_retirement.as_mut(){let step=owner.step(grant);if owner.terminal_is_empty(){self.completion_retirement.take();}return Self::controlled_close_step(step);}
+        InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
+            && self.admission_refusal.is_none()
             && self.raw.is_empty()
             && self.raw.capacity() == 0
             && self.checkpoint_input.is_none()
@@ -768,6 +698,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
             && self.context.is_none()
             && self.operation.is_none()
             && self.completion.is_none()
+            && self.completion_retirement.is_none()
     }
 }
 //#endregion 🧵️Job
@@ -798,10 +729,12 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
             checkpoint_page_cursor: 0,
             raw_input: None,
             raw,
+            admission_refusal:None,
             raw_page_cursor: 0,
             emit: None,
             download:None,
             download_retirement:None,
+            completion_retirement:None,
             ephemeral: None,
             phase: ArtifactRetainedCommandPhase::Complete,
             checkpoint_pending: false,
@@ -809,22 +742,28 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
             closing: false,
         };
         job.begin_close();
-        let mut items = 0;
-        let mut bytes = 0;
-        for _ in 0..8 {
-            match job.close_step(1, 4096) {
-                InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1 && released_bytes <= 4096);
-                    items += released_items;
-                    bytes += released_bytes;
-                }
-                InteractiveJobCloseStep::Complete => break,
-                InteractiveJobCloseStep::Blocked => panic!("empty raw allocation must not require capacity-sized byte authority"),
-            }
+        let capacity=job.raw.capacity();
+        let pointer=job.raw.as_ptr();
+        let expected:Vec<u8>=serde_json::from_str(&serde_json::to_string(&vec![42u8;case["initializedBytes"].as_u64().unwrap() as usize]).unwrap()).unwrap();
+        assert_eq!(job.raw,expected);
+        let unfunded=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
+        assert!(matches!(job.close_step(unfunded),InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()));
+        assert_eq!(job.raw.as_ptr(),pointer);assert_eq!(job.raw.capacity(),capacity);
+        let mut copied=0;let mut released=0;
+        for _ in 0..16 {
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:fixture["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:0,maximum_release_bytes:job.next_close_release_byte_demand().unwrap(),maximum_depth:job.next_close_depth_demand().unwrap()};
+            let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));
+            let progress=match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>progress,_=>panic!("funded original raw allocation must complete")};
+            assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,progress.released_bytes);
+            assert!(progress.copied_items<=grant.maximum_items&&progress.copied_bytes<=grant.maximum_copy_bytes&&progress.released_bytes<=grant.maximum_release_bytes);
+            copied+=progress.copied_bytes;released+=progress.released_bytes;
+            if job.terminal_is_empty(){break;}
         }
         assert!(job.terminal_is_empty());
-        assert_eq!(serde_json::json!({ "items": items, "bytes": bytes }), serde_json::json!({ "items": case["expectedAllocationRelease"], "bytes": case["expectedByteRelease"] }));
-        eprintln!("[TRACE] retained-command raw allocation {} released initialized bytes in4096-byte pages then one empty allocation", case["id"]);
+        assert_eq!(copied,case["expectedCopiedBytes"].as_u64().unwrap() as usize);
+        assert_eq!(released,case["expectedReleasedBytes"].as_u64().unwrap() as usize);
+        assert_eq!(released,capacity);
+        eprintln!("[DEBUG] retained command raw {} copied={copied} physically-released={released}",case["id"]);
     }
 }
 

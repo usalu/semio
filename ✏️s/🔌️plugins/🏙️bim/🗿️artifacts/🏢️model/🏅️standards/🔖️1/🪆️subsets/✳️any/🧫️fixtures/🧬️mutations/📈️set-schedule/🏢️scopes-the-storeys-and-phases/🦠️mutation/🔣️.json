@@ -1,0 +1,12 @@
+{
+  "mutation": "setSchedule",
+  "id": "sch-walls",
+  "storeys": [
+    "st-ground",
+    "st-first"
+  ],
+  "phases": [
+    "New",
+    "Existing"
+  ]
+}

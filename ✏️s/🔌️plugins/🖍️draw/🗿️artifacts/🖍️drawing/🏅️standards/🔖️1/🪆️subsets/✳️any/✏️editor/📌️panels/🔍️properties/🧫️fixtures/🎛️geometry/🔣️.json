@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "kind": "shape:rect",
+      "fields": [
+        "rectX",
+        "rectY",
+        "rectWidth",
+        "rectHeight"
+      ]
+    },
+    {
+      "kind": "shape:ellipse",
+      "fields": [
+        "ellipseCx",
+        "ellipseCy",
+        "ellipseRx",
+        "ellipseRy"
+      ]
+    },
+    {
+      "kind": "shape:line",
+      "fields": [
+        "lineX1",
+        "lineY1",
+        "lineX2",
+        "lineY2"
+      ]
+    },
+    {
+      "kind": "shape:polygon",
+      "fields": []
+    },
+    {
+      "kind": "image",
+      "fields": [
+        "imageKey",
+        "imageWidth",
+        "imageHeight"
+      ]
+    }
+  ],
+  "nodeModes": [
+    "corner",
+    "smooth",
+    "symmetric"
+  ],
+  "simplify": {
+    "kind": "simplify",
+    "tolerance": 0.5
+  },
+  "polygonCoordinates": [
+    "polygonX",
+    "polygonY"
+  ]
+}

@@ -4,7 +4,7 @@
 set -u
 label="$1"; shift; [ "${1:-}" = "--" ] && shift
 dir="$(cd "$(dirname "$0")" && pwd)/🗑️generated/gate"; mkdir -p "$dir"
-max_rustc="${MAX_RUSTC:-14}"
+max_rustc="${MAX_RUSTC:-16}"
 slots="${GATE_SLOTS:-4}"
 count_rustc() { tasklist //FI "IMAGENAME eq rustc.exe" 2>/dev/null | grep -ci "rustc.exe"; }
 while :; do

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "scripts": {
+    "nx": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx",
+    "setup": "bun nx run workspace:setup",
+    "dashboard": "bun nx run @semio-tech/repo-dashboard-rs:run --outputStyle=stream",
+    "dashboard:install": "bun nx run @semio-tech/repo-dashboard-rs:build --excludeTaskDependencies --skip-nx-cache --outputStyle=stream"
+  },
+  "cases": [
+    {"name": "canonical bootstrap", "add": {}, "remove": [], "accepted": true},
+    {"name": "competing developer alias", "add": {"dev": "bun nx run workspace:dev"}, "remove": [], "accepted": false},
+    {"name": "missing dashboard", "add": {}, "remove": ["dashboard"], "accepted": false},
+    {"name": "bypass task owner", "add": {"setup": "bun ./📜️script.ts setup"}, "remove": [], "accepted": false},
+    {"name": "build alias without rebuild", "add": {"dashboard:install": "bun nx run @semio-tech/repo-dashboard-rs:install"}, "remove": [], "accepted": false}
+  ],
+  "editorDirectories": [".vscode", ".claude", ".cursor", ".codex", ".windsurf", ".zed", ".idea", ".fleet", ".run", ".gemini"],
+  "excludedDirectories": [".git", ".🧬semio", "node_modules", "target", "dist", "build", "generated", "cache", "fixtures", ".nx"]
+}

@@ -1,4 +1,4 @@
-use super::super::{RetractRunNode, RunArtifact, RunDiff, RunMutation, RunNodeRecord, RunStep};
+use super::super::{RemoveRunNode, RunArtifact, RunDiff, RunMutation, RunNodeRecord, RunStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
@@ -20,7 +20,7 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for FinishRunNode {
     fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
         Ok(vec![match base.node_records.iter().find(|entry| entry.node_id == self.node_record.node_id) {
             Some(node_record) => RunMutation::FinishRunNode(Self { node_record: node_record.clone() }),
-            None => RunMutation::RetractRunNode(RetractRunNode { node_id: self.node_record.node_id.clone() }),
+            None => RunMutation::RemoveRunNode(RemoveRunNode { node_id: self.node_record.node_id.clone() }),
         }])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

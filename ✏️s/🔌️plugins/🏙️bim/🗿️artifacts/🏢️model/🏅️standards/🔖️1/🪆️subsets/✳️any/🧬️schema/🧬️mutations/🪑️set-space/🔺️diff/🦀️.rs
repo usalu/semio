@@ -1,6 +1,6 @@
 //! 🔺️ Diff constructor for `SetSpace`: a sparse space patch of exactly the provided fields. A new number must stay unique within the
-//! storey, a new boundary must be drawable (finite seed, or an outline of three finite vertices enclosing area); providing only
-//! equal values is a no-op. Outline, area and volume stay inferred.
+//! storey, a new boundary must be drawable (finite seed, or an outline of three finite vertices enclosing area), a zone must exist and a
+//! finish must name a material; providing only equal values is a no-op. Outline, area, volume and finish areas stay inferred.
 
 use super::SetSpace;
 use crate::{Entry, ModelDiff, ModelSnapshot, Patch, SpaceBoundary, Vertex};
@@ -32,6 +32,14 @@ pub fn diff(payload: &SetSpace, base: &ModelSnapshot) -> MutationOutcome<ModelDi
     }
     if payload.boundary.as_ref().is_some_and(|boundary| !drawable(boundary)) {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A space boundary needs a finite seed or an outline of at least three finite vertices enclosing area.", ["boundary"]);
+    }
+    if let Some(zone) = payload.zone.as_ref().and_then(|assigned| assigned.value.as_ref()).filter(|zone| !base.zones.contains_key(*zone)) {
+        return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Zone \"{zone}\" does not exist."), ["zone"]);
+    }
+    for (field, finish) in [("floor_finish", &payload.floor_finish), ("wall_finish", &payload.wall_finish), ("ceiling_finish", &payload.ceiling_finish)] {
+        if let Some(material) = finish.as_ref().and_then(|assigned| assigned.value.as_ref()).filter(|material| !base.materials.contains_key(*material)) {
+            return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Material \"{material}\" does not exist."), [field]);
+        }
     }
     let patch = payload.patch().minimal(space);
     if patch.is_empty() {

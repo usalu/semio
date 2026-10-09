@@ -1641,7 +1641,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -1657,7 +1657,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             if exchange_verb { ARCHITECT_EXCHANGE_RAW_BYTES } else { ARCHITECT_WINDOW_RAW_BYTES },
             1,
             work,
-        )?;
+        );
         Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

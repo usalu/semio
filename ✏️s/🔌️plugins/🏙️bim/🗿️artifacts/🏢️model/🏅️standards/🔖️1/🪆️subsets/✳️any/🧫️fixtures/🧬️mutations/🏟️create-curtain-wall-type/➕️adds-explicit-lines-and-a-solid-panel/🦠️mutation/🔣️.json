@@ -1,0 +1,41 @@
+{
+  "mutation": "createCurtainWallType",
+  "id": "cwt-3",
+  "curtain_wall_type": {
+    "name": "Lined",
+    "u_grid": {
+      "Lines": {
+        "positions": [
+          1,
+          2.5
+        ]
+      }
+    },
+    "v_grid": {
+      "Lines": {
+        "positions": [
+          1
+        ]
+      }
+    },
+    "interior_mullion": {
+      "Rectangle": {
+        "width": 0.05,
+        "depth": 0.15
+      }
+    },
+    "border_mullion": {
+      "Rectangle": {
+        "width": 0.08,
+        "depth": 0.15
+      }
+    },
+    "panel": {
+      "Solid": {
+        "material": "m-wood"
+      }
+    },
+    "panel_material": "m-glass",
+    "mullion_material": "m-steel"
+  }
+}

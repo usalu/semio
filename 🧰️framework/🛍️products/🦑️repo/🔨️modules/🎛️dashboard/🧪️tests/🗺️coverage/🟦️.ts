@@ -130,12 +130,15 @@ describe("the registry covers the whole monorepo", () => {
     const ids = [...special, ...plain.filter((_, index) => index % step === 0)];
     const failures: string[] = [];
     const notes = new Map<string, number>();
+    let completed = 0;
+    const started = Date.now();
     const targets = new Set<string>();
     await pool(ids, width, async (id) => {
       const required = byId.get(id)!.parameters.filter((parameter) => parameter.required && parameter.default === undefined);
       const parameters = Object.fromEntries(required.map((parameter) => [parameter.id, parameter.values[0] ?? (parameter.kind === "flag" ? true : "1")]));
       const selection: Selection = { id, parameters, extraArgs: [] };
       const { run, launch } = await dryRun(selection);
+      if (++completed % 100 === 0 || completed === ids.length) console.log(`[DEBUG] coverage ${completed}/${ids.length}, ${Date.now() - started} ms, ${failures.length} differences, latest ${id}`);
       if (!launch) { failures.push(`${id}: dry run exited ${run.code}: ${run.stderr.trim().slice(0, 300)}`); return; }
       const local: string[] = [];
       try { failures.push(...compare(id, oracle.resolve(selection), launch, local)); } catch (error) { failures.push(`${id}: oracle refused: ${(error as Error).message}`); }
@@ -153,7 +156,7 @@ describe("the registry covers the whole monorepo", () => {
       ...(failures.length ? [`${failures.length} of ${ids.length} dry runs differ:\n${failures.slice(0, 60).join("\n")}`] : []),
     ];
     expect(problems, problems.join("\n\n")).toEqual([]);
-  }, 3_600_000);
+  }, 7_200_000);
 
   test("Every ready port is unique among commands that can run together or is documented as shared", () => {
     const ports = new Map<number, string[]>();

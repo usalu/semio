@@ -186,6 +186,7 @@
           "offset": 0
         }
       },
+      "phase": "New",
       "name": "A1"
     }
   },
@@ -209,9 +210,19 @@
   },
   "classifications": {
     "c-a1": {
-      "system": "DIN 276",
-      "code": "340",
-      "title": "Wände"
+      "cs-din-276": "340"
+    }
+  },
+  "classification_systems": {
+    "cs-din-276": {
+      "name": "DIN 276",
+      "edition": "",
+      "entries": [
+        {
+          "code": "340",
+          "title": "Wände"
+        }
+      ]
     }
   }
 }

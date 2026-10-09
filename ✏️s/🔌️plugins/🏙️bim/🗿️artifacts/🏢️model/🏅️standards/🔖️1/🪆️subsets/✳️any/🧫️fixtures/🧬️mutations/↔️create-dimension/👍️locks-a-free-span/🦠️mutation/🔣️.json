@@ -1,0 +1,35 @@
+{
+  "mutation": "createDimension",
+  "id": "dim-free",
+  "dimension": {
+    "storey": "st-ground",
+    "anchors": [
+      {
+        "Point": {
+          "point": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      {
+        "Point": {
+          "point": {
+            "x": 3,
+            "y": 0
+          }
+        }
+      },
+      {
+        "Grid": {
+          "grid": "g-1"
+        }
+      }
+    ],
+    "angle": 0,
+    "offset": -1,
+    "style": "as-plan",
+    "name": "Free span",
+    "lock": 3
+  }
+}

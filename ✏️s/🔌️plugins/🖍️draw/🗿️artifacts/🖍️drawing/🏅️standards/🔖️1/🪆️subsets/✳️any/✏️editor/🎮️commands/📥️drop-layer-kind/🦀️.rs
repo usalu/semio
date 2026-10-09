@@ -18,6 +18,7 @@ pub struct DropLayerKind {
 
 pub fn handle(payload: &DropLayerKind, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
+    if payload.kind=="image" {let (parent,index)=super::move_layer::resolve_reorder_target(document,&payload.target_row_id,&payload.drop_position)?;return Ok(super::import_image::request_at(parent.map(|parent|parent.to_string_owner()),Some(index)));}
     let layer = super::add_layer::build_layer(document, &payload.kind, doc.operation_optional())?;
     let (parent_id, index) = super::move_layer::resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position)?;
     Ok(Emit::mutations(vec![crate::mutations::create_layer(parent_id, Some(index), layer)]))

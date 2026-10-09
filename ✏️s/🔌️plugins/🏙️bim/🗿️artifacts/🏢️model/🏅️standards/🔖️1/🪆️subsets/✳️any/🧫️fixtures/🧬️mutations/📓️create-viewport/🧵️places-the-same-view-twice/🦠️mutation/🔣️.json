@@ -1,0 +1,23 @@
+{
+  "mutation": "createViewport",
+  "id": "vp-2",
+  "viewport": {
+    "sheet": "sh-1",
+    "view": "v-ground",
+    "position": {
+      "x": 220,
+      "y": 120
+    },
+    "scale": 20,
+    "crop": {
+      "min": {
+        "x": 0,
+        "y": 0
+      },
+      "max": {
+        "x": 3,
+        "y": 3
+      }
+    }
+  }
+}

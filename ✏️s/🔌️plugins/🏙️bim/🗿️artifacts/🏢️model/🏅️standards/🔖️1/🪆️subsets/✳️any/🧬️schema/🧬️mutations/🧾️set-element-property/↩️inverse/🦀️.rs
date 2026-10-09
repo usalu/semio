@@ -7,7 +7,7 @@ use super::SetElementProperty;
 use crate::{ModelMutation, ModelSnapshot};
 
 pub fn inverse(payload: &SetElementProperty, base: &ModelSnapshot) -> Vec<ModelMutation> {
-    if !elements::exists(base, &payload.id) {
+    if !elements::holds_data(base, &payload.id) {
         return Vec::new();
     }
     let old = base.properties.get(&payload.id).and_then(|sets| sets.get(&payload.pset)).and_then(|properties| properties.get(&payload.property));

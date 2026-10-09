@@ -1,0 +1,7157 @@
+{
+ "cases": [
+  {
+   "name": "1 + 2 * 3",
+   "source": "1 + 2 * 3",
+   "python": "1.0 + 2.0 * 3.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "(1 + 2) * 3",
+   "source": "(1 + 2) * 3",
+   "python": "( 1.0 + 2.0 ) * 3.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "10 - 4 - 3",
+   "source": "10 - 4 - 3",
+   "python": "10.0 - 4.0 - 3.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "100 / 10 / 5",
+   "source": "100 / 10 / 5",
+   "python": "100.0 / 10.0 / 5.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "2 ^ 3 ^ 2",
+   "source": "2 ^ 3 ^ 2",
+   "python": "2.0 ** 3.0 ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "-2 ^ 2",
+   "source": "-2 ^ 2",
+   "python": "- 2.0 ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "(-2) ^ 2",
+   "source": "(-2) ^ 2",
+   "python": "( - 2.0 ) ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "2 ^ -1",
+   "source": "2 ^ -1",
+   "python": "2.0 ** - 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "2 ^ -3 ^ 2",
+   "source": "2 ^ -3 ^ 2",
+   "python": "2.0 ** - 3.0 ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "-3 * -2",
+   "source": "-3 * -2",
+   "python": "- 3.0 * - 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "1 - -1",
+   "source": "1 - -1",
+   "python": "1.0 - - 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "- - n",
+   "source": "- - n",
+   "python": "- - P('n')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "n * 2 + w / h",
+   "source": "n * 2 + w / h",
+   "python": "P('n') * 2.0 + P('w') / P('h')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "2 * n ^ 2",
+   "source": "2 * n ^ 2",
+   "python": "2.0 * P('n') ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "-n * 2",
+   "source": "-n * 2",
+   "python": "- P('n') * 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "a * 2 - a / 2",
+   "source": "a * 2 - a / 2",
+   "python": "P('a') * 2.0 - P('a') / 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "w ^ 2 + area",
+   "source": "w ^ 2 + area",
+   "python": "P('w') ** 2.0 + P('area')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "w * h * w",
+   "source": "w * h * w",
+   "python": "P('w') * P('h') * P('w')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "area / w",
+   "source": "area / w",
+   "python": "P('area') / P('w')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "vol / area",
+   "source": "vol / area",
+   "python": "P('vol') / P('area')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "vol / w / h",
+   "source": "vol / w / h",
+   "python": "P('vol') / P('w') / P('h')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "w + 90 mm",
+   "source": "w + 90 mm",
+   "python": "P('w') + Q(90.0, 'mm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "2.4 m + 90 mm",
+   "source": "2.4 m + 90 mm",
+   "python": "Q(2.4, 'm') + Q(90.0, 'mm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "2.4m + 90mm",
+   "source": "2.4m + 90mm",
+   "python": "Q(2.4, 'm') + Q(90.0, 'mm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "250 cm - 0.5 m",
+   "source": "250 cm - 0.5 m",
+   "python": "Q(250.0, 'cm') - Q(0.5, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "1 km / 1000 m",
+   "source": "1 km / 1000 m",
+   "python": "Q(1.0, 'km') / Q(1000.0, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "10 in + 1 ft",
+   "source": "10 in + 1 ft",
+   "python": "Q(10.0, 'in') + Q(1.0, 'ft')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "30 deg + 45°",
+   "source": "30 deg + 45°",
+   "python": "Q(30.0, 'deg') + Q(45.0, 'deg')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "90 deg - 1.5 rad",
+   "source": "90 deg - 1.5 rad",
+   "python": "Q(90.0, 'deg') - Q(1.5, 'rad')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "180 deg / 2",
+   "source": "180 deg / 2",
+   "python": "Q(180.0, 'deg') / 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "2 m ^ 2",
+   "source": "2 m ^ 2",
+   "python": "Q(2.0, 'm') ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "3 m² + 2 m2",
+   "source": "3 m² + 2 m2",
+   "python": "Q(3.0, 'm2') + Q(2.0, 'm2')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "500 l + 1 m³",
+   "source": "500 l + 1 m³",
+   "python": "Q(500.0, 'l') + Q(1.0, 'm3')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "2 m * 3 m * 4 m",
+   "source": "2 m * 3 m * 4 m",
+   "python": "Q(2.0, 'm') * Q(3.0, 'm') * Q(4.0, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "area ^ 0.5",
+   "source": "area ^ 0.5",
+   "python": "P('area') ** 0.5",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "w ^ 3",
+   "source": "w ^ 3",
+   "python": "P('w') ** 3.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "4 m2 ^ 0.5",
+   "source": "4 m2 ^ 0.5",
+   "python": "Q(4.0, 'm2') ** 0.5",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "sqrt(16)",
+   "source": "sqrt(16)",
+   "python": "sqrt ( 16.0 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "sqrt(4 m2)",
+   "source": "sqrt(4 m2)",
+   "python": "sqrt ( Q(4.0, 'm2') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "sqrt(area)",
+   "source": "sqrt(area)",
+   "python": "sqrt ( P('area') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "abs(-2 m)",
+   "source": "abs(-2 m)",
+   "python": "abs ( - Q(2.0, 'm') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "abs(-w)",
+   "source": "abs(-w)",
+   "python": "abs ( - P('w') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "round(2.5)",
+   "source": "round(2.5)",
+   "python": "round ( 2.5 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "round(-2.5)",
+   "source": "round(-2.5)",
+   "python": "round ( - 2.5 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "round(2.4)",
+   "source": "round(2.4)",
+   "python": "round ( 2.4 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "floor(-2.5)",
+   "source": "floor(-2.5)",
+   "python": "floor ( - 2.5 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "ceil(2.1)",
+   "source": "ceil(2.1)",
+   "python": "ceil ( 2.1 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "round(w / 100 mm) * 100 mm",
+   "source": "round(w / 100 mm) * 100 mm",
+   "python": "round ( P('w') / Q(100.0, 'mm') ) * Q(100.0, 'mm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "ceil(w / 1 m)",
+   "source": "ceil(w / 1 m)",
+   "python": "ceil ( P('w') / Q(1.0, 'm') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "sin(90 deg)",
+   "source": "sin(90 deg)",
+   "python": "sin ( Q(90.0, 'deg') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "cos(60 deg)",
+   "source": "cos(60 deg)",
+   "python": "cos ( Q(60.0, 'deg') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "tan(45 deg)",
+   "source": "tan(45 deg)",
+   "python": "tan ( Q(45.0, 'deg') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "sin(a)",
+   "source": "sin(a)",
+   "python": "sin ( P('a') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "cos(a) ^ 2 + sin(a) ^ 2",
+   "source": "cos(a) ^ 2 + sin(a) ^ 2",
+   "python": "cos ( P('a') ) ** 2.0 + sin ( P('a') ) ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "atan2(1 m, 1 m)",
+   "source": "atan2(1 m, 1 m)",
+   "python": "atan2 ( Q(1.0, 'm') , Q(1.0, 'm') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "atan2(1, -1)",
+   "source": "atan2(1, -1)",
+   "python": "atan2 ( 1.0 , - 1.0 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "atan2(w, h) * 2",
+   "source": "atan2(w, h) * 2",
+   "python": "atan2 ( P('w') , P('h') ) * 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "atan2(h, w) / n",
+   "source": "atan2(h, w) / n",
+   "python": "atan2 ( P('h') , P('w') ) / P('n')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "min(w, h)",
+   "source": "min(w, h)",
+   "python": "min ( P('w') , P('h') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "max(w, h, 3 m)",
+   "source": "max(w, h, 3 m)",
+   "python": "max ( P('w') , P('h') , Q(3.0, 'm') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "min(3, 1, 2)",
+   "source": "min(3, 1, 2)",
+   "python": "min ( 3.0 , 1.0 , 2.0 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "max(min(w, 1 m), 50 cm)",
+   "source": "max(min(w, 1 m), 50 cm)",
+   "python": "max ( min ( P('w') , Q(1.0, 'm') ) , Q(50.0, 'cm') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "min(area, 3 m2)",
+   "source": "min(area, 3 m2)",
+   "python": "min ( P('area') , Q(3.0, 'm2') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "max(a, 1 rad)",
+   "source": "max(a, 1 rad)",
+   "python": "max ( P('a') , Q(1.0, 'rad') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "w = 2.4 m",
+   "source": "w = 2.4 m",
+   "python": "P('w') == Q(2.4, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w = 240 cm",
+   "source": "w = 240 cm",
+   "python": "P('w') == Q(240.0, 'cm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w != h",
+   "source": "w != h",
+   "python": "P('w') != P('h')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w < 3 m",
+   "source": "w < 3 m",
+   "python": "P('w') < Q(3.0, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w <= 2.4 m",
+   "source": "w <= 2.4 m",
+   "python": "P('w') <= Q(2.4, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w > h",
+   "source": "w > h",
+   "python": "P('w') > P('h')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w >= 3 m",
+   "source": "w >= 3 m",
+   "python": "P('w') >= Q(3.0, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "0.1 + 0.2 = 0.3",
+   "source": "0.1 + 0.2 = 0.3",
+   "python": "0.1 + 0.2 == 0.3",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "0.1 + 0.2 < 0.3",
+   "source": "0.1 + 0.2 < 0.3",
+   "python": "0.1 + 0.2 < 0.3",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "0.1 + 0.2 <= 0.3",
+   "source": "0.1 + 0.2 <= 0.3",
+   "python": "0.1 + 0.2 <= 0.3",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "1 m = 1.0000001 m",
+   "source": "1 m = 1.0000001 m",
+   "python": "Q(1.0, 'm') == Q(1.0000001, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "n = 3",
+   "source": "n = 3",
+   "python": "P('n') == 3.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "2 m >= 200 cm",
+   "source": "2 m >= 200 cm",
+   "python": "Q(2.0, 'm') >= Q(200.0, 'cm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "s = \"oak\"",
+   "source": "s = \"oak\"",
+   "python": "P('s') == 'oak'",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "s != \"oak\"",
+   "source": "s != \"oak\"",
+   "python": "P('s') != 'oak'",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "s = \"pine\"",
+   "source": "s = \"pine\"",
+   "python": "P('s') == 'pine'",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f = true",
+   "source": "f = true",
+   "python": "P('f') == True",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f = g",
+   "source": "f = g",
+   "python": "P('f') == P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f != g",
+   "source": "f != g",
+   "python": "P('f') != P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f and g",
+   "source": "f and g",
+   "python": "P('f') and P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f or g",
+   "source": "f or g",
+   "python": "P('f') or P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "not f",
+   "source": "not f",
+   "python": "not P('f')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "not g",
+   "source": "not g",
+   "python": "not P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f and not g",
+   "source": "f and not g",
+   "python": "P('f') and not P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f or g and g",
+   "source": "f or g and g",
+   "python": "P('f') or P('g') and P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f and g or f",
+   "source": "f and g or f",
+   "python": "P('f') and P('g') or P('f')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "not f or g",
+   "source": "not f or g",
+   "python": "not P('f') or P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "not f and g",
+   "source": "not f and g",
+   "python": "not P('f') and P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "not w = h",
+   "source": "not w = h",
+   "python": "not P('w') == P('h')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "not (w = h)",
+   "source": "not (w = h)",
+   "python": "not ( P('w') == P('h') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f and g and f",
+   "source": "f and g and f",
+   "python": "P('f') and P('g') and P('f')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "g or g or f",
+   "source": "g or g or f",
+   "python": "P('g') or P('g') or P('f')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w > h and n > 2",
+   "source": "w > h and n > 2",
+   "python": "P('w') > P('h') and P('n') > 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w < h or n = 3",
+   "source": "w < h or n = 3",
+   "python": "P('w') < P('h') or P('n') == 3.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "(w > h) = (n > 2)",
+   "source": "(w > h) = (n > 2)",
+   "python": "( P('w') > P('h') ) == ( P('n') > 2.0 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "w + h > 3 m and not g",
+   "source": "w + h > 3 m and not g",
+   "python": "P('w') + P('h') > Q(3.0, 'm') and not P('g')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "zero != 0 and 1 / zero > 2",
+   "source": "zero != 0 and 1 / zero > 2",
+   "python": "P('zero') != 0.0 and 1.0 / P('zero') > 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "zero = 0 or 1 / zero > 2",
+   "source": "zero = 0 or 1 / zero > 2",
+   "python": "P('zero') == 0.0 or 1.0 / P('zero') > 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "n / zero",
+   "source": "n / zero",
+   "python": "P('n') / P('zero')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "1 / 0",
+   "source": "1 / 0",
+   "python": "1.0 / 0.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "w / 0",
+   "source": "w / 0",
+   "python": "P('w') / 0.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "1 / (n - 3)",
+   "source": "1 / (n - 3)",
+   "python": "1.0 / ( P('n') - 3.0 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "0 ^ -1",
+   "source": "0 ^ -1",
+   "python": "0.0 ** - 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "(-8) ^ 0.5",
+   "source": "(-8) ^ 0.5",
+   "python": "( - 8.0 ) ** 0.5",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "sqrt(-1)",
+   "source": "sqrt(-1)",
+   "python": "sqrt ( - 1.0 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "sqrt(0 - area)",
+   "source": "sqrt(0 - area)",
+   "python": "sqrt ( 0.0 - P('area') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "10 ^ 400",
+   "source": "10 ^ 400",
+   "python": "10.0 ** 400.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "1e308 * 10",
+   "source": "1e308 * 10",
+   "python": "1e+308 * 10.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "1e-7 * 1e7",
+   "source": "1e-7 * 1e7",
+   "python": "1e-07 * 10000000.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "1.5e3 m",
+   "source": "1.5e3 m",
+   "python": "Q(1500.0, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "0.000001 m",
+   "source": "0.000001 m",
+   "python": "Q(1e-06, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "123456.789 mm",
+   "source": "123456.789 mm",
+   "python": "Q(123456.789, 'mm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "1e20 + 1",
+   "source": "1e20 + 1",
+   "python": "1e+20 + 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "n ^ 2 ^ 2",
+   "source": "n ^ 2 ^ 2",
+   "python": "P('n') ** 2.0 ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "(n ^ 2) ^ 2",
+   "source": "(n ^ 2) ^ 2",
+   "python": "( P('n') ** 2.0 ) ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "w + a",
+   "source": "w + a",
+   "python": "P('w') + P('a')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w + 1",
+   "source": "w + 1",
+   "python": "P('w') + 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w * a",
+   "source": "w * a",
+   "python": "P('w') * P('a')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "area * area",
+   "source": "area * area",
+   "python": "P('area') * P('area')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "2 / w",
+   "source": "2 / w",
+   "python": "2.0 / P('w')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w / a",
+   "source": "w / a",
+   "python": "P('w') / P('a')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w ^ 4",
+   "source": "w ^ 4",
+   "python": "P('w') ** 4.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "exponent",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w ^ n",
+   "source": "w ^ n",
+   "python": "P('w') ** P('n')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "exponent",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w ^ -1",
+   "source": "w ^ -1",
+   "python": "P('w') ** - 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "exponent",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w ^ h",
+   "source": "w ^ h",
+   "python": "P('w') ** P('h')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "f ^ 2",
+   "source": "f ^ 2",
+   "python": "P('f') ** 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "-f",
+   "source": "-f",
+   "python": "- P('f')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "not n",
+   "source": "not n",
+   "python": "not P('n')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "f < true",
+   "source": "f < true",
+   "python": "P('f') < True",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w < s",
+   "source": "w < s",
+   "python": "P('w') < P('s')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w = 2",
+   "source": "w = 2",
+   "python": "P('w') == 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "n and f",
+   "source": "n and f",
+   "python": "P('n') and P('f')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "f or n",
+   "source": "f or n",
+   "python": "P('f') or P('n')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "sqrt(w)",
+   "source": "sqrt(w)",
+   "python": "sqrt ( P('w') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "sin(n)",
+   "source": "sin(n)",
+   "python": "sin ( P('n') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "round(w)",
+   "source": "round(w)",
+   "python": "round ( P('w') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "abs(f)",
+   "source": "abs(f)",
+   "python": "abs ( P('f') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "atan2(w, a)",
+   "source": "atan2(w, a)",
+   "python": "atan2 ( P('w') , P('a') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "atan2(f, a)",
+   "source": "atan2(f, a)",
+   "python": "atan2 ( P('f') , P('a') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "missing + 1",
+   "source": "missing + 1",
+   "python": "P('missing') + 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "unknown-parameter",
+     "path": [
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "w + (missing * 2)",
+   "source": "w + (missing * 2)",
+   "python": "P('w') + ( P('missing') * 2.0 )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "unknown-parameter",
+     "path": [
+      1,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "(w + a) * (h + n)",
+   "source": "(w + a) * (h + n)",
+   "python": "( P('w') + P('a') ) * ( P('h') + P('n') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "min(w, a)",
+   "source": "min(w, a)",
+   "python": "min ( P('w') , P('a') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "max(f, g)",
+   "source": "max(f, g)",
+   "python": "max ( P('f') , P('g') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "w + h + w + h",
+   "source": "w + h + w + h",
+   "python": "P('w') + P('h') + P('w') + P('h')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "(((n)))",
+   "source": "(((n)))",
+   "python": "( ( ( P('n') ) ) )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "((w + h) * (w - h)) / (w + h)",
+   "source": "((w + h) * (w - h)) / (w + h)",
+   "python": "( ( P('w') + P('h') ) * ( P('w') - P('h') ) ) / ( P('w') + P('h') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "n - 1 - 1 - 1",
+   "source": "n - 1 - 1 - 1",
+   "python": "P('n') - 1.0 - 1.0 - 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "n / 2 / 2 / 2",
+   "source": "n / 2 / 2 / 2",
+   "python": "P('n') / 2.0 / 2.0 / 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "2 * 3 + 4 * 5 - 6 / 2",
+   "source": "2 * 3 + 4 * 5 - 6 / 2",
+   "python": "2.0 * 3.0 + 4.0 * 5.0 - 6.0 / 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "-(n + 1) * 2",
+   "source": "-(n + 1) * 2",
+   "python": "- ( P('n') + 1.0 ) * 2.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "-(w + h)",
+   "source": "-(w + h)",
+   "python": "- ( P('w') + P('h') )",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "--n",
+   "source": "--n",
+   "python": "- - P('n')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "n * -1",
+   "source": "n * -1",
+   "python": "P('n') * - 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "n - - - 1",
+   "source": "n - - - 1",
+   "python": "P('n') - - - 1.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "if f then w else h",
+   "source": "if f then w else h",
+   "python": "((P('w')) if (P('f')) else (P('h')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "if f then 1 else 2 + 3",
+   "source": "if f then 1 else 2 + 3",
+   "python": "((1.0) if (P('f')) else (((2.0) + (3.0))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "(if f then 1 else 2) + 3",
+   "source": "(if f then 1 else 2) + 3",
+   "python": "((((1.0) if (P('f')) else (2.0))) + (3.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "1 + (if f then 2 else 3)",
+   "source": "1 + (if f then 2 else 3)",
+   "python": "((1.0) + (((2.0) if (P('f')) else (3.0))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "if f then if g then 1 else 2 else 3",
+   "source": "if f then if g then 1 else 2 else 3",
+   "python": "((((1.0) if (P('g')) else (2.0))) if (P('f')) else (3.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "if f then 1 else if g then 2 else 3",
+   "source": "if f then 1 else if g then 2 else 3",
+   "python": "((1.0) if (P('f')) else (((2.0) if (P('g')) else (3.0))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "if w > h then w else h",
+   "source": "if w > h then w else h",
+   "python": "((P('w')) if (((P('w')) > (P('h')))) else (P('h')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "if zero = 0 then 1 else 1 / zero",
+   "source": "if zero = 0 then 1 else 1 / zero",
+   "python": "((1.0) if (((P('zero')) == (0.0))) else (((1.0) / (P('zero')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "if zero != 0 then 1 / zero else 7",
+   "source": "if zero != 0 then 1 / zero else 7",
+   "python": "((((1.0) / (P('zero')))) if (((P('zero')) != (0.0))) else (7.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "if f then w else a",
+   "source": "if f then w else a",
+   "python": "((P('w')) if (P('f')) else (P('a')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "branch-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "if n then 1 else 2",
+   "source": "if n then 1 else 2",
+   "python": "((1.0) if (P('n')) else (2.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "sqrt(if f then 4 else 9)",
+   "source": "sqrt(if f then 4 else 9)",
+   "python": "sqrt(((4.0) if (P('f')) else (9.0)))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "min(if f then 1 else 2, 3)",
+   "source": "min(if f then 1 else 2, 3)",
+   "python": "min(((1.0) if (P('f')) else (2.0)), 3.0)",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "if f then \"yes\" else \"no\"",
+   "source": "if f then \"yes\" else \"no\"",
+   "python": "(('yes') if (P('f')) else ('no'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "if not f then 1 else 2",
+   "source": "if not f then 1 else 2",
+   "python": "((1.0) if ((not (P('f')))) else (2.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "(if f then g else f) and g",
+   "source": "(if f then g else f) and g",
+   "python": "((((P('g')) if (P('f')) else (P('f')))) and (P('g')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "if f and g or f then 1 m else 2 m",
+   "source": "if f and g or f then 1 m else 2 m",
+   "python": "((Q(1.0, 'm')) if (((((P('f')) and (P('g')))) or (P('f')))) else (Q(2.0, 'm')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "\"a\\\"b\\\\c\\nd\" = \"x\"",
+   "source": "\"a\\\"b\\\\c\\nd\" = \"x\"",
+   "python": "(('a\"b\\\\c\\nd') == ('x'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "(f = g) = f",
+   "source": "(f = g) = f",
+   "python": "((((P('f')) == (P('g')))) == (P('f')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "not (f and g)",
+   "source": "not (f and g)",
+   "python": "(not (((P('f')) and (P('g')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "(not f) = g",
+   "source": "(not f) = g",
+   "python": "(((not (P('f')))) == (P('g')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f and (g and f)",
+   "source": "f and (g and f)",
+   "python": "((P('f')) and (((P('g')) and (P('f')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "f or (g or f)",
+   "source": "f or (g or f)",
+   "python": "((P('f')) or (((P('g')) or (P('f')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "(f or g) and f",
+   "source": "(f or g) and f",
+   "python": "((((P('f')) or (P('g')))) and (P('f')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "-(-a)",
+   "source": "-(-a)",
+   "python": "(-((-(P('a')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 0",
+   "source": "n * (area * 0.5 m)",
+   "python": "((P('n')) * (((P('area')) * (Q(0.5, 'm')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 1",
+   "source": "n * 2.4 m * (h / n)",
+   "python": "((((P('n')) * (Q(2.4, 'm')))) * (((P('h')) / (P('n')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 2",
+   "source": "w ^ 2 * abs(w) / (if not g then 10 in / zero else n * h)",
+   "python": "((((((P('w')) ** (2.0))) * (abs(P('w'))))) / (((((Q(10.0, 'in')) / (P('zero')))) if ((not (P('g')))) else (((P('n')) * (P('h')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 3",
+   "source": "if not (false or false) and f then s else vol",
+   "python": "((P('s')) if ((((not (((False) or (False))))) and (P('f')))) else (P('vol')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "branch-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "generated 4",
+   "source": "if if f then if (g or false) and not false then g = (not false) else (h >= w) = (true = true) else s = s and (true or f) or (if true then \"\" else \"oak\") != (if f then \"a b\" else s) then (10 in / n) ^ 2 = 500 l / w - 250000 mm2 and f else (if false then if 45 deg > a then if g then \"a b\" else \"pine\" else if true then s else s else if g and false then s else if false then s else \"ß\") != (if 1000000 cm3 <= max(vol, vol) then if not g then if true then s else s else if true then s else s else if false != true then if false then \"ß\" else \"ß\" else if true then \"\" else \"\")",
+   "python": "((((((((((Q(10.0, 'in')) / (P('n')))) ** (2.0))) == (((((Q(500.0, 'l')) / (P('w')))) - (Q(250000.0, 'mm2')))))) and (P('f')))) if (((((((P('g')) == ((not (False))))) if (((((P('g')) or (False))) and ((not (False))))) else (((((P('h')) >= (P('w')))) == (((True) == (True))))))) if (P('f')) else (((((((P('s')) == (P('s')))) and (((True) or (P('f')))))) or ((((('') if (True) else ('oak'))) != ((('a b') if (P('f')) else (P('s')))))))))) else ((((((((('a b') if (P('g')) else ('pine'))) if (((Q(45.0, 'deg')) > (P('a')))) else (((P('s')) if (True) else (P('s')))))) if (False) else (((P('s')) if (((P('g')) and (False))) else (((P('s')) if (False) else ('ß'))))))) != (((((((P('s')) if (True) else (P('s')))) if ((not (P('g')))) else (((P('s')) if (True) else (P('s')))))) if (((Q(1000000.0, 'cm3')) <= (max(P('vol'), P('vol'))))) else ((((('ß') if (False) else ('ß'))) if (((False) != (True))) else ((('') if (True) else (''))))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 5",
+   "source": "1.5 km * 10000 cm2",
+   "python": "((Q(1.5, 'km')) * (Q(10000.0, 'cm2')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 6",
+   "source": "area / 0",
+   "python": "((P('area')) / (0.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 7",
+   "source": "sin(7.25 * a / (w / w))",
+   "python": "sin(((((7.25) * (P('a')))) / (((P('w')) / (P('w'))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 8",
+   "source": "(cos(atan2(0, 0)) + 3) * sqrt(3 ft * abs(1.5 km))",
+   "python": "((((cos(atan2(0.0, 0.0))) + (3.0))) * (sqrt(((Q(3.0, 'ft')) * (abs(Q(1.5, 'km')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 9",
+   "source": "(if false then a else a) * (cos(a) * (vol / 10 in)) / ((if false and true then area / 0.5 m else h) / -(1 * w)) * abs((-h) ^ 3 / (1.5 m2 / n / -100))",
+   "python": "((((((((P('a')) if (False) else (P('a')))) * (((cos(P('a'))) * (((P('vol')) / (Q(10.0, 'in')))))))) / (((((((P('area')) / (Q(0.5, 'm')))) if (((False) and (True))) else (P('h')))) / ((-(((1.0) * (P('w')))))))))) * (abs((((((-(P('h')))) ** (3.0))) / (((((Q(1.5, 'm2')) / (P('n')))) / ((-(100.0)))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 10",
+   "source": "abs(a)",
+   "python": "abs(P('a'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 11",
+   "source": "n * (if f then w else 1200 mm)",
+   "python": "((P('n')) * (((P('w')) if (P('f')) else (Q(1200.0, 'mm')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 12",
+   "source": "(2.4 m / 0 / 12 * (1.5 km / 1.5 km)) ^ 3",
+   "python": "((((((((Q(2.4, 'm')) / (0.0))) / (12.0))) * (((Q(1.5, 'km')) / (Q(1.5, 'km')))))) ** (3.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 13",
+   "source": "if g then a else (a + a) / (n / zero) / sin(abs(a))",
+   "python": "((P('a')) if (P('g')) else (((((((P('a')) + (P('a')))) / (((P('n')) / (P('zero')))))) / (sin(abs(P('a')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 14",
+   "source": "if (a >= a or g = g or (if true then \"\" else \"pine\") != (if false then \"a b\" else s)) != (a >= -(-a)) then -10 / (0.25 / 0.25) * (if false then -a else abs(a)) / abs(min(n, sin(180 deg))) else -0.5 * abs(atan2(n * w, abs(4 m)))",
+   "python": "(((((((((-(10.0))) / (((0.25) / (0.25))))) * ((((-(P('a')))) if (False) else (abs(P('a'))))))) / (abs(min(P('n'), sin(Q(180.0, 'deg'))))))) if (((((((((P('a')) >= (P('a')))) or (((P('g')) == (P('g')))))) or ((((('') if (True) else ('pine'))) != ((('a b') if (False) else (P('s')))))))) != (((P('a')) >= ((-((-(P('a')))))))))) else ((((-(0.5))) * (abs(atan2(((P('n')) * (P('w'))), abs(Q(4.0, 'm'))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 15",
+   "source": "if not g then s else \"a b\"",
+   "python": "((P('s')) if ((not (P('g')))) else ('a b'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 16",
+   "source": "-10 in",
+   "python": "(-(Q(10.0, 'in')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 17",
+   "source": "250 cm * (1 m3 / 1.5 m2) ^ 2",
+   "python": "((Q(250.0, 'cm')) * (((((Q(1.0, 'm3')) / (Q(1.5, 'm2')))) ** (2.0))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 18",
+   "source": "3 + h ^ 2",
+   "python": "((3.0) + (((P('h')) ** (2.0))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "generated 19",
+   "source": "7.25 + 1 + 7.25",
+   "python": "((((7.25) + (1.0))) + (7.25))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 20",
+   "source": "n * n",
+   "python": "((P('n')) * (P('n')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 21",
+   "source": "if false or false then if f then s else s else if g then not g else \"pine\"",
+   "python": "((((P('s')) if (P('f')) else (P('s')))) if (((False) or (False))) else ((((not (P('g')))) if (P('g')) else ('pine'))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "branch-kinds",
+     "path": [
+      2
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 22",
+   "source": "min(n * 1000000 cm3, zero * 2.5 m3) - zero ^ 2 * (2 m2 * 250 cm)",
+   "python": "((min(((P('n')) * (Q(1000000.0, 'cm3'))), ((P('zero')) * (Q(2.5, 'm3'))))) - (((((P('zero')) ** (2.0))) * (((Q(2.0, 'm2')) * (Q(250.0, 'cm')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 23",
+   "source": "abs(abs(180 deg))",
+   "python": "abs(abs(Q(180.0, 'deg')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 24",
+   "source": "(not (true or g != true and (g or true))) = (if f then round(h / 50 mm) else not not s != \"a b\")",
+   "python": "(((not (((True) or (((((P('g')) != (True))) and (((P('g')) or (True))))))))) == (((round(((P('h')) / (Q(50.0, 'mm'))))) if (P('f')) else ((not ((not (((P('s')) != ('a b'))))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "branch-kinds",
+     "path": [
+      1
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 25",
+   "source": "if false then 12 else zero",
+   "python": "((12.0) if (False) else (P('zero')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 26",
+   "source": "max(4 m, 4 m) ^ 3",
+   "python": "((max(Q(4.0, 'm'), Q(4.0, 'm'))) ** (3.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 27",
+   "source": "a",
+   "python": "P('a')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 28",
+   "source": "if true or not 3 ft < 2.4 m then \"ß\" else if floor(2) < n * zero then \"\" else if false or f then if f then s else s else if f then s else s",
+   "python": "(('ß') if (((True) or ((not (((Q(3.0, 'ft')) < (Q(2.4, 'm')))))))) else ((('') if (((floor(2.0)) < (((P('n')) * (P('zero')))))) else (((((P('s')) if (P('f')) else (P('s')))) if (((False) or (P('f')))) else (((P('s')) if (P('f')) else (P('s')))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 29",
+   "source": "if max(vol, 2.5 m3) <= min(vol, 500 l) and g and (\"oak\" != (if f then \"ß\" else s) and round(1.5 km / 100 mm) = n) then if (if not false then if g then \"oak\" else s else s) = s then \"a b\" else if false then if f and true then if true then s else \"ß\" else if false then s else \"pine\" else if false and g then if g then s else \"pine\" else if g then s else \"ß\" else if false and true and area < area and (not f) = (false or f) then if s = \"a b\" then if 90 mm > 3 ft then if g then s else s else if true then \"pine\" else s else if not true then if f then \"oak\" else s else if g then s else \"oak\" else s",
+   "python": "(((('a b') if ((((((('oak') if (P('g')) else (P('s')))) if ((not (False))) else (P('s')))) == (P('s')))) else (((((((P('s')) if (True) else ('ß'))) if (((P('f')) and (True))) else (((P('s')) if (False) else ('pine'))))) if (False) else (((((P('s')) if (P('g')) else ('pine'))) if (((False) and (P('g')))) else (((P('s')) if (P('g')) else ('ß'))))))))) if (((((((max(P('vol'), Q(2.5, 'm3'))) <= (min(P('vol'), Q(500.0, 'l'))))) and (P('g')))) and ((((('oak') != ((('ß') if (P('f')) else (P('s')))))) and (((round(((Q(1.5, 'km')) / (Q(100.0, 'mm'))))) == (P('n')))))))) else (((((((((P('s')) if (P('g')) else (P('s')))) if (((Q(90.0, 'mm')) > (Q(3.0, 'ft')))) else ((('pine') if (True) else (P('s')))))) if (((P('s')) == ('a b'))) else ((((('oak') if (P('f')) else (P('s')))) if ((not (True))) else (((P('s')) if (P('g')) else ('oak'))))))) if (((((((False) and (True))) and (((P('area')) < (P('area')))))) and ((((not (P('f')))) == (((False) or (P('f')))))))) else (P('s')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 30",
+   "source": "1000000 cm3 + 1 m3",
+   "python": "((Q(1000000.0, 'cm3')) + (Q(1.0, 'm3')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 31",
+   "source": "a",
+   "python": "P('a')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 32",
+   "source": "10 in * area / (if g then area else 2 m2) * sqrt(min(10000 cm2, 10000 cm2))",
+   "python": "((((((Q(10.0, 'in')) * (P('area')))) / (((P('area')) if (P('g')) else (Q(2.0, 'm2')))))) * (sqrt(min(Q(10000.0, 'cm2'), Q(10000.0, 'cm2')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 33",
+   "source": "(-sqrt(area)) ^ 3 / (-zero + 250000 mm2)",
+   "python": "(((((-(sqrt(P('area'))))) ** (3.0))) / ((((-(P('zero')))) + (Q(250000.0, 'mm2')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      1
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 34",
+   "source": "abs(atan2(a / 7.25 / (zero * a), 2.4 m / -90 mm)) / round((w / 0.5 m + 3) * (-10 in * (1.5 m2 / 10000 cm2)) / 50 mm)",
+   "python": "((abs(atan2(((((P('a')) / (7.25))) / (((P('zero')) * (P('a'))))), ((Q(2.4, 'm')) / ((-(Q(90.0, 'mm')))))))) / (round(((((((((P('w')) / (Q(0.5, 'm')))) + (3.0))) * ((((-(Q(10.0, 'in')))) * (((Q(1.5, 'm2')) / (Q(10000.0, 'cm2')))))))) / (Q(50.0, 'mm'))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 35",
+   "source": "area != 10000 cm2",
+   "python": "((P('area')) != (Q(10000.0, 'cm2')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 36",
+   "source": "0.5 m / zero",
+   "python": "((Q(0.5, 'm')) / (P('zero')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 37",
+   "source": "abs(1.5 rad / 0) - a",
+   "python": "((abs(((Q(1.5, 'rad')) / (0.0)))) - (P('a')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 38",
+   "source": "vol",
+   "python": "P('vol')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 39",
+   "source": "round((if not 250000 mm2 <= area then zero else w * n + 0.5) * 90 mm / 50 mm)",
+   "python": "round(((((((P('zero')) if ((not (((Q(250000.0, 'mm2')) <= (P('area')))))) else (((((P('w')) * (P('n')))) + (0.5))))) * (Q(90.0, 'mm')))) / (Q(50.0, 'mm'))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0,
+      0,
+      0,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 40",
+   "source": "h",
+   "python": "P('h')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 41",
+   "source": "zero",
+   "python": "P('zero')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 42",
+   "source": "w * 2 m2",
+   "python": "((P('w')) * (Q(2.0, 'm2')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 43",
+   "source": "1000000 cm3 / area - 1200 mm >= abs(-4 m) and not g != (not true)",
+   "python": "((((((((Q(1000000.0, 'cm3')) / (P('area')))) - (Q(1200.0, 'mm')))) >= (abs((-(Q(4.0, 'm'))))))) and ((not (((P('g')) != ((not (True))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 44",
+   "source": "if \"\" != (if f then \"pine\" else s) and false and not (g or true) = (\"ß\" = s) then \"pine\" else if s != (if f and g then s else if f then s else \"\") then if if s != \"\" then not true else 250000 mm2 != area then if g then if f then \"pine\" else s else \"\" else if false then \"a b\" else if g then s else \"oak\" else if g then if f then if false then \"oak\" else s else if false then \"a b\" else s else if if false then false else false then if f then s else \"oak\" else s",
+   "python": "(('pine') if ((((((('') != ((('pine') if (P('f')) else (P('s')))))) and (False))) and ((not (((((P('g')) or (True))) == ((('ß') == (P('s')))))))))) else ((((((((('pine') if (P('f')) else (P('s')))) if (P('g')) else (''))) if ((((not (True))) if (((P('s')) != (''))) else (((Q(250000.0, 'mm2')) != (P('area')))))) else ((('a b') if (False) else (((P('s')) if (P('g')) else ('oak'))))))) if (((P('s')) != (((P('s')) if (((P('f')) and (P('g')))) else (((P('s')) if (P('f')) else (''))))))) else ((((((('oak') if (False) else (P('s')))) if (P('f')) else ((('a b') if (False) else (P('s')))))) if (P('g')) else (((((P('s')) if (P('f')) else ('oak'))) if (((False) if (False) else (False))) else (P('s')))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 45",
+   "source": "if f then abs(a) else s",
+   "python": "((abs(P('a'))) if (P('f')) else (P('s')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "branch-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "generated 46",
+   "source": "0.25 / n * (n * w)",
+   "python": "((((0.25) / (P('n')))) * (((P('n')) * (P('w')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 47",
+   "source": "(if f then f and true else g = g) or not (f or f)",
+   "python": "((((((P('f')) and (True))) if (P('f')) else (((P('g')) == (P('g')))))) or ((not (((P('f')) or (P('f')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 48",
+   "source": "abs(sqrt(f or g))",
+   "python": "abs(sqrt(((P('f')) or (P('g')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": [
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 49",
+   "source": "sqrt(vol / (abs(n * w) + sqrt(area)))",
+   "python": "sqrt(((P('vol')) / (((abs(((P('n')) * (P('w'))))) + (sqrt(P('area')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 50",
+   "source": "not f",
+   "python": "(not (P('f')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 51",
+   "source": "w ^ 3",
+   "python": "((P('w')) ** (3.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 52",
+   "source": "abs(10 * 4 m) * -round(w / 10 mm)",
+   "python": "((abs(((10.0) * (Q(4.0, 'm'))))) * ((-(round(((P('w')) / (Q(10.0, 'mm'))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 53",
+   "source": "max(250000 mm2 / n / (10 * zero), 100 * zero * (area / n)) - round(h / 10 mm) * (0.25 * 2.4 m) * (h * 1 * 12 ^ 0.5)",
+   "python": "((max(((((Q(250000.0, 'mm2')) / (P('n')))) / (((10.0) * (P('zero'))))), ((((100.0) * (P('zero')))) * (((P('area')) / (P('n'))))))) - (((((round(((P('h')) / (Q(10.0, 'mm'))))) * (((0.25) * (Q(2.4, 'm')))))) * (((((P('h')) * (1.0))) * (((12.0) ** (0.5))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 54",
+   "source": "false or true",
+   "python": "((False) or (True))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 55",
+   "source": "a",
+   "python": "P('a')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 56",
+   "source": "(if g then true else f) and (g and g)",
+   "python": "((((True) if (P('g')) else (P('f')))) and (((P('g')) and (P('g')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 57",
+   "source": "if \"oak\" != \"oak\" or a = a then if true then -250 cm else if true then \"ß\" else s else if g then \"ß\" else \"\"",
+   "python": "(((((-(Q(250.0, 'cm')))) if (True) else ((('ß') if (True) else (P('s')))))) if ((((('oak') != ('oak'))) or (((P('a')) == (P('a')))))) else ((('ß') if (P('g')) else (''))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "branch-kinds",
+     "path": [
+      1
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 58",
+   "source": "if s = s then if false then if 90 deg = 90 deg then if f then \"pine\" else s else if true then s else s else if g and false then if f then s else \"pine\" else if f then \"ß\" else s else \"pine\"",
+   "python": "(((((((('pine') if (P('f')) else (P('s')))) if (((Q(90.0, 'deg')) == (Q(90.0, 'deg')))) else (((P('s')) if (True) else (P('s')))))) if (False) else (((((P('s')) if (P('f')) else ('pine'))) if (((P('g')) and (False))) else ((('ß') if (P('f')) else (P('s')))))))) if (((P('s')) == (P('s')))) else ('pine'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 59",
+   "source": "if false then -((zero + 100) / zero ^ 3) * (0 * -(-a)) else (if ceil(zero) < n / zero then tan(45 deg) + 7.25 else n * zero * (if true then n else zero)) * (atan2(n - zero, sin(a)) + 12 * 60 deg / zero)",
+   "python": "(((((-(((((P('zero')) + (100.0))) / (((P('zero')) ** (3.0))))))) * (((0.0) * ((-((-(P('a')))))))))) if (False) else (((((((tan(Q(45.0, 'deg'))) + (7.25))) if (((ceil(P('zero'))) < (((P('n')) / (P('zero')))))) else (((((P('n')) * (P('zero')))) * (((P('n')) if (True) else (P('zero')))))))) * (((atan2(((P('n')) - (P('zero'))), sin(P('a')))) + (((((12.0) * (Q(60.0, 'deg')))) / (P('zero')))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 60",
+   "source": "0 * w",
+   "python": "((0.0) * (P('w')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 61",
+   "source": "(if g then area else area) / (n + 0.5)",
+   "python": "((((P('area')) if (P('g')) else (P('area')))) / (((P('n')) + (0.5))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 62",
+   "source": "min(max(vol, 1000000 cm3), 1.5 m2 * 1.5 km) - area / 2 * w",
+   "python": "((min(max(P('vol'), Q(1000000.0, 'cm3')), ((Q(1.5, 'm2')) * (Q(1.5, 'km'))))) - (((((P('area')) / (2.0))) * (P('w')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 63",
+   "source": "if (if not f then if f then \"oak\" else s else if n + 100 then \"a b\" else s) = \"a b\" then 90 mm / w / (1200 mm / 3 ft) + 1 else n * sin(a) ^ 2",
+   "python": "((((((((Q(90.0, 'mm')) / (P('w')))) / (((Q(1200.0, 'mm')) / (Q(3.0, 'ft')))))) + (1.0))) if ((((((('oak') if (P('f')) else (P('s')))) if ((not (P('f')))) else ((('a b') if (((P('n')) + (100.0))) else (P('s')))))) == ('a b'))) else (((P('n')) * (((sin(P('a'))) ** (2.0))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": [
+      0,
+      0,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 64",
+   "source": "zero * -(-(if f then 1.5 m2 / w else abs(1200 mm)))",
+   "python": "((P('zero')) * ((-((-(((((Q(1.5, 'm2')) / (P('w')))) if (P('f')) else (abs(Q(1200.0, 'mm'))))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 65",
+   "source": "h + 1200 mm",
+   "python": "((P('h')) + (Q(1200.0, 'mm')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 66",
+   "source": "if true then \"pine\" else s",
+   "python": "(('pine') if (True) else (P('s')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 67",
+   "source": "area",
+   "python": "P('area')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 68",
+   "source": "(if \"pine\" != s then if g then s else s else if true then s else \"ß\") = (if g and g then if g then \"a b\" else s else if g then s else s) and not not false",
+   "python": "((((((((P('s')) if (P('g')) else (P('s')))) if ((('pine') != (P('s')))) else (((P('s')) if (True) else ('ß'))))) == ((((('a b') if (P('g')) else (P('s')))) if (((P('g')) and (P('g')))) else (((P('s')) if (P('g')) else (P('s')))))))) and ((not ((not (False))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 69",
+   "source": "atan2(min(if true then s else \"oak\", w * zero) / sqrt(if f then 10000 cm2 else area), 0.25) / zero",
+   "python": "((atan2(((min(((P('s')) if (True) else ('oak')), ((P('w')) * (P('zero'))))) / (sqrt(((Q(10000.0, 'cm2')) if (P('f')) else (P('area')))))), 0.25)) / (P('zero')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": [
+      0,
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 70",
+   "source": "if f then true else g",
+   "python": "((True) if (P('f')) else (P('g')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 71",
+   "source": "area > area and (false or f)",
+   "python": "((((P('area')) > (P('area')))) and (((False) or (P('f')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 72",
+   "source": "min(area, area)",
+   "python": "min(P('area'), P('area'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 73",
+   "source": "if f or (s = s or g != f) then round(vol / 10000 cm2 / 10 mm) * a else a / (if if g then false else g then max(1, n) else 10 * 12)",
+   "python": "((((round(((((P('vol')) / (Q(10000.0, 'cm2')))) / (Q(10.0, 'mm'))))) * (P('a')))) if (((P('f')) or (((((P('s')) == (P('s')))) or (((P('g')) != (P('f')))))))) else (((P('a')) / (((max(1.0, P('n'))) if (((False) if (P('g')) else (P('g')))) else (((10.0) * (12.0))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 74",
+   "source": "3",
+   "python": "3.0",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 75",
+   "source": "w * 2 m2",
+   "python": "((P('w')) * (Q(2.0, 'm2')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 76",
+   "source": "90 deg",
+   "python": "Q(90.0, 'deg')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 77",
+   "source": "if g then if 1 m3 = 2.5 m3 then if f then s else s else if g then s else s else if f or g then s else \"\"",
+   "python": "((((((P('s')) if (P('f')) else (P('s')))) if (((Q(1.0, 'm3')) == (Q(2.5, 'm3')))) else (((P('s')) if (P('g')) else (P('s')))))) if (P('g')) else (((P('s')) if (((P('f')) or (P('g')))) else (''))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 78",
+   "source": "(n ^ 2 + 2 m2 * w) ^ 2 * vol",
+   "python": "((((((((P('n')) ** (2.0))) + (((Q(2.0, 'm2')) * (P('w')))))) ** (2.0))) * (P('vol')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 79",
+   "source": "tan(abs(a)) * (-0.25 / zero * 1.5 km) - abs(abs(3 ft * (zero + 0.5)))",
+   "python": "((((tan(abs(P('a')))) * ((((((-(0.25))) / (P('zero')))) * (Q(1.5, 'km')))))) - (abs(abs(((Q(3.0, 'ft')) * (((P('zero')) + (0.5))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 80",
+   "source": "45 deg - 30 deg",
+   "python": "((Q(45.0, 'deg')) - (Q(30.0, 'deg')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 81",
+   "source": "2.5 m3 / 1200 mm * (h * (if true then \"a b\" else s))",
+   "python": "((((Q(2.5, 'm3')) / (Q(1200.0, 'mm')))) * (((P('h')) * ((('a b') if (True) else (P('s')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": [
+      1
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 82",
+   "source": "(true or false) != (f = true) or not (g and f)",
+   "python": "((((((True) or (False))) != (((P('f')) == (True))))) or ((not (((P('g')) and (P('f')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 83",
+   "source": "if false then if (if f then g else false) or 7.25 >= n then if f then if f then s else \"ß\" else if g then s else \"a b\" else if f != g then if true then s else \"a b\" else if false then \"oak\" else \"oak\" else if not f then if true and f then s else if f then \"oak\" else s else if a <= 180 deg then s else if true then \"a b\" else \"\"",
+   "python": "((((((((P('s')) if (P('f')) else ('ß'))) if (P('f')) else (((P('s')) if (P('g')) else ('a b'))))) if (((((P('g')) if (P('f')) else (False))) or (((7.25) >= (P('n')))))) else (((((P('s')) if (True) else ('a b'))) if (((P('f')) != (P('g')))) else ((('oak') if (False) else ('oak'))))))) if (False) else (((((P('s')) if (((True) and (P('f')))) else ((('oak') if (P('f')) else (P('s')))))) if ((not (P('f')))) else (((P('s')) if (((P('a')) <= (Q(180.0, 'deg')))) else ((('a b') if (True) else (''))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 84",
+   "source": "max(round(w / (n ^ 10) ^ 2 / (w * h)), 7.25)",
+   "python": "max(round(((((P('w')) / (((((P('n')) ** (10.0))) ** (2.0))))) / (((P('w')) * (P('h')))))), 7.25)",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 85",
+   "source": "1 * 1.5 m2",
+   "python": "((1.0) * (Q(1.5, 'm2')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 86",
+   "source": "0 * area / (2 m2 / 2 m2)",
+   "python": "((((0.0) * (P('area')))) / (((Q(2.0, 'm2')) / (Q(2.0, 'm2')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 87",
+   "source": "h ^ 2 * (zero * n * area)",
+   "python": "((((P('h')) ** (2.0))) * (((((P('zero')) * (P('n')))) * (P('area')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "generated 88",
+   "source": "(1 * 4 m) ^ 2",
+   "python": "((((1.0) * (Q(4.0, 'm')))) ** (2.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 89",
+   "source": "0.5",
+   "python": "0.5",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 90",
+   "source": "max(1.5 rad, zero)",
+   "python": "max(Q(1.5, 'rad'), P('zero'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "generated 91",
+   "source": "if not f then if false then s else s else if g then \"oak\" else s",
+   "python": "((((P('s')) if (False) else (P('s')))) if ((not (P('f')))) else ((('oak') if (P('g')) else (P('s')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 92",
+   "source": "cos(-(-a))",
+   "python": "cos((-((-(P('a'))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 93",
+   "source": "abs(zero)",
+   "python": "abs(P('zero'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 94",
+   "source": "a",
+   "python": "P('a')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 95",
+   "source": "2 m2 / zero",
+   "python": "((Q(2.0, 'm2')) / (P('zero')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 96",
+   "source": "a / (area * h)",
+   "python": "((P('a')) / (((P('area')) * (P('h')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "generated 97",
+   "source": "1.5 m2",
+   "python": "Q(1.5, 'm2')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 98",
+   "source": "w",
+   "python": "P('w')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 99",
+   "source": "-(if not (a <= a or a > (if f then n else zero)) then 2 else zero)",
+   "python": "(-(((2.0) if ((not (((((P('a')) <= (P('a')))) or (((P('a')) > (((P('n')) if (P('f')) else (P('zero')))))))))) else (P('zero')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0,
+      0,
+      0,
+      1
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 100",
+   "source": "round(w / 100 mm)",
+   "python": "round(((P('w')) / (Q(100.0, 'mm'))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 101",
+   "source": "abs(90 deg + a)",
+   "python": "abs(((Q(90.0, 'deg')) + (P('a'))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 102",
+   "source": "-45 deg",
+   "python": "(-(Q(45.0, 'deg')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 103",
+   "source": "max(min(zero * n / round(h / 10 mm), round(1000000 cm3 / 1.5 m2 / 100 mm)), n - ceil(zero) / (zero * 0.25))",
+   "python": "max(min(((((P('zero')) * (P('n')))) / (round(((P('h')) / (Q(10.0, 'mm')))))), round(((((Q(1000000.0, 'cm3')) / (Q(1.5, 'm2')))) / (Q(100.0, 'mm'))))), ((P('n')) - (((ceil(P('zero'))) / (((P('zero')) * (0.25)))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 104",
+   "source": "if true and area + 250000 mm2 >= (100 * 0.5 m) ^ 2 then if f = (not (true and false)) then if abs(60 deg) >= max(a, 180 deg) then if a > 30 deg then if g then \"ß\" else s else \"\" else if g then if g then \"\" else \"pine\" else if g then s else s else if (if f then false else true) != (s = s) then s else if g then if false then \"\" else \"\" else \"oak\" else if false = (max(2 m2, area) >= vol / 10 in) then if h / w = -0.5 then if true then if g then s else s else if false then s else s else if f and false then if true then \"oak\" else \"oak\" else if false then s else s else \"a b\"",
+   "python": "(((((((((('ß') if (P('g')) else (P('s')))) if (((P('a')) > (Q(30.0, 'deg')))) else (''))) if (((abs(Q(60.0, 'deg'))) >= (max(P('a'), Q(180.0, 'deg'))))) else ((((('') if (P('g')) else ('pine'))) if (P('g')) else (((P('s')) if (P('g')) else (P('s')))))))) if (((P('f')) == ((not (((True) and (False))))))) else (((P('s')) if (((((False) if (P('f')) else (True))) != (((P('s')) == (P('s')))))) else ((((('') if (False) else (''))) if (P('g')) else ('oak'))))))) if (((True) and (((((P('area')) + (Q(250000.0, 'mm2')))) >= (((((100.0) * (Q(0.5, 'm')))) ** (2.0))))))) else (((((((((P('s')) if (P('g')) else (P('s')))) if (True) else (((P('s')) if (False) else (P('s')))))) if (((((P('h')) / (P('w')))) == ((-(0.5))))) else ((((('oak') if (True) else ('oak'))) if (((P('f')) and (False))) else (((P('s')) if (False) else (P('s')))))))) if (((False) == (((max(Q(2.0, 'm2'), P('area'))) >= (((P('vol')) / (Q(10.0, 'in')))))))) else ('a b'))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 105",
+   "source": "1200 mm ^ 3",
+   "python": "((Q(1200.0, 'mm')) ** (3.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 106",
+   "source": "1000000 cm3 / 4 m / 1200 mm",
+   "python": "((((Q(1000000.0, 'cm3')) / (Q(4.0, 'm')))) / (Q(1200.0, 'mm')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 107",
+   "source": "f and not false",
+   "python": "((P('f')) and ((not (False))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 108",
+   "source": "(if (false = f) != (f and g) then (10000 cm2 / w) ^ 2 else zero * vol / (0.5 m / zero)) - max(area / (12 / zero), (-w) ^ 2)",
+   "python": "((((((((Q(10000.0, 'cm2')) / (P('w')))) ** (2.0))) if (((((False) == (P('f')))) != (((P('f')) and (P('g')))))) else (((((P('zero')) * (P('vol')))) / (((Q(0.5, 'm')) / (P('zero')))))))) - (max(((P('area')) / (((12.0) / (P('zero'))))), (((-(P('w')))) ** (2.0)))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 109",
+   "source": "vol",
+   "python": "P('vol')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 110",
+   "source": "n * vol",
+   "python": "((P('n')) * (P('vol')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 111",
+   "source": "true",
+   "python": "True",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 112",
+   "source": "round(zero + 2) * ((if false then 10000 cm2 else area) * (vol / 2 m2))",
+   "python": "((round(((P('zero')) + (2.0)))) * (((((Q(10000.0, 'cm2')) if (False) else (P('area')))) * (((P('vol')) / (Q(2.0, 'm2')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 113",
+   "source": "if true then if true then if false then if g then s else \"ß\" else if g then s else \"\" else s else if (if true then false else false) or g and f then if f or g then if false then s else \"a b\" else if g then s else s else if s != s then if true then s else s else s",
+   "python": "((((((((P('s')) if (P('g')) else ('ß'))) if (False) else (((P('s')) if (P('g')) else (''))))) if (True) else (P('s')))) if (True) else (((((((P('s')) if (False) else ('a b'))) if (((P('f')) or (P('g')))) else (((P('s')) if (P('g')) else (P('s')))))) if (((((False) if (True) else (False))) or (((P('g')) and (P('f')))))) else (((((P('s')) if (True) else (P('s')))) if (((P('s')) != (P('s')))) else (P('s')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 114",
+   "source": "round(zero * area / (-max(h, w)) ^ 2 / 100 mm)",
+   "python": "round(((((((P('zero')) * (P('area')))) / ((((-(max(P('h'), P('w'))))) ** (2.0))))) / (Q(100.0, 'mm'))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 115",
+   "source": "250 cm ^ 3",
+   "python": "((Q(250.0, 'cm')) ** (3.0))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 116",
+   "source": "sqrt(zero * 1.5 m2)",
+   "python": "sqrt(((P('zero')) * (Q(1.5, 'm2'))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 117",
+   "source": "round(90 mm * (n * 0) / 10 mm) * (vol / area) ^ 2",
+   "python": "((round(((((Q(90.0, 'mm')) * (((P('n')) * (0.0))))) / (Q(10.0, 'mm'))))) * (((((P('vol')) / (P('area')))) ** (2.0))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 118",
+   "source": "not not (true and f) or min(w / n, h + 1200 mm) = -(-h)",
+   "python": "(((not ((not (((True) and (P('f')))))))) or (((min(((P('w')) / (P('n'))), ((P('h')) + (Q(1200.0, 'mm'))))) == ((-((-(P('h')))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 119",
+   "source": "if area * (if not false then -0.5 m else vol / area) != (if (if g then \"a b\" else \"a b\") != s then 250000 mm2 * 2.4 m - w ^ 3 else if f = g then 7.25 * vol else n * vol) then if not n * 0.5 m < area / h then if true and (g and f) then if true or true then if false then \"a b\" else s else if true then s else \"\" else if false and g then if g then \"a b\" else s else if true then \"pine\" else \"\" else if not f and g then if a < a then if false then \"a b\" else s else s else if not f then if true then \"a b\" else \"a b\" else if true then s else s else if n * 1200 mm * area = vol then if max(1.5 m2, 10000 cm2) > zero * area then \"a b\" else if g or f then if true then \"oak\" else s else if true then \"a b\" else \"pine\" else if not false and s != s then \"pine\" else if if false then true else g then if true then \"ß\" else \"a b\" else if true then s else s",
+   "python": "(((((((((('a b') if (False) else (P('s')))) if (((True) or (True))) else (((P('s')) if (True) else (''))))) if (((True) and (((P('g')) and (P('f')))))) else ((((('a b') if (P('g')) else (P('s')))) if (((False) and (P('g')))) else ((('pine') if (True) else (''))))))) if ((not (((((P('n')) * (Q(0.5, 'm')))) < (((P('area')) / (P('h')))))))) else ((((((('a b') if (False) else (P('s')))) if (((P('a')) < (P('a')))) else (P('s')))) if ((((not (P('f')))) and (P('g')))) else ((((('a b') if (True) else ('a b'))) if ((not (P('f')))) else (((P('s')) if (True) else (P('s')))))))))) if (((((P('area')) * ((((-(Q(0.5, 'm')))) if ((not (False))) else (((P('vol')) / (P('area')))))))) != (((((((Q(250000.0, 'mm2')) * (Q(2.4, 'm')))) - (((P('w')) ** (3.0))))) if ((((('a b') if (P('g')) else ('a b'))) != (P('s')))) else (((((7.25) * (P('vol')))) if (((P('f')) == (P('g')))) else (((P('n')) * (P('vol')))))))))) else ((((('a b') if (((max(Q(1.5, 'm2'), Q(10000.0, 'cm2'))) > (((P('zero')) * (P('area')))))) else ((((('oak') if (True) else (P('s')))) if (((P('g')) or (P('f')))) else ((('a b') if (True) else ('pine'))))))) if (((((((P('n')) * (Q(1200.0, 'mm')))) * (P('area')))) == (P('vol')))) else ((('pine') if ((((not (False))) and (((P('s')) != (P('s')))))) else ((((('ß') if (True) else ('a b'))) if (((True) if (False) else (P('g')))) else (((P('s')) if (True) else (P('s')))))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 120",
+   "source": "a / (2.5 m3 <= 2.5 m3)",
+   "python": "((P('a')) / (((Q(2.5, 'm3')) <= (Q(2.5, 'm3')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "generated 121",
+   "source": "true",
+   "python": "True",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 122",
+   "source": "(if n <= zero then vol / 2 m2 else 10 in / zero) * ((7.25 + 0.25) / (if f then 10 else 2))",
+   "python": "((((((P('vol')) / (Q(2.0, 'm2')))) if (((P('n')) <= (P('zero')))) else (((Q(10.0, 'in')) / (P('zero')))))) * (((((7.25) + (0.25))) / (((10.0) if (P('f')) else (2.0))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 123",
+   "source": "if f then a else a",
+   "python": "((P('a')) if (P('f')) else (P('a')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 124",
+   "source": "(-(-10 in)) ^ 2 * (abs(4 m) * sqrt(area) / sqrt(if true then 250000 mm2 else 2 m2)) / (if false or s = s and (false and g) then max(max(500 l / h, h ^ 2), if s = s then area else 0 * area) else area)",
+   "python": "(((((((-((-(Q(10.0, 'in')))))) ** (2.0))) * (((((abs(Q(4.0, 'm'))) * (sqrt(P('area'))))) / (sqrt(((Q(250000.0, 'mm2')) if (True) else (Q(2.0, 'm2'))))))))) / (((max(max(((Q(500.0, 'l')) / (P('h'))), ((P('h')) ** (2.0))), ((P('area')) if (((P('s')) == (P('s')))) else (((0.0) * (P('area'))))))) if (((False) or (((((P('s')) == (P('s')))) and (((False) and (P('g')))))))) else (P('area')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 125",
+   "source": "-7.25",
+   "python": "(-(7.25))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 126",
+   "source": "2.4 m * 3 * (area / w)",
+   "python": "((((Q(2.4, 'm')) * (3.0))) * (((P('area')) / (P('w')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 127",
+   "source": "180 deg",
+   "python": "Q(180.0, 'deg')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 128",
+   "source": "vol",
+   "python": "P('vol')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 129",
+   "source": "if if (true or f) and (true and f) and 1200 mm ^ 3 > zero * 2.5 m3 then if (if g then g else g) or s = \"a b\" then not w = 250 cm else zero * n = (if g then 2.4 m else 90 mm) else sqrt(if g then 2 m2 else 2 m2) < -(-3 ft) then 4 m else w",
+   "python": "((Q(4.0, 'm')) if ((((((not (((P('w')) == (Q(250.0, 'cm')))))) if (((((P('g')) if (P('g')) else (P('g')))) or (((P('s')) == ('a b'))))) else (((((P('zero')) * (P('n')))) == (((Q(2.4, 'm')) if (P('g')) else (Q(90.0, 'mm')))))))) if (((((((True) or (P('f')))) and (((True) and (P('f')))))) and (((((Q(1200.0, 'mm')) ** (3.0))) > (((P('zero')) * (Q(2.5, 'm3')))))))) else (((sqrt(((Q(2.0, 'm2')) if (P('g')) else (Q(2.0, 'm2'))))) < ((-((-(Q(3.0, 'ft')))))))))) else (P('w')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      0,
+      1,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 130",
+   "source": "vol + 500 l",
+   "python": "((P('vol')) + (Q(500.0, 'l')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 131",
+   "source": "500 l",
+   "python": "Q(500.0, 'l')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 132",
+   "source": "abs(30 deg) / max(90 deg, a) * (if vol <= vol then h ^ 3 else (if f then \"\" else \"a b\") * h)",
+   "python": "((((abs(Q(30.0, 'deg'))) / (max(Q(90.0, 'deg'), P('a'))))) * (((((P('h')) ** (3.0))) if (((P('vol')) <= (P('vol')))) else ((((('') if (P('f')) else ('a b'))) * (P('h')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": [
+      1,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 133",
+   "source": "(g or g) and (g and zero = zero and f)",
+   "python": "((((P('g')) or (P('g')))) and (((((P('g')) and (((P('zero')) == (P('zero')))))) and (P('f')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 134",
+   "source": "sin(30 deg)",
+   "python": "sin(Q(30.0, 'deg'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 135",
+   "source": "(0.25 + 0) * 60 deg",
+   "python": "((((0.25) + (0.0))) * (Q(60.0, 'deg')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 136",
+   "source": "w / 0 * (2 m2 / 10 in)",
+   "python": "((((P('w')) / (0.0))) * (((Q(2.0, 'm2')) / (Q(10.0, 'in')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 137",
+   "source": "atan2(min(tan(a), -7.25), 0.5)",
+   "python": "atan2(min(tan(P('a')), (-(7.25))), 0.5)",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 138",
+   "source": "h / ((h / zero) ^ 2 / abs(10 in + 3 ft))",
+   "python": "((P('h')) / (((((((P('h')) / (P('zero')))) ** (2.0))) / (abs(((Q(10.0, 'in')) + (Q(3.0, 'ft'))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 139",
+   "source": "(-12 * sqrt(max(area, 10000 cm2))) ^ 3 + (w ^ 3 + (vol - 1 m3) - min(10000 cm2 * w, 1200 mm ^ 3) + 2.5 m3 / 2 m2 * sqrt(1.5 m2) * ((zero + 0) * w))",
+   "python": "(((((((-(12.0))) * (sqrt(max(P('area'), Q(10000.0, 'cm2')))))) ** (3.0))) + (((((((((P('w')) ** (3.0))) + (((P('vol')) - (Q(1.0, 'm3')))))) - (min(((Q(10000.0, 'cm2')) * (P('w'))), ((Q(1200.0, 'mm')) ** (3.0)))))) + (((((((Q(2.5, 'm3')) / (Q(2.0, 'm2')))) * (sqrt(Q(1.5, 'm2'))))) * (((((P('zero')) + (0.0))) * (P('w')))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 140",
+   "source": "60 deg",
+   "python": "Q(60.0, 'deg')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 141",
+   "source": "if true then if if g then \"ß\" else \"a b\" then s else \"ß\" else if true then \"a b\" else s",
+   "python": "((((P('s')) if ((('ß') if (P('g')) else ('a b'))) else ('ß'))) if (True) else ((('a b') if (True) else (P('s')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "operand-kind",
+     "path": [
+      1
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 142",
+   "source": "if 2 m2 = (if f then 10000 cm2 else 2 m2) then if false then sqrt(area) else max(1200 mm, 2.4 m) else 2.4 m * w / (h + w)",
+   "python": "((((sqrt(P('area'))) if (False) else (max(Q(1200.0, 'mm'), Q(2.4, 'm'))))) if (((Q(2.0, 'm2')) == (((Q(10000.0, 'cm2')) if (P('f')) else (Q(2.0, 'm2')))))) else (((((Q(2.4, 'm')) * (P('w')))) / (((P('h')) + (P('w')))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 143",
+   "source": "if not not \"\" = s then if g or f and g then if 30 deg > 30 deg then \"oak\" else if f then \"a b\" else s else s else s",
+   "python": "(((((('oak') if (((Q(30.0, 'deg')) > (Q(30.0, 'deg')))) else ((('a b') if (P('f')) else (P('s')))))) if (((P('g')) or (((P('f')) and (P('g')))))) else (P('s')))) if ((not ((not ((('') == (P('s')))))))) else (P('s')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 144",
+   "source": "abs(7.25 * sqrt(area)) / (if \"\" != s then round(250 cm / 100 mm) else 1.5 km / 2.4 m) ^ 0.5 / (vol / 250000 mm2 * (area / 250000 mm2) * (h * n + abs(w)) / -(vol / 1200 mm / (a / 100)))",
+   "python": "((((abs(((7.25) * (sqrt(P('area')))))) / (((((round(((Q(250.0, 'cm')) / (Q(100.0, 'mm'))))) if ((('') != (P('s')))) else (((Q(1.5, 'km')) / (Q(2.4, 'm')))))) ** (0.5))))) / (((((((((P('vol')) / (Q(250000.0, 'mm2')))) * (((P('area')) / (Q(250000.0, 'mm2')))))) * (((((P('h')) * (P('n')))) + (abs(P('w'))))))) / ((-(((((P('vol')) / (Q(1200.0, 'mm')))) / (((P('a')) / (100.0))))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": [
+      1,
+      1,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 145",
+   "source": "h * 10000 cm2",
+   "python": "((P('h')) * (Q(10000.0, 'cm2')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "volume"
+   }
+  },
+  {
+   "name": "generated 146",
+   "source": "if false and g then if g then \"\" else s else \"oak\"",
+   "python": "(((('') if (P('g')) else (P('s')))) if (((False) and (P('g')))) else ('oak'))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 147",
+   "source": "-round(-n)",
+   "python": "(-(round((-(P('n'))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 148",
+   "source": "2.4 m",
+   "python": "Q(2.4, 'm')",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 149",
+   "source": "true",
+   "python": "True",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "bool"
+   }
+  },
+  {
+   "name": "generated 150",
+   "source": "area / (250000 mm2 / zero)",
+   "python": "((P('area')) / (((Q(250000.0, 'mm2')) / (P('zero')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 151",
+   "source": "if g then round(250 cm / 50 mm) else sin(a)",
+   "python": "((round(((Q(250.0, 'cm')) / (Q(50.0, 'mm'))))) if (P('g')) else (sin(P('a'))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "number"
+   }
+  },
+  {
+   "name": "generated 152",
+   "source": "if true or not false then if g or false then if true then s else \"ß\" else s else if g then if false then \"oak\" else \"pine\" else s",
+   "python": "((((((P('s')) if (True) else ('ß'))) if (((P('g')) or (False))) else (P('s')))) if (((True) or ((not (False))))) else ((((('oak') if (False) else ('pine'))) if (P('g')) else (P('s')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 153",
+   "source": "if if not 500 l <= 1000000 cm3 then false != true and (if g then false else if f then \"a b\" else s) else true or g or vol = 1000000 cm3 then if sqrt(1.5 m2) < h then if false != g then if false then s else \"oak\" else \"pine\" else if not false then if false then s else \"oak\" else \"oak\" else if \"oak\" != \"ß\" and 30 deg <= a then if false or f then if f then \"pine\" else \"\" else if f then s else \"oak\" else if not false then if false then \"ß\" else \"ß\" else if f then s else \"pine\"",
+   "python": "((((((((P('s')) if (False) else ('oak'))) if (((False) != (P('g')))) else ('pine'))) if (((sqrt(Q(1.5, 'm2'))) < (P('h')))) else (((((P('s')) if (False) else ('oak'))) if ((not (False))) else ('oak'))))) if (((((((False) != (True))) and (((False) if (P('g')) else ((('a b') if (P('f')) else (P('s')))))))) if ((not (((Q(500.0, 'l')) <= (Q(1000000.0, 'cm3')))))) else (((((True) or (P('g')))) or (((P('vol')) == (Q(1000000.0, 'cm3')))))))) else ((((((('pine') if (P('f')) else (''))) if (((False) or (P('f')))) else (((P('s')) if (P('f')) else ('oak'))))) if ((((('oak') != ('ß'))) and (((Q(30.0, 'deg')) <= (P('a')))))) else ((((('ß') if (False) else ('ß'))) if ((not (False))) else (((P('s')) if (P('f')) else ('pine'))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "branch-kinds",
+     "path": [
+      0,
+      1,
+      1
+     ]
+    }
+   }
+  },
+  {
+   "name": "generated 154",
+   "source": "vol / (1.5 m2 + abs(3 ft) / (0.25 + 3) * (vol / min(2 m2, area)))",
+   "python": "((P('vol')) / (((Q(1.5, 'm2')) + (((((abs(Q(3.0, 'ft'))) / (((0.25) + (3.0))))) * (((P('vol')) / (min(Q(2.0, 'm2'), P('area'))))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "length"
+   }
+  },
+  {
+   "name": "generated 155",
+   "source": "if true then s else s",
+   "python": "((P('s')) if (True) else (P('s')))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "generated 156",
+   "source": "if \"\" != s then s else 60 deg / n",
+   "python": "((P('s')) if ((('') != (P('s')))) else (((Q(60.0, 'deg')) / (P('n')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "error": {
+     "code": "branch-kinds",
+     "path": []
+    }
+   }
+  },
+  {
+   "name": "generated 157",
+   "source": "abs(-atan2(1200 mm, h))",
+   "python": "abs((-(atan2(Q(1200.0, 'mm'), P('h')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "angle"
+   }
+  },
+  {
+   "name": "generated 158",
+   "source": "zero * (min(area, area) / (n * zero) - 2.4 m * 2 m2 / (w * 0))",
+   "python": "((P('zero')) * (((((min(P('area'), P('area'))) / (((P('n')) * (P('zero')))))) - (((((Q(2.4, 'm')) * (Q(2.0, 'm2')))) / (((P('w')) * (0.0))))))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "generated 159",
+   "source": "if (if f or g then if g then s else s else \"\") = (if f then s else \"ß\") and ((false or true or true != false) and (if f then \"ß\" else s) = (if g then s else s)) then \"ß\" else if -(-w) >= (if f and g then w else 4 m / n) then s else s",
+   "python": "(('ß') if (((((((((P('s')) if (P('g')) else (P('s')))) if (((P('f')) or (P('g')))) else (''))) == (((P('s')) if (P('f')) else ('ß'))))) and (((((((False) or (True))) or (((True) != (False))))) and ((((('ß') if (P('f')) else (P('s')))) == (((P('s')) if (P('g')) else (P('s')))))))))) else (((P('s')) if ((((-((-(P('w')))))) >= (((P('w')) if (((P('f')) and (P('g')))) else (((Q(4.0, 'm')) / (P('n')))))))) else (P('s')))))",
+   "params": {
+    "w": "length",
+    "h": "length",
+    "a": "angle",
+    "n": "number",
+    "zero": "number",
+    "area": "area",
+    "vol": "volume",
+    "f": "bool",
+    "g": "bool",
+    "s": "text"
+   },
+   "expected": {
+    "kind": "text"
+   }
+  },
+  {
+   "name": "other parameter set",
+   "source": "x * y + x ^ 2",
+   "python": "P('x') * P('y') + P('x') ** 2.0",
+   "params": {
+    "x": "length",
+    "y": "length",
+    "z": "angle"
+   },
+   "expected": {
+    "kind": "area"
+   }
+  },
+  {
+   "name": "other parameter set mismatch",
+   "source": "x + z",
+   "python": "P('x') + P('z')",
+   "params": {
+    "x": "length",
+    "y": "length",
+    "z": "angle"
+   },
+   "expected": {
+    "error": {
+     "code": "mixed-kinds",
+     "path": []
+    }
+   }
+  }
+ ]
+}

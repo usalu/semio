@@ -1,0 +1,76 @@
+{
+  "name": "semio-framework-expression",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧮️expression/**/*",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "test-oracle": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test oracle",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-python"
+      ],
+      "inputs": [
+        "default"
+      ]
+    },
+    "test-oracle-python": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test oracle python",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-python"
+      ],
+      "inputs": [
+        "default"
+      ]
+    }
+  }
+}

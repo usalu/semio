@@ -1,0 +1,7 @@
+{
+  "mutation": "setCurtainWallGrid",
+  "id": "cw-1",
+  "u_grid": {
+    "value": null
+  }
+}

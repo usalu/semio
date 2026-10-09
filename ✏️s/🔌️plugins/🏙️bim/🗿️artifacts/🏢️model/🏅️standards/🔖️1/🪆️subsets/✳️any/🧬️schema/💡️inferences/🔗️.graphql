@@ -3,6 +3,7 @@
 type ModelInference {
   element_solids: [ElementSolidRow!]! @derived
   stair_runs: [StairRunRow!]! @derived
+  ramp_runs: [RampRunRow!]! @derived
   spaces: [SpaceRoomRow!]! @derived
   quantities: ModelQuantities! @derived
   opening_frames: [OpeningFrameRow!]! @derived
@@ -11,11 +12,24 @@ type ModelInference {
   curtain_layout: [CurtainLayoutRow!]! @derived
   plan_linework: [PlanLineworkRow!]! @derived
   diagnostics: [Diagnostic!]! @derived
+  zone_totals: [ZoneTotalsRow!]! @derived
+  scheme_totals: [SchemeTotalsRow!]! @derived
+  diagnostic_index: DiagnosticIndex! @derived
 }
 
 type CurtainLayoutRow {
   id: String!
   value: CurtainLayout!
+}
+
+type ZoneTotalsRow {
+  id: String!
+  value: ZoneTotals!
+}
+
+type SchemeTotalsRow {
+  id: String!
+  value: SchemeTotals!
 }
 
 type StoreyLevelRow {
@@ -121,9 +135,11 @@ enum OpeningIssue {
   HostMissing
   TypeMissing
   NonPositiveSize
+  HostDegenerate
   OutsideHostExtent
   BelowHostBase
   AboveHostTop
+  OutsideTrimmedExtent
   OverlapsSibling
 }
 
@@ -199,6 +215,46 @@ type OpeningFrame {
 type StairRunRow {
   id: String!
   value: StairRun!
+}
+
+type RampRunRow {
+  id: String!
+  value: RampRun!
+}
+
+type RampRun {
+  base_z: Float!
+  top_z: Float!
+  rise: Float!
+  length: Float!
+  run_length: Float!
+  slope: Float!
+  angle: Float!
+  width: Float!
+  flights: [RampFlight!!]!
+  landings: [RampLanding!!]!
+  compliance: RampCompliance!
+}
+
+type RampFlight {
+  from: Float!
+  to: Float!
+  length: Float!
+  z_from: Float!
+  z_to: Float!
+}
+
+type RampLanding {
+  from: Float!
+  to: Float!
+  length: Float!
+  z: Float!
+}
+
+type RampCompliance {
+  run_ok: Boolean!
+  slope_ok: Boolean!
+  compliant: Boolean!
 }
 
 type SpaceRoomRow {
@@ -286,6 +342,7 @@ type SpaceRoom {
   clear_height: Float!
   volume: Float!
   ceiling_slab: String!
+  ceiling: String!
   bounding_walls: [String!]!
 }
 
@@ -323,7 +380,9 @@ type ElementQuantity {
   net_volume: Float!
   mass: Float!
   risers: Int!
+  balusters: Int
   layers: [LayerQuantity!]!
+  finishes: [FinishQuantity!]!
 }
 
 enum QuantityKind {
@@ -338,7 +397,21 @@ enum QuantityKind {
   Void
   Stair
   Railing
+  Ramp
   Space
+  Ceiling
+}
+
+enum FinishSurface {
+  Floor
+  Wall
+  Ceiling
+}
+
+type FinishQuantity {
+  surface: FinishSurface!
+  material: String!
+  area: Float!
 }
 
 type LayerQuantity {
@@ -353,6 +426,27 @@ type QuantityTotals {
   kinds: [TotalsRow!]!
   types: [TotalsRow!]!
   materials: [TotalsRow!]!
+  finishes: [TotalsRow!]!
+}
+
+type ZoneTotals {
+  spaces: Int!
+  resolved: Int!
+  area: Float!
+  net_area: Float!
+  volume: Float!
+  occupancy: Float!
+  floor_finish_area: Float!
+  wall_finish_area: Float!
+  ceiling_finish_area: Float!
+}
+
+type SchemeTotals {
+  spaces: Int!
+  resolved: Int!
+  area: Float!
+  volume: Float!
+  occupancy: Float!
 }
 
 type Totals {
@@ -382,7 +476,9 @@ enum SolidFamily {
   Slab
   Roof
   Stair
+  Ramp
   Railing
+  Ceiling
 }
 
 type SolidPoint {
@@ -468,6 +564,17 @@ enum PlanKind {
   GridLine
   GridBubble
   GridLabel
+  SectionCut
+  Silhouette
+  Edge
+  Datum
+  DatumLabel
+  CeilingEdge
+  CeilingHole
+  RampOutline
+  RampLanding
+  RampArrow
+  RampTag
 }
 
 type PlanVertex {
@@ -565,6 +672,7 @@ enum DiagnosticCode {
   OpeningAboveTop
   OpeningOverlap
   OpeningSize
+  OpeningOutsideTrimmed
   DegenerateAxis
   DegenerateThickness
   DegenerateHeight
@@ -582,9 +690,73 @@ enum DiagnosticCode {
   StairRiserHeight
   StairTreadDepth
   StairComfort
+  StairStringerIgnored
   SpaceNotEnclosed
   SpaceSeedInWall
   SpaceDuplicateNumber
+  RoofFlatCurved
+  RoofFlatSkeleton
+  RoofFlatDegenerate
+  RoofFlatPitch
+  RoofOverhangCollapsed
+  RoofGableToHip
+  AnnotationAnchorMissing
+  AnnotationAnchorUnresolved
+  AnnotationStyleMissing
+  DimensionZero
+  DimensionLockViolated
+  TagEmpty
+  ClashBeamCeiling
+  ClashCeilingCeiling
+  RefCeilingType
+  CurtainOverrideOutOfGrid
+  CurtainDoorNotAtBase
+  CurtainGridLineOutside
+  CurtainDuplicateOverride
+  RefCurtainWallType
+  RefCurtainPanel
+  RefCurtainOverrideHost
+  ColumnTiltInvalid
+  CeilingOutsideStorey
+  RampSlope
+  RampNoRun
+  RefRailingHost
+  RailingHostUnresolved
+}
+
+type SeverityCounts {
+  error: Int!
+  warning: Int!
+  info: Int!
+}
+
+type SeverityCountsRow {
+  id: String!
+  value: SeverityCounts!
+}
+
+type ElementFindings {
+  severity: Severity!
+  count: Int!
+  codes: [DiagnosticCode!]!
+}
+
+type ElementFindingsRow {
+  id: String!
+  value: ElementFindings!
+}
+
+type CodeCountRow {
+  id: String!
+  value: Int!
+}
+
+type DiagnosticIndex {
+  total: SeverityCounts!
+  elements: [ElementFindingsRow!]!
+  categories: [SeverityCountsRow!]!
+  codes: [CodeCountRow!]!
+  storeys: [SeverityCountsRow!]!
 }
 
 type Diagnostic {

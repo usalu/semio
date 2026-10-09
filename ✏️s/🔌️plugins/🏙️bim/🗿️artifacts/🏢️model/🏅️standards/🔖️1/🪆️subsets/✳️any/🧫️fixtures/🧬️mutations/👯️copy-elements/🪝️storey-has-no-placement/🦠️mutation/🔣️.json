@@ -1,0 +1,11 @@
+{
+  "mutation": "copyElements",
+  "ids": [
+    "st-ground"
+  ],
+  "vector": {
+    "x": 1,
+    "y": 0
+  },
+  "prefix": "cp"
+}

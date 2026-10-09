@@ -1,0 +1,7 @@
+{
+  "mutation": "setDimension",
+  "id": "dim-south",
+  "lock": {
+    "value": null
+  }
+}

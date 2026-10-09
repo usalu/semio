@@ -8,17 +8,14 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, 
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { installedDashboard } from "../../../📦️installation/🟦️.ts";
 
 export const dashboard = resolve(import.meta.dir, "../../..");
 export const repository = resolve(dashboard, "../../../../..");
-const executable = process.platform === "win32" ? "semio.exe" : "semio";
 
-/** 🔎️ The binary under test: `SEMIO_TEST_CLI`, else the fleet debug build, else the installed dashboard. */
+/** 🔎️ The explicitly selected test executable or the canonical installed dashboard. */
 export function binary(): string {
-  const candidates = [process.env.SEMIO_TEST_CLI, join(repository, ".🧬semio/🦑️repo/⚡️cache/cargo/target-fleet-v1/debug", executable)];
-  const found = candidates.find((path) => path && existsSync(path));
-  if (!found) throw new Error(`no semio binary: build it and set SEMIO_TEST_CLI (looked at ${candidates.join(", ")})`);
-  return found;
+  return process.env.SEMIO_TEST_CLI ?? installedDashboard(repository);
 }
 
 export type Run = { code: number; stdout: string; stderr: string };

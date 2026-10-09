@@ -1,0 +1,12 @@
+{
+  "mutation": "setCeilingType",
+  "id": "ct-board",
+  "name": "Plasterboard 12.5",
+  "layers": [
+    {
+      "material": "m-board",
+      "thickness": 0.025,
+      "function": "Finish"
+    }
+  ]
+}

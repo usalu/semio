@@ -8,7 +8,7 @@ pub fn parse_layer_field_input(field:&str,source:&str,control:&mut semio_framewo
   if field=="strokeDash"{let samples=crate::standards::v1::subsets::any::io::text::dash::decode_dash_text(text,control)?;return match samples{None=>Ok(DslValue::Null),Some(samples)=>{let mut output=control.allocate_vec(samples.len())?;for sample in samples{control.step()?;output.push(DslValue::Number(Number::Float(sample)));}Ok(DslValue::Array(output))}};}
   let color=crate::standards::v1::subsets::any::io::text::color::decode_color_text(text,1.0,control)?;let mut output=control.allocate_vec(4)?;for component in color{control.step()?;output.push(DslValue::Number(Number::Float(component)));}return Ok(DslValue::Array(output));
  }
- if matches!(field,"textContent"|"name"|"blendMode"|"fillRule"|"strokeCap"|"strokeJoin"|"booleanOperation"){if let Some(DslValue::String(text))=parsed{return Ok(DslValue::String(text));}return control.copy_text(source).map(DslValue::String);}
+ if matches!(field,"imageKey"|"textContent"|"name"|"blendMode"|"fillRule"|"strokeCap"|"strokeJoin"|"booleanOperation"){if let Some(DslValue::String(text))=parsed{return Ok(DslValue::String(text));}return control.copy_text(source).map(DslValue::String);}
  match parsed{Some(value)=>Ok(value),None=>control.copy_text(source).map(DslValue::String)}
 }
 

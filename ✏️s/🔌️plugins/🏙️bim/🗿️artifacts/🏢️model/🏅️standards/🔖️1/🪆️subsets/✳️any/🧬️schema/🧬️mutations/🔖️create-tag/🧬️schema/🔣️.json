@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-tag/schema.json",
+  "title": "CreateTag",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "tag"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createTag"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Tag id",
+          "de": "Kennzeichnungs-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "tag": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Tag",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Tag",
+          "de": "Kennzeichnung"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

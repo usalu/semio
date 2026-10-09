@@ -1,0 +1,6 @@
+{
+  "mutation": "setBeam",
+  "id": "b-a",
+  "beam_type": "bt-30x50",
+  "name": "Beam A"
+}

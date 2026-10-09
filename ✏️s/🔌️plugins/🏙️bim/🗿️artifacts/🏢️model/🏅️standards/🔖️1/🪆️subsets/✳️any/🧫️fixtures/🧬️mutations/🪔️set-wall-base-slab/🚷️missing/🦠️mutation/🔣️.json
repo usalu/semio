@@ -1,0 +1,5 @@
+{
+  "mutation": "setWallBaseSlab",
+  "id": "w-gone",
+  "slab": "sl-ground"
+}

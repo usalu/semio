@@ -1,0 +1,26 @@
+{
+  "version": "6.0",
+  "nxVersion": "23.2.0",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {
+      "dashboard-authority-verification": [
+        {
+          "file": "nx.json",
+          "hash": "10263730875132420780"
+        },
+        {
+          "file": "package.json",
+          "hash": "9988511714300539360"
+        },
+        {
+          "file": "project.json",
+          "hash": "3450845828842186684"
+        }
+      ]
+    },
+    "nonProjectFiles": []
+  },
+  "externalNodesHash": "3244421341483603138"
+}

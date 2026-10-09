@@ -74,6 +74,7 @@ pub enum Surface {
     Plan { storey: String },
     World { storey: String },
     Section { start: P, end: P },
+    Sheet { sheet: String },
 }
 
 /// 👁️ What a tool reads while it advances.
@@ -85,18 +86,19 @@ pub struct ToolContext<'a> {
     pub library: &'a [String],
     pub labels: Option<&'static BimLabels>,
     pub mint: IdMint,
+    pub instance: Option<u32>,
 }
 
 impl<'a> ToolContext<'a> {
     pub fn new(snapshot: &'a ModelSnapshot, inference: &'a ModelInference, surface: Surface, authoring_seed: &str) -> Self {
-        Self { snapshot, inference, surface, selected: &[], library: &[], labels: None, mint: IdMint::seeded(authoring_seed) }
+        Self { snapshot, inference, surface, selected: &[], library: &[], labels: None, mint: IdMint::seeded(authoring_seed), instance: None }
     }
 
     /// 🪜️ The storey a plan or world tool draws on.
     pub fn storey(&self) -> Option<&str> {
         match &self.surface {
             Surface::Plan { storey } | Surface::World { storey } => Some(storey.as_str()).filter(|storey| self.snapshot.storeys.contains_key(*storey)),
-            Surface::Section { .. } => None,
+            Surface::Section { .. } | Surface::Sheet { .. } => None,
         }
     }
 
@@ -121,14 +123,15 @@ impl<'a> ToolContext<'a> {
         !messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal))
     }
 
-    /// 🏷️ The default name of the next element of a kind: the kind's label and the next ordinal.
-    pub fn name_of(&self, label: fn(&BimLabels) -> LabelText, fallback: &str, existing: usize) -> String {
-        format!("{} {}", self.labels.map_or_else(|| fallback.to_string(), |labels| label(labels).as_str().to_string()), existing + 1)
+    /// 🏷️ The default name of the next element of a kind: the kind's label in the viewer's language and the next ordinal. Without a viewer (no view addressed) the label set is the first
+    /// language's, read from the same `BimLabels` block, never a string of its own.
+    pub fn name_of(&self, label: fn(&BimLabels) -> LabelText, existing: usize) -> String {
+        format!("{} {}", label(self.labels.unwrap_or(&BimLabels::NATIVE_EN)).as_str(), existing + 1)
     }
 
     /// 🧲️ The snapped model point of a pointer: the strongest candidate of the storey within reach, else the orthogonal direction from `anchor`.
     pub fn snapped(&self, pointer: &Pointer, anchor: Option<P>, exclude: &[String], extra: &[P]) -> SnapHit {
-        if matches!(self.surface, Surface::Section { .. }) {
+        if matches!(self.surface, Surface::Section { .. } | Surface::Sheet { .. }) {
             return SnapHit { point: pointer.at, kind: SnapKind::Free, source: String::new() };
         }
         snap(self.snapshot, pointer.at, &SnapRequest { storey: self.storey(), tolerance: pointer.tolerance * SNAP_PIXELS, anchor, lock_orthogonal: pointer.modifiers.shift && anchor.is_some(), exclude, extra })
@@ -169,6 +172,15 @@ impl Step {
 
     pub fn select(targets: Vec<(String, String)>, merge: &'static str) -> Self {
         Self { pick: Some(Pick { targets, merge }), ..Self::default() }
+    }
+
+    /// ➡️ This step followed by the next one of the same gesture: both write into one history row, the later pick and arm win, and the first refusal stands.
+    pub fn then(mut self, next: Step) -> Self {
+        self.mutations.extend(next.mutations);
+        self.pick = next.pick.or(self.pick);
+        self.arm = next.arm.or(self.arm);
+        self.refused = self.refused.or(next.refused);
+        self
     }
 
     /// 🛡️ The step writing `mutation` when the model accepts it, else the refusal.
@@ -274,6 +286,11 @@ pub trait Tool: Send {
     fn event(&mut self, ctx: &mut ToolContext<'_>, event: &ToolEvent) -> Step;
 
     fn preview(&self, ctx: &ToolContext<'_>) -> Preview;
+
+    /// ⚓️ The point the gesture in progress hangs on (the last corner of a chain, the pivot of a turn): what a typed offset, polar offset or length is measured from.
+    fn anchor(&self) -> Option<P> {
+        None
+    }
 }
 
 /// 💤️ The tool of a utility that owns no gesture.

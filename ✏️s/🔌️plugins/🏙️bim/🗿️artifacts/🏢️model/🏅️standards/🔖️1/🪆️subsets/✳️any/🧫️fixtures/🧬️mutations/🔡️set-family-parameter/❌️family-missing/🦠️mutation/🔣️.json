@@ -1,0 +1,7 @@
+{
+  "mutation": "setFamilyParameter",
+  "family": "fam-ghost",
+  "name": "width",
+  "kind": "Length",
+  "value": "1 m"
+}

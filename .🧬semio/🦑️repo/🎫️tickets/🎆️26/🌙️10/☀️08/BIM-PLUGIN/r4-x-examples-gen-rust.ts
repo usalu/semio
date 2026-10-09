@@ -374,6 +374,17 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
     for (id, building) in &model.buildings {
         need(format!("buildings/{id}/site"), model.sites.contains_key(&building.site));
     }
+    for (id, space) in &model.spaces {
+        need(format!("spaces/{id}/zone"), space.zone.as_ref().is_none_or(|zone| model.zones.contains_key(zone)));
+        for (field, finish) in [("floor_finish", &space.floor_finish), ("wall_finish", &space.wall_finish), ("ceiling_finish", &space.ceiling_finish)] {
+            need(format!("spaces/{id}/{field}"), finish.as_ref().is_none_or(|material| model.materials.contains_key(material)));
+        }
+    }
+    for (id, scheme) in &model.area_schemes {
+        for zone in &scheme.zones {
+            need(format!("area_schemes/{id}/zones"), model.zones.contains_key(zone));
+        }
+    }
     for (id, storey) in &model.storeys {
         need(format!("storeys/{id}/building"), model.buildings.contains_key(&storey.building));
     }
@@ -435,13 +446,39 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
     }
     of_material!(column_types, beam_types, window_types, door_types);
     let owned = |id: &String| {
-        model.walls.contains_key(id) || model.curtain_walls.contains_key(id) || model.columns.contains_key(id) || model.beams.contains_key(id) || model.slabs.contains_key(id) || model.roofs.contains_key(id) || model.openings.contains_key(id) || model.stairs.contains_key(id) || model.railings.contains_key(id) || model.spaces.contains_key(id)
+        model.walls.contains_key(id) || model.curtain_walls.contains_key(id) || model.columns.contains_key(id) || model.beams.contains_key(id) || model.slabs.contains_key(id) || model.roofs.contains_key(id) || model.openings.contains_key(id) || model.stairs.contains_key(id) || model.railings.contains_key(id) || model.spaces.contains_key(id) || model.zones.contains_key(id) || model.area_schemes.contains_key(id)
     };
     for id in model.properties.keys() {
         need(format!("properties/{id}"), owned(id));
     }
     for id in model.classifications.keys() {
         need(format!("classifications/{id}"), owned(id));
+    }
+    let present = |id: &str| owned(&id.to_string()) || model.grids.contains_key(id);
+    for (id, row) in &model.dimensions {
+        need(format!("dimensions/{id}/storey"), model.storeys.contains_key(&row.storey));
+        need(format!("dimensions/{id}/style"), model.annotation_styles.contains_key(&row.style));
+        need(format!("dimensions/{id}/anchors"), row.elements().all(present));
+    }
+    for (id, row) in &model.tags {
+        need(format!("tags/{id}/storey"), model.storeys.contains_key(&row.storey));
+        need(format!("tags/{id}/style"), model.annotation_styles.contains_key(&row.style));
+        need(format!("tags/{id}/element"), present(&row.element));
+    }
+    for (id, row) in &model.text_notes {
+        need(format!("text_notes/{id}/storey"), model.storeys.contains_key(&row.storey));
+        need(format!("text_notes/{id}/style"), model.annotation_styles.contains_key(&row.style));
+    }
+    for (id, row) in &model.leaders {
+        need(format!("leaders/{id}/storey"), model.storeys.contains_key(&row.storey));
+        need(format!("leaders/{id}/style"), model.annotation_styles.contains_key(&row.style));
+        need(format!("leaders/{id}/anchor"), row.element().is_none_or(present));
+    }
+    for (id, schedule) in &model.schedules {
+        for storey in &schedule.storeys {
+            need(format!("schedules/{id}/storeys"), model.storeys.contains_key(storey));
+        }
+        need(format!("schedules/{id}/definition"), crate::schedule_kit::schedule_problem(schedule).is_none());
     }
     let mut levels = std::collections::BTreeSet::new();
     for (id, storey) in &model.storeys {
@@ -521,7 +558,15 @@ families!(
     ("create-opening", "createOpening", "opening", openings),
     ("create-stair", "createStair", "stair", stairs),
     ("create-railing", "createRailing", "railing", railings),
+    ("create-zone", "createZone", "zone", zones),
+    ("create-area-scheme", "createAreaScheme", "area_scheme", area_schemes),
     ("create-space", "createSpace", "space", spaces),
+    ("create-schedule", "createSchedule", "schedule", schedules),
+    ("create-annotation-style", "createAnnotationStyle", "annotation_style", annotation_styles),
+    ("create-dimension", "createDimension", "dimension", dimensions),
+    ("create-tag", "createTag", "tag", tags),
+    ("create-text-note", "createTextNote", "text_note", text_notes),
+    ("create-leader", "createLeader", "leader", leaders),
 );
 
 fn apply_json(state: &ModelSnapshot, json: &str) -> ModelSnapshot {

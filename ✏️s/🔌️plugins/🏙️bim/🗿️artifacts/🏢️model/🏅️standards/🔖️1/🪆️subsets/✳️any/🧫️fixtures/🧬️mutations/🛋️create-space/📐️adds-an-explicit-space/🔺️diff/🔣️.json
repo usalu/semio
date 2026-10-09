@@ -38,6 +38,7 @@
       "entry": "Created",
       "name": "Hall",
       "number": "0.02",
+      "phase": "New",
       "storey": "st-ground",
       "usage": "Circulation"
     }

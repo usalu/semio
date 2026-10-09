@@ -3,7 +3,7 @@
 
 use super::reader::{real, reals, text, Doc};
 use super::Import;
-use crate::{Building, Point2, Site, Storey};
+use crate::{Building, Phase, Point2, Site, Storey};
 use semio_s_artifact_stdio_ifc::part21::Part21Value;
 use std::collections::BTreeMap;
 
@@ -25,6 +25,21 @@ pub fn authoring_of(doc: &Doc<'_>, ifc: u64) -> BTreeMap<String, Part21Value> {
         }
     }
     found
+}
+
+/// 🕰️ The phase a `Semio_Authoring.Phase` row names; anything else, or no row, is new work.
+pub fn phase(name: &str) -> Phase {
+    match name {
+        "Existing" => Phase::Existing,
+        "Demolished" => Phase::Demolished,
+        "Temporary" => Phase::Temporary,
+        _ => Phase::New,
+    }
+}
+
+/// 🕰️ The construction phase an instance was exported with (`Semio_Authoring.Phase`); an instance without the row is new work.
+pub fn phase_of(doc: &Doc<'_>, ifc: u64) -> Phase {
+    phase(&super::data::label(&authoring_of(doc, ifc), "Phase").unwrap_or_default())
 }
 
 /// 🏷️ The `name → nominal value` rows of a property set's single-value properties.

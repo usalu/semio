@@ -23,6 +23,10 @@ pub(crate) const HANDLE_FLAG_INHERIT: u32 = 0x0000_0001;
 pub(crate) const INFINITE: u32 = 0xFFFF_FFFF;
 pub(crate) const INVALID_HANDLE_VALUE: HANDLE = -1isize as HANDLE;
 pub(crate) const KEY_EVENT: u16 = 0x0001;
+pub(crate) const VK_MENU: u16 = 0x0012;
+pub(crate) const VK_SPACE: u16 = 0x0020;
+pub(crate) const VK_2: u16 = 0x0032;
+pub(crate) const CONTROL_KEYS: u32 = 0x0004 | 0x0008;
 pub(crate) const WINDOW_BUFFER_SIZE_EVENT: u16 = 0x0004;
 pub(crate) const CTRL_BREAK_EVENT: u32 = 1;
 pub(crate) const CTRL_CLOSE_EVENT: u32 = 2;
@@ -362,3 +366,4 @@ impl Drop for ProcThreadAttributeList {
         }
     }
 }
+

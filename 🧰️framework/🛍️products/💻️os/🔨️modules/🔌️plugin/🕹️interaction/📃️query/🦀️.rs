@@ -2,7 +2,8 @@
 
 use super::capture::LocalInteractionCaptureCursor;
 use protocol::LocalInteractionIdentity;
-use store::{ArtifactStoreOneItemGrant, SnapshotRetirementStep};
+use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use store::ArtifactStoreOneItemGrant;
 
 //#region 📃️PageAuthority
 pub(crate) const LOCAL_INTERACTION_QUERY_PAGE_BYTES: usize = 256;
@@ -35,7 +36,8 @@ pub(crate) trait LocalInteractionQueryCapture {
     fn completed_bytes(&self) -> u64;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -58,7 +60,10 @@ impl LocalInteractionQueryCapture for LocalInteractionCaptureCursor {
     fn begin_close(&mut self) {
         self.begin_close();
     }
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        self.retirement_demands(body)
+    }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         self.close_step(grant)
     }
     fn terminal_is_empty(&self) -> bool {
@@ -131,7 +136,7 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         if self.closing {
             return Ok(LocalInteractionQueryStep::Closing);
         }
-        if grant.maximum_items == 0 || grant.maximum_bytes == 0 {
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 {
             return Ok(LocalInteractionQueryStep::Blocked);
         }
         if self.ready {
@@ -139,7 +144,7 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         }
         if self.retiring_page {
             if self.length != 0 {
-                let retired_bytes = self.retire_page(grant.maximum_bytes);
+                let retired_bytes = self.retire_page(grant.maximum_copy_bytes);
                 return Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: 0, retired_bytes });
             }
             let Some(ordinal) = self.token.ordinal.checked_add(1) else {
@@ -150,7 +155,7 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
             self.retiring_page = false;
             return Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: 0, retired_bytes: 0 });
         }
-        let maximum = grant.maximum_bytes.min(LOCAL_INTERACTION_QUERY_PAGE_BYTES);
+        let maximum = grant.maximum_copy_bytes.min(LOCAL_INTERACTION_QUERY_PAGE_BYTES);
         match self.capture.write_chunk(grant, &mut self.page[..maximum]) {
             Ok(count) => self.length = count,
             Err(error) => {
@@ -175,21 +180,39 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         self.capture.cancel();
     }
 
-    pub(crate) fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.length != 0 {
+            return Ok(RetirementDemand { copy_bytes: 1, depth: 1, ..Default::default() });
+        }
+        let mut demand = self.capture.retirement_demands(body)?;
+        demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "local interaction query depth overflow"))?;
+        Ok(demand)
+    }
+
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
-            return Ok(SnapshotRetirementStep::Complete);
+            return Ok(RetainedCloneStep::Complete(idle));
         }
         if !self.closing || grant.maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Blocked);
+            return Ok(RetainedCloneStep::Progress(idle));
+        }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "local interaction query close exceeds admitted depth"));
+        }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(idle));
         }
         if self.length != 0 {
-            if grant.maximum_bytes == 0 {
-                return Ok(SnapshotRetirementStep::Blocked);
-            }
-            let released_bytes = self.retire_page(grant.maximum_bytes);
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
+            let copied_bytes = self.retire_page(grant.maximum_copy_bytes);
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..idle }));
         }
-        self.capture.close_step(grant)
+        let step = self.capture.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
+        Ok(match step {
+            RetainedCloneStep::Complete(progress) if !self.terminal_is_empty() => RetainedCloneStep::Progress(progress),
+            step => step,
+        })
     }
 
     fn retire_page(&mut self, maximum_bytes: usize) -> usize {

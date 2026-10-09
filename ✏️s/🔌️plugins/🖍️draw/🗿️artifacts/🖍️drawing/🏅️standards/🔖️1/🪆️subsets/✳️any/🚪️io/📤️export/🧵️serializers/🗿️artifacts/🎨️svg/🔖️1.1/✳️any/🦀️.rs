@@ -173,3 +173,6 @@ pub fn drawing_document_to_svg(doc: &DrawingSnapshot) -> Result<(String,u32,u32)
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="🧵️write/🦀️.rs"]
+pub mod write;

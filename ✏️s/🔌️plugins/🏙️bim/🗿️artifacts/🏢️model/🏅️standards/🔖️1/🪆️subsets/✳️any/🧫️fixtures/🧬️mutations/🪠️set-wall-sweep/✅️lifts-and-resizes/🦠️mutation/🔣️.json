@@ -1,0 +1,11 @@
+{
+  "mutation": "setWallSweep",
+  "id": "ws-base",
+  "height": 0.05,
+  "profile": {
+    "Rectangle": {
+      "width": 0.03,
+      "depth": 0.12
+    }
+  }
+}

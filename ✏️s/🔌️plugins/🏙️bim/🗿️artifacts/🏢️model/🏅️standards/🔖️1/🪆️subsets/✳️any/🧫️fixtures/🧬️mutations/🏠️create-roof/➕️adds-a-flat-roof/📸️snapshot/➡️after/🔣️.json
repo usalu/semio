@@ -100,6 +100,7 @@
           }
         }
       ],
+      "phase": "New",
       "name": "Flat roof",
       "overhang": 0.0,
       "roof_type": "rt-tiles",

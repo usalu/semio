@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-text-note/schema.json",
+  "title": "DeleteTextNote",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 4096
+  },
+  "properties": {
+    "mutation": {
+      "const": "deleteTextNote"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Text note",
+          "de": "Textnotiz"
+        },
+        "ref": {
+          "kind": "text-note"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

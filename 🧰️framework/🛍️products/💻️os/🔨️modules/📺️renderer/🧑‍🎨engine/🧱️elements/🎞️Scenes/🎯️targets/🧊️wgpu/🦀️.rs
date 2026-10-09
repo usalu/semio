@@ -7237,8 +7237,7 @@ fn screen_points(points: &[[f64; 2]]) -> Vec<[f32; 2]> {
 /// 🖌️ The wgpu twin of `drawSceneNode` (`📐️Canvas2dHost/🎨️paint`): under the node `transform` and the camera, the path's
 /// fill (`evenodd` unless `nonzero`) and stroke (width, caps, joins, dash in layer units) from `canvas2d_paint`, then the
 /// text lines (`◻️2d` line law, sized with the map) and the `image.src` raster at the node origin. Approximations of this
-/// renderer, not of the geometry: group opacity is applied per piece, a rotated image or text keeps its axis-aligned box,
-/// a stroke is at least one pixel wide.
+/// renderer: group opacity is applied per piece and a stroke is at least one pixel wide.
 fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &CanvasLayer, viewport: &Viewport, inner: Rect, order: &mut CanvasPaintOrder, ctx: &mut FrameworkWidgetContext<'_>) {
     use crate::canvas2d_paint::{flatten, stroke_polygons, Affine, FillRule, LineCap, LineJoin, StrokeGeometry};
     let backdrop = ctx.theme.canvas_clear;
@@ -7263,21 +7262,24 @@ fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &CanvasLayer, v
     }
     if let Some(content) = layer.text.as_ref().and_then(|text| text.content.as_deref()).filter(|content| !content.is_empty()) {
         let size = layer.text.as_ref().and_then(|text| text.size).unwrap_or(14.0);
-        let pixels = (size * map.line_scale()) as f32;
+        let text_scale=map.line_scale();
+        let pixels = (size * text_scale) as f32;
         let paint = match &layer.fill {
             Some(fill) if matches!(fill.kind.as_deref(), Some("linearGradient" | "radialGradient")) && !fill.stops.is_empty() => Some(canvas_gradient_color_at(&fill.stops, 0.5, opacity)),
             Some(fill) if fill.color.is_some() => Some(scene_rgba(fill.color.as_deref(), opacity)),
             _ => stroke.map(|stroke| scene_rgba(stroke.color.as_deref(), opacity)),
         };
-        if let Some(color) = paint.filter(|_| pixels >= CANVAS_TEXT_MIN_PIXELS) {
+        if let Some(color) = paint.filter(|_| pixels.is_finite() && pixels >= CANVAS_TEXT_MIN_PIXELS && text_scale.is_finite() && text_scale > 0.0) {
             order.quad(ctx.draw);
             let color = canvas_apply_blend_mode(blend, backdrop, color);
+            let [a,b,c,d,e,f]=map.0;
+            let matrix=[(a/text_scale) as f32,(b/text_scale) as f32,(c/text_scale) as f32,(d/text_scale) as f32,e as f32,f as f32];
             for (index, line) in semio_framework_2d::text::drawing_text_lines(content).enumerate() {
                 if line.is_empty() {
                     continue;
                 }
-                let [x, y] = map.apply([layer.x, layer.y + size + index as f64 * size * semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT]);
-                draw_text(ctx, line, x as f32, y as f32, pixels, color);
+                let origin=((layer.x*text_scale) as f32,((layer.y+size+index as f64*size*semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT)*text_scale) as f32);
+                ui_wgpu::wgpu::widgets::draw_text_face_affine_on(ctx.draw,ctx.atlas,TextFace::Sans,line,origin,pixels,color,matrix);
             }
         }
     }
@@ -7286,10 +7288,8 @@ fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &CanvasLayer, v
             let image = layer.image.as_ref();
             let width = image.and_then(|image| image.width).or((layer.width != 0.0).then_some(layer.width)).unwrap_or(CANVAS_SCENE_IMAGE_EXTENT);
             let height = image.and_then(|image| image.height).or((layer.height != 0.0).then_some(layer.height)).unwrap_or(CANVAS_SCENE_IMAGE_EXTENT);
-            let corners = [[0.0, 0.0], [width, 0.0], [width, height], [0.0, height]].map(|corner| map.apply(corner));
-            let (left, right) = corners.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(low, high), corner| (low.min(corner[0]), high.max(corner[0])));
-            let (top, bottom) = corners.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(low, high), corner| (low.min(corner[1]), high.max(corner[1])));
-            ctx.draw.push_raster_quad(&key, [left as f32, top as f32, ((right - left) as f32).max(1.0), ((bottom - top) as f32).max(1.0)], [0.0, 0.0, 1.0, 1.0], opacity);
+            order.quad(ctx.draw);
+            ctx.draw.push_raster_quad_affine(&key,[0.0,0.0,width as f32,height as f32],[0.0,0.0,1.0,1.0],opacity,map.0.map(|value|value as f32));
         }
     }
 }

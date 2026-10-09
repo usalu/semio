@@ -158,6 +158,7 @@
         "shape": "Flat",
         "overhang": 0.5,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Flat"
       },
       "r-shed": {
@@ -201,6 +202,7 @@
         },
         "overhang": 0.0,
         "base_offset": 0.1,
+        "phase": "New",
         "name": "Shed"
       },
       "r-gable": {
@@ -244,6 +246,7 @@
         },
         "overhang": 0.5,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Gable"
       },
       "r-gable-rotated": {
@@ -259,22 +262,22 @@
           },
           {
             "point": {
-              "x": 6.0,
-              "y": 1.0
+              "x": 7.642691913005,
+              "y": 2.364161653291
             },
             "bulge": 0.0
           },
           {
             "point": {
-              "x": 7.0,
-              "y": 5.0
+              "x": 5.869570673037,
+              "y": 8.096180588044
             },
             "bulge": 0.0
           },
           {
             "point": {
-              "x": 1.0,
-              "y": 4.0
+              "x": -1.773121239968,
+              "y": 5.732018934754
             },
             "bulge": 0.0
           }
@@ -287,7 +290,8 @@
         },
         "overhang": 0.0,
         "base_offset": 0.0,
-        "name": "Gable on a skewed quad"
+        "phase": "New",
+        "name": "Gable on a rotated rectangle"
       },
       "r-hip": {
         "storey": "st-first",
@@ -329,6 +333,7 @@
         },
         "overhang": 0.0,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Hip"
       },
       "r-hip-overhang": {
@@ -371,6 +376,7 @@
         },
         "overhang": 0.4,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Hip with overhang"
       },
       "r-mansard": {
@@ -415,6 +421,7 @@
         },
         "overhang": 0.0,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Mansard"
       },
       "r-l-hip": {
@@ -471,7 +478,8 @@
         },
         "overhang": 0.0,
         "base_offset": 0.0,
-        "name": "Hip on an L footprint falls back"
+        "phase": "New",
+        "name": "Hip on an L footprint"
       },
       "r-curved-gable": {
         "storey": "st-first",
@@ -514,6 +522,7 @@
         },
         "overhang": 0.0,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Gable on a curved footprint falls back"
       },
       "r-curved-shed": {
@@ -557,6 +566,7 @@
         },
         "overhang": 0.0,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Shed over a curved footprint"
       },
       "r-bad-pitch": {
@@ -599,6 +609,7 @@
         },
         "overhang": 0.0,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Pitch beyond vertical falls back"
       },
       "r-unknown-type": {
@@ -637,7 +648,455 @@
         "shape": "Flat",
         "overhang": 0.0,
         "base_offset": 0.0,
+        "phase": "New",
         "name": "Unknown type"
+      },
+      "r-l-hip-overhang": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 6
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 6
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 0.5
+          }
+        },
+        "overhang": 0.4,
+        "base_offset": 0.0,
+        "phase": "New",
+        "name": "Hip on an L with overhang"
+      },
+      "r-t-hip": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 9,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 9,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 6,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 6,
+              "y": 7
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 3,
+              "y": 7
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 3,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 3
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 0.4
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "phase": "New",
+        "name": "Hip on a T footprint"
+      },
+      "r-u-hip": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 9,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 9,
+              "y": 6
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 6,
+              "y": 6
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 6,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 3,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 3,
+              "y": 6
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 6
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 0.5
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "phase": "New",
+        "name": "Hip on a U footprint"
+      },
+      "r-l-gable": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 6
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 6
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Gable": {
+            "pitch": 0.35,
+            "ridge_direction": 0.0
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "phase": "New",
+        "name": "Gable on an L becomes a hip"
+      },
+      "r-l-mansard": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 3
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 6
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 6
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Mansard": {
+            "lower_pitch": 1.1,
+            "upper_pitch": 0.3,
+            "break_height": 0.8
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "phase": "New",
+        "name": "Mansard on an L footprint"
+      },
+      "r-hip-zero-pitch": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 6
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 6
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 0.0
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "phase": "New",
+        "name": "Hip of pitch zero is flat"
+      },
+      "r-mansard-no-break": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8,
+              "y": 6
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 6
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Mansard": {
+            "lower_pitch": 1.1,
+            "upper_pitch": 0.3,
+            "break_height": 0.0
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "phase": "New",
+        "name": "Mansard without a break height"
+      },
+      "r-bowtie": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 5,
+              "y": 4
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 5,
+              "y": 0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 3
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 0.4
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "phase": "New",
+        "name": "Footprint crossing itself"
       }
     }
   },
@@ -704,30 +1163,32 @@
       "rise": 1.912058714453,
       "fallback": null,
       "eave_z": 5.8,
+      "slope_area": 71.788117421447,
       "ridge_length": 9.0,
       "ridge_length_tolerance": 1e-05
     },
     "r-gable-rotated": {
       "family": "Roof",
-      "volume": 2.3,
+      "volume": 4.8,
       "volume_tolerance": 1e-09,
       "min": [
-        0.0,
+        -1.773121239968,
         0.0,
         5.8
       ],
       "max": [
-        7.0,
-        5.0,
-        6.818224532264
+        7.642691913005,
+        8.096180588044,
+        7.168379656215
       ],
       "bounds_tolerance": 1e-09,
       "curved": false,
       "thickness": 0.1,
-      "rise": 0.918224532264,
+      "rise": 1.268379656215,
       "fallback": null,
       "eave_z": 5.8,
-      "ridge_length": 6.523294578876,
+      "slope_area": 52.113812562395,
+      "ridge_length": 8.0,
       "ridge_length_tolerance": 1e-05
     },
     "r-hip": {
@@ -750,6 +1211,7 @@
       "rise": 1.268379656214,
       "fallback": null,
       "eave_z": 5.8,
+      "slope_area": 52.113812562395,
       "ridge_length": 2.0,
       "ridge_length_tolerance": 1e-05
     },
@@ -773,6 +1235,7 @@
       "rise": 2.326065148362,
       "fallback": null,
       "eave_z": 5.8,
+      "slope_area": 72.503838340417,
       "ridge_length": 2.0,
       "ridge_length_tolerance": 1e-05
     },
@@ -809,14 +1272,15 @@
       "max": [
         8.0,
         6.0,
-        5.9
+        6.745586437476
       ],
       "bounds_tolerance": 1e-09,
       "curved": false,
       "thickness": 0.1,
-      "rise": 0.0,
-      "fallback": "roof.fallback-flat.non-convex-footprint",
-      "eave_z": 5.8
+      "rise": 0.845586437476,
+      "fallback": null,
+      "eave_z": 5.8,
+      "slope_area": 39.085359421797
     },
     "r-curved-gable": {
       "family": "Roof",
@@ -881,7 +1345,159 @@
       "fallback": "roof.fallback-flat.invalid-pitch",
       "eave_z": 5.8
     },
-    "r-unknown-type": null
+    "r-unknown-type": null,
+    "r-l-hip-overhang": {
+      "family": "Roof",
+      "volume": 4.784,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.4,
+        -0.4,
+        5.8
+      ],
+      "max": [
+        8.4,
+        6.4,
+        7.211125975625
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 1.311125975625,
+      "fallback": null,
+      "eave_z": 5.8,
+      "slope_area": 54.513389483206
+    },
+    "r-t-hip": {
+      "family": "Roof",
+      "volume": 3.9,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        9.0,
+        7.0,
+        6.534189828107
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 0.634189828107,
+      "fallback": null,
+      "eave_z": 5.8,
+      "slope_area": 42.342472706946
+    },
+    "r-u-hip": {
+      "family": "Roof",
+      "volume": 4.5,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        9.0,
+        6.0,
+        6.719453734766
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 0.819453734766,
+      "fallback": null,
+      "eave_z": 5.8,
+      "slope_area": 51.277226729605
+    },
+    "r-l-gable": {
+      "family": "Roof",
+      "volume": 3.6,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        8.0,
+        6.0,
+        6.630056989661
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 0.730056989661,
+      "fallback": "roof.gable-ends-adjust-to-hip",
+      "eave_z": 5.8,
+      "slope_area": 38.323446601806
+    },
+    "r-l-mansard": {
+      "family": "Roof",
+      "volume": 3.6,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        8.0,
+        6.0,
+        7.192718671343
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 1.292718671343,
+      "fallback": null,
+      "eave_z": 5.8
+    },
+    "r-hip-zero-pitch": {
+      "family": "Roof",
+      "volume": 4.8,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        8.0,
+        6.0,
+        5.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 0.0,
+      "fallback": null,
+      "eave_z": 5.8
+    },
+    "r-mansard-no-break": {
+      "family": "Roof",
+      "volume": 4.8,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        8.0,
+        6.0,
+        5.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 0.0,
+      "fallback": "roof.fallback-flat.invalid-pitch",
+      "eave_z": 5.8
+    },
+    "r-bowtie": null
   },
   "meshes": {}
 }

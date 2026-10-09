@@ -65,3 +65,39 @@ async fn dependency_covers_exactly_what_compute_reads() {
     after.storeys.get_mut("st-ground").expect("ground").height = 3.0;
     assert_eq!(read(&before), read(&after), "a rename must not invalidate the levels");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn a_height_edit_recomputes_the_storeys_above_and_nothing_else_and_a_material_edit_none() {
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use crate::{Entry, MaterialPatch, ModelDiff, StoreyPatch};
+    let snapshot = house();
+    let mut session = ModelInferenceSession::new();
+    let first = session.update(&snapshot, &ModelDiff::default()).storey_levels.clone();
+    let paint = ModelDiff::materials("m-brick", Entry::Patched(MaterialPatch { density: Some(1900.0), ..Default::default() }));
+    let untouched = session.update(&snapshot, &paint).storey_levels.clone();
+    assert_eq!(first, untouched);
+    assert_eq!(session.report().computed_by_kind.get("storey"), None, "a material edit recomputes no storey");
+    let height = ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { height: Some(3.4), ..Default::default() }));
+    let edited = protocol::apply_diff(&height, &snapshot).expect("applies");
+    let recomputed = session.update(&edited, &height).storey_levels.clone();
+    assert!(close(recomputed["st-first"].elevation - first["st-first"].elevation, 0.4) && close(recomputed["st-roof"].elevation - first["st-roof"].elevation, 0.4), "the storeys above are lifted");
+    assert_eq!(recomputed["st-basement"], first["st-basement"], "the storey below is untouched");
+    assert_eq!(recomputed["st-shed"], first["st-shed"], "another building is untouched");
+    assert_eq!(session.report().computed_by_kind.get("storey"), Some(&3), "the edited storey and the two above it, no other");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_levels_are_deterministic_and_empty_by_default() {
+    assert_eq!(compute_storey_levels(&house()), compute_storey_levels(&house()));
+    assert!(compute_storey_levels(&ModelSnapshot::default()).is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn one_top_resolver_serves_every_constraint() {
+    let own = StoreyLevel { elevation: 3.0, top_elevation: 6.0, absolute_elevation: 3.0, absolute_top_elevation: 6.0 };
+    let above = StoreyLevel { elevation: 6.0, top_elevation: 9.0, absolute_elevation: 6.0, absolute_top_elevation: 9.0 };
+    assert_eq!(vertical_of(0.1, &TopConstraint::Unconnected { height: 2.0 }, &own, None), (3.1, 5.1));
+    assert_eq!(vertical_of(0.0, &TopConstraint::StoreyTop { offset: -0.2 }, &own, None), (3.0, 5.8));
+    assert_eq!(vertical_of(0.0, &TopConstraint::Storey { storey: "x".into(), offset: 0.5 }, &own, Some(&above)), (3.0, 6.5));
+    assert_eq!(vertical_of(0.0, &TopConstraint::Storey { storey: "x".into(), offset: 0.5 }, &own, None), (3.0, 3.5), "a missing target falls back to the own storey");
+}

@@ -19,10 +19,16 @@ mod artifact_reserved_tool_job_tests {
 
         fn begin_close(&mut self) {}
 
-        fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+            if grant.maximum_items==0||grant.maximum_depth==0{return semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()};}
             self.terminal = true;
-            semio_framework_job::InteractiveJobCloseStep::Complete
+            semio_framework_job::InteractiveJobCloseStep::Complete{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}}
         }
+
+        fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+        fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+        fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+        fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(!self.terminal))}
 
         fn terminal_is_empty(&self) -> bool {
             self.terminal
@@ -47,7 +53,12 @@ mod artifact_reserved_tool_job_tests {
         let erased_dispatch_clone = retained.clone();
         drop(erased_dispatch_clone);
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-        assert!(matches!(retained.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), Ok(PluginCloseStep::Complete)));
+        assert!(matches!(retained.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), Ok(PluginCloseStep::Pending{..})));
+        assert!(!retained.terminal_is_empty());assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst),0);
+        assert!(matches!(retained.close_step(1,0),Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0})));
+        assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst),0);
+        assert!(matches!(retained.close_step(1,ARTIFACT_OUTPUT_CHUNK_BYTES),Ok(PluginCloseStep::Pending{released_items:1,..})));
+        assert!(matches!(retained.close_step(1,ARTIFACT_OUTPUT_CHUNK_BYTES),Ok(PluginCloseStep::Complete)));
         assert!(retained.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
     }

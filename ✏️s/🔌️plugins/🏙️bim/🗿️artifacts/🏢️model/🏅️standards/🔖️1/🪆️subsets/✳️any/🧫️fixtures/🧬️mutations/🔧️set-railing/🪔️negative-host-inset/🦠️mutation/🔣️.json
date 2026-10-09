@@ -1,0 +1,13 @@
+{
+  "mutation": "setRailing",
+  "id": "rl-1",
+  "path": [],
+  "host": {
+    "value": {
+      "element": "rp-host",
+      "side": "Left",
+      "edge": 0,
+      "inset": -0.1
+    }
+  }
+}

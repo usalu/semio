@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/align-elements/schema.json",
+  "title": "AlignElements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "ids",
+    "axis",
+    "edge",
+    "target"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "alignElements"
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Elements",
+          "de": "Elemente"
+        },
+        "description": {
+          "en": "Elements to act on; unknown ids refuse the whole call, openings are acted on with their host.",
+          "de": "Zu bearbeitende Elemente; unbekannte Ids verweigern den ganzen Aufruf, Öffnungen werden mit ihrem Host bearbeitet."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "axis": {
+      "type": "string",
+      "enum": [
+        "X",
+        "Y"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Coordinate",
+          "de": "Koordinate"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "edge": {
+      "type": "string",
+      "enum": [
+        "Min",
+        "Center",
+        "Max"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "target": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Target coordinate (m)",
+          "de": "Zielkoordinate (m)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    }
+  }
+}

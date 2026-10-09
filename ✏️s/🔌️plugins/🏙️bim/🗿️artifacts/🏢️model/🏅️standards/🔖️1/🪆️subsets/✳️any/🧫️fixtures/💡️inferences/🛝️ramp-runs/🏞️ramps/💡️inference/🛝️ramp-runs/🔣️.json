@@ -1,0 +1,600 @@
+{
+  "r-straight": {
+    "base_z": 0.0,
+    "top_z": 0.5,
+    "rise": 0.5,
+    "length": 10.0,
+    "run_length": 7.0,
+    "slope": 0.07142857142857142,
+    "angle": 0.07130746478529032,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 8.5,
+        "length": 7.0,
+        "z_from": 0.0,
+        "z_to": 0.5
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 8.5,
+        "to": 10.0,
+        "length": 1.5,
+        "z": 0.5
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-at-limit": {
+    "base_z": 0.0,
+    "top_z": 0.5833333333333334,
+    "rise": 0.5833333333333334,
+    "length": 10.0,
+    "run_length": 7.0,
+    "slope": 0.08333333333333334,
+    "angle": 0.08314123188844123,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 8.5,
+        "length": 7.0,
+        "z_from": 0.0,
+        "z_to": 0.5833333333333334
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 8.5,
+        "to": 10.0,
+        "length": 1.5,
+        "z": 0.5833333333333334
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-steep": {
+    "base_z": 0.0,
+    "top_z": 0.7,
+    "rise": 0.7,
+    "length": 10.0,
+    "run_length": 7.0,
+    "slope": 0.09999999999999999,
+    "angle": 0.09966865249116202,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 8.5,
+        "length": 7.0,
+        "z_from": 0.0,
+        "z_to": 0.7
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 8.5,
+        "to": 10.0,
+        "length": 1.5,
+        "z": 0.7
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": false,
+      "compliant": false
+    }
+  },
+  "r-bent": {
+    "base_z": 0.0,
+    "top_z": 0.6,
+    "rise": 0.6,
+    "length": 11.0,
+    "run_length": 6.5,
+    "slope": 0.0923076923076923,
+    "angle": 0.09204684886340674,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 5.25,
+        "length": 3.75,
+        "z_from": 0.0,
+        "z_to": 0.34615384615384615
+      },
+      {
+        "from": 6.75,
+        "to": 9.5,
+        "length": 2.75,
+        "z_from": 0.34615384615384615,
+        "z_to": 0.6
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 5.25,
+        "to": 6.75,
+        "length": 1.5,
+        "z": 0.34615384615384615
+      },
+      {
+        "from": 9.5,
+        "to": 11.0,
+        "length": 1.5,
+        "z": 0.6
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": false,
+      "compliant": false
+    }
+  },
+  "r-zigzag": {
+    "base_z": 0.0,
+    "top_z": 0.7,
+    "rise": 0.7,
+    "length": 15.0,
+    "run_length": 9.0,
+    "slope": 0.07777777777777778,
+    "angle": 0.07762150873739349,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 4.25,
+        "length": 2.75,
+        "z_from": 0.0,
+        "z_to": 0.21388888888888888
+      },
+      {
+        "from": 5.75,
+        "to": 9.25,
+        "length": 3.5,
+        "z_from": 0.21388888888888888,
+        "z_to": 0.4861111111111111
+      },
+      {
+        "from": 10.75,
+        "to": 13.5,
+        "length": 2.75,
+        "z_from": 0.4861111111111111,
+        "z_to": 0.7
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 4.25,
+        "to": 5.75,
+        "length": 1.5,
+        "z": 0.21388888888888888
+      },
+      {
+        "from": 9.25,
+        "to": 10.75,
+        "length": 1.5,
+        "z": 0.4861111111111111
+      },
+      {
+        "from": 13.5,
+        "to": 15.0,
+        "length": 1.5,
+        "z": 0.7
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-smooth-join": {
+    "base_z": 0.0,
+    "top_z": 0.4,
+    "rise": 0.4,
+    "length": 8.0,
+    "run_length": 5.0,
+    "slope": 0.08,
+    "angle": 0.07982998571223732,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 6.5,
+        "length": 5.0,
+        "z_from": 0.0,
+        "z_to": 0.4
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 6.5,
+        "to": 8.0,
+        "length": 1.5,
+        "z": 0.4
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-curved": {
+    "base_z": 0.0,
+    "top_z": 0.3,
+    "rise": 0.3,
+    "length": 7.853981633974482,
+    "run_length": 4.853981633974482,
+    "slope": 0.061804931007610225,
+    "angle": 0.06172641570099378,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 6.353981633974482,
+        "length": 4.853981633974482,
+        "z_from": 0.0,
+        "z_to": 0.3
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 6.353981633974482,
+        "to": 7.853981633974482,
+        "length": 1.5,
+        "z": 0.3
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-to-first": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "length": 40.0,
+    "run_length": 37.0,
+    "slope": 0.08108108108108109,
+    "angle": 0.0809040991552306,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 38.5,
+        "length": 37.0,
+        "z_from": 0.0,
+        "z_to": 3.0
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 38.5,
+        "to": 40.0,
+        "length": 1.5,
+        "z": 3.0
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-to-first-short": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "length": 10.0,
+    "run_length": 7.0,
+    "slope": 0.42857142857142855,
+    "angle": 0.4048917862850834,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 8.5,
+        "length": 7.0,
+        "z_from": 0.0,
+        "z_to": 3.0
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 8.5,
+        "to": 10.0,
+        "length": 1.5,
+        "z": 3.0
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": false,
+      "compliant": false
+    }
+  },
+  "r-storey-top": {
+    "base_z": 3.0,
+    "top_z": 5.8,
+    "rise": 2.8,
+    "length": 40.0,
+    "run_length": 37.0,
+    "slope": 0.07567567567567567,
+    "angle": 0.07553171001225414,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 38.5,
+        "length": 37.0,
+        "z_from": 3.0,
+        "z_to": 5.8
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 3.0
+      },
+      {
+        "from": 38.5,
+        "to": 40.0,
+        "length": 1.5,
+        "z": 5.8
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-down": {
+    "base_z": 0.5,
+    "top_z": 0.0,
+    "rise": -0.5,
+    "length": 10.0,
+    "run_length": 7.0,
+    "slope": 0.07142857142857142,
+    "angle": 0.07130746478529032,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 8.5,
+        "length": 7.0,
+        "z_from": 0.5,
+        "z_to": 0.0
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.5
+      },
+      {
+        "from": 8.5,
+        "to": 10.0,
+        "length": 1.5,
+        "z": 0.0
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-no-run": {
+    "base_z": 0.0,
+    "top_z": 0.3,
+    "rise": 0.3,
+    "length": 10.0,
+    "run_length": 0.0,
+    "slope": 0.0,
+    "angle": 0.0,
+    "width": 1.2,
+    "flights": [],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 10.0,
+        "length": 10.0,
+        "z": 0.0
+      }
+    ],
+    "compliance": {
+      "run_ok": false,
+      "slope_ok": false,
+      "compliant": false
+    }
+  },
+  "r-flat": {
+    "base_z": 0.0,
+    "top_z": 0.0,
+    "rise": 0.0,
+    "length": 10.0,
+    "run_length": 7.0,
+    "slope": 0.0,
+    "angle": 0.0,
+    "width": 1.2,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 8.5,
+        "length": 7.0,
+        "z_from": 0.0,
+        "z_to": 0.0
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 0.0
+      },
+      {
+        "from": 8.5,
+        "to": 10.0,
+        "length": 1.5,
+        "z": 0.0
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-merged": {
+    "base_z": 0.0,
+    "top_z": 0.0,
+    "rise": 0.0,
+    "length": 11.0,
+    "run_length": 0.0,
+    "slope": 0.0,
+    "angle": 0.0,
+    "width": 1.2,
+    "flights": [],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 11.0,
+        "length": 11.0,
+        "z": 0.0
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  },
+  "r-degenerate": {
+    "base_z": 0.0,
+    "top_z": 0.3,
+    "rise": 0.3,
+    "length": 0.0,
+    "run_length": 0.0,
+    "slope": 0.0,
+    "angle": 0.0,
+    "width": 1.2,
+    "flights": [],
+    "landings": [],
+    "compliance": {
+      "run_ok": false,
+      "slope_ok": false,
+      "compliant": false
+    }
+  },
+  "r-wide": {
+    "base_z": 3.0,
+    "top_z": 3.4,
+    "rise": 0.3999999999999999,
+    "length": 10.0,
+    "run_length": 7.0,
+    "slope": 0.05714285714285713,
+    "angle": 0.05708078240626459,
+    "width": 2.4,
+    "flights": [
+      {
+        "from": 1.5,
+        "to": 8.5,
+        "length": 7.0,
+        "z_from": 3.0,
+        "z_to": 3.4
+      }
+    ],
+    "landings": [
+      {
+        "from": 0.0,
+        "to": 1.5,
+        "length": 1.5,
+        "z": 3.0
+      },
+      {
+        "from": 8.5,
+        "to": 10.0,
+        "length": 1.5,
+        "z": 3.4
+      }
+    ],
+    "compliance": {
+      "run_ok": true,
+      "slope_ok": true,
+      "compliant": true
+    }
+  }
+}

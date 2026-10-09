@@ -53,6 +53,7 @@ fn paged_native_drawing_snapshot_retirement_keeps_original_variants_and_exact_gr
     let layer = snapshot.layers[0].clone();
     let owners = vec![
         DrawingRetirementOwner::Snapshot(snapshot),
+        DrawingRetirementOwner::Asset(DrawingImageAsset{width:1,height:1,samples:vec![[13,27,89,255]].into()}),
         DrawingRetirementOwner::Mutation(DrawingMutation::RenameLayer(RenameLayer { layer_id: "native-owner".into(), new_name: "Grüße\0🧬".into() })),
         DrawingRetirementOwner::Layer(layer),
         DrawingRetirementOwner::Fill(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![GradientStop { offset: 0.5, color: [0.1, 0.2, 0.3, 1.0] }].into() }),
@@ -1111,7 +1112,7 @@ fn retained_drawing_mutation_candidate_covers_all_variants_and_returns_exact_own
             fill: Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }].into() }),
         }),
         DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: shape.clone(), stroke: Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0, 2.0].into()) }) }),
-        DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: boolean, boolean_operation: "subtract".into() }),
+        DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: boolean, boolean_operation: "difference".into() }),
         DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: trace, params: crate::DrawingTraceParams { threshold: 0.4, simplify_epsilon: 1.2 } }),
         DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group.clone()), index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Created", vec![PathSegment::Move { to: [0.0, 0.0] }].into())) }),
         DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: shape.clone() }),
@@ -1123,6 +1124,16 @@ fn retained_drawing_mutation_candidate_covers_all_variants_and_returns_exact_own
         drain_snapshot(value);
     }
     drain_snapshot(source);
+}
+#[test]
+fn retained_image_asset_mutations_replay_sparse_delta_and_reference_refusal(){
+    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    let mutation=crate::mutations::import_image_asset("bitmap".into(),after.assets.get("bitmap").unwrap().clone());let imported=apply(before.clone(),&mutation).unwrap();assert_eq!(imported,after);drain_mutation(mutation);
+    let removal=crate::mutations::remove_image_asset("bitmap".into());let restored=apply(imported,&removal).unwrap();assert_eq!(restored,before);drain_snapshot(restored);
+    let mut referenced=after.clone();let mut image=crate::schema::create_drawing_image_layer("Image","bitmap");crate::schema::layer_base_mut(&mut image).id="image".into();referenced.layers.push(image);let expected=referenced.clone();let (rejected,error)=apply(referenced,&removal).unwrap_err();assert_eq!(error,"drawing-store.asset-still-referenced");assert_eq!(rejected,expected);drain_snapshot(rejected);
+    let mut referenced=after.clone();let mut trace=crate::schema::create_drawing_trace_layer("Trace","bitmap");crate::schema::layer_base_mut(&mut trace).id="trace".into();referenced.layers.push(trace);let expected=referenced.clone();let (rejected,error)=apply(referenced,&removal).unwrap_err();assert_eq!(error,"drawing-store.asset-still-referenced");assert_eq!(rejected,expected);drain_snapshot(rejected);drain_mutation(removal);drain_snapshot(before);drain_snapshot(after);
+    eprintln!("[DEBUG] Retained native image asset import/remove exact neutral delta and unchanged image/trace reference refusals");
 }
 
 #[test]
@@ -1827,7 +1838,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
     let mut value = baseline.clone();
     if let DrawingLayerNode::Group(group) = &mut value {
         if let DrawingLayerNode::Boolean(boolean) = &mut group.children[4] {
-            boolean.operation = "subtract".into();
+            boolean.operation = "difference".into();
             boolean.children.swap(0, 1);
         }
     }
@@ -1855,7 +1866,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
         DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: id.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0, shear: 0.0 } }),
         DrawingMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id: id.clone(), fill: Some(FillStyle::Solid { color: [0.1, 0.2, 0.3, 0.4] }) }),
         DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: id.clone(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0].into()) }) }),
-        DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: id.clone(), boolean_operation: "intersect".into() }),
+        DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: id.clone(), boolean_operation: "intersection".into() }),
         DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: id.clone(), params: crate::DrawingTraceParams { threshold: 0.25, simplify_epsilon: 0.5 } }),
         DrawingMutation::CreateLayer(CreateLayer { parent_id: Some("parent".into()), index: Some(2), layer: Box::new(baseline.clone()) }),
         DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: id.clone() }),
@@ -1902,7 +1913,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
     );
     assert_mutation_digest_distinct(
         DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: "layer".into(), boolean_operation: "union".into() }),
-        DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: "layer".into(), boolean_operation: "subtract".into() }),
+        DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: "layer".into(), boolean_operation: "difference".into() }),
     );
     assert_mutation_digest_distinct(
         DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: "layer".into(), params: crate::DrawingTraceParams { threshold: 0.25, simplify_epsilon: 0.5 } }),
@@ -2351,4 +2362,23 @@ fn retained_blend_mutations_validate_vocabulary_and_return_unchanged_rejections(
         }
         drain_snapshot(source);drain_mutation(operation);
     }
+}
+
+#[test]
+fn retained_authored_shape_and_image_facets_match_sparse_diffs_and_digest_all_arguments() {
+    use crate::schema::shape_geometry::ShapeCoordinateField;
+    let shape=crate::schema::create_drawing_shape_layer_rect("Shape");let id=crate::schema::layer_id(&shape).clone();
+    let before=DrawingSnapshot{layers:vec![shape].into(),..Default::default()};
+    let value=apply(before,&crate::mutations::set_shape_coordinate(id,ShapeCoordinateField::RectWidth,None,64.0)).unwrap();
+    let DrawingLayerNode::Shape(shape)=&value.layers[0] else{panic!()};assert_eq!(shape.rect.as_ref().unwrap().width,64.0);drain_snapshot(value);
+    let image=crate::schema::create_drawing_image_layer("Image","before");let id=crate::schema::layer_id(&image).clone();
+    let before=DrawingSnapshot{layers:vec![image].into(),..Default::default()};
+    let value=apply(before,&crate::mutations::update_image(id,"after".into(),64.0,32.0)).unwrap();
+    let DrawingLayerNode::Image(image)=&value.layers[0] else{panic!()};assert_eq!(image.image_key,"after");assert_eq!((image.width,image.height),(64.0,32.0));drain_snapshot(value);
+    assert_mutation_digest_distinct(crate::mutations::update_image("image".into(),"before".into(),64.0,32.0),crate::mutations::update_image("image".into(),"after".into(),64.0,32.0));
+    assert_mutation_digest_distinct(crate::mutations::update_image("image".into(),"key".into(),64.0,32.0),crate::mutations::update_image("image".into(),"key".into(),65.0,32.0));
+    assert_mutation_digest_distinct(crate::mutations::update_image("image".into(),"key".into(),64.0,32.0),crate::mutations::update_image("image".into(),"key".into(),64.0,33.0));
+    assert_mutation_digest_distinct(crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::RectX,None,1.0),crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::RectY,None,1.0));
+    assert_mutation_digest_distinct(crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::PolygonX,Some(1),1.0),crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::PolygonX,Some(2),1.0));
+    assert_mutation_digest_distinct(crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::RectX,None,1.0),crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::RectX,None,2.0));
 }

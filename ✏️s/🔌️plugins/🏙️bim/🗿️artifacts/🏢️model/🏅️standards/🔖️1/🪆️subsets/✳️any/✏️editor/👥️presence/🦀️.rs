@@ -1,11 +1,11 @@
 //! 👥️ BIM presence: the shareable live state of one author, ephemeral and shared. Selection and hover travel through the framework's typed `PresencePeer.interaction`
-//! broadcast; this facet carries only what is BIM specific: the storey the author works on, the plan camera and the rename input.
+//! broadcast; this facet carries only what is BIM specific: the storey the author works on, the plan camera and the line the author is typing into a window's entry field.
 
 use protocol::Mutation;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live subset of an author's view: working storey, plan camera, rename input.
+/// 👥️ Shareable live subset of an author's view: working storey, plan camera, the line being typed into a window's entry field.
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "bim.presence")]
@@ -215,6 +215,11 @@ impl BimPresence {
     /// 👥️ The presence of an author working on `storey`, keeping the rest of the record.
     pub fn on_storey(&self, storey: &str) -> BimPresenceMutation {
         BimPresenceMutation::Set { engagement_input: self.engagement_input.clone(), storey: storey.to_string(), camera: self.camera }
+    }
+
+    /// 👥️ The presence of an author typing `input` into a window entry field, keeping the rest of the record.
+    pub fn typing(&self, input: &str) -> BimPresenceMutation {
+        BimPresenceMutation::Set { engagement_input: input.to_string(), storey: self.storey.clone(), camera: self.camera }
     }
 
     /// 👥️ The presence of an author looking through `camera`, keeping the rest of the record.

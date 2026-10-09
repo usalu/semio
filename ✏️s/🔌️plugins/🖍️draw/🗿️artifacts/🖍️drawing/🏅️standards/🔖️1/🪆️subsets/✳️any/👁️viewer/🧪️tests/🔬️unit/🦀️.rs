@@ -32,7 +32,7 @@ async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
         editor.dispatch_typed(DrawingCommand::AddLayer(AddLayer { kind: fixture["kind"].as_str().unwrap().into() }), &meta).await.map_err(|error| format!("{error:?}"))?;
         laws::settle_registered_typed_operation(&mut *editor, meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
         let created_id = crate::schema::layer_id(editor.snapshot().map_err(|error| format!("{error:?}"))?.layers.last().ok_or("created rectangle is missing")?).to_string();
-        editor.dispatch_typed(DrawingCommand::PatchLayers(crate::editor::drawing::commands::patch_layers::PatchLayers { layer_ids: vec![created_id.clone()], field: "name".into(), value: fixture["after"].as_str().unwrap().into() }), &meta).await.map_err(|error| format!("{error:?}"))?;
+        editor.dispatch_typed(DrawingCommand::PatchLayers(crate::editor::drawing::commands::patch_layers::PatchLayers { index:None, layer_ids: vec![created_id.clone()], field: "name".into(), value: fixture["after"].as_str().unwrap().into() }), &meta).await.map_err(|error| format!("{error:?}"))?;
         laws::settle_registered_typed_operation(&mut *editor, meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
         let expected = editor.document_archive().await.map_err(|error| format!("{error:?}"))?;
         restore_archive(&mut *viewer, 91, expected.clone()).await?;

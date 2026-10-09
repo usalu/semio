@@ -1,0 +1,273 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {
+    "stt-22": {
+      "name": "Slab 220",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.22,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "roof_types": {},
+  "column_types": {
+    "ct-1": {
+      "name": "Column 300",
+      "profile": {
+        "Rectangle": {
+          "width": 0.3,
+          "depth": 0.3
+        }
+      },
+      "material": "m-brick"
+    }
+  },
+  "beam_types": {},
+  "window_types": {
+    "win-1": {
+      "name": "Window",
+      "width": 1.2,
+      "height": 1.2,
+      "sill": 0.9,
+      "frame_width": 0.05,
+      "frame_depth": 0.1,
+      "panes": 2,
+      "material": "m-brick"
+    }
+  },
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {
+    "c-1": {
+      "storey": "st-ground",
+      "column_type": "ct-1",
+      "position": {
+        "x": 1,
+        "y": 1
+      },
+      "rotation": 0,
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Column"
+    }
+  },
+  "beams": {},
+  "slabs": {
+    "sl-1": {
+      "storey": "st-ground",
+      "slab_type": "stt-22",
+      "boundary": [
+        {
+          "point": {
+            "x": 0,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 6
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0,
+            "y": 6
+          },
+          "bulge": 0
+        }
+      ],
+      "holes": [],
+      "offset": 0,
+      "phase": "New",
+      "name": "Slab"
+    }
+  },
+  "roofs": {},
+  "openings": {
+    "op-1": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "offset": 2,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Window 1"
+    },
+    "op-2": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "offset": 5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Window 2"
+    }
+  },
+  "stairs": {},
+  "railings": {},
+  "spaces": {
+    "sp-1": {
+      "storey": "st-ground",
+      "number": "1",
+      "name": "Hall",
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 2,
+            "y": 2
+          }
+        }
+      },
+      "usage": "",
+      "phase": "New"
+    }
+  },
+  "properties": {},
+  "classifications": {}
+}

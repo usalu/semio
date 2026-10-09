@@ -1,0 +1,9 @@
+{
+  "mutation": "setRamp",
+  "id": "rp-1",
+  "top": {
+    "Unconnected": {
+      "height": 1.2
+    }
+  }
+}

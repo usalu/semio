@@ -1,0 +1,12 @@
+{
+  "mutation": "createAreaScheme",
+  "id": "as-gfa",
+  "area_scheme": {
+    "name": "Gross floor area",
+    "measure": "Gross",
+    "usages": [],
+    "zones": [
+      "z-attic"
+    ]
+  }
+}

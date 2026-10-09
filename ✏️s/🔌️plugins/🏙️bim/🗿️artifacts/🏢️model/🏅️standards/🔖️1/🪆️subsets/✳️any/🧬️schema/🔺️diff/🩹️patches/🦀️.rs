@@ -2,6 +2,846 @@
 
 use super::*;
 
+/// 🩹 Sparse patch of [`PropertyTemplate`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct PropertyTemplatePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub applies_to: Option<Vec<TemplateTarget>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub properties: Option<Vec<PropertyDef>>,
+}
+
+impl Patch<PropertyTemplate> for PropertyTemplatePatch {
+    fn write(&self, base: &PropertyTemplate) -> PropertyTemplate {
+        PropertyTemplate { name: take(&self.name, &base.name), applies_to: take(&self.applies_to, &base.applies_to), properties: take(&self.properties, &base.properties) }
+    }
+    fn restoring(&self, base: &PropertyTemplate) -> Self {
+        Self { name: restore(&self.name, &base.name), applies_to: restore(&self.applies_to, &base.applies_to), properties: restore(&self.properties, &base.properties) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.applies_to, later.applies_to);
+        merge_slot!(&mut self.properties, later.properties);
+    }
+    fn minimal(&self, base: &PropertyTemplate) -> Self {
+        Self { name: changed(&self.name, &base.name), applies_to: changed(&self.applies_to, &base.applies_to), properties: changed(&self.properties, &base.properties) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.applies_to.is_some() {
+            out.push("applies_to".to_string());
+        }
+        if self.properties.is_some() {
+            out.push("properties".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`ClassificationSystem`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct ClassificationSystemPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub edition: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub source: Option<Assigned<Option<String>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub entries: Option<Vec<ClassificationItem>>,
+}
+
+impl Patch<ClassificationSystem> for ClassificationSystemPatch {
+    fn write(&self, base: &ClassificationSystem) -> ClassificationSystem {
+        ClassificationSystem { name: take(&self.name, &base.name), edition: take(&self.edition, &base.edition), source: take_assigned(&self.source, &base.source), entries: take(&self.entries, &base.entries) }
+    }
+    fn restoring(&self, base: &ClassificationSystem) -> Self {
+        Self { name: restore(&self.name, &base.name), edition: restore(&self.edition, &base.edition), source: restore_assigned(&self.source, &base.source), entries: restore(&self.entries, &base.entries) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.edition, later.edition);
+        merge_slot!(&mut self.source, later.source);
+        merge_slot!(&mut self.entries, later.entries);
+    }
+    fn minimal(&self, base: &ClassificationSystem) -> Self {
+        Self { name: changed(&self.name, &base.name), edition: changed(&self.edition, &base.edition), source: changed_assigned(&self.source, &base.source), entries: changed(&self.entries, &base.entries) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.edition.is_some() {
+            out.push("edition".to_string());
+        }
+        if self.source.is_some() {
+            out.push("source".to_string());
+        }
+        if self.entries.is_some() {
+            out.push("entries".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Dimension`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct DimensionPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub anchors: Option<Vec<AnnotationAnchor>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub angle: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub style: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub lock: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+impl Patch<Dimension> for DimensionPatch {
+    fn write(&self, base: &Dimension) -> Dimension {
+        Dimension { storey: take(&self.storey, &base.storey), anchors: take(&self.anchors, &base.anchors), angle: take(&self.angle, &base.angle), offset: take(&self.offset, &base.offset), style: take(&self.style, &base.style), lock: take_assigned(&self.lock, &base.lock), name: take(&self.name, &base.name) }
+    }
+    fn restoring(&self, base: &Dimension) -> Self {
+        Self { storey: restore(&self.storey, &base.storey), anchors: restore(&self.anchors, &base.anchors), angle: restore(&self.angle, &base.angle), offset: restore(&self.offset, &base.offset), style: restore(&self.style, &base.style), lock: restore_assigned(&self.lock, &base.lock), name: restore(&self.name, &base.name) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.anchors, later.anchors);
+        merge_slot!(&mut self.angle, later.angle);
+        merge_slot!(&mut self.offset, later.offset);
+        merge_slot!(&mut self.style, later.style);
+        merge_slot!(&mut self.lock, later.lock);
+        merge_slot!(&mut self.name, later.name);
+    }
+    fn minimal(&self, base: &Dimension) -> Self {
+        Self { storey: changed(&self.storey, &base.storey), anchors: changed(&self.anchors, &base.anchors), angle: changed(&self.angle, &base.angle), offset: changed(&self.offset, &base.offset), style: changed(&self.style, &base.style), lock: changed_assigned(&self.lock, &base.lock), name: changed(&self.name, &base.name) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.anchors.is_some() {
+            out.push("anchors".to_string());
+        }
+        if self.angle.is_some() {
+            out.push("angle".to_string());
+        }
+        if self.offset.is_some() {
+            out.push("offset".to_string());
+        }
+        if self.style.is_some() {
+            out.push("style".to_string());
+        }
+        if self.lock.is_some() {
+            out.push("lock".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Tag`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct TagPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub element: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub category: Option<TagCategory>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<Point2>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub style: Option<String>,
+}
+
+impl Patch<Tag> for TagPatch {
+    fn write(&self, base: &Tag) -> Tag {
+        Tag { storey: take(&self.storey, &base.storey), element: take(&self.element, &base.element), category: take(&self.category, &base.category), offset: take(&self.offset, &base.offset), style: take(&self.style, &base.style) }
+    }
+    fn restoring(&self, base: &Tag) -> Self {
+        Self { storey: restore(&self.storey, &base.storey), element: restore(&self.element, &base.element), category: restore(&self.category, &base.category), offset: restore(&self.offset, &base.offset), style: restore(&self.style, &base.style) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.element, later.element);
+        merge_slot!(&mut self.category, later.category);
+        merge_slot!(&mut self.offset, later.offset);
+        merge_slot!(&mut self.style, later.style);
+    }
+    fn minimal(&self, base: &Tag) -> Self {
+        Self { storey: changed(&self.storey, &base.storey), element: changed(&self.element, &base.element), category: changed(&self.category, &base.category), offset: changed(&self.offset, &base.offset), style: changed(&self.style, &base.style) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.element.is_some() {
+            out.push("element".to_string());
+        }
+        if self.category.is_some() {
+            out.push("category".to_string());
+        }
+        if self.offset.is_some() {
+            out.push("offset".to_string());
+        }
+        if self.style.is_some() {
+            out.push("style".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`TextNote`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct TextNotePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub position: Option<Point2>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub style: Option<String>,
+}
+
+impl Patch<TextNote> for TextNotePatch {
+    fn write(&self, base: &TextNote) -> TextNote {
+        TextNote { storey: take(&self.storey, &base.storey), position: take(&self.position, &base.position), text: take(&self.text, &base.text), rotation: take(&self.rotation, &base.rotation), style: take(&self.style, &base.style) }
+    }
+    fn restoring(&self, base: &TextNote) -> Self {
+        Self { storey: restore(&self.storey, &base.storey), position: restore(&self.position, &base.position), text: restore(&self.text, &base.text), rotation: restore(&self.rotation, &base.rotation), style: restore(&self.style, &base.style) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.position, later.position);
+        merge_slot!(&mut self.text, later.text);
+        merge_slot!(&mut self.rotation, later.rotation);
+        merge_slot!(&mut self.style, later.style);
+    }
+    fn minimal(&self, base: &TextNote) -> Self {
+        Self { storey: changed(&self.storey, &base.storey), position: changed(&self.position, &base.position), text: changed(&self.text, &base.text), rotation: changed(&self.rotation, &base.rotation), style: changed(&self.style, &base.style) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.position.is_some() {
+            out.push("position".to_string());
+        }
+        if self.text.is_some() {
+            out.push("text".to_string());
+        }
+        if self.rotation.is_some() {
+            out.push("rotation".to_string());
+        }
+        if self.style.is_some() {
+            out.push("style".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Leader`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct LeaderPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub anchor: Option<AnnotationAnchor>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<Point2>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub style: Option<String>,
+}
+
+impl Patch<Leader> for LeaderPatch {
+    fn write(&self, base: &Leader) -> Leader {
+        Leader { storey: take(&self.storey, &base.storey), anchor: take(&self.anchor, &base.anchor), offset: take(&self.offset, &base.offset), text: take(&self.text, &base.text), style: take(&self.style, &base.style) }
+    }
+    fn restoring(&self, base: &Leader) -> Self {
+        Self { storey: restore(&self.storey, &base.storey), anchor: restore(&self.anchor, &base.anchor), offset: restore(&self.offset, &base.offset), text: restore(&self.text, &base.text), style: restore(&self.style, &base.style) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.anchor, later.anchor);
+        merge_slot!(&mut self.offset, later.offset);
+        merge_slot!(&mut self.text, later.text);
+        merge_slot!(&mut self.style, later.style);
+    }
+    fn minimal(&self, base: &Leader) -> Self {
+        Self { storey: changed(&self.storey, &base.storey), anchor: changed(&self.anchor, &base.anchor), offset: changed(&self.offset, &base.offset), text: changed(&self.text, &base.text), style: changed(&self.style, &base.style) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.anchor.is_some() {
+            out.push("anchor".to_string());
+        }
+        if self.offset.is_some() {
+            out.push("offset".to_string());
+        }
+        if self.text.is_some() {
+            out.push("text".to_string());
+        }
+        if self.style.is_some() {
+            out.push("style".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`AnnotationStyle`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct AnnotationStylePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub text_height: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub terminator: Option<Terminator>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<DimensionUnit>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub precision: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub mark_size: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub gap: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub overshoot: Option<f64>,
+}
+
+impl Patch<AnnotationStyle> for AnnotationStylePatch {
+    fn write(&self, base: &AnnotationStyle) -> AnnotationStyle {
+        AnnotationStyle { name: take(&self.name, &base.name), text_height: take(&self.text_height, &base.text_height), terminator: take(&self.terminator, &base.terminator), unit: take(&self.unit, &base.unit), precision: take(&self.precision, &base.precision), mark_size: take(&self.mark_size, &base.mark_size), gap: take(&self.gap, &base.gap), overshoot: take(&self.overshoot, &base.overshoot) }
+    }
+    fn restoring(&self, base: &AnnotationStyle) -> Self {
+        Self { name: restore(&self.name, &base.name), text_height: restore(&self.text_height, &base.text_height), terminator: restore(&self.terminator, &base.terminator), unit: restore(&self.unit, &base.unit), precision: restore(&self.precision, &base.precision), mark_size: restore(&self.mark_size, &base.mark_size), gap: restore(&self.gap, &base.gap), overshoot: restore(&self.overshoot, &base.overshoot) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.text_height, later.text_height);
+        merge_slot!(&mut self.terminator, later.terminator);
+        merge_slot!(&mut self.unit, later.unit);
+        merge_slot!(&mut self.precision, later.precision);
+        merge_slot!(&mut self.mark_size, later.mark_size);
+        merge_slot!(&mut self.gap, later.gap);
+        merge_slot!(&mut self.overshoot, later.overshoot);
+    }
+    fn minimal(&self, base: &AnnotationStyle) -> Self {
+        Self { name: changed(&self.name, &base.name), text_height: changed(&self.text_height, &base.text_height), terminator: changed(&self.terminator, &base.terminator), unit: changed(&self.unit, &base.unit), precision: changed(&self.precision, &base.precision), mark_size: changed(&self.mark_size, &base.mark_size), gap: changed(&self.gap, &base.gap), overshoot: changed(&self.overshoot, &base.overshoot) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.text_height.is_some() {
+            out.push("text_height".to_string());
+        }
+        if self.terminator.is_some() {
+            out.push("terminator".to_string());
+        }
+        if self.unit.is_some() {
+            out.push("unit".to_string());
+        }
+        if self.precision.is_some() {
+            out.push("precision".to_string());
+        }
+        if self.mark_size.is_some() {
+            out.push("mark_size".to_string());
+        }
+        if self.gap.is_some() {
+            out.push("gap".to_string());
+        }
+        if self.overshoot.is_some() {
+            out.push("overshoot".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Family`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct FamilyPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub category: Option<FamilyCategory>,
+}
+
+impl Patch<Family> for FamilyPatch {
+    fn write(&self, base: &Family) -> Family {
+        Family { name: take(&self.name, &base.name), category: take(&self.category, &base.category) }
+    }
+    fn restoring(&self, base: &Family) -> Self {
+        Self { name: restore(&self.name, &base.name), category: restore(&self.category, &base.category) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.category, later.category);
+    }
+    fn minimal(&self, base: &Family) -> Self {
+        Self { name: changed(&self.name, &base.name), category: changed(&self.category, &base.category) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.category.is_some() {
+            out.push("category".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`FamilyParameter`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct FamilyParameterPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub family: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<ParameterKind>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
+}
+
+impl Patch<FamilyParameter> for FamilyParameterPatch {
+    fn write(&self, base: &FamilyParameter) -> FamilyParameter {
+        FamilyParameter { family: take(&self.family, &base.family), name: take(&self.name, &base.name), kind: take(&self.kind, &base.kind), value: take(&self.value, &base.value) }
+    }
+    fn restoring(&self, base: &FamilyParameter) -> Self {
+        Self { family: restore(&self.family, &base.family), name: restore(&self.name, &base.name), kind: restore(&self.kind, &base.kind), value: restore(&self.value, &base.value) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.family, later.family);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.kind, later.kind);
+        merge_slot!(&mut self.value, later.value);
+    }
+    fn minimal(&self, base: &FamilyParameter) -> Self {
+        Self { family: changed(&self.family, &base.family), name: changed(&self.name, &base.name), kind: changed(&self.kind, &base.kind), value: changed(&self.value, &base.value) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.family.is_some() {
+            out.push("family".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.kind.is_some() {
+            out.push("kind".to_string());
+        }
+        if self.value.is_some() {
+            out.push("value".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`FamilySolid`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct FamilySolidPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub family: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub shape: Option<SolidShape>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub material: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub visible: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<ExprPoint3>,
+}
+
+impl Patch<FamilySolid> for FamilySolidPatch {
+    fn write(&self, base: &FamilySolid) -> FamilySolid {
+        FamilySolid { family: take(&self.family, &base.family), name: take(&self.name, &base.name), shape: take(&self.shape, &base.shape), material: take(&self.material, &base.material), visible: take(&self.visible, &base.visible), offset: take(&self.offset, &base.offset) }
+    }
+    fn restoring(&self, base: &FamilySolid) -> Self {
+        Self { family: restore(&self.family, &base.family), name: restore(&self.name, &base.name), shape: restore(&self.shape, &base.shape), material: restore(&self.material, &base.material), visible: restore(&self.visible, &base.visible), offset: restore(&self.offset, &base.offset) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.family, later.family);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.shape, later.shape);
+        merge_slot!(&mut self.material, later.material);
+        merge_slot!(&mut self.visible, later.visible);
+        merge_slot!(&mut self.offset, later.offset);
+    }
+    fn minimal(&self, base: &FamilySolid) -> Self {
+        Self { family: changed(&self.family, &base.family), name: changed(&self.name, &base.name), shape: changed(&self.shape, &base.shape), material: changed(&self.material, &base.material), visible: changed(&self.visible, &base.visible), offset: changed(&self.offset, &base.offset) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.family.is_some() {
+            out.push("family".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.shape.is_some() {
+            out.push("shape".to_string());
+        }
+        if self.material.is_some() {
+            out.push("material".to_string());
+        }
+        if self.visible.is_some() {
+            out.push("visible".to_string());
+        }
+        if self.offset.is_some() {
+            out.push("offset".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Sheet`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct SheetPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub number: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub paper: Option<Paper>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub orientation: Option<Orientation>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub project: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub drawn_by: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub checked_by: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub date: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub revision: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub scale_label: Option<String>,
+}
+
+impl Patch<Sheet> for SheetPatch {
+    fn write(&self, base: &Sheet) -> Sheet {
+        Sheet { number: take(&self.number, &base.number), name: take(&self.name, &base.name), paper: take(&self.paper, &base.paper), orientation: take(&self.orientation, &base.orientation), project: take(&self.project, &base.project), drawn_by: take(&self.drawn_by, &base.drawn_by), checked_by: take(&self.checked_by, &base.checked_by), date: take(&self.date, &base.date), revision: take(&self.revision, &base.revision), scale_label: take(&self.scale_label, &base.scale_label) }
+    }
+    fn restoring(&self, base: &Sheet) -> Self {
+        Self { number: restore(&self.number, &base.number), name: restore(&self.name, &base.name), paper: restore(&self.paper, &base.paper), orientation: restore(&self.orientation, &base.orientation), project: restore(&self.project, &base.project), drawn_by: restore(&self.drawn_by, &base.drawn_by), checked_by: restore(&self.checked_by, &base.checked_by), date: restore(&self.date, &base.date), revision: restore(&self.revision, &base.revision), scale_label: restore(&self.scale_label, &base.scale_label) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.number, later.number);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.paper, later.paper);
+        merge_slot!(&mut self.orientation, later.orientation);
+        merge_slot!(&mut self.project, later.project);
+        merge_slot!(&mut self.drawn_by, later.drawn_by);
+        merge_slot!(&mut self.checked_by, later.checked_by);
+        merge_slot!(&mut self.date, later.date);
+        merge_slot!(&mut self.revision, later.revision);
+        merge_slot!(&mut self.scale_label, later.scale_label);
+    }
+    fn minimal(&self, base: &Sheet) -> Self {
+        Self { number: changed(&self.number, &base.number), name: changed(&self.name, &base.name), paper: changed(&self.paper, &base.paper), orientation: changed(&self.orientation, &base.orientation), project: changed(&self.project, &base.project), drawn_by: changed(&self.drawn_by, &base.drawn_by), checked_by: changed(&self.checked_by, &base.checked_by), date: changed(&self.date, &base.date), revision: changed(&self.revision, &base.revision), scale_label: changed(&self.scale_label, &base.scale_label) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.number.is_some() {
+            out.push("number".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.paper.is_some() {
+            out.push("paper".to_string());
+        }
+        if self.orientation.is_some() {
+            out.push("orientation".to_string());
+        }
+        if self.project.is_some() {
+            out.push("project".to_string());
+        }
+        if self.drawn_by.is_some() {
+            out.push("drawn_by".to_string());
+        }
+        if self.checked_by.is_some() {
+            out.push("checked_by".to_string());
+        }
+        if self.date.is_some() {
+            out.push("date".to_string());
+        }
+        if self.revision.is_some() {
+            out.push("revision".to_string());
+        }
+        if self.scale_label.is_some() {
+            out.push("scale_label".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Viewport`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct ViewportPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sheet: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub view: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub position: Option<Point2>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub crop: Option<Assigned<Option<ViewCrop>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub label: Option<Assigned<Option<String>>>,
+}
+
+impl Patch<Viewport> for ViewportPatch {
+    fn write(&self, base: &Viewport) -> Viewport {
+        Viewport { sheet: take(&self.sheet, &base.sheet), view: take(&self.view, &base.view), position: take(&self.position, &base.position), scale: take(&self.scale, &base.scale), crop: take_assigned(&self.crop, &base.crop), label: take_assigned(&self.label, &base.label) }
+    }
+    fn restoring(&self, base: &Viewport) -> Self {
+        Self { sheet: restore(&self.sheet, &base.sheet), view: restore(&self.view, &base.view), position: restore(&self.position, &base.position), scale: restore(&self.scale, &base.scale), crop: restore_assigned(&self.crop, &base.crop), label: restore_assigned(&self.label, &base.label) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.sheet, later.sheet);
+        merge_slot!(&mut self.view, later.view);
+        merge_slot!(&mut self.position, later.position);
+        merge_slot!(&mut self.scale, later.scale);
+        merge_slot!(&mut self.crop, later.crop);
+        merge_slot!(&mut self.label, later.label);
+    }
+    fn minimal(&self, base: &Viewport) -> Self {
+        Self { sheet: changed(&self.sheet, &base.sheet), view: changed(&self.view, &base.view), position: changed(&self.position, &base.position), scale: changed(&self.scale, &base.scale), crop: changed_assigned(&self.crop, &base.crop), label: changed_assigned(&self.label, &base.label) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.sheet.is_some() {
+            out.push("sheet".to_string());
+        }
+        if self.view.is_some() {
+            out.push("view".to_string());
+        }
+        if self.position.is_some() {
+            out.push("position".to_string());
+        }
+        if self.scale.is_some() {
+            out.push("scale".to_string());
+        }
+        if self.crop.is_some() {
+            out.push("crop".to_string());
+        }
+        if self.label.is_some() {
+            out.push("label".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`SheetRevision`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct SheetRevisionPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sheet: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub number: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub date: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
+}
+
+impl Patch<SheetRevision> for SheetRevisionPatch {
+    fn write(&self, base: &SheetRevision) -> SheetRevision {
+        SheetRevision { sheet: take(&self.sheet, &base.sheet), number: take(&self.number, &base.number), date: take(&self.date, &base.date), description: take(&self.description, &base.description), author: take(&self.author, &base.author) }
+    }
+    fn restoring(&self, base: &SheetRevision) -> Self {
+        Self { sheet: restore(&self.sheet, &base.sheet), number: restore(&self.number, &base.number), date: restore(&self.date, &base.date), description: restore(&self.description, &base.description), author: restore(&self.author, &base.author) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.sheet, later.sheet);
+        merge_slot!(&mut self.number, later.number);
+        merge_slot!(&mut self.date, later.date);
+        merge_slot!(&mut self.description, later.description);
+        merge_slot!(&mut self.author, later.author);
+    }
+    fn minimal(&self, base: &SheetRevision) -> Self {
+        Self { sheet: changed(&self.sheet, &base.sheet), number: changed(&self.number, &base.number), date: changed(&self.date, &base.date), description: changed(&self.description, &base.description), author: changed(&self.author, &base.author) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.sheet.is_some() {
+            out.push("sheet".to_string());
+        }
+        if self.number.is_some() {
+            out.push("number".to_string());
+        }
+        if self.date.is_some() {
+            out.push("date".to_string());
+        }
+        if self.description.is_some() {
+            out.push("description".to_string());
+        }
+        if self.author.is_some() {
+            out.push("author".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`WallSweep`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct WallSweepPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub side: Option<WallSide>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<Profile>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub height: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub inset: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub material: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+impl Patch<WallSweep> for WallSweepPatch {
+    fn write(&self, base: &WallSweep) -> WallSweep {
+        WallSweep { host: take(&self.host, &base.host), side: take(&self.side, &base.side), profile: take(&self.profile, &base.profile), height: take(&self.height, &base.height), inset: take(&self.inset, &base.inset), material: take(&self.material, &base.material), name: take(&self.name, &base.name) }
+    }
+    fn restoring(&self, base: &WallSweep) -> Self {
+        Self { host: restore(&self.host, &base.host), side: restore(&self.side, &base.side), profile: restore(&self.profile, &base.profile), height: restore(&self.height, &base.height), inset: restore(&self.inset, &base.inset), material: restore(&self.material, &base.material), name: restore(&self.name, &base.name) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.host, later.host);
+        merge_slot!(&mut self.side, later.side);
+        merge_slot!(&mut self.profile, later.profile);
+        merge_slot!(&mut self.height, later.height);
+        merge_slot!(&mut self.inset, later.inset);
+        merge_slot!(&mut self.material, later.material);
+        merge_slot!(&mut self.name, later.name);
+    }
+    fn minimal(&self, base: &WallSweep) -> Self {
+        Self { host: changed(&self.host, &base.host), side: changed(&self.side, &base.side), profile: changed(&self.profile, &base.profile), height: changed(&self.height, &base.height), inset: changed(&self.inset, &base.inset), material: changed(&self.material, &base.material), name: changed(&self.name, &base.name) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.host.is_some() {
+            out.push("host".to_string());
+        }
+        if self.side.is_some() {
+            out.push("side".to_string());
+        }
+        if self.profile.is_some() {
+            out.push("profile".to_string());
+        }
+        if self.height.is_some() {
+            out.push("height".to_string());
+        }
+        if self.inset.is_some() {
+            out.push("inset".to_string());
+        }
+        if self.material.is_some() {
+            out.push("material".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
 /// 🩹 Sparse patch of [`Project`]: an absent field is untouched.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
@@ -183,6 +1023,45 @@ impl Patch<SlabType> for SlabTypePatch {
         merge_slot!(&mut self.layers, later.layers);
     }
     fn minimal(&self, base: &SlabType) -> Self {
+        Self { name: changed(&self.name, &base.name), layers: changed(&self.layers, &base.layers) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.layers.is_some() {
+            out.push("layers".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`CeilingType`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct CeilingTypePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub layers: Option<Vec<Layer>>,
+}
+
+impl Patch<CeilingType> for CeilingTypePatch {
+    fn write(&self, base: &CeilingType) -> CeilingType {
+        CeilingType { name: take(&self.name, &base.name), layers: take(&self.layers, &base.layers) }
+    }
+    fn restoring(&self, base: &CeilingType) -> Self {
+        Self { name: restore(&self.name, &base.name), layers: restore(&self.layers, &base.layers) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.layers, later.layers);
+    }
+    fn minimal(&self, base: &CeilingType) -> Self {
         Self { name: changed(&self.name, &base.name), layers: changed(&self.layers, &base.layers) }
     }
     fn touched(&self) -> Vec<String> {
@@ -726,15 +1605,21 @@ pub struct WallPatch {
     #[value(skip_serializing_if = "Option::is_none")]
     pub phase: Option<Phase>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub start_join: Option<Assigned<Option<EndJoin>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub end_join: Option<Assigned<Option<EndJoin>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub base_slab: Option<Assigned<Option<String>>>,
 }
 
 impl Patch<Wall> for WallPatch {
     fn write(&self, base: &Wall) -> Wall {
-        Wall { storey: take(&self.storey, &base.storey), wall_type: take(&self.wall_type, &base.wall_type), axis: take(&self.axis, &base.axis), location: take(&self.location, &base.location), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
+        Wall { storey: take(&self.storey, &base.storey), wall_type: take(&self.wall_type, &base.wall_type), axis: take(&self.axis, &base.axis), location: take(&self.location, &base.location), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), phase: take(&self.phase, &base.phase), start_join: take_assigned(&self.start_join, &base.start_join), end_join: take_assigned(&self.end_join, &base.end_join), name: take(&self.name, &base.name), base_slab: take_assigned(&self.base_slab, &base.base_slab) }
     }
     fn restoring(&self, base: &Wall) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), wall_type: restore(&self.wall_type, &base.wall_type), axis: restore(&self.axis, &base.axis), location: restore(&self.location, &base.location), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
+        Self { storey: restore(&self.storey, &base.storey), wall_type: restore(&self.wall_type, &base.wall_type), axis: restore(&self.axis, &base.axis), location: restore(&self.location, &base.location), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), phase: restore(&self.phase, &base.phase), start_join: restore_assigned(&self.start_join, &base.start_join), end_join: restore_assigned(&self.end_join, &base.end_join), name: restore(&self.name, &base.name), base_slab: restore_assigned(&self.base_slab, &base.base_slab) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
@@ -744,10 +1629,13 @@ impl Patch<Wall> for WallPatch {
         merge_slot!(&mut self.base_offset, later.base_offset);
         merge_slot!(&mut self.top, later.top);
         merge_slot!(&mut self.phase, later.phase);
+        merge_slot!(&mut self.start_join, later.start_join);
+        merge_slot!(&mut self.end_join, later.end_join);
         merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.base_slab, later.base_slab);
     }
     fn minimal(&self, base: &Wall) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), wall_type: changed(&self.wall_type, &base.wall_type), axis: changed(&self.axis, &base.axis), location: changed(&self.location, &base.location), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
+        Self { storey: changed(&self.storey, &base.storey), wall_type: changed(&self.wall_type, &base.wall_type), axis: changed(&self.axis, &base.axis), location: changed(&self.location, &base.location), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), phase: changed(&self.phase, &base.phase), start_join: changed_assigned(&self.start_join, &base.start_join), end_join: changed_assigned(&self.end_join, &base.end_join), name: changed(&self.name, &base.name), base_slab: changed_assigned(&self.base_slab, &base.base_slab) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -772,8 +1660,143 @@ impl Patch<Wall> for WallPatch {
         if self.phase.is_some() {
             out.push("phase".to_string());
         }
+        if self.start_join.is_some() {
+            out.push("start_join".to_string());
+        }
+        if self.end_join.is_some() {
+            out.push("end_join".to_string());
+        }
         if self.name.is_some() {
             out.push("name".to_string());
+        }
+        if self.base_slab.is_some() {
+            out.push("base_slab".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`CurtainWallType`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct CurtainWallTypePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub u_grid: Option<CurtainGrid>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub v_grid: Option<CurtainGrid>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub interior_mullion: Option<Profile>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub border_mullion: Option<Profile>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub panel: Option<CurtainPanel>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub panel_material: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub mullion_material: Option<String>,
+}
+
+impl Patch<CurtainWallType> for CurtainWallTypePatch {
+    fn write(&self, base: &CurtainWallType) -> CurtainWallType {
+        CurtainWallType { name: take(&self.name, &base.name), u_grid: take(&self.u_grid, &base.u_grid), v_grid: take(&self.v_grid, &base.v_grid), interior_mullion: take(&self.interior_mullion, &base.interior_mullion), border_mullion: take(&self.border_mullion, &base.border_mullion), panel: take(&self.panel, &base.panel), panel_material: take(&self.panel_material, &base.panel_material), mullion_material: take(&self.mullion_material, &base.mullion_material) }
+    }
+    fn restoring(&self, base: &CurtainWallType) -> Self {
+        Self { name: restore(&self.name, &base.name), u_grid: restore(&self.u_grid, &base.u_grid), v_grid: restore(&self.v_grid, &base.v_grid), interior_mullion: restore(&self.interior_mullion, &base.interior_mullion), border_mullion: restore(&self.border_mullion, &base.border_mullion), panel: restore(&self.panel, &base.panel), panel_material: restore(&self.panel_material, &base.panel_material), mullion_material: restore(&self.mullion_material, &base.mullion_material) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.u_grid, later.u_grid);
+        merge_slot!(&mut self.v_grid, later.v_grid);
+        merge_slot!(&mut self.interior_mullion, later.interior_mullion);
+        merge_slot!(&mut self.border_mullion, later.border_mullion);
+        merge_slot!(&mut self.panel, later.panel);
+        merge_slot!(&mut self.panel_material, later.panel_material);
+        merge_slot!(&mut self.mullion_material, later.mullion_material);
+    }
+    fn minimal(&self, base: &CurtainWallType) -> Self {
+        Self { name: changed(&self.name, &base.name), u_grid: changed(&self.u_grid, &base.u_grid), v_grid: changed(&self.v_grid, &base.v_grid), interior_mullion: changed(&self.interior_mullion, &base.interior_mullion), border_mullion: changed(&self.border_mullion, &base.border_mullion), panel: changed(&self.panel, &base.panel), panel_material: changed(&self.panel_material, &base.panel_material), mullion_material: changed(&self.mullion_material, &base.mullion_material) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.u_grid.is_some() {
+            out.push("u_grid".to_string());
+        }
+        if self.v_grid.is_some() {
+            out.push("v_grid".to_string());
+        }
+        if self.interior_mullion.is_some() {
+            out.push("interior_mullion".to_string());
+        }
+        if self.border_mullion.is_some() {
+            out.push("border_mullion".to_string());
+        }
+        if self.panel.is_some() {
+            out.push("panel".to_string());
+        }
+        if self.panel_material.is_some() {
+            out.push("panel_material".to_string());
+        }
+        if self.mullion_material.is_some() {
+            out.push("mullion_material".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`CurtainPanelOverride`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct CurtainPanelOverridePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub curtain: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub u: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub v: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub panel: Option<CurtainPanel>,
+}
+
+impl Patch<CurtainPanelOverride> for CurtainPanelOverridePatch {
+    fn write(&self, base: &CurtainPanelOverride) -> CurtainPanelOverride {
+        CurtainPanelOverride { curtain: take(&self.curtain, &base.curtain), u: take(&self.u, &base.u), v: take(&self.v, &base.v), panel: take(&self.panel, &base.panel) }
+    }
+    fn restoring(&self, base: &CurtainPanelOverride) -> Self {
+        Self { curtain: restore(&self.curtain, &base.curtain), u: restore(&self.u, &base.u), v: restore(&self.v, &base.v), panel: restore(&self.panel, &base.panel) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.curtain, later.curtain);
+        merge_slot!(&mut self.u, later.u);
+        merge_slot!(&mut self.v, later.v);
+        merge_slot!(&mut self.panel, later.panel);
+    }
+    fn minimal(&self, base: &CurtainPanelOverride) -> Self {
+        Self { curtain: changed(&self.curtain, &base.curtain), u: changed(&self.u, &base.u), v: changed(&self.v, &base.v), panel: changed(&self.panel, &base.panel) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.curtain.is_some() {
+            out.push("curtain".to_string());
+        }
+        if self.u.is_some() {
+            out.push("u".to_string());
+        }
+        if self.v.is_some() {
+            out.push("v".to_string());
+        }
+        if self.panel.is_some() {
+            out.push("panel".to_string());
         }
         out
     }
@@ -789,51 +1812,51 @@ pub struct CurtainWallPatch {
     #[value(skip_serializing_if = "Option::is_none")]
     pub storey: Option<String>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub curtain_wall_type: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub axis: Option<Axis>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub base_offset: Option<f64>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub top: Option<TopConstraint>,
     #[value(skip_serializing_if = "Option::is_none")]
-    pub u_spacing: Option<f64>,
+    pub u_grid: Option<Assigned<Option<CurtainGrid>>>,
     #[value(skip_serializing_if = "Option::is_none")]
-    pub v_spacing: Option<f64>,
+    pub v_grid: Option<Assigned<Option<CurtainGrid>>>,
     #[value(skip_serializing_if = "Option::is_none")]
-    pub mullion: Option<Profile>,
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub panel_material: Option<String>,
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub mullion_material: Option<String>,
+    pub phase: Option<Phase>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
 impl Patch<CurtainWall> for CurtainWallPatch {
     fn write(&self, base: &CurtainWall) -> CurtainWall {
-        CurtainWall { storey: take(&self.storey, &base.storey), axis: take(&self.axis, &base.axis), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), u_spacing: take(&self.u_spacing, &base.u_spacing), v_spacing: take(&self.v_spacing, &base.v_spacing), mullion: take(&self.mullion, &base.mullion), panel_material: take(&self.panel_material, &base.panel_material), mullion_material: take(&self.mullion_material, &base.mullion_material), name: take(&self.name, &base.name) }
+        CurtainWall { storey: take(&self.storey, &base.storey), curtain_wall_type: take(&self.curtain_wall_type, &base.curtain_wall_type), axis: take(&self.axis, &base.axis), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), u_grid: take_assigned(&self.u_grid, &base.u_grid), v_grid: take_assigned(&self.v_grid, &base.v_grid), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
     }
     fn restoring(&self, base: &CurtainWall) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), axis: restore(&self.axis, &base.axis), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), u_spacing: restore(&self.u_spacing, &base.u_spacing), v_spacing: restore(&self.v_spacing, &base.v_spacing), mullion: restore(&self.mullion, &base.mullion), panel_material: restore(&self.panel_material, &base.panel_material), mullion_material: restore(&self.mullion_material, &base.mullion_material), name: restore(&self.name, &base.name) }
+        Self { storey: restore(&self.storey, &base.storey), curtain_wall_type: restore(&self.curtain_wall_type, &base.curtain_wall_type), axis: restore(&self.axis, &base.axis), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), u_grid: restore_assigned(&self.u_grid, &base.u_grid), v_grid: restore_assigned(&self.v_grid, &base.v_grid), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.curtain_wall_type, later.curtain_wall_type);
         merge_slot!(&mut self.axis, later.axis);
         merge_slot!(&mut self.base_offset, later.base_offset);
         merge_slot!(&mut self.top, later.top);
-        merge_slot!(&mut self.u_spacing, later.u_spacing);
-        merge_slot!(&mut self.v_spacing, later.v_spacing);
-        merge_slot!(&mut self.mullion, later.mullion);
-        merge_slot!(&mut self.panel_material, later.panel_material);
-        merge_slot!(&mut self.mullion_material, later.mullion_material);
+        merge_slot!(&mut self.u_grid, later.u_grid);
+        merge_slot!(&mut self.v_grid, later.v_grid);
+        merge_slot!(&mut self.phase, later.phase);
         merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &CurtainWall) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), axis: changed(&self.axis, &base.axis), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), u_spacing: changed(&self.u_spacing, &base.u_spacing), v_spacing: changed(&self.v_spacing, &base.v_spacing), mullion: changed(&self.mullion, &base.mullion), panel_material: changed(&self.panel_material, &base.panel_material), mullion_material: changed(&self.mullion_material, &base.mullion_material), name: changed(&self.name, &base.name) }
+        Self { storey: changed(&self.storey, &base.storey), curtain_wall_type: changed(&self.curtain_wall_type, &base.curtain_wall_type), axis: changed(&self.axis, &base.axis), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), u_grid: changed_assigned(&self.u_grid, &base.u_grid), v_grid: changed_assigned(&self.v_grid, &base.v_grid), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
         if self.storey.is_some() {
             out.push("storey".to_string());
+        }
+        if self.curtain_wall_type.is_some() {
+            out.push("curtain_wall_type".to_string());
         }
         if self.axis.is_some() {
             out.push("axis".to_string());
@@ -844,20 +1867,14 @@ impl Patch<CurtainWall> for CurtainWallPatch {
         if self.top.is_some() {
             out.push("top".to_string());
         }
-        if self.u_spacing.is_some() {
-            out.push("u_spacing".to_string());
+        if self.u_grid.is_some() {
+            out.push("u_grid".to_string());
         }
-        if self.v_spacing.is_some() {
-            out.push("v_spacing".to_string());
+        if self.v_grid.is_some() {
+            out.push("v_grid".to_string());
         }
-        if self.mullion.is_some() {
-            out.push("mullion".to_string());
-        }
-        if self.panel_material.is_some() {
-            out.push("panel_material".to_string());
-        }
-        if self.mullion_material.is_some() {
-            out.push("mullion_material".to_string());
+        if self.phase.is_some() {
+            out.push("phase".to_string());
         }
         if self.name.is_some() {
             out.push("name".to_string());
@@ -882,31 +1899,37 @@ pub struct ColumnPatch {
     #[value(skip_serializing_if = "Option::is_none")]
     pub rotation: Option<f64>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub tilt: Option<Assigned<Option<Slope>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub base_offset: Option<f64>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub top: Option<TopConstraint>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Phase>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
 impl Patch<Column> for ColumnPatch {
     fn write(&self, base: &Column) -> Column {
-        Column { storey: take(&self.storey, &base.storey), column_type: take(&self.column_type, &base.column_type), position: take(&self.position, &base.position), rotation: take(&self.rotation, &base.rotation), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), name: take(&self.name, &base.name) }
+        Column { storey: take(&self.storey, &base.storey), column_type: take(&self.column_type, &base.column_type), position: take(&self.position, &base.position), rotation: take(&self.rotation, &base.rotation), tilt: take_assigned(&self.tilt, &base.tilt), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
     }
     fn restoring(&self, base: &Column) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), column_type: restore(&self.column_type, &base.column_type), position: restore(&self.position, &base.position), rotation: restore(&self.rotation, &base.rotation), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), name: restore(&self.name, &base.name) }
+        Self { storey: restore(&self.storey, &base.storey), column_type: restore(&self.column_type, &base.column_type), position: restore(&self.position, &base.position), rotation: restore(&self.rotation, &base.rotation), tilt: restore_assigned(&self.tilt, &base.tilt), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
         merge_slot!(&mut self.column_type, later.column_type);
         merge_slot!(&mut self.position, later.position);
         merge_slot!(&mut self.rotation, later.rotation);
+        merge_slot!(&mut self.tilt, later.tilt);
         merge_slot!(&mut self.base_offset, later.base_offset);
         merge_slot!(&mut self.top, later.top);
+        merge_slot!(&mut self.phase, later.phase);
         merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Column) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), column_type: changed(&self.column_type, &base.column_type), position: changed(&self.position, &base.position), rotation: changed(&self.rotation, &base.rotation), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), name: changed(&self.name, &base.name) }
+        Self { storey: changed(&self.storey, &base.storey), column_type: changed(&self.column_type, &base.column_type), position: changed(&self.position, &base.position), rotation: changed(&self.rotation, &base.rotation), tilt: changed_assigned(&self.tilt, &base.tilt), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -922,11 +1945,17 @@ impl Patch<Column> for ColumnPatch {
         if self.rotation.is_some() {
             out.push("rotation".to_string());
         }
+        if self.tilt.is_some() {
+            out.push("tilt".to_string());
+        }
         if self.base_offset.is_some() {
             out.push("base_offset".to_string());
         }
         if self.top.is_some() {
             out.push("top".to_string());
+        }
+        if self.phase.is_some() {
+            out.push("phase".to_string());
         }
         if self.name.is_some() {
             out.push("name".to_string());
@@ -947,32 +1976,35 @@ pub struct BeamPatch {
     #[value(skip_serializing_if = "Option::is_none")]
     pub beam_type: Option<String>,
     #[value(skip_serializing_if = "Option::is_none")]
-    pub start: Option<Point2>,
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub end: Option<Point2>,
+    pub axis: Option<Axis>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub top_offset: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub end_top_offset: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Phase>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
 impl Patch<Beam> for BeamPatch {
     fn write(&self, base: &Beam) -> Beam {
-        Beam { storey: take(&self.storey, &base.storey), beam_type: take(&self.beam_type, &base.beam_type), start: take(&self.start, &base.start), end: take(&self.end, &base.end), top_offset: take(&self.top_offset, &base.top_offset), name: take(&self.name, &base.name) }
+        Beam { storey: take(&self.storey, &base.storey), beam_type: take(&self.beam_type, &base.beam_type), axis: take(&self.axis, &base.axis), top_offset: take(&self.top_offset, &base.top_offset), end_top_offset: take_assigned(&self.end_top_offset, &base.end_top_offset), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
     }
     fn restoring(&self, base: &Beam) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), beam_type: restore(&self.beam_type, &base.beam_type), start: restore(&self.start, &base.start), end: restore(&self.end, &base.end), top_offset: restore(&self.top_offset, &base.top_offset), name: restore(&self.name, &base.name) }
+        Self { storey: restore(&self.storey, &base.storey), beam_type: restore(&self.beam_type, &base.beam_type), axis: restore(&self.axis, &base.axis), top_offset: restore(&self.top_offset, &base.top_offset), end_top_offset: restore_assigned(&self.end_top_offset, &base.end_top_offset), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
         merge_slot!(&mut self.beam_type, later.beam_type);
-        merge_slot!(&mut self.start, later.start);
-        merge_slot!(&mut self.end, later.end);
+        merge_slot!(&mut self.axis, later.axis);
         merge_slot!(&mut self.top_offset, later.top_offset);
+        merge_slot!(&mut self.end_top_offset, later.end_top_offset);
+        merge_slot!(&mut self.phase, later.phase);
         merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Beam) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), beam_type: changed(&self.beam_type, &base.beam_type), start: changed(&self.start, &base.start), end: changed(&self.end, &base.end), top_offset: changed(&self.top_offset, &base.top_offset), name: changed(&self.name, &base.name) }
+        Self { storey: changed(&self.storey, &base.storey), beam_type: changed(&self.beam_type, &base.beam_type), axis: changed(&self.axis, &base.axis), top_offset: changed(&self.top_offset, &base.top_offset), end_top_offset: changed_assigned(&self.end_top_offset, &base.end_top_offset), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -982,14 +2014,17 @@ impl Patch<Beam> for BeamPatch {
         if self.beam_type.is_some() {
             out.push("beam_type".to_string());
         }
-        if self.start.is_some() {
-            out.push("start".to_string());
-        }
-        if self.end.is_some() {
-            out.push("end".to_string());
+        if self.axis.is_some() {
+            out.push("axis".to_string());
         }
         if self.top_offset.is_some() {
             out.push("top_offset".to_string());
+        }
+        if self.end_top_offset.is_some() {
+            out.push("end_top_offset".to_string());
+        }
+        if self.phase.is_some() {
+            out.push("phase".to_string());
         }
         if self.name.is_some() {
             out.push("name".to_string());
@@ -1018,15 +2053,17 @@ pub struct SlabPatch {
     #[value(skip_serializing_if = "Option::is_none")]
     pub slope: Option<Assigned<Option<Slope>>>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Phase>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
 impl Patch<Slab> for SlabPatch {
     fn write(&self, base: &Slab) -> Slab {
-        Slab { storey: take(&self.storey, &base.storey), slab_type: take(&self.slab_type, &base.slab_type), boundary: take(&self.boundary, &base.boundary), holes: take(&self.holes, &base.holes), offset: take(&self.offset, &base.offset), slope: take_assigned(&self.slope, &base.slope), name: take(&self.name, &base.name) }
+        Slab { storey: take(&self.storey, &base.storey), slab_type: take(&self.slab_type, &base.slab_type), boundary: take(&self.boundary, &base.boundary), holes: take(&self.holes, &base.holes), offset: take(&self.offset, &base.offset), slope: take_assigned(&self.slope, &base.slope), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
     }
     fn restoring(&self, base: &Slab) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), slab_type: restore(&self.slab_type, &base.slab_type), boundary: restore(&self.boundary, &base.boundary), holes: restore(&self.holes, &base.holes), offset: restore(&self.offset, &base.offset), slope: restore_assigned(&self.slope, &base.slope), name: restore(&self.name, &base.name) }
+        Self { storey: restore(&self.storey, &base.storey), slab_type: restore(&self.slab_type, &base.slab_type), boundary: restore(&self.boundary, &base.boundary), holes: restore(&self.holes, &base.holes), offset: restore(&self.offset, &base.offset), slope: restore_assigned(&self.slope, &base.slope), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
@@ -1035,10 +2072,11 @@ impl Patch<Slab> for SlabPatch {
         merge_slot!(&mut self.holes, later.holes);
         merge_slot!(&mut self.offset, later.offset);
         merge_slot!(&mut self.slope, later.slope);
+        merge_slot!(&mut self.phase, later.phase);
         merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Slab) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), slab_type: changed(&self.slab_type, &base.slab_type), boundary: changed(&self.boundary, &base.boundary), holes: changed(&self.holes, &base.holes), offset: changed(&self.offset, &base.offset), slope: changed_assigned(&self.slope, &base.slope), name: changed(&self.name, &base.name) }
+        Self { storey: changed(&self.storey, &base.storey), slab_type: changed(&self.slab_type, &base.slab_type), boundary: changed(&self.boundary, &base.boundary), holes: changed(&self.holes, &base.holes), offset: changed(&self.offset, &base.offset), slope: changed_assigned(&self.slope, &base.slope), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1047,6 +2085,78 @@ impl Patch<Slab> for SlabPatch {
         }
         if self.slab_type.is_some() {
             out.push("slab_type".to_string());
+        }
+        if self.boundary.is_some() {
+            out.push("boundary".to_string());
+        }
+        if self.holes.is_some() {
+            out.push("holes".to_string());
+        }
+        if self.offset.is_some() {
+            out.push("offset".to_string());
+        }
+        if self.slope.is_some() {
+            out.push("slope".to_string());
+        }
+        if self.phase.is_some() {
+            out.push("phase".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Ceiling`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct CeilingPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub ceiling_type: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub boundary: Option<Vec<Vertex>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub holes: Option<Vec<Vec<Vertex>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub slope: Option<Assigned<Option<Slope>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+impl Patch<Ceiling> for CeilingPatch {
+    fn write(&self, base: &Ceiling) -> Ceiling {
+        Ceiling { storey: take(&self.storey, &base.storey), ceiling_type: take(&self.ceiling_type, &base.ceiling_type), boundary: take(&self.boundary, &base.boundary), holes: take(&self.holes, &base.holes), offset: take(&self.offset, &base.offset), slope: take_assigned(&self.slope, &base.slope), name: take(&self.name, &base.name) }
+    }
+    fn restoring(&self, base: &Ceiling) -> Self {
+        Self { storey: restore(&self.storey, &base.storey), ceiling_type: restore(&self.ceiling_type, &base.ceiling_type), boundary: restore(&self.boundary, &base.boundary), holes: restore(&self.holes, &base.holes), offset: restore(&self.offset, &base.offset), slope: restore_assigned(&self.slope, &base.slope), name: restore(&self.name, &base.name) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.ceiling_type, later.ceiling_type);
+        merge_slot!(&mut self.boundary, later.boundary);
+        merge_slot!(&mut self.holes, later.holes);
+        merge_slot!(&mut self.offset, later.offset);
+        merge_slot!(&mut self.slope, later.slope);
+        merge_slot!(&mut self.name, later.name);
+    }
+    fn minimal(&self, base: &Ceiling) -> Self {
+        Self { storey: changed(&self.storey, &base.storey), ceiling_type: changed(&self.ceiling_type, &base.ceiling_type), boundary: changed(&self.boundary, &base.boundary), holes: changed(&self.holes, &base.holes), offset: changed(&self.offset, &base.offset), slope: changed_assigned(&self.slope, &base.slope), name: changed(&self.name, &base.name) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.ceiling_type.is_some() {
+            out.push("ceiling_type".to_string());
         }
         if self.boundary.is_some() {
             out.push("boundary".to_string());
@@ -1087,15 +2197,17 @@ pub struct RoofPatch {
     #[value(skip_serializing_if = "Option::is_none")]
     pub base_offset: Option<f64>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Phase>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
 impl Patch<Roof> for RoofPatch {
     fn write(&self, base: &Roof) -> Roof {
-        Roof { storey: take(&self.storey, &base.storey), roof_type: take(&self.roof_type, &base.roof_type), footprint: take(&self.footprint, &base.footprint), shape: take(&self.shape, &base.shape), overhang: take(&self.overhang, &base.overhang), base_offset: take(&self.base_offset, &base.base_offset), name: take(&self.name, &base.name) }
+        Roof { storey: take(&self.storey, &base.storey), roof_type: take(&self.roof_type, &base.roof_type), footprint: take(&self.footprint, &base.footprint), shape: take(&self.shape, &base.shape), overhang: take(&self.overhang, &base.overhang), base_offset: take(&self.base_offset, &base.base_offset), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
     }
     fn restoring(&self, base: &Roof) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), roof_type: restore(&self.roof_type, &base.roof_type), footprint: restore(&self.footprint, &base.footprint), shape: restore(&self.shape, &base.shape), overhang: restore(&self.overhang, &base.overhang), base_offset: restore(&self.base_offset, &base.base_offset), name: restore(&self.name, &base.name) }
+        Self { storey: restore(&self.storey, &base.storey), roof_type: restore(&self.roof_type, &base.roof_type), footprint: restore(&self.footprint, &base.footprint), shape: restore(&self.shape, &base.shape), overhang: restore(&self.overhang, &base.overhang), base_offset: restore(&self.base_offset, &base.base_offset), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
@@ -1104,10 +2216,11 @@ impl Patch<Roof> for RoofPatch {
         merge_slot!(&mut self.shape, later.shape);
         merge_slot!(&mut self.overhang, later.overhang);
         merge_slot!(&mut self.base_offset, later.base_offset);
+        merge_slot!(&mut self.phase, later.phase);
         merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Roof) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), roof_type: changed(&self.roof_type, &base.roof_type), footprint: changed(&self.footprint, &base.footprint), shape: changed(&self.shape, &base.shape), overhang: changed(&self.overhang, &base.overhang), base_offset: changed(&self.base_offset, &base.base_offset), name: changed(&self.name, &base.name) }
+        Self { storey: changed(&self.storey, &base.storey), roof_type: changed(&self.roof_type, &base.roof_type), footprint: changed(&self.footprint, &base.footprint), shape: changed(&self.shape, &base.shape), overhang: changed(&self.overhang, &base.overhang), base_offset: changed(&self.base_offset, &base.base_offset), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1128,6 +2241,9 @@ impl Patch<Roof> for RoofPatch {
         }
         if self.base_offset.is_some() {
             out.push("base_offset".to_string());
+        }
+        if self.phase.is_some() {
+            out.push("phase".to_string());
         }
         if self.name.is_some() {
             out.push("name".to_string());
@@ -1161,14 +2277,18 @@ pub struct OpeningPatch {
     pub flip_facing: Option<bool>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub reveal_depth: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub reveal_material: Option<Assigned<Option<String>>>,
 }
 
 impl Patch<Opening> for OpeningPatch {
     fn write(&self, base: &Opening) -> Opening {
-        Opening { host: take(&self.host, &base.host), kind: take(&self.kind, &base.kind), offset: take(&self.offset, &base.offset), sill_override: take_assigned(&self.sill_override, &base.sill_override), width: take_assigned(&self.width, &base.width), height: take_assigned(&self.height, &base.height), flip_hand: take(&self.flip_hand, &base.flip_hand), flip_facing: take(&self.flip_facing, &base.flip_facing), name: take(&self.name, &base.name) }
+        Opening { host: take(&self.host, &base.host), kind: take(&self.kind, &base.kind), offset: take(&self.offset, &base.offset), sill_override: take_assigned(&self.sill_override, &base.sill_override), width: take_assigned(&self.width, &base.width), height: take_assigned(&self.height, &base.height), flip_hand: take(&self.flip_hand, &base.flip_hand), flip_facing: take(&self.flip_facing, &base.flip_facing), name: take(&self.name, &base.name), reveal_depth: take_assigned(&self.reveal_depth, &base.reveal_depth), reveal_material: take_assigned(&self.reveal_material, &base.reveal_material) }
     }
     fn restoring(&self, base: &Opening) -> Self {
-        Self { host: restore(&self.host, &base.host), kind: restore(&self.kind, &base.kind), offset: restore(&self.offset, &base.offset), sill_override: restore_assigned(&self.sill_override, &base.sill_override), width: restore_assigned(&self.width, &base.width), height: restore_assigned(&self.height, &base.height), flip_hand: restore(&self.flip_hand, &base.flip_hand), flip_facing: restore(&self.flip_facing, &base.flip_facing), name: restore(&self.name, &base.name) }
+        Self { host: restore(&self.host, &base.host), kind: restore(&self.kind, &base.kind), offset: restore(&self.offset, &base.offset), sill_override: restore_assigned(&self.sill_override, &base.sill_override), width: restore_assigned(&self.width, &base.width), height: restore_assigned(&self.height, &base.height), flip_hand: restore(&self.flip_hand, &base.flip_hand), flip_facing: restore(&self.flip_facing, &base.flip_facing), name: restore(&self.name, &base.name), reveal_depth: restore_assigned(&self.reveal_depth, &base.reveal_depth), reveal_material: restore_assigned(&self.reveal_material, &base.reveal_material) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.host, later.host);
@@ -1180,9 +2300,11 @@ impl Patch<Opening> for OpeningPatch {
         merge_slot!(&mut self.flip_hand, later.flip_hand);
         merge_slot!(&mut self.flip_facing, later.flip_facing);
         merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.reveal_depth, later.reveal_depth);
+        merge_slot!(&mut self.reveal_material, later.reveal_material);
     }
     fn minimal(&self, base: &Opening) -> Self {
-        Self { host: changed(&self.host, &base.host), kind: changed(&self.kind, &base.kind), offset: changed(&self.offset, &base.offset), sill_override: changed_assigned(&self.sill_override, &base.sill_override), width: changed_assigned(&self.width, &base.width), height: changed_assigned(&self.height, &base.height), flip_hand: changed(&self.flip_hand, &base.flip_hand), flip_facing: changed(&self.flip_facing, &base.flip_facing), name: changed(&self.name, &base.name) }
+        Self { host: changed(&self.host, &base.host), kind: changed(&self.kind, &base.kind), offset: changed(&self.offset, &base.offset), sill_override: changed_assigned(&self.sill_override, &base.sill_override), width: changed_assigned(&self.width, &base.width), height: changed_assigned(&self.height, &base.height), flip_hand: changed(&self.flip_hand, &base.flip_hand), flip_facing: changed(&self.flip_facing, &base.flip_facing), name: changed(&self.name, &base.name), reveal_depth: changed_assigned(&self.reveal_depth, &base.reveal_depth), reveal_material: changed_assigned(&self.reveal_material, &base.reveal_material) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1212,6 +2334,12 @@ impl Patch<Opening> for OpeningPatch {
         }
         if self.name.is_some() {
             out.push("name".to_string());
+        }
+        if self.reveal_depth.is_some() {
+            out.push("reveal_depth".to_string());
+        }
+        if self.reveal_material.is_some() {
+            out.push("reveal_material".to_string());
         }
         out
     }
@@ -1251,15 +2379,17 @@ pub struct StairPatch {
     #[value(skip_serializing_if = "Option::is_none")]
     pub landing_depth: Option<f64>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Phase>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
 impl Patch<Stair> for StairPatch {
     fn write(&self, base: &Stair) -> Stair {
-        Stair { storey: take(&self.storey, &base.storey), start: take(&self.start, &base.start), direction: take(&self.direction, &base.direction), width: take(&self.width, &base.width), flight: take(&self.flight, &base.flight), top: take(&self.top, &base.top), max_riser: take(&self.max_riser, &base.max_riser), min_tread: take(&self.min_tread, &base.min_tread), stringer: take(&self.stringer, &base.stringer), nosing: take(&self.nosing, &base.nosing), tread_thickness: take(&self.tread_thickness, &base.tread_thickness), riser: take(&self.riser, &base.riser), landing_depth: take(&self.landing_depth, &base.landing_depth), name: take(&self.name, &base.name) }
+        Stair { storey: take(&self.storey, &base.storey), start: take(&self.start, &base.start), direction: take(&self.direction, &base.direction), width: take(&self.width, &base.width), flight: take(&self.flight, &base.flight), top: take(&self.top, &base.top), max_riser: take(&self.max_riser, &base.max_riser), min_tread: take(&self.min_tread, &base.min_tread), stringer: take(&self.stringer, &base.stringer), nosing: take(&self.nosing, &base.nosing), tread_thickness: take(&self.tread_thickness, &base.tread_thickness), riser: take(&self.riser, &base.riser), landing_depth: take(&self.landing_depth, &base.landing_depth), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
     }
     fn restoring(&self, base: &Stair) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), start: restore(&self.start, &base.start), direction: restore(&self.direction, &base.direction), width: restore(&self.width, &base.width), flight: restore(&self.flight, &base.flight), top: restore(&self.top, &base.top), max_riser: restore(&self.max_riser, &base.max_riser), min_tread: restore(&self.min_tread, &base.min_tread), stringer: restore(&self.stringer, &base.stringer), nosing: restore(&self.nosing, &base.nosing), tread_thickness: restore(&self.tread_thickness, &base.tread_thickness), riser: restore(&self.riser, &base.riser), landing_depth: restore(&self.landing_depth, &base.landing_depth), name: restore(&self.name, &base.name) }
+        Self { storey: restore(&self.storey, &base.storey), start: restore(&self.start, &base.start), direction: restore(&self.direction, &base.direction), width: restore(&self.width, &base.width), flight: restore(&self.flight, &base.flight), top: restore(&self.top, &base.top), max_riser: restore(&self.max_riser, &base.max_riser), min_tread: restore(&self.min_tread, &base.min_tread), stringer: restore(&self.stringer, &base.stringer), nosing: restore(&self.nosing, &base.nosing), tread_thickness: restore(&self.tread_thickness, &base.tread_thickness), riser: restore(&self.riser, &base.riser), landing_depth: restore(&self.landing_depth, &base.landing_depth), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
@@ -1275,10 +2405,11 @@ impl Patch<Stair> for StairPatch {
         merge_slot!(&mut self.tread_thickness, later.tread_thickness);
         merge_slot!(&mut self.riser, later.riser);
         merge_slot!(&mut self.landing_depth, later.landing_depth);
+        merge_slot!(&mut self.phase, later.phase);
         merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Stair) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), start: changed(&self.start, &base.start), direction: changed(&self.direction, &base.direction), width: changed(&self.width, &base.width), flight: changed(&self.flight, &base.flight), top: changed(&self.top, &base.top), max_riser: changed(&self.max_riser, &base.max_riser), min_tread: changed(&self.min_tread, &base.min_tread), stringer: changed(&self.stringer, &base.stringer), nosing: changed(&self.nosing, &base.nosing), tread_thickness: changed(&self.tread_thickness, &base.tread_thickness), riser: changed(&self.riser, &base.riser), landing_depth: changed(&self.landing_depth, &base.landing_depth), name: changed(&self.name, &base.name) }
+        Self { storey: changed(&self.storey, &base.storey), start: changed(&self.start, &base.start), direction: changed(&self.direction, &base.direction), width: changed(&self.width, &base.width), flight: changed(&self.flight, &base.flight), top: changed(&self.top, &base.top), max_riser: changed(&self.max_riser, &base.max_riser), min_tread: changed(&self.min_tread, &base.min_tread), stringer: changed(&self.stringer, &base.stringer), nosing: changed(&self.nosing, &base.nosing), tread_thickness: changed(&self.tread_thickness, &base.tread_thickness), riser: changed(&self.riser, &base.riser), landing_depth: changed(&self.landing_depth, &base.landing_depth), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1321,6 +2452,9 @@ impl Patch<Stair> for StairPatch {
         if self.landing_depth.is_some() {
             out.push("landing_depth".to_string());
         }
+        if self.phase.is_some() {
+            out.push("phase".to_string());
+        }
         if self.name.is_some() {
             out.push("name".to_string());
         }
@@ -1356,15 +2490,19 @@ pub struct RailingPatch {
     #[value(skip_serializing_if = "Option::is_none")]
     pub base_offset: Option<f64>,
     #[value(skip_serializing_if = "Option::is_none")]
+    pub host: Option<Assigned<Option<RailingHost>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Phase>,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
 impl Patch<Railing> for RailingPatch {
     fn write(&self, base: &Railing) -> Railing {
-        Railing { storey: take(&self.storey, &base.storey), path: take(&self.path, &base.path), height: take(&self.height, &base.height), post_spacing: take(&self.post_spacing, &base.post_spacing), profile: take(&self.profile, &base.profile), post_profile: take(&self.post_profile, &base.post_profile), baluster: take_assigned(&self.baluster, &base.baluster), infill: take(&self.infill, &base.infill), material: take(&self.material, &base.material), base_offset: take(&self.base_offset, &base.base_offset), name: take(&self.name, &base.name) }
+        Railing { storey: take(&self.storey, &base.storey), path: take(&self.path, &base.path), height: take(&self.height, &base.height), post_spacing: take(&self.post_spacing, &base.post_spacing), profile: take(&self.profile, &base.profile), post_profile: take(&self.post_profile, &base.post_profile), baluster: take_assigned(&self.baluster, &base.baluster), infill: take(&self.infill, &base.infill), material: take(&self.material, &base.material), base_offset: take(&self.base_offset, &base.base_offset), host: take_assigned(&self.host, &base.host), phase: take(&self.phase, &base.phase), name: take(&self.name, &base.name) }
     }
     fn restoring(&self, base: &Railing) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), path: restore(&self.path, &base.path), height: restore(&self.height, &base.height), post_spacing: restore(&self.post_spacing, &base.post_spacing), profile: restore(&self.profile, &base.profile), post_profile: restore(&self.post_profile, &base.post_profile), baluster: restore_assigned(&self.baluster, &base.baluster), infill: restore(&self.infill, &base.infill), material: restore(&self.material, &base.material), base_offset: restore(&self.base_offset, &base.base_offset), name: restore(&self.name, &base.name) }
+        Self { storey: restore(&self.storey, &base.storey), path: restore(&self.path, &base.path), height: restore(&self.height, &base.height), post_spacing: restore(&self.post_spacing, &base.post_spacing), profile: restore(&self.profile, &base.profile), post_profile: restore(&self.post_profile, &base.post_profile), baluster: restore_assigned(&self.baluster, &base.baluster), infill: restore(&self.infill, &base.infill), material: restore(&self.material, &base.material), base_offset: restore(&self.base_offset, &base.base_offset), host: restore_assigned(&self.host, &base.host), phase: restore(&self.phase, &base.phase), name: restore(&self.name, &base.name) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
@@ -1377,10 +2515,12 @@ impl Patch<Railing> for RailingPatch {
         merge_slot!(&mut self.infill, later.infill);
         merge_slot!(&mut self.material, later.material);
         merge_slot!(&mut self.base_offset, later.base_offset);
+        merge_slot!(&mut self.host, later.host);
+        merge_slot!(&mut self.phase, later.phase);
         merge_slot!(&mut self.name, later.name);
     }
     fn minimal(&self, base: &Railing) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), path: changed(&self.path, &base.path), height: changed(&self.height, &base.height), post_spacing: changed(&self.post_spacing, &base.post_spacing), profile: changed(&self.profile, &base.profile), post_profile: changed(&self.post_profile, &base.post_profile), baluster: changed_assigned(&self.baluster, &base.baluster), infill: changed(&self.infill, &base.infill), material: changed(&self.material, &base.material), base_offset: changed(&self.base_offset, &base.base_offset), name: changed(&self.name, &base.name) }
+        Self { storey: changed(&self.storey, &base.storey), path: changed(&self.path, &base.path), height: changed(&self.height, &base.height), post_spacing: changed(&self.post_spacing, &base.post_spacing), profile: changed(&self.profile, &base.profile), post_profile: changed(&self.post_profile, &base.post_profile), baluster: changed_assigned(&self.baluster, &base.baluster), infill: changed(&self.infill, &base.infill), material: changed(&self.material, &base.material), base_offset: changed(&self.base_offset, &base.base_offset), host: changed_assigned(&self.host, &base.host), phase: changed(&self.phase, &base.phase), name: changed(&self.name, &base.name) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1414,6 +2554,123 @@ impl Patch<Railing> for RailingPatch {
         if self.base_offset.is_some() {
             out.push("base_offset".to_string());
         }
+        if self.host.is_some() {
+            out.push("host".to_string());
+        }
+        if self.phase.is_some() {
+            out.push("phase".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Ramp`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct RampPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub path: Option<Vec<Vertex>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub width: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub landing_start: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub landing_end: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub landing_turn: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub max_slope: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub thickness: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub material: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub base_offset: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub top: Option<TopConstraint>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub railing_left: Option<bool>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub railing_right: Option<bool>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+impl Patch<Ramp> for RampPatch {
+    fn write(&self, base: &Ramp) -> Ramp {
+        Ramp { storey: take(&self.storey, &base.storey), path: take(&self.path, &base.path), width: take(&self.width, &base.width), landing_start: take(&self.landing_start, &base.landing_start), landing_end: take(&self.landing_end, &base.landing_end), landing_turn: take(&self.landing_turn, &base.landing_turn), max_slope: take(&self.max_slope, &base.max_slope), thickness: take(&self.thickness, &base.thickness), material: take(&self.material, &base.material), base_offset: take(&self.base_offset, &base.base_offset), top: take(&self.top, &base.top), railing_left: take(&self.railing_left, &base.railing_left), railing_right: take(&self.railing_right, &base.railing_right), name: take(&self.name, &base.name) }
+    }
+    fn restoring(&self, base: &Ramp) -> Self {
+        Self { storey: restore(&self.storey, &base.storey), path: restore(&self.path, &base.path), width: restore(&self.width, &base.width), landing_start: restore(&self.landing_start, &base.landing_start), landing_end: restore(&self.landing_end, &base.landing_end), landing_turn: restore(&self.landing_turn, &base.landing_turn), max_slope: restore(&self.max_slope, &base.max_slope), thickness: restore(&self.thickness, &base.thickness), material: restore(&self.material, &base.material), base_offset: restore(&self.base_offset, &base.base_offset), top: restore(&self.top, &base.top), railing_left: restore(&self.railing_left, &base.railing_left), railing_right: restore(&self.railing_right, &base.railing_right), name: restore(&self.name, &base.name) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.path, later.path);
+        merge_slot!(&mut self.width, later.width);
+        merge_slot!(&mut self.landing_start, later.landing_start);
+        merge_slot!(&mut self.landing_end, later.landing_end);
+        merge_slot!(&mut self.landing_turn, later.landing_turn);
+        merge_slot!(&mut self.max_slope, later.max_slope);
+        merge_slot!(&mut self.thickness, later.thickness);
+        merge_slot!(&mut self.material, later.material);
+        merge_slot!(&mut self.base_offset, later.base_offset);
+        merge_slot!(&mut self.top, later.top);
+        merge_slot!(&mut self.railing_left, later.railing_left);
+        merge_slot!(&mut self.railing_right, later.railing_right);
+        merge_slot!(&mut self.name, later.name);
+    }
+    fn minimal(&self, base: &Ramp) -> Self {
+        Self { storey: changed(&self.storey, &base.storey), path: changed(&self.path, &base.path), width: changed(&self.width, &base.width), landing_start: changed(&self.landing_start, &base.landing_start), landing_end: changed(&self.landing_end, &base.landing_end), landing_turn: changed(&self.landing_turn, &base.landing_turn), max_slope: changed(&self.max_slope, &base.max_slope), thickness: changed(&self.thickness, &base.thickness), material: changed(&self.material, &base.material), base_offset: changed(&self.base_offset, &base.base_offset), top: changed(&self.top, &base.top), railing_left: changed(&self.railing_left, &base.railing_left), railing_right: changed(&self.railing_right, &base.railing_right), name: changed(&self.name, &base.name) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.path.is_some() {
+            out.push("path".to_string());
+        }
+        if self.width.is_some() {
+            out.push("width".to_string());
+        }
+        if self.landing_start.is_some() {
+            out.push("landing_start".to_string());
+        }
+        if self.landing_end.is_some() {
+            out.push("landing_end".to_string());
+        }
+        if self.landing_turn.is_some() {
+            out.push("landing_turn".to_string());
+        }
+        if self.max_slope.is_some() {
+            out.push("max_slope".to_string());
+        }
+        if self.thickness.is_some() {
+            out.push("thickness".to_string());
+        }
+        if self.material.is_some() {
+            out.push("material".to_string());
+        }
+        if self.base_offset.is_some() {
+            out.push("base_offset".to_string());
+        }
+        if self.top.is_some() {
+            out.push("top".to_string());
+        }
+        if self.railing_left.is_some() {
+            out.push("railing_left".to_string());
+        }
+        if self.railing_right.is_some() {
+            out.push("railing_right".to_string());
+        }
         if self.name.is_some() {
             out.push("name".to_string());
         }
@@ -1438,14 +2695,24 @@ pub struct SpacePatch {
     pub boundary: Option<SpaceBoundary>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub usage: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Phase>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub zone: Option<Assigned<Option<String>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub floor_finish: Option<Assigned<Option<String>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub wall_finish: Option<Assigned<Option<String>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub ceiling_finish: Option<Assigned<Option<String>>>,
 }
 
 impl Patch<Space> for SpacePatch {
     fn write(&self, base: &Space) -> Space {
-        Space { storey: take(&self.storey, &base.storey), number: take(&self.number, &base.number), name: take(&self.name, &base.name), boundary: take(&self.boundary, &base.boundary), usage: take(&self.usage, &base.usage) }
+        Space { storey: take(&self.storey, &base.storey), number: take(&self.number, &base.number), name: take(&self.name, &base.name), boundary: take(&self.boundary, &base.boundary), usage: take(&self.usage, &base.usage), phase: take(&self.phase, &base.phase), zone: take_assigned(&self.zone, &base.zone), floor_finish: take_assigned(&self.floor_finish, &base.floor_finish), wall_finish: take_assigned(&self.wall_finish, &base.wall_finish), ceiling_finish: take_assigned(&self.ceiling_finish, &base.ceiling_finish) }
     }
     fn restoring(&self, base: &Space) -> Self {
-        Self { storey: restore(&self.storey, &base.storey), number: restore(&self.number, &base.number), name: restore(&self.name, &base.name), boundary: restore(&self.boundary, &base.boundary), usage: restore(&self.usage, &base.usage) }
+        Self { storey: restore(&self.storey, &base.storey), number: restore(&self.number, &base.number), name: restore(&self.name, &base.name), boundary: restore(&self.boundary, &base.boundary), usage: restore(&self.usage, &base.usage), phase: restore(&self.phase, &base.phase), zone: restore_assigned(&self.zone, &base.zone), floor_finish: restore_assigned(&self.floor_finish, &base.floor_finish), wall_finish: restore_assigned(&self.wall_finish, &base.wall_finish), ceiling_finish: restore_assigned(&self.ceiling_finish, &base.ceiling_finish) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.storey, later.storey);
@@ -1453,9 +2720,14 @@ impl Patch<Space> for SpacePatch {
         merge_slot!(&mut self.name, later.name);
         merge_slot!(&mut self.boundary, later.boundary);
         merge_slot!(&mut self.usage, later.usage);
+        merge_slot!(&mut self.phase, later.phase);
+        merge_slot!(&mut self.zone, later.zone);
+        merge_slot!(&mut self.floor_finish, later.floor_finish);
+        merge_slot!(&mut self.wall_finish, later.wall_finish);
+        merge_slot!(&mut self.ceiling_finish, later.ceiling_finish);
     }
     fn minimal(&self, base: &Space) -> Self {
-        Self { storey: changed(&self.storey, &base.storey), number: changed(&self.number, &base.number), name: changed(&self.name, &base.name), boundary: changed(&self.boundary, &base.boundary), usage: changed(&self.usage, &base.usage) }
+        Self { storey: changed(&self.storey, &base.storey), number: changed(&self.number, &base.number), name: changed(&self.name, &base.name), boundary: changed(&self.boundary, &base.boundary), usage: changed(&self.usage, &base.usage), phase: changed(&self.phase, &base.phase), zone: changed_assigned(&self.zone, &base.zone), floor_finish: changed_assigned(&self.floor_finish, &base.floor_finish), wall_finish: changed_assigned(&self.wall_finish, &base.wall_finish), ceiling_finish: changed_assigned(&self.ceiling_finish, &base.ceiling_finish) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1474,6 +2746,21 @@ impl Patch<Space> for SpacePatch {
         if self.usage.is_some() {
             out.push("usage".to_string());
         }
+        if self.phase.is_some() {
+            out.push("phase".to_string());
+        }
+        if self.zone.is_some() {
+            out.push("zone".to_string());
+        }
+        if self.floor_finish.is_some() {
+            out.push("floor_finish".to_string());
+        }
+        if self.wall_finish.is_some() {
+            out.push("wall_finish".to_string());
+        }
+        if self.ceiling_finish.is_some() {
+            out.push("ceiling_finish".to_string());
+        }
         out
     }
     fn is_empty(&self) -> bool {
@@ -1481,43 +2768,280 @@ impl Patch<Space> for SpacePatch {
     }
 }
 
-/// 🩹 Sparse patch of [`Classification`]: an absent field is untouched.
+/// 🩹 Sparse patch of [`Zone`]: an absent field is untouched.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
-pub struct ClassificationPatch {
+pub struct ZonePatch {
     #[value(skip_serializing_if = "Option::is_none")]
-    pub system: Option<String>,
+    pub name: Option<String>,
     #[value(skip_serializing_if = "Option::is_none")]
-    pub code: Option<String>,
+    pub category: Option<String>,
     #[value(skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
+    pub occupancy_density: Option<f64>,
 }
 
-impl Patch<Classification> for ClassificationPatch {
-    fn write(&self, base: &Classification) -> Classification {
-        Classification { system: take(&self.system, &base.system), code: take(&self.code, &base.code), title: take(&self.title, &base.title) }
+impl Patch<Zone> for ZonePatch {
+    fn write(&self, base: &Zone) -> Zone {
+        Zone { name: take(&self.name, &base.name), category: take(&self.category, &base.category), occupancy_density: take(&self.occupancy_density, &base.occupancy_density) }
     }
-    fn restoring(&self, base: &Classification) -> Self {
-        Self { system: restore(&self.system, &base.system), code: restore(&self.code, &base.code), title: restore(&self.title, &base.title) }
+    fn restoring(&self, base: &Zone) -> Self {
+        Self { name: restore(&self.name, &base.name), category: restore(&self.category, &base.category), occupancy_density: restore(&self.occupancy_density, &base.occupancy_density) }
     }
     fn merge(&mut self, later: Self) {
-        merge_slot!(&mut self.system, later.system);
-        merge_slot!(&mut self.code, later.code);
-        merge_slot!(&mut self.title, later.title);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.category, later.category);
+        merge_slot!(&mut self.occupancy_density, later.occupancy_density);
     }
-    fn minimal(&self, base: &Classification) -> Self {
-        Self { system: changed(&self.system, &base.system), code: changed(&self.code, &base.code), title: changed(&self.title, &base.title) }
+    fn minimal(&self, base: &Zone) -> Self {
+        Self { name: changed(&self.name, &base.name), category: changed(&self.category, &base.category), occupancy_density: changed(&self.occupancy_density, &base.occupancy_density) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
-        if self.system.is_some() {
-            out.push("system".to_string());
+        if self.name.is_some() {
+            out.push("name".to_string());
         }
-        if self.code.is_some() {
-            out.push("code".to_string());
+        if self.category.is_some() {
+            out.push("category".to_string());
         }
-        if self.title.is_some() {
-            out.push("title".to_string());
+        if self.occupancy_density.is_some() {
+            out.push("occupancy_density".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`AreaScheme`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct AreaSchemePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub measure: Option<AreaMeasure>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub usages: Option<Vec<String>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub zones: Option<Vec<String>>,
+}
+
+impl Patch<AreaScheme> for AreaSchemePatch {
+    fn write(&self, base: &AreaScheme) -> AreaScheme {
+        AreaScheme { name: take(&self.name, &base.name), measure: take(&self.measure, &base.measure), usages: take(&self.usages, &base.usages), zones: take(&self.zones, &base.zones) }
+    }
+    fn restoring(&self, base: &AreaScheme) -> Self {
+        Self { name: restore(&self.name, &base.name), measure: restore(&self.measure, &base.measure), usages: restore(&self.usages, &base.usages), zones: restore(&self.zones, &base.zones) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.measure, later.measure);
+        merge_slot!(&mut self.usages, later.usages);
+        merge_slot!(&mut self.zones, later.zones);
+    }
+    fn minimal(&self, base: &AreaScheme) -> Self {
+        Self { name: changed(&self.name, &base.name), measure: changed(&self.measure, &base.measure), usages: changed(&self.usages, &base.usages), zones: changed(&self.zones, &base.zones) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.measure.is_some() {
+            out.push("measure".to_string());
+        }
+        if self.usages.is_some() {
+            out.push("usages".to_string());
+        }
+        if self.zones.is_some() {
+            out.push("zones".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`View`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct ViewPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub building: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<ViewKind>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<Assigned<Option<String>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub plane: Option<Assigned<Option<ViewPlane>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera: Option<Assigned<Option<ViewCamera>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub cut_height: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub depth: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub crop: Option<Assigned<Option<ViewCrop>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub hidden: Option<Vec<ViewCategory>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Assigned<Option<Phase>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<DetailLevel>,
+}
+
+impl Patch<View> for ViewPatch {
+    fn write(&self, base: &View) -> View {
+        View { building: take(&self.building, &base.building), name: take(&self.name, &base.name), kind: take(&self.kind, &base.kind), storey: take_assigned(&self.storey, &base.storey), plane: take_assigned(&self.plane, &base.plane), camera: take_assigned(&self.camera, &base.camera), cut_height: take_assigned(&self.cut_height, &base.cut_height), depth: take(&self.depth, &base.depth), crop: take_assigned(&self.crop, &base.crop), hidden: take(&self.hidden, &base.hidden), phase: take_assigned(&self.phase, &base.phase), scale: take(&self.scale, &base.scale), detail: take(&self.detail, &base.detail) }
+    }
+    fn restoring(&self, base: &View) -> Self {
+        Self { building: restore(&self.building, &base.building), name: restore(&self.name, &base.name), kind: restore(&self.kind, &base.kind), storey: restore_assigned(&self.storey, &base.storey), plane: restore_assigned(&self.plane, &base.plane), camera: restore_assigned(&self.camera, &base.camera), cut_height: restore_assigned(&self.cut_height, &base.cut_height), depth: restore(&self.depth, &base.depth), crop: restore_assigned(&self.crop, &base.crop), hidden: restore(&self.hidden, &base.hidden), phase: restore_assigned(&self.phase, &base.phase), scale: restore(&self.scale, &base.scale), detail: restore(&self.detail, &base.detail) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.building, later.building);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.kind, later.kind);
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.plane, later.plane);
+        merge_slot!(&mut self.camera, later.camera);
+        merge_slot!(&mut self.cut_height, later.cut_height);
+        merge_slot!(&mut self.depth, later.depth);
+        merge_slot!(&mut self.crop, later.crop);
+        merge_slot!(&mut self.hidden, later.hidden);
+        merge_slot!(&mut self.phase, later.phase);
+        merge_slot!(&mut self.scale, later.scale);
+        merge_slot!(&mut self.detail, later.detail);
+    }
+    fn minimal(&self, base: &View) -> Self {
+        Self { building: changed(&self.building, &base.building), name: changed(&self.name, &base.name), kind: changed(&self.kind, &base.kind), storey: changed_assigned(&self.storey, &base.storey), plane: changed_assigned(&self.plane, &base.plane), camera: changed_assigned(&self.camera, &base.camera), cut_height: changed_assigned(&self.cut_height, &base.cut_height), depth: changed(&self.depth, &base.depth), crop: changed_assigned(&self.crop, &base.crop), hidden: changed(&self.hidden, &base.hidden), phase: changed_assigned(&self.phase, &base.phase), scale: changed(&self.scale, &base.scale), detail: changed(&self.detail, &base.detail) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.building.is_some() {
+            out.push("building".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.kind.is_some() {
+            out.push("kind".to_string());
+        }
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.plane.is_some() {
+            out.push("plane".to_string());
+        }
+        if self.camera.is_some() {
+            out.push("camera".to_string());
+        }
+        if self.cut_height.is_some() {
+            out.push("cut_height".to_string());
+        }
+        if self.depth.is_some() {
+            out.push("depth".to_string());
+        }
+        if self.crop.is_some() {
+            out.push("crop".to_string());
+        }
+        if self.hidden.is_some() {
+            out.push("hidden".to_string());
+        }
+        if self.phase.is_some() {
+            out.push("phase".to_string());
+        }
+        if self.scale.is_some() {
+            out.push("scale".to_string());
+        }
+        if self.detail.is_some() {
+            out.push("detail".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Schedule`]: an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct SchedulePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub category: Option<ScheduleCategory>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub columns: Option<Vec<ScheduleColumn>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sort: Option<Vec<ScheduleSort>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Vec<ScheduleFilter>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub group: Option<Vec<ScheduleGroup>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub itemize: Option<bool>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storeys: Option<Vec<String>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub phases: Option<Vec<Phase>>,
+}
+
+impl Patch<Schedule> for SchedulePatch {
+    fn write(&self, base: &Schedule) -> Schedule {
+        Schedule { name: take(&self.name, &base.name), category: take(&self.category, &base.category), columns: take(&self.columns, &base.columns), sort: take(&self.sort, &base.sort), filter: take(&self.filter, &base.filter), group: take(&self.group, &base.group), itemize: take(&self.itemize, &base.itemize), storeys: take(&self.storeys, &base.storeys), phases: take(&self.phases, &base.phases) }
+    }
+    fn restoring(&self, base: &Schedule) -> Self {
+        Self { name: restore(&self.name, &base.name), category: restore(&self.category, &base.category), columns: restore(&self.columns, &base.columns), sort: restore(&self.sort, &base.sort), filter: restore(&self.filter, &base.filter), group: restore(&self.group, &base.group), itemize: restore(&self.itemize, &base.itemize), storeys: restore(&self.storeys, &base.storeys), phases: restore(&self.phases, &base.phases) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.category, later.category);
+        merge_slot!(&mut self.columns, later.columns);
+        merge_slot!(&mut self.sort, later.sort);
+        merge_slot!(&mut self.filter, later.filter);
+        merge_slot!(&mut self.group, later.group);
+        merge_slot!(&mut self.itemize, later.itemize);
+        merge_slot!(&mut self.storeys, later.storeys);
+        merge_slot!(&mut self.phases, later.phases);
+    }
+    fn minimal(&self, base: &Schedule) -> Self {
+        Self { name: changed(&self.name, &base.name), category: changed(&self.category, &base.category), columns: changed(&self.columns, &base.columns), sort: changed(&self.sort, &base.sort), filter: changed(&self.filter, &base.filter), group: changed(&self.group, &base.group), itemize: changed(&self.itemize, &base.itemize), storeys: changed(&self.storeys, &base.storeys), phases: changed(&self.phases, &base.phases) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.category.is_some() {
+            out.push("category".to_string());
+        }
+        if self.columns.is_some() {
+            out.push("columns".to_string());
+        }
+        if self.sort.is_some() {
+            out.push("sort".to_string());
+        }
+        if self.filter.is_some() {
+            out.push("filter".to_string());
+        }
+        if self.group.is_some() {
+            out.push("group".to_string());
+        }
+        if self.itemize.is_some() {
+            out.push("itemize".to_string());
+        }
+        if self.storeys.is_some() {
+            out.push("storeys".to_string());
+        }
+        if self.phases.is_some() {
+            out.push("phases".to_string());
         }
         out
     }

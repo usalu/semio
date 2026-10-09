@@ -8,7 +8,7 @@ use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
 pub fn diff(payload: &RemoveElementProperty, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if !elements::exists(base, &payload.id) {
+    if !elements::holds_data(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Element \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     let held = base.properties.get(&payload.id).filter(|sets| sets.get(&payload.pset).is_some_and(|properties| properties.contains_key(&payload.property)));

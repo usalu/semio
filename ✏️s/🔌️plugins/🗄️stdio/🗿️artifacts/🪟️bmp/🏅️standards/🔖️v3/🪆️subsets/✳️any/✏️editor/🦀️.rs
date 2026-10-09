@@ -307,7 +307,7 @@ impl ArtifactEditor for BmpEditor {
                 authoring_seed: request.authoring_seed.clone(),
             };
             let tool_id = paint_region::TOOL_IDS.iter().copied().find(|tool_id| *tool_id == request.tool_id).expect("checked BMP paint tool");
-            let payload = ArtifactRetainedCommandPayload::try_new(
+            let payload = ArtifactRetainedCommandPayload::new(
                 ArtifactRetainedCommandInputs {
                     command: *request.command,
                     snapshot: request.snapshot,
@@ -323,7 +323,7 @@ impl ArtifactEditor for BmpEditor {
                 paint_region::MAXIMUM_RAW_BYTES,
                 paint_region::CAPACITY.work_items(),
                 Box::new(paint_region::PaintRegionWork::new(tool_id)),
-            )?;
+            );
             return Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
         }
         if !STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
@@ -340,7 +340,7 @@ impl ArtifactEditor for BmpEditor {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -356,7 +356,7 @@ impl ArtifactEditor for BmpEditor {
             STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
             Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, bmpEditor_retained_reduce, bmpEditor_retained_extent)),
-        )?;
+        );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {

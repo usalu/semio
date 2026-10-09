@@ -201,6 +201,12 @@ impl Dashboard {
 
     fn view_key(&mut self, tui: &mut Tui, key: &KeyEvent, spec: &KeySpec) {
         let index = self.focused_index(tui);
+        if matches!(&self.windows[index].body, Body::Launcher(launcher) if launcher.editing()) && matches!(key.key, Key::Char(_) | Key::Backspace | Key::Delete | Key::Left | Key::Right | Key::Home | Key::End | Key::Keypad(_)) {
+            let event = Event::Key(event_of(spec));
+            let signals = tui.dispatch(&event);
+            self.on_signals(tui, signals);
+            return;
+        }
         let action = self.keymap.resolve(Scope::View, spec).map(str::to_string);
         let typed = match key.key { Key::Char(c) if key.mods & (mods::CTRL | mods::ALT) == 0 => Some(Input::Char(c)), Key::Backspace => Some(Input::Backspace), _ => None };
         let input = action.as_deref().and_then(input_of).or(typed);
@@ -248,7 +254,7 @@ impl Dashboard {
 
     fn on_paste(&mut self, tui: &mut Tui, event: &Event, text: &str) {
         let index = self.focused_index(tui);
-        if self.terminal_has_keyboard(tui) { let signals = tui.dispatch(event); self.on_signals(tui, signals); return; }
+        if self.terminal_has_keyboard(tui) || matches!(&self.windows[index].body, Body::Launcher(launcher) if launcher.editing()) { let signals = tui.dispatch(event); self.on_signals(tui, signals); return; }
         if matches!(self.windows[index].body, Body::Launcher(_)) { for c in text.chars().filter(|c| !c.is_control()) { self.launcher_input(tui, index, Input::Char(c)); } }
     }
 
@@ -297,6 +303,9 @@ impl Dashboard {
         for (node, signal) in signals {
             let window = self.window_of(tui, node);
             match (signal, window) {
+                (WidgetSignal::ValueChanged(value), Some(index)) if self.windows[index].input == Some(node) => {
+                    if let Body::Launcher(launcher) = &mut self.windows[index].body { launcher.edited(value); }
+                }
                 (WidgetSignal::TerminalInput(data), Some(index)) => {
                     if let Some(session_id) = self.windows[index].session().map(|session| session.session_id.clone()) { self.send_input(&session_id, data); }
                 }
@@ -391,6 +400,7 @@ impl Dashboard {
                 let newest = sessions.last().map(|session| session.session_id.clone());
                 for session in sessions { self.update_session(tui, session); }
                 if let Some(target) = newest.and_then(|id| self.windows.iter().position(|window| window.session().is_some_and(|session| session.session_id == id))) { self.focus_window(tui, target); }
+                self.restore_focus = true;
                 self.restore_sessions();
             }
             Action::SearchOutput => {
@@ -440,7 +450,7 @@ impl Dashboard {
         for message in self.sync_sizes(tui) { let _ = self.send(&message); }
         self.refresh_panes(tui);
         for index in 0..self.windows.len() { self.paint_launcher(tui, index); }
-        self.follow_stage(tui);
+        self.follow_stage(tui, focused);
         self.sync_chrome(tui);
         self.sync_footer(tui);
     }
@@ -449,6 +459,7 @@ impl Dashboard {
         let window = &mut self.windows[index];
         let (Body::Launcher(launcher), Some(tree)) = (&mut window.body, window.tree) else { return };
         let browse = launcher.stage() == super::launcher::Stage::Browse;
+        let editor_slot = launcher.editor_slot();
         let (list, input, caption) = (window.list, window.input, window.caption);
         for (node, shown) in [(Some(tree), browse), (Some(list), !browse), (input, !browse)] {
             if let Some(node) = node { if tui.scene.node(node).visible != shown { tui.scene.node_mut(node).set_visible(shown); } }
@@ -459,9 +470,10 @@ impl Dashboard {
             launcher.set_page(usize::from(tui.scene.rect(list).height).max(1));
             let screen = launcher.screen();
             if let Some(WidgetState::List(state)) = tui.scene.node_mut(list).widget() { state.marks = vec![false; screen.items.len()]; state.items = screen.items; state.selected = screen.selected; state.offset = 0; }
-            if let Some(node) = input { if let Some(WidgetState::Input(state)) = tui.scene.node_mut(node).widget() { state.cursor = screen.input.len(); state.value = screen.input; state.placeholder = screen.placeholder; } }
+            if let Some(node) = input { if let Some(WidgetState::Input(state)) = tui.scene.node_mut(node).widget() { if window.editor_slot != editor_slot || state.value != screen.input { state.set_value(screen.input); } state.placeholder = screen.placeholder; } }
             screen.caption
         };
+        window.editor_slot = editor_slot;
         if let Some(node) = caption {
             let changed = matches!(&tui.scene.node(node).content, ui_tui::tui::scene::NodeContent::Widget(WidgetState::Label(label)) if label.text != caption_text);
             if changed { if let Some(WidgetState::Label(label)) = tui.scene.node_mut(node).widget() { label.text = caption_text; } }
@@ -469,12 +481,11 @@ impl Dashboard {
     }
 
     /// 🎯️ Keeps the engine's focus on the node of the focused window that takes the keys now, as the launcher moves between its stages.
-    fn follow_stage(&mut self, tui: &mut Tui) {
+    fn follow_stage(&mut self, tui: &mut Tui, index: usize) {
         if !tui.overlays().is_empty() { return; }
-        let index = self.focused_index(tui);
         let Some(window) = self.windows.get(index) else { return };
         let want = window.focus();
-        if tui.focus() != Some(want) && tui.focus().and_then(|node| self.window_of(tui, node)) == Some(index) { tui.set_focus(Some(want)); }
+        if tui.focus() != Some(want) && tui.focus().is_none_or(|node| self.window_of(tui, node) == Some(index)) { tui.set_focus(Some(want)); }
     }
 
     fn sync_footer(&mut self, tui: &mut Tui) {
@@ -519,7 +530,7 @@ impl Dashboard {
             (None, None) => String::new(),
         };
         let phase = self.phase.map(|phase| match phase { crate::inventory::Phase::Known => text.phase_known, crate::inventory::Phase::Sources => text.phase_sources, crate::inventory::Phase::Walk => text.phase_walk, crate::inventory::Phase::Complete => text.phase_complete }.as_str().to_string()).filter(|_| self.inventory.is_some());
-        [self.focus_title(tui), Some(text.state_running.fill(&[("count", &self.running().to_string())]).into_string()), Some(link), Some(discovery).filter(|value| !value.is_empty()), phase, self.notice.clone()].into_iter().flatten().collect::<Vec<_>>().join(" · ")
+        [self.notice.clone(), self.focus_title(tui), Some(text.state_running.fill(&[("count", &self.running().to_string())]).into_string()), Some(link), Some(discovery).filter(|value| !value.is_empty()), phase].into_iter().flatten().collect::<Vec<_>>().join(" · ")
     }
 }
 // #endregion 🔖️Frame

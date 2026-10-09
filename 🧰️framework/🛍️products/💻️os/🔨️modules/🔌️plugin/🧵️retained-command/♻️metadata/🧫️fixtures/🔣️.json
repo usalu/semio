@@ -1,0 +1,25 @@
+{
+  "contract": "semio.artifact.retained-command.metadata-retirement.v1",
+  "cases": [
+    {
+      "name": "empty-history",
+      "text": "",
+      "rows": 0
+    },
+    {
+      "name": "localized-history",
+      "text": "🖍️ Zeichnen / Drawing",
+      "rows": 3
+    },
+    {
+      "name": "long-history",
+      "text": "Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field Field 🧬️",
+      "rows": 9
+    }
+  ],
+  "required": {
+    "zeroGrant": "unchanged",
+    "physicalReceipt": "exact",
+    "terminalDropBytes": 0
+  }
+}

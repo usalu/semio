@@ -123,7 +123,7 @@
     },
     "ReadyDeclaration": {
       "type": "object",
-      "description": "🟢️ The task is ready when its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match plus `path`. With `portEnv` and `port` the port is also exported under that variable; without `port`, `portEnv` names the parameter or environment value that carries it.",
+      "description": "🟢️ The task is ready after its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the exact ready URL answers HTTP with a 2xx or 3xx status; the ready URL is that match plus `path`. With `portEnv` and `port` the port is also exported under that variable; without `port`, `portEnv` names the parameter or environment value that carries it.",
       "properties": {
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
         "portEnv": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$" },
@@ -313,7 +313,7 @@
     },
     "Ready": {
       "type": "object",
-      "description": "🟢️ The resolved readiness of a process: ready when its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match plus `path`.",
+      "description": "🟢️ The resolved readiness of a process: ready after its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the exact ready URL answers HTTP with a 2xx or 3xx status; the ready URL is that match plus `path`.",
       "properties": {
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
         "path": { "type": "string" },

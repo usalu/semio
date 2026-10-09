@@ -63,6 +63,36 @@
   "beam_types": {},
   "window_types": {},
   "door_types": {},
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 1.5 x 1.2",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.2
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.15
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.15
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "mullion_material": "m-alu"
+    }
+  },
   "sites": {
     "site-1": {
       "name": "Plot",
@@ -155,6 +185,7 @@
   "curtain_walls": {
     "cw-1": {
       "storey": "st-ground",
+      "curtain_wall_type": "cwt-1",
       "axis": {
         "Line": {
           "start": {
@@ -173,16 +204,7 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.2,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-alu",
+      "phase": "New",
       "name": "Facade"
     }
   },

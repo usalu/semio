@@ -259,8 +259,8 @@ async fn window_commands_persist_per_window_and_never_touch_the_document() {
         Ok(())
     }
     .await;
-    close_or_leak(reopened);
-    close_or_leak(app);
+    artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+    artifact_app_laws::close_registered_fixture_app(&mut *app);
     outcome.expect("BIM viewer window configuration ownership and restoration");
 }
 
@@ -276,30 +276,53 @@ async fn render_plan(app: &mut VcsArtifactApp<ViewerApp<BimModelViewer>>, view: 
     artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
 }
 
-type ViewerFixture = Box<VcsArtifactApp<ViewerApp<BimModelViewer>>>;
-
-/// 🧹️ Closes a fixture through the framework's bounded close ladder for a few seconds; a ladder that stalls (see `a_window_addressed_viewer_closes_to_its_terminal_empty_witness`) leaks the fixture instead of failing the
-/// law under test, because the store's `Drop` asserts the terminal-empty witness.
-fn close_or_leak(mut app: ViewerFixture) {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
-    while std::time::Instant::now() < deadline && !app.close_terminal_is_empty() {
-        let demand = app.next_close_byte_demand();
-        let grant = semio_framework_plugin::app::artifact_close_release_grant(demand, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("a close grant");
-        app.close_step(1, grant).expect("a close step");
-    }
-    if !app.close_terminal_is_empty() {
-        std::mem::forget(app);
-    }
-}
-
-/// 🧹️ KNOWN FRAMEWORK ISSUE, reproduced on demand (`cargo test ... -- --ignored`): once a window instance has been rendered or addressed, the retained window-config partition of any window kind never reaches its
-/// terminal-empty witness (`Pending { 0, 0 }` from the partition's store disposer), for the editor's windows as well as for this viewer's. The persistence law above does not depend on it.
+/// 🧹️ A viewer whose window instance has been rendered closes through the exact retained ladder to its terminal-empty witness: the window-config partition publishes the physical release its store owes.
 #[semio_framework_async_macros::async_test]
-#[ignore = "framework: a window-config partition's store disposer answers Pending {0, 0} forever (editor windows share it)"]
 async fn a_window_addressed_viewer_closes_to_its_terminal_empty_witness() {
     let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
     app.bind_instance_id(81).await;
     let view = windows(&[("plan", plan::WINDOW_KIND_ID)]);
     render_plan(&mut app, &addressed(&view, "plan")).await.expect("render");
     artifact_app_laws::close_registered_fixture_app(&mut *app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_viewer_speaks_both_languages_from_its_one_label_block() {
+    use terminology::BimViewerLabels as Labels;
+    let json = serde_json::to_string(&create_bim_viewer()).expect("viewer definition json");
+    let picks: [fn(&Labels) -> semio_framework_ui_locale::LabelText; 10] = [
+        |labels| labels.mode_view,
+        |labels| labels.window_world,
+        |labels| labels.window_plan,
+        |labels| labels.set_camera,
+        |labels| labels.set_projection,
+        |labels| labels.set_projection_parameter,
+        |labels| labels.set_storey_visible,
+        |labels| labels.set_plan_storey,
+        |labels| labels.camera_pose,
+        |labels| labels.elements,
+    ];
+    for pick in picks {
+        for labels in [&Labels::NATIVE_EN, &Labels::NATIVE_DE] {
+            assert!(json.contains(pick(labels).as_str()), "the viewer manifest lacks '{}'", pick(labels).as_str());
+        }
+    }
+    assert!(json.contains("Bauteil") && json.contains("Ansicht") && json.contains("Grundriss"), "the German texts are in the manifest");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_layout_tabs_are_the_localized_window_labels_not_english_text() {
+    assert_eq!(view::layout(), semio_framework_plugin::create_default_layout(&[world::WINDOW_KIND_ID.into(), plan::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), None), "no tab titles of its own: the windows' labels name the tabs");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn an_unknown_body_is_named_in_the_viewers_language() {
+    let model = parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses");
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&model, &history);
+    let cfg = ConfigView { snapshot: &NoConfig {}, window: None };
+    for (locale, expected) in [(Locale::En, "Unknown body: nowhere"), (Locale::De, "Unbekannter Bereich: nowhere")] {
+        let tree = <BimModelViewer as ArtifactViewer>::render("nowhere", &doc, &cfg, &ViewModel::new(locale, Terminology::Native)).expect("renders a label");
+        assert!(artifact_app_laws::project_and_retire_fixture_tree(tree).expect("projects").contains(expected), "{locale:?}");
+    }
 }

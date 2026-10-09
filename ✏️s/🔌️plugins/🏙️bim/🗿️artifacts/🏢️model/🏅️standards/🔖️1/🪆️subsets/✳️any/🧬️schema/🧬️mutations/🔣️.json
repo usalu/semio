@@ -266,6 +266,261 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/place-elements/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-element-storey/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-element-phase/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-wall-end-join/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/copy-elements/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/mirror-elements/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/array-elements/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/align-elements/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/offset-wall/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/trim-extend-wall/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/split-slab/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/split-beam/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-ceiling-type/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-ceiling-type/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-ceiling-type/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-ceiling/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-ceiling/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-ceiling-boundary/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-ceiling/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-zone/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-zone/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-zone/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-area-scheme/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-area-scheme/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-area-scheme/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-wall-sweep/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-wall-sweep/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-wall-sweep/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-wall-base-slab/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-ramp/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-ramp/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-ramp/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-dimension/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-dimension/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-dimension/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-tag/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-tag/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-tag/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-text-note/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-text-note/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-text-note/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-leader/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-leader/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-leader/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-annotation-style/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-annotation-style/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-annotation-style/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-view/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-view/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-view/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-schedule/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-schedule/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-schedule/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-sheet/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-sheet/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-sheet/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-viewport/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-viewport/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-viewport/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-sheet-revision/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-sheet-revision/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-sheet-revision/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-property-template/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-property-template/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-property-template/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-classification-system/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-classification-system/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-classification-system/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-beam-axis/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-column-tilt/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-curtain-wall-type/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-curtain-wall-type/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-curtain-wall-type/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-curtain-wall-type-of/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-curtain-wall-grid/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-curtain-panel-override/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-curtain-panel-override/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-curtain-panel-override/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-family/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-family/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-family/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-family-parameter/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/remove-family-parameter/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-family-solid/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-family-solid/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-family-solid/schema.json"
     }
   ]
 }

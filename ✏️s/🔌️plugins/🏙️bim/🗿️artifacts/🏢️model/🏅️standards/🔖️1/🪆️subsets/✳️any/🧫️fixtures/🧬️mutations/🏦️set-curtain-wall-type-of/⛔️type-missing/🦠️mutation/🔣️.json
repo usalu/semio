@@ -1,0 +1,5 @@
+{
+  "mutation": "setCurtainWallTypeOf",
+  "id": "cw-1",
+  "curtain_wall_type": "cwt-9"
+}

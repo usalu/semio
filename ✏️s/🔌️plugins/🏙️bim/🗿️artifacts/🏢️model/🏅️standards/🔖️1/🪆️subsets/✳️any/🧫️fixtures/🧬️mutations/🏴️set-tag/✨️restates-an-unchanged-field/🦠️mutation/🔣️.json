@@ -1,0 +1,6 @@
+{
+  "mutation": "setTag",
+  "id": "tag-south",
+  "category": "Number",
+  "style": "as-plan"
+}

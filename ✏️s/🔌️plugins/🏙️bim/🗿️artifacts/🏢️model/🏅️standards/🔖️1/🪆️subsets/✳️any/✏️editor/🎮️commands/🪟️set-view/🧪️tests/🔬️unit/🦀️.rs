@@ -20,8 +20,8 @@ fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<
 }
 
 #[semio_framework_async_macros::async_test]
-async fn choosing_the_plan_storey_writes_the_window_config_and_shares_the_storey_as_presence() {
-    let (result, ctx) = set(plan::WINDOW_KIND_ID, "storey", "st-first", None);
+async fn choosing_the_plan_view_writes_the_window_config_and_shares_its_storey_as_presence() {
+    let (result, ctx) = set(plan::WINDOW_KIND_ID, "view", "v-plan-st-first", None);
     let emit = result.expect("sets");
     assert_eq!(emit.window_config_mutations.len(), 1);
     assert!(emit.artifact_mutations.is_empty(), "a view parameter never edits the document");
@@ -29,17 +29,18 @@ async fn choosing_the_plan_storey_writes_the_window_config_and_shares_the_storey
 }
 
 #[semio_framework_async_macros::async_test]
-async fn the_plan_cut_height_and_the_world_and_section_parameters_each_write_their_window() {
+async fn the_world_parameters_and_the_views_of_the_plan_and_section_windows_each_write_their_window() {
     for (kind, field, value, pressed) in [
-        (plan::WINDOW_KIND_ID, "cut_height", "1.5", None),
+        (plan::WINDOW_KIND_ID, "view", "v-plan-st-ground", None),
         (world::WINDOW_KIND_ID, "projection", "orthographic", None),
         (world::WINDOW_KIND_ID, "isolated_storey", "st-ground", None),
         (world::WINDOW_KIND_ID, "hidden_storey", "st-first", Some(true)),
+        (world::WINDOW_KIND_ID, "view_phase", "demolished", None),
+        (world::WINDOW_KIND_ID, "view_phase", "", None),
         (world::WINDOW_KIND_ID, "section_enabled", "", Some(true)),
         (world::WINDOW_KIND_ID, "section_axis", "x", None),
         (world::WINDOW_KIND_ID, "section_offset", "2.5", None),
-        (section::WINDOW_KIND_ID, "line", "0, 3, 8, 3", None),
-        (section::WINDOW_KIND_ID, "depth", "4", None),
+        (section::WINDOW_KIND_ID, "view", "v-section-a", None),
     ] {
         let (result, _) = set(kind, field, value, pressed);
         assert_eq!(result.unwrap_or_else(|fault| panic!("{kind} {field}: {}", fault.message)).window_config_mutations.len(), 1, "{kind} {field}");
@@ -48,15 +49,16 @@ async fn the_plan_cut_height_and_the_world_and_section_parameters_each_write_the
 
 #[semio_framework_async_macros::async_test]
 async fn bad_values_unknown_fields_and_missing_windows_are_refused_with_their_own_code() {
-    assert_eq!(code(set(plan::WINDOW_KIND_ID, "storey", "nowhere", None).0), Some("bim.view.storey-missing".to_string()));
-    assert_eq!(code(set(plan::WINDOW_KIND_ID, "cut_height", "high", None).0), Some("bim.view.value-invalid".to_string()));
+    assert_eq!(code(set(world::WINDOW_KIND_ID, "view_phase", "planned", None).0), Some("bim.view.value-invalid".to_string()));
+    assert_eq!(code(set(plan::WINDOW_KIND_ID, "view", "nowhere", None).0), Some("bim.view.view-missing".to_string()));
+    assert_eq!(code(set(plan::WINDOW_KIND_ID, "view", "v-section-a", None).0), Some("bim.view.view-missing".to_string()), "a section is no plan view");
     assert_eq!(code(set(world::WINDOW_KIND_ID, "section_axis", "w", None).0), Some("bim.view.value-invalid".to_string()));
-    assert_eq!(code(set(section::WINDOW_KIND_ID, "line", "1, 2", None).0), Some("bim.view.value-invalid".to_string()));
+    assert_eq!(code(set(section::WINDOW_KIND_ID, "view", "v-plan-st-ground", None).0), Some("bim.view.view-missing".to_string()), "a plan is no section");
     assert_eq!(code(set(plan::WINDOW_KIND_ID, "projection", "x", None).0), Some("bim.view.field-unknown".to_string()));
-    assert_eq!(code(set("bim-edit-schedule", "storey", "st-first", None).0), Some("bim.view.window-unsupported".to_string()));
+    assert_eq!(code(set("bim-edit-schedule", "view", "v-plan-st-first", None).0), Some("bim.view.window-unsupported".to_string()));
     let snapshot = demo();
     let mut windowless = BimDispatchCtx::default();
-    let refused = run(&snapshot, |doc, cfg| handle(&SetView { field: "storey".into(), value: "st-first".into(), pressed: None }, doc, cfg, &mut windowless));
+    let refused = run(&snapshot, |doc, cfg| handle(&SetView { field: "view".into(), value: "v-plan-st-first".into(), pressed: None }, doc, cfg, &mut windowless));
     assert_eq!(code(refused), Some("bim.view.window-required".to_string()));
 }
 

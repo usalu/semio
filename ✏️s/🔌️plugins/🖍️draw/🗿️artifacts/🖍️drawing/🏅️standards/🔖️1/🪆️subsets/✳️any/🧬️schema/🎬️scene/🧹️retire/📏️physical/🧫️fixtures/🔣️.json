@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "empty plan",
+      "source": null
+    },
+    {
+      "name": "independent painted plans",
+      "source": "painted"
+    },
+    {
+      "name": "external raster lease",
+      "source": "raster"
+    }
+  ],
+  "grant": {
+    "maximumItems": 1,
+    "refusedItems": 0,
+    "capacity": "next-demand",
+    "release": "next-demand",
+    "depth": "next-demand"
+  },
+  "expected": {
+    "allocations": "receipt.retainedCapacityBytes",
+    "releases": "receipt.releasedBytes",
+    "terminalBackingBytes": 0
+  }
+}

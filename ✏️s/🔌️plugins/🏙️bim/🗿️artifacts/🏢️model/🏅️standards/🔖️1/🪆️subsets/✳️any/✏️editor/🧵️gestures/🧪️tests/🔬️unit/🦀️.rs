@@ -80,14 +80,33 @@ pub(crate) mod fixture {
 
         /// ➡️ Sends one event; every mutation of the answer is applied to the rig's model.
         pub fn send(&mut self, event: ToolEvent) -> Step {
+            self.drive(|session, context| session.advance(context, &event))
+        }
+
+        /// ⌨️ Moves the keyboard cursor by `delta` metres from `start` (or from where the pointer last was); every mutation of the answer is applied to the rig's model.
+        pub fn nudge(&mut self, delta: [f64; 2], start: [f64; 2]) -> Step {
+            self.drive(|session, context| session.nudge(context, delta, start))
+        }
+
+        /// ⌨️ Clicks at the keyboard cursor; every mutation of the answer is applied to the rig's model.
+        pub fn place(&mut self, start: [f64; 2]) -> Step {
+            self.drive(|session, context| session.place(context, start))
+        }
+
+        /// ⌨️ Types one line into the entry field the way a submit does; every mutation of the answer is applied to the rig's model.
+        pub fn typed(&mut self, line: &str) -> Step {
+            self.drive(|session, context| session.enter(context, line))
+        }
+
+        fn drive(&mut self, feed: impl FnOnce(&mut ToolSession, &mut ToolContext<'_>) -> (Step, Preview)) -> Step {
             self.operations += 1;
-            let inference = crate::editor::bim::inference::with_inference(None, &self.snapshot, |inference| inference.clone());
+            let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &self.snapshot, |inference| inference.clone());
             let snapshot = self.snapshot.clone();
             let mut context = ToolContext::new(&snapshot, &inference, self.surface.clone(), &format!("op{}", self.operations));
             context.selected = &self.selected;
             context.library = &self.library;
             context.labels = Some(&crate::editor::bim::terminology::BimLabels::NATIVE_EN);
-            let (step, preview) = self.session.advance(&mut context, &event);
+            let (step, preview) = feed(&mut self.session, &mut context);
             self.preview = preview;
             for mutation in &step.mutations {
                 self.snapshot = crate::mutations::apply_model_mutation(&self.snapshot, mutation).expect("an emitted mutation applies");
@@ -146,14 +165,14 @@ async fn every_utility_of_the_registry_arms_a_tool_that_owns_a_gesture() {
         let before = rig.snapshot.clone();
         rig.mv(1.0, 1.0);
         assert_eq!(rig.snapshot, before, "{}: a move never writes", row.id);
-        assert!(!rig.preview.marks.is_empty() || matches!(row.id, "move" | "rotate" | "window" | "door" | "opening" | "slab-walls"), "{} shows the snapped pointer", row.id);
+        assert!(!rig.preview.marks.is_empty() || matches!(row.id, "move" | "rotate" | "window" | "door" | "opening" | "slab-walls" | "split-wall" | "copy" | "mirror" | "array" | "array-radial" | "offset" | "trim" | "extend" | "align" | "split"), "{} shows the snapped pointer", row.id);
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_hotkeys_cover_the_specified_tools_and_each_arms_an_existing_command() {
     let bindings = crate::editor::bim::utilities::keybindings();
-    for (key, utility) in [("w", "wall"), ("c", "column"), ("b", "beam"), ("s", "slab"), ("r", "roof"), ("n", "window"), ("d", "door"), ("t", "stair"), ("l", "railing"), ("p", "space"), ("g", "grid"), ("m", "measure"), ("v", "select")] {
+    for (key, utility) in [("w", "wall"), ("c", "column"), ("b", "beam"), ("s", "slab"), ("r", "roof"), ("n", "window"), ("d", "door"), ("t", "stair"), ("l", "railing"), ("p", "space"), ("g", "grid"), ("m", "measure"), ("v", "select"), ("e", "move"), ("q", "rotate"), ("shift+s", "slab-walls"), ("shift+w", "split-wall"), ("k", "copy"), ("shift+k", "mirror"), ("y", "array"), ("shift+y", "array-radial"), ("f", "offset"), ("x", "trim"), ("shift+x", "extend"), ("z", "align"), ("shift+z", "split")] {
         let (_, action) = bindings.iter().find(|(keys, _)| *keys == key).unwrap_or_else(|| panic!("no hotkey {key}"));
         let command = crate::editor::bim::BimModelApp::command_from_action(action, None).unwrap_or_else(|error| panic!("{action}: {}", error.message));
         let armed = crate::editor::bim::utilities::UTILITIES.iter().find(|row| row.arm == Some(*action)).map(|row| row.id);
@@ -172,7 +191,7 @@ async fn the_hotkeys_cover_the_specified_tools_and_each_arms_an_existing_command
 async fn a_utility_switch_drops_the_gesture_in_progress_without_a_trace() {
     let mut owner = GestureOwner::default();
     let snapshot = model();
-    let inference = crate::editor::bim::inference::with_inference(None, &snapshot, |inference| inference.clone());
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, |inference| inference.clone());
     let mut context = session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     let pointer = |x: f64| ToolEvent::Down(session::Pointer { at: [x, 0.0], modifiers: Modifiers::default(), tolerance: PIXEL });
     owner.advance("w1", PLAN, "wall", &mut context, &pointer(0.0));
@@ -187,7 +206,7 @@ async fn a_utility_switch_drops_the_gesture_in_progress_without_a_trace() {
 async fn the_owner_closes_empty() {
     let mut owner = GestureOwner::default();
     let snapshot = model();
-    let inference = crate::editor::bim::inference::with_inference(None, &snapshot, |inference| inference.clone());
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, |inference| inference.clone());
     let mut context = session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     owner.advance("w1", PLAN, "wall", &mut context, &ToolEvent::Escape);
     assert!(!semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
@@ -230,7 +249,7 @@ async fn drawing_four_walls_placing_a_window_and_dragging_the_storey_top_re_infe
     let placed = windows.down(3.0, 0.0);
     assert_eq!(placed.mutations.len(), 1);
     let opening = windows.snapshot.openings.keys().next().expect("the window").clone();
-    let infer = |snapshot: &ModelSnapshot| crate::editor::bim::inference::with_inference(None, snapshot, |inference| inference.clone());
+    let infer = |snapshot: &ModelSnapshot| crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, snapshot, |inference| inference.clone());
     let before = infer(&windows.snapshot);
     assert!(before.wall_layout.values().all(|layout| (layout.height - 3.0).abs() < 1e-9), "every wall starts as high as its 3 m storey");
     assert!((before.opening_frames[&opening].host_height - 3.0).abs() < 1e-9 && before.opening_frames[&opening].valid);
@@ -307,3 +326,71 @@ async fn the_cases_the_third_party_oracle_wrote_replay_through_the_tools_to_the_
         assert!((turned.angle - case["angle"].as_f64().expect("angle")).abs() < 1e-9, "rotation {case}: {}", turned.angle);
     }
 }
+
+//#region 🔖️ModifyPreviews
+fn modify_scene() -> ModelSnapshot {
+    use crate::{Axis, Beam, Phase, Point2, Slab, Vertex, Wall};
+    let mut snapshot = room();
+    let line = |start: (f64, f64), end: (f64, f64)| Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } };
+    let wall = |axis: Axis, name: &str| Wall { axis, name: name.into(), ..snapshot.walls["w-south"].clone() };
+    let (long, short) = (wall(line((0.0, 3.0), (10.0, 3.0)), "Long"), wall(line((1.0, 4.0), (5.0, 4.0)), "Short"));
+    snapshot.walls.insert("w-long".into(), long);
+    snapshot.walls.insert("w-short".into(), short);
+    snapshot.beams.insert("b-1".into(), Beam { storey: "st-ground".into(), beam_type: "bm-20".into(), start: Point2 { x: 0.0, y: 2.0 }, end: Point2 { x: 8.0, y: 2.0 }, top_offset: 0.0, phase: Phase::New, name: "Beam".into() });
+    let corner = |x: f64, y: f64| Vertex { point: Point2 { x, y }, bulge: 0.0 };
+    snapshot.slabs.insert("sl-1".into(), Slab { storey: "st-ground".into(), slab_type: "sl-200".into(), boundary: vec![corner(0.0, 0.0), corner(8.0, 0.0), corner(8.0, 6.0), corner(0.0, 6.0)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: "Floor".into() });
+    snapshot
+}
+
+#[derive(Clone, Copy)]
+enum Act {
+    Move(f64, f64),
+    Click(f64, f64),
+    Press(f64, f64),
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_modify_gesture_previews_live_in_the_plan_the_3d_window_and_the_transient_and_writes_nothing_until_the_last_click() {
+    use Act::{Click, Move, Press};
+    let scripts: [(&str, Vec<&str>, Vec<Act>); 10] = [
+        ("copy", vec!["w-south"], vec![Move(1.0, 1.0), Click(1.0, 1.0), Move(1.0, 4.0)]),
+        ("mirror", vec!["w-south"], vec![Move(10.0, -1.0), Click(10.0, -1.0), Move(10.0, 7.0)]),
+        ("array", vec!["w-south"], vec![Click(1.0, 2.0), Click(1.0, 3.0), Move(1.0, 5.1)]),
+        ("array-radial", vec!["w-south"], vec![Click(4.0, 3.0), Click(5.0, 3.0), Move(4.0, 4.0)]),
+        ("offset", vec![], vec![Move(4.0, 0.0), Press(4.0, 0.0), Move(4.0, 1.52)]),
+        ("trim", vec![], vec![Move(8.0, 1.5), Press(8.0, 1.5), Move(3.0, 3.0)]),
+        ("extend", vec![], vec![Move(8.0, 1.5), Press(8.0, 1.5), Move(4.9, 4.0)]),
+        ("align", vec!["w-north"], vec![Move(0.5, 0.0)]),
+        ("split", vec![], vec![Move(2.0, 2.0)]),
+        ("split", vec![], vec![Move(3.0, 2.0), Press(3.0, 2.0), Move(3.0, 4.0)]),
+    ];
+    for (index, (utility, selected, acts)) in scripts.into_iter().enumerate() {
+        let mut scene = modify_scene();
+        if index != 8 {
+            scene.beams.clear();
+        }
+        if index != 9 {
+            scene.slabs.clear();
+        }
+        let mut rig = Rig::plan(utility, scene);
+        rig.selected = selected.iter().map(|id| id.to_string()).collect();
+        let before = rig.snapshot.clone();
+        let mut shown = Vec::new();
+        for act in acts {
+            let step = match act {
+                Move(x, y) => rig.mv(x, y),
+                Click(x, y) => rig.click(x, y),
+                Press(x, y) => rig.down(x, y),
+            };
+            assert!(step.mutations.is_empty(), "{utility}: only the closing click writes");
+            shown.push(rig.preview.marks.len());
+        }
+        assert_eq!(rig.snapshot, before, "{utility}: the document stays untouched while the gesture shows");
+        assert!(shown.iter().all(|marks| *marks > 0), "{utility}: every step of the gesture shows something, {shown:?}");
+        assert_eq!(session::Preview::from_text(&rig.preview.to_text()), rig.preview, "{utility}: the preview survives the window transient");
+        assert!(!overlay::plan_records(&rig.snapshot, &rig.selected, utility, &rig.preview, 1.0).is_empty(), "{utility}: the plan paints it");
+        let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &rig.snapshot, Clone::clone);
+        assert!(!world::preview_items(&rig.snapshot, &inference, &world::config::BimWorldWindowConfig::default(), &rig.preview).is_empty(), "{utility}: the 3D window paints it");
+    }
+}
+//#endregion 🔖️ModifyPreviews

@@ -14,3 +14,9 @@ Feature: Real monorepo commands run through the dashboard
     Then the printed address answers HTTP 200
     When the developer stops the task
     Then the task is exited and the port refuses connections
+
+  Scenario: A real native build completes with a retained task log
+    Given the real workspace with an isolated named dashboard daemon
+    When a developer builds the native UI package through the dashboard with the Nx cache bypassed
+    Then the build completes and its task exits 0
+    And the retained task log records the successful Nx build

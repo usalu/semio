@@ -1,0 +1,11 @@
+{
+  "mutation": "createPropertyTemplate",
+  "id": "w-south",
+  "template": {
+    "name": "Other",
+    "applies_to": [
+      "Wall"
+    ],
+    "properties": []
+  }
+}

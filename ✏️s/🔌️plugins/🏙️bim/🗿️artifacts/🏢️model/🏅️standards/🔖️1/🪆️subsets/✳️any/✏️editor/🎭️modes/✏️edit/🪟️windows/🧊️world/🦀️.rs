@@ -7,10 +7,12 @@ pub mod config;
 
 use self::config::BimWorldWindowConfig;
 use crate::editor::bim::entities::kind_holding;
+use crate::editor::bim::gestures::session::{Preview, Shape};
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::terminology::BimLabels;
 use crate::render::world::{mesh_data, overview_orbit, world_bounds};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
 use crate::{ModelInference, ModelSnapshot};
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::InteractionRef;
@@ -23,6 +25,8 @@ use semio_framework_ui_locale::LocalizedLabel;
 pub const WINDOW_KIND_ID: &str = "bim-edit-world";
 pub const BODY_KEY: &str = "bim.edit.world";
 const SURFACE_ID: &str = "bim.edit.world3d/world";
+/// 🎥️ The projection kinds of the 3D window, as the host names them: perspective, orthographic, axonometric, one-point and two-point.
+pub const PROJECTION_KINDS: [&str; 5] = ["threePoint", "orthographic", "axonometric", "onePoint", "twoPoint"];
 /// 🎥️ The camera of a window that has not framed its content yet.
 pub const INITIAL_CAMERA: store::Viewport3dOrbit = store::Viewport3dOrbit { position: [14.0, -14.0, 10.0], target: [4.0, 3.0, 1.5], zoom: 1.0, up: None };
 //#endregion 🔖️Constants
@@ -51,14 +55,21 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Visibility
-/// 👁️ Whether a solid is drawn: not on a hidden storey and, when one storey is isolated, on that storey.
-pub fn visible(solid: &ElementSolid, config: &BimWorldWindowConfig) -> bool {
-    (config.isolated_storey.is_empty() || solid.storey == config.isolated_storey) && !config.hidden_storeys.contains(&solid.storey)
+/// 🎭️ The phase filter of the window: its `view_phase` key (`all`, `existing`, `new`, `demolished`, `temporary`), every phase for an empty or unknown key.
+pub fn view_phase(config: &BimWorldWindowConfig) -> ViewPhase {
+    ViewPhase::parse(&config.view_phase).unwrap_or_default()
+}
+
+/// 👁️ Whether the solid of element `id` is drawn: not on a hidden storey, on the isolated storey when there is one, and not hidden by the phase filter (the `phase-visibility` of its storey decides).
+pub fn visible(id: &str, solid: &ElementSolid, inference: &ModelInference, config: &BimWorldWindowConfig) -> bool {
+    (config.isolated_storey.is_empty() || solid.storey == config.isolated_storey)
+        && !config.hidden_storeys.contains(&solid.storey)
+        && !inference.phase_visibility.get(&solid.storey).is_some_and(|phases| phases.hides(view_phase(config), id))
 }
 
 /// 🧊️ The solids the window draws, in element id order.
 pub fn visible_solids<'a>(inference: &'a ModelInference, config: &BimWorldWindowConfig) -> Vec<(&'a String, &'a ElementSolid)> {
-    inference.element_solids.iter().filter(|(_, solid)| visible(solid, config)).collect()
+    inference.element_solids.iter().filter(|(id, solid)| visible(id, solid, inference, config)).collect()
 }
 //#endregion 🔖️Visibility
 
@@ -76,8 +87,9 @@ fn mesh_entry(id: &str, snapshot: &ModelSnapshot, solid: &ElementSolid) -> DslVa
 fn instance_entry(id: &str, snapshot: &ModelSnapshot, solid: &ElementSolid, selected: bool, hovered: bool) -> DslValue {
     let placement = solid.placement;
     let (sin, cos) = (placement.rotation * 0.5).sin_cos();
-    let kind = kind_holding(snapshot, id).map_or("wall", |row| row.kind);
-    let name = kind_holding(snapshot, id).and_then(|row| (row.name)(snapshot, id)).unwrap_or_else(|| id.to_string());
+    let holder = kind_holding(snapshot, id);
+    let name = holder.and_then(|row| (row.name)(snapshot, id)).unwrap_or_else(|| id.to_string());
+    let granularity = holder.map(|row| ("interactionGranularityId".to_string(), DslValue::String(row.kind.to_string())));
     DslValue::object([
         ("id".to_string(), DslValue::String(id.to_string())),
         ("meshId".to_string(), DslValue::String(id.to_string())),
@@ -88,8 +100,7 @@ fn instance_entry(id: &str, snapshot: &ModelSnapshot, solid: &ElementSolid, sele
         ("selected".to_string(), DslValue::Bool(selected)),
         ("hovered".to_string(), DslValue::Bool(hovered)),
         ("interactionId".to_string(), DslValue::String(id.to_string())),
-        ("interactionGranularityId".to_string(), DslValue::String(kind.to_string())),
-    ])
+    ].into_iter().chain(granularity))
 }
 
 /// 🎥️ The camera pose for a model: the shared overview of the visible bounds, so a window that has not been navigated frames its content.
@@ -113,8 +124,47 @@ pub fn section_options(config: &BimWorldWindowConfig) -> Option<semio_framework_
     Some(semio_framework_plugin::World3dModellingOptions { section: Some(semio_framework_plugin::World3dSection::new(origin, normal).capped(semio_framework_plugin::World3dTone::Neutral)), ..Default::default() })
 }
 
+/// 🫧️ How far above the storey floor the marks of a gesture float in the 3D window, in metres.
+const PREVIEW_LIFT: f64 = 0.02;
+
+fn segment_entry(from: [f64; 3], to: [f64; 3]) -> DslValue {
+    DslValue::object([("kind".to_string(), DslValue::String("segment".into())), ("from".to_string(), array(&from)), ("to".to_string(), array(&to))])
+}
+
+fn point_entry(at: [f64; 3]) -> DslValue {
+    DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("position".to_string(), array(&at))])
+}
+
+/// 🫧️ The marks of the gesture in progress as the world's engagement preview: every path becomes the segments between its points (a closed one gets its closing segment), every dot and snap
+/// marker a point cross, all at the floor of the storey the gesture draws on. Labels have no 3D form and stay in the plan.
+pub fn preview_items(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, preview: &Preview) -> Vec<DslValue> {
+    let storey = crate::editor::bim::gestures::world_storey(snapshot, &config.isolated_storey);
+    let z = inference.storey_levels.get(&storey).map_or(0.0, |level| level.elevation) + PREVIEW_LIFT;
+    let lift = |at: [f64; 2]| [at[0], at[1], z];
+    let mut items = Vec::new();
+    for mark in &preview.marks {
+        let corners = mark.corners();
+        match mark.shape {
+            Shape::Path => {
+                items.extend(corners.windows(2).map(|pair| segment_entry(lift(pair[0]), lift(pair[1]))));
+                if let (true, Some(first), Some(last)) = (mark.closed && corners.len() > 2, corners.first(), corners.last()) {
+                    items.push(segment_entry(lift(*last), lift(*first)));
+                }
+            }
+            Shape::Dot | Shape::Snap => items.extend(corners.first().map(|at| point_entry(lift(*at)))),
+            Shape::Label => {}
+        }
+    }
+    items
+}
+
 /// 🎬️ The world scene of the model: camera, meshes, instances, selection and the interaction domain the host dispatches picks into.
 pub fn scene(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_framework_plugin::World3dScene {
+    scene_over(snapshot, inference, config, selection, hover, revision, &Preview::default())
+}
+
+/// 🎬️ [`scene`] with the marks of the gesture in progress painted over the model as the scene's engagement preview.
+pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::World3dScene {
     let solids = visible_solids(inference, config);
     let meshes: Vec<DslValue> = solids.iter().map(|(id, solid)| mesh_entry(id, snapshot, solid)).collect();
     let instances: Vec<DslValue> = solids.iter().map(|(id, solid)| instance_entry(id, snapshot, solid, selection.contains(id), hover.contains(id))).collect();
@@ -129,15 +179,22 @@ pub fn scene(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimW
         &semio_framework_plugin::WorldSunConfig::default(),
     );
     scene.domain_id = Some(BIM_ELEMENT_DOMAIN.into());
-    scene.domain_granularity_id = Some("wall".into());
+    scene.domain_granularity_id = solids.first().and_then(|(id, _)| kind_holding(snapshot, id)).map(|row| row.kind.to_string());
     scene.fit_json = Some(semio_framework_pack_json::to_json_string(&DslValue::object([("enabled".to_string(), DslValue::Bool(!config.framed)), ("revision".to_string(), DslValue::float(f64::from(revision))), ("padding".to_string(), DslValue::float(1.25))])));
     scene.modelling_options = section_options(config);
+    let marks = preview_items(snapshot, inference, config, preview);
+    scene.engagement_preview_json = (!marks.is_empty()).then(|| semio_framework_pack_json::to_json_string(&marks));
     scene
 }
 
 /// 🧊️ Renders the world window.
 pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene(snapshot, inference, config, selection, hover, revision))
+    render_over(snapshot, inference, config, selection, hover, revision, &Preview::default())
+}
+
+/// 🧊️ [`render`] with the marks of the gesture in progress painted over the model.
+pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene_over(snapshot, inference, config, selection, hover, revision, preview))
 }
 //#endregion 🔖️Scene
 

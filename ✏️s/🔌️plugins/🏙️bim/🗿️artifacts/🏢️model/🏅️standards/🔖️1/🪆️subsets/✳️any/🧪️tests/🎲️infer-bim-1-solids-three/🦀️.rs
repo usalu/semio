@@ -7,7 +7,8 @@
 use semio_repo_test_host::Adapter;
 
 /// 📸️ The committed cases, in the order of the scenario.
-const CASES: [&str; 3] = ["straight-openings", "room-joins", "curtain-grid"];
+/// 📁️ (projection key, fixture directory) of the committed cases, in the order of the scenario.
+const CASES: [(&str, &str); 4] = [("straight-openings", "🚪️straight-openings"), ("room-joins", "🧩️room-joins"), ("curtain-grid", "🏬️curtain-grid"), ("ceilings-meshes", "🪵️ceilings-meshes")];
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
@@ -15,7 +16,8 @@ mod subject {
     use super::CASES;
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, ElementSolid};
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::model_graph::registry;
 
     fn row(solid: &ElementSolid) -> String {
         let (min, max) = (solid.bounds.min, solid.bounds.max);
@@ -36,10 +38,11 @@ mod subject {
     /// 🧊️ `{case: {element id: {volume, area, bounds, triangles}}}` of the inferred solids of every committed case.
     pub fn element_solids(ctx: &Context) -> Result<Outcome, String> {
         let mut cases = Vec::new();
-        for name in CASES {
-            let document = ctx.input_json(&format!("shared://💡️inferences/🧊️element-solids/{name}/🔣️.json"))?;
+        for (name, directory) in CASES {
+            let document = ctx.input_json(&format!("shared://💡️inferences/🧊️element-solids/{directory}/🔣️.json"))?;
             let snapshot = decode_model_snapshot_json(&document.get("snapshot").ok_or_else(|| format!("{name}: the case has no snapshot"))?.to_string())?;
-            let rows: Vec<String> = compute_element_solids(&snapshot).iter().map(|(id, solid)| format!("\"{id}\":{}", row(solid))).collect();
+            let solids = registry::try_with_inference(None, &snapshot, |inferred| inferred.element_solids.clone()).map_err(|error| error.to_string())?;
+            let rows: Vec<String> = solids.iter().map(|(id, solid)| format!("\"{id}\":{}", row(solid))).collect();
             cases.push(format!("\"{name}\":{{{}}}", rows.join(",")));
         }
         let text = format!("{{{}}}", cases.join(","));

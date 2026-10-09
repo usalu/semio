@@ -59,3 +59,22 @@ pub struct UpdateReport {
 
 - Keys are typed (`ModelNode`), ordered, stable ids; values are `Arc` payloads inside `ModelValue`, cloning is cheap.
 - `UpdateReport.computed == 0 && !gated` is the proof that an edit changed nothing the graph derives; moving one wall in a 500-wall model computes ~dozens of nodes (see the test `moving_one_wall_recomputes_only_its_neighbourhood`).
+
+## Status (z-graph, 2026-10-08): implemented, verified (3469 lib tests green, ten oracle cases green); the API above is as built, with these corrections
+
+- Module path `...::schema::inferences::model_graph` (root `🕸️model-graph/🦀️.rs`; submodules `plan` (`🧭️plan`), `compute` (`🧮️compute`), `projection` (`🪞️projection`), `session` (`📡️session`)). Re-exports: `ModelInferenceSession`, `UpdateReport`, `ModelNode`, `ModelValue`, `Data`, `NodeKind`, `kinds`, `ModelGraph<const WANT: u32>`, `infer_selected::<MASK>`.
+- Removed (do not use): `StoreyLevelsField`, `WallLayoutField`, `CurtainLayoutField`, `OpeningFramesField`, `ElementSolidsField`, `StairRunsField`, `SpacesField`, `PlanLineworkField`, `DiagnosticsField`, `Rooted`, `LayoutKey/FrameKey/SolidSource/SolidNode/DiagnosticKey`, `SolidFamilyBuilder`, `host_extent`, `storey_bodies` without inputs, `wall_layout::top_of` (it is a re-export of `storey_levels::top_of`).
+- `compute_*` and `rooms_of` are thin projections (`infer_selected`). `z-consumers` replaces them by `ModelInferenceSession` and deletes them.
+
+## How a new inference field joins the graph (recipe for wave W agents)
+
+Everything is in four places. Keep the pure computation in your leaf module (`I/<emoji><slug>/🦀️.rs`: value type, a pure function `fn xxx_of(snapshot, id, parent values...) -> Value`, and `fn dependency(snapshot, id) -> DslValue`), then:
+
+1. **Kind** (`🕸️model-graph/🦀️.rs`): add a variant to `NodeKind` (+ `ALL`, `name`, `requires` = the kinds whose nodes may be your parents), a `ModelNode::<Kind>(id)` key variant (+ `kind()`), a `Data::<Kind>(Arc<Value>)` variant, a `ModelValue::same` arm (Arc::ptr_eq) and a `bytes` arm; add a mask const in `kinds` (e.g. `RAMPS`). Bump `NodeKind::ALL.len()` users (`kinds::ALL` is derived from it).
+2. **Parents** (`🧭️plan/🦀️.rs::build`): one `if has(NodeKind::<Kind>) { steps.extend(...) }` block placed AFTER the blocks of every kind you list as parent. A step is `InferenceStep { key, parents }` where `parents` are the REAL nodes you read: `ModelNode::Storey(id)` (+ the target storey of a `TopConstraint::Storey`, via `storeys_of`), `ModelNode::WallLayout(id)`, `OpeningFrame(id)`, `Host(id)`, `StairRun(id)`, `Solid(SolidKey::of(family,id))`, `Room(storey)`. Use the per-run indexes already built in `build` (`by_host`, `walls`, `stairs`, `room_storeys`, `fillers`); never scan the snapshot per element. The engine rejects a parent that is not planned before its child.
+3. **Dependency + value** (`🧮️compute/🦀️.rs`): add an arm to `dependency` (EVERYTHING `value` reads from the snapshot that is not a parent: your element record without its name (`Anonymous`/`dep_records`/`dep_types`), the types it names; parents contribute through their own hashes) and an arm to `value` that builds an `Index::of(parents)` lookup (levels, layouts, frames, runs, solids, rooms by id) and calls your pure function. Add a field to `Index` if you need a new parent kind.
+4. **Projection** (`🪞️projection/🦀️.rs`): `apply` (+ `retract`) copy `Data::<Kind>` into the `ModelInference` field (add the `#[derive]` field + facets in `I/🦀️.rs` as for any new inference; `r7-z-graph-facets.mjs` shows how the enum facets are regenerated).
+
+Rules the tests enforce: determinism, `ModelInference::default()` for the empty model, the plan is topological for every selection (`the_plan_is_topological_for_every_selection...`), warm = cold = uncached for every field (`every_projection_is_cache_transparent...`: add your field to that comparison), the thin `compute_*` equals the whole inference, and a dependency test per field (what must / must not invalidate). A field that only reads one element and the storey is cheap: parents = `storeys_of(snapshot, &storey, Some(&top))`. A diff gate needs nothing extra: add your collection names to `model_graph::READS`.
+
+Open item for consumers: the per-edit cost is O(N) engine hashing (see `r7-exec-z-graph.md`, Open).

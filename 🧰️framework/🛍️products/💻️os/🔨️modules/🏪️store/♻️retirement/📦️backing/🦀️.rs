@@ -51,7 +51,7 @@ pub(super) struct SourceIterator<T: semio_framework_value::retirement::RetireOwn
     source: std::mem::ManuallyDrop<std::vec::IntoIter<T>>,
     source_bytes: usize,
     pending: std::mem::ManuallyDrop<Option<T>>,
-    active: Option<semio_framework_value::ControlledRetirement<T>>,
+    active: Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,
     terminal: bool,
 }
 
@@ -109,7 +109,7 @@ impl<T: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement
         }
         if self.pending.is_none() { *self.pending = self.source.next(); }
         if let Some(value) = self.pending.take() {
-            match semio_framework_value::ControlledRetirement::new(value) {
+            match semio_framework_value::retirement::controlled::ControlledRetirement::new(value) {
                 Ok(owner) => { self.active = Some(owner); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
                 Err((error, value)) => { *self.pending = Some(value); return Err(error); }
             }

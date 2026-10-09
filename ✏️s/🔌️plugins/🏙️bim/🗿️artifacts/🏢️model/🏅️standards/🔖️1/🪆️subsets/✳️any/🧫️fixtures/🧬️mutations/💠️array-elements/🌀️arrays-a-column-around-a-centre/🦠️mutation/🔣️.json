@@ -1,0 +1,17 @@
+{
+  "mutation": "arrayElements",
+  "ids": [
+    "c-r"
+  ],
+  "prefix": "ar",
+  "pattern": {
+    "Radial": {
+      "count": 3,
+      "center": {
+        "x": 4,
+        "y": 3
+      },
+      "step": 1.5707963267948966
+    }
+  }
+}

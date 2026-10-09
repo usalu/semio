@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "curtain_wall_type",
+    "border_mullion"
+  ]
+}

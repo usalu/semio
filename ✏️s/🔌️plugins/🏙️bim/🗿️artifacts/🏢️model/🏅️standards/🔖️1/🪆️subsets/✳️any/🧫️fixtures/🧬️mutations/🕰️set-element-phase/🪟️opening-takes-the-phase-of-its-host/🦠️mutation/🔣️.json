@@ -1,0 +1,5 @@
+{
+  "mutation": "setElementPhase",
+  "id": "op-1",
+  "phase": "Demolished"
+}

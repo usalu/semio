@@ -1,0 +1,25 @@
+use super::*;
+use crate::{DrawingLayerNode,DrawingImageAsset};
+use crate::schema::layer_base;
+use crate::schema::scene_booleans::DocumentBooleanLimits;
+use crate::schema::scene_trace::DocumentTraceLimits;
+use semio_framework_value::paged::Utf8Text;
+use serde_json::Value;
+struct Source{roots:Vec<DrawingLayerNode>,assets:std::collections::BTreeMap<String,DrawingImageAsset>,selected:Vec<String>}
+impl DrawingSceneSource for Source{
+ fn root_count(&self)->usize{self.roots.len()}
+ fn root(&self,index:usize)->Option<&DrawingLayerNode>{self.roots.get(index)}
+ fn asset_count(&self)->usize{self.assets.len()}
+ fn asset_at(&self,index:usize)->Option<(&dyn Utf8Text,&DrawingImageAsset)>{self.assets.iter().nth(index).map(|(key,asset)|(key as &dyn Utf8Text,asset))}
+ fn asset(&self,key:&str)->Option<&DrawingImageAsset>{self.assets.get(key)}
+ fn root_visible(&self,index:usize)->bool{self.roots.get(index).is_some_and(|root|self.selected.iter().any(|id|layer_base(root).id.eq_str(id)))}
+}
+fn rows()->Vec<Value>{serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()}
+fn source(row:&Value)->Source{let sources:Vec<Value>=serde_json::from_str(include_str!("../../../📋️prepare/🧫️fixtures/🎬️vector/🔣️.json")).unwrap();let document=row["source"].as_str().map(|name|sources.iter().find(|source|source["name"]==name).unwrap()["document"].clone());Source{roots:serde_json::from_value(document.as_ref().map_or_else(||row["roots"].clone(),|document|document["layers"].clone())).unwrap(),assets:serde_json::from_value(document.as_ref().map_or_else(||row["assets"].clone(),|document|document["assets"].clone())).unwrap(),selected:serde_json::from_value(row["selected"].clone()).unwrap()}}
+fn limits()->DocumentSceneLimits{DocumentSceneLimits{max_nodes:1024,max_depth:32,max_segments:65536,max_references:32768,max_source_bytes:268439552}}
+fn algorithms()->DocumentAlgorithmLimits{DocumentAlgorithmLimits{max_work:1_000_000_000,booleans:DocumentBooleanLimits{tolerance:0.001,epsilon:1e-8,max_depth:32,max_references:32768,max_edges:65536,max_parameters:262144,max_atomic_edges:65536,max_segments:65536,max_retained_segments:262144,max_work:1_000_000_000},trace:DocumentTraceLimits{max_pixels:16777216,max_admitted_pixels:67108864,max_source_bytes:268439552,max_edges:65536,max_segments:65536,max_retained_segments:65536,max_work:1_000_000_000}}}
+fn drain(close:&mut DrawingScenePlacementRetirement){use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep};for _ in 0..2_000_000{if close.terminal_is_empty(){return;}let copy=close.next_copy_byte_demand().unwrap();let release=close.next_release_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:close.next_depth_demand().unwrap()};let step=close.close_step(grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneStep::Complete(_)){assert!(close.terminal_is_empty());}}panic!("real placement owners did not close");}
+#[test]
+fn shared_placement_computes_real_area_length_bounds_and_empty_centroids(){for row in rows(){let mut previous=None;for grant in [1,7,4096]{let source=source(&row);let before=serde_json::to_value(&source.roots).unwrap();let mut job=DrawingScenePlacementJob::new(&source,limits(),algorithms(),0.001).unwrap();assert!(job.result().is_err());let(mut work,mut done)=(0,false);for _ in 0..2_000_000{let progress=job.advance(&source,grant).unwrap();assert!(progress.work>work&&progress.work-work<=grant as u64);work=progress.work;if progress.done{done=true;break;}}assert!(done,"{}",row["name"]);let output=job.result().unwrap();let expected:DrawingScenePlacement=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(output.basis,expected.basis);assert_eq!(output.bounds,expected.bounds);assert!((output.area-expected.area).abs()<1e-8);for axis in 0..2{assert!((output.centroid[axis]-expected.centroid[axis]).abs()<1e-8);}if let Some(previous)=previous{assert_eq!(output,previous);}previous=Some(output);assert_eq!(serde_json::to_value(&source.roots).unwrap(),before);let(mut close,moved)=job.into_retirement();assert_eq!(moved,Some(output));drain(&mut close);assert!(close.terminal_is_empty());eprintln!("[DEBUG] Shared native borrowed placement {} grant={grant} basis={:?} centroid={:?} original_typed_owners_terminal_empty=true",row["name"],output.basis,output.centroid);}}}
+#[test]
+fn placement_cancel_preserves_actual_packet_and_closes_private_children(){for row in rows(){for turns in [0,1,10,100]{let source=source(&row);let before=serde_json::to_value(&source.roots).unwrap();let mut job=DrawingScenePlacementJob::new(&source,limits(),algorithms(),0.001).unwrap();for _ in 0..turns{if job.advance(&source,1).unwrap().done{break;}}job.cancel();assert!(job.result().is_err());assert_eq!(serde_json::to_value(&source.roots).unwrap(),before);let(mut close,output)=job.into_retirement();assert!(output.is_none());drain(&mut close);assert!(close.terminal_is_empty());}}}

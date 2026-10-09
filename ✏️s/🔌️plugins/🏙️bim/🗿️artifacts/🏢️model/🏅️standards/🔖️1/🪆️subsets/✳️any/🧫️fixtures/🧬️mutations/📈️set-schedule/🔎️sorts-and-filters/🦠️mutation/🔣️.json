@@ -1,0 +1,42 @@
+{
+  "mutation": "setSchedule",
+  "id": "sch-walls",
+  "sort": [
+    {
+      "key": {
+        "Field": {
+          "field": "Length"
+        }
+      },
+      "descending": true
+    },
+    {
+      "key": {
+        "Field": {
+          "field": "Name"
+        }
+      },
+      "descending": false
+    }
+  ],
+  "filter": [
+    {
+      "key": {
+        "Field": {
+          "field": "Length"
+        }
+      },
+      "op": "GreaterOrEqual",
+      "value": "6"
+    },
+    {
+      "key": {
+        "Field": {
+          "field": "Name"
+        }
+      },
+      "op": "Contains",
+      "value": "st"
+    }
+  ]
+}

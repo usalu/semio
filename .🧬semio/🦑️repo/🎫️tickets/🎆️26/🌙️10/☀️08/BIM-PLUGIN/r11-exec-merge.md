@@ -1,0 +1,24 @@
+# r11-merge: stash-pop conflict resolution (677 + stash)
+
+Status when finished: 0 unmerged index entries, 0 leftover conflict markers in BIM, stdio, framework (scan with grep over the dirs).
+Many files were resolved concurrently by peers/owner between 02:00 and 02:20; I resolved the ones still open and then audited every
+previously conflicted file against both sides (base = 676 = `stash@{0}^1`, stash = `stash@{0}`, upstream = HEAD 677) for lost work.
+
+## Resolved by me
+| File | Hunks | Resolution | Why |
+|---|---|---|---|
+| framework `🔌️plugin/🦀️.rs` | 1 (close/maintenance demand fns) | upstream | 677 replaced `next_*_byte_demand` by `close_retirement_demands`/`maintenance_retirement_demands` (grant based). Stash only added `5 => window_config_store.next_close_byte_demand()` to the old fn and dropped `TransientDiff` from a re-export list (the drop kept, non-conflicting). window_config_store is not drained by upstream `close_step`/`close_retirement_demands`; `close_terminal_is_empty` still requires it empty -> follow-up for the owner of the retirement refactor. |
+| framework `🏪️store/🦀️.rs` | 3 (cursor disposer `close_step`, `take_next_owner` impl block, `close_owned_store_step`) | upstream x3 | stash side was the 676 SnapshotRetirementStep code minus [DEBUG] lines; upstream rewrote these to `RetainedCloneGrant`. Result is byte-identical to HEAD. |
+| workflow `run/.../🧽️remove-run-log` + `🫥️remove-run-node` `🦀️.rs` | 1 each | stash (`RemoveRunLog`/`RemoveRunNode`, kind `remove-*`) | whole tree (schema json, fixtures, run `🦀️.rs`, tests) is renamed retract->remove; upstream only touched the header line of the old-named files. |
+| BIM `🖌️render/🪟️window-config/🦀️.rs` | 3 | upstream | upstream = single `bim_window_config!` with `store::sparse_record_diff!` + `Replace` mutation; the kit `window_config!` macro and all window config tests already use that. Stash = older `Snapshot`/hand-written sparse diff. File == HEAD. |
+| BIM plan `🎚️config/🧪️tests/🔬️unit/🦀️.rs` | 1 | upstream test shape on the view model (peer resolved first: `view: "v-other"` diff test) | config is `view/framed/viewport` (no storey/cut_height). |
+| BIM `🚪️io/📝️text/📸️snapshot/🦀️.rs` | peer took upstream, lost 4 stash arms | added arms `annotations`, `finishes`, `schedules`, `zones` (stash text, they call the still-existing `schema::inferences::*::table_json/metrics_json`) and `ramp-runs` (io/text/inferences::ramp_runs, already a registered module) | tests `infer-bim-1-{annotations,finishes,zones,ramps}` call these slugs. `view-metrics` NOT added: `io/text/inferences/🖼️view-linework` is not mod-registered yet (w12 in flight). |
+
+## Resolved by peers (audited, accepted)
+- BIM `🧬️schema/🔺️diff/🩹️patches` (90 stash lines missing = the hand-written `between`/`negate`/`merge_slot` per-patch code superseded by the upstream macro design), `🟦️.ts` (superset: `slope?: Slope | null`), `🧵️elements` mutations (union of HEAD stairs patch and stash ceilings/openings/ramps/stairs fields), `🏠️spaces`, `📐️plan-kit`, editor `🧰️kit`, section/world/plan window configs and tests (upstream Replace design; stash's extra `assert_diff_algebra_between_law` line is not applicable, `assert_window_config_laws` no longer has the DiffAlgebra bound), `📦️packages/🦀️rust/📜️script.ts` (true union: SqliteVerify + platform test roles), `📋️project.json`, stdio `🧊️gltf` diff (== HEAD, stash had no adds), flow `🚪️io/🪶️sqlite/...decoding|reconstruction`, `🧵️retained`, `📑️copy` tests (== HEAD; stash lines are the older `RetirementStep`/`close_state_*` API generation, superseded by upstream grant API).
+- `.vscode/launch.json` and `🧩️launch.seed.jsonc`: no longer UD; both files exist in the tree again (status `MM`), restored by someone else. Nothing in my scope requires them.
+
+## Checks
+- `git diff --name-only --diff-filter=U` -> 0; marker scan -> 0.
+- Gate: `🚦️gate.sh r11-merge -- cargo check --manifest-path ✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml -p semio-s-artifact-bim-model --tests --message-format=short` -> FAILS in dependency `semio-framework-os-kernel`: 303 errors (log `🗑️generated/r11-merge/check1.txt`). All in `🏪️store` (249 in `🏪️store/🦀️.rs`, rest in store submodules, `📡️spr/🧮️fold`). Cause: NOT the merge. Owner commit 677 is a half-finished retirement refactor: `SnapshotRetirementStep` enum was deleted from `🌱️value/♻️retirement/🧬️contract` while `🏪️store/🦀️.rs` still has 127 uses (676 had 640; converted ones use `RetainedCloneGrant`: 4 -> 210). Same 303/304 errors appear in every peer log since ~01:48 (r11-baseline, w05, w01, w11). My store resolution equals HEAD, so the error set is exactly the committed state; it cannot be cleared by choosing a conflict side (stash side is the 676 old-API code).
+- Framework crates touched by me (`os-kernel` store/plugin) cannot be checked until that refactor lands; `value/♻️retirement/🦀️.rs` was edited at 02:19 by someone (owner session still on it).

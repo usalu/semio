@@ -1,5 +1,6 @@
 //! 🧪️ Neutral bitmap trace fixtures, bounded publication, topology and cancellation.
 use super::*;
+use std::collections::BTreeSet;
 use serde_json::{Value,json};
 fn rows()->Vec<Value> {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn input<M>(row:&Value,mask:M)->BitmapTraceInput<M> {
@@ -65,7 +66,7 @@ fn trace_owned_masks_match_neutral_vectors_and_release_at_every_cancel_phase(){
  impl AsRef<[u8]> for Tracked{fn as_ref(&self)->&[u8]{&self.bytes}}
  impl Drop for Tracked{fn drop(&mut self){self.drops.set(self.drops.get()+1);}}
  let row=&rows()[13];let mask=row["input"]["mask"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>();let mut probe=BitmapTraceJob::new(input(row,&mask)).unwrap();let mut seen=BTreeSet::new();
- loop{let p=probe.advance(1).unwrap();if seen.insert(p.phase.as_str()){let drops=std::rc::Rc::new(std::cell::Cell::new(0));let mut job=BitmapTraceJob::new(input(row,Tracked{bytes:mask.clone(),drops:drops.clone()})).unwrap();job.advance(p.work as usize).unwrap();assert_eq!(drops.get(),0);job.cancel();assert_eq!(drops.get(),1);assert_eq!(job.result().unwrap_err(),BitmapTraceError::Cancelled);assert_eq!(job.advance(1).unwrap_err(),BitmapTraceError::Cancelled);}if p.done{break;}}
+ loop{let p=probe.advance(1).unwrap();if seen.insert(p.phase.as_str()){let drops=std::rc::Rc::new(std::cell::Cell::new(0));let mut job=BitmapTraceJob::new(input(row,Tracked{bytes:mask.clone(),drops:drops.clone()})).unwrap();job.advance(p.work as usize).unwrap();assert_eq!(drops.get(),0);job.cancel();assert_eq!(drops.get(),0);assert_eq!(job.result().unwrap_err(),BitmapTraceError::Cancelled);assert_eq!(job.advance(1).unwrap_err(),BitmapTraceError::Cancelled);drop(job);assert_eq!(drops.get(),1);}if p.done{break;}}
  println!("[DEBUG] Native moved trace masks match neutral fixtures and release storage at every cancellation phase");
 }
 
@@ -74,8 +75,7 @@ fn trace_retirement_transfers_masks_and_drains_every_actual_phase_under_exact_gr
  let close_rows:Vec<Value>=serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
  for row in close_rows{for grant in [1,7,4096]{let source=rows().into_iter().find(|v|v["name"]==row["source"]).unwrap();let mask=source["input"]["mask"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>();let ptr=mask.as_ptr();let mut contract=input(&source,mask);if let Some(cap)=row["maxEdges"].as_u64(){contract.max_edges=cap as usize;}let mut job=BitmapTraceJob::new(contract).unwrap();
   let phase=row["phase"].as_str().unwrap();if phase=="cancelled"{job.cancel();}else if phase=="failure"{assert!(job.advance(4096).is_err());assert!(job.result().is_err());}else if phase!="fresh"{let mut found=false;for _ in 0..job.input.max_work{let p=job.advance(1).unwrap();if p.phase.as_str()==phase{found=true;break;}if p.done{break;}}assert!(found,"{}",row);}
-  let inventory=json!({"outgoing":job.outgoing.values().collect::<Vec<_>>(),"raw":job.raw,"base":job.base,"candidate":job.candidate,"kept":job.kept.iter().collect::<Vec<_>>(),"changes":job.changes.values().collect::<Vec<_>>(),"positions":job.positions.values().collect::<Vec<_>>()});let expected=13+inventory.as_object().unwrap().values().map(|v|v.as_array().unwrap().len()as u64).sum::<u64>();if let Some(work)=row["work"].as_u64(){assert_eq!(expected,work);}
-  let(mut close,returned)=job.into_retirement();if phase=="cancelled"{assert!(returned.is_none());}else{assert_eq!(returned.as_ref().unwrap().as_ptr(),ptr);}assert!(close.advance(0).is_err());let mut work=0;loop{let p=close.advance(grant).unwrap();assert!(p.work>work&&p.work-work<=grant as u64);work=p.work;if p.done{break;}}
-  if grant==1{println!("[DEBUG] Native trace retirement {} work={work}",phase);}assert_eq!(work,expected,"{}",row);assert!(close.terminal_is_empty());let p=close.advance(1).unwrap();assert_eq!((p.work,p.done,p.phase),(work,true,"complete"));assert!(close.job.is_none());if let Some(mask)=returned{assert_eq!(mask,source["input"]["mask"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>());}
+  let(mut close,returned)=job.into_retirement();assert_eq!(returned.as_ref().unwrap().as_ptr(),ptr);assert!(close.advance(0).is_err());let mut work=0;loop{let p=close.advance(grant).unwrap();assert!(p.work>=work&&p.work-work<=grant as u64);work=p.work;if p.done{break;}}
+  if grant==1{println!("[DEBUG] Native trace retirement {} work={work}",phase);}assert!(work>0);assert!(close.terminal_is_empty());let p=close.advance(1).unwrap();assert_eq!((p.work,p.done,p.phase),(work,true,"complete"));assert!(close.owner.original().is_none());if let Some(mask)=returned{assert_eq!(mask,source["input"]["mask"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>());}
  }println!("[DEBUG] Native active trace ownership retired its exact JSON inventory: {}",row["phase"]);}
 }

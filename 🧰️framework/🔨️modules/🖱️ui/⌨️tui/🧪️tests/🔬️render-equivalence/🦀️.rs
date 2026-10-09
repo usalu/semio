@@ -436,3 +436,23 @@ fn the_engine_measures_scalars_by_default_so_emulators_that_count_scalars_stay_a
     assert_eq!(tui.width_mode(), WidthMode::Cluster);
     assert!(!tui.render().0.is_empty(), "choosing a width mode repaints in full");
 }
+
+#[test]
+fn scalar_width_rendering_preserves_combining_marks() {
+    use crate::tui::cell::{Cell, CellBuffer};
+    use crate::tui::geometry::Rect;
+    use crate::tui::text::WidthMode;
+    use unicode_segmentation::UnicodeSegmentation;
+    use unicode_width::UnicodeWidthStr;
+    for text in ["e\u{301}", "A界e\u{301}", "a\u{308}\u{301}", "ש\u{5bc}"] {
+        let size = Size { width: 20, height: 1 };
+        let mut buffer = CellBuffer::new(size, Cell::blank([255; 3], [0; 3]));
+        buffer.set_width_mode(WidthMode::Scalar);
+        let width = buffer.put_str(Pos { x: 0, y: 0 }, text, [255; 3], [0; 3], 0, Rect::new(0, 0, size.width, size.height));
+        assert_eq!(usize::from(width), UnicodeWidthStr::width(text));
+        assert_eq!(buffer.row_text(0).trim_end(), text.graphemes(true).collect::<String>());
+        let mut patch = crate::tui::ansi::AnsiPatch::default();
+        crate::tui::ansi::emit_runs(&buffer, &[crate::tui::cell::DiffRun { x: 0, y: 0, len: width }], &mut patch);
+        assert!(patch.0.contains(text), "scalar ANSI glyphs lost the mark: {:?}", patch.0);
+    }
+}

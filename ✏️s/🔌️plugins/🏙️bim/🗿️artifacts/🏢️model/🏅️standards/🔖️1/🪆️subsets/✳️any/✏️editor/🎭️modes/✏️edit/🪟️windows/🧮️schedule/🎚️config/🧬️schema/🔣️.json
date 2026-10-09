@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/bim/model/schedule-window-config/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schedule",
+    "editing"
+  ],
+  "properties": {
+    "schedule": {
+      "type": "string"
+    },
+    "editing": {
+      "type": "boolean"
+    }
+  }
+}

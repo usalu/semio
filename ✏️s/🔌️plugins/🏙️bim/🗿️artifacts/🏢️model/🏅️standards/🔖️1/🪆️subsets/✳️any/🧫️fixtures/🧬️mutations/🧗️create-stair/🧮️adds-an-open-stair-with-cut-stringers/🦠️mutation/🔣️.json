@@ -26,6 +26,7 @@
     "tread_thickness": 0.05,
     "riser": "Open",
     "landing_depth": 1.1,
+    "phase": "New",
     "name": "Main stair"
   }
 }

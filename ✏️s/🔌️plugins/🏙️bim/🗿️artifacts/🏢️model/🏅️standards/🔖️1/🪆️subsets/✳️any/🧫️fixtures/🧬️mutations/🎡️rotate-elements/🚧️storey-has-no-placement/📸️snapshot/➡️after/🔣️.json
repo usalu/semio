@@ -118,6 +118,36 @@
     }
   },
   "door_types": {},
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 1.5 x 1.2",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.2
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.1
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.1
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "mullion_material": "m-steel"
+    }
+  },
   "sites": {
     "site-1": {
       "name": "Plot",
@@ -223,6 +253,7 @@
   "curtain_walls": {
     "cw-1": {
       "storey": "st-ground",
+      "curtain_wall_type": "cwt-1",
       "axis": {
         "Line": {
           "start": {
@@ -241,16 +272,7 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.2,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.06,
-          "depth": 0.1
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
+      "phase": "New",
       "name": "Facade"
     }
   },
@@ -269,6 +291,7 @@
           "offset": 0
         }
       },
+      "phase": "New",
       "name": "C1"
     }
   },
@@ -276,15 +299,20 @@
     "b-1": {
       "storey": "st-ground",
       "beam_type": "bt-30x50",
-      "start": {
-        "x": 0,
-        "y": 3
-      },
-      "end": {
-        "x": 8,
-        "y": 3
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 3
+          },
+          "end": {
+            "x": 8,
+            "y": 3
+          }
+        }
       },
       "top_offset": -0.1,
+      "phase": "New",
       "name": "B1"
     }
   },
@@ -359,6 +387,7 @@
         "direction": 0.5,
         "angle": 0.1
       },
+      "phase": "New",
       "name": "Floor"
     }
   },
@@ -404,6 +433,7 @@
       },
       "overhang": 0.3,
       "base_offset": 0,
+      "phase": "New",
       "name": "Roof"
     }
   },
@@ -447,6 +477,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1,
+      "phase": "New",
       "name": "Stair"
     }
   },
@@ -480,6 +511,7 @@
       "infill": "None",
       "material": "m-steel",
       "base_offset": 0,
+      "phase": "New",
       "name": "Rail"
     }
   },
@@ -522,7 +554,8 @@
           ]
         }
       },
-      "usage": "Living"
+      "usage": "Living",
+      "phase": "New"
     }
   },
   "properties": {
@@ -552,9 +585,19 @@
   },
   "classifications": {
     "w-south": {
-      "system": "Uniclass",
-      "code": "EF_25_10",
-      "title": "Walls"
+      "cs-uniclass": "EF_25_10"
+    }
+  },
+  "classification_systems": {
+    "cs-uniclass": {
+      "name": "Uniclass",
+      "edition": "",
+      "entries": [
+        {
+          "code": "EF_25_10",
+          "title": "Walls"
+        }
+      ]
     }
   }
 }

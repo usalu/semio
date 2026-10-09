@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.ui.localized-label.physical-retirement.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "cases",
+    "required"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.ui.localized-label.physical-retirement.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "cells"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "owned",
+                "capacity"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "owned": {
+                  "type": "boolean"
+                },
+                "capacity": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "required": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zeroItems",
+        "insufficientRelease",
+        "insufficientDepth",
+        "constructorCapacity",
+        "terminalDropBytes"
+      ],
+      "properties": {
+        "zeroItems": {
+          "const": "unchanged"
+        },
+        "insufficientRelease": {
+          "const": "unchanged"
+        },
+        "insufficientDepth": {
+          "const": "refused"
+        },
+        "constructorCapacity": {
+          "const": "admitted"
+        },
+        "terminalDropBytes": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

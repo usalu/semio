@@ -13,5 +13,6 @@ Feature: Load the binary glTF export of the BIM house with three.js and measure 
   @mode-differential
   Scenario: Node, mesh, triangle and material counts and the world bounds of the exported house equal the subject's report
     Given the committed house export shared://🧊️gltf/🏠️house/🏠️house.glb
+    And the authored house snapshot it is exported from shared://🏗️ifc/🏠️house/📸️snapshot/🔣️.json
     When the file is parsed by GLTFLoader and every node, primitive and vertex is counted and measured
     Then the counts, the element nodes per kind and storey and the world bounds equal the subject's within 1e-9

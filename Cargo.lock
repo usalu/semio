@@ -4637,6 +4637,7 @@ name = "semio-framework-io-binary-source"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5161,6 +5162,7 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-io-base64",
  "semio-framework-io-binary-source",
+ "semio-framework-value",
 ]
 
 [[package]]

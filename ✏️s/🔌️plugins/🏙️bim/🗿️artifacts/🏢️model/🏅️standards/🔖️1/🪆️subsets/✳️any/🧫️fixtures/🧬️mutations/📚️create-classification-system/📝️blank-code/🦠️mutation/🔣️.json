@@ -1,0 +1,14 @@
+{
+  "mutation": "createClassificationSystem",
+  "id": "cs-new",
+  "system": {
+    "name": "X",
+    "edition": "1",
+    "entries": [
+      {
+        "code": "",
+        "title": "Nothing"
+      }
+    ]
+  }
+}

@@ -56,7 +56,7 @@ async fn a_window_on_a_line_host_resolves_type_size_sill_position_and_frame() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn explicit_size_overrides_the_type_and_the_window_sill_adds_to_the_type_sill() {
+async fn explicit_size_and_sill_override_replace_the_type_values() {
     let wide = &compute_opening_frames(&placed())["o-win-south-wide"];
     assert!(close(wide.width, 2.0) && close(wide.height, 1.0) && close(wide.sill, 1.1));
     assert!(close(wide.cut.s_min, 4.5) && close(wide.cut.s_max, 6.5) && close(wide.cut.z_min, 1.1) && close(wide.cut.z_max, 2.1));

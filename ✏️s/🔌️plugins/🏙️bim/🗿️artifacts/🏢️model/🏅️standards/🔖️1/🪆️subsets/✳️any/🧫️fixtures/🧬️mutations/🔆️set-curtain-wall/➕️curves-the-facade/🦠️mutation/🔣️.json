@@ -1,0 +1,17 @@
+{
+  "mutation": "setCurtainWall",
+  "id": "cw-1",
+  "axis": {
+    "Arc": {
+      "start": {
+        "x": 0,
+        "y": 0
+      },
+      "end": {
+        "x": 6,
+        "y": 0
+      },
+      "bulge": 0.3
+    }
+  }
+}

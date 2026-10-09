@@ -6,25 +6,32 @@ pub enum StrokeGeometryCap {Butt,Round,Square}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum StrokeGeometryJoin {Miter,Round,Bevel}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct StrokeGeometryStyle {pub width:f64,pub cap:StrokeGeometryCap,pub join:StrokeGeometryJoin,pub miter_limit:f64,pub dash:Vec<f64>,pub dash_offset:f64}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct StrokeContour {pub points:Vec<Vec2>,pub closed:bool}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct StrokeOutlineInput {pub contours:Vec<StrokeContour>,pub transform:[f64;6],pub tolerance:f64,pub style:StrokeGeometryStyle}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum StrokeOutlinePhase {Preparing,Dashing,Outlining,Complete}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct StrokeOutlineProgress {pub phase:StrokeOutlinePhase,pub completed:usize,pub total:usize,pub points:usize,pub work:u64,pub done:bool}
 #[derive(Clone,Debug,PartialEq,Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum StrokeOutlineError {Invalid(&'static str),Incomplete,Cancelled}
 impl std::fmt::Display for StrokeOutlineError {
  fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result {match self {Self::Invalid(message)=>f.write_str(message),Self::Incomplete=>f.write_str("Stroke preparation is incomplete"),Self::Cancelled=>f.write_str("Stroke preparation cancelled")}}
 }
 impl std::error::Error for StrokeOutlineError {}
+#[derive(semio_framework_value::RetireOwned)]
 struct Run {points:Vec<Vec2>,closed:bool,cap_start:bool,cap_end:bool,painted:bool,tangent:Vec2}
+#[derive(semio_framework_value::RetireOwned)]
 enum Primitive {Polygon(Vec<Vec2>),Round {center:Vec2,a:f64,b:f64}}
 #[derive(Clone,Copy)]
 struct ArcNode {a:f64,b:f64,depth:u8}
+#[derive(semio_framework_value::RetireOwned)]
 struct Round {center:Vec2,polygon:usize,stack:Vec<ArcNode>}
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Stage {Prepare,Source,Offset,Walk,Finish,Outline,Done}
@@ -36,6 +43,7 @@ fn normal(t:Vec2)->Vec2 {[-t[1],t[0]]}
 fn shifted(p:Vec2,t:Vec2,d:f64)->Vec2 {[p[0]+t[0]*d,p[1]+t[1]*d]}
 
 /// 🧱️ Work-granted dash runs and positive polygon unions preserve overlapping stroke regions.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct StrokeOutlineJob {
  input:StrokeOutlineInput,sources:Vec<StrokeContour>,prepared:Vec<Vec2>,runs:Vec<Run>,seams:Vec<[Vec2;3]>,polygons:Vec<Vec<Vec2>>,queue:VecDeque<Primitive>,round:Option<Round>,
  stage:Stage,contour:usize,point:usize,source:usize,edge:usize,position:f64,pattern:Vec<f64>,pattern_total:f64,dash:usize,remaining:f64,offset:f64,active:Option<usize>,first:Option<usize>,last:Option<usize>,
@@ -153,25 +161,11 @@ impl StrokeOutlineJob {
  pub fn result(&self)->Result<&[Vec<Vec2>],StrokeOutlineError> {if self.cancelled {return Err(StrokeOutlineError::Cancelled);}if let Some(error)=&self.failed {return Err(error.clone());}if self.stage!=Stage::Done {return Err(StrokeOutlineError::Incomplete);}Ok(&self.polygons)}
  pub fn into_result(self)->Result<Vec<Vec<Vec2>>,StrokeOutlineError> {self.result()?;Ok(self.polygons)}
 }
-/// 🧹️ Retains unpublished nested buffers until their actual shallow owners retire.
-pub struct StrokeOutlineRetirement{job:Option<StrokeOutlineJob>,slot:u8,counter:crate::retirement::WorkRetirementCounter}
-impl StrokeOutlineRetirement{
- pub fn terminal_is_empty(&self)->bool{self.job.is_none()}
- fn step(&mut self){let job=self.job.as_mut().unwrap();let complete=match self.slot{
-  0=>if job.input.contours.pop().is_some(){false}else{job.input.contours=Vec::new();true},
-  1=>if job.sources.pop().is_some(){false}else{job.sources=Vec::new();true},
-  2=>{job.prepared=Vec::new();true},
-  3=>if job.runs.pop().is_some(){false}else{job.runs=Vec::new();true},
-  4=>{job.seams=Vec::new();true},
-  5=>if job.polygons.pop().is_some(){false}else{job.polygons=Vec::new();true},
-  6=>if job.queue.pop_back().is_some(){false}else{job.queue=VecDeque::new();true},
-  7=>{job.round=None;true},8=>{job.input.style.dash=Vec::new();true},9=>{job.pattern=Vec::new();true},_=>unreachable!(),
- };if complete{self.slot+=1;}if self.slot==10{self.job=None;}}
- pub fn advance(&mut self,grant:usize)->Result<crate::retirement::WorkRetirementProgress,StrokeOutlineError>{let mut counter=self.counter;let result=counter.advance(grant,||{self.step();self.terminal_is_empty()});self.counter=counter;result.map_err(StrokeOutlineError::Invalid)}
-}
+semio_framework_value::artifact_retire_leaf!(StrokeGeometryCap,StrokeGeometryJoin,StrokeOutlinePhase,ArcNode,Stage);
+crate::physical_work_retirement!(StrokeOutlineRetirement,StrokeOutlineJob,StrokeOutlineError,|_:&str|StrokeOutlineError::Invalid("Stroke retirement refused its physical grant"));
 impl StrokeOutlineJob{
  /// 🧹️ Moves complete output unchanged and retains interrupted owners for work-granted cleanup.
- pub fn into_retirement(mut self)->(StrokeOutlineRetirement,Option<Vec<Vec<Vec2>>>){let output=if self.stage==Stage::Done&&!self.cancelled&&self.failed.is_none(){Some(std::mem::take(&mut self.polygons))}else{None};self.cancelled=true;self.active=None;(StrokeOutlineRetirement{job:Some(self),slot:0,counter:Default::default()},output)}
+ pub fn into_retirement(mut self)->(StrokeOutlineRetirement,Option<Vec<Vec<Vec2>>>){let output=if self.stage==Stage::Done&&!self.cancelled&&self.failed.is_none(){Some(std::mem::take(&mut self.polygons))}else{None};self.cancelled=true;self.active=None;(StrokeOutlineRetirement::new(self),output)}
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

@@ -1,0 +1,6 @@
+{
+  "mutation": "setCurtainWallType",
+  "id": "cwt-1",
+  "panel_material": "m-spare",
+  "mullion_material": "m-brick"
+}

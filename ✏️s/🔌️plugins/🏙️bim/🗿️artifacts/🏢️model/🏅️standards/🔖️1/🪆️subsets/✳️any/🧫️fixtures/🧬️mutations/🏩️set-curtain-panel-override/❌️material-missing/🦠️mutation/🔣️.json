@@ -1,0 +1,9 @@
+{
+  "mutation": "setCurtainPanelOverride",
+  "id": "ov-1",
+  "panel": {
+    "Solid": {
+      "material": "m-ghost"
+    }
+  }
+}

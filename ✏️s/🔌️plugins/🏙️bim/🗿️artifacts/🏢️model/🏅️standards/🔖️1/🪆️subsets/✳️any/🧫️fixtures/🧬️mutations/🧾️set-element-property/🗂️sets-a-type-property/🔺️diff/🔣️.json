@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "wt-300": {
+      "entry": "Created",
+      "Pset_WallTypeCommon": {
+        "Reference": {
+          "Text": {
+            "value": "W-300"
+          }
+        }
+      }
+    }
+  }
+}

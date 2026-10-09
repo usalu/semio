@@ -1,0 +1,21 @@
+# Draw Facets Integration Audit — 2026-10-09
+
+Source-only independent review. No code edits, compiler runs, or runtime acceptance were performed. Concurrent sources may change after these observations. Full feature completion remains active.
+
+## Findings
+
+1. **P1: Native editor owners still implement the previous job close API.** `C:/git/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:572` implements `FixedOperationOwner::close_step` with two integer arguments; `:1018` implements the interactive job close method with the same previous signature. They construct `InteractiveJobCloseStep::Complete` without progress and `Pending { released_items, released_bytes }` (for example `:580` and `:582`). Current framework `C:/git/semio/🧰️framework/🔨️modules/🧵️job/🦀️.rs:178` and `:1320` require `RetainedCloneGrant`; current close variants are defined at `:1280`. These signatures are a source-confirmed native integration blocker, independent of the new facet leaves. Reconcile physical release/copy/capacity receipts and close demand with current ownership APIs rather than merely adapting arguments.
+
+2. **P2: Batch patch missing targets bypass the new error distinction.** `C:/git/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️patch-layers/🦀️.rs:28` resolves IDs through `selected_drawing_layers`; `C:/git/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs:417` filters out missing IDs. Consequently a nonempty list containing only a missing target returns successful empty emission; a mixed existing/missing list silently edits the existing subset. The new `changes_layer` helper cannot detect the missing targets because it is only invoked for resolved layers. Explicit requested target IDs should be validated before emission if command rejection must distinguish a missing target from an unchanged edit. Preserve tree-row aliases already admitted by selection lookup.
+
+## Reviewed Source Behavior
+
+- New `UpdateImage` Rust diff admits finite positive dimensions, emits only changed key/width/height, and returns empty for equality. Its inverse captures all previous authored image facets. Retained host owned source at `:3794` prepares the image key through existing native-text ownership; `:3936` adopts owned text and sets dimensions. No direct new runtime dependency was observed.
+- New shape-coordinate Rust diff validates the target kind, indexed geometry access, finite values, and nonnegative dimensions before emitting one coordinate patch. Coordinate accessors validate shape kind and require an index only for polygon coordinates. Host apply at `C:/git/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🦀️.rs:3932` uses the validated scalar setter. This is source-level evidence of bounded scalar mutation, not measured retained-work evidence.
+- Inspector property fields at `C:/git/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🦀️.rs:82` derive admitted scalar fields through geometry accessors; image dimensions at `:92` use numeric input. Polygon controls at `:219` bind X/Y field names and the same zero-based index to `patchLayers`; labels display one-based vertex numbers. No index mismatch was observed.
+- The no-op helper at `C:/git/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🦀️.rs:32` propagates inverse errors, rejects empty inverses and compares a single inverse with the original mutation. This avoids treating inverse failures as no-op success for resolved targets.
+- Aggregate Rust mutation exports/KINDS and drawing root module declarations visibly include both new semantic leaves. This audit did not execute JSON/GraphQL schema admission or independently establish complete catalog consistency; existing execution report claims require the parent validation run.
+
+## Remaining Acceptance
+
+Parent must inspect the live native result, reconcile native framework API integration, run the isolated complete TypeScript suite, and confirm user-facing runtime behavior with console evidence. This report does not claim tests pass or the feature works.

@@ -5,10 +5,15 @@ use protocol::{Inference, InferredField};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const HOUSE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+const FULL: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 const JOINS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
 
 fn decode(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the snapshot decodes")
+}
+
+fn full() -> ModelSnapshot {
+    decode(FULL)
 }
 
 fn house() -> ModelSnapshot {
@@ -50,7 +55,7 @@ fn rooms_grid(rows: usize, columns: usize) -> ModelSnapshot {
 
 #[test]
 fn the_plan_is_topological_for_every_selection_and_names_only_planned_parents() {
-    for snapshot in [house(), decode(JOINS)] {
+    for snapshot in [full(), decode(JOINS)] {
         for wanted in [kinds::ALL, kinds::LEVELS, kinds::LAYOUTS, kinds::FRAMES, kinds::SOLIDS, kinds::ROOMS, kinds::PLANS, kinds::QUANTITIES, kinds::DIAGNOSTICS, kinds::RUNS, kinds::CURTAINS] {
             let steps = plan::build(&snapshot, kinds::closure(wanted));
             let position: BTreeMap<&ModelNode, usize> = steps.iter().enumerate().map(|(index, step)| (&step.key, index)).collect();
@@ -66,7 +71,7 @@ fn the_plan_is_topological_for_every_selection_and_names_only_planned_parents() 
 
 #[test]
 fn a_selection_plans_only_its_kinds_and_their_ancestors() {
-    let snapshot = house();
+    let snapshot = full();
     let kinds_of = |wanted: u32| plan::build(&snapshot, kinds::closure(wanted)).iter().map(|step| step.key.kind()).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(kinds_of(kinds::LEVELS), [NodeKind::Storey].into());
     assert_eq!(kinds_of(kinds::LAYOUTS), [NodeKind::Storey, NodeKind::Band, NodeKind::WallLayout].into());
@@ -83,7 +88,7 @@ fn the_graph_is_deterministic_and_the_empty_model_infers_the_default() {
 
 #[test]
 fn every_projection_is_cache_transparent_warm_equals_cold_equals_uncached() {
-    for snapshot in [house(), decode(JOINS)] {
+    for snapshot in [full(), decode(JOINS)] {
         let uncached = ModelInference::infer(&snapshot).expect("infers");
         let mut session = ModelInferenceSession::new();
         let cold = session.refresh(&snapshot).clone();
@@ -112,7 +117,7 @@ fn every_projection_is_cache_transparent_warm_equals_cold_equals_uncached() {
 #[test]
 fn the_thin_projections_equal_the_whole_inference() {
     use super::super::super::{curtain_layout, diagnostics, element_solids, opening_frames, plan_linework, quantities, spaces, stair_runs, storey_levels, wall_layout};
-    for snapshot in [house(), decode(JOINS)] {
+    for snapshot in [full(), decode(JOINS)] {
         let whole = ModelInference::infer(&snapshot).expect("infers");
         assert_eq!(storey_levels::compute_storey_levels(&snapshot), whole.storey_levels);
         assert_eq!(wall_layout::compute_wall_layout(&snapshot), whole.wall_layout);
@@ -167,17 +172,17 @@ fn a_session_update_equals_a_fresh_inference_after_every_kind_of_edit() {
 
 #[test]
 fn a_session_removes_the_entries_of_nodes_that_leave_the_graph() {
-    let mut snapshot = house();
+    let mut snapshot = full();
     let mut session = ModelInferenceSession::new();
     session.refresh(&snapshot);
-    let doomed: Vec<String> = snapshot.openings.iter().filter(|(_, opening)| opening.host == "w-ground-south").map(|(id, _)| id.clone()).collect();
+    let doomed: Vec<String> = snapshot.openings.iter().filter(|(_, opening)| opening.host == "w-south").map(|(id, _)| id.clone()).collect();
     assert!(!doomed.is_empty());
     for id in &doomed {
         snapshot.openings.remove(id);
     }
-    snapshot.walls.remove("w-ground-south");
+    snapshot.walls.remove("w-south");
     let after = session.refresh(&snapshot).clone();
-    assert!(!after.wall_layout.contains_key("w-ground-south") && doomed.iter().all(|id| !after.opening_frames.contains_key(id) && !after.element_solids.contains_key(id) && !after.quantities.elements.contains_key(id)));
+    assert!(!after.wall_layout.contains_key("w-south") && doomed.iter().all(|id| !after.opening_frames.contains_key(id) && !after.element_solids.contains_key(id) && !after.quantities.elements.contains_key(id)));
     assert_eq!(after, ModelInference::infer(&snapshot).expect("infers"));
 }
 
@@ -206,10 +211,10 @@ fn moving_one_wall_recomputes_only_its_neighbourhood() {
 #[test]
 fn moving_a_window_recomputes_its_frame_its_host_wall_and_filler_only() {
     use crate::OpeningPatch;
-    let snapshot = house();
+    let snapshot = full();
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
-    let moved = ModelDiff::openings("o-win-1", Entry::Patched(OpeningPatch { offset: Some(2.0), ..Default::default() }));
+    let moved = ModelDiff::openings("o-win-1", Entry::Patched(OpeningPatch { offset: Some(2.5), ..Default::default() }));
     let edited = protocol::apply_diff(&moved, &snapshot).expect("applies");
     let incremental = session.update(&edited, &moved).clone();
     let report = session.report().clone();

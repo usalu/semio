@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "pageBytes": 4096,
   "inputState": "unstarted-record",
   "fieldOwner": {
@@ -11,13 +11,16 @@
     ],
     "closeGrant": {
       "maximumItems": 1,
-      "maximumBytes": 4096
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 4096,
+      "maximumDepth": 4
     },
     "expected": {
       "tokenDrops": 1,
       "fieldDrops": 1,
       "registeredCloseCalls": 1,
-      "unadmittedCloseCalls": 2,
+      "unadmittedCloseCalls": 1,
       "acceptCalls": 0,
       "finishCalls": 0
     }
@@ -36,11 +39,16 @@
         {
           "grant": {
             "maximumItems": 0,
-            "maximumBytes": 4096
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 1,
             "remainingBytes": 4096,
@@ -51,11 +59,16 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 0
+            "maximumCopyBytes": 0,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 1,
             "remainingBytes": 4096,
@@ -66,11 +79,16 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 4095
+            "maximumCopyBytes": 4095,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 1,
             "remainingBytes": 4096,
@@ -81,12 +99,17 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 4096
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 1,
-            "releasedBytes": 4096,
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 4096,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
             "recordPresent": true,
@@ -96,11 +119,16 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 4096
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
             "kind": "complete",
-            "releasedItems": 0,
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
@@ -111,11 +139,16 @@
         {
           "grant": {
             "maximumItems": 4,
-            "maximumBytes": 8192
+            "maximumCopyBytes": 8192,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
             "kind": "complete",
-            "releasedItems": 0,
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
@@ -126,11 +159,16 @@
         {
           "grant": {
             "maximumItems": 0,
-            "maximumBytes": 4096
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
@@ -141,11 +179,16 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 0
+            "maximumCopyBytes": 0,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
             "kind": "complete",
-            "releasedItems": 0,
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
@@ -156,7 +199,7 @@
       ]
     },
     {
-      "id": "short-tail-keeps-page-granule",
+      "id": "short-tail-charges-exact-page-bytes",
       "pages": [
         {
           "length": 4096,
@@ -174,11 +217,16 @@
         {
           "grant": {
             "maximumItems": 0,
-            "maximumBytes": 4096
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 2,
             "remainingBytes": 4110,
@@ -189,11 +237,16 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 0
+            "maximumCopyBytes": 0,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 2,
             "remainingBytes": 4110,
@@ -204,11 +257,16 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 14
+            "maximumCopyBytes": 13,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 2,
             "remainingBytes": 4110,
@@ -219,27 +277,17 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 4095
+            "maximumCopyBytes": 14,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 14,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
-            "remainingPages": 2,
-            "remainingBytes": 4110,
-            "recordPresent": true,
-            "terminal": false
-          }
-        },
-        {
-          "grant": {
-            "maximumItems": 1,
-            "maximumBytes": 4096
-          },
-          "expected": {
-            "kind": "pending",
-            "releasedItems": 1,
-            "releasedBytes": 14,
             "remainingPages": 1,
             "remainingBytes": 4096,
             "recordPresent": true,
@@ -249,11 +297,16 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 4095
+            "maximumCopyBytes": 4095,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 1,
             "remainingBytes": 4096,
@@ -264,12 +317,17 @@
         {
           "grant": {
             "maximumItems": 2,
-            "maximumBytes": 8192
+            "maximumCopyBytes": 8192,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 1,
-            "releasedBytes": 4096,
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 4096,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
             "recordPresent": true,
@@ -279,11 +337,16 @@
         {
           "grant": {
             "maximumItems": 2,
-            "maximumBytes": 8192
+            "maximumCopyBytes": 8192,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
             "kind": "complete",
-            "releasedItems": 0,
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
@@ -294,11 +357,16 @@
         {
           "grant": {
             "maximumItems": 1,
-            "maximumBytes": 4096
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
             "kind": "complete",
-            "releasedItems": 0,
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
@@ -329,12 +397,17 @@
         {
           "grant": {
             "maximumItems": 3,
-            "maximumBytes": 12288
+            "maximumCopyBytes": 12288,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 1,
-            "releasedBytes": 4096,
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 4096,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
             "remainingPages": 2,
             "remainingBytes": 8192,
             "recordPresent": true,
@@ -344,26 +417,16 @@
         {
           "grant": {
             "maximumItems": 3,
-            "maximumBytes": 8192
+            "maximumCopyBytes": 8192,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 1,
-            "releasedBytes": 4096,
-            "remainingPages": 1,
-            "remainingBytes": 4096,
-            "recordPresent": true,
-            "terminal": false
-          }
-        },
-        {
-          "grant": {
-            "maximumItems": 3,
-            "maximumBytes": 4095
-          },
-          "expected": {
-            "kind": "pending",
-            "releasedItems": 0,
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 4096,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 1,
             "remainingBytes": 4096,
@@ -374,12 +437,37 @@
         {
           "grant": {
             "maximumItems": 3,
-            "maximumBytes": 4096
+            "maximumCopyBytes": 4095,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
-            "kind": "pending",
-            "releasedItems": 1,
-            "releasedBytes": 4096,
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
+            "remainingPages": 1,
+            "remainingBytes": 4096,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
+          },
+          "expected": {
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 4096,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
             "recordPresent": true,
@@ -389,11 +477,16 @@
         {
           "grant": {
             "maximumItems": 3,
-            "maximumBytes": 12288
+            "maximumCopyBytes": 12288,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
             "kind": "complete",
-            "releasedItems": 0,
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,
@@ -404,11 +497,16 @@
         {
           "grant": {
             "maximumItems": 3,
-            "maximumBytes": 12288
+            "maximumCopyBytes": 12288,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 0,
+            "maximumDepth": 2
           },
           "expected": {
             "kind": "complete",
-            "releasedItems": 0,
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
             "releasedBytes": 0,
             "remainingPages": 0,
             "remainingBytes": 0,

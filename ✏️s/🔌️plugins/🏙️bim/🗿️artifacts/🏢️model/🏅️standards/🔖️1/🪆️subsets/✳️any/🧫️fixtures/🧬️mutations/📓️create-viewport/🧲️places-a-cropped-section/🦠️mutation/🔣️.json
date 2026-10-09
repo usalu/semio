@@ -1,0 +1,24 @@
+{
+  "mutation": "createViewport",
+  "id": "vp-1",
+  "viewport": {
+    "sheet": "sh-1",
+    "view": "v-section",
+    "position": {
+      "x": 220,
+      "y": 20
+    },
+    "scale": 50,
+    "crop": {
+      "min": {
+        "x": 0,
+        "y": 0
+      },
+      "max": {
+        "x": 6,
+        "y": 4
+      }
+    },
+    "label": "Section through the hall"
+  }
+}

@@ -1,0 +1,1876 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "IFC House",
+    "description": "Export fixture",
+    "author": "A. Architect",
+    "organization": "Semio",
+    "phase_names": [
+      "Existing",
+      "New"
+    ]
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-wool": {
+      "name": "Mineral Wool",
+      "category": "Insulation",
+      "color": {
+        "r": 0.9,
+        "g": 0.85,
+        "b": 0.3
+      },
+      "density": 40,
+      "conductivity": 0.035,
+      "specific_heat": 1030
+    },
+    "m-conc": {
+      "name": "Concrete",
+      "category": "Concrete",
+      "color": {
+        "r": 0.6,
+        "g": 0.6,
+        "b": 0.6
+      },
+      "density": 2400,
+      "conductivity": 1.6,
+      "specific_heat": 880
+    },
+    "m-wood": {
+      "name": "Oak",
+      "category": "Wood",
+      "color": {
+        "r": 0.55,
+        "g": 0.4,
+        "b": 0.2
+      },
+      "density": 700,
+      "conductivity": 0.18,
+      "specific_heat": 1600
+    },
+    "m-steel": {
+      "name": "Steel",
+      "category": "Metal",
+      "color": {
+        "r": 0.5,
+        "g": 0.55,
+        "b": 0.6
+      },
+      "density": 7850,
+      "conductivity": 50,
+      "specific_heat": 470
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.2,
+          "function": "Structure"
+        },
+        {
+          "material": "m-wool",
+          "thickness": 0.1,
+          "function": "Insulation"
+        }
+      ]
+    },
+    "wt-150": {
+      "name": "Concrete 150",
+      "layers": [
+        {
+          "material": "m-conc",
+          "thickness": 0.15,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {
+    "st-floor": {
+      "name": "Floor 250",
+      "layers": [
+        {
+          "material": "m-wood",
+          "thickness": 0.05,
+          "function": "Finish"
+        },
+        {
+          "material": "m-conc",
+          "thickness": 0.2,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "roof_types": {
+    "rt-tile": {
+      "name": "Tile roof",
+      "layers": [
+        {
+          "material": "m-wood",
+          "thickness": 0.04,
+          "function": "Finish"
+        },
+        {
+          "material": "m-wool",
+          "thickness": 0.2,
+          "function": "Insulation"
+        }
+      ]
+    }
+  },
+  "column_types": {
+    "ct-rect": {
+      "name": "Concrete 300x300",
+      "profile": {
+        "Rectangle": {
+          "width": 0.3,
+          "depth": 0.3
+        }
+      },
+      "material": "m-conc"
+    },
+    "ct-round": {
+      "name": "Steel 400",
+      "profile": {
+        "Circle": {
+          "diameter": 0.4
+        }
+      },
+      "material": "m-steel"
+    }
+  },
+  "beam_types": {
+    "bt-i": {
+      "name": "IPE 300",
+      "profile": {
+        "IShape": {
+          "width": 0.15,
+          "depth": 0.3,
+          "web": 0.0071,
+          "flange": 0.0107
+        }
+      },
+      "material": "m-steel"
+    },
+    "bt-rect": {
+      "name": "Concrete 250x400",
+      "profile": {
+        "Rectangle": {
+          "width": 0.25,
+          "depth": 0.4
+        }
+      },
+      "material": "m-conc"
+    }
+  },
+  "window_types": {
+    "wnd-120": {
+      "name": "Window 120",
+      "width": 1.2,
+      "height": 1.2,
+      "sill": 0.9,
+      "frame_width": 0.06,
+      "frame_depth": 0.08,
+      "panes": 2,
+      "material": "m-wood"
+    }
+  },
+  "door_types": {
+    "dr-90": {
+      "name": "Door 90",
+      "width": 0.9,
+      "height": 2.1,
+      "frame_width": 0.05,
+      "frame_depth": 0.1,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m-wood"
+    },
+    "dr-180": {
+      "name": "Double door 180",
+      "width": 1.8,
+      "height": 2.1,
+      "frame_width": 0.05,
+      "frame_depth": 0.1,
+      "leaves": "Double",
+      "swing": "Right",
+      "material": "m-wood"
+    }
+  },
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47.3769,
+      "longitude": 8.5417,
+      "elevation": 408,
+      "true_north": 0.2,
+      "boundary": [
+        {
+          "x": -5,
+          "y": -5
+        },
+        {
+          "x": 25,
+          "y": -5
+        },
+        {
+          "x": 25,
+          "y": 15
+        },
+        {
+          "x": -5,
+          "y": 15
+        }
+      ]
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 2,
+        "y": 3
+      },
+      "rotation": 0.1,
+      "elevation": 0.5
+    }
+  },
+  "storeys": {
+    "st-base": {
+      "building": "bldg-1",
+      "name": "Basement",
+      "level": -1,
+      "height": 2.6
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    },
+    "st-roof": {
+      "building": "bldg-1",
+      "name": "Roof",
+      "level": 2,
+      "height": 0.5
+    }
+  },
+  "grids": {
+    "g-a": {
+      "building": "bldg-1",
+      "label": "A",
+      "start": {
+        "x": 0,
+        "y": -1
+      },
+      "end": {
+        "x": 0,
+        "y": 9
+      }
+    },
+    "g-b": {
+      "building": "bldg-1",
+      "label": "B",
+      "start": {
+        "x": 8,
+        "y": -1
+      },
+      "end": {
+        "x": 8,
+        "y": 9
+      }
+    },
+    "g-1": {
+      "building": "bldg-1",
+      "label": "1",
+      "start": {
+        "x": -1,
+        "y": 0
+      },
+      "end": {
+        "x": 9,
+        "y": 0
+      }
+    }
+  },
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall 1"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Exterior",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall 10"
+    },
+    "w-north": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall 2"
+    },
+    "w-west": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      "location": "Interior",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall 3"
+    },
+    "w-free": {
+      "storey": "st-ground",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 2,
+            "y": 2
+          },
+          "end": {
+            "x": 5,
+            "y": 2
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.1,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "Existing",
+      "name": "Free"
+    },
+    "w-arc": {
+      "storey": "st-ground",
+      "wall_type": "wt-150",
+      "axis": {
+        "Arc": {
+          "start": {
+            "x": 10,
+            "y": 1
+          },
+          "end": {
+            "x": 10,
+            "y": 5
+          },
+          "bulge": 0.4
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Curved"
+    },
+    "w-first-south": {
+      "storey": "st-first",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "Demolished",
+      "name": "First South"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {
+    "c-1": {
+      "storey": "st-ground",
+      "column_type": "ct-rect",
+      "position": {
+        "x": 4,
+        "y": 3
+      },
+      "rotation": 0.3,
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "C1"
+    },
+    "c-2": {
+      "storey": "st-ground",
+      "column_type": "ct-round",
+      "position": {
+        "x": 6,
+        "y": 3
+      },
+      "rotation": 0,
+      "base_offset": 0.2,
+      "top": {
+        "Unconnected": {
+          "height": 2.5
+        }
+      },
+      "phase": "Temporary",
+      "name": "C2"
+    }
+  },
+  "beams": {
+    "b-1": {
+      "storey": "st-ground",
+      "beam_type": "bt-i",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 4,
+            "y": 3
+          },
+          "end": {
+            "x": 6,
+            "y": 3
+          }
+        }
+      },
+      "top_offset": 0,
+      "phase": "New",
+      "name": "B1"
+    },
+    "b-2": {
+      "storey": "st-ground",
+      "beam_type": "bt-rect",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 3
+          },
+          "end": {
+            "x": 4,
+            "y": 3
+          }
+        }
+      },
+      "top_offset": -0.1,
+      "phase": "Demolished",
+      "name": "B2"
+    }
+  },
+  "slabs": {
+    "sl-ground": {
+      "storey": "st-ground",
+      "slab_type": "st-floor",
+      "boundary": [
+        {
+          "point": {
+            "x": 0,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 6
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0,
+            "y": 6
+          },
+          "bulge": 0
+        }
+      ],
+      "holes": [
+        [
+          {
+            "point": {
+              "x": 5.5,
+              "y": 4
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 6.5,
+              "y": 4
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 6.5,
+              "y": 5
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 5.5,
+              "y": 5
+            },
+            "bulge": 0
+          }
+        ]
+      ],
+      "offset": 0,
+      "phase": "New",
+      "name": "Ground slab"
+    },
+    "sl-first": {
+      "storey": "st-first",
+      "slab_type": "st-floor",
+      "boundary": [
+        {
+          "point": {
+            "x": 0,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 6
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0,
+            "y": 6
+          },
+          "bulge": 0
+        }
+      ],
+      "holes": [],
+      "offset": 0,
+      "phase": "New",
+      "name": "First slab"
+    },
+    "sl-balcony": {
+      "storey": "st-first",
+      "slab_type": "st-floor",
+      "boundary": [
+        {
+          "point": {
+            "x": 8,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 10,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 10,
+            "y": 2
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 2
+          },
+          "bulge": 0
+        }
+      ],
+      "holes": [],
+      "offset": 0,
+      "slope": {
+        "direction": 0,
+        "angle": 0.05
+      },
+      "phase": "Existing",
+      "name": "Balcony"
+    }
+  },
+  "roofs": {},
+  "openings": {
+    "o-win-1": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 2,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Window 1"
+    },
+    "o-door-1": {
+      "host": "w-south",
+      "kind": {
+        "Door": {
+          "door_type": "dr-90"
+        }
+      },
+      "offset": 6,
+      "flip_hand": true,
+      "flip_facing": false,
+      "name": "Door 1"
+    },
+    "o-win-2": {
+      "host": "w-north",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 4,
+      "sill_override": 1,
+      "flip_hand": false,
+      "flip_facing": true,
+      "name": "Window 2",
+      "width": 1
+    },
+    "o-void-1": {
+      "host": "w-east",
+      "kind": {
+        "Void": {
+          "width": 0.6,
+          "height": 0.8
+        }
+      },
+      "offset": 3,
+      "sill_override": 1,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Duct"
+    },
+    "o-win-arc": {
+      "host": "w-arc",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 2.5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Curved window"
+    },
+    "o-door-2": {
+      "host": "w-first-south",
+      "kind": {
+        "Door": {
+          "door_type": "dr-180"
+        }
+      },
+      "offset": 4,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Double door"
+    }
+  },
+  "stairs": {},
+  "railings": {},
+  "spaces": {
+    "sp-1": {
+      "storey": "st-ground",
+      "number": "0.01",
+      "name": "Living room",
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 6.8,
+            "y": 5
+          }
+        }
+      },
+      "usage": "living",
+      "phase": "New",
+      "floor_finish": "m-wood",
+      "wall_finish": "m-brick"
+    },
+    "sp-2": {
+      "storey": "st-first",
+      "number": "1.01",
+      "name": "Bedroom",
+      "boundary": {
+        "Explicit": {
+          "outline": [
+            {
+              "point": {
+                "x": 0.2,
+                "y": 0.2
+              },
+              "bulge": 0
+            },
+            {
+              "point": {
+                "x": 3.8,
+                "y": 0.2
+              },
+              "bulge": 0
+            },
+            {
+              "point": {
+                "x": 3.8,
+                "y": 5.8
+              },
+              "bulge": 0
+            },
+            {
+              "point": {
+                "x": 0.2,
+                "y": 5.8
+              },
+              "bulge": 0
+            }
+          ]
+        }
+      },
+      "usage": "bedroom",
+      "phase": "Existing",
+      "floor_finish": "m-wood",
+      "wall_finish": "m-conc",
+      "ceiling_finish": "m-steel"
+    }
+  },
+  "properties": {
+    "w-south": {
+      "Pset_WallCommon": {
+        "FireRating": {
+          "Text": {
+            "value": "EI60"
+          }
+        },
+        "IsExternal": {
+          "Boolean": {
+            "value": true
+          }
+        },
+        "ThermalTransmittance": {
+          "Real": {
+            "value": 0.25
+          }
+        }
+      }
+    },
+    "c-1": {
+      "Pset_ColumnCommon": {
+        "LoadBearing": {
+          "Boolean": {
+            "value": true
+          }
+        },
+        "Reference": {
+          "Text": {
+            "value": "C-01"
+          }
+        }
+      },
+      "Custom": {
+        "Span": {
+          "Length": {
+            "value": 3
+          }
+        },
+        "Footprint": {
+          "Area": {
+            "value": 0.09
+          }
+        },
+        "Count": {
+          "Integer": {
+            "value": 4
+          }
+        },
+        "Tilt": {
+          "Angle": {
+            "value": 0.1
+          }
+        },
+        "Volume": {
+          "Volume": {
+            "value": 0.27
+          }
+        }
+      }
+    }
+  },
+  "classifications": {
+    "w-south": {
+      "cs-uniclass-2015": "EF_25_10"
+    },
+    "w-east": {
+      "cs-uniclass-2015": "EF_25_10"
+    },
+    "c-1": {
+      "cs-omniclass": "21-02 10 10"
+    }
+  },
+  "views": {
+    "v-plan-st-base": {
+      "building": "bldg-1",
+      "name": "Plan Basement",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-base"
+    },
+    "v-plan-st-ground": {
+      "building": "bldg-1",
+      "name": "Plan Ground",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-ground"
+    },
+    "v-plan-st-first": {
+      "building": "bldg-1",
+      "name": "Plan First",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-first"
+    },
+    "v-plan-st-roof": {
+      "building": "bldg-1",
+      "name": "Plan Roof",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-roof"
+    },
+    "v-section-a": {
+      "building": "bldg-1",
+      "name": "Section A",
+      "kind": "Section",
+      "depth": 5.15,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": 3
+        },
+        "end": {
+          "x": 12.15,
+          "y": 3
+        }
+      }
+    },
+    "v-section-b": {
+      "building": "bldg-1",
+      "name": "Section B",
+      "kind": "Section",
+      "depth": 7.15,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 5,
+          "y": -2.15
+        },
+        "end": {
+          "x": 5,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-south": {
+      "building": "bldg-1",
+      "name": "South",
+      "kind": "Elevation",
+      "depth": 9.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": -2.15
+        },
+        "end": {
+          "x": 12.15,
+          "y": -2.15
+        }
+      }
+    },
+    "v-elevation-east": {
+      "building": "bldg-1",
+      "name": "East",
+      "kind": "Elevation",
+      "depth": 13.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 12.15,
+          "y": -2.15
+        },
+        "end": {
+          "x": 12.15,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-north": {
+      "building": "bldg-1",
+      "name": "North",
+      "kind": "Elevation",
+      "depth": 9.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 12.15,
+          "y": 8.15
+        },
+        "end": {
+          "x": -2.15,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-west": {
+      "building": "bldg-1",
+      "name": "West",
+      "kind": "Elevation",
+      "depth": 13.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": 8.15
+        },
+        "end": {
+          "x": -2.15,
+          "y": -2.15
+        }
+      }
+    },
+    "v-3d": {
+      "building": "bldg-1",
+      "name": "3D view",
+      "kind": "Perspective",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "camera": {
+        "target": {
+          "x": 5,
+          "y": 3
+        },
+        "target_height": 3.15,
+        "azimuth": 0.7853981633974483,
+        "pitch": 0.5,
+        "distance": 25.6
+      }
+    }
+  },
+  "schedules": {
+    "sch-doors": {
+      "name": "Door schedule",
+      "category": "Door",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Width"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Height"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Leaves"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Swing"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Count"
+            }
+          },
+          "total": true
+        }
+      ],
+      "sort": [
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          },
+          "descending": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "descending": false
+        }
+      ],
+      "filter": [],
+      "group": [],
+      "itemize": true,
+      "storeys": [],
+      "phases": []
+    },
+    "sch-windows": {
+      "name": "Window schedule",
+      "category": "Window",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Width"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Height"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Panes"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Host"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Count"
+            }
+          },
+          "total": true
+        }
+      ],
+      "sort": [
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          },
+          "descending": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Width"
+            }
+          },
+          "descending": true
+        }
+      ],
+      "filter": [],
+      "group": [],
+      "itemize": true,
+      "storeys": [],
+      "phases": []
+    },
+    "sch-rooms": {
+      "name": "Room schedule",
+      "category": "Space",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Number"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Usage"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "GrossArea"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "NetArea"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Height"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "NetVolume"
+            }
+          },
+          "total": true
+        }
+      ],
+      "sort": [
+        {
+          "key": {
+            "Field": {
+              "field": "Number"
+            }
+          },
+          "descending": false
+        }
+      ],
+      "filter": [],
+      "group": [
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          }
+        }
+      ],
+      "itemize": true,
+      "storeys": [],
+      "phases": []
+    },
+    "sch-finishes": {
+      "name": "Room finish schedule",
+      "category": "Finish",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Number"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Surface"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Material"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "FinishArea"
+            }
+          },
+          "total": true
+        }
+      ],
+      "sort": [
+        {
+          "key": {
+            "Field": {
+              "field": "Number"
+            }
+          },
+          "descending": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Surface"
+            }
+          },
+          "descending": false
+        }
+      ],
+      "filter": [],
+      "group": [
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          }
+        }
+      ],
+      "itemize": true,
+      "storeys": [],
+      "phases": []
+    },
+    "sch-walls": {
+      "name": "Wall schedule",
+      "category": "Wall",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Length"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Height"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "NetSideArea"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "NetVolume"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Property": {
+              "set": "Pset_WallCommon",
+              "name": "FireRating"
+            }
+          },
+          "heading": "Fire rating",
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Material"
+            }
+          },
+          "total": false
+        }
+      ],
+      "sort": [
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "descending": false
+        }
+      ],
+      "filter": [
+        {
+          "key": {
+            "Field": {
+              "field": "Length"
+            }
+          },
+          "op": "GreaterOrEqual",
+          "value": "1"
+        }
+      ],
+      "group": [
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          }
+        }
+      ],
+      "itemize": true,
+      "storeys": [],
+      "phases": []
+    },
+    "sch-nested": {
+      "name": "Walls by storey and type",
+      "category": "Wall",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Id"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Phase"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Length"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "GrossSideArea"
+            }
+          },
+          "total": true
+        }
+      ],
+      "sort": [
+        {
+          "key": {
+            "Field": {
+              "field": "Length"
+            }
+          },
+          "descending": true
+        }
+      ],
+      "filter": [],
+      "group": [
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          }
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          }
+        }
+      ],
+      "itemize": true,
+      "storeys": [],
+      "phases": []
+    },
+    "sch-types": {
+      "name": "Wall types",
+      "category": "Wall",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Count"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Length"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "NetVolume"
+            }
+          },
+          "total": true
+        }
+      ],
+      "sort": [],
+      "filter": [],
+      "group": [],
+      "itemize": false,
+      "storeys": [],
+      "phases": []
+    },
+    "sch-ground": {
+      "name": "New ground floor walls",
+      "category": "Wall",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Storey"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Length"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Phase"
+            }
+          },
+          "total": false
+        }
+      ],
+      "sort": [
+        {
+          "key": {
+            "Field": {
+              "field": "Length"
+            }
+          },
+          "descending": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "descending": false
+        }
+      ],
+      "filter": [
+        {
+          "key": {
+            "Property": {
+              "set": "Pset_WallCommon",
+              "name": "FireRating"
+            }
+          },
+          "op": "Empty",
+          "value": ""
+        }
+      ],
+      "group": [],
+      "itemize": true,
+      "storeys": [
+        "st-ground"
+      ],
+      "phases": [
+        "New"
+      ]
+    },
+    "sch-takeoff": {
+      "name": "Material take-off",
+      "category": "Material",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Material"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "LayerArea"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "LayerVolume"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "LayerMass"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Count"
+            }
+          },
+          "total": true
+        }
+      ],
+      "sort": [],
+      "filter": [
+        {
+          "key": {
+            "Field": {
+              "field": "Kind"
+            }
+          },
+          "op": "NotEquals",
+          "value": "window"
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Kind"
+            }
+          },
+          "op": "NotEquals",
+          "value": "door"
+        }
+      ],
+      "group": [
+        {
+          "key": {
+            "Field": {
+              "field": "Material"
+            }
+          }
+        }
+      ],
+      "itemize": false,
+      "storeys": [],
+      "phases": []
+    }
+  },
+  "classification_systems": {
+    "cs-uniclass-2015": {
+      "name": "Uniclass 2015",
+      "edition": "",
+      "entries": [
+        {
+          "code": "EF_25_10",
+          "title": "Walls"
+        }
+      ]
+    },
+    "cs-omniclass": {
+      "name": "Omniclass",
+      "edition": "",
+      "entries": [
+        {
+          "code": "21-02 10 10",
+          "title": "Columns"
+        }
+      ]
+    }
+  }
+}

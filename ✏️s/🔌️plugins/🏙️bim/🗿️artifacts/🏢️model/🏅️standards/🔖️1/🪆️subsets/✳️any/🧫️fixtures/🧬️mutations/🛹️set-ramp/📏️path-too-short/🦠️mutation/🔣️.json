@@ -1,0 +1,13 @@
+{
+  "mutation": "setRamp",
+  "id": "rp-1",
+  "path": [
+    {
+      "point": {
+        "x": 2,
+        "y": 2
+      },
+      "bulge": 0
+    }
+  ]
+}

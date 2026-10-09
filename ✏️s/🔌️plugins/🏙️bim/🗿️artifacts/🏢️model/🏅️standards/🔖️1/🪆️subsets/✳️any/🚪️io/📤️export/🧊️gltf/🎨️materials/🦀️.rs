@@ -40,7 +40,10 @@ fn family_name(family: SolidFamily) -> &'static str {
         SolidFamily::Slab => "Slab",
         SolidFamily::Roof => "Roof",
         SolidFamily::Stair => "Stair",
+        SolidFamily::Ramp => "Ramp",
         SolidFamily::Railing => "Railing",
+        SolidFamily::Ceiling => "Ceiling",
+        SolidFamily::WallSweep => "Wall sweep",
     }
 }
 

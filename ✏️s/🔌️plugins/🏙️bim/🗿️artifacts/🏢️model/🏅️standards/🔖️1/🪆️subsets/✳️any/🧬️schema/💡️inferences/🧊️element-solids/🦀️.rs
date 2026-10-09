@@ -29,8 +29,14 @@ pub mod parts {
     pub const GLASS: &str = "glass";
     pub const LEAF: &str = "leaf";
     pub const STEP: &str = "step";
+    pub const RISER: &str = "riser";
+    pub const STRINGER: &str = "stringer";
+    pub const LANDING: &str = "landing";
     pub const POST: &str = "post";
     pub const RAIL: &str = "rail";
+    pub const BALUSTER: &str = "baluster";
+    pub const INFILL: &str = "infill";
+    pub const REVEAL: &str = "reveal";
 }
 
 /// 🧩️ What a solid represents.
@@ -46,7 +52,10 @@ pub enum SolidFamily {
     Slab,
     Roof,
     Stair,
+    Ramp,
     Railing,
+    Ceiling,
+    WallSweep,
 }
 
 /// 🔑️ A `Solid` node of the model graph: the family and the element id (a filler is `Window` or `Door` by the kind of its opening; voids have no solid).
@@ -230,12 +239,19 @@ pub fn dep_value<T: semio_framework_value::ToValue>(item: &T) -> DslValue {
     semio_framework_value::ToValue::to_value(item)
 }
 
-/// 🏷️ An element record without its display name: no inference reads a name, so renaming an element never invalidates a node that depends on it.
+/// 🏷️ An element record without its display name and construction phase: no geometry inference reads either, so renaming an element or putting it into another phase never invalidates a node that depends on it.
 pub trait Anonymous: Clone {
     fn anonymous(&self) -> Self;
 }
 
 macro_rules! anonymous {
+    (phased $($record:ty),+) => {
+        $(impl Anonymous for $record {
+            fn anonymous(&self) -> Self {
+                Self { name: String::new(), phase: crate::Phase::New, ..self.clone() }
+            }
+        })+
+    };
     ($($record:ty),+) => {
         $(impl Anonymous for $record {
             fn anonymous(&self) -> Self {
@@ -245,7 +261,8 @@ macro_rules! anonymous {
     };
 }
 
-anonymous!(crate::Wall, crate::CurtainWall, crate::Column, crate::Beam, crate::Slab, crate::Roof, crate::Stair, crate::Railing, crate::Opening);
+anonymous!(phased crate::Wall, crate::CurtainWall, crate::Column, crate::Beam, crate::Slab, crate::Roof, crate::Stair, crate::Railing);
+anonymous!(crate::Ramp, crate::Opening, crate::Ceiling, crate::WallSweep);
 
 /// 🔑️ A dependency value of keyed records, names left out.
 pub fn dep_records<'a, T: Anonymous + semio_framework_value::ToValue + 'a>(rows: impl IntoIterator<Item = (&'a String, &'a T)>) -> DslValue {
@@ -273,6 +290,7 @@ pub fn profile_polygon(profile: &Profile) -> Vec<Point> {
             [(-w, -d), (w, -d), (w, -d + f), (t, -d + f), (t, d - f), (w, d - f), (w, d), (-w, d), (-w, d - f), (-t, d - f), (-t, -d + f), (-w, -d + f)].into_iter().map(|(a, b)| Point::new(a, b)).collect()
         }
         Profile::Custom { outline } => loops::flatten(&outline.iter().map(|vertex| loops::Vertex { point: Point::new(vertex.point.x, vertex.point.y), bulge: vertex.bulge }).collect::<Vec<_>>(), CHORD_TOLERANCE),
+        Profile::Family { .. } => Vec::new(),
     }
 }
 
@@ -296,11 +314,12 @@ pub fn placement_of(snapshot: &ModelSnapshot, storey: &str, own: Option<&StoreyL
 
 //#region 🔖️Families
 /// 🗺️ The snapshot collections the field reads (material colours are deliberately absent: a solid names its materials by id).
-pub const READS: &[&str] = &["walls", "wall_types", "curtain_walls", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "roofs", "roof_types", "stairs", "railings", "storeys", "buildings", "sites"];
+pub const READS: &[&str] = &["walls", "wall_sweeps", "wall_types", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "roof_types", "stairs", "ramps", "railings", "storeys", "buildings", "sites"];
 //#endregion 🔖️Families
 
 //#region 🔖️Projection
 /// 🧊️ The solid of every element that has geometry, keyed by element id (the `Solid` nodes of the model graph).
+#[cfg(test)]
 pub fn compute_element_solids(snapshot: &ModelSnapshot) -> BTreeMap<String, ElementSolid> {
     std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::SOLIDS }>(snapshot).element_solids)
 }
@@ -317,9 +336,10 @@ pub(crate) mod fixtures {
     const ARC_WINDOW: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🌀️arc-window/🔣️.json");
     const ROOM_JOINS: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🧩️room-joins/🔣️.json");
     const CURTAIN_GRID: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🏬️curtain-grid/🔣️.json");
+    const CEILINGS_MESHES: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪵️ceilings-meshes/🔣️.json");
 
     /// 🧫️ Every case name with its committed text.
-    pub const CASES: [(&str, &str); 4] = [("straight-openings", STRAIGHT_OPENINGS), ("arc-window", ARC_WINDOW), ("room-joins", ROOM_JOINS), ("curtain-grid", CURTAIN_GRID)];
+    pub const CASES: [(&str, &str); 5] = [("straight-openings", STRAIGHT_OPENINGS), ("arc-window", ARC_WINDOW), ("room-joins", ROOM_JOINS), ("curtain-grid", CURTAIN_GRID), ("ceilings-meshes", CEILINGS_MESHES)];
 
     /// 🧫️ The decoded snapshot and the whole committed document of a case.
     pub fn case(name: &str) -> (ModelSnapshot, serde_json::Value) {

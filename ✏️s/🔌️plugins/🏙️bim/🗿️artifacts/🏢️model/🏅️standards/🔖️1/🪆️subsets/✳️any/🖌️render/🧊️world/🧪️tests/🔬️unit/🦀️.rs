@@ -10,7 +10,7 @@ fn json(text: &str) -> serde_json::Value {
 }
 
 fn scene_of(snapshot: &ModelSnapshot, orbit: Option<&store::Viewport3dOrbit>, hidden: &[String], selected: &[String]) -> World3dScene {
-    let solids = crate::render::solids(snapshot);
+    let solids = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, snapshot, |inference| inference.element_solids.clone());
     scene(snapshot, &solids, &WorldView { orbit, projection: &WorldProjectionConfig::default(), hidden_storeys: hidden, selected, hovered: &[] })
 }
 
@@ -95,7 +95,7 @@ fn the_fit_is_requested_only_while_no_orbit_is_stored() {
 #[test]
 fn the_overview_camera_looks_at_the_centre_of_the_drawn_solids() {
     let model = demo();
-    let solids = crate::render::solids(&model);
+    let solids = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &model, |inference| inference.element_solids.clone());
     let (lo, hi) = world_bounds(solids.values()).expect("drawn solids have bounds");
     let orbit = overview_orbit(Some((lo, hi)));
     assert_eq!(orbit.target, [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0, (lo[2] + hi[2]) / 2.0]);
@@ -107,9 +107,9 @@ fn the_overview_camera_looks_at_the_centre_of_the_drawn_solids() {
 #[test]
 fn world_bounds_follow_the_building_placement() {
     let mut model = demo();
-    let plain = world_bounds(crate::render::solids(&model).values()).expect("bounds");
+    let plain = world_bounds(crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &model, |inference| inference.element_solids.clone()).values()).expect("bounds");
     model.buildings.get_mut("bldg-1").expect("the building").origin = crate::Point2 { x: 100.0, y: -50.0 };
-    let moved = world_bounds(crate::render::solids(&model).values()).expect("bounds");
+    let moved = world_bounds(crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &model, |inference| inference.element_solids.clone()).values()).expect("bounds");
     assert!((moved.0[0] - plain.0[0] - 100.0).abs() < 1e-9 && (moved.0[1] - plain.0[1] + 50.0).abs() < 1e-9);
 }
 
@@ -138,7 +138,7 @@ fn rounded(value: f64) -> f64 {
 
 fn case_projection(name: &str) -> serde_json::Value {
     let model = case_model(name);
-    let solids = crate::render::solids(&model);
+    let solids = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &model, |inference| inference.element_solids.clone());
     let scene = scene_of(&model, None, &[], &[]);
     let meshes: Vec<serde_json::Value> = json(&scene.meshes_json)
         .as_array()

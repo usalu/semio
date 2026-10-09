@@ -1,0 +1,14 @@
+{
+  "mutation": "createCurtainPanelOverride",
+  "id": "ov-1",
+  "curtain_panel_override": {
+    "curtain": "cw-1",
+    "u": 0,
+    "v": 0,
+    "panel": {
+      "Solid": {
+        "material": "m-wood"
+      }
+    }
+  }
+}

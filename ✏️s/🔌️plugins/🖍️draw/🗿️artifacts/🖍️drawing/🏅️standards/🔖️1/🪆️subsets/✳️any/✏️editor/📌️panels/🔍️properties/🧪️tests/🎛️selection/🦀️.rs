@@ -327,3 +327,40 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
         }}
     }
 }
+
+#[test]
+fn authored_geometry_controls_match_shared_inspector_contract() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let layer=crate::schema::create_layer_by_kind(case["kind"].as_str().unwrap());
+        let id=crate::schema::layer_id(&layer).to_string_owner();
+        let document=DrawingSnapshot{layers:vec![layer].into(),..Default::default()};
+        for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
+            let mut json=String::new();
+            for offset in 0..36 {
+                let view=ViewModel{tree_windows:vec![semio_framework_plugin::TreeWindowRequest{body_key:DRAWING_PLAY_BODY_PROPERTIES.into(),node_key:ROOT.into(),open:Some(true),offset,rows:1}],..ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native)};
+                let tree=render(&document,&[id.clone()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+                json.push_str(&project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap());
+            }
+            for field in case["fields"].as_array().unwrap(){assert!(json.contains(&format!("drawing-inspector.{}.input",field.as_str().unwrap())));}
+            if case["kind"]=="shape:polygon" {for field in fixture["polygonCoordinates"].as_array().unwrap(){assert!(json.contains(field.as_str().unwrap()));}}
+        }
+    }
+}
+
+#[test]
+fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
+    let segment=PathSegment::Move{to:[0.0,0.0]};
+    for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
+        let row=node_row("path",0,&segment,None,false,labels).unwrap();
+        let json=project_and_retire_fixture_tree(built_to_component_tree(row)).unwrap();
+        for mode in fixture["nodeModes"].as_array().unwrap(){assert!(json.contains(&format!("mode.{}",mode.as_str().unwrap())));}
+        for label in [labels.node_corner,labels.node_smooth,labels.node_symmetric]{assert!(json.contains(label.as_str()));}
+        let layer=crate::schema::create_drawing_path_layer("Path",vec![segment.clone()].into());let id=crate::schema::layer_id(&layer).to_string_owner();
+        let document=DrawingSnapshot{layers:vec![layer].into(),..Default::default()};
+        let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);
+        let tree=render(&document,&[id],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+        let json=project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();assert!(json.contains("path.simplify"));assert!(json.contains(labels.simplify_tolerance.as_str()));
+    }
+}

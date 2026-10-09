@@ -1,9 +1,6 @@
 {
   "mutation": "setElementClassification",
   "id": "w-south",
-  "classification": {
-    "system": "Uniclass",
-    "code": "EF_25_11",
-    "title": "Walls"
-  }
+  "system": "cs-uni",
+  "code": "EF_25"
 }

@@ -1,0 +1,9 @@
+{
+  "mutation": "setLeader",
+  "id": "lead-1",
+  "text": "Brick 300",
+  "offset": {
+    "x": 2,
+    "y": 2
+  }
+}

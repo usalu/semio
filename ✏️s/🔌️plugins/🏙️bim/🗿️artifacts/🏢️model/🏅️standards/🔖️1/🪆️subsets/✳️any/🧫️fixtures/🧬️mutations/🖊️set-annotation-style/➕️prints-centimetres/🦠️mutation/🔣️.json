@@ -1,0 +1,7 @@
+{
+  "mutation": "setAnnotationStyle",
+  "id": "as-plan",
+  "unit": "Centimetre",
+  "precision": 1,
+  "terminator": "Dot"
+}

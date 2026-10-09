@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/kernel/clipboard/envelope",
+  "title": "Clipboard Envelope Budget",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["maximumTextBytes", "maximumMetadataWireBytes", "maximumFragmentWireBytes", "maximumPasteWireBytes"],
+  "properties": {
+    "maximumTextBytes": { "const": 1048576 },
+    "maximumMetadataWireBytes": { "const": 16384 },
+    "maximumFragmentWireBytes": { "const": 6307840 },
+    "maximumPasteWireBytes": { "const": 6324224 }
+  }
+}

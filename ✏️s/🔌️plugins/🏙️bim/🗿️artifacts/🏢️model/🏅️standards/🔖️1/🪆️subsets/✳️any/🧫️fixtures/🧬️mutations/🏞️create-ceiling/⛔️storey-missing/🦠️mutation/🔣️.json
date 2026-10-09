@@ -1,0 +1,41 @@
+{
+  "mutation": "createCeiling",
+  "id": "ce-living",
+  "ceiling": {
+    "storey": "st-attic",
+    "ceiling_type": "ct-board",
+    "boundary": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 8,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 8,
+          "y": 6
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 0,
+          "y": 6
+        },
+        "bulge": 0
+      }
+    ],
+    "holes": [],
+    "offset": 0.3,
+    "name": "Living ceiling"
+  }
+}

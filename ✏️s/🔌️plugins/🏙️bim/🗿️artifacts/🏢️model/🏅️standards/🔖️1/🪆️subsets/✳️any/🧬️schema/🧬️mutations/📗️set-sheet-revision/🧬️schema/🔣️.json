@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-sheet-revision/schema.json",
+  "title": "SetSheetRevision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setSheetRevision"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Revision",
+          "de": "Änderung"
+        },
+        "ref": {
+          "kind": "sheet-revision"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "number": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Mark",
+          "de": "Index"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "date": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Date (year-month-day)",
+          "de": "Datum (Jahr-Monat-Tag)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "description": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Description",
+          "de": "Beschreibung"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "author": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Author",
+          "de": "Bearbeiter"
+        },
+        "group": "value",
+        "order": 50
+      }
+    }
+  }
+}

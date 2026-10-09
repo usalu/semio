@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/array-elements/schema.json",
+  "title": "ArrayElements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "ids",
+    "prefix",
+    "pattern"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "arrayElements"
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Elements",
+          "de": "Elemente"
+        },
+        "description": {
+          "en": "Elements to act on; unknown ids refuse the whole call, openings are acted on with their host.",
+          "de": "Zu bearbeitende Elemente; unbekannte Ids verweigern den ganzen Aufruf, Öffnungen werden mit ihrem Host bearbeitet."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "prefix": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Id prefix",
+          "de": "Id-Präfix"
+        },
+        "description": {
+          "en": "Prefix of the ids minted for the created records: prefix, copy number and the position of the source in id order.",
+          "de": "Präfix der Ids der angelegten Datensätze: Präfix, Kopiennummer und Position der Quelle in Id-Reihenfolge."
+        },
+        "group": "identity",
+        "order": 30
+      }
+    },
+    "pattern": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Linear"
+          ],
+          "properties": {
+            "Linear": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "count",
+                "spacing"
+              ],
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "spacing": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Radial"
+          ],
+          "properties": {
+            "Radial": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "count",
+                "center",
+                "step"
+              ],
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "center": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                },
+                "step": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Pattern",
+          "de": "Muster"
+        },
+        "description": {
+          "en": "Linear: count copies, each one further by the spacing (m). Radial: count copies, each one further by the step (rad) about the centre (m).",
+          "de": "Linear: Anzahl Kopien, jede um den Abstand (m) weiter. Radial: Anzahl Kopien, jede um den Schritt (rad) weiter um den Mittelpunkt (m)."
+        },
+        "group": "pattern",
+        "order": 20
+      }
+    }
+  }
+}

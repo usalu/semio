@@ -68,6 +68,7 @@ members = [
     "🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
     "🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
+    "🔨️modules/🧮️expression/📦️packages/🦀️rust",
     "🔨️modules/🧮️math/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📦️packages/🦀️rust",
 ]
@@ -106,6 +107,9 @@ exclude-patterns = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽�
 
     [workspace.dependencies.semio-framework-async-macros]
     path = "🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-expression]
+    path = "🔨️modules/🧮️expression/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-geometry]
     path = "🔨️modules/📐️geometry/📦️packages/🦀️rust"

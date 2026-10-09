@@ -37,6 +37,7 @@
     },
     "material": "m-steel",
     "base_offset": 0,
+    "phase": "New",
     "name": "Balustrade",
     "baluster": {
       "profile": {

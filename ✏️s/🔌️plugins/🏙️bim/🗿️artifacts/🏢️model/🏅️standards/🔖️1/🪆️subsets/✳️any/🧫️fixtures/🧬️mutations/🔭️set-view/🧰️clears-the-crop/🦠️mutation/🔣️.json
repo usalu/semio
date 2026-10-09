@@ -1,0 +1,7 @@
+{
+  "mutation": "setView",
+  "id": "v-ground",
+  "crop": {
+    "value": null
+  }
+}

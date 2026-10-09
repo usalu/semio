@@ -1,0 +1,9 @@
+{
+  "mutation": "setWallSweep",
+  "id": "ws-base",
+  "profile": {
+    "Circle": {
+      "diameter": 0
+    }
+  }
+}

@@ -1,11 +1,12 @@
 /** 📷️ Bounded first-party PNG RGBA emission with exact preallocated output and private publication. */
 import {validateImage,type PixelImage} from "../../✍️editing/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "../../../◻️2d/🧹️retire/🟦️.ts";
 export interface PngEncodeProgress{completed:number;total:number;work:number;done:boolean}
 const be=(out:Uint8Array,at:number,value:number)=>{out[at]=value>>>24;out[at+1]=value>>>16;out[at+2]=value>>>8;out[at+3]=value;};
 const table=Uint32Array.from({length:256},(_,value)=>{let crc=value;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);return crc>>>0;});
 const crcByte=(crc:number,value:number)=>((crc>>>8)^table[(crc^value)&255]!)>>>0;
 export class PngEncodeJob{
- private output:Uint8Array;private readonly total:number;private readonly idatEnd:number;private cursor=0;private at=43;private crc=0xffffffff;private adlerA=1;private adlerB=0;private work=0;private cancelled=false;private done=false;
+ private output:Uint8Array;private readonly total:number;private readonly idatEnd:number;private cursor=0;private at=43;private crc=0xffffffff;private adlerA=1;private adlerB=0;private work=0;private cancelled=false;private done=false;private transferred=false;
  constructor(private image:PixelImage,maximumBytes=67108864){
   validateImage(image);this.total=image.pixels.length+image.height;const blocks=Math.ceil(this.total/4096),zlib=this.total+blocks*5+6,bytes=57+zlib;
   if(!Number.isSafeInteger(maximumBytes)||maximumBytes<8||maximumBytes>67108864||bytes>maximumBytes)throw RangeError("PNG encoded byte limit exceeded");this.output=new Uint8Array(bytes);this.output.set([137,80,78,71,13,10,26,10]);be(this.output,8,13);this.output.set([73,72,68,82],12);be(this.output,16,image.width);be(this.output,20,image.height);this.output.set([8,6,0,0,0],24);let header=0xffffffff;for(const byte of this.output.subarray(12,29))header=crcByte(header,byte);be(this.output,29,(header^0xffffffff)>>>0);be(this.output,33,zlib);this.output.set([73,68,65,84],37);for(const byte of [73,68,65,84])this.crc=crcByte(this.crc,byte);this.idatEnd=41+zlib;this.at=41;this.write(0x78);this.write(0x01);
@@ -21,5 +22,7 @@ export class PngEncodeJob{
   return{completed:this.cursor,total:this.total,work:this.work,done:this.done};
  }
  result():Uint8Array{if(this.cancelled)throw new DOMException("PNG emission cancelled","AbortError");if(!this.done)throw Error("PNG emission incomplete");return this.output;}
- cancel():void{this.cancelled=true;this.output=new Uint8Array(0);}
+ /** 🧹️ Moves real output and source references into a retained close owner before dropping the encoder. */
+ intoRetirement():{job:WorkRetirement;output:Uint8Array|null}{if(this.transferred)throw Error("PNG ownership already transferred");this.transferred=true;const output=this.done&&!this.cancelled?this.output:null;let bytes:Uint8Array|null=output?null:this.output,image:PixelImage|null=this.image;this.output=new Uint8Array(0);this.image={width:0,height:0,pixels:new Uint8Array(0)};this.cancelled=true;let slot=0;return{output,job:new UnitRetirement(()=>{if(slot===0){bytes=null;slot++;return false;}if(slot===1){image=null;slot++;return false;}return bytes===null&&image===null;})};}
+ cancel():void{this.cancelled=true;}
 }

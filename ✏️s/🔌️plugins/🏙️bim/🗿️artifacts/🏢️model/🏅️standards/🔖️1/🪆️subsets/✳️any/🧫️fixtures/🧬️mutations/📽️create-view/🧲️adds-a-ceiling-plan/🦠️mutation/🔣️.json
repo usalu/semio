@@ -1,0 +1,15 @@
+{
+  "mutation": "createView",
+  "id": "v-ceiling",
+  "view": {
+    "building": "bldg-1",
+    "name": "Ground ceiling",
+    "kind": "CeilingPlan",
+    "depth": 100,
+    "hidden": [],
+    "scale": 100,
+    "detail": "Medium",
+    "storey": "st-ground",
+    "cut_height": 2.4
+  }
+}

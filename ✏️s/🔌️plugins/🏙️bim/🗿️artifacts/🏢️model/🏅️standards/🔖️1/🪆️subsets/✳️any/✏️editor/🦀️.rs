@@ -1,13 +1,13 @@
 //! ✏️ BIM model editor: the `ArtifactEditor` implementation, the command table and the manifest stitch. The editor is a routing table: every command body lives in a `🎮️commands/*`
-//! node, every window render in `🎭️modes/✏️edit/🪟️windows/*`, every panel in `📌️panels/*`, derived values in `🔮️inference`, what an entity kind is in `🧩️entities`. A command only
+//! node, every window render in `🎭️modes/✏️edit/🪟️windows/*`, every panel in `📌️panels/*`, derived values in `model_graph::registry`, what an entity kind is in `🧩️entities`. A command only
 //! emits mutations (or window config, presence and effects); nothing here applies a diff.
 
-use crate::editor::bim::commands::{arm_utility, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, create_entity, delete_selection, rename_entity, set_camera, set_field, set_view, world_pointer_down, world_pointer_move};
+use crate::editor::bim::commands::{analyse_model, arm_utility, export_sheets, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, create_entity, create_view, delete_selection, edit_schedule, apply_template, edit_classification, edit_template, search_classification, engagement_input, export_schedule_csv, export_model, engagement_submit, flip_walls, move_storey, place_elements, cursor_keys, remove_classification, remove_property, rename_entity, select_findings, set_camera, set_classification, set_field, set_property, set_view, split_wall, world_pointer_down, world_pointer_move};
 use crate::editor::bim::config::app_schema_descriptor;
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit;
-use crate::editor::bim::modes::edit::windows::{plan, schedule, section, world};
-use crate::editor::bim::panels::{library as library_panel, outliner as outliner_panel, properties as properties_panel};
+use crate::editor::bim::modes::edit::windows::{plan, schedule, section, sheet, world};
+use crate::editor::bim::panels::{classification as classification_panel, diagnostics as diagnostics_panel, library as library_panel, outliner as outliner_panel, properties as properties_panel};
 use crate::editor::bim::presence::{BimPresence, BimPresenceMutation};
 use crate::editor::bim::terminology::{bim_labels, BimLabels};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
@@ -73,6 +73,8 @@ pub struct BimDispatchCtx {
     pub plan: plan::config::BimPlanWindowConfig,
     pub world: world::config::BimWorldWindowConfig,
     pub section: section::config::BimSectionWindowConfig,
+    pub schedule: schedule::config::BimScheduleWindowConfig,
+    pub sheet: sheet::config::BimSheetWindowConfig,
     pub presence: BimPresence,
     pub presence_out: Vec<BimPresenceMutation>,
     pub gestures: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
@@ -92,6 +94,8 @@ impl BimDispatchCtx {
             plan: plan::config::from_snapshot(window_config),
             world: world::config::from_snapshot(window_config),
             section: section::config::from_snapshot(window_config),
+            schedule: schedule::config::from_snapshot(window_config),
+            sheet: sheet::config::from_snapshot(window_config),
             presence: presence.cloned().unwrap_or_default(),
             presence_out: Vec::new(),
             gestures: None,
@@ -108,47 +112,99 @@ impl BimDispatchCtx {
 //#endregion 🔖️Dispatch
 
 //#region 🔖️CommandTable
-/// 🧩️ THE command table: `manifest id as wire keyword => payload, [publication lanes]; kind, label (en, de), description (en, de)`. The command enum, the bounded tool roster, the
+/// 🧩️ THE command table: `manifest id as wire keyword => payload, [publication lanes]; kind, label, description`, the last two being fields of `BimLabels` (en and de live in the one `app_labels!` block). The command enum, the bounded tool roster, the
 /// publication contracts, the bounded-first-step proofs and the manifest actions are all generated from these rows, so a new command is one row here, one payload node and one bridge arm.
 macro_rules! bim_command_table {
     ($callback:ident) => {
         $callback! {
-            "createEntity" as "create-entity" => create_entity::CreateEntity, [Artifact]; Mutation, ("Create Entity", "Bauteil anlegen"), ("Creates one entity of the given kind (site, building, storey, wall ...) in the given container, or in the selected or first container, and selects it.", "Legt ein Bauteil der angegebenen Art im angegebenen, im ausgewählten oder im ersten passenden Container an und wählt es aus.");
-            "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection, [Artifact]; Mutation, ("Delete Selection", "Auswahl löschen"), ("Deletes the given entities, or the current selection, children before parents, in one undoable step.", "Löscht die angegebenen Bauteile oder die aktuelle Auswahl, Kinder vor Eltern, in einem rückgängig machbaren Schritt.");
-            "renameEntity" as "rename-entity" => rename_entity::RenameEntity, [Artifact]; Mutation, ("Rename Entity", "Bauteil umbenennen"), ("Gives one entity a new name.", "Gibt einem Bauteil einen neuen Namen.");
-            "setField" as "set-field" => set_field::SetField, [Artifact]; Mutation, ("Set Field", "Parameter festlegen"), ("Sets one authored parameter (name, level, height ...) of the given entities, or of the selection, to the given value.", "Setzt einen Parameter (Name, Ebene, Höhe ...) der angegebenen Bauteile oder der Auswahl auf den angegebenen Wert.");
-            "setView" as "set-view" => set_view::SetView, [WindowConfig, Presence]; View, ("Set View", "Ansicht festlegen"), ("Sets one view parameter of the addressed window (storey, cut height, projection, isolated storey, section plane, section line, depth); the document does not change.", "Setzt einen Ansichtsparameter des adressierten Fensters (Geschoss, Schnitthöhe, Projektion, isoliertes Geschoss, Schnittebene, Schnittlinie, Tiefe); das Dokument ändert sich nicht.");
-            "setCamera" as "camera" => set_camera::SetCamera, [WindowConfig, Presence]; View, ("Set Camera", "Kamera festlegen"), ("Stores the navigation pose of the addressed window.", "Speichert die Navigationspose des adressierten Fensters.");
-            "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown, [Artifact, WindowTransient]; Mutation, ("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ("A press in a plan or section window: it belongs to the armed utility (select picks, wall sets a point, window places ...).", "Ein Druck in einem Grundriss- oder Schnittfenster: er gehört zum aktiven Werkzeug (Auswahl wählt, Wand setzt einen Punkt, Fenster platziert ...).");
-            "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove, [Artifact, WindowTransient]; Mutation, ("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), ("The pointer moved over a plan or section window: the armed utility's gesture advances and shows its preview.", "Der Zeiger bewegte sich über einem Grundriss- oder Schnittfenster: die Geste des aktiven Werkzeugs schreitet fort und zeigt ihre Vorschau.");
-            "canvasPointerUp" as "canvas-pointer-up" => canvas_pointer_up::CanvasPointerUp, [Artifact, WindowTransient]; Mutation, ("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ("A release in a plan or section window: a drag commits (marquee, handle, sliding opening, rectangle).", "Ein Loslassen in einem Grundriss- oder Schnittfenster: ein Ziehen wird abgeschlossen (Auswahlrahmen, Griff, gleitende Öffnung, Rechteck).");
-            "canvasDoubleClick" as "canvas-double-click" => canvas_double_click::CanvasDoubleClick, [Artifact, WindowTransient]; Mutation, ("Canvas Double Click", "Leinwand-Doppelklick"), ("A double click finishes the gesture in progress (wall chain, railing, slab or roof polygon).", "Ein Doppelklick beendet die laufende Geste (Wandzug, Geländer, Decken- oder Dachpolygon).");
-            "canvasCommitDraft" as "canvas-commit-draft" => canvas_commit_draft::CanvasCommitDraft, [Artifact, WindowTransient]; Mutation, ("Finish Drawing", "Zeichnen beenden"), ("Finishes the gesture in progress: a wall chain ends, a railing, slab or roof polygon is written.", "Beendet die laufende Geste: ein Wandzug endet, ein Geländer-, Decken- oder Dachpolygon wird geschrieben.");
-            "canvasEscape" as "canvas-escape" => canvas_escape::CanvasEscape, [Artifact, WindowTransient]; Mutation, ("Cancel Drawing", "Zeichnen abbrechen"), ("Cancels the gesture in progress without a trace; what was already written stays.", "Bricht die laufende Geste spurlos ab; bereits Geschriebenes bleibt.");
-            "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown, [Artifact, WindowTransient]; Mutation, ("World Pointer Down", "Welt-Zeiger gedrückt"), ("A press in the 3D window while a drawing utility is armed: the ground point is the click of the click-click tools.", "Ein Druck im 3D-Fenster bei aktivem Zeichenwerkzeug: der Bodenpunkt ist der Klick der Klick-Klick-Werkzeuge.");
-            "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove, [Artifact, WindowTransient]; Mutation, ("World Pointer Move", "Welt-Zeiger bewegt"), ("The ground point under the pointer in the 3D window while a drawing utility is armed.", "Der Bodenpunkt unter dem Zeiger im 3D-Fenster bei aktivem Zeichenwerkzeug.");
-            "armSelect" as "arm-select" => arm_utility::ArmSelect, [HostOnly]; View, ("Select Tool", "Auswahlwerkzeug"), ("Arms the select utility in the addressed window (V).", "Aktiviert das Auswahlwerkzeug im adressierten Fenster (V).");
-            "armWall" as "arm-wall" => arm_utility::ArmWall, [HostOnly]; View, ("Wall Tool", "Wandwerkzeug"), ("Arms the wall utility in the addressed window (W).", "Aktiviert das Wandwerkzeug im adressierten Fenster (W).");
-            "armWallArc" as "arm-wall-arc" => arm_utility::ArmWallArc, [HostOnly]; View, ("Arc Wall Tool", "Bogenwand-Werkzeug"), ("Arms the arc wall utility in the addressed window (A).", "Aktiviert das Bogenwand-Werkzeug im adressierten Fenster (A).");
-            "armCurtainWall" as "arm-curtain-wall" => arm_utility::ArmCurtainWall, [HostOnly]; View, ("Curtain Wall Tool", "Vorhangfassaden-Werkzeug"), ("Arms the curtain wall utility in the addressed window (U).", "Aktiviert das Vorhangfassaden-Werkzeug im adressierten Fenster (U).");
-            "armColumn" as "arm-column" => arm_utility::ArmColumn, [HostOnly]; View, ("Column Tool", "Stützenwerkzeug"), ("Arms the column utility in the addressed window (C).", "Aktiviert das Stützenwerkzeug im adressierten Fenster (C).");
-            "armBeam" as "arm-beam" => arm_utility::ArmBeam, [HostOnly]; View, ("Beam Tool", "Trägerwerkzeug"), ("Arms the beam utility in the addressed window (B).", "Aktiviert das Trägerwerkzeug im adressierten Fenster (B).");
-            "armSlab" as "arm-slab" => arm_utility::ArmSlab, [HostOnly]; View, ("Slab Tool", "Deckenwerkzeug"), ("Arms the slab utility in the addressed window (S).", "Aktiviert das Deckenwerkzeug im adressierten Fenster (S).");
-            "armRoof" as "arm-roof" => arm_utility::ArmRoof, [HostOnly]; View, ("Roof Tool", "Dachwerkzeug"), ("Arms the roof utility in the addressed window (R).", "Aktiviert das Dachwerkzeug im adressierten Fenster (R).");
-            "armWindow" as "arm-window" => arm_utility::ArmWindow, [HostOnly]; View, ("Window Tool", "Fensterwerkzeug"), ("Arms the window utility in the addressed window (N).", "Aktiviert das Fensterwerkzeug im adressierten Fenster (N).");
-            "armDoor" as "arm-door" => arm_utility::ArmDoor, [HostOnly]; View, ("Door Tool", "Türwerkzeug"), ("Arms the door utility in the addressed window (D).", "Aktiviert das Türwerkzeug im adressierten Fenster (D).");
-            "armOpening" as "arm-opening" => arm_utility::ArmOpening, [HostOnly]; View, ("Opening Tool", "Öffnungswerkzeug"), ("Arms the opening utility in the addressed window (O).", "Aktiviert das Öffnungswerkzeug im adressierten Fenster (O).");
-            "armStair" as "arm-stair" => arm_utility::ArmStair, [HostOnly]; View, ("Stair Tool", "Treppenwerkzeug"), ("Arms the stair utility in the addressed window (T).", "Aktiviert das Treppenwerkzeug im adressierten Fenster (T).");
-            "armRailing" as "arm-railing" => arm_utility::ArmRailing, [HostOnly]; View, ("Railing Tool", "Geländerwerkzeug"), ("Arms the railing utility in the addressed window (L).", "Aktiviert das Geländerwerkzeug im adressierten Fenster (L).");
-            "armSpace" as "arm-space" => arm_utility::ArmSpace, [HostOnly]; View, ("Space Tool", "Raumwerkzeug"), ("Arms the space utility in the addressed window (P).", "Aktiviert das Raumwerkzeug im adressierten Fenster (P).");
-            "armGrid" as "arm-grid" => arm_utility::ArmGrid, [HostOnly]; View, ("Grid Tool", "Rasterwerkzeug"), ("Arms the grid line utility in the addressed window (G).", "Aktiviert das Rasterlinien-Werkzeug im adressierten Fenster (G).");
-            "armMeasure" as "arm-measure" => arm_utility::ArmMeasure, [HostOnly]; View, ("Measure Tool", "Messwerkzeug"), ("Arms the measure utility in the addressed window (M).", "Aktiviert das Messwerkzeug im adressierten Fenster (M).");
+            "createEntity" as "create-entity" => create_entity::CreateEntity, [Artifact]; Mutation, cmd_create_entity, cmd_create_entity_describe;
+            "createView" as "create-view" => create_view::CreateView, [Artifact, WindowConfig]; Mutation, cmd_create_view, cmd_create_view_describe;
+            "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection, [Artifact]; Mutation, cmd_delete_selection, cmd_delete_selection_describe;
+            "renameEntity" as "rename-entity" => rename_entity::RenameEntity, [Artifact]; Mutation, cmd_rename_entity, cmd_rename_entity_describe;
+            "setField" as "set-field" => set_field::SetField, [Artifact]; Mutation, cmd_set_field, cmd_set_field_describe;
+            "setView" as "set-view" => set_view::SetView, [WindowConfig, Presence]; View, cmd_set_view, cmd_set_view_describe;
+            "editSchedule" as "edit-schedule" => edit_schedule::EditSchedule, [Artifact]; Mutation, cmd_edit_schedule, cmd_edit_schedule_describe;
+            "exportScheduleCsv" as "export-schedule-csv" => export_schedule_csv::ExportScheduleCsv, [HostOnly]; View, cmd_export_schedule_csv, cmd_export_schedule_csv_describe;
+            "analyseModel" as "analyse-model" => analyse_model::AnalyseModel, [HostOnly]; View, cmd_analyse_model, cmd_analyse_model_describe;
+            "exportModel" as "export-model" => export_model::ExportModel, [HostOnly]; View, cmd_export_model, cmd_export_model_describe;
+            "exportSheets" as "export-sheets" => export_sheets::ExportSheets, [HostOnly]; View, cmd_export_sheets, cmd_export_sheets_describe;
+            "armViewport" as "arm-viewport" => arm_utility::ArmViewport, [HostOnly]; View, cmd_arm_viewport, cmd_arm_viewport_describe;
+            "setCamera" as "camera" => set_camera::SetCamera, [WindowConfig, Presence]; View, cmd_set_camera, cmd_set_camera_describe;
+            "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown, [Artifact, WindowTransient]; Mutation, cmd_canvas_pointer_down, cmd_canvas_pointer_down_describe;
+            "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove, [Artifact, WindowTransient]; Mutation, cmd_canvas_pointer_move, cmd_canvas_pointer_move_describe;
+            "canvasPointerUp" as "canvas-pointer-up" => canvas_pointer_up::CanvasPointerUp, [Artifact, WindowTransient]; Mutation, cmd_canvas_pointer_up, cmd_canvas_pointer_up_describe;
+            "canvasDoubleClick" as "canvas-double-click" => canvas_double_click::CanvasDoubleClick, [Artifact, WindowTransient]; Mutation, cmd_canvas_double_click, cmd_canvas_double_click_describe;
+            "canvasCommitDraft" as "canvas-commit-draft" => canvas_commit_draft::CanvasCommitDraft, [Artifact, WindowTransient]; Mutation, cmd_canvas_commit_draft, cmd_canvas_commit_draft_describe;
+            "canvasEscape" as "canvas-escape" => canvas_escape::CanvasEscape, [Artifact, WindowTransient, Presence]; Mutation, cmd_canvas_escape, cmd_canvas_escape_describe;
+            "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown, [Artifact, WindowTransient]; Mutation, cmd_world_pointer_down, cmd_world_pointer_down_describe;
+            "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove, [Artifact, WindowTransient]; Mutation, cmd_world_pointer_move, cmd_world_pointer_move_describe;
+            "armSelect" as "arm-select" => arm_utility::ArmSelect, [HostOnly]; View, cmd_arm_select, cmd_arm_select_describe;
+            "armWall" as "arm-wall" => arm_utility::ArmWall, [HostOnly]; View, cmd_arm_wall, cmd_arm_wall_describe;
+            "armWallArc" as "arm-wall-arc" => arm_utility::ArmWallArc, [HostOnly]; View, cmd_arm_wall_arc, cmd_arm_wall_arc_describe;
+            "armCurtainWall" as "arm-curtain-wall" => arm_utility::ArmCurtainWall, [HostOnly]; View, cmd_arm_curtain_wall, cmd_arm_curtain_wall_describe;
+            "armColumn" as "arm-column" => arm_utility::ArmColumn, [HostOnly]; View, cmd_arm_column, cmd_arm_column_describe;
+            "armBeam" as "arm-beam" => arm_utility::ArmBeam, [HostOnly]; View, cmd_arm_beam, cmd_arm_beam_describe;
+            "armSlab" as "arm-slab" => arm_utility::ArmSlab, [HostOnly]; View, cmd_arm_slab, cmd_arm_slab_describe;
+            "armRoof" as "arm-roof" => arm_utility::ArmRoof, [HostOnly]; View, cmd_arm_roof, cmd_arm_roof_describe;
+            "armWindow" as "arm-window" => arm_utility::ArmWindow, [HostOnly]; View, cmd_arm_window, cmd_arm_window_describe;
+            "armDoor" as "arm-door" => arm_utility::ArmDoor, [HostOnly]; View, cmd_arm_door, cmd_arm_door_describe;
+            "armOpening" as "arm-opening" => arm_utility::ArmOpening, [HostOnly]; View, cmd_arm_opening, cmd_arm_opening_describe;
+            "armStair" as "arm-stair" => arm_utility::ArmStair, [HostOnly]; View, cmd_arm_stair, cmd_arm_stair_describe;
+            "armRailing" as "arm-railing" => arm_utility::ArmRailing, [HostOnly]; View, cmd_arm_railing, cmd_arm_railing_describe;
+            "armRamp" as "arm-ramp" => arm_utility::ArmRamp, [HostOnly]; View, cmd_arm_ramp, cmd_arm_ramp_describe;
+            "armSpace" as "arm-space" => arm_utility::ArmSpace, [HostOnly]; View, cmd_arm_space, cmd_arm_space_describe;
+            "armGrid" as "arm-grid" => arm_utility::ArmGrid, [HostOnly]; View, cmd_arm_grid, cmd_arm_grid_describe;
+            "armMeasure" as "arm-measure" => arm_utility::ArmMeasure, [HostOnly]; View, cmd_arm_measure, cmd_arm_measure_describe;
+            "armMove" as "arm-move" => arm_utility::ArmMove, [HostOnly]; View, cmd_arm_move, cmd_arm_move_describe;
+            "armRotate" as "arm-rotate" => arm_utility::ArmRotate, [HostOnly]; View, cmd_arm_rotate, cmd_arm_rotate_describe;
+            "armSlabWalls" as "arm-slab-walls" => arm_utility::ArmSlabWalls, [HostOnly]; View, cmd_arm_slab_walls, cmd_arm_slab_walls_describe;
+            "armCeiling" as "arm-ceiling" => arm_utility::ArmCeiling, [HostOnly]; View, cmd_arm_ceiling, cmd_arm_ceiling_describe;
+            "armCeilingSpace" as "arm-ceiling-space" => arm_utility::ArmCeilingSpace, [HostOnly]; View, cmd_arm_ceiling_space, cmd_arm_ceiling_space_describe;
+            "armSplitWall" as "arm-split-wall" => arm_utility::ArmSplitWall, [HostOnly]; View, cmd_arm_split_wall, cmd_arm_split_wall_describe;
+            "armCopy" as "arm-copy" => arm_utility::ArmCopy, [HostOnly]; View, cmd_arm_copy, cmd_arm_copy_describe;
+            "armMirror" as "arm-mirror" => arm_utility::ArmMirror, [HostOnly]; View, cmd_arm_mirror, cmd_arm_mirror_describe;
+            "armArray" as "arm-array" => arm_utility::ArmArray, [HostOnly]; View, cmd_arm_array, cmd_arm_array_describe;
+            "armArrayRadial" as "arm-array-radial" => arm_utility::ArmArrayRadial, [HostOnly]; View, cmd_arm_array_radial, cmd_arm_array_radial_describe;
+            "armOffset" as "arm-offset" => arm_utility::ArmOffset, [HostOnly]; View, cmd_arm_offset, cmd_arm_offset_describe;
+            "armTrim" as "arm-trim" => arm_utility::ArmTrim, [HostOnly]; View, cmd_arm_trim, cmd_arm_trim_describe;
+            "armExtend" as "arm-extend" => arm_utility::ArmExtend, [HostOnly]; View, cmd_arm_extend, cmd_arm_extend_describe;
+            "armAlign" as "arm-align" => arm_utility::ArmAlign, [HostOnly]; View, cmd_arm_align, cmd_arm_align_describe;
+            "armSplit" as "arm-split" => arm_utility::ArmSplit, [HostOnly]; View, cmd_arm_split, cmd_arm_split_describe;
+            "armDimension" as "arm-dimension" => arm_utility::ArmDimension, [HostOnly]; View, cmd_arm_dimension, cmd_arm_dimension_describe;
+            "armTag" as "arm-tag" => arm_utility::ArmTag, [HostOnly]; View, cmd_arm_tag, cmd_arm_tag_describe;
+            "armTextNote" as "arm-text-note" => arm_utility::ArmTextNote, [HostOnly]; View, cmd_arm_text_note, cmd_arm_text_note_describe;
+            "armLeader" as "arm-leader" => arm_utility::ArmLeader, [HostOnly]; View, cmd_arm_leader, cmd_arm_leader_describe;
+            "flipWalls" as "flip-walls" => flip_walls::FlipWalls, [Artifact]; Mutation, cmd_flip_walls, cmd_flip_walls_describe;
+            "storeyUp" as "storey-up" => move_storey::StoreyUp, [Artifact]; Mutation, cmd_storey_up, cmd_storey_up_describe;
+            "storeyDown" as "storey-down" => move_storey::StoreyDown, [Artifact]; Mutation, cmd_storey_down, cmd_storey_down_describe;
+            "splitWall" as "split-wall-at" => split_wall::SplitWallAt, [Artifact]; Mutation, cmd_split_wall, cmd_split_wall_describe;
+            "setProperty" as "set-property" => set_property::SetProperty, [Artifact]; Mutation, cmd_set_property, cmd_set_property_describe;
+            "removeProperty" as "remove-property" => remove_property::RemoveProperty, [Artifact]; Mutation, cmd_remove_property, cmd_remove_property_describe;
+            "setClassification" as "set-classification" => set_classification::SetClassification, [Artifact]; Mutation, cmd_set_classification, cmd_set_classification_describe;
+            "removeClassification" as "remove-classification" => remove_classification::RemoveClassification, [Artifact]; Mutation, cmd_remove_classification, cmd_remove_classification_describe;
+            "applyTemplate" as "apply-template" => apply_template::ApplyTemplate, [Artifact]; Mutation, cmd_apply_template, cmd_apply_template_describe;
+            "editTemplate" as "edit-template" => edit_template::EditTemplate, [Artifact]; Mutation, cmd_edit_template, cmd_edit_template_describe;
+            "editClassification" as "edit-classification" => edit_classification::EditClassification, [Artifact]; Mutation, cmd_edit_classification, cmd_edit_classification_describe;
+            "searchClassification" as "search-classification" => search_classification::SearchClassification, [HostOnly]; View, cmd_search_classification, cmd_search_classification_describe;
+            "placeElements" as "place-at" => place_elements::PlaceAt, [Artifact]; Mutation, cmd_place_elements, cmd_place_elements_describe;
+            "selectFindings" as "select-findings" => select_findings::SelectFindings, [HostOnly]; View, cmd_select_findings, cmd_select_findings_describe;
+            "cursorLeft" as "cursor-left" => cursor_keys::CursorLeft, [Artifact, WindowTransient]; Mutation, cmd_cursor_left, cmd_cursor_left_describe;
+            "cursorRight" as "cursor-right" => cursor_keys::CursorRight, [Artifact, WindowTransient]; Mutation, cmd_cursor_right, cmd_cursor_right_describe;
+            "cursorUp" as "cursor-up" => cursor_keys::CursorUp, [Artifact, WindowTransient]; Mutation, cmd_cursor_up, cmd_cursor_up_describe;
+            "cursorDown" as "cursor-down" => cursor_keys::CursorDown, [Artifact, WindowTransient]; Mutation, cmd_cursor_down, cmd_cursor_down_describe;
+            "cursorLeftFar" as "cursor-left-far" => cursor_keys::CursorLeftFar, [Artifact, WindowTransient]; Mutation, cmd_cursor_left_far, cmd_cursor_left_far_describe;
+            "cursorRightFar" as "cursor-right-far" => cursor_keys::CursorRightFar, [Artifact, WindowTransient]; Mutation, cmd_cursor_right_far, cmd_cursor_right_far_describe;
+            "cursorUpFar" as "cursor-up-far" => cursor_keys::CursorUpFar, [Artifact, WindowTransient]; Mutation, cmd_cursor_up_far, cmd_cursor_up_far_describe;
+            "cursorDownFar" as "cursor-down-far" => cursor_keys::CursorDownFar, [Artifact, WindowTransient]; Mutation, cmd_cursor_down_far, cmd_cursor_down_far_describe;
+            "cursorPlace" as "cursor-place" => cursor_keys::CursorPlace, [Artifact, WindowTransient]; Mutation, cmd_cursor_place, cmd_cursor_place_describe;
+            "engagementInput" as "engagement-input" => engagement_input::EngagementInput, [WindowTransient, Presence]; View, cmd_engagement_input, cmd_engagement_input_describe;
+            "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit, [Artifact, WindowTransient, Presence]; Mutation, cmd_engagement_submit, cmd_engagement_submit_describe;
         }
     };
 }
 
 macro_rules! command_enum {
-    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, ($en:literal, $de:literal), ($describe_en:literal, $describe_de:literal);)+) => {
+    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, $label:ident, $describe:ident;)+) => {
         semio_framework_plugin::app_commands! {
             /// 🎯️ `BimModelApp::Command`: the sole dispatch surface of the editor, generated from the command table.
             pub enum BimCommand for ModelSnapshot, ModelMutation, NoConfig, NoConfigMutation, ctx = BimDispatchCtx {
@@ -159,7 +215,7 @@ macro_rules! command_enum {
 }
 
 macro_rules! tool_roster {
-    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, ($en:literal, $de:literal), ($describe_en:literal, $describe_de:literal);)+) => {
+    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, $label:ident, $describe:ident;)+) => {
         /// 🧵️ Every bounded first-step tool of the editor, in command-table order.
         pub const BIM_TOOL_IDS: &[&str] = &[$($id),+];
         const BIM_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[$(ArtifactToolPublicationContract { tool_id: $id, lanes: &[$(ArtifactToolPublicationLane::$lane),+] }),+];
@@ -167,7 +223,7 @@ macro_rules! tool_roster {
 }
 
 macro_rules! tool_proofs {
-    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, ($en:literal, $de:literal), ($describe_en:literal, $describe_de:literal);)+) => {
+    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, $label:ident, $describe:ident;)+) => {
         semio_framework_plugin::bounded_first_step_tool_proofs! {
             owner: EditorApp<BimModelApp>,
             owner_file: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -182,10 +238,10 @@ macro_rules! tool_proofs {
 }
 
 macro_rules! manifest_actions {
-    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, ($en:literal, $de:literal), ($describe_en:literal, $describe_de:literal);)+) => {
+    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, $label:ident, $describe:ident;)+) => {
         /// 📇️ The manifest action of every command row.
         fn command_actions() -> Vec<ActionDefinition> {
-            vec![$(ActionDefinition::new($id, LocalizedLabel::native($en, $de), ActionKind::$kind, "box").describe(LocalizedLabel::native($describe_en, $describe_de))),+]
+            vec![$(ActionDefinition::new($id, LocalizedLabel::native(BimLabels::NATIVE_EN.$label.as_str(), BimLabels::NATIVE_DE.$label.as_str()), ActionKind::$kind, "box").describe(LocalizedLabel::native(BimLabels::NATIVE_EN.$describe.as_str(), BimLabels::NATIVE_DE.$describe.as_str()))),+]
         }
     };
 }
@@ -262,6 +318,15 @@ mod args_bridge {
         folded
     }
 
+    fn text_field(mut folded: DslValue, key: &str) -> DslValue {
+        if let DslValue::Object(entries) = &mut folded {
+            if let Some(slot) = entries.iter_mut().find(|(name, _)| name == key) {
+                slot.1 = stringify(slot.1.clone());
+            }
+        }
+        folded
+    }
+
     fn ids_as_list(mut folded: DslValue) -> DslValue {
         if let DslValue::Object(entries) = &mut folded {
             if let Some(slot) = entries.iter_mut().find(|(key, _)| key == "ids") {
@@ -286,6 +351,13 @@ mod args_bridge {
         DslValue::Object(vec![(slot.to_string(), DslValue::Object(kept))])
     }
 
+    fn only(folded: DslValue, keys: &[&str]) -> DslValue {
+        match folded {
+            DslValue::Object(entries) => DslValue::Object(entries.into_iter().filter(|(key, _)| keys.contains(&key.as_str())).collect()),
+            other => other,
+        }
+    }
+
     fn decode<T: semio_framework_value::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
         T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("bim action '{action}' arguments do not decode: {error}")))
     }
@@ -294,10 +366,15 @@ mod args_bridge {
         let text = |value: &str| DslValue::String(value.into());
         Ok(match action {
             "createEntity" => BimCommand::CreateEntity(decode(action, fold(args, &[("type", "kind"), ("value", "kind"), ("parent_id", "parent")], &[("parent", text("")), ("name", text(""))]))?),
+            "createView" => BimCommand::CreateView(decode(action, fold(args, &[("type", "kind"), ("value", "kind"), ("parent_id", "parent")], &[("parent", text("")), ("name", text(""))]))?),
             "deleteSelection" => BimCommand::DeleteSelection(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new()))])))?),
             "renameEntity" => BimCommand::RenameEntity(decode(action, fold(args, &[("value", "name")], &[]))?),
-            "setField" => BimCommand::SetField(decode(action, ids_as_list(value_as_text(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new()))]))))?),
+            "setField" => BimCommand::SetField(decode(action, ids_as_list(value_as_text(fold(args, &[("id", "ids"), (outliner_panel::DRAG_ELEMENT_MIME, "ids")], &[("ids", DslValue::Array(Vec::new()))]))))?),
             "setView" => BimCommand::SetView(decode(action, value_as_text(fold(args, &[], &[("value", text(""))])))?),
+            "editSchedule" => BimCommand::EditSchedule(decode(action, fold(args, &[], &[("key", text("")), ("value", text(""))]))?),
+            "exportScheduleCsv" => BimCommand::ExportScheduleCsv(decode(action, only(fold(args, &[], &[("id", text(""))]), &["id", "pressed"]))?),
+            "analyseModel" => BimCommand::AnalyseModel(decode(action, only(fold(args, &[], &[]), &["pressed"]))?),
+            "exportModel" => BimCommand::ExportModel(decode(action, only(fold(args, &[], &[("format", text("ifc"))]), &["format", "pressed"]))?),
             "setCamera" => BimCommand::SetCamera(decode(action, camera_pose(args))?),
             "canvasPointerDown" => BimCommand::CanvasPointerDown(decode(action, fold(args, &[], &[]))?),
             "canvasPointerMove" => BimCommand::CanvasPointerMove(decode(action, fold(args, &[], &[]))?),
@@ -320,9 +397,54 @@ mod args_bridge {
             "armOpening" => BimCommand::ArmOpening(decode(action, fold(args, &[], &[]))?),
             "armStair" => BimCommand::ArmStair(decode(action, fold(args, &[], &[]))?),
             "armRailing" => BimCommand::ArmRailing(decode(action, fold(args, &[], &[]))?),
+            "armRamp" => BimCommand::ArmRamp(decode(action, fold(args, &[], &[]))?),
             "armSpace" => BimCommand::ArmSpace(decode(action, fold(args, &[], &[]))?),
             "armGrid" => BimCommand::ArmGrid(decode(action, fold(args, &[], &[]))?),
             "armMeasure" => BimCommand::ArmMeasure(decode(action, fold(args, &[], &[]))?),
+            "armMove" => BimCommand::ArmMove(decode(action, fold(args, &[], &[]))?),
+            "armRotate" => BimCommand::ArmRotate(decode(action, fold(args, &[], &[]))?),
+            "armSlabWalls" => BimCommand::ArmSlabWalls(decode(action, fold(args, &[], &[]))?),
+            "armCeiling" => BimCommand::ArmCeiling(decode(action, fold(args, &[], &[]))?),
+            "armCeilingSpace" => BimCommand::ArmCeilingSpace(decode(action, fold(args, &[], &[]))?),
+            "armSplitWall" => BimCommand::ArmSplitWall(decode(action, fold(args, &[], &[]))?),
+            "armCopy" => BimCommand::ArmCopy(decode(action, fold(args, &[], &[]))?),
+            "armMirror" => BimCommand::ArmMirror(decode(action, fold(args, &[], &[]))?),
+            "armArray" => BimCommand::ArmArray(decode(action, fold(args, &[], &[]))?),
+            "armArrayRadial" => BimCommand::ArmArrayRadial(decode(action, fold(args, &[], &[]))?),
+            "armOffset" => BimCommand::ArmOffset(decode(action, fold(args, &[], &[]))?),
+            "armTrim" => BimCommand::ArmTrim(decode(action, fold(args, &[], &[]))?),
+            "armExtend" => BimCommand::ArmExtend(decode(action, fold(args, &[], &[]))?),
+            "armAlign" => BimCommand::ArmAlign(decode(action, fold(args, &[], &[]))?),
+            "armSplit" => BimCommand::ArmSplit(decode(action, fold(args, &[], &[]))?),
+            "armDimension" => BimCommand::ArmDimension(decode(action, fold(args, &[], &[]))?),
+            "armTag" => BimCommand::ArmTag(decode(action, fold(args, &[], &[]))?),
+            "armTextNote" => BimCommand::ArmTextNote(decode(action, fold(args, &[], &[]))?),
+            "armLeader" => BimCommand::ArmLeader(decode(action, fold(args, &[], &[]))?),
+            "flipWalls" => BimCommand::FlipWalls(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new()))])))?),
+            "storeyUp" => BimCommand::StoreyUp(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new()))])))?),
+            "storeyDown" => BimCommand::StoreyDown(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new()))])))?),
+            "splitWall" => BimCommand::SplitWallAt(decode(action, text_field(ids_as_list(fold(args, &[("id", "ids"), ("value", "at")], &[("ids", DslValue::Array(Vec::new())), ("at", text(""))])), "at"))?),
+            "setProperty" => BimCommand::SetProperty(decode(action, value_as_text(ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new())), ("pset", text("")), ("property", text("")), ("value", text(""))]))))?),
+            "removeProperty" => BimCommand::RemoveProperty(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new())), ("pset", text("")), ("property", text(""))])))?),
+            "setClassification" => BimCommand::SetClassification(decode(action, ids_as_list(fold(args, &[("id", "ids"), ("value", "code")], &[("ids", DslValue::Array(Vec::new())), ("system", text("")), ("code", text(""))])))?),
+            "removeClassification" => BimCommand::RemoveClassification(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new())), ("system", text(""))])))?),
+            "applyTemplate" => BimCommand::ApplyTemplate(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new())), ("template", text(""))])))?),
+            "editTemplate" => BimCommand::EditTemplate(decode(action, fold(args, &[], &[("index", text("")), ("field", text("")), ("value", text(""))]))?),
+            "editClassification" => BimCommand::EditClassification(decode(action, fold(args, &[("value", "title")], &[("code", text("")), ("title", text("")), ("parent", text(""))]))?),
+            "searchClassification" => BimCommand::SearchClassification(decode(action, fold(args, &[("value", "query")], &[("query", text(""))]))?),
+            "placeElements" => BimCommand::PlaceAt(decode(action, text_field(ids_as_list(fold(args, &[("id", "ids"), ("value", "at")], &[("ids", DslValue::Array(Vec::new())), ("at", text(""))])), "at"))?),
+            "selectFindings" => BimCommand::SelectFindings(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new()))])))?),
+            "cursorLeft" => BimCommand::CursorLeft(decode(action, fold(args, &[], &[]))?),
+            "cursorRight" => BimCommand::CursorRight(decode(action, fold(args, &[], &[]))?),
+            "cursorUp" => BimCommand::CursorUp(decode(action, fold(args, &[], &[]))?),
+            "cursorDown" => BimCommand::CursorDown(decode(action, fold(args, &[], &[]))?),
+            "cursorLeftFar" => BimCommand::CursorLeftFar(decode(action, fold(args, &[], &[]))?),
+            "cursorRightFar" => BimCommand::CursorRightFar(decode(action, fold(args, &[], &[]))?),
+            "cursorUpFar" => BimCommand::CursorUpFar(decode(action, fold(args, &[], &[]))?),
+            "cursorDownFar" => BimCommand::CursorDownFar(decode(action, fold(args, &[], &[]))?),
+            "cursorPlace" => BimCommand::CursorPlace(decode(action, fold(args, &[], &[]))?),
+            "engagementInput" => BimCommand::EngagementInput(decode(action, value_as_text(fold(args, &[], &[("value", text(""))])))?),
+            "engagementSubmit" => BimCommand::EngagementSubmit(decode(action, value_as_text(fold(args, &[], &[("value", text(""))])))?),
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the bim editor has no command for action '{action}'"))),
         })
     }
@@ -388,7 +510,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
         ctx.gestures = Some(self.owner.clone());
         ctx.window_transient = crate::editor::bim::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
         let emit = input.command.dispatch(&doc, &cfg, &mut ctx)?;
-        crate::editor::bim::inference::record_mutations(doc.operation_optional().map(|operation| operation.app_instance_id), input.snapshot, &emit.artifact_mutations);
+        crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::record_mutations(doc.operation_optional().map(|operation| operation.app_instance_id), input.snapshot, &emit.artifact_mutations);
         self.completed = true;
         let window_transient = match (ctx.transient_out.take(), view) {
             (Some(transient), Some(view)) => vec![crate::editor::bim::transient::addressed(view, transient)?],
@@ -455,42 +577,79 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BimCommandJobFactor
 //#endregion 🔖️RetainedCommands
 
 //#region 🔖️Faults
-/// 📣️ The en/de notices of every `bim.*` refusal code a command can raise.
-pub fn bim_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-    static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
-        [
-            ("bim.create.kind-unknown", "This kind of entity does not exist.", "Diese Bauteilart gibt es nicht."),
-            ("bim.create.unsupported", "This kind of entity cannot be created yet.", "Diese Bauteilart kann noch nicht angelegt werden."),
-            ("bim.create.site-missing", "Create a site first.", "Legen Sie zuerst ein Grundstück an."),
-            ("bim.create.building-missing", "Create a building first.", "Legen Sie zuerst ein Gebäude an."),
-            ("bim.create.storey-missing", "Create or select a storey first.", "Legen Sie zuerst ein Geschoss an oder wählen Sie eines aus."),
-            ("bim.create.wall-type-missing", "Create a wall type first.", "Legen Sie zuerst einen Wandtyp an."),
-            ("bim.delete.unsupported", "These entities cannot be deleted yet.", "Diese Bauteile können noch nicht gelöscht werden."),
-            ("bim.rename.target-missing", "The entity to rename does not exist.", "Das umzubenennende Bauteil gibt es nicht."),
-            ("bim.rename.unsupported", "This kind of entity cannot be renamed yet.", "Diese Bauteilart kann noch nicht umbenannt werden."),
-            ("bim.rename.rejected", "The name is not valid.", "Der Name ist ungültig."),
-            ("bim.set.target-missing", "The entity to change does not exist.", "Das zu ändernde Bauteil gibt es nicht."),
-            ("bim.set.field-unknown", "This entity has no such parameter.", "Dieses Bauteil hat keinen solchen Parameter."),
-            ("bim.set.read-only", "This parameter cannot be edited yet.", "Dieser Parameter kann noch nicht bearbeitet werden."),
-            ("bim.set.value-invalid", "The value is not valid for this parameter.", "Der Wert ist für diesen Parameter ungültig."),
-            ("bim.view.window-required", "This setting belongs to one open window.", "Diese Einstellung gehört zu einem geöffneten Fenster."),
-            ("bim.view.window-unsupported", "This window has no view settings.", "Dieses Fenster hat keine Ansichtseinstellungen."),
-            ("bim.view.field-unknown", "This window has no such view setting.", "Dieses Fenster hat keine solche Ansichtseinstellung."),
-            ("bim.view.value-invalid", "The value is not valid for this view setting.", "Der Wert ist für diese Ansichtseinstellung ungültig."),
-            ("bim.view.storey-missing", "The storey does not exist.", "Das Geschoss gibt es nicht."),
-            ("bim.camera.window-required", "A camera belongs to one open window.", "Eine Kamera gehört zu einem geöffneten Fenster."),
-            ("bim.camera.pose-mismatch", "This window takes a different kind of camera pose.", "Dieses Fenster nimmt eine andere Art von Kamerapose."),
-            ("bim.camera.invalid", "The camera pose is not valid.", "Die Kamerapose ist ungültig."),
-            ("bim.tool.storey-missing", "Create or select a storey to draw on first.", "Legen Sie zuerst ein Geschoss an oder wählen Sie eines aus, auf dem gezeichnet wird."),
-            ("bim.tool.type-missing", "The library has no type for this tool yet. Add one first.", "Die Bibliothek enthält noch keinen Typ für dieses Werkzeug. Legen Sie zuerst einen an."),
-            ("bim.tool.rejected", "The model does not accept this here: it overlaps another element or leaves its host.", "Das Modell nimmt das hier nicht an: es überschneidet ein anderes Bauteil oder verlässt sein Trägerbauteil."),
-            ("bim.gesture.retained-route", "Drawing gestures run only inside an open editor window.", "Zeichengesten laufen nur in einem geöffneten Editorfenster."),
-        ]
-        .into_iter()
-        .map(|(code, en, de)| (code, LocalizedLabel::native(en, de)))
-        .collect()
-    });
-    NOTICES.as_slice()
+/// 📣️ Declares the en/de notices of every `bim.*` refusal code a command can raise: each code names the `BimLabels` field that holds its two texts.
+macro_rules! fault_notices {
+    ($($code:literal => $label:ident;)+) => {
+        /// 📣️ The notice of every refusal code, English and German from the one `app_labels!` block.
+        pub fn bim_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+            static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> =
+                std::sync::LazyLock::new(|| vec![$(($code, LocalizedLabel::native(BimLabels::NATIVE_EN.$label.as_str(), BimLabels::NATIVE_DE.$label.as_str()))),+]);
+            NOTICES.as_slice()
+        }
+    };
+}
+
+fault_notices! {
+    "bim.create.kind-unknown" => fault_create_kind_unknown;
+    "bim.create.unsupported" => fault_create_unsupported;
+    "bim.create.site-missing" => fault_create_site_missing;
+    "bim.create.building-missing" => fault_create_building_missing;
+    "bim.create.storey-missing" => fault_create_storey_missing;
+    "bim.create.wall-type-missing" => fault_create_wall_type_missing;
+    "bim.delete.unsupported" => fault_delete_unsupported;
+    "bim.rename.target-missing" => fault_rename_target_missing;
+    "bim.rename.unsupported" => fault_rename_unsupported;
+    "bim.rename.rejected" => fault_rename_rejected;
+    "bim.set.target-missing" => fault_set_target_missing;
+    "bim.set.field-unknown" => fault_set_field_unknown;
+    "bim.set.read-only" => fault_set_read_only;
+    "bim.set.value-invalid" => fault_set_value_invalid;
+    "bim.view.window-required" => fault_view_window_required;
+    "bim.view.window-unsupported" => fault_view_window_unsupported;
+    "bim.view.field-unknown" => fault_view_field_unknown;
+    "bim.view.value-invalid" => fault_view_value_invalid;
+    "bim.view.storey-missing" => fault_view_storey_missing;
+    "bim.view.view-missing" => fault_view_view_missing;
+    "bim.view.kind-unknown" => fault_view_kind_unknown;
+    "bim.view.building-missing" => fault_view_building_missing;
+    "bim.camera.window-required" => fault_camera_window_required;
+    "bim.camera.pose-mismatch" => fault_camera_pose_mismatch;
+    "bim.camera.invalid" => fault_camera_invalid;
+    "bim.tool.storey-missing" => fault_tool_storey_missing;
+    "bim.tool.type-missing" => fault_tool_type_missing;
+    "bim.tool.rejected" => fault_tool_rejected;
+    "bim.tool.input-invalid" => fault_tool_input_invalid;
+    "bim.gesture.retained-route" => fault_gesture_retained_route;
+    "bim.split.target-missing" => fault_split_target_missing;
+    "bim.split.fraction-invalid" => fault_split_fraction_invalid;
+    "bim.flip.wall-missing" => fault_flip_wall_missing;
+    "bim.analyse.inference" => fault_analyse_inference;
+    "bim.analyse.cancelled" => fault_analyse_cancelled;
+    "bim.export.format-unknown" => fault_export_format_unknown;
+    "bim.export.inference" => fault_export_inference;
+    "bim.export.failed" => fault_export_failed;
+    "bim.export.cancelled" => fault_export_cancelled;
+    "bim.storey.target-missing" => fault_storey_target_missing;
+    "bim.storey.no-neighbour" => fault_storey_no_neighbour;
+    "bim.property.target-missing" => fault_property_target_missing;
+    "bim.property.name-invalid" => fault_property_name_invalid;
+    "bim.property.value-invalid" => fault_property_value_invalid;
+    "bim.property.missing" => fault_property_missing;
+    "bim.place.target-missing" => fault_place_target_missing;
+    "bim.place.point-invalid" => fault_place_point_invalid;
+    "bim.place.unsupported" => fault_place_unsupported;
+    "bim.diagnostic.target-missing" => fault_diagnostic_target_missing;
+    "bim.classification.target-missing" => fault_classification_target_missing;
+    "bim.classification.invalid" => fault_classification_invalid;
+    "bim.classification.missing" => fault_classification_missing;
+    "bim.classification.system-missing" => fault_classification_system_missing;
+    "bim.classification.edit-invalid" => fault_classification_edit_invalid;
+    "bim.classification.entry-has-children" => fault_classification_entry_has_children;
+    "bim.classification.no-match" => fault_classification_no_match;
+    "bim.template.target-missing" => fault_template_target_missing;
+    "bim.template.not-applicable" => fault_template_not_applicable;
+    "bim.template.edit-invalid" => fault_template_edit_invalid;
+    "bim.template.value-invalid" => fault_template_value_invalid;
 }
 //#endregion 🔖️Faults
 
@@ -511,35 +670,69 @@ fn instance_of(doc: &ArtifactView<'_, ModelSnapshot>) -> Option<u32> {
     doc.render_operation().map(|operation| operation.app_instance_id)
 }
 
+/// 🚨️ The findings of the model by severity, from the instance's inference (the diagnostic index).
+fn problems_of(doc: &ArtifactView<'_, ModelSnapshot>) -> crate::standards::v1::subsets::any::schema::inferences::diagnostics::SeverityCounts {
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance_of(doc), doc.snapshot, |inference| inference.diagnostic_index.total)
+}
+
 #[allow(clippy::too_many_arguments)]
 fn render_body(body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, elements: &[String], library: &[String], hover: &[String], preview: &crate::editor::bim::gestures::session::Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let snapshot = doc.snapshot;
     let labels = bim_labels(view_state);
     let utility = crate::editor::bim::utilities::active(view_state);
     let windows = || TreeWindows::for_body(view_state, body_key);
-    let node = crate::editor::bim::inference::with_inference(instance_of(doc), snapshot, |inference| match body_key {
+    let node = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance_of(doc), snapshot, |inference| match body_key {
         plan::BODY_KEY => {
             let config = plan::config::current(cfg);
-            let revision = crate::render::plan::framing_revision(&plan::active_storey(snapshot, &config).unwrap_or_default());
+            let revision = crate::render::plan::framing_revision(&plan::active_view(snapshot, &config).unwrap_or_default());
             let overlay = crate::editor::bim::gestures::overlay::plan_records(snapshot, elements, utility, preview, 1.0 / config.viewport.zoom.max(0.01));
             plan::render_over(snapshot, inference, &config, elements, hover, utility, revision, labels, &overlay)
         }
         world::BODY_KEY => {
             let config = world::config::current(cfg);
-            world::render(snapshot, inference, &config, elements, hover, crate::render::plan::framing_revision(&format!("{}{}", config.isolated_storey, config.projection.kind)))
+            world::render_over(snapshot, inference, &config, elements, hover, crate::render::plan::framing_revision(&format!("{}{}", config.isolated_storey, config.projection.kind)), preview)
         }
         section::BODY_KEY => {
             let config = section::config::current(cfg);
-            let overlay = crate::editor::bim::gestures::overlay::section_records(inference, [config.start_x, config.start_y], [config.end_x, config.end_y], utility, preview, 1.0 / config.viewport.zoom.max(0.01));
-            section::render_over(snapshot, inference, &config, utility, 1, &overlay)
+            let (start, end) = section::plane_of(snapshot, &config).map_or(([0.0, 0.0], [0.0, 0.0]), |plane| ([plane.start.x, plane.start.y], [plane.end.x, plane.end.y]));
+            let overlay = crate::editor::bim::gestures::overlay::section_records(inference, start, end, utility, preview, 1.0 / config.viewport.zoom.max(0.01));
+            let revision = crate::render::plan::framing_revision(&section::active_view(snapshot, &config).unwrap_or_default());
+            section::render_over(snapshot, inference, &config, elements, utility, revision, labels, &overlay)
         }
-        schedule::BODY_KEY => schedule::render(snapshot, inference, labels),
+        schedule::BODY_KEY => schedule::render(snapshot, inference, &schedule::config::current(cfg), labels),
+        sheet::BODY_KEY => {
+            let config = sheet::config::current(cfg);
+            let active = sheet::active_sheet(snapshot, &config);
+            let layout = active.as_ref().and_then(|id| inference.sheet_layouts.get(id));
+            let overlay = crate::editor::bim::gestures::overlay::sheet_records(layout, elements, utility, preview, 1.0 / config.viewport.zoom.max(0.01));
+            sheet::render_over(snapshot, inference, &config, elements, utility, crate::render::plan::framing_revision(&active.unwrap_or_default()), labels, &overlay)
+        }
         outliner_panel::BODY_KEY => outliner_panel::render(snapshot, inference, labels, &windows()),
         properties_panel::BODY_KEY => properties_panel::render(snapshot, inference, elements, library, labels),
         library_panel::BODY_KEY => library_panel::render(snapshot, labels, &windows()),
+        classification_panel::BODY_KEY => classification_panel::render(snapshot, labels, elements, library, &windows()),
+        diagnostics_panel::BODY_KEY => diagnostics_panel::render(snapshot, inference, labels, &windows()),
         _ => semio_framework_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| crate::editor::bim::kit::ui_capacity_error()),
     })?;
-    Ok(semio_framework_plugin::built_to_component_tree(node))
+    Ok(semio_framework_plugin::built_to_component_tree(accessible_surface(node, body_key, labels)?))
+}
+
+/// ♿️ The accessible name of a window or panel body, and for a drawing surface how to drive it without a pointer; a body this table does not know keeps its own node.
+fn accessible_surface(node: semio_framework_plugin::BuiltNode, body_key: &str, labels: &BimLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let (name, description) = match body_key {
+        plan::BODY_KEY => (labels.window_plan, Some(labels.surface_plan_describe)),
+        world::BODY_KEY => (labels.window_world, Some(labels.surface_world_describe)),
+        section::BODY_KEY => (labels.window_section, Some(labels.surface_section_describe)),
+        schedule::BODY_KEY => (labels.window_schedule, Some(labels.surface_schedule_describe)),
+        sheet::BODY_KEY => (labels.window_sheet, Some(labels.surface_sheet_describe)),
+        outliner_panel::BODY_KEY => (labels.panel_outliner, None),
+        properties_panel::BODY_KEY => (labels.panel_properties, None),
+        library_panel::BODY_KEY => (labels.panel_library, None),
+        classification_panel::BODY_KEY => (labels.panel_classification, Some(labels.classification_surface_describe)),
+        diagnostics_panel::BODY_KEY => (labels.panel_diagnostics, Some(labels.diag_surface_describe)),
+        _ => return Ok(node),
+    };
+    crate::editor::bim::kit::accessible(node, name.as_str(), description.as_ref().map(|description| description.as_str()))
 }
 
 impl ArtifactEditor for BimModelApp {
@@ -581,7 +774,13 @@ impl ArtifactEditor for BimModelApp {
             return Err(crate::editor::bim::kit::fault("app.command.tool-mismatch", "Bim command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BimCommandWork::new(tool_id, request.instance_operation_owner.clone()));
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match &*request.command {
+            BimCommand::ExportScheduleCsv(_) => Box::new(export_schedule_csv::ScheduleCsvWork::new(tool_id)),
+            BimCommand::AnalyseModel(_) => Box::new(analyse_model::AnalyseWork::new(tool_id)),
+            BimCommand::ExportModel(_) => Box::new(export_model::ModelExportWork::new(tool_id)),
+            BimCommand::ExportSheets(_) => Box::new(export_sheets::SheetsExportWork::new(tool_id)),
+            _ => Box::new(BimCommandWork::new(tool_id, request.instance_operation_owner.clone())),
+        };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
@@ -590,7 +789,7 @@ impl ArtifactEditor for BimModelApp {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -606,7 +805,7 @@ impl ArtifactEditor for BimModelApp {
             BIM_BOUNDED_RAW_BYTES,
             BIM_BOUNDED_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
@@ -681,7 +880,9 @@ impl ArtifactEditor for BimModelApp {
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         plan::config::register(registry)?;
         world::config::register(registry)?;
-        section::config::register(registry)
+        section::config::register(registry)?;
+        schedule::config::register(registry)?;
+        sheet::config::register(registry)
     }
 
     fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
@@ -693,11 +894,12 @@ impl ArtifactEditor for BimModelApp {
     }
 
     fn mounted_job_close_step(instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(crate::editor::bim::inference::close(instance_id))
+        crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::close(instance_id);
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
-        crate::editor::bim::inference::terminal_is_empty(instance_id)
+        crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::terminal_is_empty(instance_id)
     }
 
     fn operation_progress_scope() -> semio_framework::kernel::UiDirtyScope {
@@ -753,7 +955,7 @@ impl ArtifactEditor for BimModelApp {
     }
 
     fn window_engagements(doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
-        crate::editor::bim::chrome::engagements(doc.snapshot, view_state, crate::editor::bim::chrome::plan_storey(doc.snapshot, cfg, view_state).as_deref(), 0)
+        crate::editor::bim::chrome::engagements(doc.snapshot, view_state, crate::editor::bim::chrome::plan_storey(doc.snapshot, cfg, view_state).as_deref(), 0, &problems_of(doc))
     }
 
     fn window_engagements_with_request_context(
@@ -764,7 +966,7 @@ impl ArtifactEditor for BimModelApp {
         interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let selected = selection_ids(interaction, crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN).len();
-        crate::editor::bim::chrome::engagements(doc.snapshot, view_state, crate::editor::bim::chrome::plan_storey(doc.snapshot, cfg, view_state).as_deref(), selected)
+        crate::editor::bim::chrome::engagements(doc.snapshot, view_state, crate::editor::bim::chrome::plan_storey(doc.snapshot, cfg, view_state).as_deref(), selected, &problems_of(doc))
     }
 
     fn window_measures(doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -775,15 +977,39 @@ impl ArtifactEditor for BimModelApp {
 
 //#region 🔖️Manifest
 fn bim_action_args(id: &str) -> Vec<ActionArgDef> {
-    let text = |name: &'static str, en: &'static str, de: &'static str| ActionArgDef::text(name, LocalizedLabel::native(en, de));
+    let label = |pick: fn(&BimLabels) -> semio_framework_ui_locale::LabelText| LocalizedLabel::native(pick(&BimLabels::NATIVE_EN).as_str(), pick(&BimLabels::NATIVE_DE).as_str());
+    let text = |name: &'static str, pick: fn(&BimLabels) -> semio_framework_ui_locale::LabelText| ActionArgDef::text(name, label(pick));
+    let ids = || ActionArgDef::text_list("ids", label(|labels| labels.arg_entities));
     match id {
-        "createEntity" => vec![text("kind", "Kind", "Art").required(), text("parent", "Container", "Container"), text("name", "Name", "Name")],
-        "deleteSelection" => vec![ActionArgDef::text_list("ids", LocalizedLabel::native("Entities", "Bauteile"))],
-        "renameEntity" => vec![text("id", "Entity", "Bauteil").required(), text("name", "Name", "Name").required()],
-        "setField" => vec![ActionArgDef::text_list("ids", LocalizedLabel::native("Entities", "Bauteile")), text("field", "Parameter", "Parameter").required(), text("value", "Value", "Wert").required()],
-        "setView" => vec![text("field", "Setting", "Einstellung").required(), text("value", "Value", "Wert")],
+        "createEntity" => vec![text("kind", |labels| labels.arg_kind).required(), text("parent", |labels| labels.arg_container), text("name", |labels| labels.arg_name)],
+        "createView" => vec![text("kind", |labels| labels.arg_kind).required(), text("parent", |labels| labels.arg_container), text("name", |labels| labels.arg_name)],
+        "deleteSelection" | "flipWalls" | "storeyUp" | "storeyDown" => vec![ids()],
+        "renameEntity" => vec![text("id", |labels| labels.arg_entity).required(), text("name", |labels| labels.arg_name).required()],
+        "setField" => vec![ids(), text("field", |labels| labels.arg_parameter).required(), text("value", |labels| labels.arg_value).required()],
+        "setView" => vec![text("field", |labels| labels.arg_setting).required(), text("value", |labels| labels.arg_value)],
+        "editSchedule" => vec![text("id", |labels| labels.arg_entity).required(), text("part", |labels| labels.arg_part).required(), text("op", |labels| labels.arg_operation).required(), text("key", |labels| labels.arg_key), text("value", |labels| labels.arg_value)],
+        "splitWall" => vec![ids(), text("at", |labels| labels.arg_fraction)],
+        "setProperty" => vec![ids(), text("pset", |labels| labels.arg_property_set), text("property", |labels| labels.arg_property), text("value", |labels| labels.arg_value).required()],
+        "removeProperty" => vec![ids(), text("pset", |labels| labels.arg_property_set).required(), text("property", |labels| labels.arg_property).required()],
+        "selectFindings" => vec![ids()],
+        "removeClassification" => vec![ids(), text("system", |labels| labels.arg_classification_system).required()],
+        "setClassification" => vec![ids(), text("system", |labels| labels.arg_classification_system).required(), text("code", |labels| labels.arg_classification_code).required()],
+        "applyTemplate" => vec![ids(), text("template", |labels| labels.arg_template).required()],
+        "editTemplate" => vec![text("id", |labels| labels.arg_entity).required(), text("op", |labels| labels.arg_operation).required(), text("index", |labels| labels.arg_index), text("field", |labels| labels.arg_parameter), text("value", |labels| labels.arg_value)],
+        "editClassification" => vec![text("id", |labels| labels.arg_entity).required(), text("op", |labels| labels.arg_operation).required(), text("code", |labels| labels.arg_classification_code), text("title", |labels| labels.arg_classification_title), text("parent", |labels| labels.arg_parent)],
+        "searchClassification" => vec![text("system", |labels| labels.arg_classification_system).required(), text("query", |labels| labels.arg_query)],
+        "placeElements" => vec![ids(), text("at", |labels| labels.arg_position).required()],
+        "engagementInput" | "engagementSubmit" => vec![text("value", |labels| labels.arg_typed_line)],
         _ => Vec::new(),
     }
+}
+
+/// ⌨️ The keys of the commands that are no utility: history, the delete keys and the wall flip.
+pub const COMMAND_KEYBINDINGS: &[(&str, &str)] = &[("mod+z", "undo"), ("mod+shift+z", "redo"), ("delete", "deleteSelection"), ("backspace", "deleteSelection"), ("shift+f", "flipWalls"), ("alt+arrowup", "storeyUp"), ("alt+arrowdown", "storeyDown")];
+
+/// ⌨️ Every keybinding of the editor in registration order: the commands, the utilities and the keys of a gesture in progress. No key is bound twice.
+pub fn all_keybindings() -> Vec<(&'static str, &'static str)> {
+    COMMAND_KEYBINDINGS.iter().copied().chain(crate::editor::bim::utilities::keybindings()).chain(crate::editor::bim::gestures::GESTURE_KEYBINDINGS.iter().copied()).collect()
 }
 
 /// 🧱️ The editor manifest: one definition per taxonomy node.
@@ -798,10 +1024,13 @@ pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(world::definition())
         .window_kind_def(section::definition())
         .window_kind_def(schedule::definition())
+        .window_kind_def(sheet::definition())
         .default_layout(edit::layout())
         .panel_tab_def(outliner_panel::definition())
         .panel_tab_def(properties_panel::definition())
         .panel_tab_def(library_panel::definition())
+        .panel_tab_def(classification_panel::definition())
+        .panel_tab_def(diagnostics_panel::definition())
         .io(bim_io());
     for definition in crate::editor::bim::interaction::definitions() {
         builder = builder.interaction(definition);
@@ -818,8 +1047,8 @@ pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
             builder = builder.action_audience(&id, semio_framework_plugin::CapabilityAudience::Input);
         }
     }
-    builder = builder.action_destructive("deleteSelection").keybinding("mod+z", "undo").keybinding("mod+shift+z", "redo").keybinding("delete", "deleteSelection").keybinding("backspace", "deleteSelection");
-    for (keys, action) in crate::editor::bim::utilities::keybindings().into_iter().chain(crate::editor::bim::gestures::GESTURE_KEYBINDINGS.iter().copied()) {
+    builder = builder.action_destructive("deleteSelection");
+    for (keys, action) in all_keybindings() {
         builder = builder.keybinding(keys, action);
     }
     builder.build_definition()
@@ -829,3 +1058,7 @@ pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/⌨️completeness/🦀️.rs"]
+mod completeness_tests;

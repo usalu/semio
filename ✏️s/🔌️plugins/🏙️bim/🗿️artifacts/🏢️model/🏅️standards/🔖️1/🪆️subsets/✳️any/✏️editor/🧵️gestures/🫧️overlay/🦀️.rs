@@ -81,6 +81,16 @@ pub fn records(preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
     records
 }
 
+/// 📄️ The overlay of a sheet window: the scale handles of the selected viewports while the select utility is armed, then the preview of the gesture in progress. Marks arrive in paper millimetres, y downward, which is the canvas of the sheet.
+pub fn sheet_records(layout: Option<&crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout>, selected: &[String], utility: &str, preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
+    let handles = match layout {
+        Some(layout) if utility == crate::editor::bim::utilities::DEFAULT_UTILITY => super::viewports::handles(layout, selected),
+        _ => Vec::new(),
+    };
+    let mirrored = handles.into_iter().chain(preview.marks.iter().cloned()).map(|mark| super::session::Mark { points: mark.points.chunks_exact(2).flat_map(|pair| [pair[0], -pair[1]]).collect(), ..mark }).collect();
+    records(&Preview::of(mirrored), per_pixel)
+}
+
 /// 🗺️ The overlay of a plan window: the live handles of the one selected wall while the select utility is armed, then the preview of the gesture in progress.
 pub fn plan_records(snapshot: &ModelSnapshot, selected: &[String], utility: &str, preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
     let handles = if utility == crate::editor::bim::utilities::DEFAULT_UTILITY { select::plan_marks(snapshot, selected) } else { Vec::new() };

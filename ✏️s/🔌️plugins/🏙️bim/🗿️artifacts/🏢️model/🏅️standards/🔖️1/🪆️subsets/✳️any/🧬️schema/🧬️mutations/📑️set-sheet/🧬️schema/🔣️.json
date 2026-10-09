@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-sheet/schema.json",
+  "title": "SetSheet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setSheet"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Sheet",
+          "de": "Blatt"
+        },
+        "ref": {
+          "kind": "sheet"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "number": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Sheet number",
+          "de": "Plannummer"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "paper": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Paper",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Paper",
+          "de": "Papier"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "orientation": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Orientation",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Orientation",
+          "de": "Ausrichtung"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "project": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Project line",
+          "de": "Projektzeile"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "drawn_by": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Drawn by",
+          "de": "Gezeichnet"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "checked_by": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Checked by",
+          "de": "Geprüft"
+        },
+        "group": "value",
+        "order": 80
+      }
+    },
+    "date": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Date (year-month-day)",
+          "de": "Datum (Jahr-Monat-Tag)"
+        },
+        "group": "value",
+        "order": 90
+      }
+    },
+    "revision": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Revision mark",
+          "de": "Änderungsstand"
+        },
+        "group": "value",
+        "order": 100
+      }
+    },
+    "scale_label": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Scale line",
+          "de": "Massstabszeile"
+        },
+        "group": "value",
+        "order": 110
+      }
+    }
+  }
+}

@@ -2,6 +2,206 @@
 
 use super::values::*;
 
+/// 🏷️ A property set template: the property set `name` that elements (and types) of the listed kinds are expected to carry, with the definition of each of its properties. Library data: it owns no entries and no element is changed by it; the effective properties of an element are inferred.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct PropertyTemplate {
+    /// The name of the property set the template defines; unique among the templates.
+    pub name: String,
+    /// The element and type kinds whose elements should carry the property set; each kind at most once.
+    #[value(default)] pub applies_to: Vec<TemplateTarget>,
+    /// The property definitions in display order; names unique.
+    #[value(default)] pub properties: Vec<PropertyDef>,
+}
+
+/// 🗂️ A classification system of the project library (for example Uniclass 2015, DIN 276 or OmniClass): its name and edition and the authored table of its entries. Library data: it owns no entries of elements.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct ClassificationSystem {
+    /// The name of the system.
+    pub name: String,
+    /// The edition or version of the system.
+    pub edition: String,
+    /// Optional publisher or location of the system.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub source: Option<String>,
+    /// The entry table, in display order; codes unique, every parent present.
+    #[dsl(table)] #[value(default)] pub entries: Vec<ClassificationItem>,
+}
+
+/// 📏️ A dimension: the distances between consecutive anchors measured along `angle`, drawn `offset` metres beside the first anchor. Its values and text are inferred from the current geometry of the anchors, never stored; an optional lock names the value it must keep.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Dimension {
+    /// The storey plan the dimension is drawn on.
+    pub storey: String,
+    /// At least two anchors, in measuring order; each consecutive pair gives one segment.
+    #[dsl(statements, block)] #[value(default)] pub anchors: Vec<AnnotationAnchor>,
+    /// Direction in radians, counter-clockwise from the x axis, along which distances are measured.
+    pub angle: f64,
+    /// Signed distance in metres from the first anchor to the dimension line, positive to the left of the measuring direction.
+    pub offset: f64,
+    pub style: String,
+    /// Optional check-only lock: the total length in metres the dimension must keep. It never moves anything; a diagnostic reports a violated lock.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub lock: Option<f64>,
+    pub name: String,
+}
+
+/// 🏷️ A tag: text read from an element of the model, placed `offset` metres from the reference point of the element so it follows the element.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Tag {
+    pub storey: String,
+    pub element: String,
+    pub category: TagCategory,
+    /// Offset in metres of the tag text from the reference point of the element.
+    #[dsl(block)] pub offset: Point2,
+    pub style: String,
+}
+
+/// 🗒️ A free text on a storey plan.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct TextNote {
+    pub storey: String,
+    #[dsl(block)] pub position: Point2,
+    pub text: String,
+    /// Rotation of the text in radians, counter-clockwise.
+    pub rotation: f64,
+    pub style: String,
+}
+
+/// ↗️ A leader: a text joined by a line to an anchor; the text sits `offset` metres from the anchor point so it follows the anchored element.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Leader {
+    pub storey: String,
+    #[dsl(statements, block)] pub anchor: AnnotationAnchor,
+    /// Offset in metres of the text from the anchor point.
+    #[dsl(block)] pub offset: Point2,
+    pub text: String,
+    pub style: String,
+}
+
+/// 🎨️ A style shared by dimensions, tags, notes and leaders: text height, line end mark, printed unit and precision.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct AnnotationStyle {
+    pub name: String,
+    /// Height of the text in metres of model space.
+    pub text_height: f64,
+    pub terminator: Terminator,
+    pub unit: DimensionUnit,
+    /// Digits after the decimal point of a printed dimension value.
+    pub precision: u32,
+    /// Size in metres of the end marks of dimension lines and leaders.
+    pub mark_size: f64,
+    /// Gap in metres between an anchor and the start of its extension line.
+    pub gap: f64,
+    /// Length in metres by which an extension line passes the dimension line.
+    pub overshoot: f64,
+}
+
+/// 🧩 A parametric family: a named, categorised set of parameters and solids. Its parameter values, solids and profile outline are inferred, never stored.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Family {
+    pub name: String,
+    pub category: FamilyCategory,
+}
+
+/// 🔢 One parameter of a family: its kind and the formula (canonical text of the expression language) that gives its value. Keyed by `family.name`.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct FamilyParameter {
+    /// The family the parameter belongs to.
+    pub family: String,
+    /// The parameter name: letters, digits and underscores, not starting with a digit; formulas refer to it by this name.
+    pub name: String,
+    pub kind: ParameterKind,
+    /// The formula, in the canonical text of the expression language (for example `2 * width + 40 mm`); a literal is a formula without a parameter.
+    pub value: String,
+}
+
+/// 🧊 One solid of a family: its shape, the material and the visibility as formulas, and an offset of the solid in the family frame.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct FamilySolid {
+    pub family: String,
+    pub name: String,
+    #[dsl(statements, block)] pub shape: SolidShape,
+    /// A formula of kind text: a material parameter or a quoted material id.
+    pub material: String,
+    /// A formula of kind boolean: the solid is shown while it holds.
+    pub visible: String,
+    /// Where the origin of the solid lies in the family frame, as formulas of kind length.
+    #[dsl(block)] pub offset: ExprPoint3,
+}
+
+/// 📄️ A sheet of the drawing set: number, name, paper and the authored fields of its title block. Its frame, title block and revision table are inferred, and so are the drawings its viewports show.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Sheet {
+    /// The sheet number as printed on the drawing, unique within the project (for example A-101).
+    pub number: String,
+    /// The sheet title as printed in the title block.
+    pub name: String,
+    /// The paper of the sheet: an ISO A size or a custom size in millimetres.
+    #[dsl(statements, block)] pub paper: Paper,
+    /// Landscape puts the long side of the paper along the width, portrait along the height.
+    pub orientation: Orientation,
+    /// The project line of the title block; empty prints the name of the project.
+    pub project: String,
+    /// Who drew the sheet, as printed in the title block.
+    pub drawn_by: String,
+    /// Who checked the sheet, as printed in the title block.
+    pub checked_by: String,
+    /// The date of the sheet as year-month-day, as printed in the title block; empty prints none.
+    pub date: String,
+    /// The current revision mark, as printed in the title block; empty prints the mark of the last row of the revision table.
+    pub revision: String,
+    /// The scale line of the title block (for example 1:100 or As indicated); empty prints the common scale of the viewports, or As indicated when they differ.
+    pub scale_label: String,
+}
+
+/// 🖼️ A viewport: one authored view placed on one sheet at a drawing scale. The drawing is the inferred linework of the view, scaled to the viewport and clipped to its window.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Viewport {
+    /// The sheet the viewport stands on.
+    pub sheet: String,
+    /// The view the viewport shows: a plan, ceiling plan, section or elevation (a camera view draws nothing on paper).
+    pub view: String,
+    /// Where the top left corner of the viewport window lies on the paper, in millimetres from the top left corner of the sheet, x to the right and y downward.
+    #[dsl(block)] pub position: Point2,
+    /// Drawing scale denominator of the viewport: 100 draws the view at 1:100, from 1 to 1000.
+    pub scale: u32,
+    /// Optional crop rectangle in the drawing coordinates of the view (metres): the window shows only that part of the drawing; absent shows the whole drawing.
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub crop: Option<ViewCrop>,
+    /// Optional title printed under the viewport; absent prints the name of the view.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub label: Option<String>,
+}
+
+/// 🧾️ One row of the revision table of a sheet: the revision mark, its date, what changed and who changed it.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct SheetRevision {
+    /// The sheet whose revision table holds the row.
+    pub sheet: String,
+    /// The revision mark (for example A, B or 1), unique within the sheet.
+    pub number: String,
+    /// The date of the revision as year-month-day; empty prints none.
+    pub date: String,
+    /// What the revision changed.
+    pub description: String,
+    /// Who made the revision.
+    pub author: String,
+}
+
+/// 🧷️ A wall sweep: a profile run along one face of a wall (a baseboard, a cornice, a drip rail). It follows its host by inference: along the join-trimmed face, interrupted by the openings that reach its height, and clipped where the top of the wall is attached. Its solid, length and areas are inferred, never stored.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct WallSweep {
+    /// The wall the sweep runs along.
+    pub host: String,
+    /// The face of the wall the sweep stands on, looking along the axis from start to end: the left (interior) or the right (exterior) face.
+    pub side: WallSide,
+    /// Section of the sweep: the first coordinate runs out of the wall perpendicular to its face, the second runs up; the section is centred on its own origin, so a rectangle of width 0.02 and depth 0.12 is a baseboard 2 cm deep and 12 cm high.
+    #[dsl(statements, block)] pub profile: Profile,
+    /// Height in metres above the wall base of the lowest point of the profile.
+    pub height: f64,
+    /// Distance in metres the profile is moved into the wall: zero stands the inner edge of the profile on the face, a positive inset embeds it, so only the rest shows.
+    pub inset: f64,
+    /// Material of the sweep.
+    pub material: String,
+    pub name: String,
+}
+
 /// 🧱️ A material of the project library.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Material {
@@ -23,6 +223,13 @@ pub struct WallType {
 /// 🧱️ Layered slab build-up.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct SlabType {
+    pub name: String,
+    #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
+}
+
+/// 🧱️ Layered ceiling build-up: the first layer is topmost, the last one is the visible underside.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct CeilingType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
@@ -127,45 +334,92 @@ pub struct Wall {
     pub base_offset: f64,
     #[dsl(statements, block)] pub top: TopConstraint,
     pub phase: Phase,
+    /// Authored join preference of the end at the start of the axis; absent leaves the join to the geometry (auto).
+    #[value(default, skip_serializing_if = "Option::is_none")] pub start_join: Option<EndJoin>,
+    /// Authored join preference of the end at the end of the axis; absent leaves the join to the geometry (auto).
+    #[value(default, skip_serializing_if = "Option::is_none")] pub end_join: Option<EndJoin>,
     pub name: String,
+    /// Optional slab the base of the wall stands on: the base follows the top surface of that slab (sloped slabs included) plus the base offset; absent means the base lies on the elevation of the storey plus the base offset.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub base_slab: Option<String>,
 }
 
-/// 🪟️ A curtain wall: axis plus grid spacings and mullion profile.
+/// 🏬️ A curtain wall type: the grid rules of both directions, the mullion sections of the interior grid lines and of the border, the default panel of every cell, the glass material and the mullion material.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct CurtainWallType {
+    pub name: String,
+    /// Grid rule along the wall: equal cells of about the spacing, or explicit lines in metres from the start of the axis.
+    #[dsl(statements, block)] pub u_grid: CurtainGrid,
+    /// Grid rule up the wall: equal cells of about the spacing, or explicit lines in metres above the base.
+    #[dsl(statements, block)] pub v_grid: CurtainGrid,
+    /// Section of the mullions on the interior grid lines: the first coordinate runs along the wall, the second through it.
+    #[dsl(statements, block)] pub interior_mullion: Profile,
+    /// Section of the mullions on the outer edges of the wall.
+    #[dsl(statements, block)] pub border_mullion: Profile,
+    /// The panel of every cell that has no override.
+    #[dsl(statements, block)] pub panel: CurtainPanel,
+    /// Material of glass panels.
+    pub panel_material: String,
+    /// Material of every mullion.
+    pub mullion_material: String,
+}
+
+/// 🎯️ The panel of one cell of a curtain wall that differs from the default panel of its type; the cell is named by its indices along the wall and up it, at most one override per cell.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct CurtainPanelOverride {
+    /// The curtain wall whose cell is overridden.
+    pub curtain: String,
+    /// Zero-based index of the cell along the wall, from the start of the axis.
+    pub u: u32,
+    /// Zero-based index of the cell up the wall, from the base; a door panel belongs in row zero.
+    pub v: u32,
+    /// What fills the cell instead of the default panel.
+    #[dsl(statements, block)] pub panel: CurtainPanel,
+}
+
+/// 🪟️ A curtain wall: axis, base and top constraints, the type that carries its grid rules, mullions and panels, and optional grid rules of its own.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CurtainWall {
     pub storey: String,
+    /// The curtain wall type that carries the grid rules, mullion sections, default panel and materials.
+    pub curtain_wall_type: String,
     #[dsl(statements, block)] pub axis: Axis,
     pub base_offset: f64,
     #[dsl(statements, block)] pub top: TopConstraint,
-    pub u_spacing: f64,
-    pub v_spacing: f64,
-    #[dsl(statements, block)] pub mullion: Profile,
-    pub panel_material: String,
-    pub mullion_material: String,
+    /// Optional grid rule along the wall that replaces the rule of the type; absent follows the type.
+    #[dsl(statements, block)] #[value(default, skip_serializing_if = "Option::is_none")] pub u_grid: Option<CurtainGrid>,
+    /// Optional grid rule up the wall that replaces the rule of the type; absent follows the type.
+    #[dsl(statements, block)] #[value(default, skip_serializing_if = "Option::is_none")] pub v_grid: Option<CurtainGrid>,
+    pub phase: Phase,
     pub name: String,
 }
 
-/// 🏛️ A column placed on a storey.
+/// 🏛️ A column placed on a storey, plumb or leaning.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Column {
     pub storey: String,
     pub column_type: String,
     #[dsl(block)] pub position: Point2,
     pub rotation: f64,
+    /// Optional lean of the column: the top leans towards `direction` (radians, counter-clockwise from +x) by `angle` radians from the vertical, about the base point; absent is plumb. The cross-section perpendicular to the axis is the profile of the type, the ends are cut horizontally.
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub tilt: Option<Slope>,
     pub base_offset: f64,
     #[dsl(statements, block)] pub top: TopConstraint,
+    pub phase: Phase,
     pub name: String,
 }
 
-/// ➖️ A beam: its top lies `top_offset` metres above (positive) or below (negative) the storey top; zero is flush with it.
+/// ➖️ A beam along a line or an arc, level or inclined: its top lies `top_offset` metres above (positive) or below (negative) the storey top at the start and `end_top_offset` at the end; zero is flush with the storey top.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Beam {
     pub storey: String,
     pub beam_type: String,
-    #[dsl(block)] pub start: Point2,
-    #[dsl(block)] pub end: Point2,
-    /// Signed vertical offset in metres of the top of the beam from the top of its storey: positive lifts it above the storey top, negative hangs it below, zero is flush.
+    /// The line or arc of the beam in plan, from its start to its end, exactly like the axis of a wall; a curved beam is an axis whose bulge is set.
+    #[dsl(statements, block)] pub axis: Axis,
+    /// Signed vertical offset in metres of the top of the beam at the start of its axis from the top of its storey: positive lifts it above the storey top, negative hangs it below, zero is flush.
     pub top_offset: f64,
+    /// Optional signed offset in metres of the top of the beam at the end of its axis from the top of its storey; absent means the same as at the start (a level beam), a different value inclines the beam, linearly along the axis.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub end_top_offset: Option<f64>,
+    pub phase: Phase,
     pub name: String,
 }
 
@@ -177,6 +431,21 @@ pub struct Slab {
     #[dsl(table)] #[value(default)] pub boundary: Vec<Vertex>,
     #[value(default)] pub holes: Vec<Vec<Vertex>>,
     pub offset: f64,
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub slope: Option<Slope>,
+    pub phase: Phase,
+    pub name: String,
+}
+
+/// 🔲️ A ceiling: boundary loop, holes, drop below the storey top and optional slope; the layers of its type hang downward.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Ceiling {
+    pub storey: String,
+    pub ceiling_type: String,
+    #[dsl(table)] #[value(default)] pub boundary: Vec<Vertex>,
+    #[value(default)] pub holes: Vec<Vec<Vertex>>,
+    /// Distance in metres the top of the ceiling hangs below the top of its storey; the layers of the ceiling type stack downward from there. Zero lies against the underside of the floor above.
+    pub offset: f64,
+    /// Optional tilt of the ceiling plane: fall direction and angle; the top plane keeps its drop at the uphill edge of the boundary.
     #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub slope: Option<Slope>,
     pub name: String,
 }
@@ -190,6 +459,7 @@ pub struct Roof {
     #[dsl(statements, block)] pub shape: RoofShape,
     pub overhang: f64,
     pub base_offset: f64,
+    pub phase: Phase,
     pub name: String,
 }
 
@@ -206,6 +476,10 @@ pub struct Opening {
     pub flip_hand: bool,
     pub flip_facing: bool,
     pub name: String,
+    /// Optional depth in metres of the reveal on the front side of the opening: the distance from the front face of the host to the front plane of the window or door frame; absent centres the frame in the thickness of the host.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub reveal_depth: Option<f64>,
+    /// Optional material of the reveal surfaces (jambs, head and sill) between the front face of the host and the frame; absent leaves them in the material of the wall layers.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub reveal_material: Option<String>,
 }
 
 /// 🪜️ A stair run: placement, flight, limits and construction (stringer, nosing, tread thickness, risers, landing depth).
@@ -229,6 +503,7 @@ pub struct Stair {
     pub riser: RiserKind,
     /// Depth in metres of the landing of a turning flight, measured along the arriving flight.
     pub landing_depth: f64,
+    pub phase: Phase,
     pub name: String,
 }
 
@@ -249,10 +524,43 @@ pub struct Railing {
     #[dsl(statements, block)] pub infill: Infill,
     pub material: String,
     pub base_offset: f64,
+    /// Optional host (stair, ramp or slab edge): a hosted railing has no path of its own, its path and its base follow the host by inference.
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub host: Option<RailingHost>,
+    pub phase: Phase,
     pub name: String,
 }
 
-/// 🏠️ A room.
+/// 🛝️ A ramp: a sloped slab of constant thickness and width along a centre-line path whose rise is resolved by its top constraint; the slope, the landings and the compliance are inferred.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Ramp {
+    pub storey: String,
+    /// Centre line of the ramp from its foot to its head: vertices with the bulge of the segment to the next one; the ramp climbs along it.
+    #[dsl(table)] #[value(default)] pub path: Vec<Vertex>,
+    /// Clear width in metres across the centre line.
+    pub width: f64,
+    /// Length in metres of the flat landing at the foot of the path.
+    pub landing_start: f64,
+    /// Length in metres of the flat landing at the head of the path.
+    pub landing_end: f64,
+    /// Length in metres of the flat landing centred on every corner of the path where its direction changes.
+    pub landing_turn: f64,
+    /// Largest allowed slope as the ratio of rise to run (for example 0.0833 for 1:12); the inferred slope is checked against it.
+    pub max_slope: f64,
+    /// Vertical thickness in metres of the ramp slab, measured below its walking surface.
+    pub thickness: f64,
+    pub material: String,
+    /// Height in metres of the foot of the ramp above the elevation of its storey (negative below).
+    pub base_offset: f64,
+    /// Constraint that resolves the height of the head of the ramp; the rise is the head minus the foot.
+    #[dsl(statements, block)] pub top: TopConstraint,
+    /// Whether the ramp carries a railing along its left edge, seen in the direction of travel.
+    pub railing_left: bool,
+    /// Whether the ramp carries a railing along its right edge, seen in the direction of travel.
+    pub railing_right: bool,
+    pub name: String,
+}
+
+/// 🏠️ A room: its zone and the materials that finish its floor, walls and ceiling are authored references.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Space {
     pub storey: String,
@@ -260,13 +568,84 @@ pub struct Space {
     pub name: String,
     #[dsl(statements, block)] pub boundary: SpaceBoundary,
     pub usage: String,
+    pub phase: Phase,
+    /// The zone the space belongs to; absent means in no zone.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub zone: Option<String>,
+    /// Material of the floor finish; absent means unfinished.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub floor_finish: Option<String>,
+    /// Material of the wall finish; absent means unfinished.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub wall_finish: Option<String>,
+    /// Material of the ceiling finish; absent means unfinished.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub ceiling_finish: Option<String>,
 }
 
-/// 🗂️ A classification reference of an element.
+/// 🏘️ A zone: a named group of spaces of any storey that share a purpose and an occupancy density.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-pub struct Classification {
-    pub system: String,
-    pub code: String,
-    pub title: String,
+pub struct Zone {
+    pub name: String,
+    /// What the zone groups the spaces for (for example a fire compartment, a ventilation or a tenant zone).
+    pub category: String,
+    /// Persons per square metre of net floor area; the occupancy of the zone is the density times its net floor area.
+    pub occupancy_density: f64,
+}
+
+/// 🗃️ An area scheme (gross, net or rentable area): the authored rule that decides which spaces it adds up, by usage and by zone.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct AreaScheme {
+    pub name: String,
+    pub measure: AreaMeasure,
+    /// Space usages the scheme counts; empty counts every usage.
+    #[value(default)] pub usages: Vec<String>,
+    /// Ids of the zones the scheme counts; empty counts every space, in a zone or not.
+    #[value(default)] pub zones: Vec<String>,
+}
+
+/// 🖼️ An authored view of a building: a plan of a storey, a section or elevation through a vertical plane, or a camera; with its cut height, view depth, crop, hidden categories, phase filter, scale and detail level. The linework it draws is inferred.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct View {
+    /// The building the view belongs to; a plan view's storey is one of its storeys.
+    pub building: String,
+    pub name: String,
+    pub kind: ViewKind,
+    /// The storey a plan or ceiling plan cuts; absent for every other kind.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub storey: Option<String>,
+    /// The vertical plane of a section or elevation; absent for every other kind.
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub plane: Option<ViewPlane>,
+    /// The orbit camera of an orthographic or perspective view; absent for every other kind.
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub camera: Option<ViewCamera>,
+    /// Plan and ceiling plan only: height in metres above the storey elevation of the cut plane; absent means the storey's cut height for a plan and the ceiling convention of 2.1 m for a ceiling plan.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub cut_height: Option<f64>,
+    /// How far the view looks, in metres: below the cut plane of a plan (above it for a ceiling plan), beyond the plane of a section or elevation.
+    pub depth: f64,
+    /// Optional crop rectangle in the view's drawing coordinates; absent draws everything.
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub crop: Option<ViewCrop>,
+    /// The element categories the view does not draw, each at most once, in category order.
+    #[value(default)] pub hidden: Vec<ViewCategory>,
+    /// Phase filter: when set, the view draws only elements of that phase; absent draws every phase.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub phase: Option<Phase>,
+    /// Drawing scale denominator: 100 draws the view at 1:100.
+    pub scale: u32,
+    pub detail: DetailLevel,
+}
+
+/// 📋️ A user-defined schedule: the authored definition (category, columns, sort, filter, grouping, scope) of a table whose rows and totals are inferred from the quantity take-off and the authored fields; no row is stored.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Schedule {
+    pub name: String,
+    pub category: ScheduleCategory,
+    /// The columns in display order; at least one.
+    #[dsl(table)] #[value(default)] pub columns: Vec<ScheduleColumn>,
+    /// Sort keys in order of precedence; rows with equal keys keep the order of their element ids.
+    #[dsl(table)] #[value(default)] pub sort: Vec<ScheduleSort>,
+    /// Filters that must all hold for a row to stay.
+    #[dsl(table)] #[value(default)] pub filter: Vec<ScheduleFilter>,
+    /// Grouping levels, outermost first: rows are sorted by the group keys first and every group closes with a subtotal row.
+    #[dsl(table)] #[value(default)] pub group: Vec<ScheduleGroup>,
+    /// True lists every element; false collapses each group (or, ungrouped, each set of rows that show the same cells) into one row.
+    pub itemize: bool,
+    /// Ids of the storeys the schedule covers; empty covers every storey.
+    #[value(default)] pub storeys: Vec<String>,
+    /// Phases the schedule covers; empty covers every phase. An element that carries no phase of its own counts as new, an opening takes the phase of its host.
+    #[value(default)] pub phases: Vec<Phase>,
 }
 

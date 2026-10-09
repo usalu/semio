@@ -6,19 +6,16 @@
  * @see ./🥒️.feature
  */
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { installedDashboard } from "../../📦️installation/🟦️.ts";
 
 const dashboard = resolve(import.meta.dir, "../..");
 const repo = resolve(dashboard, "../../../../..");
 
 function binary(): string {
-  const name = process.platform === "win32" ? "semio.exe" : "semio";
-  const candidates = [process.env.SEMIO_DASHBOARD_BIN, process.env.CARGO_TARGET_DIR && join(process.env.CARGO_TARGET_DIR, "debug", name), join(repo, ".🧬semio/🦑️repo/⚡️cache/cargo/target/debug", name)].filter((path): path is string => Boolean(path));
-  const found = candidates.find((path) => existsSync(path));
-  if (!found) throw new Error(`no debug \`semio\` binary; build it or set SEMIO_DASHBOARD_BIN. Looked at: ${candidates.join(", ")}`);
-  return found;
+  return process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(repo);
 }
 
 let root = "";

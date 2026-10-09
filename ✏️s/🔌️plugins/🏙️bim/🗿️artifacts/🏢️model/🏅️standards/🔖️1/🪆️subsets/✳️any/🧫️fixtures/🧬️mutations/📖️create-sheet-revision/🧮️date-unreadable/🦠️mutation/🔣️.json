@@ -1,0 +1,11 @@
+{
+  "mutation": "createSheetRevision",
+  "id": "rev-1",
+  "sheet_revision": {
+    "sheet": "sh-1",
+    "number": "A",
+    "date": "last week",
+    "description": "Issued for permit",
+    "author": "UG"
+  }
+}

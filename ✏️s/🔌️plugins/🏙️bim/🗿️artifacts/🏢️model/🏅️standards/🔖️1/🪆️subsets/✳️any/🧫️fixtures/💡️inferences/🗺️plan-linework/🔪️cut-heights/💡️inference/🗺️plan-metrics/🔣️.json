@@ -1,0 +1,22 @@
+{
+  "st-first": {
+    "WallCut.area": 3.0,
+    "ColumnCut.area": 0.0,
+    "CurtainMullion.area": 0.03,
+    "SlabEdge.length": 28.0,
+    "BeamOutline.length": 0.0,
+    "RailingPath.length": 0.0,
+    "GridLine.length": 18.0,
+    "SpaceOutline.length": 0.0
+  },
+  "st-ground": {
+    "WallCut.area": 8.5275,
+    "ColumnCut.area": 0.16,
+    "CurtainMullion.area": 0.0,
+    "SlabEdge.length": 28.0,
+    "BeamOutline.length": 16.6,
+    "RailingPath.length": 4.2,
+    "GridLine.length": 18.0,
+    "SpaceOutline.length": 59.3
+  }
+}

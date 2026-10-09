@@ -14,7 +14,7 @@ mod diff;
 pub use diff::{RunDiff, RunHeaderEdit, RunSealEdit, RunStep};
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub use mutations::{AppendRunLog, FinishRunNode, RetractRunLog, RetractRunNode, RunMutation, SealRun, SetRunHeader, SetRunSeal, StartRun, StartRunNode};
+pub use mutations::{AppendRunLog, FinishRunNode, RemoveRunLog, RemoveRunNode, RunMutation, SealRun, SetRunHeader, SetRunSeal, StartRun, StartRunNode};
 #[path = "🧬️schema/🧬️mutations/⚡️apply/🦀️.rs"]
 mod apply;
 pub use apply::admit_run_operation;

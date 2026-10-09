@@ -1,7 +1,8 @@
 //! 🔺️ Diff constructor for `SetOpening`: a sparse opening patch naming only the provided fields that differ from the base. A new kind
 //! must name existing types, a sill override must not be negative, size overrides must be positive, and a change of kind or width must
-//! still fit the host axis and clear the neighbours. Clearing an override (`width: {"value": null}`) falls back to the kind's size, clearing the sill override to the sill of the type.
+//! still fit the host axis and clear the neighbours. Clearing an override (`width: {"value": null}`) falls back to the kind's size, clearing the sill override to the sill of the type. An authored reveal (depth not negative, material existing) is checked; clearing it centres the frame and leaves the jambs in the wall layers.
 
+use super::super::wall_depth::reveal_flaw;
 use super::super::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
 use super::SetOpening;
 use crate::{Entry, ModelDiff, ModelSnapshot, OpeningPatch, Patch};
@@ -22,6 +23,9 @@ pub fn diff(payload: &SetOpening, base: &ModelSnapshot) -> MutationOutcome<Model
             return MutationOutcome::refuse(OutcomeCode::Invariant, format!("An opening {field} must be a positive length."), [field]);
         }
     }
+    if let Some(flaw) = reveal_flaw(base, payload.reveal_depth.as_ref().and_then(|assigned| assigned.value), payload.reveal_material.as_ref().and_then(|assigned| assigned.value.as_deref())) {
+        return flaw.refuse();
+    }
     let patch = OpeningPatch {
         kind: payload.kind.clone().filter(|kind| *kind != opening.kind),
         sill_override: payload.sill_override.clone().filter(|sill| sill.value != opening.sill_override),
@@ -30,6 +34,8 @@ pub fn diff(payload: &SetOpening, base: &ModelSnapshot) -> MutationOutcome<Model
         flip_hand: payload.flip_hand.filter(|flip| *flip != opening.flip_hand),
         flip_facing: payload.flip_facing.filter(|flip| *flip != opening.flip_facing),
         name: payload.name.clone().filter(|name| *name != opening.name),
+        reveal_depth: payload.reveal_depth.clone().filter(|depth| depth.value != opening.reveal_depth),
+        reveal_material: payload.reveal_material.clone().filter(|material| material.value != opening.reveal_material),
         ..Default::default()
     };
     if patch.is_empty() {

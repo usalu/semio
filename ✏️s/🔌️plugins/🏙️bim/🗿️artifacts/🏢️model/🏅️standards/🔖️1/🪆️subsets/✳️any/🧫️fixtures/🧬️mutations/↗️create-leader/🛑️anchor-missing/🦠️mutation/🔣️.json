@@ -1,0 +1,18 @@
+{
+  "mutation": "createLeader",
+  "id": "lead-1",
+  "leader": {
+    "storey": "st-ground",
+    "anchor": {
+      "WallAxis": {
+        "wall": "w-ghost"
+      }
+    },
+    "offset": {
+      "x": 1,
+      "y": 1
+    },
+    "text": "Brick 300",
+    "style": "as-plan"
+  }
+}

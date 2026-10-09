@@ -4,21 +4,12 @@
 use super::data::label;
 use super::frames::Rigid;
 use super::reader::{real, text, Section};
-use super::spatial::authoring_of;
+use super::spatial::{authoring_of, phase_of};
 use super::Import;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::offsets_of;
-use crate::{Axis, DoorLeaves, DoorType, Layer, LayerFunction, LocationLine, Opening, OpeningKind, Phase, Point2, Swing, TopConstraint, Wall, WallType, WindowType};
+use crate::{Axis, DoorLeaves, DoorType, Layer, LayerFunction, LocationLine, Opening, OpeningKind, Point2, Swing, TopConstraint, Wall, WallType, WindowType};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
-
-fn phase(name: &str) -> Phase {
-    match name {
-        "Existing" => Phase::Existing,
-        "Demolished" => Phase::Demolished,
-        "Temporary" => Phase::Temporary,
-        _ => Phase::New,
-    }
-}
 
 fn layers_of(i: &Import<'_>, wall_ifc: u64) -> Option<(Vec<Layer>, Option<(bool, f64)>, String)> {
     let definition = *i.doc.index.materials.get(&wall_ifc)?;
@@ -98,7 +89,7 @@ fn wall(i: &mut Import<'_>, instance_id: u64, args: &[semio_s_artifact_stdio_ifc
         _ => thickness / 2.0,
     };
     let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
-    let mut row = Wall { storey, wall_type, axis, location: LocationLine::Center, base_offset: base_z - elevation, top: TopConstraint::Unconnected { height }, phase: phase(&label(&authoring_of(&i.doc, instance_id), "Phase").unwrap_or_default()), name: if label_text == id { String::new() } else { label_text } };
+    let mut row = Wall { storey, wall_type, axis, location: LocationLine::Center, base_offset: base_z - elevation, top: TopConstraint::Unconnected { height }, phase: phase_of(&i.doc, instance_id), start_join: None, end_join: None, base_slab: None, name: if label_text == id { String::new() } else { label_text } };
     row.location = location_for(i, &row, left);
     i.model.walls.insert(id.clone(), row);
     i.ids.insert(instance_id, id);
@@ -178,7 +169,7 @@ fn opening(i: &mut Import<'_>, host_ifc: u64, opening_ifc: u64) {
     let name = filler.and_then(|fill| i.doc.get(fill)).and_then(|instance| instance.primary()).map(|(_, fill_args)| text(fill_args, 2)).unwrap_or_else(|| text(args, 2));
     i.model.openings.insert(
         id.clone(),
-        Opening { host, kind, offset, sill_override, width: differs(width, kind_size.map(|size| size.0)), height: differs(height, kind_size.map(|size| size.1)), flip_hand, flip_facing, name: if name == id { String::new() } else { name } },
+        Opening { host, kind, offset, sill_override, width: differs(width, kind_size.map(|size| size.0)), height: differs(height, kind_size.map(|size| size.1)), flip_hand, flip_facing, reveal_depth: None, reveal_material: None, name: if name == id { String::new() } else { name } },
     );
     i.ids.insert(opening_ifc, id.clone());
     if let Some(fill) = filler {
@@ -200,7 +191,3 @@ pub fn read(i: &mut Import<'_>) {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -1,0 +1,24 @@
+{
+  "mutation": "createClassificationSystem",
+  "id": "wt-300",
+  "system": {
+    "name": "DIN 276",
+    "edition": "2018-12",
+    "entries": [
+      {
+        "code": "300",
+        "title": "Bauwerk - Baukonstruktionen"
+      },
+      {
+        "code": "330",
+        "title": "Aussenwaende",
+        "parent": "300"
+      },
+      {
+        "code": "331",
+        "title": "Tragende Aussenwaende",
+        "parent": "330"
+      }
+    ]
+  }
+}

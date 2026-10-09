@@ -28,3 +28,9 @@ Feature: Terminal Text Width Model
     Given a name longer than its budget
     When it is elided in the middle with a tail of six cells
     Then the result fits the budget, never splits a cluster and keeps the tail
+
+  Scenario: Scalar-width rendering preserves combining marks
+    Given narrow and wide text with combining marks in scalar-width mode
+    When the cell buffer emits terminal glyphs
+    Then the glyphs preserve every combining mark with its base
+    And their cell widths agree with the independent Unicode library

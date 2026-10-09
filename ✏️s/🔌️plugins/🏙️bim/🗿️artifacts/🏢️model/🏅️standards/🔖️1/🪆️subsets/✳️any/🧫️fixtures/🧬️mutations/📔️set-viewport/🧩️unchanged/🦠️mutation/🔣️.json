@@ -1,0 +1,6 @@
+{
+  "mutation": "setViewport",
+  "id": "vp-1",
+  "scale": 100,
+  "view": "v-ground"
+}

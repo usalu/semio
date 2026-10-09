@@ -1,0 +1,9 @@
+{
+  "mutation": "setFamilySolid",
+  "id": "s-top",
+  "offset": {
+    "x": "0.1 m",
+    "y": "0 m",
+    "z": "0 m"
+  }
+}

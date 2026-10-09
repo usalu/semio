@@ -97,6 +97,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-straight-tall": {
@@ -124,6 +125,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-lturn": {
@@ -156,6 +158,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-lturn-right": {
@@ -188,6 +191,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.2,
+      "phase": "New",
       "name": "Stair"
     },
     "s-uturn": {
@@ -219,6 +223,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-spiral": {
@@ -251,6 +256,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-spiral-cw": {
@@ -283,6 +289,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-two-storeys": {
@@ -311,6 +318,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-free": {
@@ -338,6 +346,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-basement": {
@@ -365,6 +374,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-steep": {
@@ -392,6 +402,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-one-riser": {
@@ -423,6 +434,7 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
     },
     "s-flat": {
@@ -450,7 +462,73 @@
       "tread_thickness": 0.04,
       "riser": "Closed",
       "landing_depth": 1.0,
+      "phase": "New",
       "name": "Stair"
+    },
+    "s-lturn-deep": {
+      "storey": "st-ground",
+      "start": {
+        "x": 20.0,
+        "y": 0.0
+      },
+      "direction": 1.0,
+      "width": 1.0,
+      "flight": {
+        "LTurn": {
+          "split": 0.5,
+          "turn": "Left"
+        }
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.6,
+      "phase": "New",
+      "name": "L turn with a deep landing"
+    },
+    "s-uturn-deep": {
+      "storey": "st-ground",
+      "start": {
+        "x": 30.0,
+        "y": 0.0
+      },
+      "direction": 1.5707963267948966,
+      "width": 1.0,
+      "flight": {
+        "UTurn": {
+          "gap": 0.2
+        }
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.5,
+      "phase": "New",
+      "name": "U turn with a deep landing"
     }
   },
   "railings": {},

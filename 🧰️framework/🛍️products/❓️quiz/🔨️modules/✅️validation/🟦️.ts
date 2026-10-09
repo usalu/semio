@@ -366,13 +366,14 @@ function task(value: unknown, path: string, report: Report): void {
 /** 📝️ Every issue of a quiz document: structure per the schema, unique ids, references, positive logarithmic values, complete profiles, matching values for every dimension and draws within the item count. */
 export function quizIssues(quiz: unknown): ValidationIssue[] {
   return collect((report) => {
-    const json = object(quiz, "", report, ["schema", "id", "emoji", "title", "description", "tasks"], ["$schema"]);
+    const json = object(quiz, "", report, ["schema", "id", "emoji", "title", "description", "tasks"], ["$schema", "short"]);
     if (!json) return;
     if (Object.hasOwn(json, "$schema")) string(json.$schema, "/$schema", report);
     if (Object.hasOwn(json, "schema") && json.schema !== QUIZ_SCHEMA) report("/schema", "value-invalid");
     if (Object.hasOwn(json, "id")) slug(json.id, "/id", report);
     if (Object.hasOwn(json, "emoji")) string(json.emoji, "/emoji", report, 1, 16);
     if (Object.hasOwn(json, "title")) text(json.title, "/title", report);
+    short(json, "", report);
     if (Object.hasOwn(json, "description")) text(json.description, "/description", report);
     const tasks = Object.hasOwn(json, "tasks") ? array(json.tasks, "/tasks", report, 1, (entry, path) => task(entry, path, report)) : undefined;
     uniqueIds(tasks, "/tasks", report);
@@ -395,12 +396,13 @@ function badgeRule(value: unknown, path: string, report: Report): Json | undefin
 /** 📚️ Every issue of a catalog document given its quizzes in catalog order: structure per the schema, unique paths, quiz ids and badge ids, and badge rules that reference existing quizzes and select at least one task. */
 export function catalogIssues(catalog: unknown, quizzes: readonly Quiz[]): ValidationIssue[] {
   return collect((report) => {
-    const json = object(catalog, "", report, ["schema", "id", "title", "introduction", "quizzes", "badges"], ["$schema"]);
+    const json = object(catalog, "", report, ["schema", "id", "title", "introduction", "quizzes", "badges"], ["$schema", "short"]);
     if (!json) return;
     if (Object.hasOwn(json, "$schema")) string(json.$schema, "/$schema", report);
     if (Object.hasOwn(json, "schema") && json.schema !== CATALOG_SCHEMA) report("/schema", "value-invalid");
     if (Object.hasOwn(json, "id")) slug(json.id, "/id", report);
     if (Object.hasOwn(json, "title")) text(json.title, "/title", report);
+    short(json, "", report);
     if (Object.hasOwn(json, "introduction")) {
       const introduction = object(json.introduction, "/introduction", report, ["title", "paragraphs"]);
       if (introduction && Object.hasOwn(introduction, "title")) text(introduction.title, "/introduction/title", report);

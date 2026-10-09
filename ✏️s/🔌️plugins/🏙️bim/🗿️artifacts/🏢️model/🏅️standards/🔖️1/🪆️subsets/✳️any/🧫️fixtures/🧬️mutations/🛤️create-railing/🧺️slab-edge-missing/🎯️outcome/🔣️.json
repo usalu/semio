@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "railing",
+    "host",
+    "edge"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset",
+  "semanticKind": "import-image-asset",
+  "displayName": "Import Image Asset",
+  "emoji": "📥️",
+  "aggregateVariant": "ImportImageAsset",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "import-image-asset",
+  "binaryTag": 24,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

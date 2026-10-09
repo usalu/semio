@@ -1,0 +1,25 @@
+{
+  "mutation": "createDimension",
+  "id": "dim-south",
+  "dimension": {
+    "storey": "st-ground",
+    "anchors": [
+      {
+        "WallEnd": {
+          "wall": "w-south",
+          "end": "Start"
+        }
+      },
+      {
+        "WallEnd": {
+          "wall": "w-south",
+          "end": "End"
+        }
+      }
+    ],
+    "angle": 0,
+    "offset": -1,
+    "style": "as-ghost",
+    "name": "Dimension"
+  }
+}

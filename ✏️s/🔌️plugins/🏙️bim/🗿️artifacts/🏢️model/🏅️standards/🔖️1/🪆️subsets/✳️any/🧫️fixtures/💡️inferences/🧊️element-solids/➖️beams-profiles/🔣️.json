@@ -17,9 +17,9 @@
           "g": 0.6,
           "b": 0.6
         },
-        "density": 2400.0,
-        "conductivity": 1.0,
-        "specific_heat": 900.0
+        "density": 2400,
+        "conductivity": 1,
+        "specific_heat": 900
       },
       "m-steel": {
         "name": "Steel",
@@ -29,9 +29,9 @@
           "g": 0.62,
           "b": 0.65
         },
-        "density": 7850.0,
-        "conductivity": 1.0,
-        "specific_heat": 900.0
+        "density": 7850,
+        "conductivity": 1,
+        "specific_heat": 900
       },
       "m-wood": {
         "name": "Oak",
@@ -41,9 +41,9 @@
           "g": 0.4,
           "b": 0.2
         },
-        "density": 700.0,
-        "conductivity": 1.0,
-        "specific_heat": 900.0
+        "density": 700,
+        "conductivity": 1,
+        "specific_heat": 900
       },
       "m-clay": {
         "name": "Clay Tile",
@@ -53,18 +53,18 @@
           "g": 0.3,
           "b": 0.2
         },
-        "density": 1900.0,
-        "conductivity": 1.0,
-        "specific_heat": 900.0
+        "density": 1900,
+        "conductivity": 1,
+        "specific_heat": 900
       }
     },
     "sites": {
       "site-1": {
         "name": "Plot",
-        "latitude": 47.0,
-        "longitude": 8.0,
-        "elevation": 100.0,
-        "true_north": 0.0,
+        "latitude": 47,
+        "longitude": 8,
+        "elevation": 100,
+        "true_north": 0,
         "boundary": []
       }
     },
@@ -73,10 +73,10 @@
         "site": "site-1",
         "name": "Frame",
         "origin": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0,
+          "y": 0
         },
-        "rotation": 0.0,
+        "rotation": 0,
         "elevation": 2.5
       }
     },
@@ -85,7 +85,7 @@
         "building": "bldg-1",
         "name": "Ground",
         "level": 0,
-        "height": 3.0
+        "height": 3
       },
       "st-first": {
         "building": "bldg-1",
@@ -131,85 +131,115 @@
       "b-along-x": {
         "storey": "st-ground",
         "beam_type": "bt-rect",
-        "start": {
-          "x": 0.0,
-          "y": 0.0
-        },
-        "end": {
-          "x": 6.0,
-          "y": 0.0
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 6,
+              "y": 0
+            }
+          }
         },
         "top_offset": -0.1,
+        "phase": "New",
         "name": "Along x"
       },
       "b-diagonal": {
         "storey": "st-first",
         "beam_type": "bt-rect",
-        "start": {
-          "x": 0.0,
-          "y": 0.0
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 3,
+              "y": 4
+            }
+          }
         },
-        "end": {
-          "x": 3.0,
-          "y": 4.0
-        },
-        "top_offset": 0.0,
+        "top_offset": 0,
+        "phase": "New",
         "name": "Diagonal"
       },
       "b-i": {
         "storey": "st-ground",
         "beam_type": "bt-i",
-        "start": {
-          "x": 1.0,
-          "y": 1.0
-        },
-        "end": {
-          "x": 1.0,
-          "y": 7.0
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 1,
+              "y": 1
+            },
+            "end": {
+              "x": 1,
+              "y": 7
+            }
+          }
         },
         "top_offset": -0.2,
+        "phase": "New",
         "name": "I beam"
       },
       "b-pipe": {
         "storey": "st-ground",
         "beam_type": "bt-circle",
-        "start": {
-          "x": 0.0,
-          "y": 2.0
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 2
+            },
+            "end": {
+              "x": 4,
+              "y": 2
+            }
+          }
         },
-        "end": {
-          "x": 4.0,
-          "y": 2.0
-        },
-        "top_offset": 0.0,
+        "top_offset": 0,
+        "phase": "New",
         "name": "Pipe"
       },
       "b-zero": {
         "storey": "st-ground",
         "beam_type": "bt-rect",
-        "start": {
-          "x": 2.0,
-          "y": 2.0
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 2,
+              "y": 2
+            },
+            "end": {
+              "x": 2,
+              "y": 2
+            }
+          }
         },
-        "end": {
-          "x": 2.0,
-          "y": 2.0
-        },
-        "top_offset": 0.0,
+        "top_offset": 0,
+        "phase": "New",
         "name": "Zero length"
       },
       "b-unknown-type": {
         "storey": "st-ground",
         "beam_type": "bt-none",
-        "start": {
-          "x": 0.0,
-          "y": 0.0
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 1,
+              "y": 0
+            }
+          }
         },
-        "end": {
-          "x": 1.0,
-          "y": 0.0
-        },
-        "top_offset": 0.0,
+        "top_offset": 0,
+        "phase": "New",
         "name": "Unknown type"
       }
     }
@@ -218,26 +248,26 @@
     "b-along-x": {
       "family": "Beam",
       "volume": 0.48,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-9,
       "min": [
-        0.0,
+        0,
         -0.1,
         2.5
       ],
       "max": [
-        6.0,
+        6,
         0.1,
         2.9
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-9,
       "curved": false,
-      "length": 6.0,
+      "length": 6,
       "top_z": 2.9
     },
     "b-diagonal": {
       "family": "Beam",
       "volume": 0.4,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-9,
       "min": [
         -0.08,
         -0.06,
@@ -248,28 +278,28 @@
         4.06,
         5.8
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-9,
       "curved": false,
-      "length": 5.0,
+      "length": 5,
       "top_z": 5.8
     },
     "b-i": {
       "family": "Beam",
       "volume": 0.034848,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-9,
       "min": [
         0.925,
-        1.0,
+        1,
         2.5
       ],
       "max": [
         1.075,
-        7.0,
+        7,
         2.8
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-9,
       "curved": false,
-      "length": 6.0,
+      "length": 6,
       "top_z": 2.8
     },
     "b-pipe": {
@@ -277,19 +307,19 @@
       "volume": 0.031415926536,
       "volume_tolerance": 0.000131946891,
       "min": [
-        0.0,
+        0,
         1.95,
         2.9
       ],
       "max": [
-        4.0,
+        4,
         2.05,
-        3.0
+        3
       ],
       "bounds_tolerance": 0.00021,
       "curved": true,
-      "length": 4.0,
-      "top_z": 3.0
+      "length": 4,
+      "top_z": 3
     },
     "b-zero": null,
     "b-unknown-type": null

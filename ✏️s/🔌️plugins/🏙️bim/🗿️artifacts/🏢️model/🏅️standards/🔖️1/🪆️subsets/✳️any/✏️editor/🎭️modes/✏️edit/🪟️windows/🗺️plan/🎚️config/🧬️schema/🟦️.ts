@@ -11,10 +11,9 @@ const num = (value: unknown, at: string): number => { if (typeof value !== "numb
 const count = (value: unknown, at: string): number => { if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) throw new TypeError(`${at} must be a non-negative safe integer`); return value; };
 const flag = (value: unknown, at: string): boolean => { if (typeof value !== "boolean") throw new TypeError(`${at} must be a boolean`); return value; };
 const list = <T,>(value: unknown, at: string, item: (entry: unknown, at: string) => T): T[] => { if (!Array.isArray(value)) throw new TypeError(`${at} must be an array`); return value.map((entry, index) => item(entry, `${at}[${index}]`)); };
-/** 🎚️ Persisted navigation and storey of one exact BIM plan window. */
+/** 🎚️ Persisted plan view and navigation of one exact BIM plan window. */
 export interface BimPlanWindowConfig {
-  storey: string;
-  cutHeight: number;
+  view: string;
   framed: boolean;
   viewport: Viewport2d;
 }
@@ -24,10 +23,9 @@ export type BimPlanWindowConfigMutation = { kind: "replace"; config: BimPlanWind
 export type BimPlanWindowConfigDiff = Partial<BimPlanWindowConfig>;
 /** 🚪️ Parses one exact BimPlanWindowConfig. */
 export function parseBimPlanWindowConfig(value: unknown): BimPlanWindowConfig {
-  const row = exact(value, "$", ["storey", "cutHeight", "framed", "viewport"]);
+  const row = exact(value, "$", ["view", "framed", "viewport"]);
   return {
-    storey: text(row.storey, "$.storey"),
-    cutHeight: num(row.cutHeight, "$.cutHeight"),
+    view: text(row.view, "$.view"),
     framed: flag(row.framed, "$.framed"),
     viewport: parseViewport2d(row.viewport),
   };

@@ -154,6 +154,59 @@
         "group": "identity",
         "order": 80
       }
+    },
+    "reveal_depth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Reveal depth (m, empty = centred)",
+          "de": "Laibungstiefe (m, leer = zentriert)"
+        },
+        "group": "value",
+        "order": 90
+      }
+    },
+    "reveal_material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Reveal material (empty = wall layers)",
+          "de": "Laibungsmaterial (leer = Wandschichten)"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "value",
+        "order": 100
+      }
     }
   }
 }

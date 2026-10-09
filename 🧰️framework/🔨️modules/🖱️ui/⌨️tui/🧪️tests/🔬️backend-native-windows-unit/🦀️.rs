@@ -116,4 +116,38 @@ mod windows_input_tests {
         parser.feed(&bytes, &mut events);
         assert_eq!(events.len(), 4);
     }
+
+    #[test]
+    fn native_control_space_delivers_the_nul_key_once() {
+        let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/⌨️input-decoding/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        for vector in fixture["consoleControls"].as_array().unwrap() {
+            let records: Vec<_> = vector["records"].as_array().unwrap().iter().map(|value| {
+                let mut record = key_record(value["unit"].as_u64().unwrap() as u16, value["down"].as_bool().unwrap(), 1);
+                let mut key = unsafe { record.Event.KeyEvent };
+                key.wVirtualKeyCode = value["key"].as_u64().unwrap() as u16;
+                key.dwControlKeyState = value["control"].as_u64().unwrap() as u32;
+                record.Event.KeyEvent = key;
+                record
+            }).collect();
+            let mut bytes = Vec::new();
+            assert!(!records_to_bytes(&records, &mut Utf16Decoder::default(), &mut bytes));
+            assert_eq!(bytes, vector["text"].as_str().unwrap().as_bytes(), "{}", vector["id"].as_str().unwrap());
+        }
+    }
+    #[test]
+    fn committed_alt_code_text_is_delivered_once() {
+        let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/⌨️input-decoding/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        for vector in fixture["consoleCommits"].as_array().unwrap() {
+            let records: Vec<_> = vector["records"].as_array().unwrap().iter().map(|value| {
+                let mut record = key_record(value["unit"].as_u64().unwrap() as u16, value["down"].as_bool().unwrap(), 1);
+                let mut key = unsafe { record.Event.KeyEvent };
+                key.wVirtualKeyCode = value["key"].as_u64().unwrap() as u16;
+                record.Event.KeyEvent = key;
+                record
+            }).collect();
+            let mut bytes = Vec::new();
+            assert!(!records_to_bytes(&records, &mut Utf16Decoder::default(), &mut bytes));
+            assert_eq!(bytes, vector["text"].as_str().unwrap().as_bytes());
+        }
+    }
 }

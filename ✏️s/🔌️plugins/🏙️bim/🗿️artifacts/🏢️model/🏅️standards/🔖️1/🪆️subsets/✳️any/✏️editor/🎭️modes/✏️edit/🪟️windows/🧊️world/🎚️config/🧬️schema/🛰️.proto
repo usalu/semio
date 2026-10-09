@@ -23,8 +23,9 @@ message BimWorldWindowConfig {
   BimWorldProjection projection = 2;
   string isolated_storey = 3;
   repeated string hidden_storeys = 4;
-  bool section_enabled = 5;
-  string section_axis = 6;
-  double section_offset = 7;
-  bool framed = 8;
+  string view_phase = 5;
+  bool section_enabled = 6;
+  string section_axis = 7;
+  double section_offset = 8;
+  bool framed = 9;
 }

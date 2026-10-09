@@ -104,6 +104,40 @@
         "ordered-json-v1"
       ],
       "rationale": "Independent JSON Patch replaces only attributes.fillRule and verifies the complete document and inverse."
+    },
+    {
+      "id": "immer-drawing-image-edit",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "immer",
+      "version": "10.2.0",
+      "source": {
+        "repository": "https://github.com/immerjs/immer",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "immer",
+        "implementation": "structural-sharing producer",
+        "version": "10.2.0"
+      },
+      "capabilities": [
+        "drawing-image-edit"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "win32-x64"
+      ],
+      "notes": "Independent Immer production sets only image asset reference and dimensions and restores the complete document.",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "rationale": "Independent Immer production sets only image asset reference and dimensions and restores the complete document."
     }
   ],
   "noOracleDecisions": [],
@@ -448,6 +482,39 @@
             ]
           },
           "notes": "Isolation is a group-only flag whose authored default (false) is omitted on the wire; the Immer twin checks the complete document and the inverse."
+        },
+        {
+          "id": "update-image",
+          "capability": "drawing-1-style-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-image",
+            "bridgeVersion": 1,
+            "variant": "UpdateImage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-image-edit",
+              "qualifyingKind": "third-party-library",
+              "oracle": "immer-drawing-image-edit"
+            }
+          ],
+          "carriers": [
+            "json"
+          ],
+          "invariants": {
+            "local": [
+              "authored-facet-preserved"
+            ],
+            "enclosing": [
+              "layer-identity-and-appearance-preserved"
+            ]
+          }
         }
       ]
     }

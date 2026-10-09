@@ -60,6 +60,7 @@
       "height": 1.1,
       "infill": "None",
       "material": "m-brick",
+      "phase": "New",
       "name": "Balustrade",
       "path": [
         {

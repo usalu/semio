@@ -17,6 +17,17 @@
         "forwardAllArgs": true
       }
     },
+    "test-retirement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["{projectRoot}/../../**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/**/*"],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test retirement"
+      }
+    },
     "test-quick": {
       "executor": "nx:run-commands",
       "cache": false,

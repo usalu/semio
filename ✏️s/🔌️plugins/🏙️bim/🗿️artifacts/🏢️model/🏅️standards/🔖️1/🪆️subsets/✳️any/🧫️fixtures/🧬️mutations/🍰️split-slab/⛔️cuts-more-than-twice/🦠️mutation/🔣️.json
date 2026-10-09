@@ -1,0 +1,13 @@
+{
+  "mutation": "splitSlab",
+  "id": "sl-1",
+  "new_id": "sl-2",
+  "line_start": {
+    "x": -1,
+    "y": 4
+  },
+  "line_end": {
+    "x": 10,
+    "y": 4
+  }
+}

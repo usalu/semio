@@ -20,7 +20,20 @@ struct Fixture {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Grant {
     maximum_items: usize,
-    maximum_bytes: usize,
+    maximum_copy_bytes: usize,
+    maximum_capacity_bytes: usize,
+    maximum_release_bytes: usize,
+    maximum_depth: usize,
+}
+
+impl Grant {
+    fn retained(self) -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: self.maximum_items, maximum_copy_bytes: self.maximum_copy_bytes, maximum_capacity_bytes: self.maximum_capacity_bytes, maximum_release_bytes: self.maximum_release_bytes, maximum_depth: self.maximum_depth }
+    }
+
+    fn generous(maximum_items: usize) -> Self {
+        Self { maximum_items, maximum_copy_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES, maximum_capacity_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES, maximum_release_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES, maximum_depth: 16 }
+    }
 }
 
 #[derive(Deserialize)]
@@ -70,7 +83,9 @@ struct Close {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Expected {
     kind: String,
-    released_items: usize,
+    copied_items: usize,
+    copied_bytes: usize,
+    retained_capacity_bytes: usize,
     released_bytes: usize,
     remaining_pages: usize,
     remaining_bytes: usize,
@@ -80,7 +95,7 @@ struct Expected {
 
 fn fixture() -> Fixture {
     let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🚫️rejected-page-close/🔣️.json")).expect("canonical rejected-page vectors");
-    assert_eq!(fixture.version, 1);
+    assert_eq!(fixture.version, 2);
     assert_eq!(fixture.page_bytes, OWNED_SCHEMA_DECODE_PAGE_BYTES);
     assert_eq!(fixture.input_state, "unstarted-record");
     fixture
@@ -179,10 +194,6 @@ impl ArtifactEnvelopeFieldDecoder<(), ()> for CountedField {
         Err(Self::unexpected())
     }
 
-    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
-        Ok(self.token.as_ref().map_or(0, |token| token.payload.len()))
-    }
-
     fn maximum_close_byte_demand(&self) -> usize {
         self.token.as_ref().map_or(0, |token| token.payload.len())
     }
@@ -191,17 +202,33 @@ impl ArtifactEnvelopeFieldDecoder<(), ()> for CountedField {
         self.token.as_ref().map_or(0, |token| token.payload.len())
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(self.token.as_ref().map_or(0, |token| token.payload.len()))
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(usize::from(self.token.is_some()))
+    }
+
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
         self.counts.close_calls.fetch_add(1, Ordering::SeqCst);
-        let Some(token) = self.token.as_ref() else { return Ok(SnapshotRetirementStep::Complete) };
-        if maximum_items == 0 || maximum_bytes < token.payload.len() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        let Some(token) = self.token.as_ref() else { return Ok(RetainedCloneStep::Complete(Default::default())) };
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < token.payload.len() {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         let released_bytes = token.payload.len();
         let mut token = self.token.take().expect("same counted token");
         token.released = true;
         drop(token);
-        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes })
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -292,8 +319,8 @@ fn detach_and_close(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>
             }
             note(failures, "detach is not close completion", registry.ticket_reclaimed(ticket) && !returned.terminal_is_empty(), returned.terminal_is_empty());
             for _ in 0..returned_owner_close_bound() {
-                let result = returned.close_step(1, OWNED_SCHEMA_DECODE_PAGE_BYTES);
-                if result.as_ref() == Ok(&SnapshotRetirementStep::Complete) && returned.terminal_is_empty() {
+                let result = returned.close_step(Grant::generous(1).retained());
+                if matches!(result, Ok(RetainedCloneStep::Complete(_))) && returned.terminal_is_empty() {
                     break;
                 }
                 if let Err(error) = result {
@@ -319,8 +346,8 @@ impl Subject {
                 let close_bound = unadmitted_close_bound(record.tokens.pages.page_count());
                 let mut rejected = ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields);
                 for _ in 0..close_bound {
-                    let result = rejected.close_step(1, OWNED_SCHEMA_DECODE_PAGE_BYTES);
-                    if result.as_ref() == Ok(&SnapshotRetirementStep::Complete) && rejected.terminal_is_empty() {
+                    let result = rejected.close_step(Grant::generous(1).retained());
+                    if matches!(result, Ok(RetainedCloneStep::Complete(_))) && rejected.terminal_is_empty() {
                         break;
                     }
                 }
@@ -337,7 +364,7 @@ impl Subject {
                 let close_bound = authority_close_bound(authority.record.as_ref().map_or(0, |record| record.tokens.pages.page_count()));
                 for _ in 0..close_bound {
                     detach_and_close(&registry, Some(ticket), None, failures);
-                    semio_framework_job::InteractiveJob::close_step(&mut authority, 1, OWNED_SCHEMA_DECODE_PAGE_BYTES);
+                    semio_framework_job::InteractiveJob::close_step(&mut authority, Grant::generous(1).retained());
                     if authority.terminal_is_empty() {
                         break;
                     }
@@ -362,10 +389,10 @@ impl Subject {
         }
     }
 
-    fn close_step(&mut self, grant: Grant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: Grant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         match self {
-            Self::Registered { rejected, .. } => rejected.close_step(grant.maximum_items, grant.maximum_bytes),
-            Self::Unadmitted(rejected) => rejected.close_step(grant.maximum_items, grant.maximum_bytes),
+            Self::Registered { rejected, .. } => rejected.close_step(grant.retained()),
+            Self::Unadmitted(rejected) => rejected.close_step(grant.retained()),
         }
     }
 
@@ -379,18 +406,19 @@ impl Subject {
     fn prepare_pages(&mut self, vector: &FieldVector, counts: &Counts, field_identity: usize, failures: &mut Vec<String>) {
         let before = witness(self.record());
         note(failures, "exact initial field address", self.field_identity() == Some(field_identity), self.field_identity());
-        let zero = self.close_step(Grant { maximum_items: 0, maximum_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES });
-        note(failures, "zero-item field phase", zero == Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }), &zero);
+        let zero = self.close_step(Grant::generous(0));
+        note(failures, "zero-item field phase", zero == Ok(RetainedCloneStep::Progress(Default::default())), &zero);
         note(failures, "zero-item keeps field", self.field_identity() == Some(field_identity) && counts.close_calls.load(Ordering::SeqCst) == 0, counts.close_calls.load(Ordering::SeqCst));
         let token_close = self.close_step(vector.close_grant);
-        note(failures, "actual field token close", token_close == Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: vector.payload.len() }), &token_close);
+        note(failures, "actual field token close", token_close == Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: vector.payload.len(), ..Default::default() })), &token_close);
         note(failures, "field shell remains after token close", self.field_identity() == Some(field_identity) && counts.field_drops.load(Ordering::SeqCst) == 0, self.field_identity());
         let field_close = self.close_step(vector.close_grant);
-        note(failures, "actual field shell close", field_close == Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }), &field_close);
+        let shell_bytes = if matches!(self, Self::Unadmitted(_)) { std::mem::size_of::<CountedField>() } else { 0 };
+        note(failures, "actual field shell close", field_close == Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() })), &field_close);
         if let Self::Registered { rejected, registry, ticket } = self {
             note(failures, "registry retained until detach", !registry.ticket_reclaimed(*ticket) && !registry.terminal_is_empty(), registry.ticket_reclaimed(*ticket));
-            let blocked = rejected.close_step(1, OWNED_SCHEMA_DECODE_PAGE_BYTES);
-            note(failures, "pages wait for exact reclamation", blocked == Ok(SnapshotRetirementStep::Blocked), &blocked);
+            let waiting = rejected.close_step(Grant::generous(1).retained());
+            note(failures, "pages wait for exact reclamation", waiting == Ok(RetainedCloneStep::Progress(Default::default())), &waiting);
             detach_and_close(registry, Some(*ticket), Some(field_identity), failures);
             note(failures, "exact ticket reclaimed", registry.ticket_reclaimed(*ticket), registry.ticket_reclaimed(*ticket));
         }
@@ -410,7 +438,7 @@ impl Subject {
             if self.terminal_is_empty() {
                 break;
             }
-            if let Err(error) = self.close_step(Grant { maximum_items: 1, maximum_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES }) {
+            if let Err(error) = self.close_step(Grant::generous(1)) {
                 failures.push(format!("wrapper bounded teardown: {error}"));
             }
         }
@@ -420,17 +448,18 @@ impl Subject {
 //#endregion 🧪️ActualWrapperHarness
 
 //#region 🧪️PageLaws
-fn actual(result: &Result<SnapshotRetirementStep, semio_framework_value::ValueError>, record: Option<&OwnedSchemaRecordCursor>, terminal: bool) -> Expected {
-    let (kind, released_items, released_bytes) = match result {
-        Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) => ("pending".into(), *released_items, *released_bytes),
-        Ok(SnapshotRetirementStep::Complete) => ("complete".into(), 0, 0),
-        Ok(SnapshotRetirementStep::Blocked) => ("blocked".into(), 0, 0),
-        Err(error) => (format!("error:{error}"), 0, 0),
+fn actual(result: &Result<RetainedCloneStep, semio_framework_value::ValueError>, record: Option<&OwnedSchemaRecordCursor>, terminal: bool) -> Expected {
+    let (kind, progress) = match result {
+        Ok(RetainedCloneStep::Progress(progress)) => ("progress".into(), *progress),
+        Ok(RetainedCloneStep::Complete(progress)) => ("complete".into(), *progress),
+        Err(error) => (format!("error:{error}"), RetainedCloneProgress::default()),
     };
     Expected {
         kind,
-        released_items,
-        released_bytes,
+        copied_items: progress.copied_items,
+        copied_bytes: progress.copied_bytes,
+        retained_capacity_bytes: progress.retained_capacity_bytes,
+        released_bytes: progress.released_bytes,
         remaining_pages: record.map_or(0, |record| record.tokens.pages.page_count()),
         remaining_bytes: record.map_or(0, |record| record.tokens.pages.byte_count()),
         record_present: record.is_some(),
@@ -461,8 +490,8 @@ fn check_case(registered: bool, row: &Case, vector: &FieldVector, failures: &mut
         note(
             failures,
             &format!("{} grant not exceeded {index}", row.id),
-            observed.released_items <= close.grant.maximum_items && observed.released_bytes <= close.grant.maximum_bytes && observed.released_items <= 1,
-            (&observed, close.grant.maximum_items, close.grant.maximum_bytes),
+            result.as_ref().is_ok_and(|step| step.progress().fits(close.grant.retained())) && observed.copied_items <= 1,
+            (&observed, close.grant.maximum_items, close.grant.maximum_copy_bytes),
         );
     }
     subject.teardown(failures);

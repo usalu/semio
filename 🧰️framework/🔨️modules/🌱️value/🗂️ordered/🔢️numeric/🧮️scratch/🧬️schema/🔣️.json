@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/value/ordered/numeric-scratch",
+  "type": "object",
+  "required": ["operations", "expected"],
+  "additionalProperties": false,
+  "properties": {
+    "operations": {"type": "array", "items": {"type": "object", "required": ["kind"], "additionalProperties": false, "properties": {"kind": {"enum": ["set", "remove", "get", "first", "reset"]}, "key": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, "value": {"type": "integer"}}}},
+    "expected": {"type": "array", "items": {"type": ["integer", "null", "array"], "items": {"type": "integer"}}}
+  }
+}

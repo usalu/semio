@@ -1,0 +1,6 @@
+{
+  "mutation": "setCeiling",
+  "id": "ce-living",
+  "offset": 0.5,
+  "name": "Living ceiling"
+}

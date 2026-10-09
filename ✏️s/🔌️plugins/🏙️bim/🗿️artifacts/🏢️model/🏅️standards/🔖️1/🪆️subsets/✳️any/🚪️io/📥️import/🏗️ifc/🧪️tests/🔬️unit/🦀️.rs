@@ -2,7 +2,7 @@ use super::*;
 use crate::{Axis, LocationLine, Point2, SpaceBoundary, TopConstraint};
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::house;
-use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 
 /// 🔁️ The part of the house that the import understands: no roof, stair, railing, curtain wall, sloped slab or inferred space.
 fn importable() -> ModelSnapshot {
@@ -211,4 +211,23 @@ fn a_foreign_file_without_semio_identity_is_imported_with_derived_levels_types_a
     assert_eq!((start, end), (Point2 { x: 1.0, y: 2.0 }, Point2 { x: 6.0, y: 2.0 }));
     assert!(matches!(wall.top, TopConstraint::Unconnected { height } if (height - 2.8).abs() < 1e-9));
     assert!(notes.iter().any(|note| note.starts_with("IFCFURNISHINGELEMENT: 1")), "{notes:?}");
+}
+
+#[test]
+fn the_phase_of_every_importable_element_survives_the_round_trip() {
+    use crate::Phase;
+    let mut model = importable();
+    macro_rules! cycle {
+        ($($collection:ident),+) => { $( for (index, row) in model.$collection.values_mut().enumerate() { row.phase = Phase::ALL[(index + 1) % 4]; } )+ };
+    }
+    cycle!(walls, columns, beams, slabs, spaces);
+    let (back, _) = imported(&model);
+    macro_rules! same {
+        ($($collection:ident),+) => { $( for (id, row) in &model.$collection { assert_eq!(back.$collection[id].phase, row.phase, "{id}"); } )+ };
+    }
+    same!(walls, columns, beams, slabs, spaces);
+    assert!(model.walls.values().any(|wall| wall.phase == Phase::Demolished) && model.slabs.values().any(|slab| slab.phase != Phase::New));
+    let (first, _) = export_ifc2x3(&model).expect("first export");
+    let (second, _) = export_ifc2x3(&back).expect("second export");
+    assert_eq!(first, second, "the phases keep the round trip byte-stable");
 }

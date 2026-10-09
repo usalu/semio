@@ -1,9 +1,9 @@
 //! 🔀️ Filled planar arrangements with spatial queries, bounded grants and private outputs.
 use crate::engine::{DrawingError,PathSegment,Vec2};
-use crate::retirement::{WorkRetirementCounter,WorkRetirementProgress};
+use crate::retirement::WorkRetirementProgress;
 pub type BooleanRetirementProgress=WorkRetirementProgress;
 use std::cmp::Ordering;
-use std::collections::{BTreeMap,BTreeSet};
+use semio_framework_value::numeric_scratch::NumericIndex;
 #[path="🛤️paths/🦀️.rs"]
 pub mod paths;
 type Box2=[f64;4];
@@ -16,8 +16,10 @@ impl BooleanOperation {
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum BooleanFillRule {Nonzero,Evenodd}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BooleanOperand {pub contours:Vec<Vec<Vec2>>,pub fill_rule:BooleanFillRule}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BooleanInput {
  pub operation:BooleanOperation,pub operands:Vec<BooleanOperand>,pub epsilon:f64,pub max_edges:usize,pub max_parameters:usize,pub max_atomic_edges:usize,pub max_segments:usize,pub max_work:u64,
 }
@@ -31,17 +33,19 @@ pub struct BooleanProgress {
  pub phase:BooleanPhase,pub operands:usize,pub vertices:usize,pub edges:usize,pub parameters:usize,pub pairs:u64,pub atomic_edges:usize,pub boundary_edges:usize,pub contours:usize,pub segments:usize,pub work:u64,pub done:bool,
 }
 #[derive(Clone,Debug,PartialEq,Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum BooleanError {Invalid(&'static str),Incomplete,Cancelled}
 impl std::fmt::Display for BooleanError {
  fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result {f.write_str(match self {Self::Invalid(message)=>message,Self::Incomplete=>"Boolean incomplete",Self::Cancelled=>"Boolean cancelled"})}
 }
 impl std::error::Error for BooleanError {}
-#[derive(Clone)]
-struct Edge {a:Vec2,b:Vec2,operand:usize,bounds:Box2,parameters:BTreeSet<u64>}
+#[derive(semio_framework_value::RetireOwned)]
+struct Edge {a:Vec2,b:Vec2,operand:usize,bounds:Box2,parameters:NumericIndex<u64,()>}
 #[derive(Clone,Copy)]
 struct Node {bounds:Box2,left:usize,right:usize,edge:Option<usize>,maximum:usize}
 #[derive(Clone,Copy)]
 struct Boundary {from:usize,to:usize,used:bool}
+#[derive(semio_framework_value::RetireOwned)]
 struct Ring {points:Vec<Vec2>,anchor:usize}
 #[derive(Clone,Copy)]
 struct IndexItem {key:u32,edge:usize}
@@ -81,28 +85,34 @@ fn morton(e:&Edge,b:Box2)->u32 {
  spread(x)|(spread(y)<<1)
 }
 /// ⏱️ Prepare, intersect, classify and emit owned regions under explicit work grants.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BooleanJob {
  input:BooleanInput,phase:BooleanPhase,work:u64,cancelled:bool,failure:Option<BooleanError>,prepared:usize,vertices:usize,parameters:usize,pairs:u64,
  operand:usize,contour:usize,at:usize,entering:bool,first:Option<Vec2>,previous:Option<Vec2>,bounds:Box2,rules:Vec<BooleanFillRule>,source:Vec<Edge>,
- index_mode:IndexMode,index_at:usize,index_heap:Heap<IndexItem>,tree:Vec<Node>,level:Vec<usize>,next_level:Vec<usize>,root:usize,query:Vec<usize>,pivot:usize,
- split_at:usize,split_started:bool,split_heap:Heap<f64>,split_build:bool,split_previous:Option<f64>,nodes:Vec<Vec2>,grid:BTreeMap<(i64,i64),Vec<usize>>,atomic:Vec<(usize,usize)>,atomic_ids:BTreeSet<(usize,usize)>,
+ retired_levels:Vec<Vec<usize>>,retired_points:Vec<Vec<Vec2>>,index_mode:IndexMode,index_at:usize,index_heap:Heap<IndexItem>,tree:Vec<Node>,level:Vec<usize>,next_level:Vec<usize>,root:usize,query:Vec<usize>,pivot:usize,
+ split_at:usize,split_started:bool,split_heap:Heap<f64>,split_build:bool,split_previous:Option<f64>,nodes:Vec<Vec2>,grid:NumericIndex<(i64,i64),Vec<usize>>,atomic:Vec<(usize,usize)>,atomic_ids:NumericIndex<(usize,usize),()>,
  classify_at:usize,classify_mode:ClassifyMode,classify_axis:usize,classify_direction:f64,midpoint:Vec2,left_point:Vec2,right_point:Vec2,nearest:f64,left_winding:Vec<i32>,right_winding:Vec<i32>,fold_at:usize,left_filled:bool,right_filled:bool,
- boundary:Vec<Boundary>,outgoing:BTreeMap<usize,Vec<usize>>,boundary_at:usize,current:Option<usize>,start:usize,raw:Vec<Vec<usize>>,ring:Vec<usize>,positions:BTreeMap<usize,usize>,selecting:bool,choice_at:usize,choice_node:usize,reverse_angle:f64,best:Option<usize>,best_angle:f64,
+ boundary:Vec<Boundary>,outgoing:NumericIndex<usize,Vec<usize>>,boundary_at:usize,current:Option<usize>,start:usize,raw:Vec<Vec<usize>>,ring:Vec<usize>,positions:NumericIndex<usize,usize>,selecting:bool,choice_at:usize,choice_node:usize,reverse_angle:f64,best:Option<usize>,best_angle:f64,
  split_ring:Option<Vec<usize>>,ring_split_at:usize,ring_split_stop:usize,ring_split_copy:bool,
  compact_at:usize,compact_vertex:usize,compact_mode:CompactMode,compact_points:Vec<Vec2>,area:f64,lower:usize,upper:usize,rings:Vec<Ring>,ring_heap:Heap<RingItem>,emitting:Option<usize>,emit_at:usize,output:Vec<PathSegment>,
 }
 impl BooleanJob {
- pub fn new(input:BooleanInput)->Result<Self,BooleanError> {
+ pub fn new(input:BooleanInput)->Result<Self,BooleanError> {Self::validate(&input)?;Ok(Self::admit(input))}
+ fn validate(input:&BooleanInput)->Result<(),BooleanError> {
   if input.operands.is_empty()||input.operands.len()>1024||!input.epsilon.is_finite()||!(1e-12..=16.0).contains(&input.epsilon)||!(1..=262144).contains(&input.max_edges)||!(1..=1048576).contains(&input.max_parameters)||!(1..=262144).contains(&input.max_atomic_edges)||!(1..=327680).contains(&input.max_segments)||!(1..=1000000000).contains(&input.max_work) {return Err(BooleanError::Invalid("Invalid boolean contract"));}
-  Ok(Self {input,phase:BooleanPhase::Preparing,work:0,cancelled:false,failure:None,prepared:0,vertices:0,parameters:0,pairs:0,operand:0,contour:0,at:0,entering:true,first:None,previous:None,bounds:[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY],rules:Vec::new(),source:Vec::new(),index_mode:IndexMode::Push,index_at:0,index_heap:Heap::new(index_order),tree:Vec::new(),level:Vec::new(),next_level:Vec::new(),root:usize::MAX,query:Vec::new(),pivot:0,split_at:0,split_started:false,split_heap:Heap::new(f64::total_cmp),split_build:true,split_previous:None,nodes:Vec::new(),grid:BTreeMap::new(),atomic:Vec::new(),atomic_ids:BTreeSet::new(),classify_at:0,classify_mode:ClassifyMode::Start,classify_axis:0,classify_direction:1.0,midpoint:[0.0;2],left_point:[0.0;2],right_point:[0.0;2],nearest:f64::INFINITY,left_winding:Vec::new(),right_winding:Vec::new(),fold_at:0,left_filled:false,right_filled:false,boundary:Vec::new(),outgoing:BTreeMap::new(),boundary_at:0,current:None,start:0,raw:Vec::new(),ring:Vec::new(),positions:BTreeMap::new(),selecting:false,choice_at:0,choice_node:0,reverse_angle:0.0,best:None,best_angle:f64::INFINITY,split_ring:None,ring_split_at:0,ring_split_stop:0,ring_split_copy:true,compact_at:0,compact_vertex:0,compact_mode:CompactMode::Scan,compact_points:Vec::new(),area:0.0,lower:0,upper:0,rings:Vec::new(),ring_heap:Heap::new(ring_order),emitting:None,emit_at:0,output:Vec::new()})
+  Ok(())
+ }
+ /// 📥️ Invalid contracts retain their original owned operands until caller-funded close.
+ pub fn admit(input:BooleanInput)->Self {let failure=Self::validate(&input).err();
+  Self {input,phase:BooleanPhase::Preparing,work:0,cancelled:false,failure,prepared:0,vertices:0,parameters:0,pairs:0,operand:0,contour:0,at:0,entering:true,first:None,previous:None,bounds:[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY],rules:Vec::new(),source:Vec::new(),retired_levels:Vec::new(),retired_points:Vec::new(),index_mode:IndexMode::Push,index_at:0,index_heap:Heap::new(index_order),tree:Vec::new(),level:Vec::new(),next_level:Vec::new(),root:usize::MAX,query:Vec::new(),pivot:0,split_at:0,split_started:false,split_heap:Heap::new(f64::total_cmp),split_build:true,split_previous:None,nodes:Vec::new(),grid:NumericIndex::new(),atomic:Vec::new(),atomic_ids:NumericIndex::new(),classify_at:0,classify_mode:ClassifyMode::Start,classify_axis:0,classify_direction:1.0,midpoint:[0.0;2],left_point:[0.0;2],right_point:[0.0;2],nearest:f64::INFINITY,left_winding:Vec::new(),right_winding:Vec::new(),fold_at:0,left_filled:false,right_filled:false,boundary:Vec::new(),outgoing:NumericIndex::new(),boundary_at:0,current:None,start:0,raw:Vec::new(),ring:Vec::new(),positions:NumericIndex::new(),selecting:false,choice_at:0,choice_node:0,reverse_angle:0.0,best:None,best_angle:f64::INFINITY,split_ring:None,ring_split_at:0,ring_split_stop:0,ring_split_copy:true,compact_at:0,compact_vertex:0,compact_mode:CompactMode::Scan,compact_points:Vec::new(),area:0.0,lower:0,upper:0,rings:Vec::new(),ring_heap:Heap::new(ring_order),emitting:None,emit_at:0,output:Vec::new()}
  }
  fn add_edge(&mut self,a:Vec2,b:Vec2)->Result<(),BooleanError> {
   if length(a,b)==0.0 {return Ok(());}if self.source.len()>=self.input.max_edges {return Err(BooleanError::Invalid("Boolean exceeds edge budget"));}if self.parameters+2>self.input.max_parameters {return Err(BooleanError::Invalid("Boolean exceeds parameter budget"));}
-  self.source.push(Edge {a,b,operand:self.operand,bounds:bounds(a,b),parameters:BTreeSet::from([0.0f64.to_bits(),1.0f64.to_bits()])});self.parameters+=2;Ok(())
+  self.source.push(Edge {a,b,operand:self.operand,bounds:bounds(a,b),parameters:{let mut index=NumericIndex::new();index.insert(0.0f64.to_bits(),());index.insert(1.0f64.to_bits(),());index}});self.parameters+=2;Ok(())
  }
  fn add_parameter(&mut self,index:usize,value:f64)->Result<(),BooleanError> {
   let v=value.clamp(0.0,1.0);let bits=(if v==0.0 {0.0} else {v}).to_bits();
-  if !self.source[index].parameters.contains(&bits) {if self.parameters>=self.input.max_parameters {return Err(BooleanError::Invalid("Boolean exceeds parameter budget"));}self.source[index].parameters.insert(bits);self.parameters+=1;}Ok(())
+  if !self.source[index].parameters.contains_key(&bits) {if self.parameters>=self.input.max_parameters {return Err(BooleanError::Invalid("Boolean exceeds parameter budget"));}self.source[index].parameters.insert(bits,());self.parameters+=1;}Ok(())
  }
  fn intersect(&mut self,left:usize,right:usize)->Result<(),BooleanError> {
   let (a,b)=(&self.source[left],&self.source[right]);let (rx,ry,sx,sy,ox,oy)=(a.b[0]-a.a[0],a.b[1]-a.a[1],b.b[0]-b.a[0],b.b[1]-b.a[1],b.a[0]-a.a[0],b.a[1]-a.a[1]);let denominator=rx*sy-ry*sx;let (la,lb)=(length(a.a,a.b),length(b.a,b.b));let (ta,tb)=(self.input.epsilon/la,self.input.epsilon/lb);
@@ -114,7 +124,7 @@ impl BooleanJob {
   let epsilon=self.input.epsilon;let (x,y)=((p[0]/epsilon).floor() as i64,(p[1]/epsilon).floor() as i64);let mut found=None;
   for dy in -1..=1 {for dx in -1..=1 {if let Some(indices)=self.grid.get(&(x+dx,y+dy)) {for index in indices {if length(self.nodes[*index],p)<=epsilon&&found.is_none_or(|existing|*index<existing) {found=Some(*index);}}}}}
   if let Some(index)=found {return Ok(index);}if self.nodes.len()>=self.input.max_atomic_edges*2 {return Err(BooleanError::Invalid("Boolean exceeds vertex budget"));}
-  let index=self.nodes.len();self.nodes.push(p);let cell=self.grid.entry((x,y)).or_default();if cell.len()>=16 {return Err(BooleanError::Invalid("Boolean spatial precision exceeded"));}cell.push(index);Ok(index)
+  let index=self.nodes.len();self.nodes.push(p);let cell=self.grid.get_or_insert_default((x,y));if cell.len()>=16 {return Err(BooleanError::Invalid("Boolean spatial precision exceeded"));}cell.push(index);Ok(index)
  }
  fn prepare(&mut self)->Result<(),BooleanError> {
   if self.operand==self.input.operands.len() {let magnitude=self.bounds.into_iter().map(f64::abs).fold(0.0f64,f64::max);if !self.source.is_empty()&&self.input.epsilon<magnitude*f64::EPSILON*16.0 {return Err(BooleanError::Invalid("Boolean epsilon is below coordinate precision"));}self.phase=BooleanPhase::Indexing;return Ok(());}
@@ -130,7 +140,7 @@ impl BooleanJob {
    IndexMode::Push=>{if self.index_at<self.source.len() {self.index_heap.push(IndexItem {key:morton(&self.source[self.index_at],self.bounds),edge:self.index_at});self.index_at+=1;}else {self.index_mode=IndexMode::Leaves;}}
    IndexMode::Leaves=>{if let Some(entry)=self.index_heap.pop() {self.level.push(self.tree.len());self.tree.push(Node {bounds:self.source[entry.edge].bounds,left:usize::MAX,right:usize::MAX,edge:Some(entry.edge),maximum:entry.edge});}else {self.index_mode=IndexMode::Levels;self.index_at=0;}}
    IndexMode::Levels=>{
-    if self.level.len()==1 {self.root=self.level[0];self.query.push(self.root);self.phase=BooleanPhase::Intersections;return Ok(());}if self.index_at==self.level.len() {self.level=std::mem::take(&mut self.next_level);self.index_at=0;return Ok(());}
+    if self.level.len()==1 {self.root=self.level[0];self.query.push(self.root);self.phase=BooleanPhase::Intersections;return Ok(());}if self.index_at==self.level.len() {self.retired_levels.push(std::mem::replace(&mut self.level,std::mem::take(&mut self.next_level)));self.index_at=0;return Ok(());}
     let left=self.level[self.index_at];self.index_at+=1;let Some(right)=self.level.get(self.index_at).copied() else {self.next_level.push(left);return Ok(());};self.index_at+=1;
     let (a,b)=(self.tree[left],self.tree[right]);self.next_level.push(self.tree.len());self.tree.push(Node {bounds:merge(a.bounds,b.bounds),left,right,edge:None,maximum:a.maximum.max(b.maximum)});
    }
@@ -142,13 +152,13 @@ impl BooleanJob {
  }
  fn splitting(&mut self)->Result<(),BooleanError> {
   if self.split_at==self.source.len() {self.phase=BooleanPhase::Classifying;return Ok(());}if !self.split_started {self.split_started=true;self.split_build=true;self.split_previous=None;return Ok(());}
-  if self.split_build {if let Some(bits)=self.source[self.split_at].parameters.pop_first() {self.split_heap.push(f64::from_bits(bits));}else {self.split_build=false;}return Ok(());}
+  if self.split_build {if let Some((bits,_))=self.source[self.split_at].parameters.pop_first() {self.split_heap.push(f64::from_bits(bits));}else {self.split_build=false;}return Ok(());}
   let Some(t)=self.split_heap.pop() else {self.split_started=false;self.split_at+=1;return Ok(());};let previous=self.split_previous.replace(t);let Some(previous)=previous else {return Ok(());};if previous==t {return Ok(());}
   let (p,q)=(interpolate(&self.source[self.split_at],previous)?,interpolate(&self.source[self.split_at],t)?);if length(p,q)<=self.input.epsilon {return Ok(());}let (from,to)=(self.intern(p)?,self.intern(q)?);if from==to {return Ok(());}let pair=(from.min(to),from.max(to));
-  if !self.atomic_ids.contains(&pair) {if self.atomic.len()>=self.input.max_atomic_edges {return Err(BooleanError::Invalid("Boolean exceeds atomic edge budget"));}self.atomic_ids.insert(pair);self.atomic.push(pair);}Ok(())
+  if !self.atomic_ids.contains_key(&pair) {if self.atomic.len()>=self.input.max_atomic_edges {return Err(BooleanError::Invalid("Boolean exceeds atomic edge budget"));}self.atomic_ids.insert(pair,());self.atomic.push(pair);}Ok(())
  }
  fn classify(&mut self)->Result<(),BooleanError> {
-  if self.classify_at==self.atomic.len() {self.query=Vec::new();self.phase=BooleanPhase::Contours;return Ok(());}let (from,to)=self.atomic[self.classify_at];let (a,b)=(self.nodes[from],self.nodes[to]);
+  if self.classify_at==self.atomic.len() {self.phase=BooleanPhase::Contours;return Ok(());}let (from,to)=self.atomic[self.classify_at];let (a,b)=(self.nodes[from],self.nodes[to]);
   match self.classify_mode {
    ClassifyMode::Start=>{self.midpoint=[(a[0]+b[0])/2.0,(a[1]+b[1])/2.0];let mut distance=f64::INFINITY;for axis in 0..2{for direction in [-1.0,1.0]{let next=if direction>0.0{self.bounds[axis+2]-self.midpoint[axis]}else{self.midpoint[axis]-self.bounds[axis]};if next<distance{distance=next;self.classify_axis=axis;self.classify_direction=direction;}}}let len=length(a,b);self.nearest=4.0*(len*0.25).min((self.input.epsilon*2.0).max(len*1e-7));self.query.push(self.root);self.classify_mode=ClassifyMode::Nearest;}
    ClassifyMode::Nearest=>{
@@ -164,7 +174,7 @@ impl BooleanJob {
     if self.fold_at<self.rules.len() {let rule=self.rules[self.fold_at];let inside=|n:i32|if rule==BooleanFillRule::Evenodd {n%2!=0} else {n!=0};let (l,r)=(inside(self.left_winding[self.fold_at]),inside(self.right_winding[self.fold_at]));
      self.left_filled=if self.fold_at==0 {l} else {self.input.operation.apply(self.left_filled,l)};self.right_filled=if self.fold_at==0 {r} else {self.input.operation.apply(self.right_filled,r)};self.fold_at+=1;return Ok(());
     }
-    if self.left_filled!=self.right_filled {let edge=if self.left_filled {Boundary {from,to,used:false}} else {Boundary {from:to,to:from,used:false}};let index=self.boundary.len();self.boundary.push(edge);self.outgoing.entry(edge.from).or_default().push(index);}
+    if self.left_filled!=self.right_filled {let edge=if self.left_filled {Boundary {from,to,used:false}} else {Boundary {from:to,to:from,used:false}};let index=self.boundary.len();self.boundary.push(edge);self.outgoing.get_or_insert_default(edge.from).push(index);}
     self.classify_at+=1;self.classify_mode=ClassifyMode::Start;
    }
   }Ok(())
@@ -172,7 +182,7 @@ impl BooleanJob {
  fn contours(&mut self)->Result<(),BooleanError> {
   if let Some(split)=self.split_ring.as_mut() {if self.ring_split_copy {if self.ring_split_at<self.ring.len() {split.push(self.ring[self.ring_split_at]);self.ring_split_at+=1;return Ok(());}self.ring_split_copy=false;return Ok(());}if self.ring.len()>self.ring_split_stop {self.positions.remove(&self.ring.pop().unwrap());return Ok(());}if split.len()<3 {return Err(BooleanError::Invalid("Boolean split contour is degenerate"));}self.raw.push(self.split_ring.take().unwrap());return Ok(());}
   if self.selecting {let choices=self.outgoing.get(&self.choice_node).map(Vec::as_slice).unwrap_or(&[]);if let Some(index)=choices.get(self.choice_at).copied() {self.choice_at+=1;let e=self.boundary[index];if !e.used {let (a,b)=(self.nodes[e.from],self.nodes[e.to]);let angle=(self.reverse_angle-(b[1]-a[1]).atan2(b[0]-a[0])+std::f64::consts::TAU)%std::f64::consts::TAU;if angle<self.best_angle {self.best=Some(index);self.best_angle=angle;}}return Ok(());}self.current=Some(self.best.ok_or(BooleanError::Invalid("Boolean boundary is open"))?);self.selecting=false;return Ok(());}
-  let Some(current)=self.current else {if self.boundary_at==self.boundary.len() {self.phase=BooleanPhase::Compacting;return Ok(());}let index=self.boundary_at;self.boundary_at+=1;if self.boundary[index].used {return Ok(());}self.current=Some(index);self.start=self.boundary[index].from;self.ring=Vec::new();self.positions=BTreeMap::new();return Ok(());};
+  let Some(current)=self.current else {if self.boundary_at==self.boundary.len() {self.phase=BooleanPhase::Compacting;return Ok(());}let index=self.boundary_at;self.boundary_at+=1;if self.boundary[index].used {return Ok(());}self.current=Some(index);self.start=self.boundary[index].from;self.ring=Vec::new();self.positions.reset();return Ok(());};
   let e=self.boundary[current];if e.used {return Err(BooleanError::Invalid("Boolean boundary is not manifold"));}if let Some(repeated)=self.positions.get(&e.from).copied() {self.split_ring=Some(Vec::new());self.ring_split_at=repeated;self.ring_split_stop=repeated;self.ring_split_copy=true;return Ok(());}
   self.positions.insert(e.from,self.ring.len());self.ring.push(e.from);self.boundary[current].used=true;if e.to==self.start {self.raw.push(std::mem::take(&mut self.ring));self.current=None;return Ok(());}
   self.choice_node=e.to;self.choice_at=0;self.best=None;self.best_angle=f64::INFINITY;let (a,b)=(self.nodes[e.from],self.nodes[e.to]);self.reverse_angle=(a[1]-b[1]).atan2(a[0]-b[0]);self.selecting=true;Ok(())
@@ -184,7 +194,7 @@ impl BooleanJob {
   }
   let points=&self.compact_points;let at=self.compact_vertex;self.compact_vertex+=1;if at<points.len() {let (p,l,u)=(points[at],points[self.lower],points[self.upper]);if p[0]<l[0]||p[0]==l[0]&&p[1]<l[1] {self.lower=at;}if p[0]<u[0]||p[0]==u[0]&&p[1]>u[1] {self.upper=at;}if at>0&&at<points.len()-1 {self.area+=cross(points[0],p,points[at+1])/2.0;}return Ok(());}
   if points.len()>=3&&self.area.abs()>self.input.epsilon*self.input.epsilon {let anchor=if self.area>0.0 {self.lower} else {self.upper};let (a,b)=(points[anchor],points[(anchor+1)%points.len()]);let angle=(b[1]-a[1]).atan2(b[0]-a[0]);let ring=self.rings.len();self.rings.push(Ring {points:std::mem::take(&mut self.compact_points),anchor});self.ring_heap.push(RingItem {key:[a[0],a[1],angle,self.area],ring});}
-  self.compact_at+=1;self.compact_vertex=0;self.compact_points=Vec::new();self.compact_mode=CompactMode::Scan;Ok(())
+  self.compact_at+=1;self.compact_vertex=0;if !self.compact_points.is_empty(){self.retired_points.push(std::mem::take(&mut self.compact_points));}self.compact_mode=CompactMode::Scan;Ok(())
  }
  fn emit(&mut self)->Result<(),BooleanError> {
   let Some(index)=self.emitting else {if let Some(item)=self.ring_heap.pop() {self.emitting=Some(item.ring);self.emit_at=0;}else {self.phase=BooleanPhase::Complete;}return Ok(());};
@@ -209,50 +219,11 @@ impl BooleanJob {
   let operands=std::mem::take(&mut self.input.operands);
   let output=if self.phase==BooleanPhase::Complete&&!self.cancelled&&self.failure.is_none(){Some(std::mem::take(&mut self.output))}else{None};
   self.cancelled=true;self.emitting=None;
-  (BooleanRetirement{job:Some(self),edge:None,slot:0,counter:WorkRetirementCounter::default()},operands,output)
+  (BooleanRetirement::new(self),operands,output)
  }
- pub fn cancel(&mut self) {self.cancelled=true;self.input.operands=Vec::new();self.source=Vec::new();self.tree=Vec::new();self.query=Vec::new();self.level=Vec::new();self.next_level=Vec::new();self.index_heap=Heap::new(index_order);self.split_heap=Heap::new(f64::total_cmp);self.nodes=Vec::new();self.grid=BTreeMap::new();self.atomic=Vec::new();self.atomic_ids=BTreeSet::new();self.boundary=Vec::new();self.outgoing=BTreeMap::new();self.raw=Vec::new();self.ring=Vec::new();self.positions=BTreeMap::new();self.split_ring=None;self.compact_points=Vec::new();self.rings=Vec::new();self.ring_heap=Heap::new(ring_order);self.emitting=None;self.output=Vec::new();self.left_winding=Vec::new();self.right_winding=Vec::new();}
+ pub fn cancel(&mut self) {self.cancelled=true;}
 }
-/// 🧽️ Retain interrupted arrangement owners until every nested collection is empty.
-pub struct BooleanRetirement{job:Option<BooleanJob>,edge:Option<Edge>,slot:u8,counter:WorkRetirementCounter}
-impl BooleanRetirement{
- pub fn terminal_is_empty(&self)->bool{self.job.is_none()&&self.edge.is_none()}
- pub fn advance(&mut self,grant:usize)->Result<BooleanRetirementProgress,BooleanError>{
-  let mut counter=self.counter;let p=counter.advance(grant,||self.step()).map_err(BooleanError::Invalid)?;self.counter=counter;Ok(p)
- }
- fn step(&mut self)->bool{
-  let Some(job)=self.job.as_mut()else{return true;};
-  match self.slot{
-   0=>job.input.operands=Vec::new(),
-   1=>job.rules=Vec::new(),
-   2=>{if let Some(edge)=self.edge.as_mut(){if edge.parameters.pop_first().is_some(){return false;}self.edge=None;return false;}self.edge=job.source.pop();if self.edge.is_some(){return false;}job.source=Vec::new();},
-   3=>job.index_heap.values=Vec::new(),
-   4=>job.tree=Vec::new(),
-   5=>job.level=Vec::new(),
-   6=>job.next_level=Vec::new(),
-   7=>job.query=Vec::new(),
-   8=>job.split_heap.values=Vec::new(),
-   9=>job.nodes=Vec::new(),
-   10=>{if job.grid.pop_first().is_some(){return false;}job.grid=BTreeMap::new();},
-   11=>job.atomic=Vec::new(),
-   12=>{if job.atomic_ids.pop_first().is_some(){return false;}job.atomic_ids=BTreeSet::new();},
-   13=>job.left_winding=Vec::new(),
-   14=>job.right_winding=Vec::new(),
-   15=>job.boundary=Vec::new(),
-   16=>{if job.outgoing.pop_first().is_some(){return false;}job.outgoing=BTreeMap::new();},
-   17=>{if job.raw.pop().is_some(){return false;}job.raw=Vec::new();},
-   18=>job.ring=Vec::new(),
-   19=>{if job.positions.pop_first().is_some(){return false;}job.positions=BTreeMap::new();},
-   20=>job.split_ring=None,
-   21=>job.compact_points=Vec::new(),
-   22=>{if job.rings.pop().is_some(){return false;}job.rings=Vec::new();},
-   23=>job.ring_heap.values=Vec::new(),
-   24=>job.output=Vec::new(),
-   _=>unreachable!(),
-  }
-  self.slot+=1;if self.slot==25{self.job=None;return true;}false
- }
-}
+crate::physical_work_retirement!(BooleanRetirement,BooleanJob,BooleanError,|_:&str|BooleanError::Invalid("Boolean physical retirement refused"));
 fn path_operand(segments:&[PathSegment])->Result<BooleanOperand,DrawingError> {
  if segments.len()>65536 {return Err(DrawingError::InvalidInput("Boolean source segment budget exceeded".into()));}let mut contours=Vec::new();let mut points=Vec::new();
  for segment in segments {match segment {PathSegment::Move {to}=>{if !points.is_empty() {return Err(DrawingError::InvalidInput("Boolean input requires closed contours".into()));}points.push(*to);},PathSegment::Line {to}=>{if points.is_empty() {return Err(DrawingError::InvalidInput("Boolean line requires a contour origin".into()));}points.push(*to);},PathSegment::Close=>{if !points.is_empty() {contours.push(std::mem::take(&mut points));}},_=>return Err(DrawingError::InvalidInput("Boolean curves require explicit path preparation".into()))}}
@@ -275,3 +246,6 @@ mod tests;
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod bounded_tests;
+
+semio_framework_value::artifact_retire_leaf!(BooleanOperation,BooleanFillRule,BooleanPhase,BooleanProgress,Node,Boundary,IndexItem,RingItem,IndexMode,ClassifyMode,CompactMode);
+impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for Heap<T>{fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{self.values.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.values.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}}

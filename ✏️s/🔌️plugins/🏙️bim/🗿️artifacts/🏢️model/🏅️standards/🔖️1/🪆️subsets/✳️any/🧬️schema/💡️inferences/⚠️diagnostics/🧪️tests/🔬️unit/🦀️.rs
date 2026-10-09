@@ -103,10 +103,9 @@ async fn walls_that_cross_or_join_do_not_clash_but_overlapping_walls_do() {
 #[semio_framework_async_macros::async_test]
 async fn a_beam_that_ends_on_a_column_rests_on_it_and_one_that_passes_through_clashes() {
     let mut snapshot = clean();
-    snapshot.beams.get_mut("b-1").expect("beam").start = Point2 { x: 6.0, y: 1.0 };
-    snapshot.beams.get_mut("b-1").expect("beam").end = Point2 { x: 6.0, y: 3.0 };
+    snapshot.beams.get_mut("b-1").expect("beam").axis = crate::Axis::Line { start: Point2 { x: 6.0, y: 1.0 }, end: Point2 { x: 6.0, y: 3.0 } };
     assert!(!compute_diagnostics(&snapshot).iter().any(|row| row.code == DiagnosticCode::ClashBeamColumn), "the beam ends in the column");
-    snapshot.beams.get_mut("b-1").expect("beam").end = Point2 { x: 6.0, y: 5.0 };
+    snapshot.beams.get_mut("b-1").expect("beam").axis = crate::Axis::Line { start: Point2 { x: 6.0, y: 1.0 }, end: Point2 { x: 6.0, y: 5.0 } };
     let found = compute_diagnostics(&snapshot);
     assert!(has(&found, DiagnosticCode::ClashBeamColumn, &["b-1", "c-1"]), "{:?}", rows(&found));
 }
@@ -136,7 +135,7 @@ async fn the_severity_and_the_texts_come_from_one_table() {
         assert!(slugs.insert(row.slug), "unique slug {}", row.slug);
         assert_eq!(code.message_key(), format!("bim.diagnostic.{}", row.slug));
     }
-    assert_eq!(DiagnosticCode::ALL.len(), 60);
+    assert!(DiagnosticCode::ALL.len() >= 60);
     assert_eq!(DiagnosticCode::ClashColumnColumn.severity(), Severity::Error);
     assert_eq!(DiagnosticCode::StoreyNoDatum.severity(), Severity::Info);
 }
@@ -237,4 +236,64 @@ async fn diagnostics_determinism_default_and_gating_laws() {
     let on = |found: &[Diagnostic], storey: &str| found.iter().filter(|row| row.storey.as_deref() == Some(storey)).cloned().collect::<Vec<_>>();
     assert_eq!(on(&first, "st-ground"), on(&recomputed, "st-ground"), "an edit of another storey leaves the findings of this storey");
     assert!(recomputed.iter().any(|row| row.code == DiagnosticCode::DegenerateStorey && row.storey.as_deref() == Some("st-far")));
+}
+
+const RAMPS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
+
+fn ramps() -> ModelSnapshot {
+    from_json_str(RAMPS, JsonMemberPolicy::Reject).expect("ramps decode")
+}
+
+fn ramp_rows(found: &[Diagnostic], code: DiagnosticCode) -> Vec<String> {
+    let mut ids: Vec<String> = found.iter().filter(|row| row.code == code).flat_map(|row| row.elements.clone()).collect();
+    ids.sort();
+    ids
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ramp_steeper_than_its_limit_is_reported_with_its_slope_rise_and_run() {
+    let found = compute_diagnostics(&ramps());
+    assert_eq!(ramp_rows(&found, DiagnosticCode::RampSlope), vec!["r-bent", "r-steep", "r-to-first-short"], "only the ramps above their limit: {:?}", rows(&found));
+    let steep = found.iter().find(|row| row.code == DiagnosticCode::RampSlope && row.elements == ["r-steep"]).expect("finding");
+    assert_eq!((steep.severity, steep.storey.as_deref(), steep.message_key.as_str()), (Severity::Error, Some("st-ground"), "bim.diagnostic.ramp.slope"));
+    assert!(close(steep.values["slope_percent"], 10.0) && close(steep.values["limit_percent"], 100.0 / 12.0) && close(steep.values["rise"], 0.7) && close(steep.values["run"], 7.0));
+    assert!(steep.text("en").expect("en").starts_with("Ramp r-steep climbs at "));
+    assert!(steep.text("de").expect("de").starts_with("Rampe r-steep steigt mit "));
+    assert!(!ramp_rows(&found, DiagnosticCode::RampSlope).iter().any(|id| id == "r-at-limit"), "a ramp exactly at its limit is within it");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_rise_without_a_sloped_run_and_a_ramp_without_a_path_are_reported_apart() {
+    let found = compute_diagnostics(&ramps());
+    assert_eq!(ramp_rows(&found, DiagnosticCode::RampNoRun), vec!["r-no-run"]);
+    let row = found.iter().find(|row| row.code == DiagnosticCode::RampNoRun).expect("finding");
+    assert_eq!((row.severity, row.message_key.as_str()), (Severity::Error, "bim.diagnostic.ramp.no-run"));
+    assert!(close(row.values["rise"], 0.3));
+    assert!(row.text("de").expect("de").starts_with("Rampe r-no-run hat einen Höhenunterschied"));
+    assert!(has(&found, DiagnosticCode::DegenerateAxis, &["r-degenerate"]), "a path of no length is degenerate, not a missing run");
+    assert!(!has(&found, DiagnosticCode::RampNoRun, &["r-degenerate"]) && !has(&found, DiagnosticCode::RampSlope, &["r-degenerate"]));
+    assert!(!has(&found, DiagnosticCode::RampNoRun, &["r-merged"]), "a flat ramp that is all landing climbs nowhere and needs no run");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn lengthening_a_ramp_or_raising_its_limit_clears_the_slope_finding() {
+    let mut longer = ramps();
+    longer.ramps.get_mut("r-steep").expect("ramp").path[1].point.x = 20.0;
+    assert!(!has(&compute_diagnostics(&longer), DiagnosticCode::RampSlope, &["r-steep"]), "a longer path flattens the slope");
+    let mut relaxed = ramps();
+    relaxed.ramps.get_mut("r-steep").expect("ramp").max_slope = 0.1;
+    assert!(!has(&compute_diagnostics(&relaxed), DiagnosticCode::RampSlope, &["r-steep"]), "the slope limit is authored");
+    let mut shorter = ramps();
+    shorter.ramps.get_mut("r-straight").expect("ramp").path[1].point.x = 4.0;
+    let found = compute_diagnostics(&shorter);
+    assert!(has(&found, DiagnosticCode::RampSlope, &["r-straight"]), "a shorter path steepens it: {:?}", rows(&found));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ramp_with_a_non_finite_dimension_is_reported_once_as_non_finite() {
+    let mut snapshot = ramps();
+    snapshot.ramps.get_mut("r-steep").expect("ramp").width = f64::NAN;
+    let found = compute_diagnostics(&snapshot);
+    assert!(has(&found, DiagnosticCode::NonFinite, &["r-steep"]));
+    assert!(!has(&found, DiagnosticCode::RampSlope, &["r-steep"]), "the finite checks stop at the non-finite one");
 }

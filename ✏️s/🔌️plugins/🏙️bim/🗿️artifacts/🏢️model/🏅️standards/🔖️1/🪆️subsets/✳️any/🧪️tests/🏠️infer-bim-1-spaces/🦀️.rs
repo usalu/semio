@@ -25,6 +25,11 @@ mod subject {
     pub fn rooms(ctx: &Context) -> Result<Outcome, String> {
         infer(ctx)
     }
+
+    /// 🔲️ The room table of the rooms model after four ceiling edits.
+    pub fn hung_edit(ctx: &Context) -> Result<Outcome, String> {
+        infer(ctx)
+    }
 }
 //#endregion 🔖️Subject
 
@@ -36,6 +41,7 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built.subject("spaces-rooms", subject::rooms);
+        built = built.subject("spaces-hung-edit", subject::hung_edit);
     }
     built
 }

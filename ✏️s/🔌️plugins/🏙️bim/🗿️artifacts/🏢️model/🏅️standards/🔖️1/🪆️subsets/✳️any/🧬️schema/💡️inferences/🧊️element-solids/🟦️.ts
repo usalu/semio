@@ -1,6 +1,6 @@
 /** 🧊️ `element-solids`: the owned triangle mesh of every building element, keyed by element id, in building-local metres; `placement` is the instance transform into the world. */
 
-export type SolidFamily = "Wall" | "CurtainWall" | "Window" | "Door" | "Column" | "Beam" | "Slab" | "Roof" | "Stair" | "Railing";
+export type SolidFamily = "Wall" | "CurtainWall" | "Window" | "Door" | "Column" | "Beam" | "Slab" | "Roof" | "Stair" | "Ramp" | "Railing" | "Ceiling";
 
 export interface SolidPoint {
   x: number;

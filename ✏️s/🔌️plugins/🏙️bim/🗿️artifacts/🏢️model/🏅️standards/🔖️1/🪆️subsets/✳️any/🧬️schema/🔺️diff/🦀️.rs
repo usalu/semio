@@ -150,6 +150,50 @@ impl Patch<PropertySet> for PropertySetPatch {
         self.assigned.values().all(BTreeMap::is_empty)
     }
 }
+
+/// 🗂️ Sparse patch of one element's classifications: classification system → code (`None` removes the classification of that system).
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct ClassificationSetPatch {
+    pub assigned: BTreeMap<String, Option<String>>,
+}
+
+impl Patch<ClassificationSet> for ClassificationSetPatch {
+    fn write(&self, base: &ClassificationSet) -> ClassificationSet {
+        let mut next = base.clone();
+        for (system, code) in &self.assigned {
+            match code {
+                Some(code) => {
+                    next.insert(system.clone(), code.clone());
+                }
+                None => {
+                    next.remove(system);
+                }
+            }
+        }
+        next
+    }
+
+    fn restoring(&self, base: &ClassificationSet) -> Self {
+        Self { assigned: self.assigned.keys().map(|system| (system.clone(), base.get(system).cloned())).collect() }
+    }
+
+    fn merge(&mut self, later: Self) {
+        self.assigned.extend(later.assigned);
+    }
+
+    fn minimal(&self, base: &ClassificationSet) -> Self {
+        Self { assigned: self.assigned.iter().filter(|(system, code)| base.get(*system) != code.as_ref()).map(|(system, code)| (system.clone(), code.clone())).collect() }
+    }
+
+    fn touched(&self) -> Vec<String> {
+        self.assigned.keys().cloned().collect()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.assigned.is_empty()
+    }
+}
 //#endregion 🔖️PatchAlgebra
 
 //#region 🔖️KeyedDelta
@@ -298,12 +342,14 @@ macro_rules! collections {
             beam_types: BeamType, BeamTypePatch;
             window_types: WindowType, WindowTypePatch;
             door_types: DoorType, DoorTypePatch;
+            curtain_wall_types: CurtainWallType, CurtainWallTypePatch;
             sites: Site, SitePatch;
             buildings: Building, BuildingPatch;
             storeys: Storey, StoreyPatch;
             grids: GridLine, GridLinePatch;
             walls: Wall, WallPatch;
             curtain_walls: CurtainWall, CurtainWallPatch;
+            curtain_panel_overrides: CurtainPanelOverride, CurtainPanelOverridePatch;
             columns: Column, ColumnPatch;
             beams: Beam, BeamPatch;
             slabs: Slab, SlabPatch;
@@ -311,9 +357,30 @@ macro_rules! collections {
             openings: Opening, OpeningPatch;
             stairs: Stair, StairPatch;
             railings: Railing, RailingPatch;
+            ramps: Ramp, RampPatch;
+            ceiling_types: CeilingType, CeilingTypePatch;
+            ceilings: Ceiling, CeilingPatch;
             spaces: Space, SpacePatch;
+            zones: Zone, ZonePatch;
+            area_schemes: AreaScheme, AreaSchemePatch;
+            views: View, ViewPatch;
+            sheets: Sheet, SheetPatch;
+            viewports: Viewport, ViewportPatch;
+            sheet_revisions: SheetRevision, SheetRevisionPatch;
+            dimensions: Dimension, DimensionPatch;
+            tags: Tag, TagPatch;
+            text_notes: TextNote, TextNotePatch;
+            leaders: Leader, LeaderPatch;
+            annotation_styles: AnnotationStyle, AnnotationStylePatch;
+            wall_sweeps: WallSweep, WallSweepPatch;
+            schedules: Schedule, SchedulePatch;
+            families: Family, FamilyPatch;
+            family_parameters: FamilyParameter, FamilyParameterPatch;
+            family_solids: FamilySolid, FamilySolidPatch;
+            property_templates: PropertyTemplate, PropertyTemplatePatch;
+            classification_systems: ClassificationSystem, ClassificationSystemPatch;
             properties: PropertySet, PropertySetPatch;
-            classifications: Classification, ClassificationPatch;
+            classifications: ClassificationSet, ClassificationSetPatch;
         }
     };
 }

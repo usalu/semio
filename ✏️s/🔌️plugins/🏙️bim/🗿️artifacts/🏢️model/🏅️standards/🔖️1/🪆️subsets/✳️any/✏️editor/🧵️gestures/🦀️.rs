@@ -4,8 +4,11 @@
 //! live in the app instance's operation owner, so a gesture survives from one pointer command to the next and dies with its window, its utility or its instance.
 //!
 //! Layout: `plane` (geometry), `snap` (what a pointer means), `session` (events, context, steps, previews), one node per tool family (`chain`, `area`, `point`, `opening`, `select`,
-//! `transform`), `overlay` (marks to canvas records). This node owns the registry of tools, the owner and `run`, the one entry the pointer commands call.
+//! `transform`, `split`), `typed` (the keyboard twin of the pointer: typed points and, through `run_cursor`, the arrow-key cursor), `overlay` (marks to canvas records). This node owns the registry of tools, the owner and `run` and `run_typed`, the entries the
+//! pointer and keyboard commands call.
 
+#[path = "📏️annotate/🦀️.rs"]
+pub mod annotate;
 #[path = "🧩️area/🦀️.rs"]
 pub mod area;
 #[path = "🧱️chain/🦀️.rs"]
@@ -24,13 +27,24 @@ pub mod select;
 pub mod session;
 #[path = "🧲️snap/🦀️.rs"]
 pub mod snap;
+#[path = "🔪️split/🦀️.rs"]
+pub mod split;
 #[path = "🚚️transform/🦀️.rs"]
 pub mod transform;
+#[path = "👯️duplicate/🦀️.rs"]
+pub mod duplicate;
+#[path = "✂️reshape/🦀️.rs"]
+pub mod reshape;
+#[path = "⌨️typed/🦀️.rs"]
+pub mod typed;
+#[path = "🖼️viewports/🦀️.rs"]
+pub mod viewports;
 
+use self::plane::P;
 use self::session::{Modifiers, Pointer, Preview, Step, Surface, Tool, ToolContext, ToolEvent};
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{fault, select_effect};
-use crate::editor::bim::modes::edit::windows::{plan, section, world};
+use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use crate::editor::bim::transient::BimWindowTransient;
 use crate::editor::bim::BimDispatchCtx;
 use crate::{ModelMutation, ModelSnapshot};
@@ -38,16 +52,18 @@ use semio_framework_plugin::{ArtifactInstanceOperationOwner, ArtifactView, Effec
 use std::collections::BTreeMap;
 
 //#region 🔖️Registry
-/// 🖱️ The commands that carry a pointer or a key to the gesture of the addressed window.
-pub const POINTER_COMMAND_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasCommitDraft", "canvasEscape", "worldPointerDown", "worldPointerMove"];
+/// 🖱️ The commands that carry a pointer, a key or a typed line to the gesture of the addressed window.
+pub const POINTER_COMMAND_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasCommitDraft", "canvasEscape", "worldPointerDown", "worldPointerMove", "engagementInput", "engagementSubmit", "cursorLeft", "cursorRight", "cursorUp", "cursorDown", "cursorLeftFar", "cursorRightFar", "cursorUpFar", "cursorDownFar", "cursorPlace"];
 
-/// ⌨️ The keys that drive a gesture in progress: Escape cancels it, Enter finishes it.
-pub const GESTURE_KEYBINDINGS: &[(&str, &str)] = &[("escape", "canvasEscape"), ("enter", "canvasCommitDraft")];
+/// ⌨️ The keys that drive a gesture in progress: Escape cancels it, Enter finishes it, the arrow keys with the command key move the keyboard cursor by a fine step and with shift by a coarse one, and Enter with the command key clicks at the cursor.
+pub const GESTURE_KEYBINDINGS: &[(&str, &str)] = &[("escape", "canvasEscape"), ("enter", "canvasCommitDraft"), ("mod+arrowleft", "cursorLeft"), ("mod+arrowright", "cursorRight"), ("mod+arrowup", "cursorUp"), ("mod+arrowdown", "cursorDown"), ("mod+shift+arrowleft", "cursorLeftFar"), ("mod+shift+arrowright", "cursorRightFar"), ("mod+shift+arrowup", "cursorUpFar"), ("mod+shift+arrowdown", "cursorDownFar"), ("mod+enter", "cursorPlace")];
 
 /// 🛠️ Every utility that owns a gesture, with the tool it arms.
 pub fn build_tool(utility: &str, window_kind: &str) -> Box<dyn Tool> {
     use opening::Kind as Opening;
     match utility {
+        "select" if window_kind == sheet::WINDOW_KIND_ID => Box::<viewports::Arrange>::default(),
+        "viewport" => Box::<viewports::Place>::default(),
         "select" if window_kind != world::WINDOW_KIND_ID => Box::new(select::Select::default()),
         "move" => Box::new(transform::Transform::new(transform::Kind::Move)),
         "rotate" => Box::new(transform::Transform::new(transform::Kind::Rotate)),
@@ -56,10 +72,27 @@ pub fn build_tool(utility: &str, window_kind: &str) -> Box<dyn Tool> {
         "curtain-wall" => Box::new(chain::Chain::new(chain::Kind::CurtainWall)),
         "beam" => Box::new(chain::Chain::new(chain::Kind::Beam)),
         "railing" => Box::new(chain::Chain::new(chain::Kind::Railing)),
+        "ramp" => Box::new(chain::Chain::new(chain::Kind::Ramp)),
         "grid" => Box::new(chain::Chain::new(chain::Kind::Grid)),
         "measure" => Box::new(chain::Chain::new(chain::Kind::Measure)),
         "slab" => Box::new(area::Area::new(area::Kind::Slab)),
         "slab-walls" => Box::new(area::Area::new(area::Kind::SlabFromWalls)),
+        "ceiling" => Box::new(area::Area::new(area::Kind::Ceiling)),
+        "ceiling-space" => Box::new(area::Area::new(area::Kind::CeilingFromSpace)),
+        "split-wall" => Box::<split::Split>::default(),
+        "copy" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Copy)),
+        "mirror" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Mirror)),
+        "array" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Array)),
+        "array-radial" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Radial)),
+        "offset" => Box::new(reshape::Reshape::new(reshape::Kind::Offset)),
+        "trim" => Box::new(reshape::Reshape::new(reshape::Kind::Trim)),
+        "extend" => Box::new(reshape::Reshape::new(reshape::Kind::Extend)),
+        "align" => Box::new(reshape::Reshape::new(reshape::Kind::Align)),
+        "split" => Box::new(reshape::Reshape::new(reshape::Kind::Split)),
+        "dimension" => Box::new(annotate::Annotate::new(annotate::Kind::Dimension)),
+        "tag" => Box::new(annotate::Annotate::new(annotate::Kind::Tag)),
+        "text-note" => Box::new(annotate::Annotate::new(annotate::Kind::Note)),
+        "leader" => Box::new(annotate::Annotate::new(annotate::Kind::Leader)),
         "roof" => Box::new(area::Area::new(area::Kind::Roof)),
         "column" => Box::new(point::Point::new(point::Kind::Column)),
         "space" => Box::new(point::Point::new(point::Kind::Space)),
@@ -77,11 +110,12 @@ pub fn build_tool(utility: &str, window_kind: &str) -> Box<dyn Tool> {
 pub struct ToolSession {
     utility: String,
     tool: Box<dyn Tool>,
+    last: Option<P>,
 }
 
 impl ToolSession {
     pub fn new(utility: &str, window_kind: &str) -> Self {
-        Self { utility: utility.to_string(), tool: build_tool(utility, window_kind) }
+        Self { utility: utility.to_string(), tool: build_tool(utility, window_kind), last: None }
     }
 
     pub fn utility(&self) -> &str {
@@ -90,8 +124,48 @@ impl ToolSession {
 
     /// ➡️ Advances the statechart by one event and projects the marks it shows afterwards.
     pub fn advance(&mut self, ctx: &mut ToolContext<'_>, event: &ToolEvent) -> (Step, Preview) {
+        if let ToolEvent::Down(pointer) | ToolEvent::Move(pointer) | ToolEvent::Up(pointer) | ToolEvent::Double(pointer) = event {
+            self.last = Some(pointer.at);
+        }
         let step = self.tool.event(ctx, event);
         (step, self.tool.preview(ctx))
+    }
+
+    /// ⌨️ Feeds one typed line to the tool as a click at the point it names: a press, the release and a move to the same exact point, in one step. An empty line finishes the gesture, as
+    /// Enter does; a line that names no point is refused and leaves the gesture untouched.
+    pub fn enter(&mut self, ctx: &mut ToolContext<'_>, line: &str) -> (Step, Preview) {
+        let Some(entry) = typed::parse(line) else { return (Step::refuse(typed::INVALID), self.tool.preview(ctx)) };
+        let Some(at) = typed::resolve(&entry, self.tool.anchor(), self.last) else { return self.advance(ctx, &ToolEvent::Finish) };
+        self.click(ctx, at)
+    }
+
+    fn click(&mut self, ctx: &mut ToolContext<'_>, at: P) -> (Step, Preview) {
+        let pointer = Pointer { at, modifiers: Modifiers::default(), tolerance: typed::REACH };
+        let mut step = Step::default();
+        for event in [ToolEvent::Down(pointer), ToolEvent::Up(pointer), ToolEvent::Move(pointer)] {
+            step = step.then(self.advance(ctx, &event).0);
+            if step.refused.is_some() {
+                break;
+            }
+        }
+        (step, self.tool.preview(ctx))
+    }
+
+    /// ⌨️ Where the keyboard cursor stands: where the pointer last was, else the point the gesture hangs on, else `start`.
+    pub fn cursor(&self, start: P) -> P {
+        self.last.or_else(|| self.tool.anchor()).unwrap_or(start)
+    }
+
+    /// ⌨️ Moves the keyboard cursor by `delta` metres from where the pointer last was (else the point the gesture hangs on, else `start`) and shows the tool's marks there, as a pointer move to the exact point would.
+    pub fn nudge(&mut self, ctx: &mut ToolContext<'_>, delta: P, start: P) -> (Step, Preview) {
+        let at = typed::resolve(&typed::Entry::Relative(delta), Some(self.cursor(start)), None).unwrap_or(start);
+        self.advance(ctx, &ToolEvent::Move(Pointer { at, modifiers: Modifiers::default(), tolerance: typed::REACH }))
+    }
+
+    /// ⌨️ Clicks at the keyboard cursor, as the typed point `x, y` would.
+    pub fn place(&mut self, ctx: &mut ToolContext<'_>, start: P) -> (Step, Preview) {
+        let at = self.cursor(start);
+        self.click(ctx, at)
     }
 }
 
@@ -104,13 +178,29 @@ pub struct GestureOwner {
 impl GestureOwner {
     /// ➡️ Advances the session of `window` for `utility`; a session started for another utility is dropped first (a utility switch cancels the gesture in progress).
     pub fn advance(&mut self, window: &str, window_kind: &str, utility: &str, ctx: &mut ToolContext<'_>, event: &ToolEvent) -> (Step, Preview) {
+        self.session(window, window_kind, utility).advance(ctx, event)
+    }
+
+    /// ⌨️ Feeds the typed `line` to the session of `window` for `utility`, started afresh when it was started for another utility.
+    pub fn enter(&mut self, window: &str, window_kind: &str, utility: &str, ctx: &mut ToolContext<'_>, line: &str) -> (Step, Preview) {
+        self.session(window, window_kind, utility).enter(ctx, line)
+    }
+
+    /// ⌨️ Moves the keyboard cursor of the session of `window` by `delta`, or clicks at it when there is no delta.
+    #[allow(clippy::too_many_arguments)]
+    pub fn cursor(&mut self, window: &str, window_kind: &str, utility: &str, ctx: &mut ToolContext<'_>, delta: Option<P>, start: P) -> (Step, Preview) {
+        let session = self.session(window, window_kind, utility);
+        match delta {
+            Some(delta) => session.nudge(ctx, delta, start),
+            None => session.place(ctx, start),
+        }
+    }
+
+    fn session(&mut self, window: &str, window_kind: &str, utility: &str) -> &mut ToolSession {
         if self.sessions.get(window).is_none_or(|session| session.utility() != utility) {
             self.sessions.insert(window.to_string(), ToolSession::new(utility, window_kind));
         }
-        match self.sessions.get_mut(window) {
-            Some(session) => session.advance(ctx, event),
-            None => (Step::default(), Preview::default()),
-        }
+        self.sessions.entry(window.to_string()).or_insert_with(|| ToolSession::new(utility, window_kind))
     }
 
     pub fn windows(&self) -> Vec<String> {
@@ -157,15 +247,21 @@ fn lowest_storey(snapshot: &ModelSnapshot) -> Option<String> {
     snapshot.buildings.keys().find_map(|building| crate::editor::bim::entities::ordered_storeys(snapshot, building).into_iter().next())
 }
 
+/// 🧊️ The storey the world window draws and picks on: the isolated one when it exists, else the lowest.
+pub fn world_storey(snapshot: &ModelSnapshot, isolated: &str) -> String {
+    Some(isolated.to_string()).filter(|storey| snapshot.storeys.contains_key(storey)).or_else(|| lowest_storey(snapshot)).unwrap_or_default()
+}
+
 /// 🪟️ The surface the addressed window shows and the pixels-to-metres reach there; none for a window without gestures.
 pub fn surface_of(ctx: &BimDispatchCtx, snapshot: &ModelSnapshot) -> Option<(Surface, f64)> {
     match ctx.window_kind.as_str() {
         plan::WINDOW_KIND_ID => Some((Surface::Plan { storey: plan::active_storey(snapshot, &ctx.plan).unwrap_or_default() }, 1.0 / ctx.plan.viewport.zoom.max(0.01))),
-        section::WINDOW_KIND_ID => Some((Surface::Section { start: [ctx.section.start_x, ctx.section.start_y], end: [ctx.section.end_x, ctx.section.end_y] }, 1.0 / ctx.section.viewport.zoom.max(0.01))),
-        world::WINDOW_KIND_ID => {
-            let isolated = Some(ctx.world.isolated_storey.clone()).filter(|storey| snapshot.storeys.contains_key(storey));
-            Some((Surface::World { storey: isolated.or_else(|| lowest_storey(snapshot)).unwrap_or_default() }, WORLD_PIXEL_METRES))
+        section::WINDOW_KIND_ID => {
+            let (start, end) = section::plane_of(snapshot, &ctx.section).map_or(([0.0, 0.0], [0.0, 0.0]), |plane| ([plane.start.x, plane.start.y], [plane.end.x, plane.end.y]));
+            Some((Surface::Section { start, end }, 1.0 / ctx.section.viewport.zoom.max(0.01)))
         }
+        world::WINDOW_KIND_ID => Some((Surface::World { storey: world_storey(snapshot, &ctx.world.isolated_storey) }, WORLD_PIXEL_METRES)),
+        sheet::WINDOW_KIND_ID => Some((Surface::Sheet { sheet: sheet::active_sheet(snapshot, &ctx.sheet).unwrap_or_default() }, 1.0 / ctx.sheet.viewport.zoom.max(0.01))),
         _ => None,
     }
 }
@@ -182,6 +278,10 @@ pub fn pointer_of(ctx: &BimDispatchCtx, surface: &Surface, reach: f64, raw: &Raw
             [(raw.x - raw.width * 0.5) / zoom + ctx.section.viewport.x, -((raw.y - raw.height * 0.5) / zoom + ctx.section.viewport.y)]
         }
         Surface::World { .. } => raw.ground.unwrap_or([0.0, 0.0]),
+        Surface::Sheet { .. } => {
+            let zoom = ctx.sheet.viewport.zoom.max(0.01);
+            [(raw.x - raw.width * 0.5) / zoom + ctx.sheet.viewport.x, (raw.y - raw.height * 0.5) / zoom + ctx.sheet.viewport.y]
+        }
     };
     Pointer { at, modifiers: raw.modifiers, tolerance: reach }
 }
@@ -234,23 +334,53 @@ pub fn emit_of(step: Step, ctx: &BimDispatchCtx) -> Result<Emit<ModelMutation, N
     Ok(emit)
 }
 
+/// ➡️ What drives one step of a gesture: a window event, or a typed line.
+enum Feed<'a> {
+    Event(ToolEvent),
+    Line(&'a str),
+    Cursor { delta: Option<P>, start: P },
+}
+
 /// ➡️ Advances the addressed window's gesture by `event` and answers the emit; the new preview is left in `ctx.transient_out` when it differs from the window's current one.
 pub fn run(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, event: impl FnOnce(&Pointer) -> ToolEvent, raw: &Raw) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
+    if ctx.gestures.is_none() {
+        return Err(fault(RETAINED_ROUTE, "gesture commands are reachable only through their retained route"));
+    }
+    let Some((surface, reach)) = surface_of(ctx, doc.snapshot) else { return Ok(Emit::default()) };
+    let pointer = pointer_of(ctx, &surface, reach, raw);
+    settle(ctx, doc, surface, Feed::Event(event(&pointer)))
+}
+
+/// ⌨️ Advances the addressed window's gesture by the typed `line` (a point, an offset, a length or nothing to finish) and answers the emit like [`run`].
+pub fn run_typed(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, line: &str) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
+    if ctx.gestures.is_none() {
+        return Err(fault(RETAINED_ROUTE, "gesture commands are reachable only through their retained route"));
+    }
+    let Some((surface, _)) = surface_of(ctx, doc.snapshot) else { return Ok(Emit::default()) };
+    settle(ctx, doc, surface, Feed::Line(line))
+}
+
+fn settle(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, surface: Surface, feed: Feed<'_>) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let Some(owner) = ctx.gestures.clone() else { return Err(fault(RETAINED_ROUTE, "gesture commands are reachable only through their retained route")) };
     let snapshot = doc.snapshot;
-    let Some((surface, reach)) = surface_of(ctx, snapshot) else { return Ok(Emit::default()) };
-    let pointer = pointer_of(ctx, &surface, reach, raw);
-    let event = event(&pointer);
     let operation = doc.operation_optional();
     let window = ctx.view.as_ref().and_then(|view| view.window_id.clone()).unwrap_or_default();
     let seed = operation.map_or("", |operation| operation.authoring_seed.as_str());
     let labels = ctx.labels();
-    let (step, preview) = crate::editor::bim::inference::with_inference(operation.map(|operation| operation.app_instance_id), snapshot, |inference| {
+    let instance = operation.map(|operation| operation.app_instance_id);
+    let (step, preview) = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| {
         let mut tool = ToolContext::new(snapshot, inference, surface, seed);
+        tool.instance = instance;
         tool.selected = &ctx.selected;
         tool.library = &ctx.library_selected;
         tool.labels = labels;
-        owner.with_mut::<GestureOwner, _>(|owner| Ok(owner.advance(&window, &ctx.window_kind, &ctx.utility, &mut tool, &event)))
+        owner.with_mut::<GestureOwner, _>(|owner| {
+            Ok(match &feed {
+                Feed::Event(event) => owner.advance(&window, &ctx.window_kind, &ctx.utility, &mut tool, event),
+                Feed::Line(line) => owner.enter(&window, &ctx.window_kind, &ctx.utility, &mut tool, line),
+                Feed::Cursor { delta, start } => owner.cursor(&window, &ctx.window_kind, &ctx.utility, &mut tool, *delta, *start),
+            })
+        })
     })?;
     let text = preview.to_text();
     let addressed = ctx.view.as_ref().is_some_and(|view| view.window_id.is_some());
@@ -258,6 +388,41 @@ pub fn run(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, even
         ctx.transient_out = Some(BimWindowTransient { preview: text, pointer_generation: ctx.window_transient.pointer_generation + 1, ..ctx.window_transient.clone() });
     }
     emit_of(step, ctx)
+}
+
+/// ⌨️ The point a keyboard cursor starts from when the pointer never was in the window and the gesture hangs on nothing: the centre of the view (the plan and the section centre their camera, the world has no plan point).
+pub fn cursor_start(ctx: &BimDispatchCtx) -> P {
+    match ctx.window_kind.as_str() {
+        plan::WINDOW_KIND_ID => [ctx.plan.viewport.x, -ctx.plan.viewport.y],
+        section::WINDOW_KIND_ID => [ctx.section.viewport.x, -ctx.section.viewport.y],
+        sheet::WINDOW_KIND_ID => [ctx.sheet.viewport.x, ctx.sheet.viewport.y],
+        _ => [0.0, 0.0],
+    }
+}
+
+/// ⌨️ Moves the keyboard cursor of the addressed window by `delta` metres, or clicks at it when `delta` is none, and answers the emit like [`run`]: the arrow keys move the cursor, the place key clicks, so every placement tool can be driven without a pointer or a typed line.
+pub fn run_cursor(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, delta: Option<P>) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
+    if ctx.gestures.is_none() {
+        return Err(fault(RETAINED_ROUTE, "gesture commands are reachable only through their retained route"));
+    }
+    let Some((surface, _)) = surface_of(ctx, doc.snapshot) else { return Ok(Emit::default()) };
+    let start = cursor_start(ctx);
+    settle(ctx, doc, surface, Feed::Cursor { delta, start })
+}
+
+/// ⌨️ Keeps `line` as the entry typed into the addressed window: the window transient holds it for the field, the presence shares it with the other authors. Writes only what changes.
+pub fn keep_entry(ctx: &mut BimDispatchCtx, line: &str) {
+    if ctx.view.as_ref().is_none_or(|view| view.window_id.is_none()) {
+        return;
+    }
+    let mut transient = ctx.transient_out.take().unwrap_or_else(|| ctx.window_transient.clone());
+    transient.engagement_input = line.to_string();
+    if transient != ctx.window_transient {
+        ctx.transient_out = Some(transient);
+    }
+    if ctx.presence.engagement_input != line {
+        ctx.presence_out.push(ctx.presence.typing(line));
+    }
 }
 
 /// ➡️ The event a cancelled or completed gesture command carries without a pointer.

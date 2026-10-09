@@ -1,0 +1,17 @@
+{
+  "mutation": "setCurtainWall",
+  "id": "cw-1",
+  "axis": {
+    "Line": {
+      "start": {
+        "x": 0,
+        "y": 1
+      },
+      "end": {
+        "x": 6,
+        "y": 1
+      }
+    }
+  },
+  "base_offset": 0.2
+}

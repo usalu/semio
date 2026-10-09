@@ -109,17 +109,20 @@ def layout(stair, count, riser, tread, base):
         first = int(min(max(math.floor(split * count + 0.5), 1), count - 1))
         sign = 1.0 if body["turn"] == "Left" else -1.0
         foot = along(start, angle, (first - 1) * tread)
-        centre = along(foot, angle, width / 2.0)
+        depth = stair["landing_depth"]
+        centre = along(foot, angle, depth / 2.0)
         turned = angle + sign * math.pi / 2.0
-        landing = {"after_flight": 0, "z": base + first * riser, "centre": mark(*centre), "direction": angle, "width": width, "depth": width}
-        return [flight(1, first, start, angle, tread, riser, base), flight(first + 1, count - first, along(centre, turned, width / 2.0), turned, tread, riser, base)], [landing]
+        second = along(along(foot, angle, depth - width / 2.0), turned, width / 2.0)
+        landing = {"after_flight": 0, "z": base + first * riser, "centre": mark(*centre), "direction": angle, "width": width, "depth": depth}
+        return [flight(1, first, start, angle, tread, riser, base), flight(first + 1, count - first, second, turned, tread, riser, base)], [landing]
     if tag == "UTurn":
         gap = max(body["gap"], 0.0) if math.isfinite(body["gap"]) else 0.0
         first = -(-count // 2)
         foot = along(start, angle, (first - 1) * tread)
         second = along(foot, angle + math.pi / 2.0, width + gap)
-        centre = along(along(foot, angle, width / 2.0), angle + math.pi / 2.0, (width + gap) / 2.0)
-        landing = {"after_flight": 0, "z": base + first * riser, "centre": mark(*centre), "direction": angle, "width": 2.0 * width + gap, "depth": width}
+        depth = stair["landing_depth"]
+        centre = along(along(foot, angle, depth / 2.0), angle + math.pi / 2.0, (width + gap) / 2.0)
+        landing = {"after_flight": 0, "z": base + first * riser, "centre": mark(*centre), "direction": angle, "width": 2.0 * width + gap, "depth": depth}
         return [flight(1, first, start, angle, tread, riser, base), flight(first + 1, count - first, second, angle + math.pi, tread, riser, base)], [landing]
     if tag == "Spiral":
         outer = max(body["radius"], width)

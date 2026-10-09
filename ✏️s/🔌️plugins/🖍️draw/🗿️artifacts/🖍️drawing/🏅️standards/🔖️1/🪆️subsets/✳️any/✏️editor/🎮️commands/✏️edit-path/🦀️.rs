@@ -19,20 +19,20 @@ pub fn handle(payload: &EditPath, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg:
     let Some(DrawingLayerNode::Path(path)) = crate::schema::find_drawing_layer(doc.snapshot, &payload.layer_id) else { return Err(Fault::from("Select a path to edit")); };
     let segments = edit_path(&path.segments, &payload.edit).map_err(Fault::from)?;
     if segments.iter().eq(path.segments.iter()) {return Ok(Emit::default());}
-    let rebind=matches!(payload.edit.as_ref(),PathEdit::Position {..}|PathEdit::Coordinate {..}|PathEdit::Translate {..});
+    let rebind=segments.len()==path.segments.len()&&matches!(payload.edit.as_ref(),PathEdit::Node {..}|PathEdit::Position {..}|PathEdit::Coordinate {..}|PathEdit::Translate {..});
     let mut selected=Vec::new();
-    if rebind && !session.interaction.points.is_empty() {
+    if !session.interaction.points.is_empty() {
         let before=points::geometry_id(&path.segments).ok_or_else(||Fault::from("Invalid path geometry"))?;
         let after=points::geometry_id(&segments).ok_or_else(||Fault::from("Invalid path geometry"))?;
         for id in &session.interaction.points {
             let Some(point)=points::parse_point_id(id) else {continue;};
             if point.layer_id!=payload.layer_id {selected.push(id.clone());continue;}
-            if point.geometry==before && segments.get(point.index).is_some_and(|segment|points::point_slots(segment).contains(&point.point)) {
+            if rebind && point.geometry==before && segments.get(point.index).is_some_and(|segment|points::point_slots(segment).contains(&point.point)) {
                 if let Some(id)=points::point_id(point.layer_id,&after,point.index,point.point) {selected.push(id);}
             }
         }
     }
     let mut emit=Emit::mutations(vec![crate::mutations::update_path_geometry(path.base.id.clone(), segments.into())]);
-    if rebind && !session.interaction.points.is_empty() {emit.effects.push(point_selection_effect(&selected));}
+    if !session.interaction.points.is_empty() {emit.effects.push(point_selection_effect(&selected));}
     Ok(emit)
 }

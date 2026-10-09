@@ -1,0 +1,6 @@
+{
+  "mutation": "setCeiling",
+  "id": "ce-living",
+  "ceiling_type": "ct-tile",
+  "offset": 0.5
+}

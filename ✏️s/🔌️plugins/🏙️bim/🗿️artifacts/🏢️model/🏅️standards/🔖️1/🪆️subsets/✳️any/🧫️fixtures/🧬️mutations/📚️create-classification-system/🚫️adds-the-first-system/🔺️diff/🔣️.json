@@ -1,0 +1,40 @@
+{
+  "classification_systems": {
+    "cs-uni": {
+      "entry": "Created",
+      "name": "Uniclass 2015",
+      "edition": "2024-03",
+      "source": "https://www.thenbs.com/our-tools/uniclass",
+      "entries": [
+        {
+          "code": "EF",
+          "title": "Elements and functions"
+        },
+        {
+          "code": "EF_25",
+          "title": "Walls and barriers",
+          "parent": "EF"
+        },
+        {
+          "code": "EF_25_10",
+          "title": "Walls",
+          "parent": "EF_25"
+        },
+        {
+          "code": "Pr",
+          "title": "Products"
+        },
+        {
+          "code": "Pr_20",
+          "title": "Structure and general products",
+          "parent": "Pr"
+        },
+        {
+          "code": "Pr_20_93",
+          "title": "Structural units and assemblies",
+          "parent": "Pr_20"
+        }
+      ]
+    }
+  }
+}

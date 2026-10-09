@@ -1,6 +1,5 @@
 type BimPlanWindowConfig {
-  storey: String!
-  cutHeight: Float!
+  view: String!
   framed: Boolean!
   viewport: Viewport2d!
 }

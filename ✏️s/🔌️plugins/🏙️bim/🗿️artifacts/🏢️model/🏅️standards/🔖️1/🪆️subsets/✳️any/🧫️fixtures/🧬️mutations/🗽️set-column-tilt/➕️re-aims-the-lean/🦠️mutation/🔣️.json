@@ -1,0 +1,8 @@
+{
+  "mutation": "setColumnTilt",
+  "id": "c-a1",
+  "tilt": {
+    "direction": 3.141592653589793,
+    "angle": 0.3
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-area-scheme/schema.json",
+  "title": "CreateAreaScheme",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "area_scheme"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createAreaScheme"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Area scheme id",
+          "de": "Flächenschema-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "area_scheme": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/AreaScheme",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Area scheme",
+          "de": "Flächenschema"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

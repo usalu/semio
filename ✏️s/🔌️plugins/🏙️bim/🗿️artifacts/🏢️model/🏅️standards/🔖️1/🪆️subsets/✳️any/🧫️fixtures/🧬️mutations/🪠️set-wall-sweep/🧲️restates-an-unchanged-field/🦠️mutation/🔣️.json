@@ -1,0 +1,6 @@
+{
+  "mutation": "setWallSweep",
+  "id": "ws-base",
+  "inset": 0,
+  "name": "Skirting"
+}

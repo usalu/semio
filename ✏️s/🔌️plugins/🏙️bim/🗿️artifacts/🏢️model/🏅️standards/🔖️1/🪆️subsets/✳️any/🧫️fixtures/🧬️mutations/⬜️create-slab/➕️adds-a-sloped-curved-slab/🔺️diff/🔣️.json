@@ -35,6 +35,7 @@
       "holes": [],
       "name": "Terrace",
       "offset": -0.1,
+      "phase": "New",
       "slab_type": "stt-22",
       "slope": {
         "angle": 0.05,

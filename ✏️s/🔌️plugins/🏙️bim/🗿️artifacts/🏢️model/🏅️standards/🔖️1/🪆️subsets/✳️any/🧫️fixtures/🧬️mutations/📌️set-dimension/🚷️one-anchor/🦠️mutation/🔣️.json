@@ -1,0 +1,12 @@
+{
+  "mutation": "setDimension",
+  "id": "dim-south",
+  "anchors": [
+    {
+      "WallEnd": {
+        "wall": "w-south",
+        "end": "Start"
+      }
+    }
+  ]
+}

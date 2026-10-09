@@ -272,6 +272,17 @@ impl<const N: usize> PagedUtf8<N> {
         Ok(())
     }
 
+    /// 🧮️ Appends caller-bounded text while charging original chunk and metadata backing before allocation.
+    pub fn try_push_str_controlled(&mut self,value:&str,control:&mut crate::NativeDecodeControl<'_>)->Result<(),ValueError>{
+        if value.is_empty(){return control.checkpoint();}
+        self.byte_len.checked_add(value.len()).filter(|bytes|*bytes<=N).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"paged UTF-8 append exceeds its declared capacity"))?;
+        if value.len()>PAGED_UTF8_CHUNK_BYTES{return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"controlled text append requires one source chunk"));}
+        control.checkpoint()?;
+        while !self.chunks.has_reserved_slot(){let bytes=self.chunks.next_allocation_bytes()?;control.charge(bytes)?;self.chunks.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
+        let owned=control.copy_text(value)?;let bytes=owned.len();
+        self.chunks.push_reserved(owned).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"controlled native text lost its admitted slot"))?;self.byte_len+=bytes;Ok(())
+    }
+
     pub fn push_str(&mut self, value: &str) { self.try_push_str(value).expect("cold UTF-8 append must fit its declared capacity"); }
     pub fn clear(&mut self) { self.chunks.clear(); self.byte_len = 0; }
     pub fn bytes(&self) -> impl Iterator<Item = u8> + '_ { self.chunks().flat_map(str::bytes) }

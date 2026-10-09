@@ -1,0 +1,9 @@
+{
+  "mutation": "setCurtainPanelOverride",
+  "id": "ov-1",
+  "panel": {
+    "Door": {
+      "door_type": "door-1"
+    }
+  }
+}

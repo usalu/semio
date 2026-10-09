@@ -104,6 +104,9 @@ pub fn is_curved(snapshot: &ModelSnapshot, id: &str) -> bool {
     if let Some(slab) = snapshot.slabs.get(id) {
         return bulged_loop(&slab.boundary) || slab.holes.iter().any(|hole| bulged_loop(hole));
     }
+    if let Some(ceiling) = snapshot.ceilings.get(id) {
+        return bulged_loop(&ceiling.boundary) || ceiling.holes.iter().any(|hole| bulged_loop(hole));
+    }
     if let Some(roof) = snapshot.roofs.get(id) {
         return bulged_loop(&roof.footprint);
     }

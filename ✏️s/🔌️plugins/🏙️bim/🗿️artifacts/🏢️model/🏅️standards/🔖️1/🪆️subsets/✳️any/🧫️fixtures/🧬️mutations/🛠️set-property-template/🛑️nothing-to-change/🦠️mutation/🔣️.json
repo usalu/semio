@@ -1,0 +1,9 @@
+{
+  "mutation": "setPropertyTemplate",
+  "id": "pt-door",
+  "name": "Pset_DoorCommon",
+  "applies_to": [
+    "Door",
+    "DoorType"
+  ]
+}

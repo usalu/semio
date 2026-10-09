@@ -94,7 +94,8 @@ fn write_profile(p:&mut RowWriter<'_,'_>,parent:i64,value:&Profile,slot:usize)->
  Profile::Rectangle{width,depth}=>{c.push(Cell::Text("Rectangle"))?;width.append(&mut c)?;depth.append(&mut c)?;c.nulls(9)?;},
  Profile::Circle{diameter}=>{c.push(Cell::Text("Circle"))?;c.nulls(6)?;diameter.append(&mut c)?;c.nulls(6)?;},
  Profile::IShape{width,depth,web,flange}=>{c.push(Cell::Text("IShape"))?;width.append(&mut c)?;depth.append(&mut c)?;c.nulls(3)?;web.append(&mut c)?;flange.append(&mut c)?;},
- Profile::Custom{..}=>{c.push(Cell::Text("Custom"))?;c.nulls(15)?;}}
+ Profile::Custom{..}=>{c.push(Cell::Text("Custom"))?;c.nulls(15)?;},
+ Profile::Family{..}=>return Err(invalid("BIM family profiles are not persisted by the sqlite snapshot"))}
  let id=c.emit(p,"bim_profile")?;if let Profile::Custom{outline}=value{list(p,"bim_profile_outline",id,outline)?;}Ok(())}
 fn read_profile(r:&mut Reader<'_,'_,'_>,parent:i64,slot:usize)->Result<Profile>{let row=r.required("bim_profile",parent,slot+1,23)?;active(row,1,6,slot+1)?;let outline=r.list::<Vertex>("bim_profile_outline",row.rowid)?;if row.text(7)?!="Custom"&&!outline.is_empty(){return Err(invalid("BIM noncustom profile owns an outline"))}let mut i=8;match row.text(7)?{
  "Rectangle"=>{absent(row,14,9)?;Ok(Profile::Rectangle{width:f64::read(row,&mut i,r.native)?,depth:f64::read(row,&mut i,r.native)?})},

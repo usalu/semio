@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-wall-base-slab/schema.json",
+  "title": "SetWallBaseSlab",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setWallBaseSlab"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "slab": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Base slab (empty = free)",
+          "de": "Basisdecke (leer = frei)"
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "value",
+        "order": 20,
+        "description": {
+          "en": "Leave empty to free the base.",
+          "de": "Leer lassen, um die Basis zu lösen."
+        }
+      }
+    }
+  }
+}

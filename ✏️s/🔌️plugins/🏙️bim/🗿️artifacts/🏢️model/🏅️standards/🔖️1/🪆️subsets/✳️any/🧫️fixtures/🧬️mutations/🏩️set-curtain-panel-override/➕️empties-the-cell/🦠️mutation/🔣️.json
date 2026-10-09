@@ -1,0 +1,5 @@
+{
+  "mutation": "setCurtainPanelOverride",
+  "id": "ov-1",
+  "panel": "Empty"
+}

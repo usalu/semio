@@ -85,3 +85,64 @@ async fn the_slab_from_walls_takes_the_closed_wall_loop_around_the_click() {
     assert!((area - 7.7 * 5.7).abs() < 1e-6, "the loop is the inner face of the 0.3 m walls: {area}");
     assert_eq!(rig.down(30.0, 30.0).refused, Some(REJECTED), "outside no loop is closed");
 }
+
+fn hung(mut snapshot: crate::ModelSnapshot) -> crate::ModelSnapshot {
+    let layer = crate::Layer { material: "m-concrete".into(), thickness: 0.0125, function: crate::LayerFunction::Finish };
+    snapshot.ceiling_types.insert("ct-board".into(), crate::CeilingType { name: "Board".into(), layers: vec![layer] });
+    snapshot
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ceiling_polygon_hangs_the_default_drop_below_the_storey_top_and_is_written_counter_clockwise() {
+    use crate::editor::bim::entities::ceilings::DEFAULT_DROP;
+    let mut rig = Rig::plan("ceiling", hung(model()));
+    for (x, y) in [(0.0, 0.0), (0.0, 4.0), (5.0, 4.0), (5.0, 0.0)] {
+        assert!(rig.click(x, y).mutations.is_empty(), "a corner only extends the polygon");
+    }
+    assert!(rig.mv(1.0, 1.0).mutations.is_empty() && rig.shows(Shape::Path));
+    let step = rig.finish();
+    let [ModelMutation::CreateCeiling(create)] = step.mutations.as_slice() else { panic!("one create-ceiling, got {:?}", step.mutations) };
+    let ceiling = &create.ceiling;
+    assert_eq!((ceiling.ceiling_type.as_str(), ceiling.storey.as_str(), ceiling.offset), ("ct-board", "st-ground", DEFAULT_DROP));
+    assert!(ceiling.holes.is_empty() && ceiling.slope.is_none());
+    assert_eq!(signed_area(&ring(&ceiling.boundary)), 20.0, "a clockwise click order is written counter-clockwise");
+    assert!(rig.click(9.0, 9.0).mutations.is_empty(), "the polygon is over");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn pressing_one_corner_and_releasing_the_opposite_one_hangs_a_rectangular_ceiling() {
+    let mut rig = Rig::plan("ceiling", hung(model()));
+    rig.down(1.0, 1.0);
+    rig.mv(5.0, 4.0);
+    assert!(rig.shows(Shape::Path), "the rectangle ghost follows the drag");
+    let step = rig.up(5.0, 4.0);
+    let [ModelMutation::CreateCeiling(create)] = step.mutations.as_slice() else { panic!("one create-ceiling") };
+    assert_eq!(ring(&create.ceiling.boundary), vec![[1.0, 1.0], [5.0, 1.0], [5.0, 4.0], [1.0, 4.0]]);
+    assert!(create.ceiling.name.contains('1'), "the name counts the ceilings of the storey: {}", create.ceiling.name);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ceiling_without_a_type_is_refused_and_escape_drops_the_polygon() {
+    let mut rig = Rig::plan("ceiling", model());
+    for (x, y) in [(0.0, 0.0), (4.0, 0.0), (4.0, 3.0)] {
+        rig.click(x, y);
+    }
+    assert_eq!(rig.finish().refused, Some(TYPE_MISSING));
+    let mut rig = Rig::plan("ceiling", hung(model()));
+    for (x, y) in [(0.0, 0.0), (4.0, 0.0), (4.0, 3.0)] {
+        rig.click(x, y);
+    }
+    rig.escape();
+    assert!(rig.finish().mutations.is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_ceiling_from_a_space_takes_the_room_around_the_click() {
+    let mut rig = Rig::plan("ceiling-space", hung(room()));
+    let step = rig.down(4.0, 3.0);
+    let [ModelMutation::CreateCeiling(create)] = step.mutations.as_slice() else { panic!("one create-ceiling, got {:?}", step.mutations) };
+    let area = signed_area(&ring(&create.ceiling.boundary));
+    assert!((area - 7.7 * 5.7).abs() < 1e-6, "the outline is the inner face of the 0.3 m walls: {area}");
+    assert!(create.ceiling.holes.is_empty());
+    assert_eq!(rig.down(30.0, 30.0).refused, Some(REJECTED), "outside no room is closed");
+}

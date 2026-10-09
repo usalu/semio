@@ -205,5 +205,160 @@
   "railings": {},
   "spaces": {},
   "properties": {},
-  "classifications": {}
+  "classifications": {},
+  "views": {
+    "v-plan-st-ground": {
+      "building": "bldg-1",
+      "name": "Plan Ground",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-ground"
+    },
+    "v-plan-st-first": {
+      "building": "bldg-1",
+      "name": "Plan First",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-first"
+    },
+    "v-section-a": {
+      "building": "bldg-1",
+      "name": "Section A",
+      "kind": "Section",
+      "depth": 5.15,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": 3
+        },
+        "end": {
+          "x": 10.15,
+          "y": 3
+        }
+      }
+    },
+    "v-section-b": {
+      "building": "bldg-1",
+      "name": "Section B",
+      "kind": "Section",
+      "depth": 6.15,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 4,
+          "y": -2.15
+        },
+        "end": {
+          "x": 4,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-south": {
+      "building": "bldg-1",
+      "name": "South",
+      "kind": "Elevation",
+      "depth": 9.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": -2.15
+        },
+        "end": {
+          "x": 10.15,
+          "y": -2.15
+        }
+      }
+    },
+    "v-elevation-east": {
+      "building": "bldg-1",
+      "name": "East",
+      "kind": "Elevation",
+      "depth": 11.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 10.15,
+          "y": -2.15
+        },
+        "end": {
+          "x": 10.15,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-north": {
+      "building": "bldg-1",
+      "name": "North",
+      "kind": "Elevation",
+      "depth": 9.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": 10.15,
+          "y": 8.15
+        },
+        "end": {
+          "x": -2.15,
+          "y": 8.15
+        }
+      }
+    },
+    "v-elevation-west": {
+      "building": "bldg-1",
+      "name": "West",
+      "kind": "Elevation",
+      "depth": 11.3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2.15,
+          "y": 8.15
+        },
+        "end": {
+          "x": -2.15,
+          "y": -2.15
+        }
+      }
+    },
+    "v-3d": {
+      "building": "bldg-1",
+      "name": "3D view",
+      "kind": "Perspective",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "camera": {
+        "target": {
+          "x": 4,
+          "y": 3
+        },
+        "target_height": 2.9,
+        "azimuth": 0.7853981633974483,
+        "pitch": 0.5,
+        "distance": 21.6
+      }
+    }
+  }
 }

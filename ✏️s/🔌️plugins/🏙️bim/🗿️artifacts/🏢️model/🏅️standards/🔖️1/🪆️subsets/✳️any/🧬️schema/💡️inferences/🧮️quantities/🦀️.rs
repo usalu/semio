@@ -9,31 +9,38 @@
 //! * curtain wall: as a wall without layers; the volume and the material rows come from its solid (mullions and panels).
 //! * slab: `gross_area` the boundary, `net_area` without holes, `surface_area` the sloped top, `width` the layer thickness (vertical),
 //!   `net_volume = net_area * width`.
+//! * ceiling: as a slab: `gross_area` the boundary, `net_area` without holes, `surface_area` the sloped underside, `width` the layer thickness (vertical),
+//!   `net_volume = net_area * width`.
 //! * roof: `gross_area` the eave outline (footprint grown by the overhang), `surface_area` the upward faces of the outermost layer of
 //!   its solid, volumes and layers from the solid.
 //! * column and beam: `length` the height or the axis length, `perimeter` and `gross_area` the profile, `net_volume = area * length`.
 //! * window, door, void: `gross_area = width * height` of the opening, material rows from the filler solid.
-//! * stair: `risers`, `length` the run, `height` the rise, volume from the solid. railing: `length` the path, material rows from the solid.
-//! * space: `gross_area` the room, `net_area` without columns, `height` the clear height, `net_volume` the room volume.
+//! * stair: `risers`, `length` the run, `height` the rise, volume from the solid (treads, risers, stringers and landings). railing: `length` the path, material rows from the solid, `surface_area` the area of one side of the infill
+//!   (its volume over its thickness), `balusters` the number of balusters.
+//! * space: `gross_area` the room, `net_area` without columns, `height` the clear height, `net_volume` the room volume, `finishes` the floor, wall and ceiling finish areas of the room (`finishes`).
 
 use super::super::curtain_layout::CurtainLayout;
 use super::super::element_solids::columns::profile_loop;
 use super::super::element_solids::plan_kit::seg;
-use super::super::element_solids::{dep_object, dep_value, ElementSolid};
-use super::super::opening_frames::OpeningFrame;
+use super::super::element_solids::railings::baluster_count;
+use super::super::element_solids::{curtain_walls, dep_object, dep_value, parts, rail_hosts, wall_sweeps, walls, ElementSolid};
+use super::super::families::FamilyProfiles;
+use super::super::finishes::{self, FinishQuantity};
+use super::super::opening_frames::{OpeningCut, OpeningFrame};
 use super::super::spaces::{SpaceRoom, SpaceStatus};
+use super::super::ramp_runs::{strip_of, RampRun};
 use super::super::stair_runs::StairRun;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
 use super::super::wall_layout::WallLayout;
 use super::super::ModelInference;
-use crate::{Beam, Column, CurtainWall, Layer, ModelSnapshot, Opening, OpeningKind, Railing, Roof, Slab, Space, Stair, Vertex, Wall};
+use crate::{Beam, Ceiling, Column, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🗺️ The snapshot collections the take-off reads, directly or through the fields it is computed from.
-pub const READS: &[&str] = &["walls", "wall_types", "curtain_walls", "slabs", "slab_types", "roofs", "roof_types", "columns", "column_types", "beams", "beam_types", "openings", "window_types", "door_types", "stairs", "railings", "spaces", "materials", "storeys", "buildings", "sites"];
+pub const READS: &[&str] = &["walls", "wall_types", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "roof_types", "columns", "column_types", "beams", "beam_types", "openings", "window_types", "door_types", "stairs", "ramps", "railings", "spaces", "materials", "storeys", "buildings", "sites"];
 
 //#region 🔖️Values
 /// 🗂️ Which kind of element a quantity row measures.
@@ -51,7 +58,10 @@ pub enum QuantityKind {
     Void,
     Stair,
     Railing,
+    Ramp,
     Space,
+    Ceiling,
+    WallSweep,
 }
 
 impl QuantityKind {
@@ -69,7 +79,10 @@ impl QuantityKind {
             Self::Void => "void",
             Self::Stair => "stair",
             Self::Railing => "railing",
+            Self::Ramp => "ramp",
             Self::Space => "space",
+            Self::Ceiling => "ceiling",
+            Self::WallSweep => "wall-sweep",
         }
     }
 }
@@ -84,11 +97,28 @@ pub struct LayerQuantity {
     pub mass: f64,
 }
 
+/// 🪟️ The panels of one kind of a curtain wall: how many cells hold one and the clear area they cover (`glass`, `solid`, `door`, `window`, `empty`).
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+pub struct PanelQuantity {
+    pub kind: String,
+    pub count: u32,
+    pub area: f64,
+}
+
+/// 🪛️ The mullion pieces of one section of a curtain wall: how many pieces and their total length (`interior` and `border`).
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+pub struct MullionQuantity {
+    pub kind: String,
+    pub count: u32,
+    pub length: f64,
+}
+
 /// 🧮️ The quantities of one element; measures that do not apply to its kind are 0.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct ElementQuantity {
     pub kind: QuantityKind,
     pub storey: String,
+    pub phase: Phase,
     pub type_id: String,
     pub count: u32,
     pub length: f64,
@@ -105,7 +135,18 @@ pub struct ElementQuantity {
     pub net_volume: f64,
     pub mass: f64,
     pub risers: u32,
+    #[value(default, skip_serializing_if = "no_balusters")]
+    pub balusters: u32,
     pub layers: Vec<LayerQuantity>,
+    pub finishes: Vec<FinishQuantity>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub panels: Vec<PanelQuantity>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub mullions: Vec<MullionQuantity>,
+}
+
+fn no_balusters(count: &u32) -> bool {
+    *count == 0
 }
 
 impl ElementQuantity {
@@ -128,12 +169,15 @@ pub struct Totals {
     pub mass: f64,
 }
 
-/// ➕️ Totals per kind (`wall`, `slab`, …), per type (`wall:wt-300`) and per material id.
+/// ➕️ Totals per kind (`wall`, `slab`, …), per type (`wall:wt-300`), per material id, per finish (`wall:m-paint`: the area of one surface finished with one material) and per construction phase (`new`; `phase_kinds` splits each phase by kind, `demolished:wall`).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct QuantityTotals {
     pub kinds: BTreeMap<String, Totals>,
     pub types: BTreeMap<String, Totals>,
     pub materials: BTreeMap<String, Totals>,
+    pub finishes: BTreeMap<String, Totals>,
+    pub phases: BTreeMap<String, Totals>,
+    pub phase_kinds: BTreeMap<String, Totals>,
 }
 
 /// 🧮️ The whole take-off: elements by id, totals per storey, per building and for the project.
@@ -263,12 +307,13 @@ pub fn wall_quantity(snapshot: &ModelSnapshot, wall: &Wall, layout: &WallLayout,
     let raw: Vec<f64> = layers.iter().enumerate().map(|(index, layer)| (face_length(layout, layout.layer_offsets.get(index).copied().unwrap_or(0.0)) + face_length(layout, layout.layer_offsets.get(index + 1).copied().unwrap_or(0.0))) / 2.0 * layer.thickness).collect();
     let normal = if raw.iter().sum::<f64>() > 0.0 { layout.footprint_area / raw.iter().sum::<f64>() } else { 0.0 };
     let areas: Vec<f64> = raw.iter().map(|area| area * normal).collect();
-    let volumes: Vec<f64> = layers.iter().enumerate().map(|(index, layer)| (areas[index] * layout.height - opening_area * layer.thickness * scale_at(&wall.axis, ratio(index))).max(0.0)).collect();
+    let height = if layout.top_profile.is_empty() && layout.base_profile.is_empty() || layout.footprint_area <= 0.0 { layout.height } else { layout.volume / layout.footprint_area };
+    let volumes: Vec<f64> = layers.iter().enumerate().map(|(index, layer)| (areas[index] * height - opening_area * layer.thickness * scale_at(&wall.axis, ratio(index))).max(0.0)).collect();
     let rows = layer_rows(snapshot, layers, &areas, &volumes);
     let net_volume = if rows.is_empty() { (layout.volume - opening_area * layout.thickness).max(0.0) } else { volumes.iter().sum() };
     ElementQuantity {
         kind: QuantityKind::Wall,
-        storey: wall.storey.clone(),
+        storey: wall.storey.clone(), phase: wall.phase,
         type_id: wall.wall_type.clone(),
         count: 1,
         length: layout.length,
@@ -288,14 +333,47 @@ pub fn wall_quantity(snapshot: &ModelSnapshot, wall: &Wall, layout: &WallLayout,
     }
 }
 
+/// 🧷️ The quantities of a wall sweep: `length` the path along the face less the stretches its openings interrupt, `width` and `height` the extents of the profile (out of the wall and up), `perimeter` the visible outline of the
+/// profile, `gross_area` the cross-section, `net_area` and `surface_area` the visible surface (outline times length), `gross_volume` the cross-section times the length and `net_volume` the volume of the solid.
+pub fn sweep_quantity(snapshot: &ModelSnapshot, sweep: &WallSweep, wall: &Wall, layout: &WallLayout, frames: &[&OpeningFrame], solid: Option<&ElementSolid>) -> ElementQuantity {
+    let length = wall_sweeps::path_length(sweep, wall, layout, &walls::cuts_of(frames.iter().copied()));
+    let (protrusion, rise) = wall_sweeps::extents_of(sweep);
+    let (section, outline) = (wall_sweeps::section_area(sweep), wall_sweeps::visible_perimeter(sweep));
+    let volume = solid.map_or(section * length, |solid| solid.volume);
+    let rows = vec![LayerQuantity { material: sweep.material.clone(), thickness: protrusion, area: outline * length, volume, mass: volume * density(snapshot, &sweep.material) }];
+    ElementQuantity {
+        kind: QuantityKind::WallSweep,
+        storey: wall.storey.clone(),
+        phase: wall.phase,
+        count: 1,
+        length,
+        width: protrusion,
+        height: rise,
+        perimeter: outline,
+        gross_area: section,
+        net_area: outline * length,
+        surface_area: outline * length,
+        gross_volume: section * length,
+        net_volume: volume,
+        mass: mass_of(&rows),
+        layers: rows,
+        ..ElementQuantity::default()
+    }
+}
+
 /// 🪞️ The quantities of a curtain wall from its layout, the frames of its hosted openings and its solid (mullions and panels).
 pub fn curtain_quantity(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout: &CurtainLayout, frames: &[&OpeningFrame], solid: Option<&ElementSolid>) -> ElementQuantity {
     let opening_area = cut_area(frames.iter().copied());
     let rows = solid.map(|solid| solid_rows(snapshot, solid)).unwrap_or_default();
     let volume = solid.map_or(0.0, |solid| solid.volume);
+    let cuts: Vec<OpeningCut> = frames.iter().filter(|frame| frame.valid).map(|frame| frame.cut).collect();
+    let (panels, mullions) = curtain_walls::takeoff(snapshot, curtain, layout, &cuts);
     ElementQuantity {
         kind: QuantityKind::CurtainWall,
-        storey: curtain.storey.clone(),
+        type_id: curtain.curtain_wall_type.clone(),
+        panels: panels.into_iter().filter(|row| row.count > 0).map(|row| PanelQuantity { kind: row.kind.to_string(), count: row.count, area: row.area }).collect(),
+        mullions: mullions.into_iter().filter(|row| row.count > 0).map(|row| MullionQuantity { kind: row.kind.to_string(), count: row.count, length: row.length }).collect(),
+        storey: curtain.storey.clone(), phase: curtain.phase,
         count: 1,
         length: layout.length,
         height: layout.height,
@@ -324,8 +402,38 @@ pub fn slab_quantity(snapshot: &ModelSnapshot, slab: &Slab) -> ElementQuantity {
     let rows = layer_rows(snapshot, layers, &areas, &volumes);
     ElementQuantity {
         kind: QuantityKind::Slab,
-        storey: slab.storey.clone(),
+        storey: slab.storey.clone(), phase: slab.phase,
         type_id: slab.slab_type.clone(),
+        count: 1,
+        width: thickness,
+        perimeter: loops::perimeter(&outer) + holes.iter().map(|hole| loops::perimeter(hole)).sum::<f64>(),
+        gross_area: gross,
+        net_area: net,
+        surface_area: net / slope,
+        gross_volume: gross * thickness,
+        net_volume: net * thickness,
+        mass: mass_of(&rows),
+        layers: rows,
+        ..ElementQuantity::default()
+    }
+}
+
+/// 🔲️ The quantities of a ceiling from its boundary, holes and type.
+pub fn ceiling_quantity(snapshot: &ModelSnapshot, ceiling: &Ceiling) -> ElementQuantity {
+    let outer = plan(&ceiling.boundary);
+    let holes: Vec<Vec<loops::Vertex>> = ceiling.holes.iter().map(|hole| plan(hole)).collect();
+    let gross = loops::area(&outer);
+    let net = (gross - holes.iter().map(|hole| loops::area(hole)).sum::<f64>()).max(0.0);
+    let layers: &[Layer] = snapshot.ceiling_types.get(&ceiling.ceiling_type).map_or(&[], |kind| &kind.layers);
+    let thickness: f64 = layers.iter().map(|layer| layer.thickness.max(0.0)).sum();
+    let slope = ceiling.slope.map_or(1.0, |slope| slope.angle.cos().abs().max(1e-9));
+    let areas = vec![net; layers.len()];
+    let volumes: Vec<f64> = layers.iter().map(|layer| net * layer.thickness.max(0.0)).collect();
+    let rows = layer_rows(snapshot, layers, &areas, &volumes);
+    ElementQuantity {
+        kind: QuantityKind::Ceiling,
+        storey: ceiling.storey.clone(), phase: Phase::New,
+        type_id: ceiling.ceiling_type.clone(),
         count: 1,
         width: thickness,
         perimeter: loops::perimeter(&outer) + holes.iter().map(|hole| loops::perimeter(hole)).sum::<f64>(),
@@ -350,7 +458,7 @@ pub fn roof_quantity(snapshot: &ModelSnapshot, roof: &Roof, solid: Option<&Eleme
     let thickness = snapshot.roof_types.get(&roof.roof_type).map_or(0.0, |kind| kind.layers.iter().map(|layer| layer.thickness.max(0.0)).sum());
     ElementQuantity {
         kind: QuantityKind::Roof,
-        storey: roof.storey.clone(),
+        storey: roof.storey.clone(), phase: roof.phase,
         type_id: roof.roof_type.clone(),
         count: 1,
         width: thickness,
@@ -368,28 +476,48 @@ pub fn roof_quantity(snapshot: &ModelSnapshot, roof: &Roof, solid: Option<&Eleme
 
 /// 🏛️ The quantities of a column from the levels it is resolved by; absent without a type.
 pub fn column_quantity(snapshot: &ModelSnapshot, column: &Column, own: &StoreyLevel, target: Option<&StoreyLevel>) -> Option<ElementQuantity> {
-    let kind = snapshot.column_types.get(&column.column_type)?;
-    let (base_z, top_z) = vertical_of(column.base_offset, &column.top, own, target);
-    let outline = profile_loop(&kind.profile);
-    let (area, height) = (loops::area(&outline), (top_z - base_z).max(0.0));
-    let volume = area * height;
-    let rows = vec![LayerQuantity { material: kind.material.clone(), thickness: 0.0, area, volume, mass: volume * density(snapshot, &kind.material) }];
-    Some(ElementQuantity { kind: QuantityKind::Column, storey: column.storey.clone(), type_id: column.column_type.clone(), count: 1, length: height, height, perimeter: loops::perimeter(&outline), gross_area: area, net_area: area, gross_volume: volume, net_volume: volume, mass: mass_of(&rows), layers: rows, ..ElementQuantity::default() })
+    column_quantity_in(snapshot, column, own, target, &FamilyProfiles::new())
 }
 
-/// ➖️ The quantities of a beam; absent without a type.
-pub fn beam_quantity(snapshot: &ModelSnapshot, beam: &Beam) -> Option<ElementQuantity> {
-    let kind = snapshot.beam_types.get(&beam.beam_type)?;
-    let outline = profile_loop(&kind.profile);
-    let (area, length) = (loops::area(&outline), (beam.end.x - beam.start.x).hypot(beam.end.y - beam.start.y));
+/// 🏛️ [`column_quantity`] where a type that names a profile family gets that family's outline from `profiles`.
+pub fn column_quantity_in(snapshot: &ModelSnapshot, column: &Column, own: &StoreyLevel, target: Option<&StoreyLevel>, profiles: &FamilyProfiles<'_>) -> Option<ElementQuantity> {
+    let kind = snapshot.column_types.get(&column.column_type)?;
+    let (base_z, top_z) = vertical_of(column.base_offset, &column.top, own, target);
+    let outline = profile_loop(&profiles.resolve(&kind.profile));
+    let (area, height) = (loops::area(&outline), (top_z - base_z).max(0.0));
+    let length = column.tilt.filter(|tilt| tilt.angle.is_finite() && tilt.angle.abs() < std::f64::consts::FRAC_PI_2).map_or(height, |tilt| height / tilt.angle.cos());
     let volume = area * length;
     let rows = vec![LayerQuantity { material: kind.material.clone(), thickness: 0.0, area, volume, mass: volume * density(snapshot, &kind.material) }];
-    Some(ElementQuantity { kind: QuantityKind::Beam, storey: beam.storey.clone(), type_id: beam.beam_type.clone(), count: 1, length, perimeter: loops::perimeter(&outline), gross_area: area, net_area: area, gross_volume: volume, net_volume: volume, mass: mass_of(&rows), layers: rows, ..ElementQuantity::default() })
+    Some(ElementQuantity { kind: QuantityKind::Column, storey: column.storey.clone(), phase: column.phase, type_id: column.column_type.clone(), count: 1, length, height, perimeter: loops::perimeter(&outline), gross_area: area, net_area: area, gross_volume: volume, net_volume: volume, mass: mass_of(&rows), layers: rows, ..ElementQuantity::default() })
+}
+
+/// ➖️ The quantities of a beam; absent without a type. The length is the length of the axis (along the arc, along the incline), the gross volume the profile area times it, the net volume the volume of the solid
+/// once the joins with columns cut the ends back (the gross volume while there is no solid).
+pub fn beam_quantity(snapshot: &ModelSnapshot, beam: &Beam, solid: Option<&ElementSolid>) -> Option<ElementQuantity> {
+    beam_quantity_in(snapshot, beam, solid, &FamilyProfiles::new())
+}
+
+/// ➖️ [`beam_quantity`] where a type that names a profile family gets that family's outline from `profiles`.
+pub fn beam_quantity_in(snapshot: &ModelSnapshot, beam: &Beam, solid: Option<&ElementSolid>, profiles: &FamilyProfiles<'_>) -> Option<ElementQuantity> {
+    let kind = snapshot.beam_types.get(&beam.beam_type)?;
+    let outline = profile_loop(&profiles.resolve(&kind.profile));
+    let rise = beam.end_top_offset.map_or(0.0, |end| end - beam.top_offset);
+    let (area, length) = (loops::area(&outline), seg(&beam.axis).length().hypot(rise));
+    let gross = area * length;
+    let net = solid.filter(|solid| !solid.is_empty()).map_or(gross, |solid| solid.volume);
+    let rows = vec![LayerQuantity { material: kind.material.clone(), thickness: 0.0, area, volume: net, mass: net * density(snapshot, &kind.material) }];
+    Some(ElementQuantity { kind: QuantityKind::Beam, storey: beam.storey.clone(), phase: beam.phase, type_id: beam.beam_type.clone(), count: 1, length, perimeter: loops::perimeter(&outline), gross_area: area, net_area: area, gross_volume: gross, net_volume: net, mass: mass_of(&rows), layers: rows, ..ElementQuantity::default() })
+}
+
+/// 🕰️ The phase an opening takes: the one of its host wall or curtain wall, new construction without a host.
+fn host_phase(snapshot: &ModelSnapshot, host: &str) -> Phase {
+    snapshot.walls.get(host).map(|wall| wall.phase).or_else(|| snapshot.curtain_walls.get(host).map(|curtain| curtain.phase)).unwrap_or_default()
 }
 
 /// 🪟️ The quantities of an opening from its frame and its filler solid.
 pub fn opening_quantity(snapshot: &ModelSnapshot, opening: &Opening, frame: &OpeningFrame, solid: Option<&ElementSolid>) -> ElementQuantity {
     let storey = snapshot.walls.get(&opening.host).map(|wall| wall.storey.clone()).or_else(|| snapshot.curtain_walls.get(&opening.host).map(|curtain| curtain.storey.clone())).unwrap_or_default();
+    let phase = host_phase(snapshot, &opening.host);
     let (kind, type_id) = match &opening.kind {
         OpeningKind::Window { window_type } => (QuantityKind::Window, window_type.clone()),
         OpeningKind::Door { door_type } => (QuantityKind::Door, door_type.clone()),
@@ -398,28 +526,70 @@ pub fn opening_quantity(snapshot: &ModelSnapshot, opening: &Opening, frame: &Ope
     let rows = solid.map(|solid| solid_rows(snapshot, solid)).unwrap_or_default();
     let volume = solid.map_or(0.0, |solid| solid.volume);
     let area = frame.width * frame.height;
-    ElementQuantity { kind, storey, type_id, count: 1, width: frame.width, height: frame.height, perimeter: 2.0 * (frame.width + frame.height), gross_area: area, net_area: area, gross_volume: volume, net_volume: volume, mass: mass_of(&rows), layers: rows, ..ElementQuantity::default() }
+    ElementQuantity { kind, storey, phase, type_id, count: 1, width: frame.width, height: frame.height, perimeter: 2.0 * (frame.width + frame.height), gross_area: area, net_area: area, gross_volume: volume, net_volume: volume, mass: mass_of(&rows), layers: rows, ..ElementQuantity::default() }
 }
 
 /// 🪜️ The quantities of a stair from its run and solid.
 pub fn stair_quantity(stair: &Stair, run: &StairRun, solid: Option<&ElementSolid>) -> ElementQuantity {
     let volume = solid.map_or(0.0, |solid| solid.volume);
-    ElementQuantity { kind: QuantityKind::Stair, storey: stair.storey.clone(), count: 1, length: run.run_length, width: run.width, height: run.rise, gross_volume: volume, net_volume: volume, risers: run.riser_count, ..ElementQuantity::default() }
+    ElementQuantity { kind: QuantityKind::Stair, storey: stair.storey.clone(), phase: stair.phase, count: 1, length: run.run_length, width: run.width, height: run.rise, gross_volume: volume, net_volume: volume, risers: run.riser_count, ..ElementQuantity::default() }
+}
+
+/// 🛝️ The quantities of a ramp from its run, its plan strip and its solid: `length` the path, `width`, `height` the rise, the plan area of the strip as gross and net area, the walking surface as `surface_area`, the slab (not the side railings) as volume.
+pub fn ramp_quantity(snapshot: &ModelSnapshot, ramp: &Ramp, run: &RampRun, solid: Option<&ElementSolid>) -> ElementQuantity {
+    let outline = strip_of(ramp).outline();
+    let (area, perimeter) = (loops::area(&outline), loops::perimeter(&outline));
+    let volume = solid.map_or(0.0, |solid| group_volumes(solid).iter().zip(&solid.groups).filter(|(_, group)| group.part == parts::BODY).map(|(volume, _)| *volume).sum());
+    let rows = vec![LayerQuantity { material: ramp.material.clone(), thickness: ramp.thickness, area, volume, mass: volume * density(snapshot, &ramp.material) }];
+    ElementQuantity {
+        kind: QuantityKind::Ramp,
+        storey: ramp.storey.clone(), phase: Phase::New,
+        count: 1,
+        length: run.length,
+        width: ramp.width,
+        height: run.rise,
+        perimeter,
+        gross_area: area,
+        net_area: area,
+        surface_area: solid.map_or(area, |solid| upward_area(solid, 0)),
+        gross_volume: volume,
+        net_volume: volume,
+        mass: mass_of(&rows),
+        layers: rows,
+        ..ElementQuantity::default()
+    }
+}
+
+/// 🪟️ The area of one side of the infill of a railing: the volume of the infill part of its solid over the thickness of the infill.
+fn infill_area(railing: &Railing, solid: &ElementSolid) -> f64 {
+    let (Infill::Glass { thickness } | Infill::Panel { thickness }) = railing.infill else { return 0.0 };
+    let volumes = group_volumes(solid);
+    solid.groups.iter().zip(volumes).filter(|(group, _)| group.part == parts::INFILL).map(|(_, volume)| volume).sum::<f64>() / thickness
 }
 
 /// 🛤️ The quantities of a railing from its path and solid.
 pub fn railing_quantity(snapshot: &ModelSnapshot, railing: &Railing, solid: Option<&ElementSolid>) -> ElementQuantity {
     let length: f64 = railing.path.windows(2).map(|pair| (pair[1].x - pair[0].x).hypot(pair[1].y - pair[0].y)).sum();
-    let rows = solid.map(|solid| solid_rows(snapshot, solid)).unwrap_or_default();
-    let volume = solid.map_or(0.0, |solid| solid.volume);
-    ElementQuantity { kind: QuantityKind::Railing, storey: railing.storey.clone(), count: 1, length, height: railing.height, gross_volume: volume, net_volume: volume, mass: mass_of(&rows), layers: rows, ..ElementQuantity::default() }
+    railing_quantity_of(snapshot, railing, length, solid)
 }
 
-/// 🏠️ The quantities of a space from its room; absent while the room is unresolved.
-pub fn space_quantity(space: &Space, room: &SpaceRoom) -> Option<ElementQuantity> {
+/// 🪝️ The quantities of a hosted railing: `length` is the rail along the paths its host yields.
+pub fn hosted_railing_quantity(snapshot: &ModelSnapshot, railing: &Railing, length: f64, solid: Option<&ElementSolid>) -> ElementQuantity {
+    railing_quantity_of(snapshot, railing, length, solid)
+}
+
+fn railing_quantity_of(snapshot: &ModelSnapshot, railing: &Railing, length: f64, solid: Option<&ElementSolid>) -> ElementQuantity {
+    let rows = solid.map(|solid| solid_rows(snapshot, solid)).unwrap_or_default();
+    let volume = solid.map_or(0.0, |solid| solid.volume);
+    let (infill, balusters) = solid.map_or((0.0, 0), |solid| (infill_area(railing, solid), if solid.groups.iter().any(|group| group.part == parts::BALUSTER) { baluster_count(railing) } else { 0 }));
+    ElementQuantity { kind: QuantityKind::Railing, storey: railing.storey.clone(), phase: railing.phase, count: 1, length, height: railing.height, surface_area: infill, gross_volume: volume, net_volume: volume, mass: mass_of(&rows), balusters, layers: rows, ..ElementQuantity::default() }
+}
+
+/// 🏠️ The quantities of a space from its room and the frames of the openings on the walls of its storey; absent while the room is unresolved.
+pub fn space_quantity(snapshot: &ModelSnapshot, space: &Space, room: &SpaceRoom, frames: &[&OpeningFrame]) -> Option<ElementQuantity> {
     matches!(room.status, SpaceStatus::Inferred | SpaceStatus::Explicit).then(|| ElementQuantity {
         kind: QuantityKind::Space,
-        storey: space.storey.clone(),
+        storey: space.storey.clone(), phase: space.phase,
         count: 1,
         height: room.clear_height,
         perimeter: room.perimeter,
@@ -427,6 +597,7 @@ pub fn space_quantity(space: &Space, room: &SpaceRoom) -> Option<ElementQuantity
         net_area: room.net_floor_area,
         gross_volume: room.volume,
         net_volume: room.volume,
+        finishes: finishes::finish_rows(snapshot, space, room, frames),
         ..ElementQuantity::default()
     })
 }
@@ -438,10 +609,13 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
         let kind = snapshot.wall_types.get(&wall.wall_type);
         (dep_value(&Wall { name: String::new(), ..wall.clone() }), dep_value(&kind.cloned()), kind.map(|row| materials(&row.layers)).unwrap_or_default())
     } else if let Some(curtain) = snapshot.curtain_walls.get(id) {
-        (dep_value(&CurtainWall { name: String::new(), ..curtain.clone() }), DslValue::Null, [curtain.panel_material.clone(), curtain.mullion_material.clone()].into_iter().collect())
+        (dep_value(&CurtainWall { name: String::new(), ..curtain.clone() }), dep_value(&snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).cloned()), curtain_walls::materials_of(snapshot, id, curtain))
     } else if let Some(slab) = snapshot.slabs.get(id) {
         let kind = snapshot.slab_types.get(&slab.slab_type);
         (dep_value(&Slab { name: String::new(), ..slab.clone() }), dep_value(&kind.cloned()), kind.map(|row| materials(&row.layers)).unwrap_or_default())
+    } else if let Some(ceiling) = snapshot.ceilings.get(id) {
+        let kind = snapshot.ceiling_types.get(&ceiling.ceiling_type);
+        (dep_value(&Ceiling { name: String::new(), ..ceiling.clone() }), dep_value(&kind.cloned()), kind.map(|row| materials(&row.layers)).unwrap_or_default())
     } else if let Some(roof) = snapshot.roofs.get(id) {
         let kind = snapshot.roof_types.get(&roof.roof_type);
         (dep_value(&Roof { name: String::new(), ..roof.clone() }), dep_value(&kind.cloned()), kind.map(|row| materials(&row.layers)).unwrap_or_default())
@@ -458,13 +632,18 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
             OpeningKind::Void { .. } => None,
         };
         let storey = snapshot.walls.get(&opening.host).map(|wall| wall.storey.clone()).or_else(|| snapshot.curtain_walls.get(&opening.host).map(|curtain| curtain.storey.clone()));
-        (dep_object([("storey", dep_value(&storey)), ("type", dep_value(&opening.kind))]), DslValue::Null, material.into_iter().collect())
+        (dep_object([("storey", dep_value(&storey)), ("phase", dep_value(&host_phase(snapshot, &opening.host))), ("type", dep_value(&opening.kind))]), DslValue::Null, material.into_iter().collect())
+    } else if let Some(sweep) = snapshot.wall_sweeps.get(id) {
+        let host = snapshot.walls.get(&sweep.host);
+        (dep_object([("sweep", dep_value(&WallSweep { name: String::new(), ..sweep.clone() })), ("storey", dep_value(&host.map(|wall| wall.storey.clone()))), ("phase", dep_value(&host.map(|wall| wall.phase)))]), DslValue::Null, BTreeSet::from([sweep.material.clone()]))
     } else if let Some(stair) = snapshot.stairs.get(id) {
-        (dep_value(&stair.storey), DslValue::Null, BTreeSet::new())
+        (dep_object([("storey", dep_value(&stair.storey)), ("phase", dep_value(&stair.phase))]), DslValue::Null, BTreeSet::new())
     } else if let Some(railing) = snapshot.railings.get(id) {
-        (dep_value(&Railing { name: String::new(), ..railing.clone() }), DslValue::Null, BTreeSet::from([railing.material.clone()]))
+        (dep_object([("railing", dep_value(&Railing { name: String::new(), ..railing.clone() })), ("host", rail_hosts::dependency(snapshot, railing))]), DslValue::Null, BTreeSet::from([railing.material.clone()]))
+    } else if let Some(ramp) = snapshot.ramps.get(id) {
+        (dep_value(&Ramp { name: String::new(), ..ramp.clone() }), DslValue::Null, BTreeSet::from([ramp.material.clone()]))
     } else if let Some(space) = snapshot.spaces.get(id) {
-        (dep_value(&space.storey), DslValue::Null, BTreeSet::new())
+        (dep_object([("storey", dep_value(&space.storey)), ("phase", dep_value(&space.phase)), ("finishes", finishes::dependency(snapshot, space))]), DslValue::Null, BTreeSet::new())
     } else {
         (DslValue::Null, DslValue::Null, BTreeSet::new())
     };
@@ -481,6 +660,11 @@ impl Totals {
         self.area += element.area();
         self.volume += element.net_volume;
         self.mass += element.mass;
+    }
+
+    fn add_finish(&mut self, row: &FinishQuantity) {
+        self.count += 1;
+        self.area += row.area;
     }
 
     fn add_layer(&mut self, row: &LayerQuantity) {
@@ -500,6 +684,11 @@ impl QuantityTotals {
         for row in element.layers.iter().filter(|row| !row.material.is_empty()) {
             self.materials.entry(row.material.clone()).or_default().add_layer(row);
         }
+        for row in element.finishes.iter().filter(|row| !row.material.is_empty()) {
+            self.finishes.entry(format!("{}:{}", row.surface.key(), row.material)).or_default().add_finish(row);
+        }
+        self.phases.entry(element.phase.key().to_string()).or_default().add_element(element);
+        self.phase_kinds.entry(format!("{}:{}", element.phase.key(), element.kind.key())).or_default().add_element(element);
     }
 }
 
@@ -511,6 +700,7 @@ pub fn totals_of<'a>(elements: impl IntoIterator<Item = &'a ElementQuantity>) ->
 }
 
 /// 🧮️ The take-off of a model (the `Quantity` and `Totals` nodes of the model graph). The inference argument is ignored: the graph derives everything the take-off reads in one run.
+#[cfg(test)]
 pub fn compute_quantities(snapshot: &ModelSnapshot, _inferred: &ModelInference) -> ModelQuantities {
     std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::QUANTITIES }>(snapshot).quantities)
 }

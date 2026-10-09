@@ -1,0 +1,14 @@
+{
+  "mutation": "createCurtainPanelOverride",
+  "id": "ov-1",
+  "curtain_panel_override": {
+    "curtain": "cw-1",
+    "u": 1,
+    "v": 1,
+    "panel": {
+      "Window": {
+        "window_type": "win-1"
+      }
+    }
+  }
+}

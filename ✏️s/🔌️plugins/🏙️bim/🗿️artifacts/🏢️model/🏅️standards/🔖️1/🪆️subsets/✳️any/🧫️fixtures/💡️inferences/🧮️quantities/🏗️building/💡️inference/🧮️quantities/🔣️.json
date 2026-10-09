@@ -3,6 +3,7 @@
     "w-iso": {
       "kind": "Wall",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "wt-300",
       "count": 1,
       "length": 5.0,
@@ -34,11 +35,13 @@
           "volume": 1.0910000000000004,
           "mass": 43.640000000000015
         }
-      ]
+      ],
+      "finishes": []
     },
     "w-l1": {
       "kind": "Wall",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "wt-200",
       "count": 1,
       "length": 4.0,
@@ -63,11 +66,13 @@
           "volume": 2.184,
           "mass": 3931.2000000000003
         }
-      ]
+      ],
+      "finishes": []
     },
     "w-l2": {
       "kind": "Wall",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "wt-200",
       "count": 1,
       "length": 3.0,
@@ -92,11 +97,13 @@
           "volume": 1.679999999999994,
           "mass": 3023.999999999989
         }
-      ]
+      ],
+      "finishes": []
     },
     "w-arc": {
       "kind": "Wall",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "wt-300",
       "count": 1,
       "length": 6.283185307179586,
@@ -128,11 +135,13 @@
           "volume": 1.5443361431346412,
           "mass": 61.77344572538565
         }
-      ]
+      ],
+      "finishes": []
     },
     "w-up": {
       "kind": "Wall",
       "storey": "st-1",
+      "phase": "New",
       "type_id": "wt-200",
       "count": 1,
       "length": 2.0,
@@ -157,11 +166,13 @@
           "volume": 1.2800000000000002,
           "mass": 2304.0000000000005
         }
-      ]
+      ],
+      "finishes": []
     },
     "sl-holed": {
       "kind": "Slab",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "slt-250",
       "count": 1,
       "length": 0.0,
@@ -193,11 +204,13 @@
           "volume": 2.3000000000000003,
           "mass": 5520.000000000001
         }
-      ]
+      ],
+      "finishes": []
     },
     "sl-round": {
       "kind": "Slab",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "slt-250",
       "count": 1,
       "length": 0.0,
@@ -229,11 +242,13 @@
           "volume": 1.2566370614359172,
           "mass": 3015.928947446201
         }
-      ]
+      ],
+      "finishes": []
     },
     "c-sq": {
       "kind": "Column",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "ct-sq",
       "count": 1,
       "length": 2.8,
@@ -258,11 +273,13 @@
           "volume": 0.252,
           "mass": 604.8
         }
-      ]
+      ],
+      "finishes": []
     },
     "c-round": {
       "kind": "Column",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "ct-round",
       "count": 1,
       "length": 2.0,
@@ -287,11 +304,13 @@
           "volume": 0.25132741228718347,
           "mass": 603.1857894892403
         }
-      ]
+      ],
+      "finishes": []
     },
     "c-up": {
       "kind": "Column",
       "storey": "st-1",
+      "phase": "New",
       "type_id": "ct-sq",
       "count": 1,
       "length": 2.3999999999999995,
@@ -316,11 +335,13 @@
           "volume": 0.21599999999999994,
           "mass": 518.3999999999999
         }
-      ]
+      ],
+      "finishes": []
     },
     "b-1": {
       "kind": "Beam",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "bt-rect",
       "count": 1,
       "length": 5.0,
@@ -345,11 +366,13 @@
           "volume": 0.4000000000000001,
           "mass": 960.0000000000002
         }
-      ]
+      ],
+      "finishes": []
     },
     "sp-hall": {
       "kind": "Space",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "",
       "count": 1,
       "length": 0.0,
@@ -366,11 +389,13 @@
       "net_volume": 56.0,
       "mass": 0.0,
       "risers": 0,
-      "layers": []
+      "layers": [],
+      "finishes": []
     },
     "sp-round": {
       "kind": "Space",
       "storey": "st-0",
+      "phase": "New",
       "type_id": "",
       "count": 1,
       "length": 0.0,
@@ -387,7 +412,8 @@
       "net_volume": 8.796459430051424,
       "mass": 0.0,
       "risers": 0,
-      "layers": []
+      "layers": [],
+      "finishes": []
     }
   },
   "storeys": {
@@ -495,6 +521,53 @@
           "volume": 2.6353361431346416,
           "mass": 105.41344572538566
         }
+      },
+      "finishes": {},
+      "phases": {
+        "new": {
+          "count": 11,
+          "length": 28.083185307179587,
+          "area": 104.22159024204151,
+          "volume": 86.14076847631308,
+          "mass": 39658.5167108802
+        }
+      },
+      "phase_kinds": {
+        "new:beam": {
+          "count": 1,
+          "length": 5.0,
+          "area": 0.08000000000000002,
+          "volume": 0.4000000000000001,
+          "mass": 960.0000000000002
+        },
+        "new:column": {
+          "count": 2,
+          "length": 4.8,
+          "area": 0.21566370614359173,
+          "volume": 0.5033274122871835,
+          "mass": 1207.9857894892402
+        },
+        "new:slab": {
+          "count": 2,
+          "length": 0.0,
+          "area": 35.56637061435917,
+          "volume": 8.891592653589793,
+          "mass": 21339.822368615503
+        },
+        "new:space": {
+          "count": 2,
+          "length": 0.0,
+          "area": 23.1415926535898,
+          "volume": 64.79645943005143,
+          "mass": 0.0
+        },
+        "new:wall": {
+          "count": 4,
+          "length": 18.283185307179586,
+          "area": 45.21796326794897,
+          "volume": 11.549388980384682,
+          "mass": 16150.708552775457
+        }
       }
     },
     "st-1": {
@@ -542,6 +615,32 @@
           "count": 1,
           "length": 0.0,
           "area": 0.4,
+          "volume": 1.2800000000000002,
+          "mass": 2304.0000000000005
+        }
+      },
+      "finishes": {},
+      "phases": {
+        "new": {
+          "count": 2,
+          "length": 4.3999999999999995,
+          "area": 6.49,
+          "volume": 1.4960000000000002,
+          "mass": 2822.4000000000005
+        }
+      },
+      "phase_kinds": {
+        "new:column": {
+          "count": 1,
+          "length": 2.3999999999999995,
+          "area": 0.09,
+          "volume": 0.21599999999999994,
+          "mass": 518.3999999999999
+        },
+        "new:wall": {
+          "count": 1,
+          "length": 2.0,
+          "area": 6.4,
           "volume": 1.2800000000000002,
           "mass": 2304.0000000000005
         }
@@ -653,6 +752,53 @@
           "volume": 2.6353361431346416,
           "mass": 105.41344572538566
         }
+      },
+      "finishes": {},
+      "phases": {
+        "new": {
+          "count": 13,
+          "length": 32.48318530717958,
+          "area": 110.71159024204152,
+          "volume": 87.63676847631308,
+          "mass": 42480.91671088019
+        }
+      },
+      "phase_kinds": {
+        "new:beam": {
+          "count": 1,
+          "length": 5.0,
+          "area": 0.08000000000000002,
+          "volume": 0.4000000000000001,
+          "mass": 960.0000000000002
+        },
+        "new:column": {
+          "count": 3,
+          "length": 7.199999999999999,
+          "area": 0.30566370614359173,
+          "volume": 0.7193274122871834,
+          "mass": 1726.38578948924
+        },
+        "new:slab": {
+          "count": 2,
+          "length": 0.0,
+          "area": 35.56637061435917,
+          "volume": 8.891592653589793,
+          "mass": 21339.822368615503
+        },
+        "new:space": {
+          "count": 2,
+          "length": 0.0,
+          "area": 23.1415926535898,
+          "volume": 64.79645943005143,
+          "mass": 0.0
+        },
+        "new:wall": {
+          "count": 5,
+          "length": 20.283185307179586,
+          "area": 51.617963267948966,
+          "volume": 12.829388980384682,
+          "mass": 18454.708552775457
+        }
       }
     }
   },
@@ -759,6 +905,53 @@
         "area": 1.1597344572538568,
         "volume": 2.6353361431346416,
         "mass": 105.41344572538566
+      }
+    },
+    "finishes": {},
+    "phases": {
+      "new": {
+        "count": 13,
+        "length": 32.48318530717958,
+        "area": 110.71159024204152,
+        "volume": 87.63676847631308,
+        "mass": 42480.91671088019
+      }
+    },
+    "phase_kinds": {
+      "new:beam": {
+        "count": 1,
+        "length": 5.0,
+        "area": 0.08000000000000002,
+        "volume": 0.4000000000000001,
+        "mass": 960.0000000000002
+      },
+      "new:column": {
+        "count": 3,
+        "length": 7.199999999999999,
+        "area": 0.30566370614359173,
+        "volume": 0.7193274122871834,
+        "mass": 1726.38578948924
+      },
+      "new:slab": {
+        "count": 2,
+        "length": 0.0,
+        "area": 35.56637061435917,
+        "volume": 8.891592653589793,
+        "mass": 21339.822368615503
+      },
+      "new:space": {
+        "count": 2,
+        "length": 0.0,
+        "area": 23.1415926535898,
+        "volume": 64.79645943005143,
+        "mass": 0.0
+      },
+      "new:wall": {
+        "count": 5,
+        "length": 20.283185307179586,
+        "area": 51.617963267948966,
+        "volume": 12.829388980384682,
+        "mass": 18454.708552775457
       }
     }
   }

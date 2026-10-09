@@ -9,9 +9,11 @@
 //!
 //! Related: shapely `polygonize` is the third-party oracle, <https://shapely.readthedocs.io/en/stable/manual.html#shapely.ops.polygonize>.
 
+use super::super::curtain_layout::DEFAULT_MULLION_DEPTH;
+use super::super::element_solids::ceilings;
 use super::super::element_solids::columns::profile_loop;
 use super::super::element_solids::plan_kit::{depth_of, seg};
-use super::super::element_solids::{dep_object, dep_value};
+use super::super::element_solids::{dep_object, dep_value, Anonymous};
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::WallLayout;
 use crate::{ModelSnapshot, Point2, SpaceBoundary, Vertex};
@@ -47,7 +49,7 @@ pub enum SpaceStatus {
 /// 🏠️ Resolved room of one space, in metres, square metres and cubic metres.
 /// `outline` is the counter-clockwise outer loop (bulges only for explicit outlines), `holes` the clockwise islands inside it.
 /// `area` is the outline area minus the holes, `net_floor_area` additionally excludes the columns of the storey, `perimeter` adds the hole boundaries.
-/// `clear_height` is the storey height plus the offset minus the thickness of the slab of the storey above that covers `point`, `volume = area * clear_height`.
+/// `clear_height` is the lowest underside above `point` minus the floor: the storey height plus the offset minus the thickness of the slab of the storey above that covers `point` (`ceiling_slab`), or the underside of the lowest ceiling of the storey that covers `point` (`ceiling`), `volume = area * clear_height`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SpaceRoom {
     pub status: SpaceStatus,
@@ -61,12 +63,13 @@ pub struct SpaceRoom {
     pub clear_height: f64,
     pub volume: f64,
     pub ceiling_slab: String,
+    pub ceiling: String,
     pub bounding_walls: Vec<String>,
 }
 
 impl SpaceRoom {
     fn refused(status: SpaceStatus, point: Point2, floor_z: f64) -> Self {
-        Self { status, outline: Vec::new(), holes: Vec::new(), point, area: 0.0, perimeter: 0.0, net_floor_area: 0.0, floor_z, clear_height: 0.0, volume: 0.0, ceiling_slab: String::new(), bounding_walls: Vec::new() }
+        Self { status, outline: Vec::new(), holes: Vec::new(), point, area: 0.0, perimeter: 0.0, net_floor_area: 0.0, floor_z, clear_height: 0.0, volume: 0.0, ceiling_slab: String::new(), ceiling: String::new(), bounding_walls: Vec::new() }
     }
 }
 
@@ -121,7 +124,7 @@ pub fn obstacles_of(snapshot: &ModelSnapshot, storey: &str, layouts: &BTreeMap<&
         (!outline.is_empty()).then(|| Obstacle::new(id, flat(&outline))).flatten()
     });
     let curtains = snapshot.curtain_walls.iter().filter(|(_, curtain)| curtain.storey == storey).filter_map(|(id, curtain)| {
-        let depth = depth_of(&curtain.mullion);
+        let depth = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).map_or(DEFAULT_MULLION_DEPTH, |kind| depth_of(&kind.interior_mullion));
         let outline = band_loop(&seg(&curtain.axis), depth / 2.0, depth / 2.0, None, None)?;
         let outline: Vec<loops::Vertex> = outline.iter().map(|(point, bulge)| loops::Vertex::new(*point, *bulge)).collect();
         Obstacle::new(id, flat(&outline))
@@ -169,7 +172,8 @@ pub fn interior_point(region: &Region) -> Option<Point2> {
     crossings.chunks_exact(2).max_by(|left, right| (left[1] - left[0]).total_cmp(&(right[1] - right[0]))).map(|span| Point2 { x: (span[0] + span[1]) / 2.0, y })
 }
 
-fn column_regions(snapshot: &ModelSnapshot, storey: &str) -> Vec<Region> {
+/// 🏛️ The plan regions of the columns of `storey`, placed and rotated (their profile flattened).
+pub fn column_regions(snapshot: &ModelSnapshot, storey: &str) -> Vec<Region> {
     snapshot
         .columns
         .values()
@@ -202,6 +206,15 @@ fn ceiling_of(snapshot: &ModelSnapshot, storey: &str, point: Point2) -> Option<(
         .filter(|(_, slab)| slab.storey == above && loops::contains(&plan_loop(&slab.boundary), probe) && !slab.holes.iter().any(|hole| loops::contains(&plan_loop(hole), probe)))
         .map(|(id, slab)| (id.clone(), slab_thickness(snapshot, &slab.slab_type), slab.offset))
         .max_by(|left, right| left.1.total_cmp(&right.1).then_with(|| right.0.cmp(&left.0)))
+}
+/// 🔲️ The lowest ceiling of `storey` that covers `point`: its id and the z of its underside, or `None` when no ceiling hangs there.
+fn hung_ceiling(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, point: Point2) -> Option<(String, f64)> {
+    snapshot
+        .ceilings
+        .iter()
+        .filter(|(_, ceiling)| ceiling.storey == storey)
+        .filter_map(|(id, ceiling)| ceilings::underside_at(snapshot, ceiling, level, point).map(|z| (id.clone(), z)))
+        .min_by(|left, right| left.1.total_cmp(&right.1).then_with(|| left.0.cmp(&right.0)))
 }
 //#endregion 🔖️Arrangement
 
@@ -262,7 +275,9 @@ fn finish(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, shape: Sh
         .collect();
     let height = level.top_elevation - level.elevation;
     let ceiling = ceiling_of(snapshot, storey, shape.point);
-    let clear_height = ceiling.as_ref().map_or(height, |(_, thickness, offset)| (height + offset - thickness).max(0.0));
+    let hung = hung_ceiling(snapshot, storey, level, shape.point);
+    let under_slab = ceiling.as_ref().map_or(height, |(_, thickness, offset)| (height + offset - thickness).max(0.0));
+    let clear_height = hung.as_ref().map_or(under_slab, |(_, underside)| under_slab.min((underside - level.elevation).max(0.0)));
     SpaceRoom {
         status: shape.status,
         outline: shape.outline,
@@ -275,6 +290,7 @@ fn finish(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, shape: Sh
         clear_height,
         volume: shape.area * clear_height,
         ceiling_slab: ceiling.map(|(id, _, _)| id).unwrap_or_default(),
+        ceiling: hung.map(|(id, _)| id).unwrap_or_default(),
         bounding_walls,
     }
 }
@@ -299,27 +315,27 @@ pub fn rooms_from(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, o
         .collect()
 }
 
-/// 🏠️ The rooms of a storey of a model on its own (a probe the caller has not inferred): one run of the model graph restricted to the rooms. `level` is ignored, the graph derives it.
-pub fn rooms_of(snapshot: &ModelSnapshot, storey: &str, _level: &StoreyLevel) -> StoreyRooms {
-    let mut all = compute_spaces(snapshot);
-    snapshot.spaces.iter().filter(|(_, space)| space.storey == storey).filter_map(|(id, _)| all.remove(id).map(|room| (id.clone(), room))).collect()
-}
 //#endregion 🔖️Rooms
 
 //#region 🔖️Dependency
+/// 🔑️ What `column_regions` reads of the snapshot for a storey: the position, rotation and profile of each of its columns.
+pub fn column_dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
+    DslValue::object(snapshot.columns.iter().filter(|(_, column)| column.storey == storey).map(|(id, column)| {
+        let profile = snapshot.column_types.get(&column.column_type).map(|kind| kind.profile.clone());
+        (id.clone(), dep_object([("position", dep_value(&column.position)), ("rotation", dep_value(&column.rotation)), ("profile", dep_value(&profile))]))
+    }))
+}
+
 /// 🔑️ Everything `rooms_from` reads of the snapshot for a storey besides its level and the wall footprints (which are parents): the boundaries of its spaces, its curtain wall bands, its columns with their profiles, and the slabs of the storey above with their thickness.
 pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
     let above = above_of(snapshot, storey);
     let spaces = snapshot.spaces.iter().filter(|(_, space)| space.storey == storey).map(|(id, space)| (id.clone(), dep_value(&space.boundary)));
-    let curtains = snapshot.curtain_walls.iter().filter(|(_, curtain)| curtain.storey == storey).map(|(id, curtain)| (id.clone(), dep_object([("axis", dep_value(&curtain.axis)), ("mullion", dep_value(&curtain.mullion))])));
-    let columns = snapshot.columns.iter().filter(|(_, column)| column.storey == storey).map(|(id, column)| {
-        let profile = snapshot.column_types.get(&column.column_type).map(|kind| kind.profile.clone());
-        (id.clone(), dep_object([("position", dep_value(&column.position)), ("rotation", dep_value(&column.rotation)), ("profile", dep_value(&profile))]))
-    });
+    let curtains = snapshot.curtain_walls.iter().filter(|(_, curtain)| curtain.storey == storey).map(|(id, curtain)| (id.clone(), dep_object([("axis", dep_value(&curtain.axis)), ("mullion", dep_value(&snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).map(|kind| kind.interior_mullion.clone())))])));
     let slabs = snapshot.slabs.iter().filter(|(_, slab)| above.as_ref() == Some(&slab.storey)).map(|(id, slab)| {
         (id.clone(), dep_object([("boundary", dep_value(&slab.boundary)), ("holes", dep_value(&slab.holes)), ("offset", dep_value(&slab.offset)), ("thickness", dep_value(&slab_thickness(snapshot, &slab.slab_type)))]))
     });
-    dep_object([("spaces", DslValue::object(spaces)), ("curtain_walls", DslValue::object(curtains)), ("columns", DslValue::object(columns)), ("above", dep_value(&above)), ("slabs", DslValue::object(slabs))])
+    let hung = snapshot.ceilings.iter().filter(|(_, ceiling)| ceiling.storey == storey).map(|(id, ceiling)| (id.clone(), ceilings::dependency(snapshot, &ceiling.anonymous())));
+    dep_object([("spaces", DslValue::object(spaces)), ("curtain_walls", DslValue::object(curtains)), ("columns", column_dependency(snapshot, storey)), ("above", dep_value(&above)), ("slabs", DslValue::object(slabs)), ("ceilings", DslValue::object(hung))])
 }
 //#endregion 🔖️Dependency
 
@@ -329,6 +345,7 @@ pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
 
 
 /// 🏠️ The room of every space (the `Room` nodes of the model graph, flattened).
+#[cfg(test)]
 pub fn compute_spaces(snapshot: &ModelSnapshot) -> BTreeMap<String, SpaceRoom> {
     std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::ROOMS }>(snapshot).spaces)
 }

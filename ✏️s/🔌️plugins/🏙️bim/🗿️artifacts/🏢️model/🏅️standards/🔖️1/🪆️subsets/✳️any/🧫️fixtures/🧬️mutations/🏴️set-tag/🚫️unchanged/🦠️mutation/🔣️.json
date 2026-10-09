@@ -1,0 +1,6 @@
+{
+  "mutation": "setTag",
+  "id": "tag-south",
+  "category": "Name",
+  "element": "w-south"
+}

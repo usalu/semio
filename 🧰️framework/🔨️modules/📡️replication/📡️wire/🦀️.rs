@@ -2490,6 +2490,7 @@ pub enum MergeMode {
     Range,
 }
 
+semio_framework_value::artifact_retire_leaf!(MergeMode);
 impl MergeMode {
     /// 🎯️ The ONE wire spelling of a merge mode — the `MergeMode` enum of
     /// `🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json`, pinned by
@@ -2553,6 +2554,7 @@ fn default_pointer_channels() -> Vec<String> {
 /// at the app boundary before reaching this module).await.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InteractionTarget {
     pub granularity: String,
     pub id: String,
@@ -2645,6 +2647,7 @@ pub struct DomainHover {
     pub channel: String,
     pub ids: Vec<String>,
 }
+crate::value::artifact_retire_struct!(DomainHover {channel,ids});
 
 /// 🌱️ Hand-written twin of the `SelectionMode` note above.
 impl crate::value::ToValue for DomainHover {
@@ -2680,6 +2683,7 @@ pub struct InteractionState {
     pub active_mode: BTreeMap<String, SelectionMode>,
     pub active_granularity: BTreeMap<String, String>,
 }
+crate::value::artifact_retire_struct!(InteractionState {selection,hover,active_mode,active_granularity});
 
 /// 🌱️ Hand-written twin of the `SelectionMode` note above — this is the type
 /// `crate::app::InteractionConfigMutation` (`🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`)

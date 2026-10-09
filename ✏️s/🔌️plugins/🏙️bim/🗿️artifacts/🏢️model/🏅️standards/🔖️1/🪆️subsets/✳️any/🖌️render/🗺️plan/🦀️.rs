@@ -115,19 +115,34 @@ fn polyline_record(line: &PlanPolyline, selected: bool) -> DslValue {
     record(&line.id, "node", ring(&line.vertices, line.closed), &paint(line.kind, line.style, false, selected))
 }
 
+/// 🪧️ Where an annotation text starts and how it turns on the canvas. The plan places it by the middle of its baseline; the canvas draws from the left of the baseline, so the start moves back by half the
+/// estimated advance along the text direction, and the transform rotates the text about that start (the canvas y axis is mirrored, so a counter-clockwise plan angle is a clockwise canvas angle).
+fn notation_placement(text: &PlanText, size: f64) -> ([f64; 2], [f64; 6]) {
+    let half = crate::standards::v1::subsets::any::schema::inferences::annotation_layout::text_width(&text.label, size) / 2.0;
+    let (sin, cos) = text.rotation.sin_cos();
+    let start = [text.x - half * cos, text.y - half * sin];
+    if text.rotation == 0.0 {
+        return (start, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
+    }
+    let [px, py] = canvas_point(start[0], start[1]);
+    (start, [cos, -sin, sin, cos, px - cos * px - sin * py, py + sin * px - cos * py])
+}
+
 fn text_record(text: &PlanText, selected: bool) -> DslValue {
     let content = [Some(text.label.clone()), (!text.detail.is_empty()).then(|| text.detail.clone()), text.measure.map(|area| format!("{area:.1} m\u{b2}"))].into_iter().flatten().collect::<Vec<String>>().join("\n");
-    let [x, y] = canvas_point(text.x, text.y);
+    let size = if text.kind.is_notation() && text.height > 0.0 { text.height } else { TEXT_SIZE };
+    let (start, transform) = if text.kind.is_notation() { notation_placement(text, size) } else { ([text.x, text.y], [1.0, 0.0, 0.0, 1.0, 0.0, 0.0_f64]) };
+    let [x, y] = canvas_point(start[0], start[1]);
     let color = if selected { ACCENT } else { paint(text.kind, text.style, true, false).stroke };
     DslValue::object([
         ("id".to_string(), DslValue::String(text.id.clone())),
         ("role".to_string(), DslValue::String("node".to_string())),
-        ("transform".to_string(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0_f64].to_value()),
+        ("transform".to_string(), transform.to_value()),
         ("segments".to_string(), Vec::<PathSegment>::new().to_value()),
         ("x".to_string(), DslValue::float(x)),
-        ("y".to_string(), DslValue::float(y - TEXT_SIZE)),
+        ("y".to_string(), DslValue::float(y - size)),
         ("fill".to_string(), DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), color.to_vec().to_value())])),
-        ("text".to_string(), DslValue::object([("content".to_string(), DslValue::String(content)), ("size".to_string(), DslValue::float(TEXT_SIZE))])),
+        ("text".to_string(), DslValue::object([("content".to_string(), DslValue::String(content)), ("size".to_string(), DslValue::float(size))])),
         ("opacity".to_string(), DslValue::float(1.0)),
         ("blendMode".to_string(), DslValue::String("normal".to_string())),
         ("visible".to_string(), DslValue::Bool(true)),

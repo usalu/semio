@@ -1,0 +1,7 @@
+{
+  "mutation": "setCeiling",
+  "id": "ce-living",
+  "slope": {
+    "value": null
+  }
+}

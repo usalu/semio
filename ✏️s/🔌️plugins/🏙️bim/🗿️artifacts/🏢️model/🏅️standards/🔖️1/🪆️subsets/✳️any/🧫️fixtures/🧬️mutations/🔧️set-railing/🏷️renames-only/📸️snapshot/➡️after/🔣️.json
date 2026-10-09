@@ -60,6 +60,7 @@
       "height": 1.0,
       "infill": "None",
       "material": "m-steel",
+      "phase": "New",
       "name": "Stair Guard",
       "path": [
         {

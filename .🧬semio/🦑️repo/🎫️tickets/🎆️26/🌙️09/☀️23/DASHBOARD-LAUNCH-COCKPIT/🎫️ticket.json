@@ -3,7 +3,7 @@
   "emoji": "🎛️",
   "status": "closed",
   "description": "The dashboard (`bun run dashboard`, `semio …`) is the only developer control plane: no launch.json anywhere, every runnable thing declared next to its owner, configs derived and drift-checked, battle tested across the monorepo.",
-  "summary": "Round 2 (2026-10-08): all launch.json files dissolved (.vscode/launch.json, .vscode/🧩️launch.seed.jsonc, .claude/launch.json); every capability maps to a dashboard command (r2-slice-m2.md). Entry: `bun run dashboard` (TUI) and `bun run dashboard <verb>` ≡ `semio commands|run|tasks|logs|stop|restart|kill|open|daemon|preferences|catalog`, one stable task handle, no root-script delegation; root package.json = nx/setup/dashboard/dashboard:install; stale installed binary rebuilds automatically. Commands come only from Nx targets, the playground catalog, metadata.semio.dashboard declarations and open tickets' 🎮️commands.json; MCP client files and devcontainer editor settings derived and drift-checked; hooks, dependabot, nextest copies canonicalised; 🚚️migration.json removed. Daemon §3 and TUI §4 complete; Nx graph integrity guarded. Evidence: dashboard lib 206/206, TUI 363/363, battle tests green directly and via Nx (coverage 9/9, CLI journeys 11/11, PTY journeys 9/9, load 4/4+3/3, real-workspace smoke 2/2); real cutover via `bun run dashboard`: 26,564 commands 0 problems, quiz served on 6061 and stopped cleanly. Owner actions: AGENTS.md lines 50–51, stage launch-file deletions, decide gemini --yolo / kiro --trust-all-tools tools and Monorepo.sln. See r2-summary.md.",
+  "summary": "Completed the sole declarative dashboard control plane, retiring active VS Code launch catalogs and canonicalizing bootstrap/command authority. Repaired shared TUI text/caret/hover/mouse/layout/borders, task naming, paginated restore and cancellable HTTP readiness. Native Windows verification: authority 6; exhaustive coverage 9 with 16,384 target IDs; UI 367; native dashboard 213; canonical combined 6+11+8+2+213; CLI journeys 13; independent PTY journeys 16; CLI/PTY load 4/3, one exploratory ignore; real Nx test/server/native-build smokes each passed. Stronger independent absolute caret replay passed. Current release freshness verified. Owned instances stopped, authored evidence retained, generated outputs removed. Native Linux/macOS runtime and execution of every destructive command are not claimed. See the final verification report.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2769"
   },
@@ -11,7 +11,7 @@
   "sessions": [
     "⚪20f03a5d4cd7405a8e7728c2ab997865",
     "⚪8aebc0d3385b4cfca97aadfdc3b2989b",
-    "⚪6725bd3f14e547798a482d94f1b97a18"
-  ],
-  "note": "Closed manually on 2026-10-08: repo MCP ticket_reopen returned a malformed result and ticket_close hung twice (1800 s, with and without management)."
+    "⚪6725bd3f14e547798a482d94f1b97a18",
+    "⚪8e0009016f824748a7d204725a7ca4f4"
+  ]
 }

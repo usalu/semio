@@ -4,17 +4,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "storey",
-    "cutHeight",
+    "view",
     "framed",
     "viewport"
   ],
   "properties": {
-    "storey": {
+    "view": {
       "type": "string"
-    },
-    "cutHeight": {
-      "type": "number"
     },
     "framed": {
       "type": "boolean"

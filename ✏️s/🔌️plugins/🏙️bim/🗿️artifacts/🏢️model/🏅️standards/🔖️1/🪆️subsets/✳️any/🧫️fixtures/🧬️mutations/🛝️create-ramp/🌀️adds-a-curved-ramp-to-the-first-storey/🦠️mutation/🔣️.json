@@ -1,0 +1,40 @@
+{
+  "mutation": "createRamp",
+  "id": "rp-3",
+  "ramp": {
+    "storey": "st-first",
+    "path": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0.4142135623730951
+      },
+      {
+        "point": {
+          "x": 5,
+          "y": 5
+        },
+        "bulge": 0
+      }
+    ],
+    "width": 1.2,
+    "landing_start": 1.5,
+    "landing_end": 1.5,
+    "landing_turn": 1.5,
+    "max_slope": 0.0833333333333333,
+    "thickness": 0.2,
+    "material": "m-concrete",
+    "base_offset": 0.1,
+    "top": {
+      "Storey": {
+        "storey": "st-first",
+        "offset": 0.5
+      }
+    },
+    "railing_left": false,
+    "railing_right": false,
+    "name": "Curved Ramp"
+  }
+}

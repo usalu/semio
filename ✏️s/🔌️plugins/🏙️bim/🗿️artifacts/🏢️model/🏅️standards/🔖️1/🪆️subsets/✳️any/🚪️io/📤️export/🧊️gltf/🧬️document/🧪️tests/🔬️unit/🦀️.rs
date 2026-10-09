@@ -17,33 +17,32 @@ fn triangle() -> GltfModel {
 }
 
 #[test]
-fn the_json_describes_buffer_views_and_accessors_that_tile_the_buffer() {
-    let (json, buffer) = triangle().to_json_and_buffer();
-    let value: serde_json::Value = serde_json::from_str(&json).expect("valid JSON");
-    assert_eq!(value["asset"]["version"], "2.0");
-    assert_eq!((value["scene"].as_u64(), value["scenes"][0]["nodes"][0].as_u64()), (Some(0), Some(0)));
+fn the_snapshot_describes_buffer_views_and_accessors_that_tile_the_buffer() {
+    let snapshot = triangle().to_snapshot();
+    let (document, buffer) = (&snapshot.document, &snapshot.buffers[0]);
+    assert_eq!(document.asset.version, "2.0");
+    assert_eq!((document.scene, document.scenes[0].nodes.clone()), (Some(0), vec![0]));
     assert_eq!(buffer.len(), 36 + 36 + 12);
-    assert_eq!(value["buffers"][0]["byteLength"], buffer.len());
-    let views = value["bufferViews"].as_array().expect("views");
-    assert_eq!(views.len(), 3);
+    assert_eq!(document.buffers[0].byte_length, buffer.len());
+    assert_eq!(document.buffer_views.len(), 3);
     let mut end = 0;
-    for view in views {
-        assert_eq!(view["byteOffset"].as_u64(), Some(end));
-        assert_eq!(view["byteOffset"].as_u64().unwrap() % 4, 0);
-        end += view["byteLength"].as_u64().unwrap();
+    for view in &document.buffer_views {
+        assert_eq!((view.byte_offset, view.byte_offset % 4), (end, 0));
+        end += view.byte_length;
     }
-    assert_eq!(end as usize, buffer.len());
-    let position = &value["accessors"][value["meshes"][0]["primitives"][0]["attributes"]["POSITION"].as_u64().unwrap() as usize];
-    assert_eq!((position["componentType"].as_u64(), position["count"].as_u64(), position["type"].as_str()), (Some(5126), Some(3), Some("VEC3")));
-    assert_eq!((position["min"].clone(), position["max"].clone()), (serde_json::json!([0.0, 0.0, 0.0]), serde_json::json!([1.0, 2.0, 0.0])));
-    assert_eq!(value["materials"][0]["alphaMode"], "BLEND");
-    assert_eq!(value["nodes"][1]["extras"]["id"], "a");
-    assert!(value["nodes"][1].get("translation").is_none() && value["nodes"][0]["children"][0] == 1);
+    assert_eq!(end, buffer.len());
+    let primitive = &document.meshes[0].primitives[0];
+    let position = &document.accessors[primitive.attributes.iter().find(|(name, _)| name == "POSITION").expect("positions").1];
+    assert_eq!((position.component_type, position.count, position.kind), (codec::ComponentType::Float, 3, codec::AccessorType::Vec3));
+    assert_eq!((position.min.clone(), position.max.clone()), (Some(vec![0.0, 0.0, 0.0]), Some(vec![1.0, 2.0, 0.0])));
+    assert_eq!(document.materials[0].alpha_mode, codec::AlphaMode::Blend);
+    assert_eq!(document.nodes[1].extras, Some(codec::Json::Object(vec![("id".into(), codec::Json::String("a".into()))])));
+    assert!(document.nodes[1].translation.is_none() && document.nodes[0].children == [1]);
 }
 
 #[test]
 fn the_binary_buffer_holds_the_little_endian_floats_and_indices() {
-    let (_, buffer) = triangle().to_json_and_buffer();
+    let buffer = triangle().to_snapshot().buffers.remove(0);
     assert_eq!(f32::from_le_bytes(buffer[12..16].try_into().unwrap()), 1.0);
     assert_eq!(f32::from_le_bytes(buffer[28..32].try_into().unwrap()), 2.0);
     assert_eq!(u32::from_le_bytes(buffer[72..76].try_into().unwrap()), 0);
@@ -52,7 +51,7 @@ fn the_binary_buffer_holds_the_little_endian_floats_and_indices() {
 
 #[test]
 fn the_gltf_crate_reads_back_the_nodes_the_triangle_and_the_material() {
-    let bytes = triangle().to_glb();
+    let bytes = triangle().to_glb().expect("encodes");
     let (document, blob) = third_party(&bytes);
     assert_eq!((document.nodes().len(), document.meshes().len(), document.materials().len()), (2, 1, 1));
     let mesh = document.meshes().next().unwrap();
@@ -69,10 +68,10 @@ fn the_gltf_crate_reads_back_the_nodes_the_triangle_and_the_material() {
 #[test]
 fn a_model_without_meshes_writes_no_buffer() {
     let empty = GltfModel { name: "n".into(), extras: DslValue::Null, materials: Vec::new(), meshes: Vec::new(), nodes: Vec::new(), roots: Vec::new() };
-    let (json, buffer) = empty.to_json_and_buffer();
-    assert!(buffer.is_empty() && !json.contains("buffers"));
-    let (document, _) = third_party(&empty.to_glb());
-    assert_eq!(document.nodes().len(), 0);
+    let snapshot = empty.to_snapshot();
+    assert!(snapshot.buffers.is_empty() && snapshot.document.buffers.is_empty());
+    let decoded = codec::decode(&empty.to_glb().expect("encodes")).expect("the stdio codec reads its own container");
+    assert_eq!((decoded.document.nodes.len(), decoded.document.scenes.len(), decoded.buffers.len()), (0, 1, 0));
 }
 
 #[test]

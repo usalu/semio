@@ -1,0 +1,9 @@
+{
+  "mutation": "setCurtainPanelOverride",
+  "id": "ov-1",
+  "panel": {
+    "Window": {
+      "window_type": "win-1"
+    }
+  }
+}

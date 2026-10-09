@@ -1,13 +1,14 @@
 //! 🏗️ `s.bim.model@1/*` → `s.stdio.ifc@2x3/*`: the spatial structure, walls with openings, slabs, roofs, frames, stairs, railings, spaces, curtain walls, grids,
-//! materials, property sets, classifications and base quantities of a [`ModelSnapshot`] as an IFC 2x3 Part-21 file.
+//! materials, property sets, classifications, base quantities and annotations (`IfcAnnotation`) of a [`ModelSnapshot`] as an IFC 2x3 Part-21 file.
 //! 🔖 `IoFidelity::Lossy`: IFC 2x3 has no slot for parametric constraints (top constraints, joins, derived inferences); geometry and identity are exact.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/
 
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use crate::{ModelInference, ModelSnapshot};
-use protocol::Inference;
-use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
+use crate::{ModelInference, ModelSnapshot, Phase};
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Header, Part21Value};
@@ -31,14 +32,22 @@ pub mod walls;
 pub mod frame;
 #[path = "⬜️horizontal/🦀️.rs"]
 pub mod horizontal;
+#[path = "🔲️ceilings/🦀️.rs"]
+pub mod ceilings;
 #[path = "🪜️circulation/🦀️.rs"]
 pub mod circulation;
+#[path = "🛝️ramps/🦀️.rs"]
+pub mod ramps;
 #[path = "🏠️spaces/🦀️.rs"]
 pub mod spaces;
+#[path = "🏘️zoning/🦀️.rs"]
+pub mod zoning;
 #[path = "🪟️curtain/🦀️.rs"]
 pub mod curtain;
 #[path = "📏️grids/🦀️.rs"]
 pub mod grids;
+#[path = "🪧️annotations/🦀️.rs"]
+pub mod annotations;
 #[path = "🔬️projection/🦀️.rs"]
 pub mod projection;
 
@@ -139,6 +148,15 @@ impl<'a> Export<'a> {
     pub fn contain(&mut self, storey: &str, id: &str, product: u64) {
         self.links.elements.insert(id.to_string(), product);
         self.links.contained.entry(storey.to_string()).or_default().push(product);
+        self.phase(id, product);
+    }
+
+    /// 🕰️ Records the construction phase of the written product of element `id` as the `Phase` row of its authoring data; new work (the default, and an element that carries no phase) writes no row, an opening carries the phase of its host.
+    pub fn phase(&mut self, id: &str, product: u64) {
+        let phase = phase_visibility::phase_of(self.model, id).filter(|phase| *phase != Phase::New);
+        if let Some(phase) = phase {
+            self.links.authoring.push((product, vec![("Phase", data::label(&format!("{phase:?}")))]));
+        }
     }
 
     /// 🏷️ The `Name` of an element: its authored name, else its id.
@@ -183,19 +201,22 @@ pub fn inferred_to_part21(model: &ModelSnapshot, inferred: &ModelInference) -> (
     curtain::emit(&mut export);
     frame::emit(&mut export);
     horizontal::emit(&mut export);
+    ceilings::emit(&mut export);
     circulation::emit(&mut export);
+    ramps::emit(&mut export);
     spaces::emit(&mut export);
+    zoning::emit(&mut export);
     grids::emit(&mut export);
+    annotations::emit(&mut export);
     data::emit_links(&mut export);
     let notes = std::mem::take(&mut export.notes);
     let head = header(model);
     (export.ifc.finish(head), notes)
 }
 
-/// 🏗️ The Part-21 document of `model` plus a note per item that could not be written: the model is inferred once.
+/// 🏗️ The Part-21 document of `model` plus a note per item that could not be written: the inference comes from the shared session, so an export after an edit recomputes only what the edit touched.
 pub fn model_to_part21(model: &ModelSnapshot) -> Result<(Part21Document, Vec<String>), String> {
-    let inferred = ModelInference::infer(model).map_err(|error| error.to_string())?;
-    Ok(inferred_to_part21(model, &inferred))
+    registry::try_with_inference(None, model, |inferred| inferred_to_part21(model, inferred)).map_err(|error| error.to_string())
 }
 
 /// 📤️ The IFC 2x3 file bytes of `model` plus a note per item that could not be written.

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-sheet/schema.json",
+  "title": "CreateSheet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "sheet"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createSheet"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Sheet id",
+          "de": "Blatt-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "sheet": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Sheet",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Sheet",
+          "de": "Blatt"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

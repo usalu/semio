@@ -1,0 +1,14 @@
+{
+  "mutation": "createAnnotationStyle",
+  "id": "as-mm",
+  "annotation_style": {
+    "name": "Millimetres",
+    "text_height": 0.25,
+    "terminator": "Arrow",
+    "unit": "Millimetre",
+    "precision": 0,
+    "mark_size": 0.15,
+    "gap": 0.1,
+    "overshoot": 0.2
+  }
+}

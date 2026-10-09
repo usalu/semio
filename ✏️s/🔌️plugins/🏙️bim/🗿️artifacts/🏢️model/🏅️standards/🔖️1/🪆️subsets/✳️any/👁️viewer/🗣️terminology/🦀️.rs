@@ -17,6 +17,9 @@ semio_framework_ui_locale::app_labels! {
         set_plan_storey: native_en "Show storey in plan", native_de "Geschoss im Grundriss zeigen", reuse_en "Show level in plan", reuse_de "Ebene im Grundriss zeigen";
         elements: native_en "Elements", native_de "Bauteile", reuse_en "Objects", reuse_de "Objekte";
         element: native_en "Element", native_de "Bauteil", reuse_en "Object", reuse_de "Objekt";
+        mode_view: native_en "View", native_de "Ansicht", reuse_en "View", reuse_de "Ansicht";
+        camera_pose: native_en "Camera pose", native_de "Kamerapose", reuse_en "Camera pose", reuse_de "Kamerapose";
+        unknown_body: native_en "Unknown body", native_de "Unbekannter Bereich", reuse_en "Unknown body", reuse_de "Unbekannter Bereich";
     }
 }
 

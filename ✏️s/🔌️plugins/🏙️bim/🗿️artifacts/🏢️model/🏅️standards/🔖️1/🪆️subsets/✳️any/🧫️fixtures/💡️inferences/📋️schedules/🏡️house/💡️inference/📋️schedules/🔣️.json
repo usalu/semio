@@ -1,0 +1,921 @@
+{
+  "sch-doors": {
+    "items": 2,
+    "rows": [
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "o-door-2"
+        ],
+        "cells": [
+          "Double door",
+          "Double door 180",
+          "First",
+          1.8,
+          2.1,
+          "double",
+          "right",
+          1.0
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "o-door-1"
+        ],
+        "cells": [
+          "Door 1",
+          "Door 90",
+          "Ground",
+          0.9,
+          2.1,
+          "single",
+          "right",
+          1.0
+        ]
+      },
+      {
+        "kind": "Total",
+        "level": 0,
+        "elements": [],
+        "cells": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          2.0
+        ]
+      }
+    ]
+  },
+  "sch-finishes": {
+    "items": 6,
+    "rows": [
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "sp-2"
+        ],
+        "cells": [
+          "1.01",
+          "Bedroom",
+          "ceiling",
+          "Steel",
+          20.16
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "sp-2"
+        ],
+        "cells": [
+          "1.01",
+          "Bedroom",
+          "floor",
+          "Oak",
+          20.16
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "sp-2"
+        ],
+        "cells": [
+          "1.01",
+          "Bedroom",
+          "wall",
+          "Concrete",
+          51.519999999999996
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "sp-2"
+        ],
+        "cells": [
+          null,
+          null,
+          null,
+          null,
+          91.84
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "sp-1"
+        ],
+        "cells": [
+          "0.01",
+          "Living room",
+          "ceiling",
+          null,
+          43.22433630661352
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "sp-1"
+        ],
+        "cells": [
+          "0.01",
+          "Living room",
+          "floor",
+          "Oak",
+          43.22433630661352
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "sp-1"
+        ],
+        "cells": [
+          "0.01",
+          "Living room",
+          "wall",
+          "Brick",
+          86.49499999999998
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "sp-1"
+        ],
+        "cells": [
+          null,
+          null,
+          null,
+          null,
+          172.94367261322702
+        ]
+      },
+      {
+        "kind": "Total",
+        "level": 0,
+        "elements": [],
+        "cells": [
+          null,
+          null,
+          null,
+          null,
+          264.783672613227
+        ]
+      }
+    ]
+  },
+  "sch-ground": {
+    "items": 4,
+    "rows": [
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "w-north"
+        ],
+        "cells": [
+          "Wall 2",
+          "Ground",
+          8.0,
+          "new"
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "w-west"
+        ],
+        "cells": [
+          "Wall 3",
+          "Ground",
+          6.0,
+          "new"
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "w-east"
+        ],
+        "cells": [
+          "Wall 10",
+          "Ground",
+          6.0,
+          "new"
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "w-arc"
+        ],
+        "cells": [
+          "Curved",
+          "Ground",
+          4.413873974503432,
+          "new"
+        ]
+      }
+    ]
+  },
+  "sch-nested": {
+    "items": 7,
+    "rows": [
+      {
+        "kind": "Item",
+        "level": 2,
+        "elements": [
+          "w-first-south"
+        ],
+        "cells": [
+          "w-first-south",
+          "demolished",
+          8.0,
+          22.4
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 1,
+        "elements": [
+          "w-first-south"
+        ],
+        "cells": [
+          null,
+          null,
+          8.0,
+          22.4
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "w-first-south"
+        ],
+        "cells": [
+          null,
+          null,
+          8.0,
+          22.4
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 2,
+        "elements": [
+          "w-north"
+        ],
+        "cells": [
+          "w-north",
+          "new",
+          8.0,
+          24.0
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 2,
+        "elements": [
+          "w-south"
+        ],
+        "cells": [
+          "w-south",
+          "new",
+          8.0,
+          24.0
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 2,
+        "elements": [
+          "w-east"
+        ],
+        "cells": [
+          "w-east",
+          "new",
+          6.0,
+          18.0
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 2,
+        "elements": [
+          "w-west"
+        ],
+        "cells": [
+          "w-west",
+          "new",
+          6.0,
+          18.0
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 1,
+        "elements": [
+          "w-north",
+          "w-south",
+          "w-east",
+          "w-west"
+        ],
+        "cells": [
+          null,
+          null,
+          28.0,
+          84.0
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 2,
+        "elements": [
+          "w-arc"
+        ],
+        "cells": [
+          "w-arc",
+          "new",
+          4.413873974503432,
+          13.241621923510298
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 2,
+        "elements": [
+          "w-free"
+        ],
+        "cells": [
+          "w-free",
+          "existing",
+          3.0,
+          7.199999999999999
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 1,
+        "elements": [
+          "w-arc",
+          "w-free"
+        ],
+        "cells": [
+          null,
+          null,
+          7.413873974503432,
+          20.441621923510297
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "w-north",
+          "w-south",
+          "w-east",
+          "w-west",
+          "w-arc",
+          "w-free"
+        ],
+        "cells": [
+          null,
+          null,
+          35.41387397450343,
+          104.4416219235103
+        ]
+      },
+      {
+        "kind": "Total",
+        "level": 0,
+        "elements": [],
+        "cells": [
+          null,
+          null,
+          43.41387397450343,
+          126.8416219235103
+        ]
+      }
+    ]
+  },
+  "sch-rooms": {
+    "items": 2,
+    "rows": [
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "sp-2"
+        ],
+        "cells": [
+          "1.01",
+          "Bedroom",
+          "First",
+          "bedroom",
+          20.16,
+          20.16,
+          2.8,
+          56.44799999999999
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "sp-2"
+        ],
+        "cells": [
+          null,
+          null,
+          "First",
+          null,
+          20.16,
+          20.16,
+          null,
+          56.44799999999999
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "sp-1"
+        ],
+        "cells": [
+          "0.01",
+          "Living room",
+          "Ground",
+          "living",
+          43.43999999999999,
+          43.22433630661352,
+          2.75,
+          119.45999999999998
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "sp-1"
+        ],
+        "cells": [
+          null,
+          null,
+          "Ground",
+          null,
+          43.43999999999999,
+          43.22433630661352,
+          null,
+          119.45999999999998
+        ]
+      },
+      {
+        "kind": "Total",
+        "level": 0,
+        "elements": [],
+        "cells": [
+          null,
+          null,
+          null,
+          null,
+          63.599999999999994,
+          63.38433630661352,
+          null,
+          175.90799999999996
+        ]
+      }
+    ]
+  },
+  "sch-takeoff": {
+    "items": 22,
+    "rows": [
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "w-east",
+          "w-first-south",
+          "w-north",
+          "w-south",
+          "w-west"
+        ],
+        "cells": [
+          "Brick",
+          7.120000000000003,
+          19.282000000000007,
+          34707.60000000001,
+          5.0
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "b-2",
+          "c-1",
+          "sl-balcony",
+          "sl-first",
+          "sl-ground",
+          "w-arc",
+          "w-free"
+        ],
+        "cells": [
+          "Concrete",
+          100.30208109617551,
+          23.320243288526555,
+          55968.58389246373,
+          7.0
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "w-east",
+          "w-first-south",
+          "w-north",
+          "w-south",
+          "w-west"
+        ],
+        "cells": [
+          "Mineral Wool",
+          3.680000000000003,
+          10.001000000000008,
+          400.0400000000003,
+          5.0
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "sl-balcony",
+          "sl-first",
+          "sl-ground"
+        ],
+        "cells": [
+          "Oak",
+          99.0,
+          4.95,
+          3465.0,
+          3.0
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "b-1",
+          "c-2"
+        ],
+        "cells": [
+          "Steel",
+          0.13085176614359173,
+          0.3245353853589793,
+          2547.6027750679877,
+          2.0
+        ]
+      },
+      {
+        "kind": "Total",
+        "level": 0,
+        "elements": [],
+        "cells": [
+          null,
+          210.2329328623191,
+          57.87777867388555,
+          97088.82666753173,
+          22.0
+        ]
+      }
+    ]
+  },
+  "sch-types": {
+    "items": 7,
+    "rows": [
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "w-arc",
+          "w-free"
+        ],
+        "cells": [
+          "Concrete 150",
+          2.0,
+          7.413873974503432,
+          2.850243288526552
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "w-east",
+          "w-first-south",
+          "w-north",
+          "w-south",
+          "w-west"
+        ],
+        "cells": [
+          "Brick 300",
+          5.0,
+          36.0,
+          29.283000000000015
+        ]
+      },
+      {
+        "kind": "Total",
+        "level": 0,
+        "elements": [],
+        "cells": [
+          null,
+          7.0,
+          43.41387397450343,
+          32.133243288526565
+        ]
+      }
+    ]
+  },
+  "sch-walls": {
+    "items": 7,
+    "rows": [
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "w-first-south"
+        ],
+        "cells": [
+          "First South",
+          "Brick 300",
+          "First",
+          8.0,
+          2.8,
+          18.619999999999997,
+          5.586,
+          null,
+          "Brick, Mineral Wool"
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "w-south"
+        ],
+        "cells": [
+          "Wall 1",
+          "Brick 300",
+          "Ground",
+          8.0,
+          3.0,
+          20.669999999999998,
+          6.2010000000000005,
+          "EI60",
+          "Brick, Mineral Wool"
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "w-north"
+        ],
+        "cells": [
+          "Wall 2",
+          "Brick 300",
+          "Ground",
+          8.0,
+          3.0,
+          22.8,
+          6.840000000000016,
+          null,
+          "Brick, Mineral Wool"
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "w-west"
+        ],
+        "cells": [
+          "Wall 3",
+          "Brick 300",
+          "Ground",
+          6.0,
+          3.0,
+          18.0,
+          5.4,
+          null,
+          "Brick, Mineral Wool"
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "w-east"
+        ],
+        "cells": [
+          "Wall 10",
+          "Brick 300",
+          "Ground",
+          6.0,
+          3.0,
+          17.52,
+          5.255999999999997,
+          null,
+          "Brick, Mineral Wool"
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "w-first-south",
+          "w-south",
+          "w-north",
+          "w-west",
+          "w-east"
+        ],
+        "cells": [
+          null,
+          "Brick 300",
+          null,
+          36.0,
+          null,
+          97.61,
+          29.283000000000015,
+          null,
+          null
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "w-arc"
+        ],
+        "cells": [
+          "Curved",
+          "Concrete 150",
+          "Ground",
+          4.413873974503432,
+          3.0,
+          11.801621923510297,
+          1.770243288526551,
+          null,
+          "Concrete"
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 1,
+        "elements": [
+          "w-free"
+        ],
+        "cells": [
+          "Free",
+          "Concrete 150",
+          "Ground",
+          3.0,
+          2.4,
+          7.199999999999999,
+          1.080000000000001,
+          null,
+          "Concrete"
+        ]
+      },
+      {
+        "kind": "Group",
+        "level": 0,
+        "elements": [
+          "w-arc",
+          "w-free"
+        ],
+        "cells": [
+          null,
+          "Concrete 150",
+          null,
+          7.413873974503432,
+          null,
+          19.001621923510296,
+          2.850243288526552,
+          null,
+          null
+        ]
+      },
+      {
+        "kind": "Total",
+        "level": 0,
+        "elements": [],
+        "cells": [
+          null,
+          null,
+          null,
+          43.41387397450343,
+          null,
+          116.61162192351028,
+          32.133243288526565,
+          null,
+          null
+        ]
+      }
+    ]
+  },
+  "sch-windows": {
+    "items": 3,
+    "rows": [
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "o-win-1"
+        ],
+        "cells": [
+          "Window 1",
+          "Window 120",
+          "Ground",
+          1.2,
+          1.2,
+          2.0,
+          "Wall 1",
+          1.0
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "o-win-arc"
+        ],
+        "cells": [
+          "Curved window",
+          "Window 120",
+          "Ground",
+          1.2,
+          1.2,
+          2.0,
+          "Curved",
+          1.0
+        ]
+      },
+      {
+        "kind": "Item",
+        "level": 0,
+        "elements": [
+          "o-win-2"
+        ],
+        "cells": [
+          "Window 2",
+          "Window 120",
+          "Ground",
+          1.0,
+          1.2,
+          2.0,
+          "Wall 2",
+          1.0
+        ]
+      },
+      {
+        "kind": "Total",
+        "level": 0,
+        "elements": [],
+        "cells": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          3.0
+        ]
+      }
+    ]
+  }
+}

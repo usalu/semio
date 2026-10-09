@@ -104,7 +104,7 @@ async fn inverse_undoes_every_kind_of_entry() {
 #[semio_framework_async_macros::async_test]
 async fn an_optional_field_is_restored_to_none_and_to_some() {
     let mut base = ModelSnapshot::default();
-    base.openings.insert("o".into(), Opening { host: "w".into(), kind: OpeningKind::Void { width: 1.0, height: 2.0 }, offset: 1.0, sill_override: None, width: None, height: Some(2.1), flip_hand: false, flip_facing: false, name: "O".into() });
+    base.openings.insert("o".into(), Opening { host: "w".into(), kind: OpeningKind::Void { width: 1.0, height: 2.0 }, offset: 1.0, sill_override: None, width: None, height: Some(2.1), flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "O".into() });
     let diff = ModelDiff::openings("o", Entry::Patched(OpeningPatch { width: Some(Assigned::new(Some(0.9))), height: Some(Assigned::new(None)), ..Default::default() }));
     let after = protocol::apply_diff(&diff, &base).expect("applies");
     assert_eq!((after.openings["o"].width, after.openings["o"].height), (Some(0.9), None));
@@ -184,7 +184,7 @@ async fn a_minimal_patch_drops_exactly_the_fields_that_restate_the_base() {
     assert_eq!(both.minimal(&base), heightened(3.4));
     assert!(StoreyPatch { name: Some("Ground".into()), level: Some(0), height: Some(3.0), ..Default::default() }.minimal(&base).is_empty());
     assert!(StoreyPatch::default().minimal(&base).is_empty());
-    let slab = Slab { storey: "st".into(), slab_type: "t".into(), boundary: Vec::new(), holes: Vec::new(), offset: 0.0, slope: None, name: "Slab".into() };
+    let slab = Slab { phase: crate::Phase::New, storey: "st".into(), slab_type: "t".into(), boundary: Vec::new(), holes: Vec::new(), offset: 0.0, slope: None, name: "Slab".into() };
     assert!(SlabPatch { slope: Some(Assigned::new(None)), ..Default::default() }.minimal(&slab).is_empty());
     let sloped = SlabPatch { slope: Some(Assigned::new(Some(Slope { direction: 0.0, angle: 0.1 }))), ..Default::default() };
     assert_eq!(sloped.minimal(&slab), sloped);

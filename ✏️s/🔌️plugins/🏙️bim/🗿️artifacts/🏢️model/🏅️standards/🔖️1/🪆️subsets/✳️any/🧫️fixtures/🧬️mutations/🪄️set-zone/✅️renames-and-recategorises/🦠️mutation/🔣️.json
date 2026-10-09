@@ -1,0 +1,6 @@
+{
+  "mutation": "setZone",
+  "id": "z-day",
+  "name": "Living zone",
+  "category": "Fire compartment"
+}

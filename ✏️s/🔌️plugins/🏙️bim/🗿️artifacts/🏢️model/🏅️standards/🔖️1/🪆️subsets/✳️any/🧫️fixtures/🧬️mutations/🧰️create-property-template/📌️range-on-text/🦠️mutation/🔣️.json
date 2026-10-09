@@ -1,0 +1,19 @@
+{
+  "mutation": "createPropertyTemplate",
+  "id": "pt-new",
+  "template": {
+    "name": "Pset_X",
+    "applies_to": [
+      "Wall"
+    ],
+    "properties": [
+      {
+        "name": "Label",
+        "kind": "Text",
+        "required": false,
+        "allowed": [],
+        "minimum": 1
+      }
+    ]
+  }
+}

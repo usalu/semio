@@ -12,6 +12,7 @@
       "entry": "Created",
       "name": "Kitchen",
       "number": "0.01",
+      "phase": "New",
       "storey": "st-ground",
       "usage": "Kitchen"
     }

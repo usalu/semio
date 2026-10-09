@@ -8,9 +8,8 @@
 use super::document::{GltfMesh, GltfModel, GltfNode, GltfPrimitive};
 use super::materials::Palette;
 use crate::render::element_name;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, ElementSolid, SolidFamily};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+use crate::{ModelInference, ModelSnapshot};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -31,7 +30,10 @@ pub fn kind_of(family: SolidFamily) -> &'static str {
         SolidFamily::Slab => "slab",
         SolidFamily::Roof => "roof",
         SolidFamily::Stair => "stair",
+        SolidFamily::Ramp => "ramp",
         SolidFamily::Railing => "railing",
+        SolidFamily::Ceiling => "ceiling",
+        SolidFamily::WallSweep => "wall-sweep",
     }
 }
 
@@ -104,10 +106,9 @@ fn spatial(name: &str, translation: Option<[f64; 3]>, rotation: Option<[f64; 4]>
     GltfNode { name: name.to_string(), translation, rotation, mesh: None, children: Vec::new(), extras }
 }
 
-/// 🌳️ The glTF model of `snapshot` plus a note per element that could not be placed in the site, building and storey hierarchy.
-pub fn build(snapshot: &ModelSnapshot) -> (GltfModel, Vec<String>) {
-    let solids = compute_element_solids(snapshot);
-    let levels = compute_storey_levels(snapshot);
+/// 🌳️ The glTF model of `snapshot` from its inference plus a note per element that could not be placed in the site, building and storey hierarchy.
+pub fn build(snapshot: &ModelSnapshot, inferred: &ModelInference) -> (GltfModel, Vec<String>) {
+    let (solids, levels) = (&inferred.element_solids, &inferred.storey_levels);
     let mut by_storey: BTreeMap<&str, Vec<(&String, &ElementSolid)>> = BTreeMap::new();
     solids.iter().for_each(|(id, solid)| by_storey.entry(solid.storey.as_str()).or_default().push((id, solid)));
     let mut palette = Palette::default();

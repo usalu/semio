@@ -1,0 +1,32 @@
+{
+  "mutation": "createPropertyTemplate",
+  "id": "pt-slab",
+  "template": {
+    "name": "Pset_SlabCommon",
+    "applies_to": [
+      "Slab",
+      "SlabType"
+    ],
+    "properties": [
+      {
+        "name": "LoadBearing",
+        "kind": "Boolean",
+        "required": true,
+        "allowed": []
+      },
+      {
+        "name": "Thickness",
+        "kind": "Length",
+        "required": false,
+        "allowed": [],
+        "unit": "m",
+        "minimum": 0.05,
+        "default_value": {
+          "Length": {
+            "value": 0.2
+          }
+        }
+      }
+    ]
+  }
+}

@@ -65,6 +65,26 @@ impl TouchedPaths {
         })
     }
 
+    /// 🔀️ [`intersects_prefix`](Self::intersects_prefix) for the path whose segments are `parts`, without splitting or allocating: a part may itself contain `/`.
+    pub fn intersects_parts(&self, parts: &[&str]) -> bool {
+        self.paths.iter().any(|path| {
+            let mut rest = path.trim_start_matches('/');
+            for part in parts {
+                if rest.is_empty() {
+                    return true;
+                }
+                if part.is_empty() {
+                    continue;
+                }
+                match rest.strip_prefix(part) {
+                    Some(after) if after.is_empty() || after.starts_with('/') => rest = after.trim_start_matches('/'),
+                    _ => return false,
+                }
+            }
+            true
+        })
+    }
+
     /// 🔀️ Whether any of `prefixes` intersects `self` (see [`intersects_prefix`](Self::intersects_prefix)).
     // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     pub fn intersects_any(&self, prefixes: &[&str]) -> bool {
@@ -769,7 +789,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     }
 
     /// 🧭️ Consumes the plan with each local step's already-validated pre-state.
-    fn into_steps_with_pre_states(self) -> (Vec<PlanStep<Op>>, Vec<Option<P>>) {
+    pub(crate) fn into_steps_with_pre_states(self) -> (Vec<PlanStep<Op>>, Vec<Option<P>>) {
         (self.steps, self.pre_states)
     }
 

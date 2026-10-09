@@ -292,7 +292,7 @@ impl ArtifactViewer for DrawingViewer {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -308,7 +308,7 @@ impl ArtifactViewer for DrawingViewer {
             DRAWING_VIEW_RAW_BYTES,
             1,
             work,
-        )?;
+        );
         Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

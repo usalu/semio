@@ -1,0 +1,23 @@
+{
+  "mutation": "createSpace",
+  "id": "sp-9",
+  "space": {
+    "storey": "st-ground",
+    "number": "0.09",
+    "name": "Studio",
+    "boundary": {
+      "Bounded": {
+        "seed": {
+          "x": 2,
+          "y": 2
+        }
+      }
+    },
+    "usage": "Office",
+    "phase": "New",
+    "zone": "z-day",
+    "floor_finish": "m-tile",
+    "wall_finish": "m-paint",
+    "ceiling_finish": "m-paint"
+  }
+}

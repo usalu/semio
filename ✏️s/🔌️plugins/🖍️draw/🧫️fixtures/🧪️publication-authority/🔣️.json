@@ -5,7 +5,10 @@
       "owner": "DrawingPlayApp",
       "toolIdsConstants": [
         "DRAWING_GESTURE_TOOL_IDS",
-        "DRAWING_BOUNDED_TOOL_IDS"
+        "DRAWING_BOUNDED_TOOL_IDS",
+        "DRAWING_PATH_TOOL_IDS",
+        "DRAWING_IMAGE_TOOL_IDS",
+        "DRAWING_EXPORT_TOOL_IDS"
       ],
       "source": "🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "routes": [
@@ -232,6 +235,12 @@
           "lanes": [
             "artifact"
           ]
+        },
+        {
+          "id": "importImage",
+          "lanes": [
+            "artifact"
+          ]
         }
       ],
       "laws": {
@@ -249,7 +258,31 @@
         ],
         "accessibleLabels": true,
         "customizableUi": true
-      }
+      },
+      "reservedToolIdsConstant": "DRAWING_CLIPBOARD_RESERVED_IDS",
+      "reservedRoutes": [
+        {
+          "id": "copy",
+          "lanes": [
+            "host-only"
+          ]
+        },
+        {
+          "id": "cut",
+          "lanes": [
+            "artifact",
+            "child"
+          ]
+        },
+        {
+          "id": "paste",
+          "lanes": [
+            "artifact",
+            "child"
+          ]
+        }
+      ],
+      "reservedProducerSource": "🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧵️job/🦀️.rs"
     }
   ]
 }

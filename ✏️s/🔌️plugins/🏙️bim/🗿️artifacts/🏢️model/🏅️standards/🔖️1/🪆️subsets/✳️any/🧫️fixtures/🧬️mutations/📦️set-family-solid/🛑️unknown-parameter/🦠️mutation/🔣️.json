@@ -1,0 +1,5 @@
+{
+  "mutation": "setFamilySolid",
+  "id": "s-top",
+  "visible": "ghost > 1 m"
+}

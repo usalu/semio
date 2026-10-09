@@ -1,0 +1,8 @@
+{
+  "mutation": "setView",
+  "id": "v-section",
+  "hidden": [
+    "Walls",
+    "Walls"
+  ]
+}

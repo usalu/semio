@@ -6,6 +6,12 @@
 
 use crate::schema::{find_drawing_layer, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
+#[path="../../../🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🦠️mutation/🦀️.rs"]
+pub mod import_image;
+#[path="../../../🧱️structure/🧬️schema/🧬️mutations/🗑️remove-image-asset/🦠️mutation/🦀️.rs"]
+pub mod remove_image;
+pub use import_image::{import_image_asset,ImportImageAsset};
+pub use remove_image::{remove_image_asset,RemoveImageAsset};
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
@@ -36,6 +42,10 @@ pub enum DrawingMutation {
     RotateLayers(RotateLayers),
     ScaleLayers(ScaleLayers),
     DragPathPoints(DragPathPoints),
+    UpdateImage(UpdateImage),
+    SetShapeCoordinate(SetShapeCoordinate),
+    ImportImageAsset(ImportImageAsset),
+    RemoveImageAsset(RemoveImageAsset),
 }
 //#endregion 🔖️Mutations
 pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
@@ -52,9 +62,18 @@ fn field_dash(value:&semio_framework_value::DslValue)->Option<Option<Vec<f64>>>{
 pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), field: &str, value: &semio_framework_value::DslValue) -> Option<DrawingMutation> {
     let layer = find_drawing_layer(doc, layer_id)?;
     let layer_id = &layer_base(layer).id;
+    if let Ok(coordinate)=crate::schema::shape_geometry::ShapeCoordinateField::parse(field) {
+        let DrawingLayerNode::Shape(shape)=layer else{return None;};
+        let value=value.as_f64().filter(|number|number.is_finite())?;
+        crate::schema::shape_geometry::shape_coordinate(shape,&coordinate,None).ok()?;
+        if value<0.0&&matches!(coordinate,crate::schema::shape_geometry::ShapeCoordinateField::RectWidth|crate::schema::shape_geometry::ShapeCoordinateField::RectHeight|crate::schema::shape_geometry::ShapeCoordinateField::EllipseRx|crate::schema::shape_geometry::ShapeCoordinateField::EllipseRy|crate::schema::shape_geometry::ShapeCoordinateField::CircleR){return None;}
+        return Some(set_shape_coordinate(layer_id.clone(),coordinate,None,value));
+    }
     let finite = || value.as_f64().filter(|number| number.is_finite());
     match field {
         "name" => { value.as_str()?; }
+        "imageKey" => { if !matches!(layer,DrawingLayerNode::Image(_)){return None;}value.as_str()?; }
+        "imageWidth" | "imageHeight" => { if !matches!(layer,DrawingLayerNode::Image(_))||finite()?<=0.0{return None;} }
         "textContent" => { if !matches!(layer, DrawingLayerNode::Text(_)) { return None; } value.as_str()?; }
         "textSize" => { if !matches!(layer, DrawingLayerNode::Text(_)) || finite()? <= 0.0 { return None; } }
         "visible" | "locked" | "fillEnabled" | "strokeEnabled" => { value.as_bool()?; }
@@ -70,7 +89,7 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
         "strokeJoin" => { crate::StrokeJoin::parse(value.as_str()?).ok()?; }
         "strokeDash" => { field_dash(value)?; }
         "blendMode" => { if !crate::DRAWING_BLEND_MODES.contains(&value.as_str()?) { return None; } }
-        "booleanOperation" => { if !matches!(layer, DrawingLayerNode::Boolean(_)) || !matches!(value.as_str()?, "union" | "intersect" | "subtract" | "exclude") { return None; } }
+        "booleanOperation" => { if !matches!(layer, DrawingLayerNode::Boolean(_)) || !crate::DRAWING_BOOLEAN_OPERATIONS.contains(&value.as_str()?) { return None; } }
         _ => return None,
     }
     let operation = match field {
@@ -78,6 +97,10 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
         "textContent" | "textSize" => {
             let DrawingLayerNode::Text(text) = layer else { return None; };
             update_text(layer_id.clone(), if field == "textContent" { value.as_str()?.into() } else { text.content.clone() }, if field == "textSize" { finite()? } else { text.size })
+        }
+        "imageKey" | "imageWidth" | "imageHeight" => {
+            let DrawingLayerNode::Image(image)=layer else{return None;};
+            update_image(layer_id.clone(),if field=="imageKey"{value.as_str()?.into()}else{image.image_key.clone()},if field=="imageWidth"{finite()?}else{image.width},if field=="imageHeight"{finite()?}else{image.height})
         }
         "opacity" => set_layer_opacity(layer_id.clone(), value.as_f64().unwrap_or(1.0)),
         "visible" => set_layer_visible(layer_id.clone(), value.as_bool().unwrap_or(true)),
@@ -205,6 +228,10 @@ pub const KINDS: &[&str] = &[
     "rotate-layers",
     "scale-layers",
     "drag-path-points",
+    "update-image",
+    "set-shape-coordinate",
+    "import-image-asset",
+    "remove-image-asset",
 ];
 //#endregion 🔖️Kinds
 
@@ -327,3 +354,7 @@ pub fn drawing_label_layers(count: usize) -> (String, String) {
     }
 }
 //#endregion 🔖️SelectionTransform
+
+pub use crate::standards::v1::subsets::style::schema::mutations::update_image::mutation::{update_image,UpdateImage};
+
+pub use crate::standards::v1::subsets::transform::schema::mutations::shape_coordinate::mutation::{set_shape_coordinate,SetShapeCoordinate};

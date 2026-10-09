@@ -2880,4 +2880,21 @@ class SnapshotSqliteAdmissionScript extends BundleScript {
 }
 router.register("test-artifact-kind",ArtifactKindNativeScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript);
 
+/** 🧾️ Checks original returned-read registry custody with neutral Ajv and native allocation laws. */
+class ReturnedReadCustodyScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-returned-read-custody accepts no arguments");
+  const owner=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return");
+  const fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8"));
+  const schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8"));
+  const {default:Ajv2020}=await import("ajv/dist/2020.js");const oracle=new Ajv2020({strict:true,allErrors:true}).compile(schema);assert(oracle(fixture),JSON.stringify(oracle.errors));
+  for(const row of fixture.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);
+  const artifactDir=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactDir)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned native output");
+  let cancelled=false;const stop=()=>{cancelled=true;};process.once("SIGINT",stop);process.once("SIGTERM",stop);
+  try{const receipts=await runRepositoryExactCargoLaws({cwd:this.repoRoot,...exactCargoStageEnvironments(),artifactDir,buildBudgetMs:buildBudgetMs(),listBudgetMs:60000,lawBudgetMs:120000,cancelled:()=>cancelled,progress:event=>console.log("[DEBUG] returned-read native "+event.stage),groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}]});console.log("[DEBUG] returned-read custody receipts "+JSON.stringify(receipts));}
+  finally{process.off("SIGINT",stop);process.off("SIGTERM",stop);}
+ }
+}
+router.register("test-returned-read-custody",ReturnedReadCustodyScript);
+
 await runScriptMain(router, { defaultCommand: "check" });

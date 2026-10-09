@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-area-scheme/schema.json",
+  "title": "SetAreaScheme",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "name",
+    "measure",
+    "usages",
+    "zones"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setAreaScheme"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Area scheme",
+          "de": "Flächenschema"
+        },
+        "ref": {
+          "kind": "area-scheme"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "measure": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/AreaMeasure",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Measure",
+          "de": "Fläche"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "usages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Counted usages",
+          "de": "Gezählte Nutzungen"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Counted zones",
+          "de": "Gezählte Zonen"
+        },
+        "group": "value",
+        "order": 50
+      }
+    }
+  }
+}

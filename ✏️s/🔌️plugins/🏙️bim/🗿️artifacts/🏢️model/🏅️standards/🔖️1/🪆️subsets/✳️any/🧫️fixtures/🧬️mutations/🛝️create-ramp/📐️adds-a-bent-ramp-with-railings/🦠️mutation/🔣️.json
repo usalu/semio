@@ -1,0 +1,46 @@
+{
+  "mutation": "createRamp",
+  "id": "rp-2",
+  "ramp": {
+    "storey": "st-ground",
+    "path": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 6,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 6,
+          "y": 5
+        },
+        "bulge": 0
+      }
+    ],
+    "width": 1.2,
+    "landing_start": 1.5,
+    "landing_end": 1.5,
+    "landing_turn": 1.5,
+    "max_slope": 0.0833333333333333,
+    "thickness": 0.2,
+    "material": "m-concrete",
+    "base_offset": 0,
+    "top": {
+      "Unconnected": {
+        "height": 0.6
+      }
+    },
+    "railing_left": true,
+    "railing_right": true,
+    "name": "Bent Ramp"
+  }
+}

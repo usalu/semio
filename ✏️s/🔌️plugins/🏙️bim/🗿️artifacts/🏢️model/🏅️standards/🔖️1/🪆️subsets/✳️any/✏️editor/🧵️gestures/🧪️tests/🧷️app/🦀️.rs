@@ -1,6 +1,6 @@
 use crate::editor::bim::commands::{arm_utility, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, world_pointer_down};
 use crate::editor::bim::modes::edit::windows::{plan, world};
-use crate::editor::bim::unit_tests::context::{bim_app, canvas_scene, dispatch_in, history_verb, view};
+use crate::editor::bim::unit_tests::context::{bim_app, canvas_scene, dispatch_in, history_verb, view, world_scene};
 use crate::editor::bim::BimCommand;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::{Effect, PluginApp, ViewModel};
@@ -131,5 +131,97 @@ fn the_world_window_draws_with_the_ground_point_of_its_ray() {
         assert!(!dispatch_in(&mut app, down(10.0, 10.0), &wall).await.edited_document());
         assert!(dispatch_in(&mut app, down(14.0, 10.0), &wall).await.edited_document(), "two ground points write a wall");
         assert_eq!(app.snapshot().expect("snapshot").walls.len(), 5);
+    });
+}
+
+fn typed_in(value: &str) -> BimCommand {
+    BimCommand::EngagementInput(crate::editor::bim::commands::engagement_input::EngagementInput { value: value.into() })
+}
+
+fn submitted(value: &str) -> BimCommand {
+    BimCommand::EngagementSubmit(crate::editor::bim::commands::engagement_submit::EngagementSubmit { value: value.into() })
+}
+
+#[test]
+fn a_wall_is_typed_through_the_entry_field_of_the_mounted_window_and_escape_empties_the_field() {
+    on_a_big_stack(|| async {
+        let mut app = bim_app().await;
+        let wall = armed("wall");
+        let typing = dispatch_in(&mut app, typed_in("20, 20"), &wall).await;
+        assert!(typing.wrote(TypedOperationResultLane::WindowTransient) && typing.wrote(TypedOperationResultLane::Presence) && !typing.edited_document(), "typing keeps the line locally and shares it, and never touches the document");
+        let anchor = dispatch_in(&mut app, submitted("20, 20"), &wall).await;
+        assert!(!anchor.edited_document() && anchor.wrote(TypedOperationResultLane::WindowTransient), "the first point only anchors the chain and empties the field");
+        let second = dispatch_in(&mut app, submitted("@4<0"), &wall).await;
+        assert!(second.edited_document(), "the polar offset writes the wall");
+        let snapshot = app.snapshot().expect("snapshot");
+        let created = snapshot.walls.values().find(|row| crate::editor::bim::gestures::plane::axis_ends(&row.axis).0 == [20.0, 20.0]).expect("the typed wall");
+        assert_eq!(crate::editor::bim::gestures::plane::axis_ends(&created.axis).1, [24.0, 20.0]);
+        history_verb(&mut app, "undo").await;
+        assert_eq!(app.snapshot().expect("snapshot").walls.len(), 4, "a typed point is one undoable row like a click");
+        dispatch_in(&mut app, typed_in("3, 3"), &wall).await;
+        let escaped = dispatch_in(&mut app, BimCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &wall).await;
+        assert!(escaped.wrote(TypedOperationResultLane::WindowTransient) && escaped.wrote(TypedOperationResultLane::Presence), "escape empties the line it had kept");
+    });
+}
+
+#[test]
+fn the_gesture_in_progress_shows_in_the_3d_window_as_its_engagement_preview() {
+    on_a_big_stack(|| async {
+        let mut app = bim_app().await;
+        let windows = [("bim-world", world::WINDOW_KIND_ID)];
+        let wall = ViewModel { active_utility_id: Some("wall".into()), ..view(Locale::En, &windows, Some("bim-world")) };
+        assert!(world_scene(&mut app, &wall).await.engagement_preview_json.is_none(), "nothing in progress, nothing shown");
+        let down = |x: f64, y: f64| BimCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: vec![x, y, 0.0], ..Default::default() });
+        dispatch_in(&mut app, down(10.0, 10.0), &wall).await;
+        let moved = BimCommand::WorldPointerMove(crate::editor::bim::commands::world_pointer_move::WorldPointerMove { pane: "bim-world".into(), position: vec![13.0, 10.0, 0.0] });
+        dispatch_in(&mut app, moved, &wall).await;
+        let preview = world_scene(&mut app, &wall).await.engagement_preview_json.expect("the rubber band shows in 3D");
+        assert!(preview.contains("segment") && preview.contains("13"), "{preview}");
+    });
+}
+
+#[test]
+fn a_wall_is_drawn_with_the_arrow_keys_alone_through_the_mounted_window() {
+    use crate::editor::bim::commands::cursor_keys::{CursorLeft, CursorPlace, CursorRightFar, CursorUp};
+    on_a_big_stack(|| async {
+        let mut app = bim_app().await;
+        let wall = armed("wall");
+        let far = || BimCommand::CursorRightFar(CursorRightFar {});
+        let moved = dispatch_in(&mut app, far(), &wall).await;
+        assert!(moved.wrote(TypedOperationResultLane::WindowTransient) && !moved.edited_document(), "a cursor step shows the tool's marks and writes no document");
+        let anchored = dispatch_in(&mut app, BimCommand::CursorPlace(CursorPlace {}), &wall).await;
+        assert!(!anchored.edited_document(), "the first place only anchors the chain");
+        for _ in 0..3 {
+            dispatch_in(&mut app, far(), &wall).await;
+        }
+        dispatch_in(&mut app, BimCommand::CursorUp(CursorUp {}), &wall).await;
+        dispatch_in(&mut app, BimCommand::CursorLeft(CursorLeft {}), &wall).await;
+        let second = dispatch_in(&mut app, BimCommand::CursorPlace(CursorPlace {}), &wall).await;
+        assert!(second.edited_document(), "the second place writes the wall");
+        let snapshot = app.snapshot().expect("snapshot");
+        let created = snapshot.walls.values().find(|row| crate::editor::bim::gestures::plane::axis_ends(&row.axis).0 == [1.0, 0.0]).expect("the wall drawn from the keyboard cursor");
+        assert_eq!(crate::editor::bim::gestures::plane::axis_ends(&created.axis).1, [3.9, 0.1], "three coarse steps right, one fine step up and one fine step left from the anchor");
+        history_verb(&mut app, "undo").await;
+        assert_eq!(app.snapshot().expect("snapshot").walls.len(), 4, "a placed cursor point is one undoable row like a click");
+    });
+}
+
+#[test]
+fn an_offset_previews_in_the_window_transient_and_its_closing_click_writes_one_undoable_row() {
+    on_a_big_stack(|| async {
+        let mut app = bim_app().await;
+        let offset = armed("offset");
+        assert!(!dispatch_in(&mut app, press(4.0, 0.0), &offset).await.edited_document(), "the press only holds the wall");
+        let before = app.document_pack().await.expect("pack");
+        let moved = dispatch_in(&mut app, hover(4.0, 1.5), &offset).await;
+        assert!(moved.wrote(TypedOperationResultLane::WindowTransient) && !moved.edited_document(), "a move writes the window transient only");
+        let after = app.document_pack().await.expect("pack");
+        assert!(before.pack == after.pack && before.spr == after.spr, "a preview never changes document bytes");
+        let scene = canvas_scene(&mut app, plan::BODY_KEY, &offset).await;
+        assert!(scene.layers_json.contains("preview:") && scene.layers_json.contains("1.50 m"), "the parallel wall and its distance are painted over the plan");
+        assert!(dispatch_in(&mut app, press(4.0, 1.5), &offset).await.edited_document(), "the closing click writes the offset wall");
+        assert_eq!(app.snapshot().expect("snapshot").walls.len(), 5);
+        history_verb(&mut app, "undo").await;
+        assert_eq!(app.snapshot().expect("snapshot").walls.len(), 4, "one row undoes it");
     });
 }

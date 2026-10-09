@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/split-slab/schema.json",
+  "title": "SplitSlab",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "new_id",
+    "line_start",
+    "line_end"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 2
+  },
+  "properties": {
+    "mutation": {
+      "const": "splitSlab"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slab",
+          "de": "Decke"
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "new_id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "New slab id",
+          "de": "Id der neuen Decke"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "line_start": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Cut line start (m)",
+          "de": "Schnittlinie Anfang (m)"
+        },
+        "group": "line",
+        "order": 30
+      }
+    },
+    "line_end": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Cut line end (m)",
+          "de": "Schnittlinie Ende (m)"
+        },
+        "group": "line",
+        "order": 40
+      }
+    }
+  }
+}

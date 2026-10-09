@@ -1,0 +1,10 @@
+{
+  "mutation": "setSheet",
+  "id": "sh-1",
+  "paper": {
+    "Custom": {
+      "width": 400,
+      "height": 10
+    }
+  }
+}

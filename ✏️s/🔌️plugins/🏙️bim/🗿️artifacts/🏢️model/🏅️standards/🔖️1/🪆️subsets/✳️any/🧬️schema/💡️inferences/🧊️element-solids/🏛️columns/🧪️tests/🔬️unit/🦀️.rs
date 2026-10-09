@@ -77,3 +77,56 @@ async fn columns_are_deterministic_and_the_empty_model_has_none() {
     assert!(["c-bad-type", "c-flat", "c-unknown-type"].iter().all(|id| !first.element_solids.contains_key(*id)), "columns without geometry are absent");
     assert!(solid_steps(&ModelSnapshot::default(), SolidFamily::Column).is_empty());
 }
+
+#[semio_framework_async_macros::async_test]
+async fn a_leaning_column_is_the_sheared_prism_of_its_stretched_section() {
+    let mut snapshot = case(CASE).snapshot;
+    snapshot.columns.get_mut("c-rect").expect("column").rotation = 0.0;
+    let plumb = compute_element_solids(&snapshot)["c-rect"].clone();
+    let angle = 0.3_f64;
+    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(crate::Slope { direction: 0.0, angle });
+    let leaning = compute_element_solids(&snapshot)["c-rect"].clone();
+    let rise = plumb.bounds.max.z - plumb.bounds.min.z;
+    assert!(close(leaning.volume, plumb.volume / angle.cos(), 1e-9), "area times rise over cos(angle)");
+    assert!(close(leaning.bounds.max.z - leaning.bounds.min.z, rise, 1e-9), "both ends are cut by horizontal planes");
+    let width = plumb.bounds.max.x - plumb.bounds.min.x;
+    assert!(close(leaning.bounds.max.x - leaning.bounds.min.x, width / angle.cos() + rise * angle.tan(), 1e-9), "the base section is stretched and the top is moved along the lean");
+    assert!(close(leaning.bounds.max.y - leaning.bounds.min.y, plumb.bounds.max.y - plumb.bounds.min.y, 1e-9), "nothing changes across the lean");
+    assert!(close(leaning.bounds.min.x, plumb.bounds.min.x - (width / angle.cos() - width) / 2.0, 1e-9), "the base section stays centred on the position");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_lean_direction_turns_the_shift_in_plan() {
+    let mut snapshot = case(CASE).snapshot;
+    snapshot.columns.get_mut("c-rect").expect("column").rotation = 0.0;
+    let plumb = compute_element_solids(&snapshot)["c-rect"].clone();
+    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(crate::Slope { direction: std::f64::consts::FRAC_PI_2, angle: 0.2 });
+    let leaning = compute_element_solids(&snapshot)["c-rect"].clone();
+    let rise = plumb.bounds.max.z - plumb.bounds.min.z;
+    assert!(close(leaning.bounds.max.x - leaning.bounds.min.x, plumb.bounds.max.x - plumb.bounds.min.x, 1e-9), "no lean across x");
+    assert!(close(leaning.bounds.max.y - plumb.bounds.max.y, (0.3 / 0.2_f64.cos() - 0.3) / 2.0 + rise * 0.2_f64.tan(), 1e-9), "the top moves towards +y");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_footprint_at_a_height_follows_the_lean() {
+    let mut snapshot = case(CASE).snapshot;
+    let column = snapshot.columns.get_mut("c-rect").expect("column");
+    column.rotation = 0.0;
+    column.tilt = Some(crate::Slope { direction: 0.0, angle: 0.25 });
+    let (column, profile) = (snapshot.columns["c-rect"].clone(), snapshot.column_types["ct-rect"].profile.clone());
+    let centre = |ring: &[Point]| (ring.iter().map(|p| p.x).sum::<f64>() / ring.len() as f64, ring.iter().map(|p| p.y).sum::<f64>() / ring.len() as f64);
+    let (base, high) = (centre(&footprint(&column, &profile, 0.0, 0.0)), centre(&footprint(&column, &profile, 0.0, 2.0)));
+    assert!(close(base.0, column.position.x, 1e-12) && close(base.1, column.position.y, 1e-12));
+    assert!(close(high.0 - base.0, 2.0 * 0.25_f64.tan(), 1e-12) && close(high.1, base.1, 1e-12));
+}
+
+#[test]
+fn the_reach_of_a_column_grows_with_its_lean() {
+    let snapshot = case(CASE).snapshot;
+    let mut column = snapshot.columns["c-rect"].clone();
+    let plumb = reach(&snapshot, &column).expect("a type");
+    column.tilt = Some(crate::Slope { direction: 0.0, angle: 0.3 });
+    assert!(reach(&snapshot, &column).expect("a type") > plumb + 1.0, "a lean may carry the section away from the base point");
+    column.column_type = "ct-none".into();
+    assert_eq!(reach(&snapshot, &column), None);
+}

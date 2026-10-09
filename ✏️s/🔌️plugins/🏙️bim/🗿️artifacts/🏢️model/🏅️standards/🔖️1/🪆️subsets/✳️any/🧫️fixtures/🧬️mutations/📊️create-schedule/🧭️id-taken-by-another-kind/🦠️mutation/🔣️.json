@@ -1,0 +1,32 @@
+{
+  "mutation": "createSchedule",
+  "id": "w-south",
+  "schedule": {
+    "name": "Walls",
+    "category": "Wall",
+    "columns": [
+      {
+        "key": {
+          "Field": {
+            "field": "Name"
+          }
+        },
+        "total": false
+      },
+      {
+        "key": {
+          "Field": {
+            "field": "Length"
+          }
+        },
+        "total": true
+      }
+    ],
+    "sort": [],
+    "filter": [],
+    "group": [],
+    "itemize": true,
+    "storeys": [],
+    "phases": []
+  }
+}

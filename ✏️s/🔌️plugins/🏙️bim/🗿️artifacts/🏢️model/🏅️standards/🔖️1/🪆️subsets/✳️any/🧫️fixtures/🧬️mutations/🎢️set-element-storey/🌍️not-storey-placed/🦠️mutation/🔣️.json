@@ -1,0 +1,5 @@
+{
+  "mutation": "setElementStorey",
+  "id": "bldg-1",
+  "storey": "st-first"
+}

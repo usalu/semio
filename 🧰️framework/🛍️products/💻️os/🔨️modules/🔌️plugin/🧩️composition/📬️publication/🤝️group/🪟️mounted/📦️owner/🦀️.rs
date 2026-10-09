@@ -118,7 +118,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
             verb:verb.into(),meta:meta.clone(),operation,canonical_revision:revision,artifact_generation:generation.0,
             config_generation:self.config_store.generation_now(),draft_generation:self.draft_store.generation_now(),presence_generation:0,transient_generation:0,
             window_config_authority:None,window_transient_authority:None,publication_lanes:&[],
-            session:None,session_rejected:None,reserved_producer,completion,raw_input:None,output_chunks:None,cancellation_lease:Some(lease),terminal_outcome:None,terminal_seen:true,
+            session:None,session_rejected:None,reserved_producer,completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:Some(lease),terminal_outcome:None,terminal_seen:true,
             publication,pending_artifact_publication:None,pending_child_publication:None,
             owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,
             captured_child_content:Some(std::sync::Arc::new(ChildContentView::clone(&self.child_content_root))),captured_child_content_generation:self.child_content_generation,
@@ -256,7 +256,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         let output=owner.output.as_mut().ok_or_else(||plugin_sdk_fault("preborn private receipt refused its exact original handoff"))?;
         if owner.record.is_none(){*owner.record=owner.command.as_mut().unwrap().take(&mut output.command_edit_id,&mut output.command_child_edit_ids,sequence,mounted_private_child_grant(0,0)?);}
         owner.record.as_mut().ok_or_else(||plugin_sdk_fault("preborn private command row refused its original receipt cardinality"))?.seq=sequence;
-        let Some(next)=group.commit(&mut self.store,&mut self.children,graph,store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:4096})?else{return Ok(());};
+        let Some(next)=group.commit(&mut self.store,&mut self.children,graph,store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64})?else{return Ok(());};
         let previous=std::mem::replace(&mut*self.child_content_root,next);if !previous.is_empty(){self.child_content_retirements.insert_admitted(generation,ChildContentRetirement::new(previous,false));}
         self.child_content_generation=generation;
         self.command_log.commit_append(append,&mut owner.record).expect("common private decision retains the validated original command prefix");self.next_command_seq=sequence;self.log_generation=log_generation;*owner.displaced_shell_redo=std::mem::take(&mut self.shell_redo);

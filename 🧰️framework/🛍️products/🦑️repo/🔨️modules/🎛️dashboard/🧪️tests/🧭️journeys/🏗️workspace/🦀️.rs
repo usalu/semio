@@ -20,12 +20,15 @@ pub fn which(name: &str) -> PathBuf {
     std::env::split_paths(&paths).map(|folder| folder.join(&exe)).find(|candidate| candidate.is_file()).unwrap_or_else(|| panic!("{name} is not on PATH"))
 }
 
-/// 🧪 The `semio` binary under test: `SEMIO_TEST_CLI`, else the fleet debug build.
+/// 🧪 The explicitly selected test executable or the canonical installed dashboard.
 pub fn binary() -> PathBuf {
     if let Some(path) = std::env::var_os("SEMIO_TEST_CLI") { return PathBuf::from(path); }
     let repository = Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|folder| folder.join("nx.json").is_file()).expect("the repository root").to_path_buf();
-    let exe = if cfg!(windows) { "semio.exe" } else { "semio" };
-    repository.join(".🧬semio/🦑️repo/⚡️cache/cargo/target-fleet-v1/debug").join(exe)
+    let record: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repository.join(".🧬semio/🦑️repo/⚡️cache/🎛️dashboard/installed.json")).expect("install the dashboard through its owning Nx build")).unwrap();
+    assert_eq!(record["version"], 2);
+    let executable = repository.join(record["path"].as_str().unwrap());
+    assert!(executable.is_file(), "the installed dashboard executable exists");
+    executable
 }
 
 fn free_port() -> u16 {

@@ -24,7 +24,7 @@ async fn without_an_addressed_window_nothing_is_armed() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_arming_command_arms_a_utility_of_the_registry() {
-    assert_eq!(ARMED_UTILITIES.len(), 16);
+    assert_eq!(ARMED_UTILITIES.len(), crate::editor::bim::utilities::UTILITIES.iter().filter(|row| row.arm.is_some()).count(), "every utility with a hotkey has its arming command and the other way round");
     for utility in ARMED_UTILITIES {
         assert!(crate::editor::bim::utilities::UTILITIES.iter().any(|row| row.id == *utility), "{utility}");
     }

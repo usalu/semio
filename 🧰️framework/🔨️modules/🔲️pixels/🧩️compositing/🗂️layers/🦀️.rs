@@ -16,7 +16,7 @@ pub enum RasterStackContent {Pixel {width:Option<u32>,height:Option<u32>,image_k
 pub struct RasterStackLayer {pub id:String,pub visible:bool,pub opacity:f64,pub blend_mode:CompositeBlend,pub transform:RasterStackTransform,pub mask:Option<RasterStackMask>,pub content:RasterStackContent}
 pub struct RasterStackInput {pub layers:Vec<RasterStackLayer>,pub images:BTreeMap<String,Arc<RasterImage>>}
 pub struct RasterStackResult {pub image:RasterImage,pub origin:[f64;2],pub empty:bool}
-struct Preparation {image:Arc<RasterImage>,coverage:Arc<[u8]>,offset:usize}
+struct Preparation {image:Arc<RasterImage>,coverage:Arc<crate::retirement::MaskBytes>,offset:usize}
 struct Planner<'a> {source:&'a BTreeMap<String,Arc<RasterImage>>,images:BTreeMap<String,Arc<RasterImage>>,preparations:Vec<Preparation>,mask_indices:BTreeMap<String,usize>,mask_slots:Vec<usize>,ids:std::collections::BTreeSet<String>,bounds:[f64;4],commands:usize,coverage_total:usize}
 fn matrix(value:RasterStackTransform)->Result<CompositeAffine,PixelEditError>{
     let result=[value.a,value.b,value.c,value.d,value.x,value.y];inverse(result)?;Ok(result)
@@ -44,10 +44,10 @@ impl Planner<'_> {
             let count=validate_extent(image.width,image.height)?;
             if self.coverage_total+count>67108864{return Err(PixelEditError::Invalid("Mask coverage exceeds 64 MiB preparation budget"));}
             self.coverage_total+=count;let index=self.preparations.len();self.mask_indices.insert(key.to_owned(),index);
-            self.preparations.push(Preparation {image:Arc::clone(&image),coverage:vec![0;count].into(),offset:0});index
+            self.preparations.push(Preparation {image:Arc::clone(&image),coverage:Arc::new(crate::retirement::MaskBytes(vec![0;count])),offset:0});index
         };
         self.mask_slots.push(index);
-        Ok(Some(CompositeMask {width:image.width,height:image.height,coverage:Arc::from([]),transform,invert:mask.invert}))
+        Ok(Some(CompositeMask {width:image.width,height:image.height,coverage:Vec::new().into(),transform,invert:mask.invert}))
     }
     fn layers(&mut self,layers:Vec<RasterStackLayer>,parent:CompositeAffine,depth:usize,enabled:bool,paint_enabled:bool)->Result<Vec<CompositeLayer>,PixelEditError>{
         if depth>32{return Err(PixelEditError::Invalid("Invalid layer nesting"));}
@@ -112,7 +112,7 @@ impl RasterStackJob {
         }
         if self.preparation==self.preparations.len()&&self.pending.is_some(){
             fn attach(layers:&mut [CompositeLayer],slots:&mut impl Iterator<Item=usize>,preparations:&[Preparation]){
-                for layer in layers{if let Some(mask)=&mut layer.mask{mask.coverage=Arc::clone(&preparations[slots.next().unwrap()].coverage);}if let CompositeContent::Group(children)=&mut layer.content{attach(children,slots,preparations);}}
+                for layer in layers{if let Some(mask)=&mut layer.mask{mask.coverage=MaskLease(Arc::clone(&preparations[slots.next().unwrap()].coverage));}if let CompositeContent::Group(children)=&mut layer.content{attach(children,slots,preparations);}}
             }
             let mut input=self.pending.take().unwrap();attach(&mut input.layers,&mut self.mask_slots.iter().copied(),&self.preparations);
             self.composite=Some(CompositeJob::new(input)?);self.preparations.clear();self.mask_slots.clear();

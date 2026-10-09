@@ -1,9 +1,6 @@
 {
   "mutation": "setElementClassification",
-  "id": "w-missing",
-  "classification": {
-    "system": "Uniclass",
-    "code": "EF_25_10",
-    "title": "Walls"
-  }
+  "id": "w-nowhere",
+  "system": "cs-uni",
+  "code": "EF_25_10"
 }

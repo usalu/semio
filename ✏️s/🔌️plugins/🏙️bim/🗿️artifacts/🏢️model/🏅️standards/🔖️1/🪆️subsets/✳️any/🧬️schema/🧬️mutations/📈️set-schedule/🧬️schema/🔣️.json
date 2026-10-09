@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-schedule/schema.json",
+  "title": "SetSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setSchedule"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Schedule",
+          "de": "Bauteilliste"
+        },
+        "ref": {
+          "kind": "schedule"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "category": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ScheduleCategory",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Category",
+          "de": "Kategorie"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ScheduleColumn"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Columns",
+          "de": "Spalten"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "sort": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ScheduleSort"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Sort",
+          "de": "Sortierung"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "filter": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ScheduleFilter"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Filter",
+          "de": "Filter"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "group": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ScheduleGroup"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Grouping",
+          "de": "Gruppierung"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "itemize": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Itemize every instance",
+          "de": "Jedes Bauteil einzeln auflisten"
+        },
+        "group": "value",
+        "order": 80
+      }
+    },
+    "storeys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Storeys",
+          "de": "Geschosse"
+        },
+        "group": "value",
+        "order": 90
+      }
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Phase"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Phases",
+          "de": "Phasen"
+        },
+        "group": "value",
+        "order": 100
+      }
+    }
+  }
+}

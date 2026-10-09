@@ -15,7 +15,9 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf",
-        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf"
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/**/*"
       ]
     }
   }

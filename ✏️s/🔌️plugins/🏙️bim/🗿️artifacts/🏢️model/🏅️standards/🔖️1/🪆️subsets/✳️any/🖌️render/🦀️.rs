@@ -1,15 +1,10 @@
 //! 🖼️ Shared BIM rendering: everything the editor and the viewer draw identically lives here, once. `world` builds the World3d scene from the
 //! `element-solids` inference, `plan` builds the Canvas2d layers from the `plan-linework` inference, `window_config` is the window-config
 //! macro, and this root holds the model queries both need (storeys in stacking order, placed element ids, the storey and the name of an
-//! element) plus the one-entry inference memo that keeps a camera move from re-inferring the model. The viewer must not import the editor,
+//! element) used by both. The viewer must not import the editor,
 //! so this module is the single place both surfaces import.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, ElementSolid};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{compute_plan_linework, PlanLinework};
 use crate::ModelSnapshot;
-use std::cell::RefCell;
-use std::collections::BTreeMap;
-use std::rc::Rc;
 
 #[path = "🪟️window-config/🦀️.rs"]
 pub mod window_config;
@@ -45,7 +40,7 @@ pub fn plan_storey(snapshot: &ModelSnapshot, stored: &str) -> Option<String> {
 //#endregion 🔖️Storeys
 
 //#region 🔖️Elements
-/// 🧱️ Ids of every placed element that can be drawn or picked (walls, curtain walls, columns, beams, slabs, roofs, openings, stairs, railings).
+/// 🧱️ Ids of every placed element that can be drawn or picked (walls, curtain walls, columns, beams, slabs, roofs, openings, wall sweeps, stairs, railings, ramps).
 pub fn element_ids(snapshot: &ModelSnapshot) -> Vec<String> {
     let keys = |ids: Vec<&String>| ids.into_iter().cloned().collect::<Vec<String>>();
     [
@@ -54,10 +49,13 @@ pub fn element_ids(snapshot: &ModelSnapshot) -> Vec<String> {
         keys(snapshot.columns.keys().collect()),
         keys(snapshot.beams.keys().collect()),
         keys(snapshot.slabs.keys().collect()),
+        keys(snapshot.ceilings.keys().collect()),
         keys(snapshot.roofs.keys().collect()),
         keys(snapshot.openings.keys().collect()),
+        keys(snapshot.wall_sweeps.keys().collect()),
         keys(snapshot.stairs.keys().collect()),
         keys(snapshot.railings.keys().collect()),
+        keys(snapshot.ramps.keys().collect()),
     ]
     .concat()
 }
@@ -71,6 +69,9 @@ pub fn storey_of<'a>(snapshot: &'a ModelSnapshot, element: &str) -> Option<&'a s
     if let Some(opening) = snapshot.openings.get(element) {
         return snapshot.walls.get(&opening.host).and_then(|wall| storey(&wall.storey)).or_else(|| snapshot.curtain_walls.get(&opening.host).and_then(|wall| storey(&wall.storey)));
     }
+    if let Some(sweep) = snapshot.wall_sweeps.get(element) {
+        return snapshot.walls.get(&sweep.host).and_then(|wall| storey(&wall.storey));
+    }
     snapshot
         .curtain_walls
         .get(element)
@@ -78,9 +79,11 @@ pub fn storey_of<'a>(snapshot: &'a ModelSnapshot, element: &str) -> Option<&'a s
         .or_else(|| snapshot.columns.get(element).map(|item| &item.storey))
         .or_else(|| snapshot.beams.get(element).map(|item| &item.storey))
         .or_else(|| snapshot.slabs.get(element).map(|item| &item.storey))
+        .or_else(|| snapshot.ceilings.get(element).map(|item| &item.storey))
         .or_else(|| snapshot.roofs.get(element).map(|item| &item.storey))
         .or_else(|| snapshot.stairs.get(element).map(|item| &item.storey))
         .or_else(|| snapshot.railings.get(element).map(|item| &item.storey))
+        .or_else(|| snapshot.ramps.get(element).map(|item| &item.storey))
         .and_then(storey)
 }
 
@@ -94,46 +97,16 @@ pub fn element_name<'a>(snapshot: &'a ModelSnapshot, element: &str) -> &'a str {
         .or_else(|| snapshot.columns.get(element).map(|item| item.name.as_str()))
         .or_else(|| snapshot.beams.get(element).map(|item| item.name.as_str()))
         .or_else(|| snapshot.slabs.get(element).map(|item| item.name.as_str()))
+        .or_else(|| snapshot.ceilings.get(element).map(|item| item.name.as_str()))
         .or_else(|| snapshot.roofs.get(element).map(|item| item.name.as_str()))
         .or_else(|| snapshot.openings.get(element).map(|item| item.name.as_str()))
+        .or_else(|| snapshot.wall_sweeps.get(element).map(|item| item.name.as_str()))
         .or_else(|| snapshot.stairs.get(element).map(|item| item.name.as_str()))
         .or_else(|| snapshot.railings.get(element).map(|item| item.name.as_str()))
+        .or_else(|| snapshot.ramps.get(element).map(|item| item.name.as_str()))
         .unwrap_or_default()
 }
 //#endregion 🔖️Elements
-
-//#region 🔖️Inference
-struct Memo {
-    snapshot: ModelSnapshot,
-    solids: Option<Rc<BTreeMap<String, ElementSolid>>>,
-    plans: Option<Rc<BTreeMap<String, PlanLinework>>>,
-}
-
-thread_local! {
-    static MEMO: RefCell<Option<Memo>> = const { RefCell::new(None) };
-}
-
-fn memoised<R>(snapshot: &ModelSnapshot, read: impl FnOnce(&mut Memo) -> R) -> R {
-    MEMO.with(|memo| {
-        let mut memo = memo.borrow_mut();
-        if memo.as_ref().is_none_or(|cached| cached.snapshot != *snapshot) {
-            *memo = Some(Memo { snapshot: snapshot.clone(), solids: None, plans: None });
-        }
-        read(memo.as_mut().expect("the memo was just filled"))
-    })
-}
-
-/// 🧊️ The `element-solids` inference of `snapshot`, memoised for the last snapshot only: re-rendering for a camera or selection change reuses
-/// it, a document change replaces it. The memo holds exactly one model, so it never grows.
-pub fn solids(snapshot: &ModelSnapshot) -> Rc<BTreeMap<String, ElementSolid>> {
-    memoised(snapshot, |memo| Rc::clone(memo.solids.get_or_insert_with(|| Rc::new(compute_element_solids(snapshot)))))
-}
-
-/// 🗺️ The `plan-linework` inference of `snapshot` (one plan per storey id), memoised like [`solids`].
-pub fn plans(snapshot: &ModelSnapshot) -> Rc<BTreeMap<String, PlanLinework>> {
-    memoised(snapshot, |memo| Rc::clone(memo.plans.get_or_insert_with(|| Rc::new(compute_plan_linework(snapshot)))))
-}
-//#endregion 🔖️Inference
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

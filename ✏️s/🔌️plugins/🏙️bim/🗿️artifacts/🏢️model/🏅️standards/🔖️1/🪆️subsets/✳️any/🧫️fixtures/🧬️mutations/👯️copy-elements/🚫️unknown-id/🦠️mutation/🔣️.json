@@ -1,0 +1,12 @@
+{
+  "mutation": "copyElements",
+  "ids": [
+    "w-south",
+    "w-missing"
+  ],
+  "vector": {
+    "x": 1,
+    "y": 0
+  },
+  "prefix": "cp"
+}

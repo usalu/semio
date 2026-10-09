@@ -1,0 +1,20 @@
+{
+  "classification_systems": {
+    "cs-omni": {
+      "entry": "Created",
+      "name": "OmniClass Table 23",
+      "edition": "2012",
+      "entries": [
+        {
+          "code": "23-13 00 00",
+          "title": "Structural Products"
+        },
+        {
+          "code": "23-13 11 00",
+          "title": "Structural Walls",
+          "parent": "23-13 00 00"
+        }
+      ]
+    }
+  }
+}

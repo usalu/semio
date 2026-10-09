@@ -1,4 +1,4 @@
-//! 🫧️ Ephemeral local interaction state of one exact BIM window: what an author is typing, how many pointer gestures the window has seen and the marks of the gesture in progress (`preview`, the JSON of a tool `Preview`, empty when no gesture shows anything). One record serves the plan, world and
+//! 🫧️ Ephemeral local interaction state of one exact BIM window: the line an author is typing into its entry field (`engagement_input`), how many pointer gestures the window has seen and the marks of the gesture in progress (`preview`, the JSON of a tool `Preview`, empty when no gesture shows anything). One record serves the plan, world and
 //! section windows; each window instance holds its own copy, and nothing of it is shared or persisted.
 
 use crate::editor::bim::modes::edit::windows::{plan, section, world};

@@ -54,8 +54,8 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
         include_str!("../../🧫️fixtures/🧬️mutations/🔏️seal-run/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../🧫️fixtures/🧬️mutations/🧷️set-run-header/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../🧫️fixtures/🧬️mutations/🔓️set-run-seal/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🧽️retract-run-log/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutations/🫥️retract-run-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🧽️remove-run-log/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🫥️remove-run-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ] {
         store::os_store::test_support::assert_wire_witness::<RunMutation>(witness);
     }
@@ -144,8 +144,8 @@ async fn run_operation_op_text_round_trips_every_variant() {
         started_at: String::new(),
     }));
     store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SetRunSeal(SetRunSeal { sealed: true, status: RunStatus::Succeeded, finished_at: Some("2026-09-30T12:00:00Z".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::RetractRunLog(RetractRunLog { count: 2 }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::RetractRunNode(RetractRunNode { node_id: "a".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::RemoveRunLog(RemoveRunLog { count: 2 }));
+    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::RemoveRunNode(RemoveRunNode { node_id: "a".into() }));
 }
 
 #[test]
@@ -340,8 +340,8 @@ async fn every_run_kind_inverse_diffs_sum_to_the_negative_diff() {
     let sealed = apply_run_operation(&started, &RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }));
     law(&RunMutation::SetRunSeal(SetRunSeal { sealed: false, status: RunStatus::Running, finished_at: None }), &sealed).await;
     law(&RunMutation::SetRunHeader(SetRunHeader { status: RunStatus::Pending, started_at: String::new(), ..set_run_header_of(&started) }), &started).await;
-    law(&RunMutation::RetractRunLog(RetractRunLog { count: 1 }), &started).await;
-    law(&RunMutation::RetractRunNode(RetractRunNode { node_id: "a".into() }), &started).await;
+    law(&RunMutation::RemoveRunLog(RemoveRunLog { count: 1 }), &started).await;
+    law(&RunMutation::RemoveRunNode(RemoveRunNode { node_id: "a".into() }), &started).await;
 }
 
 fn set_run_header_of(document: &RunArtifact) -> SetRunHeader {

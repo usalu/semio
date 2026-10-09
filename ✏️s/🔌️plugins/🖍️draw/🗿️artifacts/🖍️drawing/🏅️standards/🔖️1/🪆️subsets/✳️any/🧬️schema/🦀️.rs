@@ -183,7 +183,7 @@ pub struct DrawingSceneNode {
 }
 
 /// 🧩️ One isolated ancestor compositing scope; leaf matrices already include its transform.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase")]
 pub struct DrawingSceneGroup {
     pub id:String,
@@ -907,6 +907,8 @@ pub mod scene_trace;
 pub mod scene_retirement;
 #[path = "🎬️scene/🎨️paint/🦀️.rs"]
 pub mod scene_paint;
+#[path = "🎬️scene/📍️placement/🦀️.rs"]
+pub mod scene_placement;
 
 pub fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     path_segments_bounds_with_matrix(segments,[1.0,0.0,0.0,1.0,0.0,0.0])
@@ -1217,6 +1219,9 @@ pub fn valid_path_segment(segment: &PathSegment) -> bool {
 
 #[path = "🖊️stroke/🦀️.rs"]
 pub mod stroke;
+
+#[path="🔷️shape/✏️coordinates/🦀️.rs"]
+pub mod shape_geometry;
 
 #[path = "🎨️fill/🦀️.rs"]
 pub mod fill;

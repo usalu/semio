@@ -1,0 +1,1108 @@
+{
+  "document": {
+    "schema": "drawing.document",
+    "id": "field-history",
+    "layers": [
+      {
+        "id": "group",
+        "name": "group",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              0.4
+            ]
+          },
+          "stroke": {
+            "color": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "width": 2,
+            "cap": "butt",
+            "join": "miter",
+            "dash": [
+              2,
+              1
+            ]
+          }
+        },
+        "kind": "group",
+        "isolation": true,
+        "children": [
+          {
+            "id": "rect",
+            "name": "rect",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  1,
+                  0,
+                  0,
+                  0.4
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 2,
+                "cap": "butt",
+                "join": "miter",
+                "dash": [
+                  2,
+                  1
+                ]
+              }
+            },
+            "kind": "shape",
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 20,
+              "height": 10
+            }
+          },
+          {
+            "id": "text",
+            "name": "text",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  1,
+                  0,
+                  0,
+                  0.4
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 2,
+                "cap": "butt",
+                "join": "miter",
+                "dash": [
+                  2,
+                  1
+                ]
+              }
+            },
+            "kind": "text",
+            "x": 0,
+            "y": 0,
+            "content": "Grüße 🌍",
+            "size": 14
+          },
+          {
+            "id": "image",
+            "name": "image",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  1,
+                  0,
+                  0,
+                  0.4
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 2,
+                "cap": "butt",
+                "join": "miter",
+                "dash": [
+                  2,
+                  1
+                ]
+              }
+            },
+            "kind": "image",
+            "imageKey": "pixel",
+            "width": 2,
+            "height": 3
+          },
+          {
+            "id": "polygon",
+            "name": "polygon",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  1,
+                  0,
+                  0,
+                  0.4
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 2,
+                "cap": "butt",
+                "join": "miter",
+                "dash": [
+                  2,
+                  1
+                ]
+              }
+            },
+            "kind": "shape",
+            "shapeKind": "polygon",
+            "polygon": {
+              "points": [
+                [
+                  1,
+                  2
+                ],
+                [
+                  3,
+                  4
+                ],
+                [
+                  5,
+                  6
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "boolean",
+        "name": "boolean",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              0.4
+            ]
+          },
+          "stroke": {
+            "color": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "width": 2,
+            "cap": "butt",
+            "join": "miter",
+            "dash": [
+              2,
+              1
+            ]
+          }
+        },
+        "kind": "boolean",
+        "operation": "union",
+        "children": [
+          "rect",
+          "polygon"
+        ]
+      },
+      {
+        "id": "trace",
+        "name": "trace",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              0.4
+            ]
+          },
+          "stroke": {
+            "color": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "width": 2,
+            "cap": "butt",
+            "join": "miter",
+            "dash": [
+              2,
+              1
+            ]
+          }
+        },
+        "kind": "trace",
+        "sourceKey": "pixel",
+        "params": {
+          "threshold": 0.5,
+          "simplifyEpsilon": 1.5
+        }
+      }
+    ],
+    "assets": {
+      "pixel": {
+        "width": 1,
+        "height": 1,
+        "samples": [
+          [
+            255,
+            0,
+            0,
+            255
+          ]
+        ]
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "name unchanged",
+      "mutation": {
+        "mutation": "renameLayer",
+        "layerId": "rect",
+        "newName": "rect"
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/name",
+          "value": "rect"
+        }
+      ]
+    },
+    {
+      "name": "name changes",
+      "mutation": {
+        "mutation": "renameLayer",
+        "layerId": "rect",
+        "newName": "Rectangle"
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/name",
+          "value": "Rectangle"
+        }
+      ]
+    },
+    {
+      "name": "visible unchanged",
+      "mutation": {
+        "mutation": "setLayerVisible",
+        "layerId": "rect",
+        "visible": true
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/visible",
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "visible changes",
+      "mutation": {
+        "mutation": "setLayerVisible",
+        "layerId": "rect",
+        "visible": false
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/visible",
+          "value": false
+        }
+      ]
+    },
+    {
+      "name": "locked unchanged",
+      "mutation": {
+        "mutation": "setLayerLocked",
+        "layerId": "rect",
+        "locked": false
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/locked",
+          "value": false
+        }
+      ]
+    },
+    {
+      "name": "locked changes",
+      "mutation": {
+        "mutation": "setLayerLocked",
+        "layerId": "rect",
+        "locked": true
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/locked",
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "opacity unchanged",
+      "mutation": {
+        "mutation": "setLayerOpacity",
+        "layerId": "rect",
+        "opacity": 1
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/opacity",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "opacity changes",
+      "mutation": {
+        "mutation": "setLayerOpacity",
+        "layerId": "rect",
+        "opacity": 0.5
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/opacity",
+          "value": 0.5
+        }
+      ]
+    },
+    {
+      "name": "blend unchanged",
+      "mutation": {
+        "mutation": "setLayerBlendMode",
+        "layerId": "rect",
+        "blendMode": "normal"
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/blendMode",
+          "value": "normal"
+        }
+      ]
+    },
+    {
+      "name": "blend changes",
+      "mutation": {
+        "mutation": "setLayerBlendMode",
+        "layerId": "rect",
+        "blendMode": "multiply"
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/blendMode",
+          "value": "multiply"
+        }
+      ]
+    },
+    {
+      "name": "transform unchanged",
+      "mutation": {
+        "mutation": "updateLayerTransform",
+        "layerId": "rect",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        }
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/transform",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "transform changes",
+      "mutation": {
+        "mutation": "updateLayerTransform",
+        "layerId": "rect",
+        "transform": {
+          "x": 7,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0.2,
+          "rotation": 0
+        }
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/transform",
+          "value": {
+            "x": 7,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0.2,
+            "rotation": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "fill unchanged",
+      "mutation": {
+        "mutation": "replaceLayerFill",
+        "layerId": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": [
+            1,
+            0,
+            0,
+            0.4
+          ]
+        }
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              0.4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fill changes",
+      "mutation": {
+        "mutation": "replaceLayerFill",
+        "layerId": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": [
+            0,
+            1,
+            0,
+            0.4
+          ]
+        }
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": {
+            "kind": "solid",
+            "color": [
+              0,
+              1,
+              0,
+              0.4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "stroke unchanged",
+      "mutation": {
+        "mutation": "replaceLayerStroke",
+        "layerId": "rect",
+        "stroke": {
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "width": 2,
+          "cap": "butt",
+          "join": "miter",
+          "dash": [
+            2,
+            1
+          ]
+        }
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/stroke",
+          "value": {
+            "color": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "width": 2,
+            "cap": "butt",
+            "join": "miter",
+            "dash": [
+              2,
+              1
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "stroke changes",
+      "mutation": {
+        "mutation": "replaceLayerStroke",
+        "layerId": "rect",
+        "stroke": {
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "width": 2,
+          "cap": "butt",
+          "join": "miter",
+          "dash": [
+            4,
+            3
+          ]
+        }
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/stroke",
+          "value": {
+            "color": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "width": 2,
+            "cap": "butt",
+            "join": "miter",
+            "dash": [
+              4,
+              3
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fill rule unchanged",
+      "mutation": {
+        "mutation": "setLayerFillRule",
+        "layerId": "rect",
+        "fillRule": "nonzero"
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fillRule",
+          "value": "nonzero"
+        }
+      ]
+    },
+    {
+      "name": "fill rule changes",
+      "mutation": {
+        "mutation": "setLayerFillRule",
+        "layerId": "rect",
+        "fillRule": "evenodd"
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fillRule",
+          "value": "evenodd"
+        }
+      ]
+    },
+    {
+      "name": "group isolation unchanged",
+      "mutation": {
+        "mutation": "setGroupIsolation",
+        "layerId": "group",
+        "isolation": true
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/isolation",
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "group isolation changes",
+      "mutation": {
+        "mutation": "setGroupIsolation",
+        "layerId": "group",
+        "isolation": false
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/isolation",
+          "value": false
+        }
+      ]
+    },
+    {
+      "name": "Boolean operation unchanged",
+      "mutation": {
+        "mutation": "setLayerBooleanOperation",
+        "layerId": "boolean",
+        "booleanOperation": "union"
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/operation",
+          "value": "union"
+        }
+      ]
+    },
+    {
+      "name": "Boolean operation changes",
+      "mutation": {
+        "mutation": "setLayerBooleanOperation",
+        "layerId": "boolean",
+        "booleanOperation": "intersection"
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/operation",
+          "value": "intersection"
+        }
+      ]
+    },
+    {
+      "name": "trace parameters unchanged",
+      "mutation": {
+        "mutation": "updateLayerTraceParams",
+        "layerId": "trace",
+        "params": {
+          "threshold": 0.5,
+          "simplifyEpsilon": 1.5
+        }
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/2/params",
+          "value": {
+            "threshold": 0.5,
+            "simplifyEpsilon": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "name": "trace parameters changes",
+      "mutation": {
+        "mutation": "updateLayerTraceParams",
+        "layerId": "trace",
+        "params": {
+          "threshold": 0.6,
+          "simplifyEpsilon": 1.5
+        }
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/2/params",
+          "value": {
+            "threshold": 0.6,
+            "simplifyEpsilon": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "name": "text Grüße 🌍 14",
+      "mutation": {
+        "mutation": "updateText",
+        "layerId": "text",
+        "content": "Grüße 🌍",
+        "size": 14
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/1/content",
+          "value": "Grüße 🌍"
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/1/size",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "name": "text Edited 14",
+      "mutation": {
+        "mutation": "updateText",
+        "layerId": "text",
+        "content": "Edited",
+        "size": 14
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/1/content",
+          "value": "Edited"
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/1/size",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "name": "text Grüße 🌍 18",
+      "mutation": {
+        "mutation": "updateText",
+        "layerId": "text",
+        "content": "Grüße 🌍",
+        "size": 18
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/1/content",
+          "value": "Grüße 🌍"
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/1/size",
+          "value": 18
+        }
+      ]
+    },
+    {
+      "name": "image pixel 2",
+      "mutation": {
+        "mutation": "updateImage",
+        "layerId": "image",
+        "imageKey": "pixel",
+        "width": 2,
+        "height": 3
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/imageKey",
+          "value": "pixel"
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/width",
+          "value": 2
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/height",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "name": "image pixel 4",
+      "mutation": {
+        "mutation": "updateImage",
+        "layerId": "image",
+        "imageKey": "pixel",
+        "width": 4,
+        "height": 3
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/imageKey",
+          "value": "pixel"
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/width",
+          "value": 4
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/height",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "name": "image other 2",
+      "mutation": {
+        "mutation": "updateImage",
+        "layerId": "image",
+        "imageKey": "other",
+        "width": 2,
+        "height": 3
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/imageKey",
+          "value": "other"
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/width",
+          "value": 2
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/2/height",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "name": "rectangle width unchanged",
+      "mutation": {
+        "mutation": "setShapeCoordinate",
+        "layerId": "rect",
+        "field": "rectWidth",
+        "value": 20
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/rect/width",
+          "value": 20
+        }
+      ]
+    },
+    {
+      "name": "rectangle width changes",
+      "mutation": {
+        "mutation": "setShapeCoordinate",
+        "layerId": "rect",
+        "field": "rectWidth",
+        "value": 24
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/rect/width",
+          "value": 24
+        }
+      ]
+    },
+    {
+      "name": "polygon vertex unchanged",
+      "mutation": {
+        "mutation": "setShapeCoordinate",
+        "layerId": "polygon",
+        "field": "polygonY",
+        "index": 1,
+        "value": 4
+      },
+      "changed": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/3/polygon/points/1/1",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "name": "polygon vertex changes",
+      "mutation": {
+        "mutation": "setShapeCoordinate",
+        "layerId": "polygon",
+        "field": "polygonY",
+        "index": 1,
+        "value": 9
+      },
+      "changed": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/3/polygon/points/1/1",
+          "value": 9
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ use crate::{PathSegment,FillRule,StrokeCap,StrokeJoin};
 use semio_framework_2d::{flatten::{PathFlattenJob,PathFlattenInput,PathFlattenRetirement,FlatContour},stroke::{StrokeOutlineJob,StrokeOutlineInput,StrokeOutlineRetirement,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin,StrokeContour},retirement::{WorkRetirementCounter,WorkRetirementProgress}};
 type Point=[f64;2];
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PaintedPathStroke{pub width:f64,pub cap:StrokeCap,pub join:StrokeJoin,pub dash:Vec<f64>}
 #[derive(Clone,Debug)]
 pub struct PaintedPathQuery{pub point:Point,pub transform:[f64;6],pub tolerance:f64,pub flatness:f64,pub fill:bool,pub fill_rule:FillRule,pub stroke:Option<PaintedPathStroke>}

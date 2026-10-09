@@ -1,0 +1,29 @@
+{
+  "mutation": "createView",
+  "id": "v-detail",
+  "view": {
+    "building": "bldg-1",
+    "name": "Detail plan",
+    "kind": "Plan",
+    "depth": 3,
+    "hidden": [
+      "Beams",
+      "Grids"
+    ],
+    "scale": 50,
+    "detail": "Fine",
+    "storey": "st-first",
+    "cut_height": 0.9,
+    "crop": {
+      "min": {
+        "x": 0,
+        "y": 0
+      },
+      "max": {
+        "x": 6,
+        "y": 4
+      }
+    },
+    "phase": "New"
+  }
+}

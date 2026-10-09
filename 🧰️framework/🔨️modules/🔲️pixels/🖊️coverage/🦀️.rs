@@ -1,13 +1,15 @@
 //! 🖊️ Exact transformed polygon coverage for https://www.w3.org/TR/SVG11/painting.html#FillProperties.
 use crate::editing::{validate_extent,PixelEditError};
 use std::cmp::Ordering;
-use semio_framework_2d::retirement::{WorkRetirementCounter,WorkRetirementProgress};
+use semio_framework_2d::physical_work_retirement;
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum CoverageRule {NonZero,EvenOdd}
 #[derive(Clone,Debug,PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CoverageInput {pub width:u32,pub height:u32,pub transform:[f64;6],pub rule:CoverageRule,pub contours:Vec<Vec<[f64;2]>>}
 #[derive(Clone,Debug,PartialEq,Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CoverageMask {pub width:u32,pub height:u32,pub coverage:Vec<u8>}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum CoveragePhase {Preparing,Sorting,Rasterizing,Complete}
@@ -31,6 +33,7 @@ fn integral(a:f64,b:f64,height:f64)->f64 {
 }
 fn x_at(edge:Edge,y:f64)->f64 {edge.x+(y-edge.y)*edge.dx}
 
+#[derive(semio_framework_value::RetireOwned)]
 struct MergeSort {source:Vec<usize>,target:Vec<usize>,width:usize,left:usize,i:usize,j:usize,k:usize,mid:usize,end:usize,writes:usize}
 impl MergeSort {
     fn new(source:Vec<usize>)->Self {
@@ -47,6 +50,7 @@ impl MergeSort {
 }
 
 /// ⏱️ Owned, budgeted sweep with exact polygon area integration and cancellable candidates.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CoverageJob {
     input:CoverageInput,mask:CoverageMask,areas:Vec<f64>,edges:Vec<Edge>,events:Vec<SweepEvent>,positions:Vec<usize>,active:Vec<usize>,event_ids:Vec<usize>,
     sorted:Vec<usize>,copied:Vec<usize>,sorter:Option<MergeSort>,stage:Stage,cancelled:bool,failed:Option<PixelEditError>,work:u64,
@@ -151,39 +155,12 @@ impl CoverageJob {
     /// 🧹️ Transfers complete coverage and admits private contour and buffer retirement through work grants.
     pub fn into_retirement(mut self)->(CoverageRetirement,Option<CoverageMask>) {
         let output=if self.stage==Stage::Done&&!self.cancelled&&self.failed.is_none() {Some(CoverageMask {width:self.mask.width,height:self.mask.height,coverage:std::mem::take(&mut self.mask.coverage)})} else {None};
-        self.cancelled=true;(CoverageRetirement {job:Some(self),slot:0,counter:WorkRetirementCounter::default()},output)
+        self.cancelled=true;(CoverageRetirement::new(self),output)
     }
 }
 
-/// 🧹️ Consumes the sweep owner; terminal destruction retains no contour or scratch allocation.
-pub struct CoverageRetirement {job:Option<CoverageJob>,slot:u8,counter:WorkRetirementCounter}
-impl CoverageRetirement {
-    pub fn terminal_is_empty(&self)->bool {self.job.is_none()}
-    pub fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,&'static str> {
-        let owner=&mut self.job;let slot=&mut self.slot;
-        self.counter.advance(grant,||{
-            let Some(job)=owner.as_mut() else {return true;};let mut complete=true;
-            match *slot {
-                0=>if job.input.contours.pop().is_some() {complete=false;} else {job.input.contours=Vec::new();},
-                1=>job.mask.coverage=Vec::new(),
-                2=>job.areas=Vec::new(),
-                3=>job.edges=Vec::new(),
-                4=>job.events=Vec::new(),
-                5=>job.positions=Vec::new(),
-                6=>job.active=Vec::new(),
-                7=>job.event_ids=Vec::new(),
-                8=>job.sorted=Vec::new(),
-                9=>job.copied=Vec::new(),
-                10=>if let Some(sorter)=job.sorter.as_mut() {sorter.source=Vec::new();},
-                11=>if let Some(sorter)=job.sorter.as_mut() {sorter.target=Vec::new();},
-                12=>job.sorter=None,
-                13=>{job.first=None;job.previous=None;},
-                _=>unreachable!(),
-            }
-            if complete {*slot+=1;}if *slot==14 {*owner=None;true} else {false}
-        })
-    }
-}
+semio_framework_value::artifact_retire_leaf!(CoverageRule,CoveragePhase,Edge,SweepEvent,Stage);
+physical_work_retirement!(CoverageRetirement,CoverageJob,&'static str,|_:&str|"Coverage retirement refused its physical grant");
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

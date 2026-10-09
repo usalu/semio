@@ -5,7 +5,7 @@
  * @see ./🧰️support/🟦️.ts
  */
 import { afterAll, describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Workspace, get, plain, scenarios, semio, sleep, slug, type Task } from "./🧰️support/🟦️.ts";
 
@@ -35,6 +35,39 @@ const waitFor = async (what: string, read: () => Promise<string>, needle: string
 };
 
 describe("cli journeys", () => {
+  test("A listening server waits for a successful HTTP response", async () => {
+    const ws = await workspace("http-readiness");
+    const gate = join(ws.root, "http-ready");
+    await ws.ok(["run", "tool:journey-fixture/serve", "--param", `listen=${ws.portA}`, "--env", `JOURNEY_HTTP_GATE=${gate}`, "--detach"]);
+    const task = await ws.task((candidate) => candidate.commandId === "tool:journey-fixture/serve" && candidate.status === "running");
+    const address = `http://127.0.0.1:${ws.portA}/health`;
+    await waitFor("listening", () => logOf(ws, task.session), "journey server listening");
+    expect((await get(address)).status).toBe(503);
+    await sleep(500);
+    expect((await ws.tasks()).find((candidate) => candidate.session === task.session)!.readyUrl).toBeNull();
+    writeFileSync(gate, "ready");
+    await waitFor("HTTP readiness", async () => (await ws.tasks()).find((candidate) => candidate.session === task.session)!.readyUrl ?? "", address);
+    expect((await get(address)).status).toBe(200);
+    await ws.ok(["stop", task.session]);
+  }, 120_000);
+  test("A pending HTTP probe remains responsive and is cancelled with its task", async () => {
+    const ws = await workspace("http-cancellation");
+    const gate = join(ws.root, "http-ready");
+    await ws.ok(["run", "tool:journey-fixture/serve", "--param", `listen=${ws.portA}`, "--env", `JOURNEY_HTTP_GATE=${gate}`, "--env", "JOURNEY_HTTP_DELAY=800", "--detach"]);
+    const task = await ws.task((candidate) => candidate.commandId === "tool:journey-fixture/serve" && candidate.status === "running");
+    await waitFor("listening", () => logOf(ws, task.session), "journey server listening");
+    const start = Date.now();
+    expect((await ws.tasks()).find((candidate) => candidate.session === task.session)!.readyUrl).toBeNull();
+    expect(Date.now() - start).toBeLessThan(1500);
+    await ws.ok(["stop", task.session]);
+    writeFileSync(gate, "ready");
+    await sleep(700);
+    const stopped = (await ws.tasks()).find((candidate) => candidate.session === task.session)!;
+    expect(stopped.status).toBe("exited");
+    expect(stopped.readyUrl).toBeNull();
+    expect(await refused(`http://127.0.0.1:${ws.portA}/health`)).toBe(true);
+    console.log(`[DEBUG] a pending HTTP probe kept control responsive and stopped with ${task.session}`);
+  }, 120_000);
   test("A detached server prints its address once it is ready", async () => {
     const ws = await workspace("detached");
     const port = ws.portA;

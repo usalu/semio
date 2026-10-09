@@ -49,12 +49,13 @@ export function parseBimWorldProjection(value: unknown, at = "$"): BimWorldProje
     curvilinearMapping: text(row.curvilinearMapping, `${at}.curvilinearMapping`),
   };
 }
-/** 🎚️ Persisted camera, projection, storey visibility and section plane of one exact BIM world window. */
+/** 🎚️ Persisted camera, projection, storey visibility, phase filter and section plane of one exact BIM world window. */
 export interface BimWorldWindowConfig {
   camera: Viewport3dOrbit;
   projection: BimWorldProjection;
   isolatedStorey: string;
   hiddenStoreys: string[];
+  viewPhase: string;
   sectionEnabled: boolean;
   sectionAxis: string;
   sectionOffset: number;
@@ -66,12 +67,13 @@ export type BimWorldWindowConfigMutation = { kind: "replace"; config: BimWorldWi
 export type BimWorldWindowConfigDiff = Partial<BimWorldWindowConfig>;
 /** 🚪️ Parses one exact BimWorldWindowConfig. */
 export function parseBimWorldWindowConfig(value: unknown): BimWorldWindowConfig {
-  const row = exact(value, "$", ["camera", "projection", "isolatedStorey", "hiddenStoreys", "sectionEnabled", "sectionAxis", "sectionOffset", "framed"]);
+  const row = exact(value, "$", ["camera", "projection", "isolatedStorey", "hiddenStoreys", "viewPhase", "sectionEnabled", "sectionAxis", "sectionOffset", "framed"]);
   return {
     camera: parseViewport3dOrbit(row.camera),
     projection: parseBimWorldProjection(row.projection, "$.projection"),
     isolatedStorey: text(row.isolatedStorey, "$.isolatedStorey"),
     hiddenStoreys: list(row.hiddenStoreys, "$.hiddenStoreys", text),
+    viewPhase: text(row.viewPhase, "$.viewPhase"),
     sectionEnabled: flag(row.sectionEnabled, "$.sectionEnabled"),
     sectionAxis: text(row.sectionAxis, "$.sectionAxis"),
     sectionOffset: num(row.sectionOffset, "$.sectionOffset"),

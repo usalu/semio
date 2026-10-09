@@ -29,6 +29,36 @@
   "columns": {},
   "curtain_walls": {},
   "door_types": {},
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 1.5 x 1.2",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.2
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.1
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.1
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "mullion_material": "m-steel"
+    }
+  },
   "grids": {},
   "materials": {
     "m-brick": {
@@ -39,9 +69,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800.0,
+      "density": 1800,
       "name": "Brick",
-      "specific_heat": 900.0
+      "specific_heat": 900
     },
     "m-glass": {
       "category": "Masonry",
@@ -51,9 +81,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800.0,
+      "density": 1800,
       "name": "Glass",
-      "specific_heat": 900.0
+      "specific_heat": 900
     },
     "m-steel": {
       "category": "Masonry",
@@ -63,9 +93,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800.0,
+      "density": 1800,
       "name": "Steel",
-      "specific_heat": 900.0
+      "specific_heat": 900
     }
   },
   "openings": {},
@@ -132,6 +162,18 @@
       "panes": 2,
       "sill": 0.9,
       "width": 1.2
+    }
+  },
+  "classification_systems": {
+    "cs-uniclass": {
+      "name": "Uniclass",
+      "edition": "",
+      "entries": [
+        {
+          "code": "EF_25_10",
+          "title": "Walls"
+        }
+      ]
     }
   }
 }

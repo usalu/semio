@@ -1,7 +1,12 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::export::gltf::scene::{build, y_up};
+use crate::standards::v1::subsets::any::io::export::gltf::scene::y_up;
 use crate::standards::v1::subsets::any::io::export::gltf::testkit::{house, read};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+
+fn build(snapshot: &crate::ModelSnapshot) -> (GltfModel, Vec<String>) {
+    registry::with_inference(None, snapshot, |inferred| crate::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
+}
 
 #[test]
 fn the_report_counts_what_the_scene_holds() {

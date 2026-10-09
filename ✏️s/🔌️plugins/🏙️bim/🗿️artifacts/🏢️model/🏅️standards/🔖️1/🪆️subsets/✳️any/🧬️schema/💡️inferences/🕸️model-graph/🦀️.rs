@@ -5,18 +5,28 @@
 //!
 //! The submodules: [`plan`] builds the topological order and the parent lists (indexes built once per run: touching walls per storey, hosted openings, elements per storey), [`compute`] is the
 //! node dispatch and the dependency of each node (the honesty contract of `dep_input`), [`projection`] copies node values into [`ModelInference`] (whole or incrementally) and
-//! [`session`] is the incremental entry point of editor, viewer and export. See `r7-design-model-graph.md` and `r7-api-model-session.md` in the BIM-PLUGIN ticket.
+//! [`session`] is the stepped, cancellable entry point of every consumer and [`registry`] holds one session per mounted instance for the editor, the viewer, the exports and the imports. See `r7-design-model-graph.md` and `r7-api-model-session.md` in the BIM-PLUGIN ticket.
 
+use super::super::annotation_layout::StoreyAnnotations;
 use super::super::curtain_layout::CurtainLayout;
-use super::super::diagnostics::Diagnostic;
+use super::super::diagnostics::{Diagnostic, DiagnosticIndex};
 use super::super::element_solids::{SolidEntry, SolidKey};
+use super::super::families::FamilyValue;
 use super::super::opening_frames::{CutRect, HostExtent, OpeningFrame};
+use super::super::phase_visibility::PhaseVisibility;
 use super::super::plan_linework::PlanLinework;
 use super::super::quantities::{ElementQuantity, QuantityTotals};
+use super::super::schedules::ScheduleTable;
+use super::super::zones::{SchemeTotals, ZoneTotals};
 use super::super::spaces::StoreyRooms;
 use super::super::stair_runs::StairRun;
+use super::super::ramp_runs::RampRun;
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::joins::Band;
+use super::super::view_linework::ViewLinework;
+use super::super::sheet_layout::SheetLayout;
+use super::super::wall_layout::attach::AttachSurface;
+use super::super::effective_properties::EffectiveProperties;
 use super::super::wall_layout::WallLayout;
 use super::super::ModelInference;
 use crate::ModelSnapshot;
@@ -26,14 +36,18 @@ use std::sync::Arc;
 
 #[path = "🧮️compute/🦀️.rs"]
 pub mod compute;
+#[path = "🎯️dirty/🦀️.rs"]
+pub mod dirty;
 #[path = "🧭️plan/🦀️.rs"]
 pub mod plan;
 #[path = "🪞️projection/🦀️.rs"]
 pub mod projection;
+#[path = "🗂️registry/🦀️.rs"]
+pub mod registry;
 #[path = "📡️session/🦀️.rs"]
 pub mod session;
 
-pub use session::{ModelInferenceSession, UpdateReport};
+pub use session::{ModelInferenceSession, RunProgress, SessionRun, UpdateReport};
 
 //#region 🔖️Kinds
 /// 🧩️ The kind of a node; the selections of [`kinds`] are sets of kinds.
@@ -47,17 +61,29 @@ pub enum NodeKind {
     Host,
     OpeningFrame,
     StairRun,
+    RampRun,
     Solid,
     Room,
     Plan,
     Quantity,
     Totals,
     Diagnostics,
+    DiagnosticIndex,
+    Annotation,
+    Schedule,
+    Zone,
+    Scheme,
+    View,
+    Sheet,
+    PhaseVisibility,
+    Surface,
+    Properties,
+    Family,
 }
 
 impl NodeKind {
     /// 🔢️ Every kind, in plan order.
-    pub const ALL: [NodeKind; 14] = [
+    pub const ALL: [NodeKind; 26] = [
         Self::Storey,
         Self::Band,
         Self::Cut,
@@ -66,12 +92,24 @@ impl NodeKind {
         Self::Host,
         Self::OpeningFrame,
         Self::StairRun,
+        Self::RampRun,
         Self::Solid,
         Self::Room,
         Self::Plan,
         Self::Quantity,
         Self::Totals,
         Self::Diagnostics,
+        Self::DiagnosticIndex,
+        Self::Annotation,
+        Self::Schedule,
+        Self::Zone,
+        Self::Scheme,
+        Self::View,
+        Self::Sheet,
+        Self::PhaseVisibility,
+        Self::Surface,
+        Self::Properties,
+        Self::Family,
     ];
 
     /// 🔢️ The bit of the kind in a selection mask.
@@ -90,12 +128,24 @@ impl NodeKind {
             Self::Host => "host",
             Self::OpeningFrame => "opening-frame",
             Self::StairRun => "stair-run",
+            Self::RampRun => "ramp-run",
             Self::Solid => "solid",
             Self::Room => "room",
             Self::Plan => "plan",
             Self::Quantity => "quantity",
             Self::Totals => "totals",
             Self::Diagnostics => "diagnostics",
+            Self::DiagnosticIndex => "diagnostic-index",
+            Self::Annotation => "annotation",
+            Self::Schedule => "schedule",
+            Self::Zone => "zone",
+            Self::Scheme => "scheme",
+            Self::View => "view",
+            Self::Sheet => "sheet",
+            Self::PhaseVisibility => "phase-visibility",
+            Self::Surface => "surface",
+            Self::Properties => "properties",
+            Self::Family => "family",
         }
     }
 
@@ -103,18 +153,27 @@ impl NodeKind {
     pub const fn requires(self) -> &'static [NodeKind] {
         use NodeKind::*;
         match self {
-            Storey | Band | Cut => &[],
-            WallLayout => &[Storey, Band],
+            Storey | Band | Cut | PhaseVisibility | Family => &[],
+            Surface => &[Storey],
+            Properties => &[Properties],
+            WallLayout => &[Storey, Band, Surface],
             CurtainLayout => &[Storey],
             Host => &[Storey, WallLayout, CurtainLayout],
             OpeningFrame => &[Host, Cut],
             StairRun => &[Storey],
-            Solid => &[Storey, WallLayout, CurtainLayout, OpeningFrame, StairRun],
+            RampRun => &[Storey],
+            Solid => &[Storey, WallLayout, CurtainLayout, OpeningFrame, StairRun, RampRun, Family],
             Room => &[Storey, WallLayout],
-            Plan => &[Storey, WallLayout, CurtainLayout, OpeningFrame, StairRun, Room],
-            Quantity => &[Storey, WallLayout, CurtainLayout, OpeningFrame, StairRun, Solid, Room],
+            Annotation => &[WallLayout],
+            Plan => &[Storey, WallLayout, CurtainLayout, OpeningFrame, StairRun, RampRun, Room, Annotation],
+            Quantity => &[Storey, WallLayout, CurtainLayout, OpeningFrame, StairRun, RampRun, Solid, Room, Family],
             Totals => &[Quantity],
-            Diagnostics => &[Storey, WallLayout, OpeningFrame, StairRun, Room, Solid],
+            Diagnostics => &[Storey, WallLayout, OpeningFrame, StairRun, RampRun, Room, Solid, Annotation, Properties, Family],
+            Self::DiagnosticIndex => &[Diagnostics],
+            Schedule => &[Quantity, Properties],
+            Zone | Scheme => &[Quantity],
+            View => &[Storey, WallLayout, CurtainLayout, OpeningFrame, StairRun, RampRun, Room, Solid],
+            Sheet => &[View],
         }
     }
 }
@@ -132,11 +191,22 @@ pub mod kinds {
     pub const CURTAINS: u32 = mask(NodeKind::CurtainLayout);
     pub const FRAMES: u32 = mask(NodeKind::OpeningFrame);
     pub const RUNS: u32 = mask(NodeKind::StairRun);
+    pub const RAMP_RUNS: u32 = mask(NodeKind::RampRun);
     pub const SOLIDS: u32 = mask(NodeKind::Solid);
     pub const ROOMS: u32 = mask(NodeKind::Room);
     pub const PLANS: u32 = mask(NodeKind::Plan);
     pub const QUANTITIES: u32 = mask(NodeKind::Totals);
     pub const DIAGNOSTICS: u32 = mask(NodeKind::Diagnostics);
+    pub const DIAGNOSTIC_INDEX: u32 = mask(NodeKind::DiagnosticIndex);
+    pub const ANNOTATIONS: u32 = mask(NodeKind::Annotation);
+    pub const SCHEDULES: u32 = mask(NodeKind::Schedule);
+    pub const ZONES: u32 = mask(NodeKind::Zone) | mask(NodeKind::Scheme);
+    pub const VIEWS: u32 = mask(NodeKind::View);
+    pub const SHEETS: u32 = mask(NodeKind::Sheet);
+    pub const PHASES: u32 = mask(NodeKind::PhaseVisibility);
+    pub const SURFACES: u32 = mask(NodeKind::Surface);
+    pub const PROPERTIES: u32 = mask(NodeKind::Properties);
+    pub const FAMILIES: u32 = mask(NodeKind::Family);
     pub const ALL: u32 = (1 << NodeKind::ALL.len()) - 1;
 
     /// 🔗️ The wanted kinds and everything they require, transitively.
@@ -181,6 +251,7 @@ pub enum DiagnosticScope {
     Storey(String),
     Building(String),
     Model,
+    Data,
 }
 
 /// 🔑️ A node of the model graph. Ids are the ids of the snapshot (unique across collections); a `Room`, `Plan` and storey scope is the id of the storey.
@@ -194,12 +265,24 @@ pub enum ModelNode {
     Host(String),
     OpeningFrame(String),
     StairRun(String),
+    RampRun(String),
     Solid(SolidKey),
     Room(String),
     Plan(String),
     Quantity(String),
     Totals(TotalsScope),
     Diagnostics(DiagnosticScope),
+    DiagnosticIndex,
+    Annotation(String),
+    Schedule(String),
+    Zone(String),
+    Scheme(String),
+    View(String),
+    Sheet(String),
+    PhaseVisibility(String),
+    Surface(String),
+    Properties(String),
+    Family(String),
 }
 
 impl ModelNode {
@@ -214,12 +297,24 @@ impl ModelNode {
             Self::Host(_) => NodeKind::Host,
             Self::OpeningFrame(_) => NodeKind::OpeningFrame,
             Self::StairRun(_) => NodeKind::StairRun,
+            Self::RampRun(_) => NodeKind::RampRun,
             Self::Solid(_) => NodeKind::Solid,
             Self::Room(_) => NodeKind::Room,
             Self::Plan(_) => NodeKind::Plan,
             Self::Quantity(_) => NodeKind::Quantity,
             Self::Totals(_) => NodeKind::Totals,
             Self::Diagnostics(_) => NodeKind::Diagnostics,
+            Self::DiagnosticIndex => NodeKind::DiagnosticIndex,
+            Self::Annotation(_) => NodeKind::Annotation,
+            Self::Schedule(_) => NodeKind::Schedule,
+            Self::Zone(_) => NodeKind::Zone,
+            Self::Scheme(_) => NodeKind::Scheme,
+            Self::View(_) => NodeKind::View,
+            Self::Sheet(_) => NodeKind::Sheet,
+            Self::PhaseVisibility(_) => NodeKind::PhaseVisibility,
+            Self::Surface(_) => NodeKind::Surface,
+            Self::Properties(_) => NodeKind::Properties,
+            Self::Family(_) => NodeKind::Family,
         }
     }
 }
@@ -233,16 +328,28 @@ pub enum Data {
     Band(Option<Band>),
     Cut(CutRect),
     Layout(Arc<WallLayout>),
-    Curtain(CurtainLayout),
+    Curtain(Arc<CurtainLayout>),
     Host(Option<Arc<HostExtent>>),
     Frame(Arc<OpeningFrame>),
     Run(Arc<StairRun>),
+    RampRun(Arc<RampRun>),
     Solid(Arc<SolidEntry>),
     Rooms(Arc<StoreyRooms>),
     Plan(Arc<PlanLinework>),
     Quantity(Option<Arc<ElementQuantity>>),
     Totals(Arc<QuantityTotals>),
     Findings(Arc<Vec<Diagnostic>>),
+    Index(Arc<DiagnosticIndex>),
+    Annotations(Arc<StoreyAnnotations>),
+    Schedule(Arc<ScheduleTable>),
+    Zone(Arc<ZoneTotals>),
+    Scheme(Arc<SchemeTotals>),
+    View(Arc<ViewLinework>),
+    Sheet(Arc<SheetLayout>),
+    Phases(Arc<PhaseVisibility>),
+    Surface(Arc<AttachSurface>),
+    Properties(Arc<EffectiveProperties>),
+    Family(Arc<FamilyValue>),
 }
 
 /// 📦️ A node value: the key it was computed for and its data. The key travels with the value so a parent is found by key, never by position.
@@ -257,15 +364,28 @@ impl ModelValue {
     pub fn same(&self, other: &ModelValue) -> bool {
         match (&self.data, &other.data) {
             (Data::Layout(a), Data::Layout(b)) => Arc::ptr_eq(a, b),
+            (Data::Curtain(a), Data::Curtain(b)) => Arc::ptr_eq(a, b),
             (Data::Host(Some(a)), Data::Host(Some(b))) => Arc::ptr_eq(a, b),
             (Data::Frame(a), Data::Frame(b)) => Arc::ptr_eq(a, b),
             (Data::Run(a), Data::Run(b)) => Arc::ptr_eq(a, b),
+            (Data::RampRun(a), Data::RampRun(b)) => Arc::ptr_eq(a, b),
             (Data::Solid(a), Data::Solid(b)) => Arc::ptr_eq(a, b),
             (Data::Rooms(a), Data::Rooms(b)) => Arc::ptr_eq(a, b),
             (Data::Plan(a), Data::Plan(b)) => Arc::ptr_eq(a, b),
             (Data::Quantity(Some(a)), Data::Quantity(Some(b))) => Arc::ptr_eq(a, b),
             (Data::Totals(a), Data::Totals(b)) => Arc::ptr_eq(a, b),
             (Data::Findings(a), Data::Findings(b)) => Arc::ptr_eq(a, b),
+            (Data::Index(a), Data::Index(b)) => Arc::ptr_eq(a, b),
+            (Data::Annotations(a), Data::Annotations(b)) => Arc::ptr_eq(a, b),
+            (Data::Schedule(a), Data::Schedule(b)) => Arc::ptr_eq(a, b),
+            (Data::Zone(a), Data::Zone(b)) => Arc::ptr_eq(a, b),
+            (Data::Scheme(a), Data::Scheme(b)) => Arc::ptr_eq(a, b),
+            (Data::View(a), Data::View(b)) => Arc::ptr_eq(a, b),
+            (Data::Sheet(a), Data::Sheet(b)) => Arc::ptr_eq(a, b),
+            (Data::Phases(a), Data::Phases(b)) => Arc::ptr_eq(a, b),
+            (Data::Surface(a), Data::Surface(b)) => Arc::ptr_eq(a, b),
+            (Data::Properties(a), Data::Properties(b)) => Arc::ptr_eq(a, b),
+            (Data::Family(a), Data::Family(b)) => Arc::ptr_eq(a, b),
             (Data::Host(Some(_)), _) | (Data::Quantity(Some(_)), _) => false,
             (a, b) => a == b && self.node == other.node,
         }
@@ -276,12 +396,22 @@ impl ModelValue {
         let base = std::mem::size_of::<ModelValue>();
         base + match &self.data {
             Data::Layout(layout) => layout.layer_offsets.len() * 8 + layout.footprint.len() * std::mem::size_of::<crate::Vertex>() + layout.joins.iter().map(|join| std::mem::size_of_val(join) + join.other.len()).sum::<usize>(),
+            Data::Curtain(layout) => (layout.u_edges.len() + layout.v_edges.len() + layout.ignored_u.len() + layout.ignored_v.len()) * 8 + layout.overrides.len() * 96 + (layout.stray.len() + layout.repeated.len()) * 32,
             Data::Solid(entry) => entry.solid.byte_size(),
             Data::Frame(frame) => std::mem::size_of_val(&**frame) + frame.plan.len() * 64,
             Data::Rooms(rooms) => rooms.values().map(|room| 128 + (room.outline.len() + room.holes.iter().map(Vec::len).sum::<usize>()) * std::mem::size_of::<crate::Vertex>()).sum(),
             Data::Plan(plan) => plan.regions.iter().map(|region| 96 + region.outer.len() * 24).sum::<usize>() + plan.polylines.iter().map(|line| 96 + line.vertices.len() * 24).sum::<usize>() + plan.texts.len() * 128,
+            Data::View(view) => view.lines.regions.iter().map(|region| 96 + region.outer.len() * 24).sum::<usize>() + view.lines.polylines.iter().map(|line| 96 + line.vertices.len() * 24).sum::<usize>() + view.lines.texts.len() * 128,
+            Data::Sheet(layout) => 512 + (layout.viewports.len() * 192) + layout.title_block.cells.iter().map(|cell| 96 + cell.value.len()).sum::<usize>() + layout.revisions.rows.iter().map(|row| 128 + row.description.len()).sum::<usize>() + layout.findings.len() * 96,
             Data::Findings(found) => found.len() * 160,
-            Data::Totals(totals) => (totals.kinds.len() + totals.types.len() + totals.materials.len()) * 80,
+            Data::Index(index) => index.elements.values().map(|entry| 96 + entry.codes.len() * 8).sum::<usize>() + (index.categories.len() + index.codes.len() + index.storeys.len()) * 64,
+            Data::Family(family) => family.solids.values().map(|solid| 160 + 8 * (solid.positions.len() + solid.normals.len()) + 4 * solid.indices.len()).sum::<usize>() + family.parameters.len() * 128 + family.issues.len() * 192 + family.outline.len() * 32,
+            Data::Phases(phases) => phases.visible.values().map(|ids| 48 + ids.iter().map(|id| id.len() + 24).sum::<usize>()).sum(),
+            Data::Annotations(set) => (set.dimensions.len() + set.tags.len() + set.notes.len() + set.leaders.len()) * 256 + set.findings.len() * 160,
+            Data::Properties(properties) => properties.values.values().map(|set| 64 + set.len() * 96).sum::<usize>() + properties.findings.len() * 96,
+            Data::Surface(surface) => surface.pieces.iter().map(|piece| 96 + (piece.outline.len() + piece.holes.iter().map(Vec::len).sum::<usize>()) * 16).sum(),
+            Data::Totals(totals) => (totals.kinds.len() + totals.types.len() + totals.materials.len() + totals.finishes.len()) * 80,
+            Data::Schedule(table) => table.rows.iter().map(|row| 64 + row.cells.len() * 32 + row.elements.len() * 24).sum(),
             _ => 0,
         }
     }
@@ -294,7 +424,7 @@ pub struct ModelGraph<const WANT: u32>;
 
 /// 🗺️ The snapshot collections the graph reads (the tier-1 gate of `infer_field_after_diff`): everything except the project info and material colours' absence of effect, which the dependency hashes decide.
 pub const READS: &[&str] = &[
-    "storeys", "buildings", "sites", "walls", "wall_types", "curtain_walls", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "roofs", "roof_types", "stairs", "railings", "spaces", "grids", "materials", "properties", "classifications",
+    "families", "family_parameters", "family_solids", "property_templates", "classification_systems", "storeys", "buildings", "sites", "walls", "wall_sweeps", "wall_types", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "roof_types", "stairs", "ramps", "railings", "spaces", "zones", "area_schemes", "grids", "materials", "properties", "classifications", "schedules", "views", "sheets", "viewports", "sheet_revisions", "dimensions", "tags", "text_notes", "leaders", "annotation_styles",
 ];
 
 impl<const WANT: u32> protocol::InferredField<ModelSnapshot> for ModelGraph<WANT> {
@@ -317,6 +447,10 @@ impl<const WANT: u32> protocol::InferredField<ModelSnapshot> for ModelGraph<WANT
         compute::dependency(snapshot, key)
     }
 
+    fn touched_by(snapshot: &ModelSnapshot, key: &Self::Key, touched: &protocol::TouchedPaths) -> bool {
+        dirty::touched(snapshot, key, touched)
+    }
+
     fn compute(snapshot: &ModelSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         compute::value(snapshot, key, parents)
     }
@@ -326,9 +460,15 @@ impl<const WANT: u32> protocol::InferredField<ModelSnapshot> for ModelGraph<WANT
     }
 }
 
-/// 🕸️ Runs the graph restricted to `WANT` without a cache and projects the values into a `ModelInference` (the fields of unwanted kinds stay empty).
+/// 🕸️ Runs the graph restricted to `WANT` without a cache and projects the values into a `ModelInference` (the fields of unwanted kinds stay empty): the reference every session run is tested against. A fault of the engine is a value.
+pub fn try_infer_selected<const WANT: u32>(snapshot: &ModelSnapshot) -> Result<ModelInference, protocol::InferenceError> {
+    protocol::try_infer_field::<ModelSnapshot, ModelGraph<WANT>>(snapshot, None).map(projection::project)
+}
+
+/// 🕸️ [`try_infer_selected`] for the test helpers that read one projection of a model.
+#[cfg(test)]
 pub fn infer_selected<const WANT: u32>(snapshot: &ModelSnapshot) -> ModelInference {
-    projection::project(protocol::infer_field::<ModelSnapshot, ModelGraph<WANT>>(snapshot, None))
+    try_infer_selected::<WANT>(snapshot).unwrap_or_else(|error| panic!("{error}"))
 }
 
 /// 🗂️ The node values of a whole run, by key.
@@ -338,3 +478,11 @@ pub type Values = BTreeMap<ModelNode, ModelValue>;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/📈️incremental/🦀️.rs"]
+mod incremental_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧬️families/🦀️.rs"]
+mod family_tests;

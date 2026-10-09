@@ -4,11 +4,14 @@
 //! the plan cut and of the clash tests. Walls, curtain walls, columns, beams, slabs and stairs have one; they are derived from authored
 //! parameters and the already inferred storey levels, wall layouts and stair runs (the nodes the callers are children of). Sloped or curved parts are bounded by their extent.
 
+use super::super::curtain_layout::DEFAULT_MULLION_DEPTH;
+use super::super::element_solids::ceilings;
+use super::super::element_solids::columns::footprint;
 use super::super::element_solids::plan_kit::{bulged, depth_of, extents_of, placed, point, seg};
 use super::super::stair_runs::StairRun;
 use super::super::storey_levels::{target_of, vertical_of, StoreyLevel};
 use super::super::wall_layout::WallLayout;
-use crate::{Beam, Column, CurtainWall, ModelSnapshot, Profile, Slab, Stair, TopConstraint, Wall};
+use crate::{Beam, Ceiling, Column, CurtainWall, ModelSnapshot, Profile, Slab, Stair, TopConstraint, Wall};
 use semio_framework_2d::regions::Region;
 use semio_framework_geometry::loops::{self, Vertex as Corner};
 use semio_framework_geometry::Point;
@@ -17,6 +20,7 @@ use std::collections::BTreeMap;
 //#region 🔖️Vocabulary
 /// 📏️ Sagitta (metres) allowed when an arc becomes a polygon ring for booleans and overlap tests.
 pub const CHORD_TOLERANCE: f64 = 1e-4;
+
 
 /// 🧱️ What a body is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -27,6 +31,7 @@ pub enum BodyKind {
     Beam,
     Slab,
     Stair,
+    Ceiling,
 }
 
 /// 📦️ One element as a prism: its footprint between `z_min` and `z_max` (building datum), with the rectangle `bounds = [min_x, min_y, max_x, max_y]` of the footprint.
@@ -90,6 +95,7 @@ pub fn profile_outline(profile: &Profile) -> Vec<Corner> {
             vec![corner(-w, -d), corner(w, -d), corner(w, -d + f), corner(t, -d + f), corner(t, d - f), corner(w, d - f), corner(w, d), corner(-w, d), corner(-w, d - f), corner(-t, d - f), corner(-t, -d + f), corner(-w, -d + f)]
         }
         Profile::Custom { outline } => loops::ccw(&bulged(outline)),
+        Profile::Family { .. } => Vec::new(),
     }
 }
 //#endregion 🔖️Profiles
@@ -127,24 +133,77 @@ pub fn band(start: Point, end: Point, width: f64) -> Option<Vec<Corner>> {
     })
 }
 
-/// 🏛️ The placed outline of a column in building coordinates.
-pub fn column_outline(snapshot: &ModelSnapshot, column: &Column) -> Option<Vec<Corner>> {
+fn finite_column(column: &Column) -> bool {
+    column.position.x.is_finite() && column.position.y.is_finite() && column.rotation.is_finite() && column.tilt.is_none_or(|tilt| tilt.direction.is_finite() && tilt.angle.is_finite() && tilt.angle.abs() < std::f64::consts::FRAC_PI_2)
+}
+
+/// 🔷️ The convex hull of points as a counter-clockwise loop of straight corners.
+fn hull(points: &[Point]) -> Vec<Corner> {
+    let mut sorted: Vec<Point> = points.to_vec();
+    sorted.sort_by(|a, b| a.x.total_cmp(&b.x).then(a.y.total_cmp(&b.y)));
+    sorted.dedup_by(|a, b| (a.x - b.x).abs() < 1e-12 && (a.y - b.y).abs() < 1e-12);
+    if sorted.len() < 3 {
+        return Vec::new();
+    }
+    let turn = |o: Point, a: Point, b: Point| (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+    let mut chain: Vec<Point> = Vec::new();
+    for pass in 0..2 {
+        let start = chain.len();
+        for &point in &sorted {
+            while chain.len() >= start + 2 && turn(chain[chain.len() - 2], chain[chain.len() - 1], point) <= 0.0 {
+                chain.pop();
+            }
+            chain.push(point);
+        }
+        chain.pop();
+        if pass == 0 {
+            sorted.reverse();
+        }
+    }
+    chain.iter().map(|p| Corner::corner(p.x, p.y)).collect()
+}
+
+/// 🏛️ The placed outline of a column in building coordinates over the heights `base..top`: the profile at its position, and for a tilted column the convex hull of its horizontal sections at both heights (the plan extent of the whole column).
+pub fn column_outline(snapshot: &ModelSnapshot, column: &Column, base: f64, top: f64) -> Option<Vec<Corner>> {
     let kind = snapshot.column_types.get(&column.column_type)?;
     let (width, depth) = extents_of(&kind.profile);
-    (width > 1e-9 && depth > 1e-9 && column.position.x.is_finite() && column.position.y.is_finite() && column.rotation.is_finite()).then(|| placed(&profile_outline(&kind.profile), point(&column.position), column.rotation))
+    if !(width > 1e-9 && depth > 1e-9 && finite_column(column)) {
+        return None;
+    }
+    if column.tilt.is_none() {
+        return Some(placed(&profile_outline(&kind.profile), point(&column.position), column.rotation));
+    }
+    let both: Vec<Point> = footprint(column, &kind.profile, base, base).into_iter().chain(footprint(column, &kind.profile, base, top)).collect();
+    let outline = hull(&both);
+    (outline.len() >= 3).then_some(outline)
 }
 
-/// ➖️ The plan footprint of a beam: its profile width along its axis.
+/// 🔷️ The horizontal section of a column at the height `z` (the plan cut), clamped to the column.
+pub fn column_section(snapshot: &ModelSnapshot, column: &Column, base: f64, top: f64, z: f64) -> Option<Vec<Corner>> {
+    let kind = snapshot.column_types.get(&column.column_type)?;
+    if column.tilt.is_none() {
+        return column_outline(snapshot, column, base, top);
+    }
+    column_outline(snapshot, column, base, top).map(|_| footprint(column, &kind.profile, base, z.clamp(base.min(top), top.max(base))).into_iter().map(|p| Corner::corner(p.x, p.y)).collect())
+}
+
+/// ➖️ The plan footprint of a beam: its profile width along its axis, a straight band or a band around the arc.
 pub fn beam_outline(snapshot: &ModelSnapshot, beam: &Beam) -> Option<Vec<Corner>> {
     let kind = snapshot.beam_types.get(&beam.beam_type)?;
-    band(point(&beam.start), point(&beam.end), extents_of(&kind.profile).0)
+    let width = extents_of(&kind.profile).0;
+    let axis = seg(&beam.axis);
+    if axis.length() <= 1e-9 || width <= 1e-9 {
+        return None;
+    }
+    let rows = semio_framework_geometry::bulge::band_loop(&axis, width / 2.0, width / 2.0, None, None)?;
+    Some(rows.iter().map(|(p, b)| Corner::new(*p, *b)).collect())
 }
 
-/// 🧱️ The vertical extent of a beam: its top hangs `top_offset` from the storey top, its depth below.
+/// 🧱️ The vertical extent of a beam: its top hangs `top_offset` from the storey top at the start and `end_top_offset` at the end, its depth below the lower top.
 pub fn beam_span(snapshot: &ModelSnapshot, beam: &Beam, own: &StoreyLevel) -> Option<(f64, f64)> {
     let kind = snapshot.beam_types.get(&beam.beam_type)?;
-    let top = own.top_elevation + beam.top_offset;
-    Some((top - extents_of(&kind.profile).1, top))
+    let (start, end) = (own.top_elevation + beam.top_offset, own.top_elevation + beam.end_top_offset.unwrap_or(beam.top_offset));
+    Some((start.min(end) - extents_of(&kind.profile).1, start.max(end)))
 }
 
 /// 🧱️ The body of a wall: its join-trimmed footprint between its base and top.
@@ -156,9 +215,9 @@ pub fn wall_body(id: &str, wall: &Wall, layout: &WallLayout) -> Option<Body> {
     Body::new(id, BodyKind::Wall, &wall.storey, layout.base_z, layout.top_z, vec![region(&outline, &[])])
 }
 
-/// 🪟️ The body of a curtain wall: its axis thickened by the mullion depth.
-pub fn curtain_body(id: &str, curtain: &CurtainWall, own: &StoreyLevel, target: Option<&StoreyLevel>) -> Option<Body> {
-    let depth = depth_of(&curtain.mullion);
+/// 🪟️ The body of a curtain wall: its axis thickened by the interior mullion depth of its type (a default depth while the type is missing).
+pub fn curtain_body(snapshot: &ModelSnapshot, id: &str, curtain: &CurtainWall, own: &StoreyLevel, target: Option<&StoreyLevel>) -> Option<Body> {
+    let depth = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).map_or(DEFAULT_MULLION_DEPTH, |kind| depth_of(&kind.interior_mullion));
     let (base, top) = vertical_of(curtain.base_offset, &curtain.top, own, target);
     let rows = semio_framework_geometry::bulge::band_loop(&seg(&curtain.axis), depth / 2.0, depth / 2.0, None, None)?;
     let outline: Vec<Corner> = rows.iter().map(|(p, b)| Corner::new(*p, *b)).collect();
@@ -168,7 +227,7 @@ pub fn curtain_body(id: &str, curtain: &CurtainWall, own: &StoreyLevel, target: 
 /// 🏛️ The body of a column.
 pub fn column_body(snapshot: &ModelSnapshot, id: &str, column: &Column, own: &StoreyLevel, target: Option<&StoreyLevel>) -> Option<Body> {
     let (base, top) = vertical_of(column.base_offset, &column.top, own, target);
-    Body::new(id, BodyKind::Column, &column.storey, base, top, vec![region(&column_outline(snapshot, column)?, &[])])
+    Body::new(id, BodyKind::Column, &column.storey, base, top, vec![region(&column_outline(snapshot, column, base, top)?, &[])])
 }
 
 /// ➖️ The body of a beam.
@@ -185,6 +244,22 @@ pub fn slab_body(snapshot: &ModelSnapshot, id: &str, slab: &Slab, own: &StoreyLe
         return None;
     }
     Body::new(id, BodyKind::Slab, &slab.storey, low, high, vec![region(&bulged(&slab.boundary), &holes)])
+}
+
+/// 🔲️ The body of a ceiling: its boundary with the holes between the underside of its layers and the top of its plane. Ceilings are not in [`storey_bodies`] (the plan cuts walls, not hung ceilings); the clashes add [`ceiling_bodies`].
+pub fn ceiling_body(snapshot: &ModelSnapshot, id: &str, ceiling: &Ceiling, own: &StoreyLevel) -> Option<Body> {
+    let (low, high) = ceilings::span(snapshot, ceiling, own);
+    let holes: Vec<Vec<Corner>> = ceiling.holes.iter().map(|hole| bulged(hole)).collect();
+    if ceiling.boundary.len() < 3 || ceilings::thickness(snapshot, ceiling) <= 1e-12 {
+        return None;
+    }
+    Body::new(id, BodyKind::Ceiling, &ceiling.storey, low, high, vec![region(&bulged(&ceiling.boundary), &holes)])
+}
+
+/// 🔲️ The bodies of the ceilings of one storey in id order.
+pub fn ceiling_bodies(snapshot: &ModelSnapshot, storey: &str, levels: &BTreeMap<String, StoreyLevel>) -> Vec<Body> {
+    let Some(own) = levels.get(storey) else { return Vec::new() };
+    snapshot.ceilings.iter().filter(|(_, ceiling)| ceiling.storey == storey).filter_map(|(id, ceiling)| ceiling_body(snapshot, id, ceiling, own)).collect()
 }
 
 /// 🪜️ The footprint of a rectangle `back` behind and `forward` ahead of `centre` along `direction`, `width` wide.
@@ -236,7 +311,7 @@ pub fn storey_bodies(snapshot: &ModelSnapshot, storey: &str, levels: &BTreeMap<S
         }
     }
     for (id, curtain) in snapshot.curtain_walls.iter().filter(|(_, curtain)| curtain.storey == storey) {
-        bodies.extend(curtain_body(id, curtain, own, target_of(&curtain.top, levels)));
+        bodies.extend(curtain_body(snapshot, id, curtain, own, target_of(&curtain.top, levels)));
     }
     for (id, column) in snapshot.columns.iter().filter(|(_, column)| column.storey == storey) {
         bodies.extend(column_body(snapshot, id, column, own, target_of(&column.top, levels)));
@@ -275,6 +350,11 @@ pub fn level_storeys(snapshot: &ModelSnapshot, storey: &str) -> Vec<String> {
     ids
 }
 //#endregion 🔖️Scope
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+️Scope
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

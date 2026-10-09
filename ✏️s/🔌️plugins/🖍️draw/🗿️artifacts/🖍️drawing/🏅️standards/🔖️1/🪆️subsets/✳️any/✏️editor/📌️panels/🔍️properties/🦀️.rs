@@ -80,6 +80,17 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> UiAssemblyRes
     ] {
         rows.push(Field { key, label, value, kind, toggle, min, max });
     }
+    if let DrawingLayerNode::Shape(shape)=layer {
+        use crate::schema::shape_geometry::{ShapeCoordinateField as Coordinate,shape_coordinate};
+        let geometry=[(Coordinate::RectX,labels.position_x),(Coordinate::RectY,labels.position_y),(Coordinate::RectWidth,labels.width),(Coordinate::RectHeight,labels.height),(Coordinate::EllipseCx,labels.gradient_center_x),(Coordinate::EllipseCy,labels.gradient_center_y),(Coordinate::EllipseRx,labels.radius_x),(Coordinate::EllipseRy,labels.radius_y),(Coordinate::CircleCx,labels.gradient_center_x),(Coordinate::CircleCy,labels.gradient_center_y),(Coordinate::CircleR,labels.gradient_radius),(Coordinate::LineX1,labels.gradient_start_x),(Coordinate::LineY1,labels.gradient_start_y),(Coordinate::LineX2,labels.gradient_end_x),(Coordinate::LineY2,labels.gradient_end_y)];
+        for (coordinate,label) in geometry {
+            if let Ok(value)=shape_coordinate(shape,&coordinate,None){rows.push(Field{key:coordinate.as_str(),label,value:value.to_string(),kind:InputKind::Number,toggle:false,min:coordinate.nonnegative().then_some(0.0),max:None});}
+        }
+    }
+    if let DrawingLayerNode::Image(image)=layer {
+        rows.push(Field{key:"imageKey",label:labels.image_key,value:image.image_key.to_string_owner(),kind:InputKind::Text,toggle:false,min:None,max:None});
+        for (key,label,value) in [("imageWidth",labels.width,image.width),("imageHeight",labels.height,image.height)]{rows.push(Field{key,label,value:value.to_string(),kind:InputKind::Number,toggle:false,min:Some(0.000001),max:None});}
+    }
     if let DrawingLayerNode::Group(group)=layer {rows.push(Field {key:"isolation",label:labels.isolation,value:group.isolation.to_string(),kind:InputKind::Text,toggle:true,min:None,max:None});}
     if let DrawingLayerNode::Text(text) = layer {
         rows.push(Field { key: "textContent", label: labels.text_content, value: text.content.to_string_owner(), kind: InputKind::LongText, toggle: false, min: None, max: None });
@@ -118,7 +129,7 @@ fn field_row(document: &DrawingSnapshot, field: &Field, selected: &[&DrawingLaye
             &[("butt", labels.cap_butt), ("round", labels.stroke_round), ("square", labels.cap_square)]
         } else if field.key == "strokeJoin" {
             &[("miter", labels.join_miter), ("round", labels.stroke_round), ("bevel", labels.join_bevel)]
-        } else { &[("union", labels.boolean_union), ("intersect", labels.boolean_intersect), ("subtract", labels.boolean_subtract), ("exclude", labels.boolean_exclude)] };
+        } else { &[("union", labels.boolean_union), ("intersection", labels.boolean_intersect), ("difference", labels.boolean_subtract), ("xor", labels.boolean_exclude)] };
         let mut input = ui::select(text(if mixed { "" } else { &field.value })?).try_id(&id).map_err(|_| error())?.try_label(field.label.as_str()).map_err(|_| error())?.disabled(disabled);
         if mixed { input = input.placeholder(ui::Label(text(labels.mixed.as_str())?)); }
         for (value, label) in choices { input = input.try_item(text(value)?, ui::Label(text(label.as_str())?)).map_err(|_| error())?; }
@@ -170,6 +181,13 @@ fn node_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, segment:
             let button = semio_framework_plugin::tree_item_with_action(format!("{id}.join"),ui::Label(text(labels.join_contour.as_str())?),None,drawing_play_action("editPath",Some(args))?)?;
             row = row.try_child(button).map_err(|_| error())?;
         }
+        if !matches!(segment, PathSegment::Close) {
+            for (mode,label) in [("corner",labels.node_corner),("smooth",labels.node_smooth),("symmetric",labels.node_symmetric)] {
+                let edit=ui_value_map([("kind",ui_value_text("node")?),("index",ui_value_number(index as f64)),("mode",ui_value_text(mode)?)])?;
+                let args=ui_value_map([("edit",edit),("layerId",ui_value_text(layer_id)?)])?;
+                row=row.try_child(semio_framework_plugin::tree_item_with_action(format!("{id}.mode.{mode}"),ui::Label(text(label.as_str())?),None,drawing_play_action("editPath",Some(args))?)?).map_err(|_|error())?;
+            }
+        }
         let mut actions = vec![("open", labels.open_contour), ("close", labels.close_contour)];
         if !matches!(segment, PathSegment::Close) { actions.push(("delete", labels.delete_node)); }
         if matches!(segment, PathSegment::Line { .. } | PathSegment::Quad { .. } | PathSegment::Cubic { .. } | PathSegment::Arc { .. }) { actions.push(("split", labels.split_segment)); }
@@ -193,6 +211,20 @@ fn node_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, segment:
         }
     }
     row.try_build().map_err(|_| error())
+}
+
+fn polygon_row(layer_id:&(impl std::fmt::Display+?Sized),index:usize,point:[f64;2],disabled:bool,labels:&DrawingPlayLabels)->UiAssemblyResult<BuiltNode> {
+    let id=format!("{ROOT}.polygon.{index}");
+    let mut row=ui::tree_item(ui::Label(text(&format!("{} {}",labels.anchor.as_str(),index+1))?)).try_id(&id).map_err(|_|error())?;
+    for (axis,field,value) in [("X","polygonX",point[0]),("Y","polygonY",point[1])] {
+        let args=ui_value_map([("layerIds",ui_value_list([ui_value_text(layer_id)?])?),("field",ui_value_text(field)?),("index",ui_value_number(index as f64))])?;
+        let (action,args)=drawing_play_action("patchLayers",Some(args))?;
+        let input=ui::input(InputKind::Number).value(text(&value.to_string())?).step(0.1).commit(text("blur")?).disabled(disabled)
+            .try_id(format!("{id}.{axis}")).map_err(|_|error())?.try_label(format!("{} {axis}",labels.anchor.as_str())).map_err(|_|error())?
+            .try_on_with(Trigger::Commit,action,args.ok_or_else(error)?).map_err(|_|error())?.try_build().map_err(|_|error())?;
+        row=row.try_child(input).map_err(|_|error())?;
+    }
+    row.try_build().map_err(|_|error())
 }
 
 fn fill_input(layer_id: &(impl std::fmt::Display + ?Sized), id: &str, label: LabelText, kind: InputKind, value: &str, edit: semio_framework_plugin::UiValue, disabled: bool) -> UiAssemblyResult<BuiltNode> {
@@ -285,7 +317,22 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
             let rows = stops.iter().enumerate().collect::<Vec<_>>();
             if !rows.is_empty() { tree = tree.window_section(windows,"drawing-inspector.fill.stops",Some(ui::Label(text(labels.gradient_stops.as_str())?)),true,&rows,|(index,stop)| stop_row(&base.id,*index,stop,stops.len()>2,disabled,labels))?; }
         }
+        if let DrawingLayerNode::Shape(shape)=first {
+            if shape.shape_kind.eq_str("polygon") {
+                if let Some(polygon)=&shape.polygon {
+                    tree=tree.window_indexed_section(windows,"drawing-inspector.polygon",Some(ui::Label(text(labels.polygon_points.as_str())?)),true,polygon.points.len(),|index|polygon_row(&shape.base.id,index,polygon.points[index],disabled,labels))?;
+                }
+            }
+        }
         if let DrawingLayerNode::Path(path) = first {
+            let edit=ui_value_map([("kind",ui_value_text("simplify")?),("tolerance",ui_value_number(0.5))])?;
+            let args=ui_value_map([("edit",edit),("layerId",ui_value_text(&path.base.id)?)])?;
+            let (action,args)=drawing_play_action("editPath",Some(args))?;
+            tree=tree.window_section(windows,"drawing-inspector.path",Some(ui::Label(text(labels.simplify.as_str())?)),true,&[()],|_| {
+                ui::input(InputKind::Number).value(text("0.5")?).min(0.000001).max(1000000.0).step(0.1).commit(text("blur")?).disabled(disabled)
+                    .try_id("drawing-inspector.path.simplify").map_err(|_|error())?.try_label(labels.simplify_tolerance.as_str()).map_err(|_|error())?
+                    .try_on_with(Trigger::Commit,action.clone(),args.clone().ok_or_else(error)?).map_err(|_|error())?.try_build().map_err(|_|error())
+            })?;
             let mut joins = vec![None;path.segments.len()];
             let mut closed = false;
             for (index,segment) in path.segments.iter().enumerate().rev() {

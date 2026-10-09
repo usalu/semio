@@ -1,0 +1,8 @@
+{
+  "mutation": "setAreaScheme",
+  "id": "as-nsa",
+  "measure": "Net",
+  "zones": [
+    "z-day"
+  ]
+}

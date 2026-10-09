@@ -25,11 +25,11 @@ fn line(a: (f64, f64), b: (f64, f64)) -> Axis {
 }
 
 fn wall(storey: &str, axis: Axis) -> Wall {
-    Wall { storey: storey.into(), wall_type: "wt".into(), axis, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: "Wall".into() }
+    Wall { storey: storey.into(), wall_type: "wt".into(), axis, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, start_join: None, end_join: None, base_slab: None, name: "Wall".into() }
 }
 
 fn space(storey: &str, boundary: SpaceBoundary) -> Space {
-    Space { storey: storey.into(), number: "1".into(), name: "Room".into(), boundary, usage: "office".into() }
+    Space { phase: crate::Phase::New, storey: storey.into(), number: "1".into(), name: "Room".into(), boundary, usage: "office".into(), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None }
 }
 
 fn base() -> ModelSnapshot {
@@ -164,8 +164,8 @@ async fn explicit_outlines_are_exact_for_arcs() {
 async fn columns_reduce_the_net_floor_area_only() {
     let mut snapshot = room(4.0, 3.0);
     snapshot.column_types.insert("ct".into(), ColumnType { name: "Square".into(), profile: Profile::Rectangle { width: 0.4, depth: 0.4 }, material: "m".into() });
-    snapshot.columns.insert("c-in".into(), Column { storey: "st-0".into(), column_type: "ct".into(), position: point(2.0, 1.5), rotation: 0.3, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
-    snapshot.columns.insert("c-out".into(), Column { storey: "st-0".into(), column_type: "ct".into(), position: point(9.0, 9.0), rotation: 0.0, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Far".into() });
+    snapshot.columns.insert("c-in".into(), Column { phase: crate::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(2.0, 1.5), rotation: 0.3, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
+    snapshot.columns.insert("c-out".into(), Column { phase: crate::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(9.0, 9.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Far".into() });
     let found = rooms(&snapshot)["sp"].clone();
     assert!(near(found.area, 3.8 * 2.8, 1e-9));
     assert!(near(found.net_floor_area, 3.8 * 2.8 - 0.16, 1e-9), "{}", found.net_floor_area);
@@ -175,10 +175,10 @@ async fn columns_reduce_the_net_floor_area_only() {
 async fn the_slab_above_lowers_the_clear_height() {
     let mut snapshot = room(4.0, 3.0);
     let square = vec![corner(-1.0, -1.0), corner(5.0, -1.0), corner(5.0, 4.0), corner(-1.0, 4.0)];
-    snapshot.slabs.insert("sl-thin".into(), Slab { storey: "st-1".into(), slab_type: "st".into(), boundary: square.clone(), holes: Vec::new(), offset: 0.0, slope: None, name: "Floor".into() });
+    snapshot.slabs.insert("sl-thin".into(), Slab { phase: crate::Phase::New, storey: "st-1".into(), slab_type: "st".into(), boundary: square.clone(), holes: Vec::new(), offset: 0.0, slope: None, name: "Floor".into() });
     snapshot.slab_types.insert("st-thick".into(), SlabType { name: "Thick".into(), layers: vec![Layer { material: "m".into(), thickness: 0.4, function: LayerFunction::Structure }] });
-    snapshot.slabs.insert("sl-thick".into(), Slab { storey: "st-1".into(), slab_type: "st-thick".into(), boundary: square, holes: vec![vec![corner(1.5, 1.0), corner(2.5, 1.0), corner(2.5, 2.0), corner(1.5, 2.0)]], offset: 0.1, slope: None, name: "Hole".into() });
-    snapshot.slabs.insert("sl-ground".into(), Slab { storey: "st-0".into(), slab_type: "st".into(), boundary: vec![corner(-1.0, -1.0), corner(5.0, -1.0), corner(5.0, 4.0)], holes: Vec::new(), offset: 0.0, slope: None, name: "Own floor".into() });
+    snapshot.slabs.insert("sl-thick".into(), Slab { phase: crate::Phase::New, storey: "st-1".into(), slab_type: "st-thick".into(), boundary: square, holes: vec![vec![corner(1.5, 1.0), corner(2.5, 1.0), corner(2.5, 2.0), corner(1.5, 2.0)]], offset: 0.1, slope: None, name: "Hole".into() });
+    snapshot.slabs.insert("sl-ground".into(), Slab { phase: crate::Phase::New, storey: "st-0".into(), slab_type: "st".into(), boundary: vec![corner(-1.0, -1.0), corner(5.0, -1.0), corner(5.0, 4.0)], holes: Vec::new(), offset: 0.0, slope: None, name: "Own floor".into() });
     let found = rooms(&snapshot)["sp"].clone();
     assert_eq!(found.ceiling_slab, "sl-thin", "the seed lies in the hole of the thick slab, so only the thin slab covers it");
     assert!(close(found.clear_height, 3.0 - 0.25) && near(found.volume, found.area * 2.75, 1e-9));
@@ -202,7 +202,8 @@ async fn the_clear_height_follows_the_storey_height() {
 async fn curtain_walls_close_a_room_with_their_mullion_depth() {
     let mut snapshot = room(4.0, 3.0);
     snapshot.walls.remove("w-north");
-    snapshot.curtain_walls.insert("cw".into(), crate::CurtainWall { storey: "st-0".into(), axis: line((4.0, 3.0), (0.0, 3.0)), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_spacing: 1.0, v_spacing: 1.0, mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel_material: "m".into(), mullion_material: "m".into(), name: "Curtain".into() });
+    snapshot.curtain_wall_types.insert("cwt".into(), crate::CurtainWallType { name: "Facade".into(), u_grid: crate::CurtainGrid::Spacing { spacing: 1.0 }, v_grid: crate::CurtainGrid::Spacing { spacing: 1.0 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: crate::CurtainPanel::Glass, panel_material: "m".into(), mullion_material: "m".into() });
+    snapshot.curtain_walls.insert("cw".into(), crate::CurtainWall { phase: crate::Phase::New, storey: "st-0".into(), curtain_wall_type: "cwt".into(), axis: line((4.0, 3.0), (0.0, 3.0)), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, name: "Curtain".into() });
     let found = rooms(&snapshot)["sp"].clone();
     assert_eq!(found.status, SpaceStatus::Inferred);
     assert!(near(found.area, 3.8 * (3.0 - 0.1 - 0.05), 1e-9), "{}", found.area);
@@ -273,4 +274,62 @@ async fn the_rooms_are_deterministic_and_empty_by_default() {
     let snapshot = room(4.0, 3.0);
     assert_eq!(compute_spaces(&snapshot), compute_spaces(&snapshot));
     assert!(compute_spaces(&ModelSnapshot::default()).is_empty());
+}
+
+fn hung(snapshot: &mut ModelSnapshot, offset: f64, thickness: f64) {
+    snapshot.ceiling_types.insert("ct".into(), crate::CeilingType { name: "Board".into(), layers: vec![Layer { material: "m".into(), thickness, function: LayerFunction::Finish }] });
+    let boundary = vec![corner(-1.0, -1.0), corner(5.0, -1.0), corner(5.0, 4.0), corner(-1.0, 4.0)];
+    snapshot.ceilings.insert("ce".into(), crate::Ceiling { storey: "st-0".into(), ceiling_type: "ct".into(), boundary, holes: Vec::new(), offset, slope: None, name: "Hung".into() });
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_hung_ceiling_only_lowers_the_clear_height_and_its_hole_lets_the_room_open_up() {
+    let mut snapshot = room(4.0, 3.0);
+    hung(&mut snapshot, 0.3, 0.0625);
+    let found = rooms(&snapshot)["sp"].clone();
+    assert_eq!(found.ceiling, "ce");
+    assert!(close(found.clear_height, 3.0 - 0.3 - 0.0625) && near(found.volume, found.area * found.clear_height, 1e-9), "{}", found.clear_height);
+    snapshot.ceilings.get_mut("ce").expect("ceiling").holes = vec![vec![corner(1.0, 0.5), corner(3.0, 0.5), corner(3.0, 2.5), corner(1.0, 2.5)]];
+    let found = rooms(&snapshot)["sp"].clone();
+    assert!(found.ceiling.is_empty() && close(found.clear_height, 3.0), "the seed (2, 1.5) lies in the hole, so no ceiling hangs there");
+    hung(&mut snapshot, -0.5, 0.0625);
+    snapshot.ceilings.get_mut("ce").expect("ceiling").holes.clear();
+    assert!(close(rooms(&snapshot)["sp"].clone().clear_height, 3.0), "a ceiling hung above the storey top never raises the room");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn editing_a_ceiling_changes_the_clear_height_through_the_session_and_a_rename_recomputes_no_room() {
+    let mut snapshot = room(4.0, 3.0);
+    hung(&mut snapshot, 0.3, 0.0625);
+    let mut session = ModelInferenceSession::new();
+    let first = session.update(&snapshot, &ModelDiff::default()).spaces.clone();
+    assert!(close(first["sp"].clear_height, 3.0 - 0.3 - 0.0625));
+    let rename = ModelDiff::ceilings("ce", Entry::Patched(crate::CeilingPatch { name: Some("Renamed".into()), ..Default::default() }));
+    let renamed = protocol::apply_diff(&rename, &snapshot).expect("applies");
+    let same = session.update(&renamed, &rename).spaces.clone();
+    assert_eq!(same, first);
+    assert_eq!(session.report().computed_by_kind.get("room"), None, "a name is not read by the rooms: {:?}", session.report());
+    let drop = ModelDiff::ceilings("ce", Entry::Patched(crate::CeilingPatch { offset: Some(0.6), ..Default::default() }));
+    let edited = protocol::apply_diff(&drop, &renamed).expect("applies");
+    let lowered = session.update(&edited, &drop).clone();
+    assert!(!session.report().gated && session.report().computed_by_kind.get("room") == Some(&1), "{:?}", session.report());
+    assert!(close(lowered.spaces["sp"].clear_height, 3.0 - 0.6 - 0.0625) && lowered.spaces["sp"].clear_height < first["sp"].clear_height);
+    assert_eq!(lowered, crate::ModelInference::infer(&edited).expect("infers"), "the incremental result equals a fresh inference");
+    let retyped = ModelDiff::ceiling_types("ct", Entry::Patched(crate::CeilingTypePatch { layers: Some(vec![Layer { material: "m".into(), thickness: 0.2, function: LayerFunction::Finish }]), ..Default::default() }));
+    let thick = protocol::apply_diff(&retyped, &edited).expect("applies");
+    let deeper = session.update(&thick, &retyped).spaces.clone();
+    assert!(close(deeper["sp"].clear_height, 3.0 - 0.6 - 0.2), "the layers of the type are read as well");
+}
+
+const HUNG_EDIT: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/📸️snapshot/🔣️.json");
+const HUNG_EDIT_TABLE: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/💡️inference/🏠️spaces/🔣️.json");
+
+#[semio_framework_async_macros::async_test]
+async fn the_subject_reproduces_the_oracle_table_of_the_rooms_after_the_ceiling_edits() {
+    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(HUNG_EDIT, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the edited rooms model decodes");
+    let found = compute_spaces(&snapshot);
+    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems(HUNG_EDIT_TABLE, &table_json(&found));
+    assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
+    assert_eq!((found["sp-living"].ceiling.as_str(), found["sp-kitchen"].ceiling.as_str()), ("ce-bulkhead", ""), "the lowest ceiling over the seed governs, a hole over the seed removes the kitchen ceiling");
+    assert!(close(found["sp-living"].clear_height, 3.0 - 1.25) && close(found["sp-kitchen"].clear_height, 3.0));
 }

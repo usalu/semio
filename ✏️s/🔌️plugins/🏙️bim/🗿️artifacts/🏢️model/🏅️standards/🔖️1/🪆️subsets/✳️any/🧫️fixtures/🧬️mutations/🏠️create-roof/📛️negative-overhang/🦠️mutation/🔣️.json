@@ -42,6 +42,7 @@
     },
     "overhang": -0.2,
     "base_offset": 0,
+    "phase": "New",
     "name": "Main roof"
   }
 }

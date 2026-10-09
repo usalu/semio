@@ -277,7 +277,7 @@ fn build_deflate_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<De
         canonical_base_revision: request.canonical_base_revision,
         authoring_seed: request.authoring_seed.clone(),
     };
-    let payload = ArtifactRetainedCommandPayload::try_new(
+    let payload = ArtifactRetainedCommandPayload::new(
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
@@ -293,7 +293,7 @@ fn build_deflate_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<De
         DEFLATE_TEXT_MAXIMUM_RAW_BYTES,
         4,
         Box::new(BoundedArtifactCommandWork::new(tool_id, deflate_text_reduce, deflate_text_extent)),
-    )?;
+    );
     Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
 }
 //#endregion 🧵️RetainedTextRoute

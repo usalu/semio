@@ -1,0 +1,14 @@
+{
+  "mutation": "createTextNote",
+  "id": "note-2",
+  "text_note": {
+    "storey": "st-ground",
+    "position": {
+      "x": 8.5,
+      "y": 3
+    },
+    "text": "Fire wall",
+    "rotation": 1.5707963267948966,
+    "style": "as-plan"
+  }
+}

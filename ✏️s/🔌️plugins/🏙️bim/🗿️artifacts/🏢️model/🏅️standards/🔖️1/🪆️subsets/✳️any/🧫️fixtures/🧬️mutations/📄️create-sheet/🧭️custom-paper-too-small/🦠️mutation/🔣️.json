@@ -1,0 +1,21 @@
+{
+  "mutation": "createSheet",
+  "id": "sh-2",
+  "sheet": {
+    "number": "A-102",
+    "name": "Ground floor",
+    "paper": {
+      "Custom": {
+        "width": 20,
+        "height": 400
+      }
+    },
+    "orientation": "Landscape",
+    "project": "",
+    "drawn_by": "",
+    "checked_by": "",
+    "date": "",
+    "revision": "",
+    "scale_label": ""
+  }
+}

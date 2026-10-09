@@ -1,0 +1,25 @@
+{
+  "mutation": "createFamilySolid",
+  "id": "s-new",
+  "solid": {
+    "family": "fam-table",
+    "name": "Box",
+    "shape": {
+      "Cuboid": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m",
+        "width": "ghost",
+        "depth": "1 m",
+        "height": "1 m"
+      }
+    },
+    "material": "\"m-brick\"",
+    "visible": "true",
+    "offset": {
+      "x": "0 m",
+      "y": "0 m",
+      "z": "0 m"
+    }
+  }
+}

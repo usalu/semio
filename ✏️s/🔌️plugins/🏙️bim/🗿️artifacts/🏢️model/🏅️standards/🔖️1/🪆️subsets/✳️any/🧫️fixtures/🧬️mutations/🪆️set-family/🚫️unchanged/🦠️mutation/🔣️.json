@@ -1,0 +1,6 @@
+{
+  "mutation": "setFamily",
+  "id": "fam-table",
+  "name": "Table",
+  "category": "Furniture"
+}

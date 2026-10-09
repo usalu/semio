@@ -4080,6 +4080,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-expression"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-geometry"
 version = "0.1.0"
 dependencies = [
@@ -4154,6 +4161,7 @@ dependencies = [
  "base64",
  "percent-encoding",
  "semio-framework-io-base64",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -4293,6 +4301,7 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-io-base64",
  "semio-framework-io-binary-source",
+ "semio-framework-value",
  "serde_json",
 ]
 

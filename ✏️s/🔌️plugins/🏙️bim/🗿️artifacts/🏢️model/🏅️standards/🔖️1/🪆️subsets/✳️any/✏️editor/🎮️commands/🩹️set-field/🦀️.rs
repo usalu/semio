@@ -1,7 +1,7 @@
 //! 🩹 `setField`: sets one authored parameter of one or more entities of one kind. The field row of the entity table turns the edited text into the `set-*` mutation that owns the
-//! parameter; a parameter without a mutation yet is refused, never half-applied.
+//! parameter; a parameter without a mutation yet is refused, never half-applied. The project record answers to the id `project` and has its own rows.
 
-use crate::editor::bim::entities::kind_holding;
+use crate::editor::bim::entities::{fields_of, kind_holding, FieldRow, PROJECT_FIELDS, PROJECT_ID};
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
 use crate::{ModelMutation, ModelSnapshot};
@@ -23,9 +23,14 @@ pub fn handle(payload: &SetField, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &
     }
     let mut mutations = Vec::new();
     for id in ids {
-        let row = kind_holding(doc.snapshot, id).ok_or_else(|| fault("bim.set.target-missing", format!("no entity '{id}'")))?;
-        let field = row.fields.iter().find(|field| field.key == payload.field).ok_or_else(|| fault("bim.set.field-unknown", format!("a {} has no parameter '{}'", row.kind, payload.field)))?;
-        let write = field.write.ok_or_else(|| fault("bim.set.read-only", format!("the parameter '{}' of a {} has no set mutation yet", payload.field, row.kind)))?;
+        let (kind, mut fields): (&str, Box<dyn Iterator<Item = &'static FieldRow>>) = if id.as_str() == PROJECT_ID {
+            (PROJECT_ID, Box::new(PROJECT_FIELDS.iter()))
+        } else {
+            let row = kind_holding(doc.snapshot, id).ok_or_else(|| fault("bim.set.target-missing", format!("no entity '{id}'")))?;
+            (row.kind, Box::new(fields_of(row)))
+        };
+        let field = fields.find(|field| field.key == payload.field).ok_or_else(|| fault("bim.set.field-unknown", format!("a {kind} has no parameter '{}'", payload.field)))?;
+        let write = field.write.ok_or_else(|| fault("bim.set.read-only", format!("the parameter '{}' of a {kind} has no set mutation yet", payload.field)))?;
         mutations.push(write(doc.snapshot, id, &payload.value).ok_or_else(|| fault("bim.set.value-invalid", format!("'{}' is not a valid value for '{}'", payload.value, payload.field)))?);
     }
     Ok(Emit::mutations(mutations))

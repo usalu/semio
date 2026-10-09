@@ -1,0 +1,7 @@
+{
+  "mutation": "setFamilyParameter",
+  "family": "fam-table",
+  "name": "quad",
+  "kind": "Length",
+  "value": "double * 2"
+}

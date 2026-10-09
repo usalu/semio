@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-leader/schema.json",
+  "title": "CreateLeader",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "leader"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createLeader"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Leader id",
+          "de": "Hinweislinien-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "leader": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Leader",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Leader",
+          "de": "Hinweislinie"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

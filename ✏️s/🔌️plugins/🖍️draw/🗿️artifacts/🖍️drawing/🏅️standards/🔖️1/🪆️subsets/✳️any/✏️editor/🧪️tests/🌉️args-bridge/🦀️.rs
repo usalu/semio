@@ -10,8 +10,8 @@ fn folds_camel_case_keys_and_json_values() {
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"camera":{"x":1,"y":2,"zoom":1.5}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("json"));
     assert!(matches!(command_from_action("setCamera", Some(&args)).expect("decodes"), DrawingCommand::SetCamera(_)));
     assert_eq!(command_from_action("addLayer", None).expect("arg-less palette row"), DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }));
-    assert_eq!(command_from_action("exportDocument", None).expect("arg-less palette row"), DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into() }));
-    assert_eq!(command_from_action("exportDocument", Some(&semio_framework_value::DslValue::Object(vec![("format".into(), semio_framework_value::DslValue::String("svg".into()))]))).expect("explicit format"), DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into() }));
+    assert_eq!(command_from_action("exportDocument", None).expect("arg-less palette row"), DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into(), ..Default::default() }));
+    assert_eq!(command_from_action("exportDocument", Some(&semio_framework_value::DslValue::Object(vec![("format".into(), semio_framework_value::DslValue::String("svg".into()))]))).expect("explicit format"), DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into(), ..Default::default() }));
     assert!(command_from_action("noSuchAction", None).is_err());
 }
 

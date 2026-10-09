@@ -132,9 +132,9 @@ fn artifact_store_resident_registry_lock_matches_standard_contention_and_poison_
 fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole_funding() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut owner = SnapshotReadLeaseRegistryOwner::new();
-    let original = Arc::as_ptr(owner.0.as_ref().unwrap());
+    let original = owner.0.as_ref().unwrap().identity();
     let alias = owner.0.as_ref().unwrap().clone();
-    assert_eq!(Arc::strong_count(&alias), 1 + fixture["registryExternalAliases"].as_u64().unwrap() as usize);
+    assert_eq!(alias.strong_count(), 1 + fixture["registryExternalAliases"].as_u64().unwrap() as usize);
     let slots = owner.empty_backing_demands().unwrap();
     assert_eq!(owner.close_empty_backing_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: slots.release_bytes, maximum_depth: slots.depth, ..Default::default() }).unwrap(), released(slots.release_bytes, true));
     let extent = owner.frame_byte_demand().unwrap();
@@ -148,7 +148,7 @@ fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_frame_step(RetainedCloneGrant { maximum_release_bytes: extent - 1, ..grant }));
     assert_eq!(step.unwrap(), denied());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    assert_eq!(Arc::as_ptr(owner.0.as_ref().unwrap()), original);
+    assert_eq!(owner.0.as_ref().unwrap().identity(), original);
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_frame_step(grant));
     assert_eq!(step.unwrap(), released(extent, true));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
@@ -158,27 +158,42 @@ fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole
     eprintln!("[DEBUG] registry original Arc frame={} shared/one-below retained; exact free={} finalDrop=0", extent, extent);
 }
 
+
+fn demand_grant(demand: semio_framework_value::RetirementDemand) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+}
+
+fn undergrants(demand: semio_framework_value::RetirementDemand) -> Vec<RetainedCloneGrant> {
+    let grant = demand_grant(demand);
+    [(demand.copy_bytes != 0).then(|| RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant })].into_iter().flatten().collect()
+}
+
 #[test]
 fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_factory_owners() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let maximum = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     let mut owners = super::super::tests::demo_closable_store_owners();
-    assert_eq!(owners.store_disposer.close_uninstalled_step(1).unwrap(), SnapshotRetirementStep::Complete);
-    assert!(owners.store_disposer.uninstalled_terminal_is_empty());
+    while !owners.store_disposer.uninstalled_terminal_is_empty() {
+        let demand = owners.store_disposer.uninstalled_demands(0).unwrap();
+        assert!(matches!(owners.store_disposer.close_uninstalled_step(demand_grant(demand)).unwrap(), RetainedCloneStep::Progress(_) | RetainedCloneStep::Complete(_)));
+    }
     let mut turns = 0;
     let mut released = 0;
     while !owners.uninstalled_owners_terminal_is_empty() {
-        let demand = owners.next_close_byte_demand();
-        assert!(demand <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
-        if demand != 0 {
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owners.close_uninstalled_owners_step(1, demand - 1));
+        let demand = owners.uninstalled_owners_demands(0).unwrap();
+        assert!(demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes) <= maximum);
+        for denied_grant in undergrants(demand) {
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owners.close_uninstalled_owners_step(denied_grant));
             assert_eq!(step.unwrap(), denied());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            assert_eq!(owners.next_close_byte_demand(), demand);
+            assert_eq!(owners.uninstalled_owners_demands(0).unwrap(), demand);
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owners.close_uninstalled_owners_step(1, demand));
-        let physical = match step.unwrap() { SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); released_bytes }, SnapshotRetirementStep::Complete => 0, SnapshotRetirementStep::Blocked => panic!("catalog has no external owner") };
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, physical));
-        released += physical;
+        let grant = demand_grant(demand);
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owners.close_uninstalled_owners_step(grant));
+        let progress = step.unwrap().progress();
+        assert!(progress.fits(grant));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+        released += progress.released_bytes;
         turns += 1;
         assert!(turns <= 64);
     }
@@ -194,16 +209,21 @@ fn artifact_store_resident_consumed_envelope_keeps_catalog_until_exact_terminal_
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let owners = super::super::tests::demo_closable_store_owners();
     let envelope = create_document_envelope::<super::super::tests::DemoSnapshot, super::super::fixture_mutations::demo::DemoMutation>("demo/v1", "catalog-cancel", super::super::tests::DemoSnapshot::default(), None);
-    let mut owner = Some(owners.retire_envelope_uninstalled(envelope).unwrap());
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: 0, maximum_depth: 64 };
+    let (born, progress) = owners.retire_envelope_uninstalled(envelope, grant).unwrap_or_else(|_| panic!("catalog envelope birth is funded"));
+    assert!(progress.fits(grant));
+    let mut owner = Some(born);
     let mut turns = 0;
     let mut total = 0;
     while owner.is_some() {
-        let demand = artifact_retirement_box_byte_demand(owner.as_ref().unwrap());
-        assert!(demand <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| artifact_retirement_box_close_step(&mut owner, 1, demand));
-        let physical = match step.unwrap() { SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); released_bytes }, SnapshotRetirementStep::Complete => 0, SnapshotRetirementStep::Blocked => panic!("consumed envelope has no external owner") };
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, physical));
-        total += physical;
+        let demand = artifact_retirement_box_demands(owner.as_ref().unwrap(), 0).unwrap();
+        assert!(demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes) <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
+        let grant = demand_grant(demand);
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| artifact_retirement_box_close_step(&mut owner, grant));
+        let progress = step.unwrap().progress();
+        assert!(progress.fits(grant));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+        total += progress.released_bytes;
         turns += 1;
         assert!(turns <= 1024);
     }

@@ -237,13 +237,13 @@ impl ArtifactEditor for TiffAnyEditor {
         if request.tool_id == paint_region::ACTION_ID {
             if tiffAnyEditor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-tiff-paint-region-tool-mismatch")); }
             let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone() };
-            let payload = ArtifactRetainedCommandPayload::try_new(
+            let payload = ArtifactRetainedCommandPayload::new(
                 ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
                 tiffAnyEditor_command_id,
                 paint_region::MAXIMUM_RAW_BYTES,
                 paint_region::CAPACITY.work_items(),
                 Box::new(paint_region::PaintRegionWork::new()),
-            )?;
+            );
             return Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
         }
         if !STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
@@ -254,7 +254,7 @@ impl ArtifactEditor for TiffAnyEditor {
             main::SELECT_IFD_ACTION_ID => main::SELECT_IFD_ACTION_ID,
             _ => unreachable!("filtered above"),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiffAnyEditor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(action_id, tiffAnyEditor_retained_reduce, tiffAnyEditor_retained_extent)))?;
+        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiffAnyEditor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(action_id, tiffAnyEditor_retained_reduce, tiffAnyEditor_retained_extent)));
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {

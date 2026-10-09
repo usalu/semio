@@ -1,0 +1,192 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/expression/parameters.json",
+ "title": "ParameterFixtures",
+ "definitions": {
+  "Kind": {
+   "enum": [
+    "number",
+    "length",
+    "angle",
+    "area",
+    "volume",
+    "bool",
+    "text"
+   ]
+  },
+  "Value": {
+   "type": "object",
+   "required": [
+    "kind",
+    "value"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "kind": {
+     "$ref": "#/definitions/Kind"
+    },
+    "value": {
+     "type": [
+      "number",
+      "boolean",
+      "string"
+     ]
+    }
+   }
+  },
+  "Failure": {
+   "type": "object",
+   "required": [
+    "code",
+    "path"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "code": {
+     "type": "string",
+     "minLength": 1
+    },
+    "path": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0
+     }
+    }
+   }
+  },
+  "Tree": {
+   "$ref": "https://semio.tech/framework/expression/tree.json"
+  }
+ },
+ "type": "object",
+ "required": [
+  "cases"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "name",
+     "params",
+     "overrides",
+     "declared",
+     "expected"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object",
+       "required": [
+        "source",
+        "python"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "source": {
+         "type": "string"
+        },
+        "python": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "overrides": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object",
+       "required": [
+        "source",
+        "python"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "source": {
+         "type": "string"
+        },
+        "python": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "declared": {
+      "type": "object",
+      "additionalProperties": {
+       "$ref": "#/definitions/Kind"
+      }
+     },
+     "expected": {
+      "type": "object",
+      "required": [
+       "order",
+       "values",
+       "errors"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "order": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "values": {
+        "type": "object",
+        "additionalProperties": {
+         "$ref": "#/definitions/Value"
+        }
+       },
+       "errors": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "required": [
+          "code"
+         ],
+         "properties": {
+          "code": {
+           "type": "string"
+          },
+          "path": {
+           "type": "array",
+           "items": {
+            "type": "integer",
+            "minimum": 0
+           }
+          },
+          "members": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          },
+          "name": {
+           "type": "string"
+          },
+          "declared": {
+           "$ref": "#/definitions/Kind"
+          },
+          "found": {
+           "$ref": "#/definitions/Kind"
+          }
+         },
+         "additionalProperties": false
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

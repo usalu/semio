@@ -1,0 +1,14 @@
+{
+  "mutation": "createCeilingType",
+  "id": "ct-board",
+  "ceiling_type": {
+    "name": "Again",
+    "layers": [
+      {
+        "material": "m-board",
+        "thickness": 0.0125,
+        "function": "Structure"
+      }
+    ]
+  }
+}

@@ -12,7 +12,7 @@ pub fn inverse(payload: &PlaceElements, base: &ModelSnapshot) -> Vec<ModelMutati
         .placements
         .iter()
         .map(|(id, target)| {
-            let current = elements::placement(base, id).filter(|current| current.same_kind(target) && target.numbers().iter().all(|number| number.is_finite()))?;
+            let current = elements::state(base, id).filter(|current| current.same_kind(target) && target.numbers().iter().all(|number| number.is_finite()))?;
             let changes = current != *target;
             Some((id.clone(), current, changes))
         })

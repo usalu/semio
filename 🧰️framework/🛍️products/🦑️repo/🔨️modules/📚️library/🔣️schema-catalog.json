@@ -16424,40 +16424,40 @@
         "🔣️.json": "bdd90e7811f08055e7f510117decbf503c932eb701632dd877df37c77f506f31"
       }
     },
-    "os.workflow.artifacts.run.mutation.retract-run-log": {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🧽️retract-run-log/🧬️schema",
+    "os.workflow.artifacts.run.mutation.remove-run-log": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🧽️remove-run-log/🧬️schema",
       "level": "product-module",
       "facetKind": "🧬️data",
       "formats": {
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "RetractRunLog": {
+        "RemoveRunLog": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "4c2447b8bbb2aad5368ea009b23153b8471f88b7a4b39a5390997ae9d39e0aa4"
+        "🔣️.json": "a472d70f2a0b197cb7fccd044a4c2c765aa079ea81167a9361c245ea95b89c0b"
       }
     },
-    "os.workflow.artifacts.run.mutation.retract-run-node": {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🫥️retract-run-node/🧬️schema",
+    "os.workflow.artifacts.run.mutation.remove-run-node": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🫥️remove-run-node/🧬️schema",
       "level": "product-module",
       "facetKind": "🧬️data",
       "formats": {
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "RetractRunNode": {
+        "RemoveRunNode": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "679b2d6796bc3f227cb84eeaad59bb8123608e894fcf3fe18e91c022c1cfc3a3"
+        "🔣️.json": "c14dcd68923401a5097dfb3f296a8ec0ca418b18c797fe7d6f0b5aa44f06fe63"
       }
     },
     "os.workflow.artifacts.run.mutation.seal-run": {

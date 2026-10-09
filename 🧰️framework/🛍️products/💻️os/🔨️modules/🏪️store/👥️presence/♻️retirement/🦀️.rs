@@ -32,7 +32,7 @@ pub struct PresenceStoreRetirement<P> {
     peers: std::mem::ManuallyDrop<Option<Arc<PresencePeersRoot<P>>>>,
     active_local: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     active_peers: std::mem::ManuallyDrop<Option<PresencePeersRetirement<P>>>,
-    reads: std::mem::ManuallyDrop<Option<Arc<SnapshotReadLeaseRegistry>>>,
+    reads: std::mem::ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryHandle>>,
     active_returned: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     local_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
     peer_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,

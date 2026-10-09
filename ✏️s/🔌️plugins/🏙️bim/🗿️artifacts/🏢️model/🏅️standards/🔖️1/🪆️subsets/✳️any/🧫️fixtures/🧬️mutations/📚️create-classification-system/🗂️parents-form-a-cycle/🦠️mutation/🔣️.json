@@ -1,0 +1,20 @@
+{
+  "mutation": "createClassificationSystem",
+  "id": "cs-new",
+  "system": {
+    "name": "X",
+    "edition": "1",
+    "entries": [
+      {
+        "code": "A",
+        "title": "One",
+        "parent": "B"
+      },
+      {
+        "code": "B",
+        "title": "Two",
+        "parent": "A"
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "mutation": "createWallSweep",
+  "id": "w-south",
+  "wall_sweep": {
+    "host": "w-south",
+    "side": "Left",
+    "profile": {
+      "Rectangle": {
+        "width": 0.02,
+        "depth": 0.1
+      }
+    },
+    "height": 0,
+    "inset": 0,
+    "material": "m-paint",
+    "name": "Baseboard"
+  }
+}

@@ -128,10 +128,41 @@ impl RetireOwned for super::LinkPin {
 artifact_retire_struct!(super::ArtifactBackboneRef { uri });
 artifact_retire_struct!(super::MigrationProvenance { document_id, dialect, checkpoint_id, migrated_at });
 artifact_retire_struct!(super::OpenToolTransaction { transaction, edit_id });
-impl RetireOwned for super::HistoryLane {
-    fn retirement(self) -> Box<dyn RetirementCursor> { match self { Self::Document => 0u8, Self::Interaction => 1u8 }.retirement() }
-    fn retirement_birth_bytes(&self) -> Option<usize> { 0u8.retirement_birth_bytes() }
-    fn controlled_retirement_supported() -> bool { true }
-}
 
 semio_framework_value::artifact_retire_leaf!(super::HistoryLane);
+
+artifact_retire_struct!(crate::os_vcs::Author { id, name, avatar });
+artifact_retire_struct!(super::HistoryColumn { checkpoint_id, timestamp, labels, authors, parent_checkpoint_id, description, lane, alternative_ids });
+artifact_retire_struct!(super::SpaceMemberPin { document_id, checkpoint_id, alternative_id });
+artifact_retire_struct!(super::SpaceCheckpoint { id, parent_id, message, authors, timestamp, members });
+artifact_retire_struct!(super::SpaceAlternative { id, name, checkpoint_ids });
+artifact_retire_struct!(super::SpaceHistorySnapshot { checkpoints, alternatives, active_alternative_id });
+artifact_retire_struct!(super::CommitSpaceCheckpoint { checkpoint });
+artifact_retire_struct!(super::CreateSpaceAlternative { alternative });
+artifact_retire_struct!(super::SwitchSpaceAlternative { alternative_id });
+artifact_retire_struct!(super::RemoveSpaceCheckpoint { checkpoint_id });
+artifact_retire_struct!(super::RemoveSpaceAlternative { alternative_id });
+artifact_retire_struct!(super::SetActiveSpaceAlternative { alternative_id });
+impl RetireOwned for super::SpaceHistoryMutation {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        match self {
+            Self::CommitSpaceCheckpoint(value) => value.retirement(),
+            Self::CreateSpaceAlternative(value) => value.retirement(),
+            Self::SwitchSpaceAlternative(value) => value.retirement(),
+            Self::RemoveSpaceCheckpoint(value) => value.retirement(),
+            Self::RemoveSpaceAlternative(value) => value.retirement(),
+            Self::SetActiveSpaceAlternative(value) => value.retirement(),
+        }
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        match self {
+            Self::CommitSpaceCheckpoint(value) => value.retirement_birth_bytes(),
+            Self::CreateSpaceAlternative(value) => value.retirement_birth_bytes(),
+            Self::SwitchSpaceAlternative(value) => value.retirement_birth_bytes(),
+            Self::RemoveSpaceCheckpoint(value) => value.retirement_birth_bytes(),
+            Self::RemoveSpaceAlternative(value) => value.retirement_birth_bytes(),
+            Self::SetActiveSpaceAlternative(value) => value.retirement_birth_bytes(),
+        }
+    }
+    fn controlled_retirement_supported() -> bool { true }
+}

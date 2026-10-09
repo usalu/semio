@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:draw:completion-custody:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "aliasCounts",
+    "vacantCapacities",
+    "bodyBytes",
+    "zeroGrantRetains",
+    "oneBelowRetains",
+    "exactGrantReleases",
+    "unsupportedEffect",
+    "unsupportedRetains"
+  ],
+  "properties": {
+    "schema": {
+      "const": "drawing.completion-custody.v1"
+    },
+    "aliasCounts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 64
+      }
+    },
+    "vacantCapacities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4096
+      }
+    },
+    "bodyBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1048576
+    },
+    "zeroGrantRetains": {
+      "const": true
+    },
+    "oneBelowRetains": {
+      "const": true
+    },
+    "exactGrantReleases": {
+      "const": true
+    },
+    "unsupportedEffect": {
+      "const": "request-sync"
+    },
+    "unsupportedRetains": {
+      "const": true
+    }
+  }
+}

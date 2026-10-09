@@ -1,0 +1,20 @@
+{
+  "mutation": "createSpace",
+  "id": "sp-9",
+  "space": {
+    "storey": "st-ground",
+    "number": "0.09",
+    "name": "Studio",
+    "boundary": {
+      "Bounded": {
+        "seed": {
+          "x": 2,
+          "y": 2
+        }
+      }
+    },
+    "usage": "Office",
+    "phase": "New",
+    "zone": "z-attic"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "mutation": "setViewport",
+  "id": "vp-1",
+  "crop": {
+    "value": {
+      "min": {
+        "x": 1,
+        "y": 1
+      },
+      "max": {
+        "x": 5,
+        "y": 4
+      }
+    }
+  }
+}

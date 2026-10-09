@@ -1,0 +1,23 @@
+{
+  "mutation": "createPropertyTemplate",
+  "id": "pt-new",
+  "template": {
+    "name": "Pset_X",
+    "applies_to": [
+      "Wall"
+    ],
+    "properties": [
+      {
+        "name": "Mass",
+        "kind": "Real",
+        "required": false,
+        "allowed": [],
+        "default_value": {
+          "Text": {
+            "value": "heavy"
+          }
+        }
+      }
+    ]
+  }
+}

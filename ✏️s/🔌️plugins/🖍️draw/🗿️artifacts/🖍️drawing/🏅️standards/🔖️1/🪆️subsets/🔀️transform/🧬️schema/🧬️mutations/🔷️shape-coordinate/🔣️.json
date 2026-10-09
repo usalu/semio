@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate",
+  "semanticKind": "set-shape-coordinate",
+  "displayName": "Set Shape Coordinate",
+  "emoji": "🔷️",
+  "aggregateVariant": "SetShapeCoordinate",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-shape-coordinate",
+  "binaryTag": 23,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema",
+    "typescript"
+  ]
+}

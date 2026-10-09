@@ -6,21 +6,21 @@
 use super::codec::PathCommand;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex;
 
-/// 📐️ The drawing scale denominator: 1:100.
-pub const SCALE: f64 = 100.0;
-
-/// 📏️ Paper millimetres per model metre at the drawing scale.
-pub const MM_PER_METRE: f64 = 1000.0 / SCALE;
+/// 📏️ Paper millimetres per model metre at the drawing scale `1:scale`.
+pub fn mm_per_metre(scale: u32) -> f64 {
+    1000.0 / f64::from(scale.max(1))
+}
 
 const EPSILON: f64 = 1e-12;
 
-/// 🖼️ The map from plan metres (y up) to local paper millimetres (y down): the plan's top-left corner `(min_x, max_y)` lands on `(left, top)`.
+/// 🖼️ The map from view metres (y up: north in a plan, height in a section or elevation) to local paper millimetres (y down): the top-left corner `(min_x, max_y)` of the drawing lands on `(left, top)`, `mm` paper millimetres per metre.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Frame {
     pub min_x: f64,
     pub max_y: f64,
     pub left: f64,
     pub top: f64,
+    pub mm: f64,
 }
 
 /// 🔢️ A coordinate snapped to a micrometre, negative zero normalised.
@@ -31,7 +31,7 @@ pub fn snap(value: f64) -> f64 {
 impl Frame {
     /// 📍️ The local paper position of a plan point.
     pub fn point(&self, x: f64, y: f64) -> (f64, f64) {
-        (snap((x - self.min_x) * MM_PER_METRE + self.left), snap((self.max_y - y) * MM_PER_METRE + self.top))
+        (snap((x - self.min_x) * self.mm + self.left), snap((self.max_y - y) * self.mm + self.top))
     }
 }
 

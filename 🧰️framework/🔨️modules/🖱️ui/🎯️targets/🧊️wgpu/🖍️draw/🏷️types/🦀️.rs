@@ -16,6 +16,10 @@ pub const KIND_ROUNDED: f32 = 1.0;
 pub const KIND_GLYPH: f32 = 2.0;
 pub const KIND_TEXTURED: f32 = 4.0;
 pub const KIND_RASTER: f32 = 5.0;
+/// ↗️ A glyph with its screen-space horizontal and vertical axes carried by the instance.
+pub const KIND_AFFINE_GLYPH: f32 = 10.0;
+/// 🖼️ An image with its screen-space horizontal and vertical axes carried by the instance.
+pub const KIND_AFFINE_RASTER: f32 = 11.0;
 /// 🌀️ Clockwise spinning + pulsing loading ring (see `UiInstance::loading_border` and `UI_SHADER`'s `kind == 6` branch).
 pub const KIND_LOADING_BORDER: f32 = 6.0;
 /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring (see `UiInstance::waiting_border` and `UI_SHADER`'s `kind == 7` branch).
@@ -86,7 +90,29 @@ impl UiInstance {
     pub fn raster(rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) -> Self {
         Self { rect, color: [1.0, 1.0, 1.0, alpha], params: [0.0, 0.0, KIND_RASTER, 0.0], uv_rect, clip_ellipse: [0.0; 4] }
     }
+
+    /// 🔤️ Preserves the glyph's authored rotation, reflection, shear and scale.
+    pub fn glyph_affine(rect:[f32;4],color:Rgba,uv_rect:[f32;4],matrix:[f32;6])->Self {
+        Self::glyph(rect,color,uv_rect).affine(matrix,KIND_AFFINE_GLYPH)
+    }
+
+    /// 📷️ Preserves the sampled image's authored rotation, reflection, shear and scale.
+    pub fn raster_affine(rect:[f32;4],uv_rect:[f32;4],alpha:f32,matrix:[f32;6])->Self {
+        Self::raster(rect,uv_rect,alpha).affine(matrix,KIND_AFFINE_RASTER)
+    }
+
+    fn affine(mut self,matrix:[f32;6],kind:f32)->Self {
+        let [x,y,width,height]=self.rect;
+        let [a,b,c,d,e,f]=matrix;
+        self.rect=[a*x+c*y+e,b*x+d*y+f,a*width,b*width];
+        self.params=[c*height,d*height,kind,0.0];
+        self
+    }
 }
+
+#[cfg(test)]
+#[path="↗️affine/🧪️tests/🔬️unit/🦀️.rs"]
+mod affine_quad_tests;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -1166,6 +1192,13 @@ impl DrawList {
         self.active_ui_instances().push(UiInstance::glyph(rect, color, uv_rect));
     }
 
+    /// ✒️ Emits one transformed glyph under the current draw-layer ownership.
+    pub fn push_glyph_affine(&mut self,rect:[f32;4],color:Rgba,uv_rect:[f32;4],matrix:[f32;6]) {
+        if self.claim_retained_output(1,size_of::<UiInstance>()) {
+            self.active_ui_instances().push(UiInstance::glyph_affine(rect,color,uv_rect,matrix));
+        }
+    }
+
     pub fn push_glyph_overlay(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
@@ -1197,6 +1230,17 @@ impl DrawList {
 
     pub fn push_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
         self.push_rounded_raster_quad(key, rect, uv_rect, alpha, 0.0);
+    }
+
+    /// ↗️ Emits a sampled image quad with its complete authored affine transform.
+    pub fn push_raster_quad_affine(&mut self,key:&str,rect:[f32;4],uv_rect:[f32;4],alpha:f32,matrix:[f32;6]) {
+        let Some(bytes)=key.len().checked_add(size_of::<UiInstance>()) else {
+            let _=self.claim_retained_output(usize::MAX,usize::MAX);
+            return;
+        };
+        if self.claim_retained_output(1,bytes) {
+            self.active_raster_instances().push((key.to_owned(),UiInstance::raster_affine(rect,uv_rect,alpha,matrix)));
+        }
     }
 
     /// 📻️ An image quad whose sampled pixels are clipped to its rounded CSS-style boundary.

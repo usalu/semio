@@ -3,15 +3,16 @@
   "id": "cw-1",
   "curtain_wall": {
     "storey": "st-ground",
+    "curtain_wall_type": "cwt-1",
     "axis": {
       "Line": {
         "start": {
           "x": 0,
-          "y": 9
+          "y": 6
         },
         "end": {
-          "x": 8,
-          "y": 9
+          "x": 6,
+          "y": 6
         }
       }
     },
@@ -21,16 +22,7 @@
         "offset": 0
       }
     },
-    "u_spacing": 1.5,
-    "v_spacing": 1.2,
-    "mullion": {
-      "Rectangle": {
-        "width": 0.05,
-        "depth": 0.15
-      }
-    },
-    "panel_material": "m-glass",
-    "mullion_material": "m-alu",
-    "name": "Other"
+    "phase": "New",
+    "name": "Again"
   }
 }

@@ -83,7 +83,8 @@
       "name": "Kitchen",
       "number": "0.01",
       "storey": "st-ground",
-      "usage": "Kitchen"
+      "usage": "Kitchen",
+      "phase": "New"
     },
     "sp-3": {
       "boundary": {
@@ -97,7 +98,8 @@
       "name": "Bedroom",
       "number": "1.01",
       "storey": "st-first",
-      "usage": "Sleeping"
+      "usage": "Sleeping",
+      "phase": "New"
     }
   },
   "stairs": {},
@@ -179,5 +181,17 @@
       "wall_type": "wt-300"
     }
   },
-  "window_types": {}
+  "window_types": {},
+  "classification_systems": {
+    "cs-din-276": {
+      "name": "DIN 276",
+      "edition": "",
+      "entries": [
+        {
+          "code": "340",
+          "title": "Wände"
+        }
+      ]
+    }
+  }
 }

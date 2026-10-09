@@ -214,6 +214,9 @@
                 },
                 "direction": {
                   "type": "number"
+                },
+                "flight": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StairFlight"
                 }
               }
             }
@@ -284,6 +287,35 @@
                 },
                 "end": {
                   "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Opening"
+          ],
+          "properties": {
+            "Opening": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "offset",
+                "flip_hand",
+                "flip_facing"
+              ],
+              "properties": {
+                "offset": {
+                  "type": "number"
+                },
+                "flip_hand": {
+                  "type": "boolean"
+                },
+                "flip_facing": {
+                  "type": "boolean"
                 }
               }
             }

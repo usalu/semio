@@ -1,0 +1,87 @@
+{
+  "contract": "semio.ui.localized-label.physical-retirement.v1",
+  "cases": [
+    {
+      "name": "borrowed",
+      "cells": [
+        {
+          "text": "English",
+          "owned": false,
+          "capacity": 0
+        },
+        {
+          "text": "Deutsch",
+          "owned": false,
+          "capacity": 0
+        },
+        {
+          "text": "Reuse",
+          "owned": false,
+          "capacity": 0
+        },
+        {
+          "text": "Wiederverwenden",
+          "owned": false,
+          "capacity": 0
+        }
+      ]
+    },
+    {
+      "name": "owned",
+      "cells": [
+        {
+          "text": "Draw",
+          "owned": true,
+          "capacity": 19
+        },
+        {
+          "text": "Zeichnen",
+          "owned": true,
+          "capacity": 31
+        },
+        {
+          "text": "Layers",
+          "owned": true,
+          "capacity": 48
+        },
+        {
+          "text": "Ebenen",
+          "owned": true,
+          "capacity": 64
+        }
+      ]
+    },
+    {
+      "name": "mixed-unicode-empty",
+      "cells": [
+        {
+          "text": "🖍️",
+          "owned": true,
+          "capacity": 33
+        },
+        {
+          "text": "Größe",
+          "owned": true,
+          "capacity": 80
+        },
+        {
+          "text": "",
+          "owned": true,
+          "capacity": 17
+        },
+        {
+          "text": "",
+          "owned": false,
+          "capacity": 0
+        }
+      ]
+    }
+  ],
+  "required": {
+    "zeroItems": "unchanged",
+    "insufficientRelease": "unchanged",
+    "insufficientDepth": "refused",
+    "constructorCapacity": "admitted",
+    "terminalDropBytes": 0
+  }
+}

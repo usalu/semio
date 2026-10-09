@@ -6,7 +6,7 @@ use super::*;
 use client::{Connection, Message};
 use ipc::{ClientMsg, Ready, ServerMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup, TaskLabel};
 use std::collections::BTreeMap;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -61,6 +61,18 @@ fn idle() -> ! {
     loop { std::thread::sleep(Duration::from_millis(50)); }
 }
 
+fn serve_http(port: u16) {
+    let listener = std::net::TcpListener::bind(("127.0.0.1", port)).unwrap();
+    println!("  Local:   http://localhost:{port}/");
+    for stream in listener.incoming() {
+        if let Ok(mut stream) = stream {
+            let _ = stream.set_write_timeout(Some(Duration::from_millis(100)));
+            let _ = stream.set_read_timeout(Some(Duration::from_millis(100)));
+            let _ = stream.read(&mut [0u8; 1024]);
+            let _ = stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
+        }
+    }
+}
 #[test]
 fn child() {
     let Ok(mode) = std::env::var(CHILD) else { return };
@@ -71,19 +83,13 @@ fn child() {
         "exit" => { println!("exiting with {}", number(1)); std::process::exit(number(1) as i32) }
         "serve" => {
             std::thread::sleep(Duration::from_millis(number(2)));
-            let _listener = std::net::TcpListener::bind(("127.0.0.1", number(1) as u16));
-            println!("  Local:   http://localhost:{}/", number(1));
-            idle()
-        }
-        "sleep" => { println!("sleeping"); idle() }
+            serve_http(number(1) as u16)
+        }        "sleep" => { println!("sleeping"); idle() }
         "late" => {
             println!("waiting for the site http://127.0.0.1:{}", number(1));
             while !std::path::Path::new(parts.get(2).copied().unwrap_or("gate")).exists() { std::thread::sleep(Duration::from_millis(20)); }
-            let _listener = std::net::TcpListener::bind(("127.0.0.1", number(1) as u16));
-            println!("Local: http://localhost:{}/", number(1));
-            idle()
-        }
-        "env" => {
+            serve_http(number(1) as u16)
+        }        "env" => {
             let mut variables: Vec<(String, String)> = std::env::vars().collect();
             variables.sort();
             for (key, value) in variables { println!("ENV:{key}={value}"); }
@@ -496,7 +502,7 @@ fn sessions_that_were_alive_when_the_daemon_vanished_come_back_interrupted() {
 
 // #region 🔖️Readiness
 #[test]
-fn text_alone_never_declares_readiness_a_listening_port_does() {
+fn text_alone_never_declares_readiness_a_successful_http_response_does() {
     let daemon = Daemon::start("late");
     let port = free_port();
     let mut view = daemon.view();
@@ -551,7 +557,7 @@ fn batch_script(root: &Path) -> (PathBuf, SessionCommand) {
     let executable = std::env::current_exe().unwrap();
     std::fs::hard_link(&executable, &linked).or_else(|_| std::fs::copy(&executable, &linked).map(|_| ())).unwrap();
     let script = root.join("loop.cmd");
-    std::fs::write(&script, format!("@echo off\r\necho batch-started\r\n\"{}\" {}\r\n", linked.display(), task.args.join(" "))).unwrap();
+    std::fs::write(&script, format!("@echo off\r\necho batch-started\r\n\"%~dp0child.exe\" {}\r\n", task.args.join(" "))).unwrap();
     (script, task)
 }
 

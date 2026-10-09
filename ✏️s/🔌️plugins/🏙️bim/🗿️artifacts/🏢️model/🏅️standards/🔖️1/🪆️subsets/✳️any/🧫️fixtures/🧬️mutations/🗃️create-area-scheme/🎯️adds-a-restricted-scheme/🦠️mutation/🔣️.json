@@ -1,0 +1,15 @@
+{
+  "mutation": "createAreaScheme",
+  "id": "as-nsa",
+  "area_scheme": {
+    "name": "Net sales area",
+    "measure": "Net",
+    "usages": [
+      "Kitchen",
+      "Sleeping"
+    ],
+    "zones": [
+      "z-day"
+    ]
+  }
+}

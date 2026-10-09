@@ -1,0 +1,8 @@
+{
+  "mutation": "setViewport",
+  "id": "vp-1",
+  "position": {
+    "x": 30,
+    "y": 40
+  }
+}

@@ -1,4 +1,5 @@
 {
   "mutation": "removeElementClassification",
-  "id": "w-south"
+  "id": "w-south",
+  "system": "cs-uni"
 }

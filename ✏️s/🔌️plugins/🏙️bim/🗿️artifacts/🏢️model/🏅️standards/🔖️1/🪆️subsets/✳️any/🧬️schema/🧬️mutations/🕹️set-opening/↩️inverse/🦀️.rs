@@ -17,5 +17,7 @@ pub fn inverse(payload: &SetOpening, base: &ModelSnapshot) -> Vec<ModelMutation>
         flip_hand: payload.flip_hand.map(|_| opening.flip_hand),
         flip_facing: payload.flip_facing.map(|_| opening.flip_facing),
         name: payload.name.as_ref().map(|_| opening.name.clone()),
+        reveal_depth: payload.reveal_depth.as_ref().map(|_| Assigned::new(opening.reveal_depth)),
+        reveal_material: payload.reveal_material.as_ref().map(|_| Assigned::new(opening.reveal_material.clone())),
     })]
 }

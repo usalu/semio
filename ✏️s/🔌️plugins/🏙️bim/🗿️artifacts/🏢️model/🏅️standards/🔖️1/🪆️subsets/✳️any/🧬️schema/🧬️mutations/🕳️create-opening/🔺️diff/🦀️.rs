@@ -1,8 +1,9 @@
 //! 🔺️ Diff constructor for `CreateOpening`: one created opening entry. The host (a wall or curtain wall), the window or door type it
 //! names and a non-negative sill override (when authored) must hold, the centre offset must keep the opening inside the host axis and clear of its
-//! neighbours. Only the offset and the optional sill override (which replaces the sill of the window type) are stored; the frame follows the host parametrically by inference.
+//! neighbours. An authored reveal (depth not negative, material existing) is checked as well. Only the offset, the optional sill override (which replaces the sill of the window type) and the optional reveal are stored; the frame follows the host parametrically by inference.
 
 use super::super::elements;
+use super::super::wall_depth::reveal_flaw;
 use super::super::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
 use super::CreateOpening;
 use crate::{Entry, ModelDiff, ModelSnapshot};
@@ -21,6 +22,9 @@ pub fn diff(payload: &CreateOpening, base: &ModelSnapshot) -> MutationOutcome<Mo
     }
     if opening.sill_override.is_some_and(|sill| !(sill.is_finite() && sill >= 0.0)) {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "An opening sill must not be negative.", ["opening", "sill_override"]);
+    }
+    if let Some(flaw) = reveal_flaw(base, opening.reveal_depth, opening.reveal_material.as_deref()) {
+        return flaw.under(&["opening"]).refuse();
     }
     for (field, size) in [("width", opening.width), ("height", opening.height)] {
         if size.is_some_and(|value| !positive(value)) {

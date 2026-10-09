@@ -8,7 +8,19 @@ export interface LayerQuantity {
   mass: number;
 }
 
-export type QuantityKind = "Wall" | "CurtainWall" | "Slab" | "Roof" | "Column" | "Beam" | "Window" | "Door" | "Void" | "Stair" | "Railing" | "Space";
+export type QuantityKind = "Wall" | "CurtainWall" | "Slab" | "Roof" | "Column" | "Beam" | "Window" | "Door" | "Void" | "Stair" | "Railing" | "Ramp" | "Space" | "Ceiling";
+
+export interface PanelQuantity {
+  kind: string;
+  count: number;
+  area: number;
+}
+
+export interface MullionQuantity {
+  kind: string;
+  count: number;
+  length: number;
+}
 
 export interface ElementQuantity {
   kind: QuantityKind;
@@ -29,7 +41,10 @@ export interface ElementQuantity {
   net_volume: number;
   mass: number;
   risers: number;
+  balusters?: number;
   layers: LayerQuantity[];
+  panels?: PanelQuantity[];
+  mullions?: MullionQuantity[];
 }
 
 export interface Totals {

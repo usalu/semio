@@ -317,12 +317,17 @@ fn marks_of(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> w
     world::Marks { selected: interaction.selection(ELEMENT_DOMAIN).ids.clone(), hovered: interaction.hover(ELEMENT_DOMAIN, HOVER_CHANNEL).ids.clone() }
 }
 
-fn render_body(body_key: &str, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &world::Marks) -> UiAssemblyResult<ComponentTree> {
-    let node = match body_key {
-        world::BODY_KEY => world::render(snapshot, &world::config::current(cfg), marks),
-        plan::BODY_KEY => plan::render(snapshot, &plan::config::current(cfg), &marks.selected),
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("bim.viewer.ui.capacity", "viewer label admission failed")),
-    }?;
+/// 🪪️ The mounted instance a render belongs to, the key of its inference session.
+fn instance_of(doc: &ArtifactView<'_, ModelSnapshot>) -> Option<u32> {
+    doc.render_operation().map(|operation| operation.app_instance_id)
+}
+
+fn render_body(body_key: &str, instance: Option<u32>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &world::Marks, labels: &terminology::BimViewerLabels) -> UiAssemblyResult<ComponentTree> {
+    let node = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| match body_key {
+        world::BODY_KEY => world::render(snapshot, inference, &world::config::current(cfg), marks),
+        plan::BODY_KEY => plan::render(snapshot, inference, &plan::config::current(cfg), &marks.selected),
+        _ => semio_framework_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("bim.viewer.ui.capacity", "viewer label admission failed")),
+    })?;
     Ok(semio_framework_plugin::built_to_component_tree(node))
 }
 
@@ -390,6 +395,15 @@ impl ArtifactViewer for BimModelViewer {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
+    fn mounted_job_close_step(instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::close(instance_id);
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+    }
+
+    fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
+        crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::terminal_is_empty(instance_id)
+    }
+
     fn command_id(command: &Self::Command) -> &'static str {
         command.action_id()
     }
@@ -444,7 +458,7 @@ impl ArtifactViewer for BimModelViewer {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -460,7 +474,7 @@ impl ArtifactViewer for BimModelViewer {
             BIM_VIEW_RAW_BYTES,
             1,
             work,
-        )?;
+        );
         Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
@@ -475,8 +489,8 @@ impl ArtifactViewer for BimModelViewer {
         tools: ["setCamera", "setProjection", "setProjectionParam", "setStoreyVisible", "setPlanStorey"]
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        render_body(body_key, doc.snapshot, cfg, &world::Marks::default())
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+        render_body(body_key, instance_of(doc), doc.snapshot, cfg, &world::Marks::default(), terminology::bim_viewer_labels(view_state))
     }
 
     fn render_with_request_context(
@@ -484,11 +498,11 @@ impl ArtifactViewer for BimModelViewer {
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &ViewModel,
+        view_state: &ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> UiAssemblyResult<ComponentTree> {
-        render_body(body_key, doc.snapshot, cfg, &marks_of(interaction))
+        render_body(body_key, instance_of(doc), doc.snapshot, cfg, &marks_of(interaction), terminology::bim_viewer_labels(view_state))
     }
 
     /// 🎚️ The chrome of the addressed window: the projection tree and storey toggles of a world window, the storey picker of a plan window.
@@ -512,6 +526,11 @@ pub fn viewer_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
+/// 🗣️ A label of the viewer's one `app_labels!` block in both languages.
+fn localized(pick: fn(&terminology::BimViewerLabels) -> semio_framework_ui_locale::LabelText) -> LocalizedLabel {
+    LocalizedLabel::native(pick(&terminology::BimViewerLabels::NATIVE_EN).as_str(), pick(&terminology::BimViewerLabels::NATIVE_DE).as_str())
+}
+
 fn view_action(id: &str, label: LocalizedLabel, args: Vec<ActionArgDef>) -> ActionDefinition {
     ActionDefinition::bounded_catalog(id, label, ActionKind::View).with_args(args).in_palette(false)
 }
@@ -527,19 +546,19 @@ pub fn create_bim_viewer() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(world::definition())
         .window_kind_def(plan::definition())
         .default_layout(view::layout())
-        .action_with(view_action(SET_CAMERA, LocalizedLabel::native("Set Camera", "Kamera festlegen"), vec![ActionArgDef::text("camera", LocalizedLabel::native("Camera pose", "Kamerapose")).required()]))
-        .action_with(view_action(SET_PROJECTION, LocalizedLabel::native("Set Projection", "Projektion festlegen"), Vec::new()))
-        .action_with(view_action(SET_PROJECTION_PARAMETER, LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), Vec::new()))
-        .action_with(view_action(SET_STOREY_VISIBLE, LocalizedLabel::native("Show or Hide Storey", "Geschoss ein- oder ausblenden"), vec![ActionArgDef::text("storey", LocalizedLabel::native("Storey", "Geschoss")).required()]))
-        .action_with(view_action(SET_PLAN_STOREY, LocalizedLabel::native("Show Storey in Plan", "Geschoss im Grundriss zeigen"), vec![ActionArgDef::text("storey", LocalizedLabel::native("Storey", "Geschoss")).required()]));
+        .action_with(view_action(SET_CAMERA, localized(|labels| labels.set_camera), vec![ActionArgDef::text("camera", localized(|labels| labels.camera_pose)).required()]))
+        .action_with(view_action(SET_PROJECTION, localized(|labels| labels.set_projection), Vec::new()))
+        .action_with(view_action(SET_PROJECTION_PARAMETER, localized(|labels| labels.set_projection_parameter), Vec::new()))
+        .action_with(view_action(SET_STOREY_VISIBLE, localized(|labels| labels.set_storey_visible), vec![ActionArgDef::text("storey", localized(|labels| labels.storey)).required()]))
+        .action_with(view_action(SET_PLAN_STOREY, localized(|labels| labels.set_plan_storey), vec![ActionArgDef::text("storey", localized(|labels| labels.storey)).required()]));
     for tool_id in BIM_VIEW_TOOL_IDS {
         builder = builder.action_audience(tool_id, CapabilityAudience::Chrome).action_interactive_job(tool_id, InteractiveJobClassification::Migrated);
     }
     builder
         .interaction(InteractionDefinition {
             id: ELEMENT_DOMAIN.into(),
-            label: LocalizedLabel::native("Elements", "Bauteile"),
-            granularities: vec![GranularityDefinition { id: ELEMENT_GRANULARITY.into(), label: LocalizedLabel::native("Element", "Bauteil"), icon_id: "box".into() }],
+            label: localized(|labels| labels.elements),
+            granularities: vec![GranularityDefinition { id: ELEMENT_GRANULARITY.into(), label: localized(|labels| labels.element), icon_id: "box".into() }],
             hierarchy: HierarchyProvider::Flat,
             hover: HoverSpec::default(),
             selection: SelectionSpec {

@@ -1739,7 +1739,7 @@ fn json_native_node<'a>(source: &'a DslValue, path: &[usize]) -> Result<JsonNati
 }
 
 /// 🔎️ A canonical JSON scalar or collection borrowed directly from the retained source owner.
-pub enum JsonWriteNode<'a>{Null,Bool(bool),Number(semio_framework_value::Number),String(&'a str),Array(usize),Object(usize)}
+pub enum JsonWriteNode<'a>{Null,Bool(bool),Number(semio_framework_value::Number),String(&'a str),NativeString(&'a dyn semio_framework_value::paged::Utf8Text),Array(usize),Object(usize)}
 
 /// 🌱️ Source owners provide ordinal views without projecting or copying their payload first.
 pub trait JsonWriteSource{
@@ -1813,6 +1813,7 @@ impl<S:JsonWriteSource> JsonWriteCursor<S> {
                     JsonWriteNode::Bool(value) => self.writer.raw(if value { "true" } else { "false" }, control)?,
                     JsonWriteNode::Number(value) => self.writer.number(value, control)?,
                     JsonWriteNode::String(_) => { self.writer.raw("\"", control)?; self.frames.last_mut().unwrap().state = 5; return Ok(()); }
+                    JsonWriteNode::NativeString(_) => {self.writer.raw("\"",control)?;self.frames.last_mut().unwrap().state=6;return Ok(());}
                     JsonWriteNode::Array(_) => { self.writer.raw("[", control)?; self.frames.last_mut().unwrap().state = 1; return Ok(()); }
                     JsonWriteNode::Object(_) => { self.writer.raw("{", control)?; self.frames.last_mut().unwrap().state = 2; return Ok(()); }
                 }
@@ -1835,6 +1836,16 @@ impl<S:JsonWriteSource> JsonWriteCursor<S> {
                 else { self.writer.raw("\"", control)?; if frame.state == 5 { self.finish_node(); } else { self.writer.raw(":", control)?; self.frames.last_mut().unwrap().state = 4; } }
             }
             4 => { let next = self.frames.last_mut().unwrap(); next.state = 2; next.index += 1; self.child(frame.index)?; }
+            6 => {
+                let JsonWriteNode::NativeString(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text source changed"));};
+                if frame.index==text.text_chunk_count(){self.writer.raw("\"",control)?;self.finish_node();}
+                else {
+                    let body=text.text_chunk(frame.index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text chunk absent"))?;
+                    let remaining=body.get(frame.position..).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON native text offset changed"))?;
+                    if let Some(character)=remaining.chars().next(){self.writer.character(character,control)?;self.frames.last_mut().unwrap().position+=character.len_utf8();}
+                    else {let next=self.frames.last_mut().unwrap();next.index+=1;next.position=0;}
+                }
+            }
             _ => unreachable!(),
         }
         Ok(())

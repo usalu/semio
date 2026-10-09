@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-family/schema.json",
+  "title": "CreateFamily",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "family"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createFamily"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Family id",
+          "de": "Familien-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "family": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Family",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Family",
+          "de": "Familie"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

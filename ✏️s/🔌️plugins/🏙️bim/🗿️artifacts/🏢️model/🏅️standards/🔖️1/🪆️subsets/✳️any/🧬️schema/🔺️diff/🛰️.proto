@@ -13,26 +13,168 @@ message ModelDiff {
   map<string, BeamTypeEntry> beam_types = 7;
   map<string, WindowTypeEntry> window_types = 8;
   map<string, DoorTypeEntry> door_types = 9;
-  map<string, SiteEntry> sites = 10;
-  map<string, BuildingEntry> buildings = 11;
-  map<string, StoreyEntry> storeys = 12;
-  map<string, GridLineEntry> grids = 13;
-  map<string, WallEntry> walls = 14;
-  map<string, CurtainWallEntry> curtain_walls = 15;
-  map<string, ColumnEntry> columns = 16;
-  map<string, BeamEntry> beams = 17;
-  map<string, SlabEntry> slabs = 18;
-  map<string, RoofEntry> roofs = 19;
-  map<string, OpeningEntry> openings = 20;
-  map<string, StairEntry> stairs = 21;
-  map<string, RailingEntry> railings = 22;
-  map<string, SpaceEntry> spaces = 23;
-  map<string, PropertySetEntry> properties = 24;
-  map<string, ClassificationEntry> classifications = 25;
+  map<string, CurtainWallTypeEntry> curtain_wall_types = 10;
+  map<string, SiteEntry> sites = 11;
+  map<string, BuildingEntry> buildings = 12;
+  map<string, StoreyEntry> storeys = 13;
+  map<string, GridLineEntry> grids = 14;
+  map<string, WallEntry> walls = 15;
+  map<string, CurtainWallEntry> curtain_walls = 16;
+  map<string, CurtainPanelOverrideEntry> curtain_panel_overrides = 17;
+  map<string, ColumnEntry> columns = 18;
+  map<string, BeamEntry> beams = 19;
+  map<string, SlabEntry> slabs = 20;
+  map<string, RoofEntry> roofs = 21;
+  map<string, OpeningEntry> openings = 22;
+  map<string, StairEntry> stairs = 23;
+  map<string, RailingEntry> railings = 24;
+  map<string, RampEntry> ramps = 25;
+  map<string, SpaceEntry> spaces = 26;
+  map<string, CeilingTypeEntry> ceiling_types = 27;
+  map<string, CeilingEntry> ceilings = 28;
+  map<string, ZoneEntry> zones = 29;
+  map<string, AreaSchemeEntry> area_schemes = 30;
+  map<string, ViewEntry> views = 31;
+  map<string, SheetEntry> sheets = 32;
+  map<string, ViewportEntry> viewports = 33;
+  map<string, SheetRevisionEntry> sheet_revisions = 34;
+  map<string, DimensionEntry> dimensions = 35;
+  map<string, TagEntry> tags = 36;
+  map<string, TextNoteEntry> text_notes = 37;
+  map<string, LeaderEntry> leaders = 38;
+  map<string, AnnotationStyleEntry> annotation_styles = 39;
+  map<string, FamilyEntry> families = 40;
+  map<string, FamilyParameterEntry> family_parameters = 41;
+  map<string, FamilySolidEntry> family_solids = 42;
+  map<string, WallSweepEntry> wall_sweeps = 43;
+  map<string, ScheduleEntry> schedules = 44;
+  map<string, PropertyTemplateEntry> property_templates = 45;
+  map<string, ClassificationSystemEntry> classification_systems = 46;
+  map<string, PropertySetEntry> properties = 47;
+  map<string, ClassificationSetEntry> classifications = 48;
 }
 
 message Assigned {
   bool present = 1;
+}
+
+message PropertyTemplatePatch {
+  optional string name = 1;
+  optional TemplateTargetList applies_to = 2;
+  optional PropertyDefList properties = 3;
+}
+
+message ClassificationSystemPatch {
+  optional string name = 1;
+  optional string edition = 2;
+  optional string source = 3;
+  optional ClassificationItemList entries = 4;
+}
+
+message DimensionPatch {
+  optional string storey = 1;
+  optional AnnotationAnchorList anchors = 2;
+  optional double angle = 3;
+  optional double offset = 4;
+  optional string style = 5;
+  optional double lock = 6;
+  optional string name = 7;
+}
+
+message TagPatch {
+  optional string storey = 1;
+  optional string element = 2;
+  optional TagCategory category = 3;
+  optional Point2 offset = 4;
+  optional string style = 5;
+}
+
+message TextNotePatch {
+  optional string storey = 1;
+  optional Point2 position = 2;
+  optional string text = 3;
+  optional double rotation = 4;
+  optional string style = 5;
+}
+
+message LeaderPatch {
+  optional string storey = 1;
+  optional AnnotationAnchor anchor = 2;
+  optional Point2 offset = 3;
+  optional string text = 4;
+  optional string style = 5;
+}
+
+message AnnotationStylePatch {
+  optional string name = 1;
+  optional double text_height = 2;
+  optional Terminator terminator = 3;
+  optional DimensionUnit unit = 4;
+  optional uint32 precision = 5;
+  optional double mark_size = 6;
+  optional double gap = 7;
+  optional double overshoot = 8;
+}
+
+message FamilyPatch {
+  optional string name = 1;
+  optional FamilyCategory category = 2;
+}
+
+message FamilyParameterPatch {
+  optional string family = 1;
+  optional string name = 2;
+  optional ParameterKind kind = 3;
+  optional string value = 4;
+}
+
+message FamilySolidPatch {
+  optional string family = 1;
+  optional string name = 2;
+  optional SolidShape shape = 3;
+  optional string material = 4;
+  optional string visible = 5;
+  optional ExprPoint3 offset = 6;
+}
+
+message SheetPatch {
+  optional string number = 1;
+  optional string name = 2;
+  optional Paper paper = 3;
+  optional Orientation orientation = 4;
+  optional string project = 5;
+  optional string drawn_by = 6;
+  optional string checked_by = 7;
+  optional string date = 8;
+  optional string revision = 9;
+  optional string scale_label = 10;
+}
+
+message ViewportPatch {
+  optional string sheet = 1;
+  optional string view = 2;
+  optional Point2 position = 3;
+  optional uint32 scale = 4;
+  optional ViewCrop crop = 5;
+  optional string label = 6;
+}
+
+message SheetRevisionPatch {
+  optional string sheet = 1;
+  optional string number = 2;
+  optional string date = 3;
+  optional string description = 4;
+  optional string author = 5;
+}
+
+message WallSweepPatch {
+  optional string host = 1;
+  optional WallSide side = 2;
+  optional Profile profile = 3;
+  optional double height = 4;
+  optional double inset = 5;
+  optional string material = 6;
+  optional string name = 7;
 }
 
 message ProjectPatch {
@@ -58,6 +200,11 @@ message WallTypePatch {
 }
 
 message SlabTypePatch {
+  optional string name = 1;
+  optional LayerList layers = 2;
+}
+
+message CeilingTypePatch {
   optional string name = 1;
   optional LayerList layers = 2;
 }
@@ -141,20 +288,40 @@ message WallPatch {
   optional double base_offset = 5;
   optional TopConstraint top = 6;
   optional Phase phase = 7;
-  optional string name = 8;
+  optional EndJoin start_join = 8;
+  optional EndJoin end_join = 9;
+  optional string name = 10;
+  optional string base_slab = 11;
+}
+
+message CurtainWallTypePatch {
+  optional string name = 1;
+  optional CurtainGrid u_grid = 2;
+  optional CurtainGrid v_grid = 3;
+  optional Profile interior_mullion = 4;
+  optional Profile border_mullion = 5;
+  optional CurtainPanel panel = 6;
+  optional string panel_material = 7;
+  optional string mullion_material = 8;
+}
+
+message CurtainPanelOverridePatch {
+  optional string curtain = 1;
+  optional uint32 u = 2;
+  optional uint32 v = 3;
+  optional CurtainPanel panel = 4;
 }
 
 message CurtainWallPatch {
   optional string storey = 1;
-  optional Axis axis = 2;
-  optional double base_offset = 3;
-  optional TopConstraint top = 4;
-  optional double u_spacing = 5;
-  optional double v_spacing = 6;
-  optional Profile mullion = 7;
-  optional string panel_material = 8;
-  optional string mullion_material = 9;
-  optional string name = 10;
+  optional string curtain_wall_type = 2;
+  optional Axis axis = 3;
+  optional double base_offset = 4;
+  optional TopConstraint top = 5;
+  optional CurtainGrid u_grid = 6;
+  optional CurtainGrid v_grid = 7;
+  optional Phase phase = 8;
+  optional string name = 9;
 }
 
 message ColumnPatch {
@@ -162,23 +329,37 @@ message ColumnPatch {
   optional string column_type = 2;
   optional Point2 position = 3;
   optional double rotation = 4;
-  optional double base_offset = 5;
-  optional TopConstraint top = 6;
-  optional string name = 7;
+  optional Slope tilt = 5;
+  optional double base_offset = 6;
+  optional TopConstraint top = 7;
+  optional Phase phase = 8;
+  optional string name = 9;
 }
 
 message BeamPatch {
   optional string storey = 1;
   optional string beam_type = 2;
-  optional Point2 start = 3;
-  optional Point2 end = 4;
-  optional double top_offset = 5;
-  optional string name = 6;
+  optional Axis axis = 3;
+  optional double top_offset = 4;
+  optional double end_top_offset = 5;
+  optional Phase phase = 6;
+  optional string name = 7;
 }
 
 message SlabPatch {
   optional string storey = 1;
   optional string slab_type = 2;
+  optional VertexList boundary = 3;
+  optional VertexListList holes = 4;
+  optional double offset = 5;
+  optional Slope slope = 6;
+  optional Phase phase = 7;
+  optional string name = 8;
+}
+
+message CeilingPatch {
+  optional string storey = 1;
+  optional string ceiling_type = 2;
   optional VertexList boundary = 3;
   optional VertexListList holes = 4;
   optional double offset = 5;
@@ -193,7 +374,8 @@ message RoofPatch {
   optional RoofShape shape = 4;
   optional double overhang = 5;
   optional double base_offset = 6;
-  optional string name = 7;
+  optional Phase phase = 7;
+  optional string name = 8;
 }
 
 message OpeningPatch {
@@ -206,6 +388,8 @@ message OpeningPatch {
   optional bool flip_hand = 7;
   optional bool flip_facing = 8;
   optional string name = 9;
+  optional double reveal_depth = 10;
+  optional string reveal_material = 11;
 }
 
 message StairPatch {
@@ -222,7 +406,8 @@ message StairPatch {
   optional double tread_thickness = 11;
   optional RiserKind riser = 12;
   optional double landing_depth = 13;
-  optional string name = 14;
+  optional Phase phase = 14;
+  optional string name = 15;
 }
 
 message RailingPatch {
@@ -236,7 +421,26 @@ message RailingPatch {
   optional Infill infill = 8;
   optional string material = 9;
   optional double base_offset = 10;
-  optional string name = 11;
+  optional RailingHost host = 11;
+  optional Phase phase = 12;
+  optional string name = 13;
+}
+
+message RampPatch {
+  optional string storey = 1;
+  optional VertexList path = 2;
+  optional double width = 3;
+  optional double landing_start = 4;
+  optional double landing_end = 5;
+  optional double landing_turn = 6;
+  optional double max_slope = 7;
+  optional double thickness = 8;
+  optional string material = 9;
+  optional double base_offset = 10;
+  optional TopConstraint top = 11;
+  optional bool railing_left = 12;
+  optional bool railing_right = 13;
+  optional string name = 14;
 }
 
 message SpacePatch {
@@ -245,12 +449,52 @@ message SpacePatch {
   optional string name = 3;
   optional SpaceBoundary boundary = 4;
   optional string usage = 5;
+  optional Phase phase = 6;
+  optional string zone = 7;
+  optional string floor_finish = 8;
+  optional string wall_finish = 9;
+  optional string ceiling_finish = 10;
 }
 
-message ClassificationPatch {
-  optional string system = 1;
-  optional string code = 2;
-  optional string title = 3;
+message ZonePatch {
+  optional string name = 1;
+  optional string category = 2;
+  optional double occupancy_density = 3;
+}
+
+message AreaSchemePatch {
+  optional string name = 1;
+  optional AreaMeasure measure = 2;
+  optional StringList usages = 3;
+  optional StringList zones = 4;
+}
+
+message ViewPatch {
+  optional string building = 1;
+  optional string name = 2;
+  optional ViewKind kind = 3;
+  optional string storey = 4;
+  optional ViewPlane plane = 5;
+  optional ViewCamera camera = 6;
+  optional double cut_height = 7;
+  optional double depth = 8;
+  optional ViewCrop crop = 9;
+  optional ViewCategoryList hidden = 10;
+  optional Phase phase = 11;
+  optional uint32 scale = 12;
+  optional DetailLevel detail = 13;
+}
+
+message SchedulePatch {
+  optional string name = 1;
+  optional ScheduleCategory category = 2;
+  optional ScheduleColumnList columns = 3;
+  optional ScheduleSortList sort = 4;
+  optional ScheduleFilterList filter = 5;
+  optional ScheduleGroupList group = 6;
+  optional bool itemize = 7;
+  optional StringList storeys = 8;
+  optional PhaseList phases = 9;
 }
 
 message PropertySetPatch {
@@ -259,6 +503,11 @@ message PropertySetPatch {
 
 message PropertyGroupPatch {
   map<string, PropertyValue> set = 1;
+  repeated string removed = 2;
+}
+
+message ClassificationSetPatch {
+  map<string, string> set = 1;
   repeated string removed = 2;
 }
 
@@ -318,6 +567,12 @@ message DoorTypeEntry {
   optional DoorTypePatch patch = 3;
 }
 
+message CurtainWallTypeEntry {
+  EntryKind entry = 1;
+  optional CurtainWallType record = 2;
+  optional CurtainWallTypePatch patch = 3;
+}
+
 message SiteEntry {
   EntryKind entry = 1;
   optional Site record = 2;
@@ -352,6 +607,12 @@ message CurtainWallEntry {
   EntryKind entry = 1;
   optional CurtainWall record = 2;
   optional CurtainWallPatch patch = 3;
+}
+
+message CurtainPanelOverrideEntry {
+  EntryKind entry = 1;
+  optional CurtainPanelOverride record = 2;
+  optional CurtainPanelOverridePatch patch = 3;
 }
 
 message ColumnEntry {
@@ -396,10 +657,136 @@ message RailingEntry {
   optional RailingPatch patch = 3;
 }
 
+message RampEntry {
+  EntryKind entry = 1;
+  optional Ramp record = 2;
+  optional RampPatch patch = 3;
+}
+
 message SpaceEntry {
   EntryKind entry = 1;
   optional Space record = 2;
   optional SpacePatch patch = 3;
+}
+
+message CeilingTypeEntry {
+  EntryKind entry = 1;
+  optional CeilingType record = 2;
+  optional CeilingTypePatch patch = 3;
+}
+
+message CeilingEntry {
+  EntryKind entry = 1;
+  optional Ceiling record = 2;
+  optional CeilingPatch patch = 3;
+}
+
+message ZoneEntry {
+  EntryKind entry = 1;
+  optional Zone record = 2;
+  optional ZonePatch patch = 3;
+}
+
+message AreaSchemeEntry {
+  EntryKind entry = 1;
+  optional AreaScheme record = 2;
+  optional AreaSchemePatch patch = 3;
+}
+
+message ViewEntry {
+  EntryKind entry = 1;
+  optional View record = 2;
+  optional ViewPatch patch = 3;
+}
+
+message SheetEntry {
+  EntryKind entry = 1;
+  optional Sheet record = 2;
+  optional SheetPatch patch = 3;
+}
+
+message ViewportEntry {
+  EntryKind entry = 1;
+  optional Viewport record = 2;
+  optional ViewportPatch patch = 3;
+}
+
+message SheetRevisionEntry {
+  EntryKind entry = 1;
+  optional SheetRevision record = 2;
+  optional SheetRevisionPatch patch = 3;
+}
+
+message DimensionEntry {
+  EntryKind entry = 1;
+  optional Dimension record = 2;
+  optional DimensionPatch patch = 3;
+}
+
+message TagEntry {
+  EntryKind entry = 1;
+  optional Tag record = 2;
+  optional TagPatch patch = 3;
+}
+
+message TextNoteEntry {
+  EntryKind entry = 1;
+  optional TextNote record = 2;
+  optional TextNotePatch patch = 3;
+}
+
+message LeaderEntry {
+  EntryKind entry = 1;
+  optional Leader record = 2;
+  optional LeaderPatch patch = 3;
+}
+
+message AnnotationStyleEntry {
+  EntryKind entry = 1;
+  optional AnnotationStyle record = 2;
+  optional AnnotationStylePatch patch = 3;
+}
+
+message FamilyEntry {
+  EntryKind entry = 1;
+  optional Family record = 2;
+  optional FamilyPatch patch = 3;
+}
+
+message FamilyParameterEntry {
+  EntryKind entry = 1;
+  optional FamilyParameter record = 2;
+  optional FamilyParameterPatch patch = 3;
+}
+
+message FamilySolidEntry {
+  EntryKind entry = 1;
+  optional FamilySolid record = 2;
+  optional FamilySolidPatch patch = 3;
+}
+
+message WallSweepEntry {
+  EntryKind entry = 1;
+  optional WallSweep record = 2;
+  optional WallSweepPatch patch = 3;
+}
+
+message ScheduleEntry {
+  EntryKind entry = 1;
+  optional Schedule record = 2;
+  optional SchedulePatch patch = 3;
+}
+
+message PropertyTemplateEntry {
+  EntryKind entry = 1;
+  optional PropertyTemplate record = 2;
+  optional PropertyTemplatePatch patch = 3;
+}
+
+message ClassificationSystemEntry {
+  EntryKind entry = 1;
+  optional ClassificationSystem record = 2;
+  optional ClassificationSystemPatch patch = 3;
 }
 
 message PropertySetEntry {
@@ -408,14 +795,42 @@ message PropertySetEntry {
   optional PropertySetPatch patch = 3;
 }
 
-message ClassificationEntry {
+message ClassificationSetEntry {
   EntryKind entry = 1;
-  optional Classification record = 2;
-  optional ClassificationPatch patch = 3;
+  optional ClassificationSetRows record = 2;
+  optional ClassificationSetPatch patch = 3;
+}
+
+message ExprPointList {
+  repeated ExprPoint items = 1;
+}
+
+message DoubleList {
+  repeated double items = 1;
 }
 
 message VertexList {
   repeated Vertex items = 1;
+}
+
+message PropertyValueList {
+  repeated PropertyValue items = 1;
+}
+
+message TemplateTargetList {
+  repeated TemplateTarget items = 1;
+}
+
+message PropertyDefList {
+  repeated PropertyDef items = 1;
+}
+
+message ClassificationItemList {
+  repeated ClassificationItem items = 1;
+}
+
+message AnnotationAnchorList {
+  repeated AnnotationAnchor items = 1;
 }
 
 message StringList {
@@ -432,4 +847,28 @@ message Point2List {
 
 message VertexListList {
   repeated VertexList items = 1;
+}
+
+message ViewCategoryList {
+  repeated ViewCategory items = 1;
+}
+
+message ScheduleColumnList {
+  repeated ScheduleColumn items = 1;
+}
+
+message ScheduleSortList {
+  repeated ScheduleSort items = 1;
+}
+
+message ScheduleFilterList {
+  repeated ScheduleFilter items = 1;
+}
+
+message ScheduleGroupList {
+  repeated ScheduleGroup items = 1;
+}
+
+message PhaseList {
+  repeated Phase items = 1;
 }

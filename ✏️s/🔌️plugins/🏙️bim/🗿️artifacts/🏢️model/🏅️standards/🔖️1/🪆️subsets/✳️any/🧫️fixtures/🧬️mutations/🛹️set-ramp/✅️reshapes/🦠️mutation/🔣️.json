@@ -1,0 +1,26 @@
+{
+  "mutation": "setRamp",
+  "id": "rp-1",
+  "path": [
+    {
+      "point": {
+        "x": 0,
+        "y": 0
+      },
+      "bulge": 0
+    },
+    {
+      "point": {
+        "x": 12,
+        "y": 0
+      },
+      "bulge": 0
+    }
+  ],
+  "width": 1.5,
+  "top": {
+    "Unconnected": {
+      "height": 0.7
+    }
+  }
+}

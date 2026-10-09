@@ -14,7 +14,10 @@ Feature: Take off the quantities of walls, slabs, columns, beams and spaces and 
   with holes, profile areas and beam lengths as GEOS polygons and lines, and the space rows from the sibling oracle
   `../🏠️infer-bim-1-spaces`. The totals are re-summed independently, and the parametric law is proved: raising a storey by
   `delta` adds `delta` times the length to the gross side area of every wall that follows its top and `delta` to every such
-  column. The committed expectation is written by that file, never by hand.
+  column. Every element row carries its construction phase and every total is split per phase and per phase and kind. The authoring law is proved
+  too: a case directory with a `🦠️mutation` is the model before a `set-element-storey` or `set-element-phase`; the oracle moves the one authored field itself and
+  requires that the wall keeps its openings, that no other row changes and that the storey and phase totals move exactly that wall. The committed expectation
+  is written by that file, never by hand.
 
   @id-quantities-building
   @level-quick
@@ -23,3 +26,12 @@ Feature: Take off the quantities of walls, slabs, columns, beams and spaces and 
     Given the committed building model shared://💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json
     When 🧮️quantities is inferred for it
     Then every element's quantities and every total equal the table shared://💡️inferences/🧮️quantities/🏗️building/💡️inference/🧮️quantities/🔣️.json
+
+  @id-quantities-storey-move
+  @level-quick
+  @mode-differential
+  Scenario: Moving a wall from the ground to the first storey takes its openings along and moves its quantities per storey
+    Given the committed model shared://💡️inferences/🧮️quantities/🛗️storey-move/📸️snapshot/🔣️.json with a wall on the ground storey that hosts two windows
+    And the committed mutation shared://💡️inferences/🧮️quantities/🛗️storey-move/🦠️mutation/🔣️.json that stands that wall on the first storey
+    When the mutation is applied and 🧮️quantities is inferred for the moved model
+    Then the wall and its openings are on the first storey, the ground storey lost one wall and the first storey gained it, and every element's quantities and every total equal the table shared://💡️inferences/🧮️quantities/🛗️storey-move/💡️inference/🧮️quantities/🔣️.json

@@ -4,6 +4,10 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { child, em, subset } from "./r3-f1-paths.ts";
 import * as F from "./r3-f1-fixtures.ts";
+import { viewsFor } from "./r10-w12-views-examples.ts";
+import { annotationsFor } from "./r11-w11-annotations-examples.ts";
+import { rampsFor } from "./r11-w09-ramps-examples.ts";
+import { MOVES, phasesFor } from "./r11-w04-phase-examples.ts";
 
 type Pt = [number, number];
 type Json = Record<string, unknown>;
@@ -26,6 +30,9 @@ const MATERIALS: Record<string, [string, string, [number, number, number], numbe
   "m-membrane": ["Bitumen Membrane", "Membrane", [0.15, 0.15, 0.15], 1100, 0.17, 1000],
   "m-tile": ["Clay Roof Tile", "Masonry", [0.65, 0.25, 0.15], 1900, 1.0, 900],
   "m-gravel": ["Ballast Gravel", "Other", [0.6, 0.58, 0.55], 1800, 0.7, 840],
+  "m-oak": ["Oak Parquet", "Finish", [0.62, 0.45, 0.28], 700, 0.17, 1600],
+  "m-ceramic": ["Ceramic Tile", "Finish", [0.88, 0.88, 0.85], 2000, 1.0, 840],
+  "m-paint": ["Interior Paint", "Finish", [0.96, 0.95, 0.92], 1300, 0.8, 1000],
 };
 const materials = (ids: string[]) => Object.fromEntries(ids.map((id) => {
   const [name, category, [r, g, b], density, conductivity, specific_heat] = MATERIALS[id];
@@ -42,6 +49,7 @@ const wall = (storey: string, type: string, axis: unknown, top: unknown, name: s
 const column = (storey: string, type: string, at: Pt, name: string, top: unknown = F.storeyTop(0)) => ({ storey, column_type: type, position: pt(at), rotation: 0, base_offset: 0, top, name });
 const beam = (storey: string, type: string, start: Pt, end: Pt, top_offset: number, name: string) => ({ storey, beam_type: type, start: pt(start), end: pt(end), top_offset, name });
 const slab = (storey: string, type: string, boundary: unknown[], holes: unknown[][], name: string) => ({ storey, slab_type: type, boundary, holes, offset: 0, name });
+const ceiling = (storey: string, type: string, boundary: unknown[], holes: unknown[][], offset: number, name: string, slope?: { direction: number; angle: number }) => ({ storey, ceiling_type: type, boundary, holes, offset, ...(slope ? { slope } : {}), name });
 const roof = (storey: string, type: string, footprint: unknown[], shape: unknown, overhang: number, base_offset: number, name: string) => ({ storey, roof_type: type, footprint, shape, overhang, base_offset, name });
 type StairConstruction = { stringer?: { kind: string; width: number; depth: number }; nosing?: number; tread_thickness?: number; riser?: string };
 const stair = (storey: string, start: Pt, direction: number, width: number, flight: unknown, max_riser: number, min_tread: number, name: string, c: StairConstruction = {}) => ({
@@ -52,6 +60,7 @@ const railing = (storey: string, path: Pt[], material: string, name: string, c: 
   storey, path: path.map(pt), height: 1.0, post_spacing: 1.2, profile: c.profile ?? rectProfile(0.06, 0.04), post_profile: c.post_profile ?? rectProfile(0.05, 0.05), ...(c.baluster === undefined ? {} : { baluster: c.baluster }), infill: c.infill ?? "None", material, base_offset: 0, name,
 });
 const space = (storey: string, number: string, name: string, boundary: unknown, usage: string) => ({ storey, number, name, boundary, usage });
+const finishes = (model: any, ids: string[], over: Json) => ids.forEach((id) => Object.assign(model.spaces[id], over));
 const seed = (x: number, y: number) => ({ Bounded: { seed: P(x, y) } });
 const outline = (vertices: unknown[]) => ({ Explicit: { outline: vertices } });
 const grid = (building: string, label: string, a: Pt, b: Pt) => ({ building, label, start: pt(a), end: pt(b) });
@@ -69,6 +78,13 @@ const text = (value: string) => ({ Text: { value } });
 const real = (value: number) => ({ Real: { value } });
 const flag = (value: boolean) => ({ Boolean: { value } });
 const classify = (system: string, code: string, title: string) => ({ system, code, title });
+const pascal = (token: string) => token.split("_").map((part) => part[0].toUpperCase() + part.slice(1)).join("");
+const field = (token: string) => ({ Field: { field: pascal(token) } });
+const property = (set: string, name: string) => ({ Property: { set, name } });
+const col = (key: unknown, total = false, heading?: string) => ({ key, ...(heading === undefined ? {} : { heading }), total });
+const sortBy = (key: unknown, descending = false) => ({ key, descending });
+const groupBy = (key: unknown) => ({ key });
+const schedule = (name: string, category: string, columns: unknown[], over: Json = {}) => ({ name, category, columns, sort: [], filter: [], group: [], itemize: true, storeys: [], phases: [], ...over });
 
 const reference = (path: string, id: unknown, ...collections: Json[]) => {
   if (typeof id !== "string" || !collections.some((c) => id in c)) throw new Error(`dangling reference ${path} -> ${String(id)}`);
@@ -97,10 +113,19 @@ function verify(model: any) {
   for (const [id, e] of Object.entries<any>(c("beams"))) reference(`beams/${id}/type`, e.beam_type, c("beam_types"));
   for (const [id, e] of Object.entries<any>(c("slabs"))) reference(`slabs/${id}/type`, e.slab_type, c("slab_types"));
   for (const [id, e] of Object.entries<any>(c("roofs"))) reference(`roofs/${id}/type`, e.roof_type, c("roof_types"));
+  for (const [id, e] of Object.entries<any>(c("ceilings") ?? {})) { reference(`ceilings/${id}/storey`, e.storey, c("storeys")); reference(`ceilings/${id}/type`, e.ceiling_type, c("ceiling_types")); }
+  for (const [id, t] of Object.entries<any>(c("ceiling_types") ?? {})) for (const l of t.layers) reference(`ceiling_types/${id}/layer`, l.material, c("materials"));
   for (const [id, e] of Object.entries<any>(c("railings"))) reference(`railings/${id}/material`, e.material, c("materials"));
+  for (const [id, e] of Object.entries<any>(c("ramps") ?? {})) { reference(`ramps/${id}/storey`, e.storey, c("storeys")); reference(`ramps/${id}/material`, e.material, c("materials")); if (e.top.Storey) reference(`ramps/${id}/top`, e.top.Storey.storey, c("storeys")); }
+  for (const [id, e] of Object.entries<any>(c("railings"))) if (e.host) reference(`railings/${id}/host`, e.host.element, c("stairs"), c("ramps") ?? {}, c("slabs"));
   for (const [id, e] of Object.entries<any>(c("curtain_walls"))) { reference(`curtain_walls/${id}/panel`, e.panel_material, c("materials")); reference(`curtain_walls/${id}/mullion`, e.mullion_material, c("materials")); }
   for (const kind of ["wall_types", "slab_types", "roof_types"]) for (const [id, t] of Object.entries<any>(c(kind))) for (const l of t.layers) reference(`${kind}/${id}/layer`, l.material, c("materials"));
   for (const kind of ["column_types", "beam_types", "window_types", "door_types"]) for (const [id, t] of Object.entries<any>(c(kind))) reference(`${kind}/${id}/material`, t.material, c("materials"));
+  for (const [id, e] of Object.entries<any>(c("spaces"))) {
+    if (e.zone !== undefined) reference(`spaces/${id}/zone`, e.zone, c("zones"));
+    for (const finish of ["floor_finish", "wall_finish", "ceiling_finish"]) if (e[finish] !== undefined) reference(`spaces/${id}/${finish}`, e[finish], c("materials"));
+  }
+  for (const [id, e] of Object.entries<any>(c("area_schemes") ?? {})) for (const zone of e.zones) reference(`area_schemes/${id}/zones`, zone, c("zones"));
   for (const [id, b] of Object.entries<any>(c("buildings"))) reference(`buildings/${id}/site`, b.site, c("sites"));
   for (const [id, s] of Object.entries<any>(c("storeys"))) reference(`storeys/${id}/building`, s.building, c("buildings"));
   for (const [id, g] of Object.entries<any>(c("grids"))) reference(`grids/${id}/building`, g.building, c("buildings"));
@@ -123,7 +148,7 @@ function verify(model: any) {
     (byHost.get(o.host) ?? byHost.set(o.host, []).get(o.host)!).push({ id, from, to });
   }
   for (const [host, rows] of byHost) for (const a of rows) for (const b of rows) if (a.id < b.id && a.from < b.to + 0.05 && b.from < a.to + 0.05) throw new Error(`openings ${a.id} and ${b.id} overlap on ${host}`);
-  const owners = new Set(["walls", "curtain_walls", "columns", "beams", "slabs", "roofs", "openings", "stairs", "railings", "spaces"].flatMap((name) => Object.keys(c(name))));
+  const owners = new Set(["walls", "curtain_walls", "columns", "beams", "slabs", "ceilings", "roofs", "openings", "stairs", "railings", "ramps", "spaces", "zones", "area_schemes"].flatMap((name) => Object.keys(c(name) ?? {})));
   for (const name of ["properties", "classifications"]) for (const id of Object.keys(c(name))) if (!owners.has(id)) throw new Error(`${name} of unknown element ${id}`);
   const numbers = new Set<string>();
   for (const s of Object.values<any>(c("spaces"))) {
@@ -140,6 +165,15 @@ function verify(model: any) {
 }
 
 //#region 🏡️ house
+const MIRRORED_NORTH = "w-a-north-1-0";
+const MIRRORED_WEST = "w-a-west-1-0";
+/** 🪞️ The records of an example that a modify mutation makes from other records: the replay applies these instead of creating the produced ids, and the ids are the ones the mutation mints (prefix, copy number, position of the source). */
+const HOUSE_DERIVATIONS = {
+  derived: [
+    { produced: [MIRRORED_NORTH], mutations: [{ mutation: "mirrorElements", ids: ["w-a-south"], line_start: P(0, 4), line_end: P(10, 4), prefix: "w-a-north" }, { mutation: "renameElement", id: MIRRORED_NORTH, name: "Attic North" }] },
+    { produced: [MIRRORED_WEST], mutations: [{ mutation: "mirrorElements", ids: ["w-a-east"], line_start: P(5, 0), line_end: P(5, 8), prefix: "w-a-west" }, { mutation: "renameElement", id: MIRRORED_WEST, name: "Attic West" }] },
+  ],
+};
 function house() {
   const bay: [Pt, Pt, number] = [[10, 1], [10, 4], 0.5];
   const exterior = (sid: string, storey: string, type: string, top: unknown, label: string) => ({
@@ -156,18 +190,18 @@ function house() {
     ...exterior("b", "st-basement", "wt-base-37", top, "Basement"),
     "w-b-spine": wall("st-basement", "wt-base-25", line([3.6, 0], [3.6, 8]), top, "Basement Spine"),
     ...exterior("g", "st-ground", "wt-ext-37", top, "Ground"),
-    "w-g-spine": wall("st-ground", "wt-int-205", line([3.6, 0], [3.6, 8]), top, "Ground Spine"),
+    "w-g-spine": { ...wall("st-ground", "wt-int-205", line([3.6, 0], [3.6, 8]), top, "Ground Spine"), start_join: "Butt" },
     "w-g-cross": wall("st-ground", "wt-int-205", line([0, 5], [10, 5]), top, "Cross Wall"),
-    "w-g-wc": wall("st-ground", "wt-int-145", line([1.8, 5], [1.8, 8]), top, "WC Partition"),
+    "w-g-wc": { ...wall("st-ground", "wt-int-145", line([1.8, 5], [1.8, 8]), top, "WC Partition"), start_join: "Butt", end_join: "Butt" },
     ...exterior("u", "st-upper", "wt-ext-37", top, "Upper"),
     "w-u-spine": wall("st-upper", "wt-int-205", line([3.6, 0], [3.6, 8]), top, "Upper Spine"),
     "w-u-bedrooms": wall("st-upper", "wt-int-145", line([3.6, 4.5], [10, 4.5]), top, "Bedroom Partition"),
-    "w-u-bath": wall("st-upper", "wt-int-145", line([0, 5], [1.8, 5]), top, "Bathroom South"),
+    "w-u-bath": { ...wall("st-upper", "wt-int-145", line([0, 5], [1.8, 5]), top, "Bathroom South"), start_join: "Butt", end_join: "Miter" },
     "w-u-bath-east": wall("st-upper", "wt-int-145", line([1.8, 5], [1.8, 8]), top, "Bathroom East"),
     "w-a-south": wall("st-attic", "wt-attic-34", line([0, 0], [10, 0]), knee, "Attic South"),
     "w-a-east": wall("st-attic", "wt-attic-34", line([10, 0], [10, 8]), knee, "Attic East"),
-    "w-a-north": wall("st-attic", "wt-attic-34", line([10, 8], [0, 8]), knee, "Attic North"),
-    "w-a-west": wall("st-attic", "wt-attic-34", line([0, 8], [0, 0]), knee, "Attic West"),
+    [MIRRORED_NORTH]: wall("st-attic", "wt-attic-34", line([10, 8], [0, 8]), knee, "Attic North"),
+    [MIRRORED_WEST]: wall("st-attic", "wt-attic-34", line([0, 8], [0, 0]), knee, "Attic West"),
   };
   const bayWindows = (sid: string, storey: string) => [0.75, 1.74, 2.73].map((offset, i) => [`o-${sid}-bay-${i + 1}`, win(`w-${sid}-bay`, "wn-bay", offset, `${storey === "st-ground" ? "Living" : "Master"} Bay Window ${i + 1}`)] as const);
   const openings: Record<string, unknown> = Object.fromEntries([
@@ -305,6 +339,50 @@ function house() {
       "sl-g": classify("DIN 276", "351", "Deckenkonstruktionen"),
     },
   }, "Family House");
+  Object.assign(model, {
+    schedules: {
+      "sch-doors": schedule("Door schedule", "Door", [col(field("name")), col(field("type")), col(field("storey")), col(field("width")), col(field("height")), col(field("leaves")), col(field("swing")), col(property("Pset_DoorCommon", "SecurityRating"), false, "Security"), col(field("count"), true)], { sort: [sortBy(field("storey")), sortBy(field("name"))] }),
+      "sch-windows": schedule("Window schedule", "Window", [col(field("name")), col(field("type")), col(field("storey")), col(field("width")), col(field("height")), col(field("panes")), col(field("material")), col(field("count"), true)], { sort: [sortBy(field("storey")), sortBy(field("name"))] }),
+      "sch-rooms": schedule("Room schedule", "Space", [col(field("number")), col(field("name")), col(field("storey")), col(field("usage")), col(field("gross_area"), true), col(field("net_area"), true), col(field("height")), col(field("net_volume"), true)], { sort: [sortBy(field("number"))], group: [groupBy(field("storey"))] }),
+      "sch-walls": schedule("Wall schedule", "Wall", [col(field("name")), col(field("type")), col(field("storey")), col(field("length"), true), col(field("height")), col(field("net_side_area"), true), col(field("net_volume"), true)], { sort: [sortBy(field("name"))], group: [groupBy(field("type"))], filter: [{ key: field("length"), op: "GreaterOrEqual", value: "1" }] }),
+      "sch-finishes": schedule("Room finish schedule", "Finish", [col(field("number")), col(field("name")), col(field("surface")), col(field("material")), col(field("finish_area"), true)], { sort: [sortBy(field("number")), sortBy(field("surface"))], group: [groupBy(field("storey"))] }),
+      "sch-doors-ground": schedule("Ground floor doors", "Door", [col(field("name")), col(field("type")), col(field("width")), col(field("height")), col(field("swing")), col(field("count"), true)], { sort: [sortBy(field("name"))], storeys: ["st-ground"], phases: ["New"] }),
+      "sch-takeoff": schedule("Material take-off", "Material", [col(field("material")), col(field("layer_area"), true), col(field("layer_volume"), true), col(field("layer_mass"), true), col(field("count"), true)], { group: [groupBy(field("material"))], itemize: false }),
+    },
+  });
+  Object.assign(model, {
+    ceiling_types: {
+      "cet-board-125": stack("Suspended Board Ceiling", [layer("m-plaster", 0.0125, "Finish")]),
+      "cet-acoustic-62": stack("Acoustic Ceiling", [layer("m-plaster", 0.0125, "Finish"), layer("m-insulation", 0.05, "Insulation")]),
+    },
+    ceilings: {
+      "ce-g-living": ceiling("st-ground", "cet-board-125", rect(3.7, 0.2, 9.8, 4.9), [], 0.35, "Living Room Ceiling"),
+      "ce-g-kitchen": ceiling("st-ground", "cet-acoustic-62", rect(3.7, 5.1, 9.8, 7.8), [], 0.45, "Kitchen and Dining Ceiling"),
+      "ce-u-master": ceiling("st-upper", "cet-board-125", rect(3.7, 0.2, 9.8, 4.4), [], 0.35, "Master Bedroom Raked Ceiling", { direction: Math.PI / 2, angle: 0.04 }),
+      "ce-u-child": ceiling("st-upper", "cet-acoustic-62", rect(3.7, 4.6, 9.8, 7.8), [], 0.35, "Child Room Ceiling"),
+    },
+  });
+  Object.assign(model.materials, materials(["m-oak", "m-ceramic", "m-paint"]));
+  Object.assign(model, {
+    zones: {
+      "z-day": { name: "Day zone", category: "Ventilation", occupancy_density: 0.05 },
+      "z-night": { name: "Night zone", category: "Ventilation", occupancy_density: 0.03 },
+      "z-service": { name: "Service zone", category: "Ventilation", occupancy_density: 0.005 },
+    },
+    area_schemes: {
+      "as-gfa": { name: "Gross floor area", measure: "Gross", usages: [], zones: [] },
+      "as-nfa": { name: "Net floor area", measure: "Net", usages: [], zones: [] },
+      "as-living": { name: "Living area", measure: "Net", usages: ["Living", "Kitchen", "Sleeping"], zones: [] },
+      "as-day": { name: "Day zone area", measure: "Net", usages: [], zones: ["z-day"] },
+    },
+  });
+  finishes(model, ["sp-g1", "sp-g3"], { zone: "z-day", floor_finish: "m-ceramic", wall_finish: "m-paint", ceiling_finish: "m-paint" });
+  finishes(model, ["sp-g4"], { zone: "z-day", floor_finish: "m-oak", wall_finish: "m-paint", ceiling_finish: "m-paint" });
+  finishes(model, ["sp-g5"], { zone: "z-day", floor_finish: "m-ceramic", wall_finish: "m-paint", ceiling_finish: "m-paint" });
+  finishes(model, ["sp-g2"], { zone: "z-service", floor_finish: "m-ceramic", wall_finish: "m-ceramic", ceiling_finish: "m-paint" });
+  finishes(model, ["sp-u1", "sp-u3", "sp-u4"], { zone: "z-night", floor_finish: "m-oak", wall_finish: "m-paint", ceiling_finish: "m-paint" });
+  finishes(model, ["sp-u2"], { zone: "z-night", floor_finish: "m-ceramic", wall_finish: "m-ceramic", ceiling_finish: "m-paint" });
+  finishes(model, ["sp-b1", "sp-b2", "sp-a1"], { zone: "z-service" });
   Object.assign(model.project, { description: "Detached single-family house with basement, two storeys and a pitched attic roof.", author: "semio", organization: "semio", phase_names: ["Design", "Permit", "Construction"] });
   return model;
 }
@@ -435,6 +513,42 @@ function office() {
       "rf-main": classify("DIN 276", "360", "Dächer"),
     },
   }, "Office Building");
+  Object.assign(model, {
+    schedules: {
+      "sch-doors": schedule("Door schedule", "Door", [col(field("name")), col(field("type")), col(field("storey")), col(field("width")), col(field("height")), col(field("leaves")), col(field("swing")), col(field("count"), true)], { sort: [sortBy(field("storey")), sortBy(field("name"))] }),
+      "sch-windows": schedule("Window schedule", "Window", [col(field("name")), col(field("type")), col(field("storey")), col(field("width")), col(field("height")), col(field("panes")), col(field("count"), true)], { sort: [sortBy(field("storey")), sortBy(field("name"))] }),
+      "sch-finishes": schedule("Room finish schedule", "Finish", [col(field("number")), col(field("name")), col(field("surface")), col(field("material")), col(field("finish_area"), true)], { sort: [sortBy(field("number")), sortBy(field("surface"))], group: [groupBy(field("storey"))] }),
+      "sch-columns": schedule("Column schedule", "Column", [col(field("type")), col(field("storey")), col(field("name")), col(field("height")), col(field("net_volume"), true), col(property("Pset_ColumnCommon", "FireRating"), false, "Fire rating"), col(field("count"), true)], { sort: [sortBy(field("storey")), sortBy(field("name"))], group: [groupBy(field("type"))] }),
+      "sch-rooms": schedule("Room schedule", "Space", [col(field("number")), col(field("name")), col(field("storey")), col(field("usage")), col(field("net_area"), true)], { sort: [sortBy(field("number"))], group: [groupBy(field("storey"))], filter: [{ key: field("usage"), op: "NotEquals", value: "Escape Stair" }] }),
+    },
+  });
+  const tiles: Record<string, unknown> = {};
+  for (const level of levels) {
+    tiles[`ce-${level}-south`] = ceiling(storeyId(level), "cet-tile-grid", rect(0.3, 0.3, 29.7, 5.7), [], 1, `South Suspended Ceiling ${level}`);
+    tiles[`ce-${level}-north`] = ceiling(storeyId(level), "cet-tile-grid", rect(0.3, 12.3, 29.7, 17.7), [], 1, `North Suspended Ceiling ${level}`);
+    tiles[`ce-${level}-centre`] = ceiling(storeyId(level), "cet-tile-grid", rect(10.3, 6.3, 19.7, 11.7), [], 1, `Centre Suspended Ceiling ${level}`);
+  }
+  Object.assign(model, {
+    ceiling_types: { "cet-tile-grid": stack("Suspended Tile Ceiling", [layer("m-plaster", 0.02, "Finish"), layer("m-insulation", 0.03, "Insulation")]) },
+    ceilings: tiles,
+  });
+  Object.assign(model.materials, materials(["m-oak", "m-ceramic", "m-paint"]));
+  Object.assign(model, {
+    zones: {
+      "z-office": { name: "Office zone", category: "Tenant", occupancy_density: 0.1 },
+      "z-circulation": { name: "Circulation zone", category: "Fire compartment", occupancy_density: 0.02 },
+    },
+    area_schemes: {
+      "as-gfa": { name: "Gross floor area", measure: "Gross", usages: [], zones: [] },
+      "as-nfa": { name: "Net floor area", measure: "Net", usages: [], zones: [] },
+      "as-office": { name: "Office area", measure: "Net", usages: ["Office"], zones: ["z-office"] },
+    },
+  });
+  for (const level of levels) {
+    finishes(model, [`sp-${level}-1`, `sp-${level}-2`], { zone: "z-office", floor_finish: "m-oak", wall_finish: "m-paint", ceiling_finish: "m-paint" });
+    finishes(model, [`sp-${level}-3`, `sp-${level}-4`, `sp-${level}-5`], { zone: "z-circulation", floor_finish: "m-ceramic", wall_finish: "m-paint" });
+    finishes(model, [`sp-${level}-6`, `sp-${level}-7`], { zone: "z-circulation" });
+  }
   Object.assign(model.project, { description: "Four-storey office building on a six metre structural grid with two escape stair cores and a curtain wall façade.", author: "semio", organization: "semio", phase_names: ["Design", "Permit", "Construction"] });
   return model;
 }
@@ -442,10 +556,16 @@ function office() {
 
 for (const [dir, name, build] of [[em(0x1f3e1) + "house", "house", house], [em(0x1f3e2) + "office", "office", office]] as const) {
   const model = build();
+  const ramps = rampsFor(name, model);
+  Object.assign(model, { ramps: ramps.ramps, railings: { ...model.railings, ...ramps.railings } });
+  Object.assign(model, annotationsFor(name, model));
+  Object.assign(model, { views: viewsFor(model) });
+  phasesFor(name, model);
   verify(model);
   const assets = join(child(subset, "assets"), dir);
   mkdirSync(assets, { recursive: true });
   writeFileSync(join(assets, em(0x1f4f8) + "snapshot.json"), JSON.stringify(model, null, 2) + "\n");
+  if (name === "house") writeFileSync(join(assets, em(0x1f9ec) + "derivations.json"), JSON.stringify({ ...HOUSE_DERIVATIONS, moved: MOVES.house.map(({ id, from }) => ({ id, from, to: model.walls[id].storey })) }, null, 2) + "\n");
   const counts = Object.fromEntries(Object.entries(model).filter(([, v]) => v && typeof v === "object" && !Array.isArray(v) && !("name" in (v as Json) && "description" in (v as Json))).map(([k, v]) => [k, Object.keys(v as Json).length]));
   console.log(`${name}: ${JSON.stringify(counts)}`);
 }

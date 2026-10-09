@@ -1,0 +1,38 @@
+# r11-store-b execution report
+
+Gate label `r11-store-b`, logs in `🗑️generated/r11-store-b/` (`check1..8.txt`). `FW = 🧰️framework/🛍️products/💻️os`, store = `FW/🔨️modules/🏪️store`.
+
+## Result
+`cargo check -p semio-framework-os-kernel` (lib, borrowck included): 0 errors (check6). `--tests`: my area has no errors in `rejected-page-close` and the trait implementors; the only remaining errors that touch my types are 4 tests in `store/🧪️tests/🔬️unit/🦀️.rs` that wait on the shared `DemandingBufferRetirement` helper and catalog fixtures (see open items). Nothing was run (test target does not build yet).
+
+## Trait shape chosen (`store/🦀️.rs`)
+`ArtifactEnvelopeFieldDecoder<P, Mutation>`: kept `maximum_close_byte_demand` / `maximum_retained_close_bytes` (same as the already-migrated Vcs/Snapshot/Mutation/Spr/HistoryEntry authority traits and the catalog, and used as the decode job's per-axis ceiling + released-bytes ledger). Replaced `next_close_byte_demand` / `close_step(items, bytes)` by
+`next_close_copy_byte_demand`, `next_close_capacity_byte_demand(maximum_copy_bytes)`, `next_close_release_byte_demand`, `next_close_depth_demand` (all `Result<usize, OwnedSchemaDecodeDiagnostic>`) and `close_step(&mut self, RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>`.
+`ArtifactEnvelopeVcsFieldAuthority` was already in this shape from 677; `ArtifactEnvelopeFreshVcsAuthority` now implements it.
+`ArtifactEnvelopeCompletedRecord`: `close_step(RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>` + `next_close_{copy,capacity(max_copy),release,depth}_byte_demand -> Result<usize, ValueError>`.
+Demand convention: raw child demand; every parent adds +1 depth; a turn below any copy/capacity/release axis yields `Progress(default)`, depth below demand is `DepthLimit`; terminal-empty boxed children release `size_of_val` in their own turn.
+
+## What changed in `store/🦀️.rs`
+- New helpers: `artifact_envelope_field_demands`, `artifact_retirement_grant_covers`, `artifact_retirement_self_grant`, `artifact_envelope_diagnostic_error`.
+- `ArtifactEnvelopeReturnedFieldDecoder`: grant `close_step`, 4 demand methods, private `demands`.
+- `ArtifactEnvelopeFieldDecoderRegistry::reclaim_returned_ticket_now(ticket)` (no item/byte args; self-funds each turn from the decoder's demands).
+- `OwnedSchemaBoundedArrayAuthority`: `ArtifactHistoryReservation` is no longer `Copy`; reservation is restored on `insert_reserved` refusal and on failed cancel.
+- `ArtifactEnvelopeDecodeAuthority`: `checked_field_close_demand`, public `close_demands(max_copy)` (replaces `next_close_byte_demand`), self-funded `release_step`, `InteractiveJob::close_step(grant)` (Pending{progress} / Blocked on contended lease / Refused on invariant or depth) plus the four `next_close_*_demand` job methods. Page close uses `OwnedSchemaRecordCursor::next_close_copy_byte_demand()` (copy axis, r11-store's cursor design); an empty record husk is dropped directly.
+- `ArtifactEnvelopeDecodeRejected` / `ArtifactEnvelopeUnadmittedDecodeRejected`: `ErasedSnapshotRetirement` with grants and 4 demand methods; lease return and field/record shell drops are separate funded turns; contended lease yields.
+- `ArtifactEnvelopeCompletedRecord(Owner)`: see above; uses `artifact_retirement_owner_close`.
+- `ArtifactEnvelopeFreshVcsAuthority`: removed unfunded `Box::new`/`owned_retirement`; `close_demands` + `close_step(grant)`; history ledgers are handed whole to `ArtifactStoreHistoryLedgerRetirement` via `artifact_history_ledger_handoff` (empty ledger just dropped), `ArtifactVcs` boxed via `admit_artifact_retirement`, genesis pack bytes via `artifact_retirement_admit_owned` (new field `genesis_bytes`), initial snapshot via `retire_owned(grant)`. `ArtifactEnvelopeFreshVcsActive` got `terminal_is_empty/close_demands/close_step`.
+- `ArtifactEnvelopeFreshFieldDecoder`: `close_demands` + grant `close_step` (replaces `close_target_vcs`).
+- Codec: new `fund_document_store_owners(birth, source)` and `funded_bounded_artifact_store_owners::<P, M>()` (same loop as `funded_member_store_owners`; r11-store may fold the latter onto it); `close_codec_reduction_store` drives `close_owned_demands` -> `close_owned_step(self-grant)`; `apply_ops_binary_impl` installs the funded catalog without `?` while the store is live; `replay_envelopes_onto_pair(.., owners: impl FnOnce() -> Result<DocumentStoreOwners<P, M>, ValueError>)` (callers pass `funded_bounded_artifact_store_owners::<P, M>`).
+
+## External implementors migrated
+- `store/🧪️tests/🚫️rejected-page-close/🦀️.rs` and fixture `store/🧫️fixtures/🚫️rejected-page-close/🔣️.json` (version 2: five-axis grants, progress/complete receipts, exact page bytes charged on the copy axis; `unadmittedCloseCalls` 1; case renamed `short-tail-charges-exact-page-bytes`).
+- `store/🧪️tests/🔬️unit/🦀️.rs`: `TestEnvelopeFieldDecoder`, `envelope_field_close_grant`, `drive_test_envelope_field_return`, `drain_completed_record`, the decode/reject/job-protocol tests, and the fresh-VCS / fresh-field / terminal-snapshot / active-history tests (logic migrated, `genesis_bytes: None` added to struct literals).
+- `plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract` (`ReturnedDecoder`, `CompletedRecordSentinel`, two `owner.close_step` calls) and `plugin/🧪️tests/🧩️composition` (`SlowFreshEnvelopeFieldDecoder`).
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/.../🧰️owned/🧪️tests/🔬️retained-authority-laws` (`OuterPackField`); the rest of that test still uses the old job `close_step(items, bytes)`.
+
+## Open items
+- `plugin/🦀️.rs` (not touched): `drive_envelope_field_decoder_returns` and `drive_envelope_completed_record_returns` (~34390-34510) call `ErasedSnapshotRetirement::close_step(.., items, bytes)` / `ArtifactEnvelopeCompletedRecord::close_step` and match `SnapshotRetirementStep`; they must derive a grant from the 4 demand methods (`retirement.next_*_demand`) and return `PluginLifecycleStep`. `artifact_app_apply_ops` (~39218) and `artifact_app_replay_envelopes` (~39286) still call `bounded_artifact_store_owners` without a grant and ignore the `install_document_store_owners_exact` result; use `store::funded_bounded_artifact_store_owners` (or the app catalog) and pass `|| Ok(owners)` style closures to `replay_envelopes_onto_pair`; `owner.close_owned_step(1, bytes)` -> `close_owned_demands` + grant.
+- Other callers of `replay_envelopes_onto_pair`: `🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs:1380` (pass `directory::os_store::funded_bounded_artifact_store_owners::<..>`) and `store/🧪️tests/🧪️supersede-replay` (6 sites pass `test_support::plain_document_store_owners`, which returns owners directly: wrap as `|| Ok(test_support::plain_document_store_owners())`).
+- `store/🧪️tests/🔬️unit/🦀️.rs`: my 4 tests (~10690-10890) reference `DemandingBufferRetirement` and `ReleaseOnlyCatalog` fixtures; they compile once r11-store migrates `DemandingBufferRetirement` to the grant trait (release demand = buffer capacity, copy/capacity 0, depth 1 while present) and the catalog/snapshot-authority fixture impls (`ArtifactEnvelopeSnapshotFieldAuthority`/`...OwnedFieldCatalog`/`ArtifactOwnedHistoryEntryDecoder` already have the new shape in the lib).
+- `✏️s/**/🏠️host/🧰️owned` hosts (writer, generation2d, generation3d, gismap, presentation, process3d, jack, drawing, raster) implement the already-migrated snapshot/mutation/history-entry authority traits and call `store::ArtifactEnvelopeFreshVcsAuthority::try_new`; none is on the BIM dependency path (BIM artifact has no references). Not touched.
+- Unverified at runtime: all migrated test assertions, especially the rewritten fixture row values (derived by hand from the new semantics).

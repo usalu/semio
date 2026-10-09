@@ -1,7 +1,8 @@
 //! 🔺️ Diff constructor for `CreateWall`: one created wall entry. The storey and the wall type must exist, a storey constraint
-//! must name a storey of the same building, and the axis must have length. No height is stored: it is inferred.
+//! must name a storey of the same building, an attach of the top or base must name an existing roof, slab or ceiling of the same building, and the axis must have length. No height is stored: it is inferred.
 
 use super::super::elements;
+use super::super::wall_depth::attach_flaw;
 use super::CreateWall;
 use crate::{Axis, Entry, ModelDiff, ModelSnapshot, TopConstraint};
 use protocol::{MutationOutcome, OutcomeCode};
@@ -28,6 +29,9 @@ pub fn diff(payload: &CreateWall, base: &ModelSnapshot) -> MutationOutcome<Model
             Some(row) if row.building != storey.building => return MutationOutcome::refuse(OutcomeCode::Invariant, format!("Storey \"{target}\" belongs to another building."), ["wall", "top", "storey"]),
             Some(_) => {}
         }
+    }
+    if let Some(flaw) = attach_flaw(base, Some(&payload.id), &wall.storey, &wall.top, wall.base_slab.as_deref()) {
+        return flaw.under(&["wall"]).refuse();
     }
     if degenerate(&wall.axis) {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A wall axis must have length.", ["wall", "axis"]);

@@ -53,6 +53,8 @@ pub(crate) mod context {
 }
 
 use super::*;
+#[path="../../📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs"]
+mod clipboard_runtime;
 use crate::schema::{layer_id};
 use crate::standards::v1::subsets::any::schema::{default_drawing_document};
 use crate::standards::v1::subsets::any::io::text::snapshot::{semio_drawing_example_json};
@@ -324,7 +326,7 @@ async fn patch_layers_opacity_emits_granular_operation() {
     let mut app = drawing_app().await;
     let id = first_layer_id(&app);
     let meta = artifact_laws::meta("local");
-    let (result, receipt) = settled(&mut app, DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &meta).await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None, layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &meta).await;
     assert!(result.mutations.is_empty(), "the migrated route retains its operation until publication");
     assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().unwrap();
@@ -434,7 +436,7 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
 #[semio_framework_async_macros::async_test]
 async fn export_document_downloads_a_real_pdf_of_the_document() {
     let (mut app, meta) = inline_selection_app().await;
-    let (result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into() }), &meta).await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into(), ..Default::default() }), &meta).await;
     assert!(result.mutations.is_empty(), "an export is not a document operation");
     let [Effect::DownloadMediaExport { filename, mime_type, data, encoding }] = receipt.effects.as_slice() else { panic!("one download effect, got {:?}", receipt.effects) };
     assert!(filename.ends_with(".pdf"), "{filename}");
@@ -444,8 +446,9 @@ async fn export_document_downloads_a_real_pdf_of_the_document() {
     assert!(bytes.starts_with(b"%PDF-1.4\n"));
     let read = semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::decode_pdf(&bytes).expect("stdio's reader opens the download");
     assert_eq!(read.pages.len(), 1);
-    let (_result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into() }), &meta).await;
-    assert!(matches!(receipt.effects.as_slice(), [Effect::DownloadMediaExport { mime_type, data, encoding: None, .. }] if mime_type == "image/svg+xml" && data.starts_with("<svg")), "{:?}", receipt.effects);
+    let (_result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into(), ..Default::default() }), &meta).await;
+    let [Effect::DownloadMediaExport { mime_type, data, encoding, .. }] = receipt.effects.as_slice() else { panic!("one SVG download required") };
+    assert_eq!(mime_type,"image/svg+xml");assert_eq!(encoding.as_deref(),Some("base64"));assert!(base64_codec::base64_standard_decode(data).unwrap().starts_with(b"<svg"));
     artifact_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -1417,7 +1420,7 @@ fn every_command() -> Vec<DrawingCommand> {
         DrawingCommand::ToggleLayerVisible(toggle_layer_visible::ToggleLayerVisible { layer_id: "layer-1".into() }),
         DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec!["a".into(), "b".into()] }),
         DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: "layer-1".into(), field: "opacity".into(), value: "0.4".into() }),
-        DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec!["a".into(), "b".into()], field: "blendMode".into(), value: "\"multiply\"".into() }),
+        DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None, layer_ids: vec!["a".into(), "b".into()], field: "blendMode".into(), value: "\"multiply\"".into() }),
         DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
         DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 2.0 }),
         DrawingCommand::EngagementInput(engagement_input::EngagementInput { value: "typing".into() }),
@@ -1439,7 +1442,7 @@ fn every_command() -> Vec<DrawingCommand> {
         DrawingCommand::CanvasDoubleClick(canvas_double_click::CanvasDoubleClick {}),
         DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}),
         DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}),
-        DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into() }),
+        DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into(), ..Default::default() }),
         DrawingCommand::EditSelection(edit_selection::EditSelection { operation: "group".into(), ids: vec!["a".into(), "b".into()] }),
         DrawingCommand::EditPath(edit_path::EditPath { layer_id: "path".into(), edit: Box::new(crate::schema::geometry::editing::PathEdit::Reverse) }),
         DrawingCommand::EditFill(edit_fill::EditFill { layer_id: "a".into(), edit: Box::new(crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }) }),
@@ -1452,6 +1455,7 @@ fn every_command() -> Vec<DrawingCommand> {
         DrawingCommand::NudgeSelectionUpFast(nudge_selection_up_fast::NudgeSelectionUpFast {}),
         DrawingCommand::NudgeSelectionDown(nudge_selection_down::NudgeSelectionDown {}),
         DrawingCommand::NudgeSelectionDownFast(nudge_selection_down_fast::NudgeSelectionDownFast {}),
+        DrawingCommand::ImportImage(import_image::ImportImage {payload:"data:image/png;base64,AAAA".into(),name:Some("Image.png".into()),parent_id:None,index:None}),
     ]
 }
 
@@ -1539,8 +1543,10 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory as _;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
-    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 31);
-    let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).copied().collect::<Vec<_>>();
+    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 30);
+    assert_eq!(DRAWING_PATH_TOOL_IDS.len(), 1);
+    assert_eq!(DRAWING_IMAGE_TOOL_IDS.len(), 1);
+    let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).chain(DRAWING_PATH_TOOL_IDS).chain(DRAWING_IMAGE_TOOL_IDS).copied().collect::<Vec<_>>();
     routes.sort_unstable();
     let mut declared = every_command().into_iter().map(|command| command.command_id()).collect::<Vec<_>>();
     declared.sort_unstable();
@@ -1549,7 +1555,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 
     assert_eq!(DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.len(), DRAWING_GESTURE_TOOL_IDS.len());
     assert_eq!(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), DRAWING_BOUNDED_TOOL_IDS.len());
-    for contract in DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.iter().chain(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS) {
+    for contract in DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.iter().chain(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingPathCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingImageCommandJobFactory::PUBLICATION_CONTRACTS) {
         assert!(routes.contains(&contract.tool_id), "{} publishes without owning a route", contract.tool_id);
         assert!(!contract.lanes.is_empty(), "{} declares no publication lane", contract.tool_id);
         assert!(!contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1, "{} pairs HostOnly with another lane, which the registry rejects", contract.tool_id);
@@ -1729,7 +1735,7 @@ async fn text_content_and_size_each_undo_as_one_selection_edit() {
             if field == "textContent" { text.content = value.into(); } else { text.size = 36.0; }
         }
         load_drawing_fixture(&mut app, &before);
-        artifact_laws::assert_undo_redo_round_trip(&mut *app, DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec!["first".into(), "second".into()], field: field.into(), value: value.into() }), |app| app.snapshot().unwrap(), before, after).await;
+        artifact_laws::assert_undo_redo_round_trip(&mut *app, DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None, layer_ids: vec!["first".into(), "second".into()], field: field.into(), value: value.into() }), |app| app.snapshot().unwrap(), before, after).await;
     }
 }
 
@@ -2012,7 +2018,7 @@ async fn fill_rule_selection_edit_undoes_as_one_history_entry() {
     for layer in &mut after.layers {crate::schema::layer_base_mut(layer).attributes.fill_rule=crate::FillRule::Nonzero;}
     let ids=before.layers.iter().map(|layer|crate::schema::layer_id(layer).to_string()).collect();
     load_drawing_fixture(&mut app,&before);
-    artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers {layer_ids:ids,field:"fillRule".into(),value:"nonzero".into()}),|app|app.snapshot().unwrap(),before,after).await;
+    artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None,layer_ids:ids,field:"fillRule".into(),value:"nonzero".into()}),|app|app.snapshot().unwrap(),before,after).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -2079,7 +2085,7 @@ async fn group_isolation_selection_edit_undoes_as_one_history_entry() {
     let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json")).unwrap();
     load_drawing_fixture(&mut app,&before);
-    artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers {layer_ids:vec!["group-a".into()],field:"isolation".into(),value:"true".into()}),|app|app.snapshot().unwrap(),before,after).await;
+    artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None,layer_ids:vec!["group-a".into()],field:"isolation".into(),value:"true".into()}),|app|app.snapshot().unwrap(),before,after).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -2152,4 +2158,13 @@ async fn registered_pointer_yields_while_real_scene_job_is_pending_and_then_sele
     let(mut units,mut done)=(0,false);for _ in 0..1000000{units+=1;match step_job(geometry,JobBudget{fuel:1,deadline_ms:8}).await{JobStep::Running(_)=>{if units%32==0{app.advance_typed_operation_publication().await.unwrap();}},JobStep::Done(_)=>{done=true;break;},JobStep::Failed(error)=>panic!("{}",String::from_utf8_lossy(&error))}}assert!(done&&units>1);
     let receipt=artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));assert_eq!(receipt.completions,1);assert_eq!(app.interaction_state().await.selection[DRAWING_INTERACTION_DOMAIN].ids.clone(),vec![selected]);assert_eq!(app.snapshot().unwrap(),before);
     settled(&mut app,DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape{}),&meta).await;artifact_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Registered InteractiveJob pointer yielded eight pending turns beside {units} genuine fuel-one geometry units, selected once after complete cache publication and closed source/gesture owners");
+}
+
+/// 📤️ The registered PNG command publishes exact neutral pixels once and changes no source or history.
+#[semio_framework_async_macros::async_test]
+async fn png_export_command_publishes_one_real_download_from_the_registered_factory(){
+ let sources:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../../🧬️schema/🎬️scene/📋️prepare/🧫️fixtures/🔣️.json")).unwrap();let mut samples:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../🎮️commands/📤️export-document/🧫️fixtures/🔣️.json")).unwrap();let styles:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../🎮️commands/📤️export-document/🧫️fixtures/🎨️styles/🔣️.json")).unwrap();for style in styles{samples.push(serde_json::json!({"name":style["name"],"source":"rectangle","width":2,"height":1,"transparent":true,"expected":style["expected"],"layers":style["layers"],"channelTolerance":style["channelTolerance"]}));}
+ for sample in samples{let row=sources.iter().find(|row|row["name"]==sample["source"]).unwrap();let mut authored=row["document"].clone();if let Some(layers)=sample.get("layers"){authored["layers"]=layers.clone();}authored["artboard"]=serde_json::json!({"width":2,"height":1});let document:DrawingSnapshot=serde_json::from_value(authored).unwrap();let(mut app,meta)=inline_selection_app().await;load_drawing_fixture(&mut app,&document);let before=app.snapshot().unwrap();let edits=app.history_snapshot().await.unwrap().edit_count;let command=export_document::ExportDocument{format:"png".into(),width:Some(2),height:Some(1),transparent:Some(sample["transparent"].as_bool().unwrap())};let(result,receipt)=settled(&mut app,DrawingCommand::ExportDocument(command),&meta).await;
+  assert!(result.mutations.is_empty());assert_eq!(receipt.completions,1);assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));let[Effect::DownloadMediaExport{filename,mime_type,data,encoding}]=receipt.effects.as_slice()else{panic!("one sealed PNG download required")};assert!(filename.ends_with(".png"));assert_eq!(mime_type,"image/png");assert_eq!(encoding.as_deref(),Some("base64"));let bytes=base64_codec::base64_standard_decode(data).unwrap();let mut decoder=png::Decoder::new(std::io::Cursor::new(&bytes)).read_info().unwrap();let mut pixels=vec![0;decoder.output_buffer_size()];let info=decoder.next_frame(&mut pixels).unwrap();assert_eq!((info.width,info.height),(2,1));let expected:Vec<u8>=serde_json::from_value(sample["expected"].clone()).unwrap();let tolerance=sample["channelTolerance"].as_u64().unwrap_or(0)as u8;assert_eq!(info.buffer_size(),expected.len());for(actual,expected)in pixels[..info.buffer_size()].iter().zip(expected.iter()){assert!(actual.abs_diff(*expected)<=tolerance);}assert_eq!(app.snapshot().unwrap(),before);assert_eq!(app.history_snapshot().await.unwrap().edit_count,edits);artifact_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Registered native PNG {} published once, independent decoder matched shared pixels, source/history unchanged and app owners closed",sample["name"]);
+ }
 }

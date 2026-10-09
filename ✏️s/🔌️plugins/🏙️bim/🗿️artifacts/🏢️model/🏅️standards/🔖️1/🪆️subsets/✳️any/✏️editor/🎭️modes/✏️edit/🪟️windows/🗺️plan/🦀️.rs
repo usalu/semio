@@ -1,18 +1,17 @@
-//! 🗺️ BIM plan window: the architectural floor plan of one storey on a `Canvas2d` surface. It paints the `plan-linework` inference of the configured storey (cut walls as
+//! 🗺️ BIM plan window: the architectural floor plan of one authored plan view on a `Canvas2d` surface. It paints the `view-linework` inference of the configured view (the plan of its storey cut at the height the view resolves) (cut walls as
 //! poché, projections, hidden lines, openings, stairs, grid, space tags) with the selection and hover highlighted by element id, and answers a pointer press by picking the
-//! topmost element under it. Nothing here computes geometry: a storey without linework paints nothing.
+//! topmost element under it. Nothing here computes geometry: a view without linework paints nothing.
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
 use self::config::BimPlanWindowConfig;
-use crate::editor::bim::entities::ordered_storeys;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
 use crate::editor::bim::terminology::BimLabels;
 use crate::render::plan::{canvas_point, plan_point};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
-use crate::{ModelInference, ModelSnapshot};
+use crate::{ModelInference, ModelSnapshot, ViewKind};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 use semio_framework_plugin::DslValue;
@@ -54,16 +53,32 @@ pub fn definition() -> WindowKindDefinition {
 }
 //#endregion 🔖️Definition
 
-//#region 🔖️Storey
-/// 🪜️ The storey a plan window shows: its configured one when it still exists, else the lowest storey of the first building.
-pub fn active_storey(snapshot: &ModelSnapshot, config: &BimPlanWindowConfig) -> Option<String> {
-    if snapshot.storeys.contains_key(&config.storey) {
-        return Some(config.storey.clone());
-    }
-    let building = snapshot.buildings.keys().find(|building| !ordered_storeys(snapshot, building).is_empty())?;
-    ordered_storeys(snapshot, building).into_iter().next()
+//#region 🔖️View
+/// 🗺️ Every plan and ceiling plan view of the model in browser order: by building, then the level of its storey, plans before ceiling plans, then name.
+pub fn plan_views(snapshot: &ModelSnapshot) -> Vec<String> {
+    let mut rows: Vec<(&String, i32, bool, &String, &String)> = snapshot
+        .views
+        .iter()
+        .filter(|(_, view)| view.kind.is_plan())
+        .filter_map(|(id, view)| view.storey.as_ref().and_then(|storey| snapshot.storeys.get(storey)).map(|storey| (&view.building, storey.level, view.kind == ViewKind::CeilingPlan, &view.name, id)))
+        .collect();
+    rows.sort();
+    rows.into_iter().map(|row| row.4.clone()).collect()
 }
-//#endregion 🔖️Storey
+
+/// 🗺️ The plan view a plan window shows: its configured one while it still is a plan or ceiling plan view, else the first one in browser order; none when the model has no plan view.
+pub fn active_view(snapshot: &ModelSnapshot, config: &BimPlanWindowConfig) -> Option<String> {
+    if snapshot.views.get(&config.view).is_some_and(|view| view.kind.is_plan() && view.storey.as_ref().is_some_and(|storey| snapshot.storeys.contains_key(storey))) {
+        return Some(config.view.clone());
+    }
+    plan_views(snapshot).into_iter().next()
+}
+
+/// 🪜️ The storey a plan window cuts: the storey of its view, so every drawing tool places on it.
+pub fn active_storey(snapshot: &ModelSnapshot, config: &BimPlanWindowConfig) -> Option<String> {
+    active_view(snapshot, config).and_then(|id| snapshot.views.get(&id)).and_then(|view| view.storey.clone())
+}
+//#endregion 🔖️View
 
 //#region 🔖️Geometry
 /// ➰️ The flattened points of a bulged vertex list, mirrored into the window's space; a closed list repeats no closing point.
@@ -118,10 +133,10 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &Bim
 /// 🗺️ [`render`] with the records of the authoring overlay (handles, snap markers, the gesture preview) painted last, over everything.
 #[allow(clippy::too_many_arguments)]
 pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let storey = active_storey(snapshot, config);
-    let plan = storey.as_ref().and_then(|storey| inference.plan_linework.get(storey));
-    let mut records = plan.map_or_else(|| vec![meta_record(utility)], |plan| self::records(plan, selection, hover, utility));
-    if storey.is_none() {
+    let view = active_view(snapshot, config);
+    let plan = view.as_ref().and_then(|view| inference.view_linework.get(view)).map(|drawing| &drawing.lines);
+    let mut records = plan.map_or_else(|| vec![meta_record(utility)], |plan| records(plan, selection, hover, utility));
+    if view.is_none() {
         records.push(text_record("empty", (0.0, 0.0), labels.empty_plan.as_str(), crate::render::plan::TEXT_SIZE * 2.0, [0.22, 0.24, 0.28, 1.0]));
     }
     records.extend(overlay.iter().cloned());

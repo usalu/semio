@@ -1353,7 +1353,7 @@ impl ArtifactEditor for LayoutPlayApp {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -1369,7 +1369,7 @@ impl ArtifactEditor for LayoutPlayApp {
             LAYOUT_RETAINED_RAW_BYTES,
             LAYOUT_RETAINED_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

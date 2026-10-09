@@ -20,6 +20,8 @@ use semio_framework_ui_locale::LocalizedLabel;
 //#region 🔖️Constants
 pub const BIM_ELEMENT_DOMAIN: &str = "elements";
 pub const BIM_LIBRARY_DOMAIN: &str = "library";
+/// 🗂️ The granularity of a row of the entry table of a classification system in the `library` domain; its id is `system:code`.
+pub const CLASSIFICATION_ENTRY: &str = "classification-entry";
 //#endregion 🔖️Constants
 
 fn localized(label: crate::editor::bim::entities::LabelOf) -> LocalizedLabel {
@@ -39,11 +41,17 @@ fn selection() -> SelectionSpec {
 //#region 🔖️Definitions
 /// 🕹️ The two interaction domains of the manifest, one granularity per entity kind.
 pub fn definitions() -> Vec<InteractionDefinition> {
-    let granularities = |library: bool| -> Vec<GranularityDefinition> { ENTITIES.iter().filter(|row| row.library == library).map(|row| GranularityDefinition { id: row.kind.into(), label: localized(row.label), icon_id: row.icon.into() }).collect() };
+    let granularities = |library: bool| -> Vec<GranularityDefinition> {
+        let mut found: Vec<GranularityDefinition> = ENTITIES.iter().filter(|row| row.library == library).map(|row| GranularityDefinition { id: row.kind.into(), label: localized(row.label), icon_id: row.icon.into() }).collect();
+        if library {
+            found.push(GranularityDefinition { id: CLASSIFICATION_ENTRY.into(), label: localized(|labels| labels.kind_classification_entry), icon_id: "list-tree".into() });
+        }
+        found
+    };
     vec![
         InteractionDefinition {
             id: BIM_ELEMENT_DOMAIN.into(),
-            label: LocalizedLabel::native("Elements", "Bauteile"),
+            label: LocalizedLabel::native(BimLabels::NATIVE_EN.domain_elements.as_str(), BimLabels::NATIVE_DE.domain_elements.as_str()),
             granularities: granularities(false),
             hierarchy: HierarchyProvider::Topology,
             hover: HoverSpec::default(),
@@ -51,7 +59,7 @@ pub fn definitions() -> Vec<InteractionDefinition> {
         },
         InteractionDefinition {
             id: BIM_LIBRARY_DOMAIN.into(),
-            label: LocalizedLabel::native("Library", "Bibliothek"),
+            label: LocalizedLabel::native(BimLabels::NATIVE_EN.domain_library.as_str(), BimLabels::NATIVE_DE.domain_library.as_str()),
             granularities: granularities(true),
             hierarchy: HierarchyProvider::Flat,
             hover: HoverSpec::default(),
@@ -89,9 +97,10 @@ pub fn element_topology(snapshot: &ModelSnapshot) -> DomainTopology {
     DomainTopology { ordered }
 }
 
-/// 📚️ The `library` domain: materials then each type family, flat.
+/// 📚️ The `library` domain: materials then each type family, flat, then the rows of the entry table of each classification system (the nodes a search of the classification browser selects).
 pub fn library_topology(snapshot: &ModelSnapshot) -> DomainTopology {
-    let ordered = ENTITIES.iter().filter(|row| row.library).flat_map(|row| (row.ids)(snapshot).into_iter().map(|id| TopologyNode { id, granularity: row.kind.into(), parent: None })).collect();
+    let mut ordered: Vec<TopologyNode> = ENTITIES.iter().filter(|row| row.library).flat_map(|row| (row.ids)(snapshot).into_iter().map(|id| TopologyNode { id, granularity: row.kind.into(), parent: None })).collect();
+    ordered.extend(snapshot.classification_systems.iter().flat_map(|(system, row)| row.entries.iter().map(move |entry| TopologyNode { id: format!("{system}:{}", entry.code), granularity: CLASSIFICATION_ENTRY.into(), parent: None })));
     DomainTopology { ordered }
 }
 

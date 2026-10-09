@@ -1,0 +1,644 @@
+{
+  ".": {
+    "root": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "tags.npm:private": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.description": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageName": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageVersion": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageExports": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageMain": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.isInPackageManagerWorkspaces": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.authority": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.authority.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.authority.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.authority.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.authority.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.authority.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.authority.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lock": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lock.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lock.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lock.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lock.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lock.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lock.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cursor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cursor.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cursor.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cursor.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cursor.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cursor.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cursor.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unit": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unit.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unit.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unit.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unit.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unit.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unit.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.terminal": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.terminal.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.terminal.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.terminal.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.terminal.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.terminal.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.terminal.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.editing": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.editing.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.editing.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.editing.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.editing.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.editing.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.editing.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pty.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pty.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pty.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pty.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pty.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pty.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ptyall": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ptyall.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ptyall.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ptyall.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ptyall.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ptyall.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ptyall.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.borders": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.borders.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.borders.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.borders.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.borders.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.borders.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.borders.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicode": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicode.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicode.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicode.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicode.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicode.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicode.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicodeinput": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicodeinput.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicodeinput.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicodeinput.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicodeinput.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicodeinput.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.unicodeinput.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.confirm": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.confirm.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.confirm.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.confirm.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.confirm.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.confirm.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.confirm.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.button": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.button.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.button.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.button.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.button.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.button.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.button.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.coverage": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.coverage.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.coverage.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.coverage.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.coverage.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.coverage.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.coverage.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.journeys": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.journeys.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.journeys.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.journeys.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.journeys.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.journeys.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.journeys.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.load": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.load.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.load.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.load.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.load.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.load.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.load.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scalar": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scalar.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scalar.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scalar.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scalar.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scalar.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scalar.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ui": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ui.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ui.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ui.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ui.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ui.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.ui.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.script": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.script.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.script.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.script.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.script.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.script.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.script.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scriptlogs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scriptlogs.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scriptlogs.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scriptlogs.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scriptlogs.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scriptlogs.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.scriptlogs.options": [
+      "project.json",
+      "nx/core/project-json"
+    ]
+  }
+}

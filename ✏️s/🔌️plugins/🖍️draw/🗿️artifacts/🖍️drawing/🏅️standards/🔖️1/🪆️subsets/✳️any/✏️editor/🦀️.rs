@@ -10,7 +10,7 @@
 use crate::editor::drawing::commands::nudge_selection::{nudge_selection_left,nudge_selection_left_fast,nudge_selection_right,nudge_selection_right_fast,nudge_selection_up,nudge_selection_up_fast,nudge_selection_down,nudge_selection_down_fast};
 use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
 use crate::editor::drawing::commands::{
-    add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input,
+    import_image, add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input,
     engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, load_document_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::editor::drawing::modes::edit;
@@ -75,6 +75,8 @@ pub use properties_panel::DRAWING_PLAY_BODY_PROPERTIES;
 pub(crate) mod interaction;
 #[path = "🧮️status/🦀️.rs"]
 mod status;
+#[path="📋️clipboard/🦀️.rs"]
+pub mod clipboard;
 
 //#region 🔖️Constants
 pub const DRAWING_PLAY_CONTROLLER_ID: &str = "drawing-play";
@@ -216,6 +218,26 @@ fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
             semio_framework_plugin::ActionArgOption::new("name", LocalizedLabel::native("Name", "Name")),
             semio_framework_plugin::ActionArgOption::new("textContent", LocalizedLabel::native("Text Content", "Textinhalt")),
             semio_framework_plugin::ActionArgOption::new("textSize", LocalizedLabel::native("Text Size", "Schriftgröße")),
+            semio_framework_plugin::ActionArgOption::new("imageKey", LocalizedLabel::native("Image Asset Key", "Bildressourcenschlüssel")),
+            semio_framework_plugin::ActionArgOption::new("imageWidth", LocalizedLabel::native("Image Width", "Bildbreite")),
+            semio_framework_plugin::ActionArgOption::new("imageHeight", LocalizedLabel::native("Image Height", "Bildhöhe")),
+            semio_framework_plugin::ActionArgOption::new("rectX", LocalizedLabel::native("Rectangle X", "Rechteck X")),
+            semio_framework_plugin::ActionArgOption::new("rectY", LocalizedLabel::native("Rectangle Y", "Rechteck Y")),
+            semio_framework_plugin::ActionArgOption::new("rectWidth", LocalizedLabel::native("Rectangle Width", "Rechteckbreite")),
+            semio_framework_plugin::ActionArgOption::new("rectHeight", LocalizedLabel::native("Rectangle Height", "Rechteckhöhe")),
+            semio_framework_plugin::ActionArgOption::new("ellipseCx", LocalizedLabel::native("Ellipse Center X", "Ellipsenmittelpunkt X")),
+            semio_framework_plugin::ActionArgOption::new("ellipseCy", LocalizedLabel::native("Ellipse Center Y", "Ellipsenmittelpunkt Y")),
+            semio_framework_plugin::ActionArgOption::new("ellipseRx", LocalizedLabel::native("Ellipse Radius X", "Ellipsenradius X")),
+            semio_framework_plugin::ActionArgOption::new("ellipseRy", LocalizedLabel::native("Ellipse Radius Y", "Ellipsenradius Y")),
+            semio_framework_plugin::ActionArgOption::new("circleCx", LocalizedLabel::native("Circle Center X", "Kreismittelpunkt X")),
+            semio_framework_plugin::ActionArgOption::new("circleCy", LocalizedLabel::native("Circle Center Y", "Kreismittelpunkt Y")),
+            semio_framework_plugin::ActionArgOption::new("circleR", LocalizedLabel::native("Circle Radius", "Kreisradius")),
+            semio_framework_plugin::ActionArgOption::new("lineX1", LocalizedLabel::native("Line Start X", "Linienanfang X")),
+            semio_framework_plugin::ActionArgOption::new("lineY1", LocalizedLabel::native("Line Start Y", "Linienanfang Y")),
+            semio_framework_plugin::ActionArgOption::new("lineX2", LocalizedLabel::native("Line End X", "Linienende X")),
+            semio_framework_plugin::ActionArgOption::new("lineY2", LocalizedLabel::native("Line End Y", "Linienende Y")),
+            semio_framework_plugin::ActionArgOption::new("polygonX", LocalizedLabel::native("Polygon Point X", "Polygonpunkt X")),
+            semio_framework_plugin::ActionArgOption::new("polygonY", LocalizedLabel::native("Polygon Point Y", "Polygonpunkt Y")),
             semio_framework_plugin::ActionArgOption::new("opacity", LocalizedLabel::native("Opacity", "Deckkraft")),
             semio_framework_plugin::ActionArgOption::new("visible", LocalizedLabel::native("Visible", "Sichtbar")),
             semio_framework_plugin::ActionArgOption::new("locked", LocalizedLabel::native("Locked", "Gesperrt")),
@@ -300,6 +322,7 @@ semio_framework_plugin::app_commands! {
         "nudgeSelectionUpFast" as "nudge-selection-up-fast" => nudge_selection_up_fast::NudgeSelectionUpFast,
         "nudgeSelectionDown" as "nudge-selection-down" => nudge_selection_down::NudgeSelectionDown,
         "nudgeSelectionDownFast" as "nudge-selection-down-fast" => nudge_selection_down_fast::NudgeSelectionDownFast,
+        "importImage" as "import-image" => import_image::ImportImage,
     }
 }
 
@@ -413,6 +436,7 @@ mod args_bridge {
             "setActiveExample" => DrawingCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("example", "example_id")], &[]))?),
             "setSelectedOpacity" => DrawingCommand::SetSelectedOpacity(decode(action, plain())?),
             "engagementSubmit" => DrawingCommand::EngagementSubmit(decode(action, plain())?),
+            "importImage" => DrawingCommand::ImportImage(decode(action, plain())?),
             "addLayer" => DrawingCommand::AddLayer(decode(action, default_key(plain(), "kind", "path"))?),
             "exportDocument" => DrawingCommand::ExportDocument(decode(action, default_key(plain(), "format", export_document::DEFAULT_EXPORT_FORMAT))?),
             "dropLayerKind" => DrawingCommand::DropLayerKind(decode(action, plain())?),
@@ -453,7 +477,10 @@ mod args_bridge {
                             semio_framework_value::DslValue::String(text) => text.parse::<f64>().ok(),
                             other => <f64 as semio_framework_value::FromValue>::from_value(other.clone()).ok(),
                         }.filter(|number| number.is_finite()).ok_or_else(|| Fault::from("Enter a finite coordinate"))?;
-                        if let semio_framework_value::DslValue::Object(fields) = &mut edit { put(fields, "value", semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(number))); }
+                        if let semio_framework_value::DslValue::Object(fields) = &mut edit {
+                            let key=if fields.iter().any(|(key,value)|key=="kind"&&matches!(value,semio_framework_value::DslValue::String(kind) if kind=="simplify")) {"tolerance"}else {"value"};
+                            put(fields,key,semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(number)));
+                        }
                     }
                     put(entries, "edit", integral(edit));
                 }
@@ -544,7 +571,8 @@ impl FixedOperationOwner for DrawingGestureOperationOwner {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
         if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
@@ -552,9 +580,9 @@ impl FixedOperationOwner for DrawingGestureOperationOwner {
         let released_bytes = self.unreleased_bytes.min(maximum_bytes);
         self.unreleased_bytes -= released_bytes;
         if released_items == 0 && released_bytes == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Complete;
+            return semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()};
         }
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        semio_framework_job::InteractiveJobCloseStep::Pending { progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..Default::default()} }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -817,11 +845,13 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
         // `Pending { 0, 0 }`. Skip past those within one bounded sweep so a retiring owner gets a page
         // every maintenance step rather than every 64th — 9 steps to retire a gesture, not 576.
         for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
-            match self.operations.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 } if !self.operations.is_empty() => continue,
+            let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:maximum_bytes,maximum_release_bytes:maximum_bytes,maximum_depth:32};
+            match self.operations.close_step(grant) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress==Default::default() && !self.operations.is_empty() => continue,
                 semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "Drawing gesture close owner awaits a non-empty grant" }),
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }),
-                semio_framework_job::InteractiveJobCloseStep::Complete => return Ok(semio_framework_plugin::PluginCloseStep::Complete),
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items:progress.copied_items, released_bytes:progress.released_bytes }),
+                semio_framework_job::InteractiveJobCloseStep::Complete {..} => return Ok(semio_framework_plugin::PluginCloseStep::Complete),
+                semio_framework_job::InteractiveJobCloseStep::Refused(kind) => return Err(Fault::from(format!("Drawing gesture retirement refused: {kind:?}"))),
             }
         }
         Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
@@ -990,7 +1020,9 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
+        let pending=|copied_items,released_bytes|semio_framework_job::InteractiveJobCloseStep::Pending {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items,released_bytes,..Default::default()}};
         if !self.closing {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
@@ -998,39 +1030,50 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
             if let Ok(emit) = rejected.emit.as_mut() {
                 if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
                     return match step {
-                        semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                        semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => pending(released_items,released_bytes),
                         semio_framework_plugin::PluginCloseStep::Blocked { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } => semio_framework_job::InteractiveJobCloseStep::Blocked,
                         semio_framework_plugin::PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
                     };
                 }
             }
             if maximum_items == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                return pending(0,0);
             }
             self.pending_completion_rejection = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return pending(1,0);
         }
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
         if let Some(input) = self.raw_input.as_mut() {
-            let step = input.close_step(1, maximum_bytes);
+            let step = input.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,..grant});
             if input.terminal_is_empty() {
                 self.raw_input = None;
             }
             return match step {
-                semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                semio_framework_job::InteractiveJobCloseStep::Complete {progress} => semio_framework_job::InteractiveJobCloseStep::Pending {progress},
                 other => other,
             };
         }
         if self.payload.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return pending(1,0);
         }
-        if self.decoder.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        if let Some(decoder)=self.decoder.as_mut() {
+            let bytes=decoder.raw.capacity();
+            if bytes>maximum_bytes {return pending(0,0);}
+            drop(std::mem::take(&mut decoder.raw));self.decoder=None;
+            return pending(1,bytes);
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()}
     }
+
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {
+        if let Some(input)=self.raw_input.as_ref(){return input.next_close_release_byte_demand();}
+        Ok(self.decoder.as_ref().map_or(0,|decoder|decoder.raw.capacity()))
+    }
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(!self.terminal_is_empty()))}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.pending_completion_rejection.is_none() && self.payload.is_none() && self.raw_input.is_none() && self.decoder.is_none()
@@ -1142,11 +1185,32 @@ const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setCameraZoom",
     "engagementInput",
-    "exportDocument",
     "editSelection",
-    "editPath",
     "editFill",
 ];
+const DRAWING_EXPORT_TOOL_IDS: &[&str] = &["exportDocument"];
+const DRAWING_CLIPBOARD_RESERVED_IDS: &[&str] = &["copy","cut","paste"];
+const DRAWING_EXPORT_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+];
+#[path="🎮️commands/📤️export-document/🧵️export/🦀️.rs"]
+mod export_job;
+use export_job::DrawingExportCommandJobFactory;
+const DRAWING_IMAGE_RAW_BYTES:usize=89_481_584;
+const DRAWING_IMAGE_TOOL_IDS: &[&str] = &["importImage"];
+const DRAWING_IMAGE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importImage", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+];
+#[path="🎮️commands/📥️import-image/🧵️admission/🦀️.rs"]
+mod image_job;
+use image_job::DrawingImageCommandJobFactory;
+const DRAWING_PATH_TOOL_IDS: &[&str] = &["editPath"];
+const DRAWING_PATH_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editPath", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+];
+#[path="🎮️commands/✏️edit-path/🧵️simplify/🦀️.rs"]
+mod path_job;
+use path_job::DrawingPathCommandJobFactory;
 const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
 const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
 const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
@@ -1169,7 +1233,6 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSelectedOpacity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -1180,7 +1243,6 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLayerVisible", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editFill", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editPath", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "combineBoolean", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -1214,6 +1276,7 @@ impl DrawingWindowCommandWork {
 }
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>> for DrawingWindowCommandWork {
+    fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn extent(
@@ -1353,7 +1416,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         canonical_base_revision: request.canonical_base_revision,
         authoring_seed: request.authoring_seed.clone(),
     };
-    let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+    let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
         semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
@@ -1369,7 +1432,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         DRAWING_BOUNDED_RAW_BYTES,
         DRAWING_BOUNDED_WORK_ITEMS,
         work,
-    )?;
+    );
     Ok(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation))
 }
 //#endregion 🧵️BoundedCommands
@@ -1512,6 +1575,47 @@ impl DrawingGestureProofs {
     }
 }
 
+struct DrawingPathProofs;
+impl DrawingPathProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.draw.drawing@1/*#editor",
+        artifact_schema: "drawing.document",
+        factory: "DrawingPathCommandJobFactory",
+        factory_type: DrawingPathCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+        tools: ["editPath"]
+    }
+}
+
+struct DrawingImageProofs;
+impl DrawingImageProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.draw.drawing@1/*#editor",
+        artifact_schema: "drawing.document",
+        factory: "DrawingImageCommandJobFactory",
+        factory_type: DrawingImageCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::resumable(89_481_584, 4_096, 1, 262_144, 7_500, 1, 1),
+        tools: ["importImage"]
+    }
+}
+
+struct DrawingExportProofs;
+impl DrawingExportProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.draw.drawing@1/*#editor",
+        artifact_schema: "drawing.document",
+        factory: "DrawingExportCommandJobFactory",
+        factory_type: DrawingExportCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::resumable(4_096, 4_096, 1, 67_108_864, 7_500, 1, 1),
+        tools: ["exportDocument"]
+    }
+}
 struct DrawingBoundedProofs;
 impl DrawingBoundedProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -1525,7 +1629,7 @@ impl DrawingBoundedProofs {
         tools: [
             "setSnapshot", "commitDocument", "loadDocumentJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
             "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
-            "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput", "exportDocument", "editSelection", "editPath", "editFill",
+            "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput", "editSelection", "editFill",
             "deleteSelection",
     "nudgeSelectionLeft", "nudgeSelectionLeftFast", "nudgeSelectionRight", "nudgeSelectionRightFast", "nudgeSelectionUp", "nudgeSelectionUpFast", "nudgeSelectionDown", "nudgeSelectionDownFast",
         ]
@@ -1586,6 +1690,8 @@ impl Default for DrawingPlayApp {
 }
 
 impl ArtifactEditor for DrawingPlayApp {
+    fn completion_retirement_birth_bytes(value:&semio_framework_plugin::ArtifactToolCompletionValue<semio_framework_plugin::EditorApp<Self>>)->Option<usize>{completion::birth(value)}
+    fn admit_completion_retirement(value:&mut Option<semio_framework_plugin::ArtifactToolCompletionValue<semio_framework_plugin::EditorApp<Self>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{completion::admit(value,grant)}
     /// 📢️ The localized notices of the retained gesture owner's refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
         drawing_fault_notices()
@@ -1698,7 +1804,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        DrawingGestureProofs::bounded_first_step_tool_proofs().into_iter().chain(DrawingBoundedProofs::bounded_first_step_tool_proofs()).collect()
+        DrawingGestureProofs::bounded_first_step_tool_proofs().into_iter().chain(DrawingBoundedProofs::bounded_first_step_tool_proofs()).chain(DrawingPathProofs::bounded_first_step_tool_proofs()).chain(DrawingImageProofs::bounded_first_step_tool_proofs()).chain(DrawingExportProofs::bounded_first_step_tool_proofs()).collect()
     }
 
     fn mounted_job_prepare_snapshot_read(operation:semio_framework_plugin::AppRenderOperationContext,snapshot:&Self::Snapshot)->bool{geometry_session::prepare(operation,snapshot)}
@@ -1714,10 +1820,16 @@ impl ArtifactEditor for DrawingPlayApp {
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(DrawingGestureOperationJobFactory::new(&controller))?;
-        registry.register(DrawingBoundedCommandJobFactory::new(&controller))
+        registry.register(DrawingBoundedCommandJobFactory::new(&controller))?;
+        registry.register(DrawingPathCommandJobFactory::new(&controller))?;
+        registry.register(DrawingImageCommandJobFactory::new(&controller))?;
+        registry.register(DrawingExportCommandJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if DRAWING_EXPORT_TOOL_IDS.contains(&request.tool_id.as_str()) {return export_job::build(request).map(Some);}
+        if DRAWING_IMAGE_TOOL_IDS.contains(&request.tool_id.as_str()) {return image_job::build(request).map(Some);}
+        if DRAWING_PATH_TOOL_IDS.contains(&request.tool_id.as_str()) {return path_job::build(request).map(Some);}
         if DRAWING_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return drawing_bounded_tool_job(request).map(Some);
         }
@@ -1789,6 +1901,25 @@ impl ArtifactEditor for DrawingPlayApp {
     // stays reachable through the `set_snapshot`/`commit_document`/`load_document_json`/
     // `set_active_example` commands, which now emit `Effect::LoadDocument` (the sanctioned
     // non-history reset path) instead.
+
+    fn clipboard_media_type()->Option<semio_framework_plugin::MediaType>{Some(clipboard::media_type())}
+
+    fn copy_fragment(doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,interaction:&InteractionView<'_>)->Result<semio_framework_plugin::ClipboardFragment,semio_framework_plugin::ClipboardError>{
+        clipboard::copy(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids)
+    }
+
+    fn cut_operations(doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,interaction:&InteractionView<'_>)->Vec<DrawingMutation>{
+        clipboard::cut(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids).unwrap_or_default()
+    }
+
+    fn paste_operations(doc:&ArtifactView<'_,DrawingSnapshot>,fragment:&semio_framework_plugin::ClipboardFragment,placement:&semio_framework_plugin::kernel::PastePlacement)->Result<Vec<DrawingMutation>,semio_framework_plugin::ClipboardError>{
+        clipboard::paste(doc.snapshot,clipboard::decode(fragment)?,placement,None).map(|(mutations,_)|mutations)
+    }
+
+    fn build_reserved_tool_job(request:semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<Self>>)->Result<Option<semio_framework_plugin::ArtifactReservedToolJob>,Fault>{
+        if !DRAWING_CLIPBOARD_RESERVED_IDS.contains(&request.tool_id.as_str()){return Ok(None);}
+        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(clipboard::job::DrawingClipboardJob::new(request)?)))
+    }
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
     fn command_id(command: &DrawingCommand) -> &'static str {
@@ -1975,6 +2106,8 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                     .with_args([drawing_layer_kind_arg()]),
             )
             .action_interactive_job("addLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette:false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("importImage",LocalizedLabel::native("Import PNG Image","PNG-Bild importieren"),ActionKind::Mutation) })
+            .action_interactive_job("importImage", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(
                 semio_framework_plugin::ActionDefinition::bounded_catalog("combineBoolean", LocalizedLabel::native("Combine Boolean", "Boolean kombinieren"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native(
@@ -1988,9 +2121,9 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                             LocalizedLabel::native("Operation", "Operation"),
                             vec![
                                 semio_framework_plugin::ActionArgOption::new("union", LocalizedLabel::native("Union", "Vereinigung")),
-                                semio_framework_plugin::ActionArgOption::new("intersect", LocalizedLabel::native("Intersect", "Schnitt")),
-                                semio_framework_plugin::ActionArgOption::new("subtract", LocalizedLabel::native("Subtract", "Differenz")),
-                                semio_framework_plugin::ActionArgOption::new("exclude", LocalizedLabel::native("Exclude", "Ausschluss")),
+                                semio_framework_plugin::ActionArgOption::new("intersection", LocalizedLabel::native("Intersect", "Schnitt")),
+                                semio_framework_plugin::ActionArgOption::new("difference", LocalizedLabel::native("Subtract", "Differenz")),
+                                semio_framework_plugin::ActionArgOption::new("xor", LocalizedLabel::native("Exclude", "Ausschluss")),
                             ],
                         )
                         .default_value(&"union")
@@ -2081,19 +2214,23 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .action_with(
                 semio_framework_plugin::ActionDefinition { icon_id: "download".into(), ..semio_framework_plugin::ActionDefinition::bounded_catalog("exportDocument", LocalizedLabel::native("Export Drawing", "Zeichnung exportieren"), ActionKind::View) }
                     .describe(LocalizedLabel::native(
-                        "Renders the drawing to a downloadable file — a vector-painted PDF page or an SVG document.",
-                        "Rendert die Zeichnung in eine herunterladbare Datei — eine vektorgezeichnete PDF-Seite oder ein SVG-Dokument.",
+                        "Renders the drawing to a downloadable PNG image, vector-painted PDF page or SVG document.",
+                        "Rendert die Zeichnung als PNG-Bild, vektorgezeichnete PDF-Seite oder SVG-Dokument in eine herunterladbare Datei.",
                     ))
-                    .use_when(["export the document as pdf", "save this drawing as an svg", "download the drawing"])
+                    .use_when(["export the document as png", "export the document as pdf", "save this drawing as an svg", "download the drawing"])
                     .with_args([semio_framework_plugin::ActionArgDef::select(
                         "format",
                         LocalizedLabel::native("Format", "Format"),
                         vec![
+                            semio_framework_plugin::ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG")),
                             semio_framework_plugin::ActionArgOption::new("pdf", LocalizedLabel::native("PDF", "PDF")),
                             semio_framework_plugin::ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")),
                         ],
                     )
-                    .default_value(&export_document::DEFAULT_EXPORT_FORMAT)]),
+                    .default_value(&export_document::DEFAULT_EXPORT_FORMAT),
+                    semio_framework_plugin::ActionArgDef {schema:semio_framework::ArgSchema::number(Some(1.0),Some(16384.0),Some(1.0),true),..semio_framework_plugin::ActionArgDef::index("width",LocalizedLabel::native("PNG Width in Pixels","PNG-Breite in Pixeln"))},
+                    semio_framework_plugin::ActionArgDef {schema:semio_framework::ArgSchema::number(Some(1.0),Some(16384.0),Some(1.0),true),..semio_framework_plugin::ActionArgDef::index("height",LocalizedLabel::native("PNG Height in Pixels","PNG-Höhe in Pixeln"))},
+                    semio_framework_plugin::ActionArgDef::toggle("transparent",LocalizedLabel::native("Transparent PNG Background","Transparenter PNG-Hintergrund")).default_value(&true)]),
             )
             .action_interactive_job("exportDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🔧️ Internal content operations — inspector/layer-panel/import-bound, not palette commands,
@@ -2318,6 +2455,8 @@ mod example;
 
 #[path="🧵️geometry/🦀️.rs"]
 pub mod geometry_session;
+#[path="📬️completion/🦀️.rs"]
+mod completion;
 
 /// 📣️ The en/de notices of every `drawing.gesture.*` refusal code (design §20.12).
 pub fn drawing_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {

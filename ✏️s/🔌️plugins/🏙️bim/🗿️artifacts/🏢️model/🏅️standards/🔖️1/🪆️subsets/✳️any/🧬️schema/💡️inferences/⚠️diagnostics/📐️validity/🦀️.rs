@@ -2,13 +2,17 @@
 //! break the code (from `stair-runs`).
 
 use super::{Diagnostic, DiagnosticCode, Inputs};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::MAX_TILT;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, extents_of, seg};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::stringer_ignored;
 use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue;
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{BLONDEL_MAX, BLONDEL_MIN};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
-use crate::{Axis, ModelSnapshot, Point2, SpaceBoundary, Vertex};
+use crate::{Axis, CurtainGrid, CurtainPanel, ModelSnapshot, Point2, SpaceBoundary, Vertex};
 use semio_framework_geometry::loops;
 
 /// 📏️ Lengths below this (metres) are no length.
@@ -86,18 +90,22 @@ fn degenerate(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found
             let (base, top) = vertical_of(curtain.base_offset, &curtain.top, own, target_of(&curtain.top, &inputs.levels));
             height(found, storey, id, top - base);
         }
-        if !(curtain.u_spacing > LENGTH_EPS && curtain.v_spacing > LENGTH_EPS) {
+        let kind = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type);
+        let rules = [curtain.u_grid.as_ref().or(kind.map(|kind| &kind.u_grid)), curtain.v_grid.as_ref().or(kind.map(|kind| &kind.v_grid))];
+        if rules.iter().flatten().any(|rule| matches!(rule, CurtainGrid::Spacing { spacing } if !(*spacing > LENGTH_EPS))) {
             found.push(Diagnostic::new(DiagnosticCode::DegenerateSpacing, &[id]).on(storey));
         }
-        let (width, depth) = extents_of(&curtain.mullion);
-        if !(width > LENGTH_EPS && depth > LENGTH_EPS) {
+        if kind.is_some_and(|kind| [&kind.interior_mullion, &kind.border_mullion].into_iter().any(|profile| { let (width, depth) = extents_of(profile); !(width > LENGTH_EPS && depth > LENGTH_EPS) })) {
             found.push(Diagnostic::new(DiagnosticCode::DegenerateProfile, &[id]).on(storey));
         }
     }
     for (id, column) in snapshot.columns.iter().filter(|(_, row)| row.storey == storey) {
-        if !finite_point(&column.position) || !column.rotation.is_finite() {
+        if !finite_point(&column.position) || !column.rotation.is_finite() || !column.tilt.is_none_or(|tilt| tilt.direction.is_finite() && tilt.angle.is_finite()) {
             found.push(Diagnostic::new(DiagnosticCode::NonFinite, &[id]).on(storey));
             continue;
+        }
+        if let Some(tilt) = column.tilt.filter(|tilt| !(tilt.angle > 0.0 && tilt.angle <= MAX_TILT)) {
+            found.push(Diagnostic::new(DiagnosticCode::ColumnTiltInvalid, &[id]).on(storey).with("angle", tilt.angle));
         }
         if let Some(kind) = snapshot.column_types.get(&column.column_type) {
             let (width, depth) = extents_of(&kind.profile);
@@ -109,14 +117,11 @@ fn degenerate(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found
         height(found, storey, id, top - base);
     }
     for (id, beam) in snapshot.beams.iter().filter(|(_, row)| row.storey == storey) {
-        if !(finite_point(&beam.start) && finite_point(&beam.end) && beam.top_offset.is_finite()) {
+        if !(beam.top_offset.is_finite() && beam.end_top_offset.is_none_or(f64::is_finite)) {
             found.push(Diagnostic::new(DiagnosticCode::NonFinite, &[id]).on(storey));
             continue;
         }
-        let length = (beam.end.x - beam.start.x).hypot(beam.end.y - beam.start.y);
-        if length <= LENGTH_EPS {
-            found.push(Diagnostic::new(DiagnosticCode::DegenerateAxis, &[id]).on(storey).with("length", length));
-        }
+        axis(found, storey, id, &beam.axis);
         if let Some(kind) = snapshot.beam_types.get(&beam.beam_type) {
             let (width, depth) = extents_of(&kind.profile);
             if !(width > LENGTH_EPS && depth > LENGTH_EPS) {
@@ -128,11 +133,31 @@ fn degenerate(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found
         outline(found, storey, id, &slab.boundary);
         slab.holes.iter().for_each(|hole| outline(found, storey, id, hole));
     }
+    for (id, ceiling) in snapshot.ceilings.iter().filter(|(_, row)| row.storey == storey) {
+        if !ceiling.offset.is_finite() || !ceiling.slope.is_none_or(|slope| slope.direction.is_finite() && slope.angle.is_finite()) {
+            found.push(Diagnostic::new(DiagnosticCode::NonFinite, &[id]).on(storey));
+            continue;
+        }
+        outline(found, storey, id, &ceiling.boundary);
+        ceiling.holes.iter().for_each(|hole| outline(found, storey, id, hole));
+        if finite_loop(&ceiling.boundary) && snapshot.ceiling_types.contains_key(&ceiling.ceiling_type) {
+            let (bottom, top) = ceilings::span(snapshot, ceiling, own);
+            if top > own.top_elevation + LENGTH_EPS || bottom < own.elevation - LENGTH_EPS {
+                found.push(Diagnostic::new(DiagnosticCode::CeilingOutsideStorey, &[id]).on(storey).with("top", top - own.elevation).with("bottom", bottom - own.elevation).with("height", own.top_elevation - own.elevation));
+            }
+        }
+    }
     for (id, roof) in snapshot.roofs.iter().filter(|(_, row)| row.storey == storey) {
         outline(found, storey, id, &roof.footprint);
     }
     for (id, railing) in snapshot.railings.iter().filter(|(_, row)| row.storey == storey) {
-        if !railing.path.iter().all(finite_point) {
+        if let Some(host) = railing.host.as_ref() {
+            if !host.inset.is_finite() {
+                found.push(Diagnostic::new(DiagnosticCode::NonFinite, &[id]).on(storey));
+            } else if rail_hosts::unresolved(railing, snapshot.slabs.get(&host.element)) {
+                found.push(Diagnostic::new(DiagnosticCode::RailingHostUnresolved, &[id, &host.element]).on(storey));
+            }
+        } else if !railing.path.iter().all(finite_point) {
             found.push(Diagnostic::new(DiagnosticCode::NonFinite, &[id]).on(storey));
         } else if railing.path.windows(2).map(|pair| (pair[1].x - pair[0].x).hypot(pair[1].y - pair[0].y)).sum::<f64>() <= LENGTH_EPS {
             found.push(Diagnostic::new(DiagnosticCode::DegeneratePath, &[id]).on(storey));
@@ -190,6 +215,51 @@ fn stairs(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found: &m
         if !run.compliance.blondel_ok {
             found.push(Diagnostic::new(DiagnosticCode::StairComfort, &[id]).on(storey).with("stride", run.stride).with("minimum", BLONDEL_MIN).with("maximum", BLONDEL_MAX));
         }
+        if stringer_ignored(stair) {
+            found.push(Diagnostic::new(DiagnosticCode::StairStringerIgnored, &[id]).on(storey));
+        }
+    }
+}
+
+fn ramps(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found: &mut Vec<Diagnostic>) {
+    for (id, ramp) in snapshot.ramps.iter().filter(|(_, row)| row.storey == storey) {
+        if !(ramp.path.iter().all(|vertex| finite_point(&vertex.point) && vertex.bulge.is_finite()) && ramp.width.is_finite() && ramp.thickness.is_finite() && ramp.max_slope.is_finite() && ramp.base_offset.is_finite()) {
+            found.push(Diagnostic::new(DiagnosticCode::NonFinite, &[id]).on(storey));
+            continue;
+        }
+        let Some(run) = inputs.ramp_runs.get(id.as_str()) else { continue };
+        if run.length <= LENGTH_EPS {
+            found.push(Diagnostic::new(DiagnosticCode::DegenerateAxis, &[id]).on(storey).with("length", run.length));
+        } else if !run.compliance.run_ok {
+            found.push(Diagnostic::new(DiagnosticCode::RampNoRun, &[id]).on(storey).with("rise", run.rise));
+        } else if !run.compliance.slope_ok {
+            found.push(Diagnostic::new(DiagnosticCode::RampSlope, &[id]).on(storey).with("slope_percent", run.slope * 100.0).with("limit_percent", ramp.max_slope * 100.0).with("rise", run.rise.abs()).with("run", run.run_length));
+        }
+    }
+}
+
+fn curtains(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found: &mut Vec<Diagnostic>) {
+    for (id, curtain) in snapshot.curtain_walls.iter().filter(|(_, row)| row.storey == storey) {
+        let Some(layout) = inputs.curtains.get(id.as_str()) else { continue };
+        for stray in &layout.stray {
+            let row = &snapshot.curtain_panel_overrides[stray];
+            found.push(Diagnostic::new(DiagnosticCode::CurtainOverrideOutOfGrid, &[stray, id]).on(storey).with("u", f64::from(row.u)).with("v", f64::from(row.v)).with("u_panels", f64::from(layout.u_panels)).with("v_panels", f64::from(layout.v_panels)));
+        }
+        if !layout.repeated.is_empty() {
+            let mut ids: Vec<&str> = layout.repeated.iter().map(String::as_str).collect();
+            ids.sort_unstable();
+            found.push(Diagnostic::new(DiagnosticCode::CurtainDuplicateOverride, &ids).on(storey));
+        }
+        let ignored = layout.ignored_u.len() + layout.ignored_v.len();
+        if ignored > 0 {
+            found.push(Diagnostic::new(DiagnosticCode::CurtainGridLineOutside, &[id]).on(storey).with("ignored", ignored as f64));
+        }
+        for cell in layout.overrides.iter().filter(|cell| cell.v > 0 && matches!(cell.panel, CurtainPanel::Door { .. })) {
+            found.push(Diagnostic::new(DiagnosticCode::CurtainDoorNotAtBase, &[&cell.id, id]).on(storey).with("v", f64::from(cell.v)));
+        }
+        if layout.v_panels > 1 && matches!(layout.panel, Some(CurtainPanel::Door { .. })) && snapshot.curtain_wall_types.contains_key(&curtain.curtain_wall_type) {
+            found.push(Diagnostic::new(DiagnosticCode::CurtainDoorNotAtBase, &[id]).on(storey).with("v", 1.0));
+        }
     }
 }
 
@@ -214,14 +284,15 @@ fn roofs(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found: &mu
     }
 }
 
-/// 🏠️ The diagnostic code of a roof fallback: a roof that is flat although its shape asks for more, or whose overhang collapsed.
+/// 🏠️ The diagnostic code of a roof fallback: a roof that is flat although its shape asks for more, whose overhang collapsed, or whose gable ends turned into hips.
 pub fn fallback_code(fallback: RoofFallback) -> DiagnosticCode {
     match fallback {
         RoofFallback::CurvedFootprint => DiagnosticCode::RoofFlatCurved,
-        RoofFallback::NonConvexFootprint => DiagnosticCode::RoofFlatNonConvex,
+        RoofFallback::SkeletonFailed => DiagnosticCode::RoofFlatSkeleton,
         RoofFallback::DegenerateFootprint => DiagnosticCode::RoofFlatDegenerate,
         RoofFallback::InvalidPitch => DiagnosticCode::RoofFlatPitch,
         RoofFallback::OverhangCollapsed => DiagnosticCode::RoofOverhangCollapsed,
+        RoofFallback::GableEndsAdjustToHip => DiagnosticCode::RoofGableToHip,
     }
 }
 
@@ -231,6 +302,8 @@ pub fn storey(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>) -> Ve
     degenerate(snapshot, storey, inputs, &mut found);
     openings(snapshot, storey, inputs, &mut found);
     stairs(snapshot, storey, inputs, &mut found);
+    ramps(snapshot, storey, inputs, &mut found);
+    curtains(snapshot, storey, inputs, &mut found);
     spaces(snapshot, storey, inputs, &mut found);
     roofs(snapshot, storey, inputs, &mut found);
     found

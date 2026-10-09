@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/authority.json",
+  "title": "🧭️ Developer control plane authority",
+  "type": "object",
+  "required": ["scripts"],
+  "properties": {
+    "scripts": {
+      "type": "object",
+      "required": ["nx", "setup", "dashboard", "dashboard:install"],
+      "additionalProperties": false,
+      "properties": {
+        "nx": {"const": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx"},
+        "setup": {"const": "bun nx run workspace:setup"},
+        "dashboard": {"const": "bun nx run @semio-tech/repo-dashboard-rs:run --outputStyle=stream"},
+        "dashboard:install": {"const": "bun nx run @semio-tech/repo-dashboard-rs:build --excludeTaskDependencies --skip-nx-cache --outputStyle=stream"}
+      }
+    }
+  }
+}

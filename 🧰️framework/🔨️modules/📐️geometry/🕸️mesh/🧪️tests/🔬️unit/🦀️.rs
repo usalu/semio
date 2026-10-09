@@ -224,3 +224,78 @@ fn crease_normals_keep_hard_edges_and_smooth_curves() {
     let loose = cube.crease_normals(100f64.to_radians());
     assert!(loose.normals.iter().any(|n| (n[0].abs() - n[2].abs()).abs() < 1e-9 && n[0] != 0.0 && n[2] != 0.0), "wide crease averages across edges");
 }
+
+fn rectangle_in_half_plane(inner: f64, outer: f64, height: f64) -> Vec<Point> {
+    vec![Point::new(inner, 0.0), Point::new(outer, 0.0), Point::new(outer, height), Point::new(inner, height)]
+}
+
+#[test]
+fn revolving_a_rectangle_about_the_axis_makes_a_cylinder() {
+    let mesh = revolve_profile(&rectangle_in_half_plane(0.0, 1.0, 2.0), std::f64::consts::TAU, 1e-4);
+    consistent(&mesh, "cylinder");
+    close(mesh.volume(), std::f64::consts::PI * 2.0, 5e-4, "cylinder volume");
+    close(mesh.surface_area(), 6.0 * std::f64::consts::PI, 1e-3, "cylinder surface");
+}
+
+#[test]
+fn revolving_away_from_the_axis_makes_a_ring_and_either_orientation_works() {
+    let ring = rectangle_in_half_plane(0.5, 1.0, 1.0);
+    let mut reversed = ring.clone();
+    reversed.reverse();
+    for profile in [ring, reversed] {
+        let mesh = revolve_profile(&profile, std::f64::consts::TAU, 1e-4);
+        consistent(&mesh, "ring");
+        close(mesh.volume(), std::f64::consts::PI * (1.0 - 0.25), 5e-4, "ring volume");
+    }
+}
+
+#[test]
+fn a_partial_sweep_is_capped_and_scales_with_the_angle() {
+    for fraction in [0.25, 0.5, 0.75] {
+        let mesh = revolve_profile(&rectangle_in_half_plane(0.25, 1.0, 1.5), std::f64::consts::TAU * fraction, 1e-4);
+        consistent(&mesh, "wedge");
+        close(mesh.volume(), std::f64::consts::PI * (1.0 - 0.0625) * 1.5 * fraction, 5e-4, "wedge volume");
+    }
+}
+
+#[test]
+fn an_invalid_revolution_is_empty() {
+    assert!(revolve_profile(&rectangle_in_half_plane(-0.5, 1.0, 1.0), 1.0, 1e-3).indices.is_empty(), "crosses the axis");
+    assert!(revolve_profile(&rectangle_in_half_plane(0.0, 1.0, 1.0), 0.0, 1e-3).indices.is_empty(), "no sweep");
+    assert!(revolve_profile(&rectangle_in_half_plane(0.0, 1.0, 1.0), f64::NAN, 1e-3).indices.is_empty(), "not finite");
+    assert!(revolve_profile(&[Point::new(1.0, 0.0), Point::new(2.0, 0.0)], 1.0, 1e-3).indices.is_empty(), "two points");
+}
+
+fn section(width: f64, depth: f64) -> Vec<Point> {
+    vec![Point::new(-width / 2.0, -depth), Point::new(width / 2.0, -depth), Point::new(width / 2.0, 0.0), Point::new(-width / 2.0, 0.0)]
+}
+
+#[test]
+fn a_ramped_sweep_with_no_rise_is_the_plain_sweep() {
+    let path = [BulgeSeg::line(Point::new(0.0, 0.0), Point::new(4.0, 0.0))];
+    let (plain, ramped) = (sweep_profile(&section(0.3, 0.5), &[], &path, 2.0, 1e-4), sweep_profile_ramped(&section(0.3, 0.5), &[], &path, 2.0, 0.0, 1e-4));
+    assert_eq!(plain, ramped);
+}
+
+#[test]
+fn a_ramped_straight_sweep_keeps_the_section_perpendicular_to_the_climbing_axis() {
+    let (rise, run, width, depth) = (3.0_f64, 4.0_f64, 0.3, 0.5);
+    let mesh = sweep_profile_ramped(&section(width, depth), &[], &[BulgeSeg::line(Point::new(0.0, 0.0), Point::new(run, 0.0))], 1.0, rise, 1e-4);
+    close(mesh.volume(), width * depth * run.hypot(rise), 1e-9, "section area times the sloping length");
+    let (lo, hi) = mesh.bounds().expect("a solid");
+    close(hi[2], 1.0 + rise, 1e-9, "the top line ends at base + rise");
+    close(lo[2], 1.0 - depth * run / run.hypot(rise), 1e-9, "the lowest start corner hangs perpendicular to the axis");
+    assert!(mesh.is_watertight() || mesh.welded().is_watertight());
+}
+
+#[test]
+fn a_ramped_arc_sweep_climbs_with_the_arc_length() {
+    let arc = BulgeSeg::new(Point::new(0.0, 0.0), Point::new(4.0, 0.0), 0.4);
+    let mesh = sweep_profile_ramped(&section(0.3, 0.5), &[], &[arc], 0.0, -1.2, 1e-4);
+    let (lo, hi) = mesh.bounds().expect("a solid");
+    close(hi[2], 0.0, 1e-6, "the top starts on the reference line");
+    assert!(lo[2] < -1.2, "the descending end hangs below the reference line");
+    let level = sweep_profile(&section(0.3, 0.5), &[], &[arc], 0.0, 1e-4);
+    assert!(mesh.volume() > level.volume(), "the sloping length is longer than the plan length");
+    close(mesh.volume() / level.volume(), (arc.length().powi(2) + 1.2_f64.powi(2)).sqrt() / arc.length(), 5e-2, "volume scales about with the 3D length (the hanging section twists with the torsion of the helix)");
+}

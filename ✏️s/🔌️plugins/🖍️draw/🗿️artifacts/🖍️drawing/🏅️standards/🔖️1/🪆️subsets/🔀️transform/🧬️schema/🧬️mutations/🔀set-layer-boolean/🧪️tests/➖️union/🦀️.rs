@@ -48,7 +48,7 @@ async fn only_the_boolean_variants_operation_changes() {
         panic!("set-layer-boolean-operation must not change the layer's variant");
     };
     assert_eq!(before_boolean.operation, "union", "union-to-subtract's before-snapshot must start on union");
-    assert_eq!(after_boolean.operation, "subtract", "set-layer-boolean-operation must write the payload's boolean_operation");
+    assert_eq!(after_boolean.operation, "difference", "set-layer-boolean-operation must write the payload's boolean_operation");
     assert_eq!(after_boolean.children, before_boolean.children, "changing the operation must not disturb the operand list");
     assert_eq!(find_drawing_layer(&snapshot, "shape-a"), find_drawing_layer(&base, "shape-a"), "the sibling shape layer is out of this mutation's reach");
 }
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "set-layer-boolean-operation/union-to-subtract: subtract differs from union, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("set-layer-boolean-operation's diff pins a layers delta");
     assert_eq!(delta.modified[0].id, "boolean-a", "the patch is addressed to the boolean layer");
-    assert_eq!(delta.modified[0].patch.boolean_operation.as_deref(), Some("subtract"), "the patch pins the boolean_operation field");
+    assert_eq!(delta.modified[0].patch.boolean_operation.as_deref(), Some("difference"), "the patch pins the boolean_operation field");
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one: one `modified` entry addressing `boolean-a` and
@@ -109,7 +109,7 @@ async fn produces_committed_diff() {
     assert_eq!(delta.modified.len(), 1, "exactly one layer is patched");
     assert_eq!(delta.modified[0].id, "boolean-a", "the entry addresses the boolean layer, never its operands");
     let patch = &delta.modified[0].patch;
-    assert_eq!(patch.boolean_operation.as_deref(), Some("subtract"), "the boolean-operation lane carries the new operation");
+    assert_eq!(patch.boolean_operation.as_deref(), Some("difference"), "the boolean-operation lane carries the new operation");
     assert!(patch.trace_params.is_none(), "the sibling variant-specific lane stays empty");
 }
 

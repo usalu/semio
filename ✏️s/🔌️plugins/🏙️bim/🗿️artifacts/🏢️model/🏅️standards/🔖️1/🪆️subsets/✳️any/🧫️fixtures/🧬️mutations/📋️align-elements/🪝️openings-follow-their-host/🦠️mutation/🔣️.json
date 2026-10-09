@@ -1,0 +1,9 @@
+{
+  "mutation": "alignElements",
+  "ids": [
+    "o-door"
+  ],
+  "axis": "X",
+  "edge": "Min",
+  "target": 2
+}

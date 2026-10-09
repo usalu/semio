@@ -96,4 +96,4 @@ export {
   type ElementsSurfaceChromeInput,
 } from "../🌓️appearance/🟦️.ts";
 export { presenceColor, presenceCssVar, presencePaint, type PresenceAppearance, type PresenceHsl } from "../../../🔨️modules/👥️presence-presentation/🟦️.ts";
-export { ResponsiveLabel, shellChromeTitleClassName } from "../🟦️.tsx";
+export { ResponsiveLabel, shellChromeTitleClassName } from "./responsive-label/🟦️.tsx";

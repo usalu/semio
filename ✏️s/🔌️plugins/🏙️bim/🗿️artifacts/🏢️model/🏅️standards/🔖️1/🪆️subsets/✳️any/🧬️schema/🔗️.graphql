@@ -11,12 +11,14 @@ type ModelArtifact {
   beam_types: [BeamTypeRow!]! @state(class: ARTIFACT)
   window_types: [WindowTypeRow!]! @state(class: ARTIFACT)
   door_types: [DoorTypeRow!]! @state(class: ARTIFACT)
+  curtain_wall_types: [CurtainWallTypeRow!]! @state(class: ARTIFACT)
   sites: [SiteRow!]! @state(class: ARTIFACT)
   buildings: [BuildingRow!]! @state(class: ARTIFACT)
   storeys: [StoreyRow!]! @state(class: ARTIFACT)
   grids: [GridLineRow!]! @state(class: ARTIFACT)
   walls: [WallRow!]! @state(class: ARTIFACT)
   curtain_walls: [CurtainWallRow!]! @state(class: ARTIFACT)
+  curtain_panel_overrides: [CurtainPanelOverrideRow!]! @state(class: ARTIFACT)
   columns: [ColumnRow!]! @state(class: ARTIFACT)
   beams: [BeamRow!]! @state(class: ARTIFACT)
   slabs: [SlabRow!]! @state(class: ARTIFACT)
@@ -24,9 +26,140 @@ type ModelArtifact {
   openings: [OpeningRow!]! @state(class: ARTIFACT)
   stairs: [StairRow!]! @state(class: ARTIFACT)
   railings: [RailingRow!]! @state(class: ARTIFACT)
+  ramps: [RampRow!]! @state(class: ARTIFACT)
   spaces: [SpaceRow!]! @state(class: ARTIFACT)
+  ceiling_types: [CeilingTypeRow!]! @state(class: ARTIFACT)
+  ceilings: [CeilingRow!]! @state(class: ARTIFACT)
+  zones: [ZoneRow!]! @state(class: ARTIFACT)
+  area_schemes: [AreaSchemeRow!]! @state(class: ARTIFACT)
+  views: [ViewRow!]! @state(class: ARTIFACT)
+  sheets: [SheetRow!]! @state(class: ARTIFACT)
+  viewports: [ViewportRow!]! @state(class: ARTIFACT)
+  sheet_revisions: [SheetRevisionRow!]! @state(class: ARTIFACT)
+  dimensions: [DimensionRow!]! @state(class: ARTIFACT)
+  tags: [TagRow!]! @state(class: ARTIFACT)
+  text_notes: [TextNoteRow!]! @state(class: ARTIFACT)
+  leaders: [LeaderRow!]! @state(class: ARTIFACT)
+  annotation_styles: [AnnotationStyleRow!]! @state(class: ARTIFACT)
+  families: [FamilyRow!]! @state(class: ARTIFACT)
+  family_parameters: [FamilyParameterRow!]! @state(class: ARTIFACT)
+  family_solids: [FamilySolidRow!]! @state(class: ARTIFACT)
+  wall_sweeps: [WallSweepRow!]! @state(class: ARTIFACT)
+  schedules: [ScheduleRow!]! @state(class: ARTIFACT)
+  property_templates: [PropertyTemplateRow!]! @state(class: ARTIFACT)
+  classification_systems: [ClassificationSystemRow!]! @state(class: ARTIFACT)
   properties: [PropertySetRow!]! @state(class: ARTIFACT)
-  classifications: [ClassificationRow!]! @state(class: ARTIFACT)
+  classifications: [ClassificationSetRow!]! @state(class: ARTIFACT)
+}
+
+enum PropertyKind {
+  Text
+  Real
+  Integer
+  Boolean
+  Length
+  Area
+  Volume
+  Angle
+}
+
+enum TemplateTarget {
+  Site
+  Building
+  Storey
+  Wall
+  CurtainWall
+  Column
+  Beam
+  Slab
+  Ceiling
+  Roof
+  Window
+  Door
+  Void
+  Stair
+  Ramp
+  Railing
+  Space
+  Zone
+  WallType
+  SlabType
+  CeilingType
+  RoofType
+  ColumnType
+  BeamType
+  WindowType
+  DoorType
+}
+
+enum AnchorEnd {
+  Start
+  End
+}
+
+enum WallSide {
+  Left
+  Right
+}
+
+enum TagCategory {
+  Name
+  Type
+  Number
+  Size
+}
+
+enum Terminator {
+  Tick
+  Arrow
+  Dot
+}
+
+enum DimensionUnit {
+  Metre
+  Centimetre
+  Millimetre
+}
+
+enum FamilyCategory {
+  Furniture
+  Equipment
+  Casework
+  Plumbing
+  Lighting
+  Mechanical
+  Electrical
+  Generic
+  Profile
+}
+
+enum ParameterKind {
+  Length
+  Angle
+  Real
+  Integer
+  Boolean
+  Text
+  Material
+}
+
+enum SolidAxis {
+  X
+  Y
+  Z
+}
+
+enum IsoSize {
+  A0
+  A1
+  A2
+  A3
+  A4
+}
+
+enum Orientation {
+  Landscape
+  Portrait
 }
 
 enum MaterialCategory {
@@ -91,6 +224,271 @@ enum RiserKind {
   Closed
 }
 
+enum ScheduleCategory {
+  Wall
+  CurtainWall
+  Slab
+  Roof
+  Column
+  Beam
+  Window
+  Door
+  Void
+  Stair
+  Railing
+  Space
+  Finish
+  Material
+}
+
+enum ScheduleField {
+  Id
+  Name
+  Kind
+  Storey
+  Level
+  Type
+  Phase
+  Material
+  Host
+  Number
+  Usage
+  Surface
+  Swing
+  Leaves
+  Panes
+  Count
+  Length
+  Width
+  Height
+  Perimeter
+  GrossSideArea
+  OpeningArea
+  NetSideArea
+  GrossArea
+  NetArea
+  SurfaceArea
+  GrossVolume
+  NetVolume
+  Mass
+  Risers
+  Thickness
+  LayerArea
+  LayerVolume
+  LayerMass
+  FinishArea
+}
+
+enum ScheduleOp {
+  Equals
+  NotEquals
+  Contains
+  Greater
+  GreaterOrEqual
+  Less
+  LessOrEqual
+  Empty
+  NotEmpty
+}
+
+enum EndJoin {
+  Miter
+  Butt
+  None
+}
+
+enum ViewKind {
+  Plan
+  CeilingPlan
+  Section
+  Elevation
+  Orthographic
+  Perspective
+}
+
+enum DetailLevel {
+  Coarse
+  Medium
+  Fine
+}
+
+enum ViewCategory {
+  Walls
+  CurtainWalls
+  Columns
+  Beams
+  Slabs
+  Roofs
+  Openings
+  Stairs
+  Railings
+  Spaces
+  Grids
+}
+
+enum HostSide {
+  Left
+  Right
+}
+
+enum AreaMeasure {
+  Gross
+  Net
+}
+
+# externally tagged: exactly one member is present
+type AnnotationAnchor {
+  [object Object]: AnnotationAnchorPoint
+  [object Object]: AnnotationAnchorWallFace
+  [object Object]: AnnotationAnchorWallAxis
+  [object Object]: AnnotationAnchorWallEnd
+  [object Object]: AnnotationAnchorOpeningCentre
+  [object Object]: AnnotationAnchorGrid
+  [object Object]: AnnotationAnchorColumnCentre
+}
+
+type AnnotationAnchorPoint {
+  point: Point2!
+}
+
+type AnnotationAnchorWallFace {
+  wall: String!
+  side: WallSide!
+}
+
+type AnnotationAnchorWallAxis {
+  wall: String!
+}
+
+type AnnotationAnchorWallEnd {
+  wall: String!
+  end: AnchorEnd!
+}
+
+type AnnotationAnchorOpeningCentre {
+  opening: String!
+}
+
+type AnnotationAnchorGrid {
+  grid: String!
+}
+
+type AnnotationAnchorColumnCentre {
+  column: String!
+}
+
+# externally tagged: exactly one member is present
+type ParametricProfile {
+  [object Object]: ParametricProfileRectangle
+  [object Object]: ParametricProfileCircle
+  [object Object]: ParametricProfileIShape
+  [object Object]: ParametricProfilePolygon
+}
+
+type ParametricProfileRectangle {
+  width: String!
+  depth: String!
+}
+
+type ParametricProfileCircle {
+  diameter: String!
+}
+
+type ParametricProfileIShape {
+  width: String!
+  depth: String!
+  web: String!
+  flange: String!
+}
+
+type ParametricProfilePolygon {
+  points: [ExprPoint!]!
+}
+
+# externally tagged: exactly one member is present
+type SolidShape {
+  [object Object]: SolidShapeExtrusion
+  [object Object]: SolidShapeRevolution
+  [object Object]: SolidShapeSweep
+  [object Object]: SolidShapeCuboid
+}
+
+type SolidShapeExtrusion {
+  profile: ParametricProfile!
+  base: String!
+  height: String!
+}
+
+type SolidShapeRevolution {
+  profile: ParametricProfile!
+  axis: SolidAxis!
+  angle: String!
+}
+
+type SolidShapeSweep {
+  profile: ParametricProfile!
+  path: [ExprPoint!]!
+}
+
+type SolidShapeCuboid {
+  x: String!
+  y: String!
+  z: String!
+  width: String!
+  depth: String!
+  height: String!
+}
+
+# externally tagged: exactly one member is present
+type Paper {
+  [object Object]: PaperIso
+  [object Object]: PaperCustom
+}
+
+type PaperIso {
+  size: IsoSize!
+}
+
+type PaperCustom {
+  width: Float!
+  height: Float!
+}
+
+# externally tagged: exactly one member is present
+type CurtainGrid {
+  [object Object]: CurtainGridSpacing
+  [object Object]: CurtainGridLines
+}
+
+type CurtainGridSpacing {
+  spacing: Float!
+}
+
+type CurtainGridLines {
+  positions: [Float!]!
+}
+
+# externally tagged: exactly one member is present
+type CurtainPanel {
+  [object Object]: Boolean
+  [object Object]: CurtainPanelSolid
+  [object Object]: CurtainPanelDoor
+  [object Object]: CurtainPanelWindow
+  [object Object]: Boolean
+}
+
+type CurtainPanelSolid {
+  material: String!
+}
+
+type CurtainPanelDoor {
+  door_type: String!
+}
+
+type CurtainPanelWindow {
+  window_type: String!
+}
+
 # externally tagged: exactly one member is present
 type Axis {
   [object Object]: AxisLine
@@ -113,6 +511,9 @@ type TopConstraint {
   [object Object]: TopConstraintUnconnected
   [object Object]: TopConstraintStoreyTop
   [object Object]: TopConstraintStorey
+  [object Object]: TopConstraintRoof
+  [object Object]: TopConstraintSlab
+  [object Object]: TopConstraintCeiling
 }
 
 type TopConstraintUnconnected {
@@ -128,12 +529,28 @@ type TopConstraintStorey {
   offset: Float!
 }
 
+type TopConstraintRoof {
+  roof: String!
+  offset: Float!
+}
+
+type TopConstraintSlab {
+  slab: String!
+  offset: Float!
+}
+
+type TopConstraintCeiling {
+  ceiling: String!
+  offset: Float!
+}
+
 # externally tagged: exactly one member is present
 type Profile {
   [object Object]: ProfileRectangle
   [object Object]: ProfileCircle
   [object Object]: ProfileIShape
   [object Object]: ProfileCustom
+  [object Object]: ProfileFamily
 }
 
 type ProfileRectangle {
@@ -154,6 +571,10 @@ type ProfileIShape {
 
 type ProfileCustom {
   outline: [Vertex!]!
+}
+
+type ProfileFamily {
+  family: String!
 }
 
 # externally tagged: exactly one member is present
@@ -300,6 +721,169 @@ type SpaceBoundaryExplicit {
   outline: [Vertex!]!
 }
 
+# externally tagged: exactly one member is present
+type ScheduleKey {
+  [object Object]: ScheduleKeyField
+  [object Object]: ScheduleKeyProperty
+}
+
+type ScheduleKeyField {
+  field: ScheduleField!
+}
+
+type ScheduleKeyProperty {
+  set: String!
+  name: String!
+}
+
+type PropertyDef {
+  name: String!
+  kind: PropertyKind!
+  unit: String
+  description: String
+  required: Boolean!
+  default_value: PropertyValue
+  allowed: [PropertyValue!]!
+  minimum: Float
+  maximum: Float
+}
+
+type PropertyTemplate {
+  name: String!
+  applies_to: [TemplateTarget!]!
+  properties: [PropertyDef!]!
+}
+
+type ClassificationItem {
+  code: String!
+  title: String!
+  parent: String
+}
+
+type ClassificationSystem {
+  name: String!
+  edition: String!
+  source: String
+  entries: [ClassificationItem!]!
+}
+
+type Dimension {
+  storey: String!
+  anchors: [AnnotationAnchor!]!
+  angle: Float!
+  offset: Float!
+  style: String!
+  lock: Float
+  name: String!
+}
+
+type Tag {
+  storey: String!
+  element: String!
+  category: TagCategory!
+  offset: Point2!
+  style: String!
+}
+
+type TextNote {
+  storey: String!
+  position: Point2!
+  text: String!
+  rotation: Float!
+  style: String!
+}
+
+type Leader {
+  storey: String!
+  anchor: AnnotationAnchor!
+  offset: Point2!
+  text: String!
+  style: String!
+}
+
+type AnnotationStyle {
+  name: String!
+  text_height: Float!
+  terminator: Terminator!
+  unit: DimensionUnit!
+  precision: Int!
+  mark_size: Float!
+  gap: Float!
+  overshoot: Float!
+}
+
+type ExprPoint {
+  x: String!
+  y: String!
+}
+
+type ExprPoint3 {
+  x: String!
+  y: String!
+  z: String!
+}
+
+type Family {
+  name: String!
+  category: FamilyCategory!
+}
+
+type FamilyParameter {
+  family: String!
+  name: String!
+  kind: ParameterKind!
+  value: String!
+}
+
+type FamilySolid {
+  family: String!
+  name: String!
+  shape: SolidShape!
+  material: String!
+  visible: String!
+  offset: ExprPoint3!
+}
+
+type Sheet {
+  number: String!
+  name: String!
+  paper: Paper!
+  orientation: Orientation!
+  project: String!
+  drawn_by: String!
+  checked_by: String!
+  date: String!
+  revision: String!
+  scale_label: String!
+}
+
+type Viewport {
+  sheet: String!
+  view: String!
+  position: Point2!
+  scale: Int!
+  crop: ViewCrop
+  label: String
+}
+
+type SheetRevision {
+  sheet: String!
+  number: String!
+  date: String!
+  description: String!
+  author: String!
+}
+
+type WallSweep {
+  host: String!
+  side: WallSide!
+  profile: Profile!
+  height: Float!
+  inset: Float!
+  material: String!
+  name: String!
+}
+
 type Point2 {
   x: Float!
   y: Float!
@@ -332,6 +916,13 @@ type Baluster {
   spacing: Float!
 }
 
+type RailingHost {
+  element: String!
+  side: HostSide!
+  edge: Int!
+  inset: Float!
+}
+
 type Layer {
   material: String!
   thickness: Float!
@@ -361,6 +952,11 @@ type WallType {
 }
 
 type SlabType {
+  name: String!
+  layers: [Layer!]!
+}
+
+type CeilingType {
   name: String!
   layers: [Layer!]!
 }
@@ -444,19 +1040,39 @@ type Wall {
   base_offset: Float!
   top: TopConstraint!
   phase: Phase!
+  start_join: EndJoin
+  end_join: EndJoin
   name: String!
+  base_slab: String
+}
+
+type CurtainWallType {
+  name: String!
+  u_grid: CurtainGrid!
+  v_grid: CurtainGrid!
+  interior_mullion: Profile!
+  border_mullion: Profile!
+  panel: CurtainPanel!
+  panel_material: String!
+  mullion_material: String!
+}
+
+type CurtainPanelOverride {
+  curtain: String!
+  u: Int!
+  v: Int!
+  panel: CurtainPanel!
 }
 
 type CurtainWall {
   storey: String!
+  curtain_wall_type: String!
   axis: Axis!
   base_offset: Float!
   top: TopConstraint!
-  u_spacing: Float!
-  v_spacing: Float!
-  mullion: Profile!
-  panel_material: String!
-  mullion_material: String!
+  u_grid: CurtainGrid
+  v_grid: CurtainGrid
+  phase: Phase!
   name: String!
 }
 
@@ -465,23 +1081,37 @@ type Column {
   column_type: String!
   position: Point2!
   rotation: Float!
+  tilt: Slope
   base_offset: Float!
   top: TopConstraint!
+  phase: Phase!
   name: String!
 }
 
 type Beam {
   storey: String!
   beam_type: String!
-  start: Point2!
-  end: Point2!
+  axis: Axis!
   top_offset: Float!
+  end_top_offset: Float
+  phase: Phase!
   name: String!
 }
 
 type Slab {
   storey: String!
   slab_type: String!
+  boundary: [Vertex!]!
+  holes: [[Vertex!]!]!
+  offset: Float!
+  slope: Slope
+  phase: Phase!
+  name: String!
+}
+
+type Ceiling {
+  storey: String!
+  ceiling_type: String!
   boundary: [Vertex!]!
   holes: [[Vertex!]!]!
   offset: Float!
@@ -496,6 +1126,7 @@ type Roof {
   shape: RoofShape!
   overhang: Float!
   base_offset: Float!
+  phase: Phase!
   name: String!
 }
 
@@ -509,6 +1140,8 @@ type Opening {
   flip_hand: Boolean!
   flip_facing: Boolean!
   name: String!
+  reveal_depth: Float
+  reveal_material: String
 }
 
 type Stair {
@@ -525,6 +1158,7 @@ type Stair {
   tread_thickness: Float!
   riser: RiserKind!
   landing_depth: Float!
+  phase: Phase!
   name: String!
 }
 
@@ -539,6 +1173,25 @@ type Railing {
   infill: Infill!
   material: String!
   base_offset: Float!
+  host: RailingHost
+  phase: Phase!
+  name: String!
+}
+
+type Ramp {
+  storey: String!
+  path: [Vertex!]!
+  width: Float!
+  landing_start: Float!
+  landing_end: Float!
+  landing_turn: Float!
+  max_slope: Float!
+  thickness: Float!
+  material: String!
+  base_offset: Float!
+  top: TopConstraint!
+  railing_left: Boolean!
+  railing_right: Boolean!
   name: String!
 }
 
@@ -548,12 +1201,91 @@ type Space {
   name: String!
   boundary: SpaceBoundary!
   usage: String!
+  phase: Phase!
+  zone: String
+  floor_finish: String
+  wall_finish: String
+  ceiling_finish: String
 }
 
-type Classification {
-  system: String!
-  code: String!
-  title: String!
+type Zone {
+  name: String!
+  category: String!
+  occupancy_density: Float!
+}
+
+type AreaScheme {
+  name: String!
+  measure: AreaMeasure!
+  usages: [String!]!
+  zones: [String!]!
+}
+
+type ViewPlane {
+  start: Point2!
+  end: Point2!
+}
+
+type ViewCrop {
+  min: Point2!
+  max: Point2!
+}
+
+type ViewCamera {
+  target: Point2!
+  target_height: Float!
+  azimuth: Float!
+  pitch: Float!
+  distance: Float!
+}
+
+type View {
+  building: String!
+  name: String!
+  kind: ViewKind!
+  storey: String
+  plane: ViewPlane
+  camera: ViewCamera
+  cut_height: Float
+  depth: Float!
+  crop: ViewCrop
+  hidden: [ViewCategory!]!
+  phase: Phase
+  scale: Int!
+  detail: DetailLevel!
+}
+
+type ScheduleColumn {
+  key: ScheduleKey!
+  heading: String
+  total: Boolean!
+}
+
+type ScheduleSort {
+  key: ScheduleKey!
+  descending: Boolean!
+}
+
+type ScheduleFilter {
+  key: ScheduleKey!
+  op: ScheduleOp!
+  value: String!
+}
+
+type ScheduleGroup {
+  key: ScheduleKey!
+}
+
+type Schedule {
+  name: String!
+  category: ScheduleCategory!
+  columns: [ScheduleColumn!]!
+  sort: [ScheduleSort!]!
+  filter: [ScheduleFilter!]!
+  group: [ScheduleGroup!]!
+  itemize: Boolean!
+  storeys: [String!]!
+  phases: [Phase!]!
 }
 
 type MaterialRow {
@@ -596,6 +1328,11 @@ type DoorTypeRow {
   value: DoorType!
 }
 
+type CurtainWallTypeRow {
+  id: String!
+  value: CurtainWallType!
+}
+
 type SiteRow {
   id: String!
   value: Site!
@@ -624,6 +1361,11 @@ type WallRow {
 type CurtainWallRow {
   id: String!
   value: CurtainWall!
+}
+
+type CurtainPanelOverrideRow {
+  id: String!
+  value: CurtainPanelOverride!
 }
 
 type ColumnRow {
@@ -661,9 +1403,114 @@ type RailingRow {
   value: Railing!
 }
 
+type RampRow {
+  id: String!
+  value: Ramp!
+}
+
 type SpaceRow {
   id: String!
   value: Space!
+}
+
+type CeilingTypeRow {
+  id: String!
+  value: CeilingType!
+}
+
+type CeilingRow {
+  id: String!
+  value: Ceiling!
+}
+
+type ZoneRow {
+  id: String!
+  value: Zone!
+}
+
+type AreaSchemeRow {
+  id: String!
+  value: AreaScheme!
+}
+
+type ViewRow {
+  id: String!
+  value: View!
+}
+
+type SheetRow {
+  id: String!
+  value: Sheet!
+}
+
+type ViewportRow {
+  id: String!
+  value: Viewport!
+}
+
+type SheetRevisionRow {
+  id: String!
+  value: SheetRevision!
+}
+
+type DimensionRow {
+  id: String!
+  value: Dimension!
+}
+
+type TagRow {
+  id: String!
+  value: Tag!
+}
+
+type TextNoteRow {
+  id: String!
+  value: TextNote!
+}
+
+type LeaderRow {
+  id: String!
+  value: Leader!
+}
+
+type AnnotationStyleRow {
+  id: String!
+  value: AnnotationStyle!
+}
+
+type FamilyRow {
+  id: String!
+  value: Family!
+}
+
+type FamilyParameterRow {
+  id: String!
+  value: FamilyParameter!
+}
+
+type FamilySolidRow {
+  id: String!
+  value: FamilySolid!
+}
+
+type WallSweepRow {
+  id: String!
+  value: WallSweep!
+}
+
+type ScheduleRow {
+  id: String!
+  value: Schedule!
+}
+
+type PropertyTemplateRow {
+  id: String!
+  value: PropertyTemplate!
+}
+
+type ClassificationSystemRow {
+  id: String!
+  value: ClassificationSystem!
 }
 
 type PropertySetRow {
@@ -671,9 +1518,9 @@ type PropertySetRow {
   value: PropertySetRows!
 }
 
-type ClassificationRow {
+type ClassificationSetRow {
   id: String!
-  value: Classification!
+  value: ClassificationSetRows!
 }
 
 type PropertySetRows {
@@ -684,5 +1531,14 @@ type PropertyRow {
   set: String!
   name: String!
   value: PropertyValue!
+}
+
+type ClassificationSetRows {
+  rows: [ClassificationRow!]!
+}
+
+type ClassificationRow {
+  system: String!
+  code: String!
 }
 

@@ -1,0 +1,41 @@
+{
+  "mutation": "createCurtainWall",
+  "id": "cw-2",
+  "curtain_wall": {
+    "storey": "st-ground",
+    "curtain_wall_type": "cwt-1",
+    "axis": {
+      "Line": {
+        "start": {
+          "x": 0,
+          "y": 6
+        },
+        "end": {
+          "x": 6,
+          "y": 6
+        }
+      }
+    },
+    "base_offset": 0,
+    "top": {
+      "StoreyTop": {
+        "offset": 0
+      }
+    },
+    "u_grid": {
+      "Lines": {
+        "positions": [
+          1,
+          3
+        ]
+      }
+    },
+    "v_grid": {
+      "Spacing": {
+        "spacing": 1
+      }
+    },
+    "phase": "New",
+    "name": "Lined facade"
+  }
+}

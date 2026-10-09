@@ -1,0 +1,23 @@
+{
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": null,
+  "assets": {
+    "entries": {
+      "bitmap": {
+        "width": 1,
+        "height": 1,
+        "samples": [
+          [
+            13,
+            27,
+            89,
+            255
+          ]
+        ]
+      }
+    }
+  },
+  "artboard": null
+}

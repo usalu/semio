@@ -1,0 +1,3818 @@
+{
+ "cases": [
+  {
+   "name": "empty",
+   "params": {},
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [],
+    "values": {},
+    "errors": {}
+   }
+  },
+  {
+   "name": "single literal",
+   "params": {
+    "width": {
+     "source": "2.4 m",
+     "python": "Q(2.4, 'm')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "width"
+    ],
+    "values": {
+     "width": {
+      "kind": "length",
+      "value": 2.4
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "chain",
+   "params": {
+    "width": {
+     "source": "2.4 m",
+     "python": "Q(2.4, 'm')"
+    },
+    "height": {
+     "source": "width / 2",
+     "python": "P('width') / 2.0"
+    },
+    "area": {
+     "source": "width * height",
+     "python": "P('width') * P('height')"
+    },
+    "half": {
+     "source": "area / 2",
+     "python": "P('area') / 2.0"
+    },
+    "big": {
+     "source": "area > 2 m2",
+     "python": "P('area') > Q(2.0, 'm2')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "width",
+     "height",
+     "area",
+     "big",
+     "half"
+    ],
+    "values": {
+     "width": {
+      "kind": "length",
+      "value": 2.4
+     },
+     "height": {
+      "kind": "length",
+      "value": 1.2
+     },
+     "area": {
+      "kind": "area",
+      "value": 2.88
+     },
+     "big": {
+      "kind": "bool",
+      "value": true
+     },
+     "half": {
+      "kind": "area",
+      "value": 1.44
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "diamond",
+   "params": {
+    "a": {
+     "source": "1",
+     "python": "1.0"
+    },
+    "b": {
+     "source": "a + 1",
+     "python": "P('a') + 1.0"
+    },
+    "c": {
+     "source": "a + 2",
+     "python": "P('a') + 2.0"
+    },
+    "d": {
+     "source": "b * c",
+     "python": "P('b') * P('c')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "values": {
+     "a": {
+      "kind": "number",
+      "value": 1.0
+     },
+     "b": {
+      "kind": "number",
+      "value": 2.0
+     },
+     "c": {
+      "kind": "number",
+      "value": 3.0
+     },
+     "d": {
+      "kind": "number",
+      "value": 6.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "sorted by name within a layer",
+   "params": {
+    "z": {
+     "source": "1",
+     "python": "1.0"
+    },
+    "m": {
+     "source": "2",
+     "python": "2.0"
+    },
+    "a": {
+     "source": "3",
+     "python": "3.0"
+    },
+    "total": {
+     "source": "z + m + a",
+     "python": "P('z') + P('m') + P('a')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "a",
+     "m",
+     "z",
+     "total"
+    ],
+    "values": {
+     "a": {
+      "kind": "number",
+      "value": 3.0
+     },
+     "m": {
+      "kind": "number",
+      "value": 2.0
+     },
+     "z": {
+      "kind": "number",
+      "value": 1.0
+     },
+     "total": {
+      "kind": "number",
+      "value": 6.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "layers follow the longest chain",
+   "params": {
+    "a": {
+     "source": "1",
+     "python": "1.0"
+    },
+    "b": {
+     "source": "a",
+     "python": "P('a')"
+    },
+    "c": {
+     "source": "b",
+     "python": "P('b')"
+    },
+    "d": {
+     "source": "a + c",
+     "python": "P('a') + P('c')"
+    },
+    "e": {
+     "source": "a",
+     "python": "P('a')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "a",
+     "b",
+     "e",
+     "c",
+     "d"
+    ],
+    "values": {
+     "a": {
+      "kind": "number",
+      "value": 1.0
+     },
+     "b": {
+      "kind": "number",
+      "value": 1.0
+     },
+     "e": {
+      "kind": "number",
+      "value": 1.0
+     },
+     "c": {
+      "kind": "number",
+      "value": 1.0
+     },
+     "d": {
+      "kind": "number",
+      "value": 2.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "reference to an absent name",
+   "params": {
+    "a": {
+     "source": "missing + 1",
+     "python": "P('missing') + 1.0"
+    },
+    "b": {
+     "source": "a",
+     "python": "P('a')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "a",
+     "b"
+    ],
+    "values": {},
+    "errors": {
+     "a": {
+      "code": "unknown-parameter",
+      "path": [
+       0
+      ]
+     },
+     "b": {
+      "code": "failed-dependency",
+      "name": "a"
+     }
+    }
+   }
+  },
+  {
+   "name": "self reference",
+   "params": {
+    "a": {
+     "source": "a + 1",
+     "python": "P('a') + 1.0"
+    },
+    "b": {
+     "source": "1",
+     "python": "1.0"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "b",
+     "a"
+    ],
+    "values": {
+     "b": {
+      "kind": "number",
+      "value": 1.0
+     }
+    },
+    "errors": {
+     "a": {
+      "code": "cycle",
+      "members": [
+       "a"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "two cycle",
+   "params": {
+    "a": {
+     "source": "b + 1",
+     "python": "P('b') + 1.0"
+    },
+    "b": {
+     "source": "a + 1",
+     "python": "P('a') + 1.0"
+    },
+    "c": {
+     "source": "a * 2",
+     "python": "P('a') * 2.0"
+    },
+    "d": {
+     "source": "c",
+     "python": "P('c')"
+    },
+    "e": {
+     "source": "5",
+     "python": "5.0"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "e",
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "values": {
+     "e": {
+      "kind": "number",
+      "value": 5.0
+     }
+    },
+    "errors": {
+     "a": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b"
+      ]
+     },
+     "b": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b"
+      ]
+     },
+     "c": {
+      "code": "failed-dependency",
+      "name": "a"
+     },
+     "d": {
+      "code": "failed-dependency",
+      "name": "c"
+     }
+    }
+   }
+  },
+  {
+   "name": "three cycle with a tail",
+   "params": {
+    "a": {
+     "source": "b",
+     "python": "P('b')"
+    },
+    "b": {
+     "source": "c",
+     "python": "P('c')"
+    },
+    "c": {
+     "source": "a",
+     "python": "P('a')"
+    },
+    "d": {
+     "source": "c + 1",
+     "python": "P('c') + 1.0"
+    },
+    "g": {
+     "source": "d + 1",
+     "python": "P('d') + 1.0"
+    },
+    "f": {
+     "source": "1",
+     "python": "1.0"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "f",
+     "a",
+     "b",
+     "c",
+     "d",
+     "g"
+    ],
+    "values": {
+     "f": {
+      "kind": "number",
+      "value": 1.0
+     }
+    },
+    "errors": {
+     "a": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     "b": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     "c": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     "d": {
+      "code": "failed-dependency",
+      "name": "c"
+     },
+     "g": {
+      "code": "failed-dependency",
+      "name": "d"
+     }
+    }
+   }
+  },
+  {
+   "name": "two overlapping cycles are one component",
+   "params": {
+    "a": {
+     "source": "b",
+     "python": "P('b')"
+    },
+    "b": {
+     "source": "a + c",
+     "python": "P('a') + P('c')"
+    },
+    "c": {
+     "source": "b",
+     "python": "P('b')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "values": {},
+    "errors": {
+     "a": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     "b": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     "c": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b",
+       "c"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "separate cycles",
+   "params": {
+    "a": {
+     "source": "b",
+     "python": "P('b')"
+    },
+    "b": {
+     "source": "a",
+     "python": "P('a')"
+    },
+    "c": {
+     "source": "d",
+     "python": "P('d')"
+    },
+    "d": {
+     "source": "c",
+     "python": "P('c')"
+    },
+    "e": {
+     "source": "1",
+     "python": "1.0"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "e",
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "values": {
+     "e": {
+      "kind": "number",
+      "value": 1.0
+     }
+    },
+    "errors": {
+     "a": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b"
+      ]
+     },
+     "b": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b"
+      ]
+     },
+     "c": {
+      "code": "cycle",
+      "members": [
+       "c",
+       "d"
+      ]
+     },
+     "d": {
+      "code": "cycle",
+      "members": [
+       "c",
+       "d"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "division by zero blocks dependants",
+   "params": {
+    "zero": {
+     "source": "0",
+     "python": "0.0"
+    },
+    "bad": {
+     "source": "1 / zero",
+     "python": "1.0 / P('zero')"
+    },
+    "later": {
+     "source": "bad + 1",
+     "python": "P('bad') + 1.0"
+    },
+    "indep": {
+     "source": "zero + 5",
+     "python": "P('zero') + 5.0"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "zero",
+     "bad",
+     "indep",
+     "later"
+    ],
+    "values": {
+     "zero": {
+      "kind": "number",
+      "value": 0.0
+     },
+     "indep": {
+      "kind": "number",
+      "value": 5.0
+     }
+    },
+    "errors": {
+     "bad": {
+      "code": "division-by-zero",
+      "path": []
+     },
+     "later": {
+      "code": "failed-dependency",
+      "name": "bad"
+     }
+    }
+   }
+  },
+  {
+   "name": "first failed dependency by name",
+   "params": {
+    "x": {
+     "source": "1 / 0",
+     "python": "1.0 / 0.0"
+    },
+    "y": {
+     "source": "1 / 0",
+     "python": "1.0 / 0.0"
+    },
+    "z": {
+     "source": "y + x",
+     "python": "P('y') + P('x')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "x",
+     "y",
+     "z"
+    ],
+    "values": {},
+    "errors": {
+     "x": {
+      "code": "division-by-zero",
+      "path": []
+     },
+     "y": {
+      "code": "division-by-zero",
+      "path": []
+     },
+     "z": {
+      "code": "failed-dependency",
+      "name": "x"
+     }
+    }
+   }
+  },
+  {
+   "name": "kind error in a formula",
+   "params": {
+    "w": {
+     "source": "2 m",
+     "python": "Q(2.0, 'm')"
+    },
+    "t": {
+     "source": "30 deg",
+     "python": "Q(30.0, 'deg')"
+    },
+    "bad": {
+     "source": "w + t",
+     "python": "P('w') + P('t')"
+    },
+    "ok": {
+     "source": "w * 2",
+     "python": "P('w') * 2.0"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "t",
+     "w",
+     "bad",
+     "ok"
+    ],
+    "values": {
+     "t": {
+      "kind": "angle",
+      "value": 0.5235987755982988
+     },
+     "w": {
+      "kind": "length",
+      "value": 2.0
+     },
+     "ok": {
+      "kind": "length",
+      "value": 4.0
+     }
+    },
+    "errors": {
+     "bad": {
+      "code": "mixed-kinds",
+      "path": []
+     }
+    }
+   }
+  },
+  {
+   "name": "unknown parameter",
+   "params": {
+    "a": {
+     "source": "typo * 2",
+     "python": "P('typo') * 2.0"
+    },
+    "b": {
+     "source": "1",
+     "python": "1.0"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "a",
+     "b"
+    ],
+    "values": {
+     "b": {
+      "kind": "number",
+      "value": 1.0
+     }
+    },
+    "errors": {
+     "a": {
+      "code": "unknown-parameter",
+      "path": [
+       0
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "override replaces the formula",
+   "params": {
+    "width": {
+     "source": "2 m",
+     "python": "Q(2.0, 'm')"
+    },
+    "double": {
+     "source": "width * 2",
+     "python": "P('width') * 2.0"
+    }
+   },
+   "overrides": {
+    "width": {
+     "source": "3 m",
+     "python": "Q(3.0, 'm')"
+    }
+   },
+   "declared": {},
+   "expected": {
+    "order": [
+     "width",
+     "double"
+    ],
+    "values": {
+     "width": {
+      "kind": "length",
+      "value": 3.0
+     },
+     "double": {
+      "kind": "length",
+      "value": 6.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "override with a different kind propagates",
+   "params": {
+    "width": {
+     "source": "2 m",
+     "python": "Q(2.0, 'm')"
+    },
+    "double": {
+     "source": "width * 2",
+     "python": "P('width') * 2.0"
+    },
+    "sum": {
+     "source": "width + 1 m",
+     "python": "P('width') + Q(1.0, 'm')"
+    }
+   },
+   "overrides": {
+    "width": {
+     "source": "30 deg",
+     "python": "Q(30.0, 'deg')"
+    }
+   },
+   "declared": {},
+   "expected": {
+    "order": [
+     "width",
+     "double",
+     "sum"
+    ],
+    "values": {
+     "width": {
+      "kind": "angle",
+      "value": 0.5235987755982988
+     },
+     "double": {
+      "kind": "angle",
+      "value": 1.0471975511965976
+     }
+    },
+    "errors": {
+     "sum": {
+      "code": "mixed-kinds",
+      "path": []
+     }
+    }
+   }
+  },
+  {
+   "name": "override of a missing parameter",
+   "params": {
+    "a": {
+     "source": "1",
+     "python": "1.0"
+    }
+   },
+   "overrides": {
+    "b": {
+     "source": "2",
+     "python": "2.0"
+    }
+   },
+   "declared": {},
+   "expected": {
+    "order": [
+     "a"
+    ],
+    "values": {
+     "a": {
+      "kind": "number",
+      "value": 1.0
+     }
+    },
+    "errors": {
+     "b": {
+      "code": "unknown-override"
+     }
+    }
+   }
+  },
+  {
+   "name": "override breaking a cycle",
+   "params": {
+    "a": {
+     "source": "b + 1",
+     "python": "P('b') + 1.0"
+    },
+    "b": {
+     "source": "a + 1",
+     "python": "P('a') + 1.0"
+    },
+    "c": {
+     "source": "a",
+     "python": "P('a')"
+    }
+   },
+   "overrides": {
+    "a": {
+     "source": "10",
+     "python": "10.0"
+    }
+   },
+   "declared": {},
+   "expected": {
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "values": {
+     "a": {
+      "kind": "number",
+      "value": 10.0
+     },
+     "b": {
+      "kind": "number",
+      "value": 11.0
+     },
+     "c": {
+      "kind": "number",
+      "value": 10.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "override creating a cycle",
+   "params": {
+    "a": {
+     "source": "1",
+     "python": "1.0"
+    },
+    "b": {
+     "source": "a + 1",
+     "python": "P('a') + 1.0"
+    }
+   },
+   "overrides": {
+    "a": {
+     "source": "b + 1",
+     "python": "P('b') + 1.0"
+    }
+   },
+   "declared": {},
+   "expected": {
+    "order": [
+     "a",
+     "b"
+    ],
+    "values": {},
+    "errors": {
+     "a": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b"
+      ]
+     },
+     "b": {
+      "code": "cycle",
+      "members": [
+       "a",
+       "b"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "override adding a dependency order",
+   "params": {
+    "a": {
+     "source": "1",
+     "python": "1.0"
+    },
+    "b": {
+     "source": "2",
+     "python": "2.0"
+    },
+    "c": {
+     "source": "a + b",
+     "python": "P('a') + P('b')"
+    }
+   },
+   "overrides": {
+    "a": {
+     "source": "b + 1",
+     "python": "P('b') + 1.0"
+    }
+   },
+   "declared": {},
+   "expected": {
+    "order": [
+     "b",
+     "a",
+     "c"
+    ],
+    "values": {
+     "b": {
+      "kind": "number",
+      "value": 2.0
+     },
+     "a": {
+      "kind": "number",
+      "value": 3.0
+     },
+     "c": {
+      "kind": "number",
+      "value": 5.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "declared kinds hold",
+   "params": {
+    "w": {
+     "source": "2 m",
+     "python": "Q(2.0, 'm')"
+    },
+    "h": {
+     "source": "1 m",
+     "python": "Q(1.0, 'm')"
+    },
+    "a": {
+     "source": "w * h",
+     "python": "P('w') * P('h')"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "w": "length",
+    "h": "length",
+    "a": "area"
+   },
+   "expected": {
+    "order": [
+     "h",
+     "w",
+     "a"
+    ],
+    "values": {
+     "h": {
+      "kind": "length",
+      "value": 1.0
+     },
+     "w": {
+      "kind": "length",
+      "value": 2.0
+     },
+     "a": {
+      "kind": "area",
+      "value": 2.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "declared kind mismatch",
+   "params": {
+    "w": {
+     "source": "2 m",
+     "python": "Q(2.0, 'm')"
+    },
+    "n": {
+     "source": "w / 1 m",
+     "python": "P('w') / Q(1.0, 'm')"
+    },
+    "m": {
+     "source": "n * 2",
+     "python": "P('n') * 2.0"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "w": "length",
+    "n": "length"
+   },
+   "expected": {
+    "order": [
+     "w",
+     "n",
+     "m"
+    ],
+    "values": {
+     "w": {
+      "kind": "length",
+      "value": 2.0
+     }
+    },
+    "errors": {
+     "n": {
+      "code": "declared-kind",
+      "declared": "length",
+      "found": "number"
+     },
+     "m": {
+      "code": "failed-dependency",
+      "name": "n"
+     }
+    }
+   }
+  },
+  {
+   "name": "declared kind for a failing parameter",
+   "params": {
+    "a": {
+     "source": "1 / 0",
+     "python": "1.0 / 0.0"
+    },
+    "b": {
+     "source": "2",
+     "python": "2.0"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "a": "number"
+   },
+   "expected": {
+    "order": [
+     "a",
+     "b"
+    ],
+    "values": {
+     "b": {
+      "kind": "number",
+      "value": 2.0
+     }
+    },
+    "errors": {
+     "a": {
+      "code": "division-by-zero",
+      "path": []
+     }
+    }
+   }
+  },
+  {
+   "name": "conditional parameters",
+   "params": {
+    "wide": {
+     "source": "w > 2 m",
+     "python": "P('w') > Q(2.0, 'm')"
+    },
+    "w": {
+     "source": "2.4 m",
+     "python": "Q(2.4, 'm')"
+    },
+    "pick": {
+     "source": "w * 2 + w",
+     "python": "P('w') * 2.0 + P('w')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "w",
+     "pick",
+     "wide"
+    ],
+    "values": {
+     "w": {
+      "kind": "length",
+      "value": 2.4
+     },
+     "pick": {
+      "kind": "length",
+      "value": 7.199999999999999
+     },
+     "wide": {
+      "kind": "bool",
+      "value": true
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "lazy branch still resolves",
+   "params": {
+    "zero": {
+     "source": "0",
+     "python": "0.0"
+    },
+    "safe": {
+     "source": "zero != 0 and 1 / zero > 1",
+     "python": "P('zero') != 0.0 and 1.0 / P('zero') > 1.0"
+    },
+    "other": {
+     "source": "zero = 0 or 1 / zero > 1",
+     "python": "P('zero') == 0.0 or 1.0 / P('zero') > 1.0"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "zero",
+     "other",
+     "safe"
+    ],
+    "values": {
+     "zero": {
+      "kind": "number",
+      "value": 0.0
+     },
+     "other": {
+      "kind": "bool",
+      "value": true
+     },
+     "safe": {
+      "kind": "bool",
+      "value": false
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "text and bool parameters",
+   "params": {
+    "name": {
+     "source": "\"oak\"",
+     "python": "'oak'"
+    },
+    "same": {
+     "source": "name = \"oak\"",
+     "python": "P('name') == 'oak'"
+    },
+    "flag": {
+     "source": "not same",
+     "python": "not P('same')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "name",
+     "same",
+     "flag"
+    ],
+    "values": {
+     "name": {
+      "kind": "text",
+      "value": "oak"
+     },
+     "same": {
+      "kind": "bool",
+      "value": true
+     },
+     "flag": {
+      "kind": "bool",
+      "value": false
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "trigonometry parameters",
+   "params": {
+    "turn": {
+     "source": "90 deg",
+     "python": "Q(90.0, 'deg')"
+    },
+    "s": {
+     "source": "sin(turn)",
+     "python": "sin ( P('turn') )"
+    },
+    "c": {
+     "source": "cos(turn)",
+     "python": "cos ( P('turn') )"
+    },
+    "t": {
+     "source": "atan2(s, c)",
+     "python": "atan2 ( P('s') , P('c') )"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "turn",
+     "c",
+     "s",
+     "t"
+    ],
+    "values": {
+     "turn": {
+      "kind": "angle",
+      "value": 1.5707963267948966
+     },
+     "c": {
+      "kind": "number",
+      "value": 6.123233995736766e-17
+     },
+     "s": {
+      "kind": "number",
+      "value": 1.0
+     },
+     "t": {
+      "kind": "angle",
+      "value": 1.5707963267948966
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "rounding to a grid",
+   "params": {
+    "span": {
+     "source": "2.43 m",
+     "python": "Q(2.43, 'm')"
+    },
+    "cells": {
+     "source": "round(span / 100 mm)",
+     "python": "round ( P('span') / Q(100.0, 'mm') )"
+    },
+    "snapped": {
+     "source": "cells * 100 mm",
+     "python": "P('cells') * Q(100.0, 'mm')"
+    }
+   },
+   "overrides": {},
+   "declared": {},
+   "expected": {
+    "order": [
+     "span",
+     "cells",
+     "snapped"
+    ],
+    "values": {
+     "span": {
+      "kind": "length",
+      "value": 2.43
+     },
+     "cells": {
+      "kind": "number",
+      "value": 24.0
+     },
+     "snapped": {
+      "kind": "length",
+      "value": 2.4000000000000004
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 0",
+   "params": {
+    "p0": {
+     "source": "true or (false or false)",
+     "python": "((True) or (((False) or (False))))"
+    },
+    "p1": {
+     "source": "(if false then 250 cm else 4 m) * (3 ft / 0.25)",
+     "python": "((((Q(250.0, 'cm')) if (False) else (Q(4.0, 'm')))) * (((Q(3.0, 'ft')) / (0.25))))"
+    },
+    "p2": {
+     "source": "if not false then abs(30 deg) else -p3",
+     "python": "((abs(Q(30.0, 'deg'))) if ((not (False))) else ((-(P('p3')))))"
+    },
+    "p3": {
+     "source": "3 * (p2 / 0.5)",
+     "python": "((3.0) * (((P('p2')) / (0.5))))"
+    }
+   },
+   "overrides": {
+    "p1": {
+     "source": "500 l / 10 in",
+     "python": "((Q(500.0, 'l')) / (Q(10.0, 'in')))"
+    }
+   },
+   "declared": {},
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p3"
+    ],
+    "values": {
+     "p0": {
+      "kind": "bool",
+      "value": true
+     },
+     "p1": {
+      "kind": "area",
+      "value": 1.968503937007874
+     }
+    },
+    "errors": {
+     "p2": {
+      "code": "cycle",
+      "members": [
+       "p2",
+       "p3"
+      ]
+     },
+     "p3": {
+      "code": "cycle",
+      "members": [
+       "p2",
+       "p3"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 1",
+   "params": {
+    "p0": {
+     "source": "if 10 in < 90 mm then not p0 else \"pine\" = \"\"",
+     "python": "(((not (P('p0')))) if (((Q(10.0, 'in')) < (Q(90.0, 'mm')))) else ((('pine') == (''))))"
+    },
+    "p1": {
+     "source": "2 m2 * 250 cm < 1.5 m2 * 0.5 m",
+     "python": "((((Q(2.0, 'm2')) * (Q(250.0, 'cm')))) < (((Q(1.5, 'm2')) * (Q(0.5, 'm')))))"
+    },
+    "p2": {
+     "source": "250 cm / 10 in * 1.5 rad",
+     "python": "((((Q(250.0, 'cm')) / (Q(10.0, 'in')))) * (Q(1.5, 'rad')))"
+    },
+    "p3": {
+     "source": "atan2(1200 mm, sqrt(10000 cm2))",
+     "python": "atan2(Q(1200.0, 'mm'), sqrt(Q(10000.0, 'cm2')))"
+    },
+    "p4": {
+     "source": "sqrt(10000 cm2) / sqrt(1.5 m2)",
+     "python": "((sqrt(Q(10000.0, 'cm2'))) / (sqrt(Q(1.5, 'm2'))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p0": "bool",
+    "p2": "angle"
+   },
+   "expected": {
+    "order": [
+     "p1",
+     "p2",
+     "p3",
+     "p4",
+     "p0"
+    ],
+    "values": {
+     "p1": {
+      "kind": "bool",
+      "value": false
+     },
+     "p2": {
+      "kind": "angle",
+      "value": 14.763779527559056
+     },
+     "p3": {
+      "kind": "angle",
+      "value": 0.8760580505981934
+     },
+     "p4": {
+      "kind": "number",
+      "value": 0.8164965809277261
+     }
+    },
+    "errors": {
+     "p0": {
+      "code": "cycle",
+      "members": [
+       "p0"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 2",
+   "params": {
+    "p0": {
+     "source": "4 m * 250000 mm2 / (2.4 m * 250000 mm2)",
+     "python": "((((Q(4.0, 'm')) * (Q(250000.0, 'mm2')))) / (((Q(2.4, 'm')) * (Q(250000.0, 'mm2')))))"
+    },
+    "p1": {
+     "source": "if false then true else false and true",
+     "python": "((True) if (False) else (((False) and (True))))"
+    },
+    "p2": {
+     "source": "if true and p1 then if p1 then 0.5 else p0 else -p0",
+     "python": "((((0.5) if (P('p1')) else (P('p0')))) if (((True) and (P('p1')))) else ((-(P('p0')))))"
+    },
+    "p3": {
+     "source": "abs(90 deg) < atan2(p0, 0.5)",
+     "python": "((abs(Q(90.0, 'deg'))) < (atan2(P('p0'), 0.5)))"
+    },
+    "p4": {
+     "source": "round(10 in * p2 / 100 mm)",
+     "python": "round(((((Q(10.0, 'in')) * (P('p2')))) / (Q(100.0, 'mm'))))"
+    },
+    "p5": {
+     "source": "-3 ft * floor(p0)",
+     "python": "(((-(Q(3.0, 'ft')))) * (floor(P('p0'))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p0": "number"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p3",
+     "p5",
+     "p4"
+    ],
+    "values": {
+     "p0": {
+      "kind": "number",
+      "value": 1.6666666666666667
+     },
+     "p1": {
+      "kind": "bool",
+      "value": false
+     },
+     "p2": {
+      "kind": "number",
+      "value": -1.6666666666666667
+     },
+     "p3": {
+      "kind": "bool",
+      "value": false
+     },
+     "p5": {
+      "kind": "length",
+      "value": -0.9144
+     },
+     "p4": {
+      "kind": "number",
+      "value": -4.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 3",
+   "params": {
+    "p0": {
+     "source": "true",
+     "python": "True"
+    },
+    "p1": {
+     "source": "abs(if p0 then 3 ft else 1200 mm)",
+     "python": "abs(((Q(3.0, 'ft')) if (P('p0')) else (Q(1200.0, 'mm'))))"
+    },
+    "p2": {
+     "source": "abs(180 deg) / (0.5 + 3)",
+     "python": "((abs(Q(180.0, 'deg'))) / (((0.5) + (3.0))))"
+    },
+    "p3": {
+     "source": "abs(250000 mm2 / 1.5 km)",
+     "python": "abs(((Q(250000.0, 'mm2')) / (Q(1.5, 'km'))))"
+    },
+    "p4": {
+     "source": "2 m2",
+     "python": "Q(2.0, 'm2')"
+    },
+    "p5": {
+     "source": "abs(100 * p2)",
+     "python": "abs(((100.0) * (P('p2'))))"
+    },
+    "p6": {
+     "source": "not p0 and (true and p0)",
+     "python": "(((not (P('p0')))) and (((True) and (P('p0')))))"
+    }
+   },
+   "overrides": {
+    "p1": {
+     "source": "abs(p3)",
+     "python": "abs(P('p3'))"
+    }
+   },
+   "declared": {
+    "p6": "bool"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p2",
+     "p3",
+     "p4",
+     "p1",
+     "p5",
+     "p6"
+    ],
+    "values": {
+     "p0": {
+      "kind": "bool",
+      "value": true
+     },
+     "p2": {
+      "kind": "angle",
+      "value": 0.8975979010256552
+     },
+     "p3": {
+      "kind": "length",
+      "value": 0.00016666666666666666
+     },
+     "p4": {
+      "kind": "area",
+      "value": 2.0
+     },
+     "p1": {
+      "kind": "length",
+      "value": 0.00016666666666666666
+     },
+     "p5": {
+      "kind": "angle",
+      "value": 89.75979010256552
+     },
+     "p6": {
+      "kind": "bool",
+      "value": false
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 4",
+   "params": {
+    "p0": {
+     "source": "if true or false then if false then 10 in else 4 m else 2 m2 / 2.4 m",
+     "python": "((((Q(10.0, 'in')) if (False) else (Q(4.0, 'm')))) if (((True) or (False))) else (((Q(2.0, 'm2')) / (Q(2.4, 'm')))))"
+    },
+    "p1": {
+     "source": "3 * 2 m2 + 1.5 m2",
+     "python": "((((3.0) * (Q(2.0, 'm2')))) + (Q(1.5, 'm2')))"
+    },
+    "p2": {
+     "source": "90 mm / p0 * round(2.4 m / 100 mm)",
+     "python": "((((Q(90.0, 'mm')) / (P('p0')))) * (round(((Q(2.4, 'm')) / (Q(100.0, 'mm'))))))"
+    },
+    "p3": {
+     "source": "10000 cm2",
+     "python": "Q(10000.0, 'cm2')"
+    },
+    "p4": {
+     "source": "p0 / p0 + 0.5",
+     "python": "((((P('p0')) / (P('p0')))) + (0.5))"
+    },
+    "p5": {
+     "source": "1 m3 / (0.25 * 1200 mm)",
+     "python": "((Q(1.0, 'm3')) / (((0.25) * (Q(1200.0, 'mm')))))"
+    },
+    "p6": {
+     "source": "p5",
+     "python": "P('p5')"
+    },
+    "p7": {
+     "source": "0 * 1.5 km / (p4 * 1200 mm)",
+     "python": "((((0.0) * (Q(1.5, 'km')))) / (((P('p4')) * (Q(1200.0, 'mm')))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p3": "area",
+    "p4": "number",
+    "p7": "number"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p3",
+     "p5",
+     "p2",
+     "p4",
+     "p6",
+     "p7"
+    ],
+    "values": {
+     "p0": {
+      "kind": "length",
+      "value": 4.0
+     },
+     "p1": {
+      "kind": "area",
+      "value": 7.5
+     },
+     "p3": {
+      "kind": "area",
+      "value": 1.0
+     },
+     "p5": {
+      "kind": "area",
+      "value": 3.3333333333333335
+     },
+     "p2": {
+      "kind": "number",
+      "value": 0.54
+     },
+     "p4": {
+      "kind": "number",
+      "value": 1.5
+     },
+     "p6": {
+      "kind": "area",
+      "value": 3.3333333333333335
+     },
+     "p7": {
+      "kind": "number",
+      "value": 0.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 5",
+   "params": {
+    "p0": {
+     "source": "0 * 500 l / 2.4 m ^ 2",
+     "python": "((((0.0) * (Q(500.0, 'l')))) / (((Q(2.4, 'm')) ** (2.0))))"
+    },
+    "p1": {
+     "source": "atan2(-2.4 m, p0)",
+     "python": "atan2((-(Q(2.4, 'm'))), P('p0'))"
+    },
+    "p2": {
+     "source": "sqrt(10000 cm2) * (1 * 2)",
+     "python": "((sqrt(Q(10000.0, 'cm2'))) * (((1.0) * (2.0))))"
+    },
+    "p3": {
+     "source": "p5",
+     "python": "P('p5')"
+    },
+    "p4": {
+     "source": "abs(p0) * (2.5 m3 / 10000 cm2)",
+     "python": "((abs(P('p0'))) * (((Q(2.5, 'm3')) / (Q(10000.0, 'cm2')))))"
+    },
+    "p5": {
+     "source": "atan2(2, 1) / (0.5 / 0.25)",
+     "python": "((atan2(2.0, 1.0)) / (((0.5) / (0.25))))"
+    },
+    "p6": {
+     "source": "-(10000 cm2 / p0)",
+     "python": "(-(((Q(10000.0, 'cm2')) / (P('p0')))))"
+    },
+    "p7": {
+     "source": "false and false or (if false then true else false)",
+     "python": "((((False) and (False))) or (((True) if (False) else (False))))"
+    },
+    "p8": {
+     "source": "round((p6 + p6) / 50 mm)",
+     "python": "round(((((P('p6')) + (P('p6')))) / (Q(50.0, 'mm'))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p1": "angle",
+    "p2": "length",
+    "p5": "angle"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p2",
+     "p5",
+     "p7",
+     "p1",
+     "p3",
+     "p4",
+     "p6",
+     "p8"
+    ],
+    "values": {
+     "p0": {
+      "kind": "length",
+      "value": 0.0
+     },
+     "p2": {
+      "kind": "length",
+      "value": 2.0
+     },
+     "p5": {
+      "kind": "angle",
+      "value": 0.5535743588970452
+     },
+     "p7": {
+      "kind": "bool",
+      "value": false
+     },
+     "p1": {
+      "kind": "angle",
+      "value": -1.5707963267948966
+     },
+     "p3": {
+      "kind": "angle",
+      "value": 0.5535743588970452
+     },
+     "p4": {
+      "kind": "area",
+      "value": 0.0
+     }
+    },
+    "errors": {
+     "p6": {
+      "code": "division-by-zero",
+      "path": [
+       0
+      ]
+     },
+     "p8": {
+      "code": "failed-dependency",
+      "name": "p6"
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 6",
+   "params": {
+    "p0": {
+     "source": "(if false then 2.5 m3 else 500 l) / min(90 mm, 90 mm)",
+     "python": "((((Q(2.5, 'm3')) if (False) else (Q(500.0, 'l')))) / (min(Q(90.0, 'mm'), Q(90.0, 'mm'))))"
+    },
+    "p1": {
+     "source": "1.5 km",
+     "python": "Q(1.5, 'km')"
+    },
+    "p2": {
+     "source": "false",
+     "python": "False"
+    },
+    "p3": {
+     "source": "500 l / 250000 mm2 * p7",
+     "python": "((((Q(500.0, 'l')) / (Q(250000.0, 'mm2')))) * (P('p7')))"
+    },
+    "p4": {
+     "source": "max(abs(45 deg), 10 * 45 deg)",
+     "python": "max(abs(Q(45.0, 'deg')), ((10.0) * (Q(45.0, 'deg'))))"
+    },
+    "p5": {
+     "source": "(p1 - p1) ^ 2",
+     "python": "((((P('p1')) - (P('p1')))) ** (2.0))"
+    },
+    "p6": {
+     "source": "3 ft",
+     "python": "Q(3.0, 'ft')"
+    },
+    "p7": {
+     "source": "p1 / -10",
+     "python": "((P('p1')) / ((-(10.0))))"
+    },
+    "p8": {
+     "source": "(if false then \"oak\" else \"\") != (if p2 then \"ß\" else \"pine\")",
+     "python": "(((('oak') if (False) else (''))) != ((('ß') if (P('p2')) else ('pine'))))"
+    },
+    "p9": {
+     "source": "false",
+     "python": "False"
+    }
+   },
+   "overrides": {
+    "p9": {
+     "source": "p8 and true",
+     "python": "((P('p8')) and (True))"
+    }
+   },
+   "declared": {
+    "p0": "area",
+    "p2": "bool",
+    "p7": "length"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p4",
+     "p6",
+     "p5",
+     "p7",
+     "p8",
+     "p3",
+     "p9"
+    ],
+    "values": {
+     "p0": {
+      "kind": "area",
+      "value": 5.555555555555555
+     },
+     "p1": {
+      "kind": "length",
+      "value": 1500.0
+     },
+     "p2": {
+      "kind": "bool",
+      "value": false
+     },
+     "p4": {
+      "kind": "angle",
+      "value": 7.853981633974483
+     },
+     "p6": {
+      "kind": "length",
+      "value": 0.9144
+     },
+     "p5": {
+      "kind": "area",
+      "value": 0.0
+     },
+     "p7": {
+      "kind": "length",
+      "value": -150.0
+     },
+     "p8": {
+      "kind": "bool",
+      "value": true
+     },
+     "p3": {
+      "kind": "area",
+      "value": -300.0
+     },
+     "p9": {
+      "kind": "bool",
+      "value": true
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 7",
+   "params": {
+    "p0": {
+     "source": "true",
+     "python": "True"
+    },
+    "p1": {
+     "source": "1.5 m2",
+     "python": "Q(1.5, 'm2')"
+    },
+    "p2": {
+     "source": "p0",
+     "python": "P('p0')"
+    },
+    "p3": {
+     "source": "not (if p2 then false else p2)",
+     "python": "(not (((False) if (P('p2')) else (P('p2')))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p2": "bool"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p3"
+    ],
+    "values": {
+     "p0": {
+      "kind": "bool",
+      "value": true
+     },
+     "p1": {
+      "kind": "area",
+      "value": 1.5
+     },
+     "p2": {
+      "kind": "bool",
+      "value": true
+     },
+     "p3": {
+      "kind": "bool",
+      "value": true
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 8",
+   "params": {
+    "p0": {
+     "source": "0.5 m / 1 * (3 + 3)",
+     "python": "((((Q(0.5, 'm')) / (1.0))) * (((3.0) + (3.0))))"
+    },
+    "p1": {
+     "source": "false",
+     "python": "False"
+    },
+    "p2": {
+     "source": "0.25",
+     "python": "0.25"
+    },
+    "p3": {
+     "source": "0.5",
+     "python": "0.5"
+    },
+    "p4": {
+     "source": "tan(p3 * 1.5 rad)",
+     "python": "tan(((P('p3')) * (Q(1.5, 'rad'))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p2": "number"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p3",
+     "p4"
+    ],
+    "values": {
+     "p0": {
+      "kind": "length",
+      "value": 3.0
+     },
+     "p1": {
+      "kind": "bool",
+      "value": false
+     },
+     "p2": {
+      "kind": "number",
+      "value": 0.25
+     },
+     "p3": {
+      "kind": "number",
+      "value": 0.5
+     },
+     "p4": {
+      "kind": "number",
+      "value": 0.9315964599440725
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 9",
+   "params": {
+    "p0": {
+     "source": "atan2(250 cm, 1.5 km) / 0.5",
+     "python": "((atan2(Q(250.0, 'cm'), Q(1.5, 'km'))) / (0.5))"
+    },
+    "p1": {
+     "source": "sqrt(10000 cm2 - 10000 cm2)",
+     "python": "sqrt(((Q(10000.0, 'cm2')) - (Q(10000.0, 'cm2'))))"
+    },
+    "p2": {
+     "source": "abs(-90 deg)",
+     "python": "abs((-(Q(90.0, 'deg'))))"
+    },
+    "p3": {
+     "source": "90 mm / 10 in - cos(p2)",
+     "python": "((((Q(90.0, 'mm')) / (Q(10.0, 'in')))) - (cos(P('p2'))))"
+    },
+    "p4": {
+     "source": "if true then p1 else 3 ft * p3",
+     "python": "((P('p1')) if (True) else (((Q(3.0, 'ft')) * (P('p3')))))"
+    },
+    "p5": {
+     "source": "min(0 * p5, p3 * 180 deg)",
+     "python": "min(((0.0) * (P('p5'))), ((P('p3')) * (Q(180.0, 'deg'))))"
+    }
+   },
+   "overrides": {
+    "p1": {
+     "source": "p4 / 7.25",
+     "python": "((P('p4')) / (7.25))"
+    }
+   },
+   "declared": {
+    "p1": "length",
+    "p5": "angle"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p2",
+     "p3",
+     "p1",
+     "p4",
+     "p5"
+    ],
+    "values": {
+     "p0": {
+      "kind": "angle",
+      "value": 0.0033333302469187244
+     },
+     "p2": {
+      "kind": "angle",
+      "value": 1.5707963267948966
+     },
+     "p3": {
+      "kind": "number",
+      "value": 0.35433070866141725
+     }
+    },
+    "errors": {
+     "p1": {
+      "code": "cycle",
+      "members": [
+       "p1",
+       "p4"
+      ]
+     },
+     "p4": {
+      "code": "cycle",
+      "members": [
+       "p1",
+       "p4"
+      ]
+     },
+     "p5": {
+      "code": "cycle",
+      "members": [
+       "p5"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 10",
+   "params": {
+    "p0": {
+     "source": "7.25 ^ 3 + 2",
+     "python": "((((7.25) ** (3.0))) + (2.0))"
+    },
+    "p1": {
+     "source": "-atan2(12, 0.5)",
+     "python": "(-(atan2(12.0, 0.5)))"
+    },
+    "p2": {
+     "source": "(if true then 250 cm else 250 cm) * sin(p1)",
+     "python": "((((Q(250.0, 'cm')) if (True) else (Q(250.0, 'cm')))) * (sin(P('p1'))))"
+    },
+    "p3": {
+     "source": "-p1 / round(3 ft / 100 mm)",
+     "python": "(((-(P('p1')))) / (round(((Q(3.0, 'ft')) / (Q(100.0, 'mm'))))))"
+    },
+    "p4": {
+     "source": "if 2 m2 < 2 m2 then 10 in * p0 else -p2",
+     "python": "((((Q(10.0, 'in')) * (P('p0')))) if (((Q(2.0, 'm2')) < (Q(2.0, 'm2')))) else ((-(P('p2')))))"
+    },
+    "p5": {
+     "source": "-(1.5 rad / 0.5)",
+     "python": "(-(((Q(1.5, 'rad')) / (0.5))))"
+    },
+    "p6": {
+     "source": "p6 and true and p6",
+     "python": "((((P('p6')) and (True))) and (P('p6')))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p2": "length",
+    "p6": "bool"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p5",
+     "p2",
+     "p3",
+     "p4",
+     "p6"
+    ],
+    "values": {
+     "p0": {
+      "kind": "number",
+      "value": 383.078125
+     },
+     "p1": {
+      "kind": "angle",
+      "value": -1.5291537476963082
+     },
+     "p5": {
+      "kind": "angle",
+      "value": -3.0
+     },
+     "p2": {
+      "kind": "length",
+      "value": -2.4978326827308797
+     },
+     "p3": {
+      "kind": "angle",
+      "value": 0.16990597196625645
+     },
+     "p4": {
+      "kind": "length",
+      "value": 2.4978326827308797
+     }
+    },
+    "errors": {
+     "p6": {
+      "code": "cycle",
+      "members": [
+       "p6"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 11",
+   "params": {
+    "p0": {
+     "source": "min(p0 / p1, 10 in * 0.5 m)",
+     "python": "min(((P('p0')) / (P('p1'))), ((Q(10.0, 'in')) * (Q(0.5, 'm'))))"
+    },
+    "p1": {
+     "source": "(-2) ^ 0.5",
+     "python": "(((-(2.0))) ** (0.5))"
+    },
+    "p2": {
+     "source": "max(10 in ^ 2, 1200 mm * 2.4 m)",
+     "python": "max(((Q(10.0, 'in')) ** (2.0)), ((Q(1200.0, 'mm')) * (Q(2.4, 'm'))))"
+    },
+    "p3": {
+     "source": "abs(1.5 km) * 0.5 m",
+     "python": "((abs(Q(1.5, 'km'))) * (Q(0.5, 'm')))"
+    },
+    "p4": {
+     "source": "if false or true then \"pine\" != \"ß\" else true or true",
+     "python": "(((('pine') != ('ß'))) if (((False) or (True))) else (((True) or (True))))"
+    },
+    "p5": {
+     "source": "30 deg",
+     "python": "Q(30.0, 'deg')"
+    },
+    "p6": {
+     "source": "90 mm / 90 mm * (p1 * p2)",
+     "python": "((((Q(90.0, 'mm')) / (Q(90.0, 'mm')))) * (((P('p1')) * (P('p2')))))"
+    },
+    "p7": {
+     "source": "sqrt(p6) ^ 2",
+     "python": "((sqrt(P('p6'))) ** (2.0))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p0": "area",
+    "p4": "bool",
+    "p7": "area"
+   },
+   "expected": {
+    "order": [
+     "p1",
+     "p2",
+     "p3",
+     "p4",
+     "p5",
+     "p6",
+     "p7",
+     "p0"
+    ],
+    "values": {
+     "p2": {
+      "kind": "area",
+      "value": 2.88
+     },
+     "p3": {
+      "kind": "area",
+      "value": 750.0
+     },
+     "p4": {
+      "kind": "bool",
+      "value": true
+     },
+     "p5": {
+      "kind": "angle",
+      "value": 0.5235987755982988
+     }
+    },
+    "errors": {
+     "p1": {
+      "code": "domain",
+      "path": []
+     },
+     "p6": {
+      "code": "failed-dependency",
+      "name": "p1"
+     },
+     "p7": {
+      "code": "failed-dependency",
+      "name": "p6"
+     },
+     "p0": {
+      "code": "cycle",
+      "members": [
+       "p0"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 12",
+   "params": {
+    "p0": {
+     "source": "3 * 1000000 cm3 / abs(250 cm)",
+     "python": "((((3.0) * (Q(1000000.0, 'cm3')))) / (abs(Q(250.0, 'cm'))))"
+    },
+    "p1": {
+     "source": "round(7.25) * (0.5 * 2 m2)",
+     "python": "((round(7.25)) * (((0.5) * (Q(2.0, 'm2')))))"
+    },
+    "p2": {
+     "source": "(\"ß\" = \"pine\") = (not false)",
+     "python": "(((('ß') == ('pine'))) == ((not (False))))"
+    },
+    "p3": {
+     "source": "(if false then 7.25 else 12) / 0.5 ^ 2",
+     "python": "((((7.25) if (False) else (12.0))) / (((0.5) ** (2.0))))"
+    },
+    "p4": {
+     "source": "max(1.5 m2 / p3, p1)",
+     "python": "max(((Q(1.5, 'm2')) / (P('p3'))), P('p1'))"
+    },
+    "p5": {
+     "source": "max(1 m3, 2.5 m3) / (2.4 m / p3)",
+     "python": "((max(Q(1.0, 'm3'), Q(2.5, 'm3'))) / (((Q(2.4, 'm')) / (P('p3')))))"
+    },
+    "p6": {
+     "source": "0.5",
+     "python": "0.5"
+    },
+    "p7": {
+     "source": "p3 * 1200 mm + 0.5 m",
+     "python": "((((P('p3')) * (Q(1200.0, 'mm')))) + (Q(0.5, 'm')))"
+    },
+    "p8": {
+     "source": "if true != true then p1 >= p5 else p2 or p2",
+     "python": "((((P('p1')) >= (P('p5')))) if (((True) != (True))) else (((P('p2')) or (P('p2')))))"
+    }
+   },
+   "overrides": {
+    "p0": {
+     "source": "p5 - p1",
+     "python": "((P('p5')) - (P('p1')))"
+    }
+   },
+   "declared": {
+    "p5": "area",
+    "p7": "length"
+   },
+   "expected": {
+    "order": [
+     "p1",
+     "p2",
+     "p3",
+     "p6",
+     "p4",
+     "p5",
+     "p7",
+     "p0",
+     "p8"
+    ],
+    "values": {
+     "p1": {
+      "kind": "area",
+      "value": 7.0
+     },
+     "p2": {
+      "kind": "bool",
+      "value": false
+     },
+     "p3": {
+      "kind": "number",
+      "value": 48.0
+     },
+     "p6": {
+      "kind": "number",
+      "value": 0.5
+     },
+     "p4": {
+      "kind": "area",
+      "value": 7.0
+     },
+     "p5": {
+      "kind": "area",
+      "value": 50.00000000000001
+     },
+     "p7": {
+      "kind": "length",
+      "value": 58.099999999999994
+     },
+     "p0": {
+      "kind": "area",
+      "value": 43.00000000000001
+     },
+     "p8": {
+      "kind": "bool",
+      "value": false
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 13",
+   "params": {
+    "p0": {
+     "source": "abs(4 m) ^ 2",
+     "python": "((abs(Q(4.0, 'm'))) ** (2.0))"
+    },
+    "p1": {
+     "source": "sqrt(7.25 * 2 m2)",
+     "python": "sqrt(((7.25) * (Q(2.0, 'm2'))))"
+    },
+    "p2": {
+     "source": "abs(abs(1.5 rad))",
+     "python": "abs(abs(Q(1.5, 'rad')))"
+    },
+    "p3": {
+     "source": "not false and \"ß\" = \"pine\"",
+     "python": "(((not (False))) and ((('ß') == ('pine'))))"
+    },
+    "p4": {
+     "source": "-0.5 * (0 * 10000 cm2)",
+     "python": "(((-(0.5))) * (((0.0) * (Q(10000.0, 'cm2')))))"
+    },
+    "p5": {
+     "source": "-2.4 m * tan(45 deg)",
+     "python": "(((-(Q(2.4, 'm')))) * (tan(Q(45.0, 'deg'))))"
+    },
+    "p6": {
+     "source": "(p3 or p3) and (true and false)",
+     "python": "((((P('p3')) or (P('p3')))) and (((True) and (False))))"
+    },
+    "p7": {
+     "source": "cos(p2) / sqrt(p7)",
+     "python": "((cos(P('p2'))) / (sqrt(P('p7'))))"
+    },
+    "p8": {
+     "source": "p7 * 60 deg / p7",
+     "python": "((((P('p7')) * (Q(60.0, 'deg')))) / (P('p7')))"
+    },
+    "p9": {
+     "source": "round(p5 / 10 mm) * (1000000 cm3 / 1.5 m2)",
+     "python": "((round(((P('p5')) / (Q(10.0, 'mm'))))) * (((Q(1000000.0, 'cm3')) / (Q(1.5, 'm2')))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p2": "angle",
+    "p3": "bool",
+    "p8": "angle"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p3",
+     "p4",
+     "p5",
+     "p6",
+     "p9",
+     "p7",
+     "p8"
+    ],
+    "values": {
+     "p0": {
+      "kind": "area",
+      "value": 16.0
+     },
+     "p1": {
+      "kind": "length",
+      "value": 3.8078865529319543
+     },
+     "p2": {
+      "kind": "angle",
+      "value": 1.5
+     },
+     "p3": {
+      "kind": "bool",
+      "value": false
+     },
+     "p4": {
+      "kind": "area",
+      "value": -0.0
+     },
+     "p5": {
+      "kind": "length",
+      "value": -2.3999999999999995
+     },
+     "p6": {
+      "kind": "bool",
+      "value": false
+     },
+     "p9": {
+      "kind": "length",
+      "value": -160.0
+     }
+    },
+    "errors": {
+     "p7": {
+      "code": "cycle",
+      "members": [
+       "p7"
+      ]
+     },
+     "p8": {
+      "code": "failed-dependency",
+      "name": "p7"
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 14",
+   "params": {
+    "p0": {
+     "source": "sqrt(2.4 m * p0)",
+     "python": "sqrt(((Q(2.4, 'm')) * (P('p0'))))"
+    },
+    "p1": {
+     "source": "1.5 m2",
+     "python": "Q(1.5, 'm2')"
+    },
+    "p2": {
+     "source": "90 mm / 7.25 + (p0 + 10 in)",
+     "python": "((((Q(90.0, 'mm')) / (7.25))) + (((P('p0')) + (Q(10.0, 'in')))))"
+    },
+    "p3": {
+     "source": "abs(180 deg + 180 deg)",
+     "python": "abs(((Q(180.0, 'deg')) + (Q(180.0, 'deg'))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p1": "area",
+    "p3": "angle"
+   },
+   "expected": {
+    "order": [
+     "p1",
+     "p3",
+     "p0",
+     "p2"
+    ],
+    "values": {
+     "p1": {
+      "kind": "area",
+      "value": 1.5
+     },
+     "p3": {
+      "kind": "angle",
+      "value": 6.283185307179586
+     }
+    },
+    "errors": {
+     "p0": {
+      "code": "cycle",
+      "members": [
+       "p0"
+      ]
+     },
+     "p2": {
+      "code": "failed-dependency",
+      "name": "p0"
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 15",
+   "params": {
+    "p0": {
+     "source": "2 m2",
+     "python": "Q(2.0, 'm2')"
+    },
+    "p1": {
+     "source": "0.5",
+     "python": "0.5"
+    },
+    "p2": {
+     "source": "90 deg",
+     "python": "Q(90.0, 'deg')"
+    },
+    "p3": {
+     "source": "0.5 * 60 deg - p2",
+     "python": "((((0.5) * (Q(60.0, 'deg')))) - (P('p2')))"
+    },
+    "p4": {
+     "source": "min(p0, p0)",
+     "python": "min(P('p0'), P('p0'))"
+    }
+   },
+   "overrides": {
+    "p1": {
+     "source": "if false then 100 else 12",
+     "python": "((100.0) if (False) else (12.0))"
+    }
+   },
+   "declared": {
+    "p0": "area",
+    "p3": "angle"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p3",
+     "p4"
+    ],
+    "values": {
+     "p0": {
+      "kind": "area",
+      "value": 2.0
+     },
+     "p1": {
+      "kind": "number",
+      "value": 12.0
+     },
+     "p2": {
+      "kind": "angle",
+      "value": 1.5707963267948966
+     },
+     "p3": {
+      "kind": "angle",
+      "value": -1.0471975511965979
+     },
+     "p4": {
+      "kind": "area",
+      "value": 2.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 16",
+   "params": {
+    "p0": {
+     "source": "7.25 * min(250000 mm2, 10000 cm2)",
+     "python": "((7.25) * (min(Q(250000.0, 'mm2'), Q(10000.0, 'cm2'))))"
+    },
+    "p1": {
+     "source": "-(if true then p4 else 90 mm)",
+     "python": "(-(((P('p4')) if (True) else (Q(90.0, 'mm')))))"
+    },
+    "p2": {
+     "source": "min(4 m * p5, 1000000 cm3 / p0)",
+     "python": "min(((Q(4.0, 'm')) * (P('p5'))), ((Q(1000000.0, 'cm3')) / (P('p0'))))"
+    },
+    "p3": {
+     "source": "if p0 = 2 m2 then 10000 cm2 / 7.25 else 7.25 * 2 m2",
+     "python": "((((Q(10000.0, 'cm2')) / (7.25))) if (((P('p0')) == (Q(2.0, 'm2')))) else (((7.25) * (Q(2.0, 'm2')))))"
+    },
+    "p4": {
+     "source": "max(if true then p1 else p1, abs(p1))",
+     "python": "max(((P('p1')) if (True) else (P('p1'))), abs(P('p1')))"
+    },
+    "p5": {
+     "source": "-100 + 0.5",
+     "python": "(((-(100.0))) + (0.5))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p0": "area",
+    "p1": "length",
+    "p3": "area",
+    "p4": "length",
+    "p5": "number"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p5",
+     "p2",
+     "p3",
+     "p1",
+     "p4"
+    ],
+    "values": {
+     "p0": {
+      "kind": "area",
+      "value": 1.8125
+     },
+     "p5": {
+      "kind": "number",
+      "value": -99.5
+     },
+     "p2": {
+      "kind": "length",
+      "value": -398.0
+     },
+     "p3": {
+      "kind": "area",
+      "value": 14.5
+     }
+    },
+    "errors": {
+     "p1": {
+      "code": "cycle",
+      "members": [
+       "p1",
+       "p4"
+      ]
+     },
+     "p4": {
+      "code": "cycle",
+      "members": [
+       "p1",
+       "p4"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 17",
+   "params": {
+    "p0": {
+     "source": "(false or true) and (p2 and p2)",
+     "python": "((((False) or (True))) and (((P('p2')) and (P('p2')))))"
+    },
+    "p1": {
+     "source": "(10000 cm2 / 250 cm) ^ 2",
+     "python": "((((Q(10000.0, 'cm2')) / (Q(250.0, 'cm')))) ** (2.0))"
+    },
+    "p2": {
+     "source": "not (if false then false else false)",
+     "python": "(not (((False) if (False) else (False))))"
+    },
+    "p3": {
+     "source": "if 90 mm = 2.4 m then if false then 10000 cm2 else p1 else 1 * p1",
+     "python": "((((Q(10000.0, 'cm2')) if (False) else (P('p1')))) if (((Q(90.0, 'mm')) == (Q(2.4, 'm')))) else (((1.0) * (P('p1')))))"
+    },
+    "p4": {
+     "source": "1200 mm",
+     "python": "Q(1200.0, 'mm')"
+    },
+    "p5": {
+     "source": "2.4 m * 0.25 / sin(60 deg)",
+     "python": "((((Q(2.4, 'm')) * (0.25))) / (sin(Q(60.0, 'deg'))))"
+    },
+    "p6": {
+     "source": "(if p2 then 0.5 else 0) * (p6 + p6)",
+     "python": "((((0.5) if (P('p2')) else (0.0))) * (((P('p6')) + (P('p6')))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p1": "area",
+    "p5": "length"
+   },
+   "expected": {
+    "order": [
+     "p1",
+     "p2",
+     "p4",
+     "p5",
+     "p0",
+     "p3",
+     "p6"
+    ],
+    "values": {
+     "p1": {
+      "kind": "area",
+      "value": 0.16000000000000003
+     },
+     "p2": {
+      "kind": "bool",
+      "value": true
+     },
+     "p4": {
+      "kind": "length",
+      "value": 1.2
+     },
+     "p5": {
+      "kind": "length",
+      "value": 0.6928203230275509
+     },
+     "p0": {
+      "kind": "bool",
+      "value": true
+     },
+     "p3": {
+      "kind": "area",
+      "value": 0.16000000000000003
+     }
+    },
+    "errors": {
+     "p6": {
+      "code": "cycle",
+      "members": [
+       "p6"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 18",
+   "params": {
+    "p0": {
+     "source": "sqrt(1.5 km ^ 2)",
+     "python": "sqrt(((Q(1.5, 'km')) ** (2.0)))"
+    },
+    "p1": {
+     "source": "2 * 1000000 cm3 / abs(90 mm)",
+     "python": "((((2.0) * (Q(1000000.0, 'cm3')))) / (abs(Q(90.0, 'mm'))))"
+    },
+    "p2": {
+     "source": "-(45 deg / 1)",
+     "python": "(-(((Q(45.0, 'deg')) / (1.0))))"
+    },
+    "p3": {
+     "source": "abs(p0) / (2 m2 / p0)",
+     "python": "((abs(P('p0'))) / (((Q(2.0, 'm2')) / (P('p0')))))"
+    },
+    "p4": {
+     "source": "p3",
+     "python": "P('p3')"
+    },
+    "p5": {
+     "source": "p1 / (p0 / p0)",
+     "python": "((P('p1')) / (((P('p0')) / (P('p0')))))"
+    },
+    "p6": {
+     "source": "-(p0 / 7.25)",
+     "python": "(-(((P('p0')) / (7.25))))"
+    },
+    "p7": {
+     "source": "atan2(500 l / 2 m2, abs(1200 mm))",
+     "python": "atan2(((Q(500.0, 'l')) / (Q(2.0, 'm2'))), abs(Q(1200.0, 'mm')))"
+    }
+   },
+   "overrides": {
+    "p7": {
+     "source": "-p2",
+     "python": "(-(P('p2')))"
+    }
+   },
+   "declared": {
+    "p6": "length"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p3",
+     "p5",
+     "p6",
+     "p7",
+     "p4"
+    ],
+    "values": {
+     "p0": {
+      "kind": "length",
+      "value": 1500.0
+     },
+     "p1": {
+      "kind": "area",
+      "value": 22.22222222222222
+     },
+     "p2": {
+      "kind": "angle",
+      "value": -0.7853981633974483
+     },
+     "p3": {
+      "kind": "number",
+      "value": 1125000.0
+     },
+     "p5": {
+      "kind": "area",
+      "value": 22.22222222222222
+     },
+     "p6": {
+      "kind": "length",
+      "value": -206.89655172413794
+     },
+     "p7": {
+      "kind": "angle",
+      "value": 0.7853981633974483
+     },
+     "p4": {
+      "kind": "number",
+      "value": 1125000.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 19",
+   "params": {
+    "p0": {
+     "source": "1000000 cm3 >= 1 m3 or (true or true)",
+     "python": "((((Q(1000000.0, 'cm3')) >= (Q(1.0, 'm3')))) or (((True) or (True))))"
+    },
+    "p1": {
+     "source": "30 deg",
+     "python": "Q(30.0, 'deg')"
+    },
+    "p2": {
+     "source": "250000 mm2 * 0.5 m / (1.5 m2 / 3)",
+     "python": "((((Q(250000.0, 'mm2')) * (Q(0.5, 'm')))) / (((Q(1.5, 'm2')) / (3.0))))"
+    },
+    "p3": {
+     "source": "abs(1.5 km / p6)",
+     "python": "abs(((Q(1.5, 'km')) / (P('p6'))))"
+    },
+    "p4": {
+     "source": "1000000 cm3 / 250000 mm2 * (4 m / 0.25)",
+     "python": "((((Q(1000000.0, 'cm3')) / (Q(250000.0, 'mm2')))) * (((Q(4.0, 'm')) / (0.25))))"
+    },
+    "p5": {
+     "source": "if false and p0 then p1 - p1 else -p1",
+     "python": "((((P('p1')) - (P('p1')))) if (((False) and (P('p0')))) else ((-(P('p1')))))"
+    },
+    "p6": {
+     "source": "cos(-p1)",
+     "python": "cos((-(P('p1'))))"
+    },
+    "p7": {
+     "source": "abs(90 mm) ^ 2",
+     "python": "((abs(Q(90.0, 'mm'))) ** (2.0))"
+    },
+    "p8": {
+     "source": "500 l / 90 mm / (1 m3 / p4)",
+     "python": "((((Q(500.0, 'l')) / (Q(90.0, 'mm')))) / (((Q(1.0, 'm3')) / (P('p4')))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p0": "bool",
+    "p6": "number"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p4",
+     "p7",
+     "p5",
+     "p6",
+     "p8",
+     "p3"
+    ],
+    "values": {
+     "p0": {
+      "kind": "bool",
+      "value": true
+     },
+     "p1": {
+      "kind": "angle",
+      "value": 0.5235987755982988
+     },
+     "p2": {
+      "kind": "length",
+      "value": 0.25
+     },
+     "p4": {
+      "kind": "area",
+      "value": 64.0
+     },
+     "p7": {
+      "kind": "area",
+      "value": 0.0081
+     },
+     "p5": {
+      "kind": "angle",
+      "value": -0.5235987755982988
+     },
+     "p6": {
+      "kind": "number",
+      "value": 0.8660254037844387
+     },
+     "p8": {
+      "kind": "length",
+      "value": 355.55555555555554
+     },
+     "p3": {
+      "kind": "length",
+      "value": 1732.0508075688772
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 20",
+   "params": {
+    "p0": {
+     "source": "sin(30 deg) / 100 ^ 10",
+     "python": "((sin(Q(30.0, 'deg'))) / (((100.0) ** (10.0))))"
+    },
+    "p1": {
+     "source": "min(abs(90 deg), abs(45 deg))",
+     "python": "min(abs(Q(90.0, 'deg')), abs(Q(45.0, 'deg')))"
+    },
+    "p2": {
+     "source": "sqrt(2.5 m3 / 90 mm)",
+     "python": "sqrt(((Q(2.5, 'm3')) / (Q(90.0, 'mm'))))"
+    },
+    "p3": {
+     "source": "p2",
+     "python": "P('p2')"
+    },
+    "p4": {
+     "source": "round(0.5 m / 10 mm) * cos(p1)",
+     "python": "((round(((Q(0.5, 'm')) / (Q(10.0, 'mm'))))) * (cos(P('p1'))))"
+    },
+    "p5": {
+     "source": "if \"oak\" = \"oak\" then abs(p3) else 2.5 m3 / 250000 mm2",
+     "python": "((abs(P('p3'))) if ((('oak') == ('oak'))) else (((Q(2.5, 'm3')) / (Q(250000.0, 'mm2')))))"
+    },
+    "p6": {
+     "source": "p4 * 3 ft",
+     "python": "((P('p4')) * (Q(3.0, 'ft')))"
+    },
+    "p7": {
+     "source": "250000 mm2",
+     "python": "Q(250000.0, 'mm2')"
+    },
+    "p8": {
+     "source": "1000000 cm3 / p5 / (p6 / p5)",
+     "python": "((((Q(1000000.0, 'cm3')) / (P('p5')))) / (((P('p6')) / (P('p5')))))"
+    },
+    "p9": {
+     "source": "floor(10 * p4)",
+     "python": "floor(((10.0) * (P('p4'))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p0": "number",
+    "p9": "number"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p7",
+     "p3",
+     "p4",
+     "p5",
+     "p6",
+     "p9",
+     "p8"
+    ],
+    "values": {
+     "p0": {
+      "kind": "number",
+      "value": 5e-21
+     },
+     "p1": {
+      "kind": "angle",
+      "value": 0.7853981633974483
+     },
+     "p2": {
+      "kind": "length",
+      "value": 5.270462766947299
+     },
+     "p7": {
+      "kind": "area",
+      "value": 0.25
+     },
+     "p3": {
+      "kind": "length",
+      "value": 5.270462766947299
+     },
+     "p4": {
+      "kind": "number",
+      "value": 35.35533905932738
+     },
+     "p5": {
+      "kind": "length",
+      "value": 5.270462766947299
+     },
+     "p6": {
+      "kind": "length",
+      "value": 32.328922035848954
+     },
+     "p9": {
+      "kind": "number",
+      "value": 353.0
+     },
+     "p8": {
+      "kind": "area",
+      "value": 0.030932055170015203
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 21",
+   "params": {
+    "p0": {
+     "source": "round(250000 mm2 / 10 in / 10 mm)",
+     "python": "round(((((Q(250000.0, 'mm2')) / (Q(10.0, 'in')))) / (Q(10.0, 'mm'))))"
+    },
+    "p1": {
+     "source": "p0 * (90 mm * 3 ft)",
+     "python": "((P('p0')) * (((Q(90.0, 'mm')) * (Q(3.0, 'ft')))))"
+    },
+    "p2": {
+     "source": "-(p0 * 0.25)",
+     "python": "(-(((P('p0')) * (0.25))))"
+    },
+    "p3": {
+     "source": "sqrt(4 m ^ 2)",
+     "python": "sqrt(((Q(4.0, 'm')) ** (2.0)))"
+    }
+   },
+   "overrides": {
+    "p0": {
+     "source": "3",
+     "python": "3.0"
+    }
+   },
+   "declared": {
+    "p3": "length"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p3",
+     "p1",
+     "p2"
+    ],
+    "values": {
+     "p0": {
+      "kind": "number",
+      "value": 3.0
+     },
+     "p3": {
+      "kind": "length",
+      "value": 4.0
+     },
+     "p1": {
+      "kind": "area",
+      "value": 0.246888
+     },
+     "p2": {
+      "kind": "number",
+      "value": -0.75
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 22",
+   "params": {
+    "p0": {
+     "source": "1.5 km",
+     "python": "Q(1.5, 'km')"
+    },
+    "p1": {
+     "source": "min(7.25 * 1, 2 / 12)",
+     "python": "min(((7.25) * (1.0)), ((2.0) / (12.0)))"
+    },
+    "p2": {
+     "source": "2 m2 / p1 / abs(p1)",
+     "python": "((((Q(2.0, 'm2')) / (P('p1')))) / (abs(P('p1'))))"
+    },
+    "p3": {
+     "source": "false and (false and false)",
+     "python": "((False) and (((False) and (False))))"
+    },
+    "p4": {
+     "source": "min(p1, 0.25) / (0 + 10)",
+     "python": "((min(P('p1'), 0.25)) / (((0.0) + (10.0))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p0": "length",
+    "p2": "area"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p3",
+     "p2",
+     "p4"
+    ],
+    "values": {
+     "p0": {
+      "kind": "length",
+      "value": 1500.0
+     },
+     "p1": {
+      "kind": "number",
+      "value": 0.16666666666666666
+     },
+     "p3": {
+      "kind": "bool",
+      "value": false
+     },
+     "p2": {
+      "kind": "area",
+      "value": 72.0
+     },
+     "p4": {
+      "kind": "number",
+      "value": 0.016666666666666666
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 23",
+   "params": {
+    "p0": {
+     "source": "(10 in * 12) ^ 2",
+     "python": "((((Q(10.0, 'in')) * (12.0))) ** (2.0))"
+    },
+    "p1": {
+     "source": "(250 cm * 7.25) ^ 2",
+     "python": "((((Q(250.0, 'cm')) * (7.25))) ** (2.0))"
+    },
+    "p2": {
+     "source": "(false or true) and \"\" = \"\"",
+     "python": "((((False) or (True))) and ((('') == (''))))"
+    },
+    "p3": {
+     "source": "1 ^ 2 * -30 deg",
+     "python": "((((1.0) ** (2.0))) * ((-(Q(30.0, 'deg')))))"
+    },
+    "p4": {
+     "source": "abs(90 deg) / floor(7.25)",
+     "python": "((abs(Q(90.0, 'deg'))) / (floor(7.25)))"
+    },
+    "p5": {
+     "source": "p4",
+     "python": "P('p4')"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p4": "angle"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p3",
+     "p4",
+     "p5"
+    ],
+    "values": {
+     "p0": {
+      "kind": "area",
+      "value": 9.290304
+     },
+     "p1": {
+      "kind": "area",
+      "value": 328.515625
+     },
+     "p2": {
+      "kind": "bool",
+      "value": true
+     },
+     "p3": {
+      "kind": "angle",
+      "value": -0.5235987755982988
+     },
+     "p4": {
+      "kind": "angle",
+      "value": 0.2243994752564138
+     },
+     "p5": {
+      "kind": "angle",
+      "value": 0.2243994752564138
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 24",
+   "params": {
+    "p0": {
+     "source": "cos(abs(180 deg))",
+     "python": "cos(abs(Q(180.0, 'deg')))"
+    },
+    "p1": {
+     "source": "(500 l - 500 l) / (1.5 m2 / 3)",
+     "python": "((((Q(500.0, 'l')) - (Q(500.0, 'l')))) / (((Q(1.5, 'm2')) / (3.0))))"
+    },
+    "p2": {
+     "source": "if false or false then p0 * 1.5 rad else 60 deg / 1",
+     "python": "((((P('p0')) * (Q(1.5, 'rad')))) if (((False) or (False))) else (((Q(60.0, 'deg')) / (1.0))))"
+    },
+    "p3": {
+     "source": "sin(1 * 45 deg)",
+     "python": "sin(((1.0) * (Q(45.0, 'deg'))))"
+    },
+    "p4": {
+     "source": "(p0 + 0.25) * (p0 + 0)",
+     "python": "((((P('p0')) + (0.25))) * (((P('p0')) + (0.0))))"
+    },
+    "p5": {
+     "source": "if false then false and false else false = false",
+     "python": "((((False) and (False))) if (False) else (((False) == (False))))"
+    },
+    "p6": {
+     "source": "(p0 / 3) ^ 2",
+     "python": "((((P('p0')) / (3.0))) ** (2.0))"
+    }
+   },
+   "overrides": {
+    "p4": {
+     "source": "-p6",
+     "python": "(-(P('p6')))"
+    }
+   },
+   "declared": {
+    "p1": "length",
+    "p4": "number",
+    "p6": "number"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p3",
+     "p5",
+     "p2",
+     "p6",
+     "p4"
+    ],
+    "values": {
+     "p0": {
+      "kind": "number",
+      "value": -1.0
+     },
+     "p1": {
+      "kind": "length",
+      "value": 0.0
+     },
+     "p3": {
+      "kind": "number",
+      "value": 0.7071067811865476
+     },
+     "p5": {
+      "kind": "bool",
+      "value": true
+     },
+     "p2": {
+      "kind": "angle",
+      "value": 1.0471975511965976
+     },
+     "p6": {
+      "kind": "number",
+      "value": 0.1111111111111111
+     },
+     "p4": {
+      "kind": "number",
+      "value": -0.1111111111111111
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 25",
+   "params": {
+    "p0": {
+     "source": "if true or true then 1.5 km ^ 2 else 2.5 m3 / 0.5 m",
+     "python": "((((Q(1.5, 'km')) ** (2.0))) if (((True) or (True))) else (((Q(2.5, 'm3')) / (Q(0.5, 'm')))))"
+    },
+    "p1": {
+     "source": "abs(min(180 deg, 60 deg))",
+     "python": "abs(min(Q(180.0, 'deg'), Q(60.0, 'deg')))"
+    },
+    "p2": {
+     "source": "abs(250 cm) + 1.5 m2 / 3 ft",
+     "python": "((abs(Q(250.0, 'cm'))) + (((Q(1.5, 'm2')) / (Q(3.0, 'ft')))))"
+    },
+    "p3": {
+     "source": "sqrt(p0 - p0)",
+     "python": "sqrt(((P('p0')) - (P('p0'))))"
+    },
+    "p4": {
+     "source": "if true then 10 * 60 deg else abs(1.5 rad)",
+     "python": "((((10.0) * (Q(60.0, 'deg')))) if (True) else (abs(Q(1.5, 'rad'))))"
+    },
+    "p5": {
+     "source": "max(1000000 cm3, 1 m3) / 1200 mm",
+     "python": "((max(Q(1000000.0, 'cm3'), Q(1.0, 'm3'))) / (Q(1200.0, 'mm')))"
+    },
+    "p6": {
+     "source": "true",
+     "python": "True"
+    },
+    "p7": {
+     "source": "p3 * p2 / p5",
+     "python": "((((P('p3')) * (P('p2')))) / (P('p5')))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p3": "length",
+    "p6": "bool"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p4",
+     "p5",
+     "p6",
+     "p3",
+     "p7"
+    ],
+    "values": {
+     "p0": {
+      "kind": "area",
+      "value": 2250000.0
+     },
+     "p1": {
+      "kind": "angle",
+      "value": 1.0471975511965976
+     },
+     "p2": {
+      "kind": "length",
+      "value": 4.140419947506562
+     },
+     "p4": {
+      "kind": "angle",
+      "value": 10.471975511965976
+     },
+     "p5": {
+      "kind": "area",
+      "value": 0.8333333333333334
+     },
+     "p6": {
+      "kind": "bool",
+      "value": true
+     },
+     "p3": {
+      "kind": "length",
+      "value": 0.0
+     },
+     "p7": {
+      "kind": "number",
+      "value": 0.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 26",
+   "params": {
+    "p0": {
+     "source": "round(250 cm / 10 mm) * (1.5 km / 90 mm)",
+     "python": "((round(((Q(250.0, 'cm')) / (Q(10.0, 'mm'))))) * (((Q(1.5, 'km')) / (Q(90.0, 'mm')))))"
+    },
+    "p1": {
+     "source": "min(abs(60 deg), 30 deg)",
+     "python": "min(abs(Q(60.0, 'deg')), Q(30.0, 'deg'))"
+    },
+    "p2": {
+     "source": "250 cm",
+     "python": "Q(250.0, 'cm')"
+    },
+    "p3": {
+     "source": "(if p5 then p7 else p5) or not false",
+     "python": "((((P('p7')) if (P('p5')) else (P('p5')))) or ((not (False))))"
+    },
+    "p4": {
+     "source": "min(90 mm * p0, p2 / p0)",
+     "python": "min(((Q(90.0, 'mm')) * (P('p0'))), ((P('p2')) / (P('p0'))))"
+    },
+    "p5": {
+     "source": "250000 mm2 * 90 mm > 250000 mm2 * 3 ft",
+     "python": "((((Q(250000.0, 'mm2')) * (Q(90.0, 'mm')))) > (((Q(250000.0, 'mm2')) * (Q(3.0, 'ft')))))"
+    },
+    "p6": {
+     "source": "3 ft",
+     "python": "Q(3.0, 'ft')"
+    },
+    "p7": {
+     "source": "false",
+     "python": "False"
+    },
+    "p8": {
+     "source": "min(p0 * p0, 0.5)",
+     "python": "min(((P('p0')) * (P('p0'))), 0.5)"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p1": "angle",
+    "p4": "length",
+    "p5": "bool",
+    "p7": "bool"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p2",
+     "p5",
+     "p6",
+     "p7",
+     "p3",
+     "p4",
+     "p8"
+    ],
+    "values": {
+     "p0": {
+      "kind": "number",
+      "value": 4166666.666666667
+     },
+     "p1": {
+      "kind": "angle",
+      "value": 0.5235987755982988
+     },
+     "p2": {
+      "kind": "length",
+      "value": 2.5
+     },
+     "p5": {
+      "kind": "bool",
+      "value": false
+     },
+     "p6": {
+      "kind": "length",
+      "value": 0.9144
+     },
+     "p7": {
+      "kind": "bool",
+      "value": false
+     },
+     "p3": {
+      "kind": "bool",
+      "value": true
+     },
+     "p4": {
+      "kind": "length",
+      "value": 6e-07
+     },
+     "p8": {
+      "kind": "number",
+      "value": 0.5
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 27",
+   "params": {
+    "p0": {
+     "source": "-2 * max(180 deg, 180 deg)",
+     "python": "(((-(2.0))) * (max(Q(180.0, 'deg'), Q(180.0, 'deg'))))"
+    },
+    "p1": {
+     "source": "round(sin(p0))",
+     "python": "round(sin(P('p0')))"
+    },
+    "p2": {
+     "source": "-atan2(p1, 2)",
+     "python": "(-(atan2(P('p1'), 2.0)))"
+    },
+    "p3": {
+     "source": "180 deg / p0 * (250 cm * 1200 mm)",
+     "python": "((((Q(180.0, 'deg')) / (P('p0')))) * (((Q(250.0, 'cm')) * (Q(1200.0, 'mm')))))"
+    },
+    "p4": {
+     "source": "not false or (if true then false else true)",
+     "python": "(((not (False))) or (((False) if (True) else (True))))"
+    },
+    "p5": {
+     "source": "p3 / (3 ft * 0)",
+     "python": "((P('p3')) / (((Q(3.0, 'ft')) * (0.0))))"
+    },
+    "p6": {
+     "source": "2.4 m",
+     "python": "Q(2.4, 'm')"
+    },
+    "p7": {
+     "source": "abs(p6)",
+     "python": "abs(P('p6'))"
+    },
+    "p8": {
+     "source": "p1",
+     "python": "P('p1')"
+    },
+    "p9": {
+     "source": "0.5 m / 3 ft * 30 deg",
+     "python": "((((Q(0.5, 'm')) / (Q(3.0, 'ft')))) * (Q(30.0, 'deg')))"
+    }
+   },
+   "overrides": {
+    "p3": {
+     "source": "10000 cm2",
+     "python": "Q(10000.0, 'cm2')"
+    }
+   },
+   "declared": {
+    "p2": "angle",
+    "p3": "area",
+    "p5": "length",
+    "p7": "length"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p3",
+     "p4",
+     "p6",
+     "p9",
+     "p1",
+     "p5",
+     "p7",
+     "p2",
+     "p8"
+    ],
+    "values": {
+     "p0": {
+      "kind": "angle",
+      "value": -6.283185307179586
+     },
+     "p3": {
+      "kind": "area",
+      "value": 1.0
+     },
+     "p4": {
+      "kind": "bool",
+      "value": true
+     },
+     "p6": {
+      "kind": "length",
+      "value": 2.4
+     },
+     "p9": {
+      "kind": "angle",
+      "value": 0.28630729199382043
+     },
+     "p1": {
+      "kind": "number",
+      "value": 0.0
+     },
+     "p7": {
+      "kind": "length",
+      "value": 2.4
+     },
+     "p2": {
+      "kind": "angle",
+      "value": -0.0
+     },
+     "p8": {
+      "kind": "number",
+      "value": 0.0
+     }
+    },
+    "errors": {
+     "p5": {
+      "code": "division-by-zero",
+      "path": []
+     }
+    }
+   }
+  },
+  {
+   "name": "generated 28",
+   "params": {
+    "p0": {
+     "source": "250000 mm2",
+     "python": "Q(250000.0, 'mm2')"
+    },
+    "p1": {
+     "source": "-90 deg / -30 deg",
+     "python": "(((-(Q(90.0, 'deg')))) / ((-(Q(30.0, 'deg')))))"
+    },
+    "p2": {
+     "source": "round(0.5 m / 10 mm) * (p1 / p1)",
+     "python": "((round(((Q(0.5, 'm')) / (Q(10.0, 'mm'))))) * (((P('p1')) / (P('p1')))))"
+    },
+    "p3": {
+     "source": "if true or false then 3 ft * 250 cm else 10 in ^ 2",
+     "python": "((((Q(3.0, 'ft')) * (Q(250.0, 'cm')))) if (((True) or (False))) else (((Q(10.0, 'in')) ** (2.0))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p2": "number"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p3",
+     "p2"
+    ],
+    "values": {
+     "p0": {
+      "kind": "area",
+      "value": 0.25
+     },
+     "p1": {
+      "kind": "number",
+      "value": 3.0
+     },
+     "p3": {
+      "kind": "area",
+      "value": 2.286
+     },
+     "p2": {
+      "kind": "number",
+      "value": 50.0
+     }
+    },
+    "errors": {}
+   }
+  },
+  {
+   "name": "generated 29",
+   "params": {
+    "p0": {
+     "source": "true",
+     "python": "True"
+    },
+    "p1": {
+     "source": "max(10 in, 0.5 m) ^ 2",
+     "python": "((max(Q(10.0, 'in'), Q(0.5, 'm'))) ** (2.0))"
+    },
+    "p2": {
+     "source": "(if true then p1 else 250000 mm2) / 1.5 km",
+     "python": "((((P('p1')) if (True) else (Q(250000.0, 'mm2')))) / (Q(1.5, 'km')))"
+    },
+    "p3": {
+     "source": "max(500 l, 2.5 m3) / sqrt(2 m2)",
+     "python": "((max(Q(500.0, 'l'), Q(2.5, 'm3'))) / (sqrt(Q(2.0, 'm2'))))"
+    },
+    "p4": {
+     "source": "100 * 45 deg < abs(45 deg)",
+     "python": "((((100.0) * (Q(45.0, 'deg')))) < (abs(Q(45.0, 'deg'))))"
+    }
+   },
+   "overrides": {},
+   "declared": {
+    "p3": "area",
+    "p4": "bool"
+   },
+   "expected": {
+    "order": [
+     "p0",
+     "p1",
+     "p3",
+     "p4",
+     "p2"
+    ],
+    "values": {
+     "p0": {
+      "kind": "bool",
+      "value": true
+     },
+     "p1": {
+      "kind": "area",
+      "value": 0.25
+     },
+     "p3": {
+      "kind": "area",
+      "value": 1.7677669529663687
+     },
+     "p4": {
+      "kind": "bool",
+      "value": false
+     },
+     "p2": {
+      "kind": "length",
+      "value": 0.00016666666666666666
+     }
+    },
+    "errors": {}
+   }
+  }
+ ]
+}

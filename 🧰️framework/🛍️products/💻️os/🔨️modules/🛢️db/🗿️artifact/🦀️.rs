@@ -4789,7 +4789,7 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
             let ArtifactDurableGroupJournalCommitStateV1::NotSubmitted { decision_pack, decision_sha256 } = state else { unreachable!() };
             if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
                 self.state = ArtifactDurableGroupJournalCommitStateV1::Absent;
-            } else if grant.maximum_bytes < decision_pack.len() {
+            } else if grant.maximum_copy_bytes < decision_pack.len() {
                 self.state = ArtifactDurableGroupJournalCommitStateV1::Rejected("durable group journal grant is smaller than the canonical decision".to_string());
             } else {
                 match store::durable_group::DurableOwnedGroupJournalRecordV1::admit(decision_pack, &decision_sha256) {
@@ -4831,19 +4831,19 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
         self.close_started = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        use store::SnapshotRetirementStep;
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         if matches!(self.state, ArtifactDurableGroupJournalCommitStateV1::Empty) {
-            return Ok(SnapshotRetirementStep::Complete);
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
-        if !self.close_started || !grant.permits_one() {
-            return Ok(SnapshotRetirementStep::Blocked);
+        if !self.close_started || grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         if matches!(self.state, ArtifactDurableGroupJournalCommitStateV1::Awaiting(_) | ArtifactDurableGroupJournalCommitStateV1::Failed(_)) {
-            return Ok(SnapshotRetirementStep::Blocked);
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         self.state = ArtifactDurableGroupJournalCommitStateV1::Empty;
-        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn terminal_is_empty(&self) -> bool {

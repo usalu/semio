@@ -466,3 +466,40 @@ fn shell_set_status_mirrors_into_every_tab_strip_of_the_stack() {
     let (left, _, _, y) = chip_geometry(&tui, windows[0], 1);
     assert_eq!(tui.frame().get(left + 2, y).unwrap().ch, '\u{2717}');
 }
+#[test]
+fn hidden_children_reserve_neither_size_nor_gaps() {
+    use taffy::prelude::{AvailableSpace, Display, FlexDirection, Style, TaffyTree};
+    for direction in [Direction::Row, Direction::Column] {
+        let mut tui = Tui::new(Size { width: 40, height: 22 }, Theme::new(AppearanceName::Dark));
+        let root = tui.scene.root();
+        tui.scene.node_mut(root).set_constraint(Constraint { direction, gap: 2, ..Default::default() });
+        let nodes: Vec<_> = (0..4).map(|_| {
+            let id = tui.scene.add(root, Node::new(NodeContent::Widget(label())));
+            tui.scene.node_mut(id).set_constraint(Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
+            id
+        }).collect();
+        tui.scene.node_mut(nodes[0]).set_constraint(Constraint { width: if direction == Direction::Row { Dimension::Cells(4) } else { Dimension::Weight(1) }, height: if direction == Direction::Column { Dimension::Cells(4) } else { Dimension::Weight(1) }, ..Default::default() });
+        let grandchild = tui.scene.add(nodes[1], Node::new(NodeContent::Widget(label())));
+        for hidden in [vec![1, 3], vec![0, 2], vec![], vec![0, 1, 2, 3]] {
+            let mut oracle = TaffyTree::<()>::new();
+            let children: Vec<_> = nodes.iter().enumerate().map(|(index, id)| {
+                tui.scene.node_mut(*id).set_visible(!hidden.contains(&index));
+                oracle.new_leaf(Style { display: if hidden.contains(&index) { Display::None } else { Display::Flex }, flex_grow: if index == 0 { 0.0 } else { 1.0 }, flex_basis: taffy::style::Dimension::length(if index == 0 { 4.0 } else { 0.0 }), ..Default::default() }).unwrap()
+            }).collect();
+            let parent = oracle.new_with_children(Style {
+                flex_direction: if direction == Direction::Row { FlexDirection::Row } else { FlexDirection::Column },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(40.0), height: taffy::style::Dimension::length(22.0) },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::length(2.0), height: taffy::style::LengthPercentage::length(2.0) },
+                ..Default::default()
+            }, &children).unwrap();
+            oracle.compute_layout(parent, taffy::geometry::Size { width: AvailableSpace::Definite(40.0), height: AvailableSpace::Definite(22.0) }).unwrap();
+            tui.layout();
+            if hidden.contains(&1) { assert_eq!(tui.scene.rect(grandchild), crate::tui::geometry::Rect::default()); }
+            for (id, child) in nodes.iter().zip(children) {
+                let expected = oracle.layout(child).unwrap();
+                let actual = tui.scene.rect(*id);
+                assert_eq!((actual.x, actual.y, actual.width, actual.height), (expected.location.x.round() as u16, expected.location.y.round() as u16, expected.size.width.round() as u16, expected.size.height.round() as u16), "{direction:?}, hidden {hidden:?}");
+            }
+        }
+    }
+}

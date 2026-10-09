@@ -118,7 +118,7 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
     };
     let adopts_query = matches!(request.command.as_ref(), TrinityJackCommand::LoadExampleQuery { .. }) && source != request.snapshot.query && source.len() <= crate::JACK_QUERY_MAXIMUM_BYTES;
     let work = Box::new(JackQueryWork::new(tool, source.to_string(), adopts_query, editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation));
-    let payload = ArtifactRetainedCommandPayload::try_new(
+    let payload = ArtifactRetainedCommandPayload::new(
         ArtifactRetainedCommandInputs {
             command: *request.command,
             snapshot: request.snapshot,
@@ -134,7 +134,7 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
         RAW_BYTES,
         1,
         work,
-    )?;
+    );
     Ok(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation))
 }
 

@@ -20,9 +20,9 @@
       "conductivity": 0.8,
       "specific_heat": 900
     },
-    "m-glass": {
-      "name": "Glass",
-      "category": "Glass",
+    "m-steel": {
+      "name": "Steel",
+      "category": "Masonry",
       "color": {
         "r": 0.7,
         "g": 0.35,
@@ -32,9 +32,33 @@
       "conductivity": 0.8,
       "specific_heat": 900
     },
-    "m-alu": {
-      "name": "Aluminium",
-      "category": "Metal",
+    "m-glass": {
+      "name": "Glass",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-wood": {
+      "name": "Wood",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-spare": {
+      "name": "Spare",
+      "category": "Masonry",
       "color": {
         "r": 0.7,
         "g": 0.35,
@@ -59,10 +83,94 @@
   },
   "slab_types": {},
   "roof_types": {},
-  "column_types": {},
-  "beam_types": {},
-  "window_types": {},
-  "door_types": {},
+  "column_types": {
+    "ct-400": {
+      "name": "Concrete 40x40",
+      "profile": {
+        "Rectangle": {
+          "width": 0.4,
+          "depth": 0.4
+        }
+      },
+      "material": "m-brick"
+    },
+    "ct-500": {
+      "name": "Concrete 50x50",
+      "profile": {
+        "Rectangle": {
+          "width": 0.5,
+          "depth": 0.5
+        }
+      },
+      "material": "m-brick"
+    }
+  },
+  "beam_types": {
+    "bt-30x50": {
+      "name": "Concrete 30x50",
+      "profile": {
+        "Rectangle": {
+          "width": 0.3,
+          "depth": 0.5
+        }
+      },
+      "material": "m-brick"
+    },
+    "bt-40x60": {
+      "name": "Concrete 40x60",
+      "profile": {
+        "Rectangle": {
+          "width": 0.4,
+          "depth": 0.6
+        }
+      },
+      "material": "m-brick"
+    }
+  },
+  "window_types": {
+    "win-1": {
+      "name": "Window",
+      "width": 1.2,
+      "height": 1.2,
+      "sill": 0.9,
+      "frame_width": 0.07,
+      "frame_depth": 0.12,
+      "panes": 2,
+      "material": "m-wood"
+    },
+    "win-2": {
+      "name": "Spare window",
+      "width": 1,
+      "height": 1,
+      "sill": 0.9,
+      "frame_width": 0.07,
+      "frame_depth": 0.12,
+      "panes": 1,
+      "material": "m-wood"
+    }
+  },
+  "door_types": {
+    "door-1": {
+      "name": "Door",
+      "width": 0.9,
+      "height": 2.1,
+      "frame_width": 0.06,
+      "frame_depth": 0.12,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m-wood"
+    },
+    "door-2": {
+      "name": "Spare door",
+      "width": 1,
+      "height": 2.1,
+      "frame_width": 0.06,
+      "frame_depth": 0.12,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m-wood"
+    }
+  },
   "sites": {
     "site-1": {
       "name": "Plot",
@@ -155,15 +263,16 @@
   "curtain_walls": {
     "cw-1": {
       "storey": "st-ground",
+      "curtain_wall_type": "cwt-1",
       "axis": {
         "Line": {
           "start": {
             "x": 0,
-            "y": 8
+            "y": 0
           },
           "end": {
-            "x": 8,
-            "y": 8
+            "x": 6,
+            "y": 0
           }
         }
       },
@@ -173,17 +282,8 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.2,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-alu",
-      "name": "Facade"
+      "phase": "New",
+      "name": "South facade"
     }
   },
   "columns": {},
@@ -195,5 +295,63 @@
   "railings": {},
   "spaces": {},
   "properties": {},
-  "classifications": {}
+  "classifications": {},
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Facade 1.5 x 1.5",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.15
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.08,
+          "depth": 0.15
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "mullion_material": "m-steel"
+    },
+    "cwt-2": {
+      "name": "Facade 2 x 3",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 2
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 3
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.15
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.08,
+          "depth": 0.15
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "mullion_material": "m-steel"
+    }
+  }
 }

@@ -12,8 +12,9 @@
 
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
+use crate::os_spr::command::TouchedPaths;
 use std::any::Any;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
 //#region 🔖️DepHash
@@ -32,42 +33,33 @@ impl DepHash {
         Self(*semio_framework_hash::hash(&data).as_bytes())
     }
 
-    /// 🔗 Extends a chain: folds `parents` (order-independent — sorted by their own bytes via
-    /// `merkle_node`, so two entities with the same parent SET in different orders hash identically)
-    /// into `input` under the same `(field_id, schema_version)` salt as [`root`](Self::root).
+    /// 🔗 Extends a chain: folds `parents` (order-independent — sorted by their own bytes, so two entities with
+    /// the same parent SET in different orders hash identically) into `input` under the same `(field_id, schema_version)`
+    /// salt as [`root`](Self::root). The fold is `semio_framework_hash::merkle_node` over the hex of the sorted parents, without its strings.
     pub fn chain(field_id: &str, schema_version: u32, input: &[u8], parents: &[DepHash]) -> Self {
         let mut own = field_id.as_bytes().to_vec();
         own.push(0);
         own.extend_from_slice(&schema_version.to_le_bytes());
         own.push(0);
         own.extend_from_slice(input);
-        let own_hex = semio_framework_hash::hash(&own).to_hex();
-        // 🪡️ `hex::encode` is async; `Iterator::map`'s closure is sync (E0728), so the await is
-        // hoisted into a plain loop instead (R10 residue #1).
-        let mut parent_hexes: Vec<String> = Vec::with_capacity(parents.len());
-        for parent in parents {
-            parent_hexes.push(hex::encode(parent.0));
+        let mut sorted: Vec<[u8; 32]> = parents.iter().map(|parent| parent.0).collect();
+        sorted.sort_unstable();
+        let mut data = Vec::with_capacity(65 * (1 + sorted.len()));
+        push_hex(&mut data, semio_framework_hash::hash(&own).as_bytes());
+        data.push(0x1f);
+        for parent in &sorted {
+            push_hex(&mut data, parent);
+            data.push(0x1f);
         }
-        let folded = semio_framework_hash::merkle_node(&[&own_hex], parent_hexes);
-        let mut bytes = [0u8; 32];
-        hex::decode_to_slice(&folded, &mut bytes).expect("merkle_node returns 64 hex chars");
-        Self(bytes)
+        Self(*semio_framework_hash::hash(&data).as_bytes())
     }
 }
 
-mod hex {
-    pub fn encode(bytes: [u8; 32]) -> String {
-        bytes.iter().map(|b| format!("{b:02x}")).collect()
-    }
-    pub fn decode_to_slice(s: &str, out: &mut [u8; 32]) -> Result<(), &'static str> {
-        if s.len() != 64 {
-            return Err("expected 64 hex chars");
-        }
-        for (i, chunk) in s.as_bytes().chunks(2).enumerate() {
-            let byte_str = std::str::from_utf8(chunk).map_err(|_| "invalid utf8")?;
-            out[i] = u8::from_str_radix(byte_str, 16).map_err(|_| "invalid hex")?;
-        }
-        Ok(())
+fn push_hex(out: &mut Vec<u8>, bytes: &[u8; 32]) {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    for byte in bytes {
+        out.push(DIGITS[usize::from(byte >> 4)]);
+        out.push(DIGITS[usize::from(byte & 15)]);
     }
 }
 //#endregion 🔖️DepHash
@@ -139,6 +131,13 @@ pub trait InferredField<P>: Send + Sync + 'static {
     /// 🗺️ Coarse tier-1 read-set — checked against a diff's [`crate::os_spr::command::DiffRegions::touches`]
     /// before this field's plan is even walked.
     fn reads() -> &'static [&'static str];
+
+    /// 🎯 Whether the regions a diff touched may change the dependency of `key` (the per-key twin of [`reads`](Self::reads)): `false` lets an incremental update carry the previous value of an entity whose parents did not move
+    /// without evaluating its dependency. `snapshot` is the snapshot after the diff, so the rows `key` reads are the ones it names now. Over-approximation costs a hash, under-approximation serves a stale value, so the default says yes.
+    fn touched_by(snapshot: &P, key: &Self::Key, touched: &TouchedPaths) -> bool {
+        let _ = (snapshot, key, touched);
+        true
+    }
 
     /// 🧭 Deterministic topological plan over `snapshot`'s entities (roots first — entries with no
     /// parents come before anything that depends on them).
@@ -322,17 +321,39 @@ impl InferenceCache {
 //#endregion 🔖️Cache
 
 //#region 🔖️Session
-struct SessionEntry {
-    root: DepHash,
-    result: Box<dyn Any + Send + Sync>,
+/// 🔗 One entity as the last run of its field left it: the dependency hash its value was computed under, the parents it was computed from, its share of the field digest and the run that last looked at it.
+struct Link<K> {
+    hash: DepHash,
+    parents: Vec<K>,
+    entry: [u64; 4],
+    epoch: u64,
 }
 
-/// 🧭 Per-artifact-instance tier-1 gate state: one root [`DepHash`] + typed result per field id,
-/// consulted by [`infer_field_after_diff`] before even walking a field's plan. The root is the merkle
-/// fold of every entity's own dependency hash, so it changes exactly when some entity's chain changed.
+/// 🧠 What a field keeps between two runs: its values, one [`Link`] per value, the digest of all links and whether the values are known to match the last snapshot.
+struct Stored<K, V> {
+    values: BTreeMap<K, V>,
+    links: HashMap<K, Link<K>>,
+    digest: [u64; 4],
+    epoch: u64,
+    sound: bool,
+}
+
+impl<K, V> Stored<K, V> {
+    fn empty() -> Self {
+        Self { values: BTreeMap::new(), links: HashMap::new(), digest: [0; 4], epoch: 0, sound: false }
+    }
+}
+
+struct SessionEntry {
+    digest: [u64; 4],
+    stored: Box<dyn Any + Send + Sync>,
+}
+
+/// 🧭 Per-artifact-instance state of the diff-driven entry points: per field id the values of the last run with their dependency links. [`infer_field_after_diff`] and the stepped [`InferenceSession::begin_update`] consult it
+/// to skip a whole field the diff does not touch, to carry every entity a diff and its parents did not move, and to skip the compute of an entity whose dependency hash did not move.
 #[derive(Default)]
 pub struct InferenceSession {
-    roots: HashMap<&'static str, SessionEntry>,
+    entries: HashMap<&'static str, SessionEntry>,
 }
 
 impl InferenceSession {
@@ -340,12 +361,225 @@ impl InferenceSession {
         Self::default()
     }
 
-    /// 🌳 The root of the result last stored for `field_id`.
+    /// 🌳 The root of the result last stored for `field_id`: a digest over every entity's key and dependency hash, so it moves exactly when some entity's chain moved.
     pub fn root(&self, field_id: &str) -> Option<DepHash> {
-        self.roots.get(field_id).map(|entry| entry.root)
+        self.entries.get(field_id).map(|entry| {
+            let mut bytes = Vec::with_capacity(32);
+            for lane in entry.digest {
+                bytes.extend_from_slice(&lane.to_le_bytes());
+            }
+            DepHash(*semio_framework_hash::hash(&bytes).as_bytes())
+        })
+    }
+
+    /// 🗂️ The values of the last run of field `F`, if there was one.
+    pub fn field_values<P, F: InferredField<P>>(&self) -> Option<&BTreeMap<F::Key, F::Value>> {
+        self.entries.get(F::FIELD_ID).and_then(|entry| entry.stored.downcast_ref::<Stored<F::Key, F::Value>>()).map(|stored| &stored.values)
+    }
+
+    /// 🚦 Starts an update of field `F` after `diff`. The field's values move into the update; [`finish_update`](Self::finish_update) gives them back. With `reuse` an entity is carried or confirmed instead of recomputed
+    /// (the caller passes whether its cache is enabled: with no cache every update is a plain recompute).
+    pub fn begin_update<P, F: InferredField<P>, D: crate::os_spr::command::DiffRegions>(&mut self, diff: &D, reuse: bool) -> FieldUpdate<F::Key, F::Value> {
+        let stored = self.entries.remove(F::FIELD_ID).and_then(|entry| entry.stored.downcast::<Stored<F::Key, F::Value>>().ok()).map_or_else(Stored::empty, |stored| *stored);
+        let touched = diff.touches();
+        let known = stored.sound;
+        let gated = known && !touched.intersects_any(F::reads());
+        let epoch = stored.epoch + 1;
+        FieldUpdate {
+            field: F::FIELD_ID,
+            values: stored.values,
+            track: Track { links: stored.links, digest: stored.digest, epoch, touched: known.then_some(touched), reuse, moved: HashSet::new(), changes: Vec::new(), carried: 0, confirmed: 0, swept: false },
+            cursor: InferenceCursor::new(),
+            gated,
+            computed: 0,
+            hits: 0,
+        }
+    }
+
+    /// 🏁 Ends an update, finished or not: the values stay in the session and are trusted by the next update only when this one ran to its end.
+    pub fn finish_update<K: Clone + Eq + std::hash::Hash + Ord + Send + Sync + 'static, V: Send + Sync + 'static>(&mut self, update: FieldUpdate<K, V>) -> FieldDelta<K, V> {
+        let done = update.gated || update.cursor.is_done();
+        let FieldUpdate { field, values, track, gated, computed, hits, .. } = update;
+        let Track { links, digest, epoch, changes, carried, confirmed, .. } = track;
+        self.entries.insert(field, SessionEntry { digest, stored: Box::new(Stored { values, links, digest, epoch, sound: done }) });
+        FieldDelta { gated, done, changes, computed, hits, carried, confirmed }
     }
 }
 //#endregion 🔖️Session
+
+//#region 🔖️Update
+/// 🔄 One entity a diff moved: its key and the value it had before (`None` when it is new). The value it has now is in the session's values, or the entity is gone from them.
+#[derive(Clone, Debug)]
+pub struct FieldChange<K, V> {
+    pub key: K,
+    pub old: Option<V>,
+}
+
+/// 📊 What an update did: the entities whose value was replaced, added or removed, and how the rest was served.
+#[derive(Clone, Debug)]
+pub struct FieldDelta<K, V> {
+    pub gated: bool,
+    pub done: bool,
+    pub changes: Vec<FieldChange<K, V>>,
+    pub computed: usize,
+    pub hits: usize,
+    pub carried: usize,
+    pub confirmed: usize,
+}
+
+/// 🧮 The bookkeeping of an update beside the values: the links of the last run, the regions the diff touched (`None` when nothing is known of the last run, so every entity is examined), the entities whose
+/// dependency hash moved in this run and the replaced values.
+struct Track<K, V> {
+    links: HashMap<K, Link<K>>,
+    digest: [u64; 4],
+    epoch: u64,
+    touched: Option<TouchedPaths>,
+    reuse: bool,
+    moved: HashSet<K>,
+    changes: Vec<FieldChange<K, V>>,
+    carried: usize,
+    confirmed: usize,
+    swept: bool,
+}
+
+fn lanes(bytes: &[u8; 32]) -> [u64; 4] {
+    std::array::from_fn(|at| u64::from_le_bytes(bytes[at * 8..at * 8 + 8].try_into().expect("eight bytes")))
+}
+
+impl<K: Clone + Eq + std::hash::Hash + ToValue, V> Track<K, V> {
+    fn hash_of(&self, key: &K) -> Option<DepHash> {
+        self.links.get(key).filter(|link| link.epoch == self.epoch).map(|link| link.hash)
+    }
+
+    fn carries<P, F: InferredField<P, Key = K, Value = V>>(&mut self, snapshot: &P, step: &InferenceStep<K>, values: &BTreeMap<K, V>) -> bool
+    where
+        K: Ord,
+    {
+        let (Some(touched), true) = (self.touched.as_ref(), self.reuse) else { return false };
+        let Some(link) = self.links.get_mut(&step.key) else { return false };
+        let clean = link.parents == step.parents && values.contains_key(&step.key) && !F::touched_by(snapshot, &step.key, touched) && (self.moved.is_empty() || !step.parents.iter().any(|parent| self.moved.contains(parent)));
+        if clean {
+            link.epoch = self.epoch;
+            self.carried += 1;
+        }
+        clean
+    }
+
+    fn confirms(&mut self, step: &InferenceStep<K>, hash: DepHash, values: &BTreeMap<K, V>) -> bool
+    where
+        K: Ord,
+    {
+        if !self.reuse {
+            return false;
+        }
+        let Some(link) = self.links.get_mut(&step.key) else { return false };
+        let same = link.hash == hash && link.parents == step.parents && values.contains_key(&step.key);
+        if same {
+            link.epoch = self.epoch;
+            self.confirmed += 1;
+        }
+        same
+    }
+
+    fn record(&mut self, step: &InferenceStep<K>, hash: DepHash, old: Option<V>) {
+        let mut data = encode(&step.key);
+        data.extend_from_slice(&hash.0);
+        let entry = lanes(semio_framework_hash::hash(&data).as_bytes());
+        add(&mut self.digest, &entry);
+        match self.links.get_mut(&step.key) {
+            Some(link) => {
+                sub(&mut self.digest, &link.entry);
+                link.hash = hash;
+                link.entry = entry;
+                link.epoch = self.epoch;
+                link.parents.clone_from(&step.parents);
+            }
+            None => {
+                self.links.insert(step.key.clone(), Link { hash, parents: step.parents.clone(), entry, epoch: self.epoch });
+            }
+        }
+        self.moved.insert(step.key.clone());
+        self.changes.push(FieldChange { key: step.key.clone(), old });
+    }
+
+    fn sweep(&mut self, values: &mut BTreeMap<K, V>, plan: &[InferenceStep<K>])
+    where
+        K: Ord,
+    {
+        if std::mem::replace(&mut self.swept, true) || values.len() == plan.len() {
+            return;
+        }
+        let keep: HashSet<&K> = plan.iter().map(|step| &step.key).collect();
+        let gone: Vec<K> = values.keys().filter(|key| !keep.contains(key)).cloned().collect();
+        for key in gone {
+            let old = values.remove(&key);
+            if let Some(link) = self.links.remove(&key) {
+                sub(&mut self.digest, &link.entry);
+            }
+            self.changes.push(FieldChange { key, old });
+        }
+    }
+}
+
+fn add(digest: &mut [u64; 4], entry: &[u64; 4]) {
+    for (lane, part) in digest.iter_mut().zip(entry) {
+        *lane = lane.wrapping_add(*part);
+    }
+}
+
+fn sub(digest: &mut [u64; 4], entry: &[u64; 4]) {
+    for (lane, part) in digest.iter_mut().zip(entry) {
+        *lane = lane.wrapping_sub(*part);
+    }
+}
+
+/// 🔄 A resumable update of one field after a diff: the plan walk of [`step_field_update`] with the field's previous values and links in hand. It can be [`cancel`](Self::cancel)led; what it finished stays valid.
+pub struct FieldUpdate<K, V> {
+    field: &'static str,
+    values: BTreeMap<K, V>,
+    track: Track<K, V>,
+    cursor: InferenceCursor<K>,
+    gated: bool,
+    computed: usize,
+    hits: usize,
+}
+
+impl<K: Eq + std::hash::Hash, V> FieldUpdate<K, V> {
+    /// 🛑 Cancels the in-flight compute; every later step refuses with [`InferenceError::Cancelled`] and the session distrusts the values until a whole update ran.
+    pub fn cancel(&mut self) {
+        self.cursor.cancel();
+    }
+
+    pub fn is_done(&self) -> bool {
+        self.gated || self.cursor.is_done()
+    }
+
+    /// 📈 Finished entities as a fraction of the plan (one when the diff touched nothing of the field).
+    pub fn fraction(&self) -> f32 {
+        if self.gated { 1.0 } else { self.cursor.fraction() }
+    }
+
+    /// ✅ Entities of the plan finished so far (computed, served by the cache, confirmed or carried).
+    pub fn completed(&self) -> usize {
+        self.cursor.completed()
+    }
+
+    /// 🧮 Entities in the plan; zero until the first step has planned.
+    pub fn total(&self) -> usize {
+        self.cursor.total()
+    }
+
+    /// 🛑 Whether [`cancel`](Self::cancel) was called.
+    pub fn is_cancelled(&self) -> bool {
+        self.cursor.is_cancelled()
+    }
+
+    /// 🗂️ The values as far as the update has come.
+    pub fn values(&self) -> &BTreeMap<K, V> {
+        &self.values
+    }
+}
+//#endregion 🔖️Update
 
 //#region 🔖️Cursor
 /// 🧷 The explicit, resumable position of one field run: the plan, the next entity, the dependency hash of every finished
@@ -436,69 +670,96 @@ fn key_text<K: ToValue>(key: &K) -> String {
 /// without one `dep_input` is never evaluated.
 pub fn infer_field_step<P, F: InferredField<P>>(snapshot: &P, cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, fuel: usize) -> Result<InferenceStepReport, InferenceError> {
     let hashing = cache.as_deref().is_some_and(InferenceCache::enabled);
-    step_driver::<P, F>(snapshot, cache, cursor, values, fuel, hashing)
+    drive::<P, F>(snapshot, cache, cursor, values, fuel, hashing, None)
 }
 
-fn step_driver<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, fuel: usize, hashing: bool) -> Result<InferenceStepReport, InferenceError> {
+fn missing<K: ToValue>(key: &K, parent: &K) -> InferenceError {
+    InferenceError::MissingParent { key: key_text(key), parent: key_text(parent) }
+}
+
+fn commit<K: Clone + Eq + std::hash::Hash + Ord + ToValue, V>(values: &mut BTreeMap<K, V>, hashes: &mut HashMap<K, DepHash>, track: Option<&mut Track<K, V>>, step: &InferenceStep<K>, hash: Option<DepHash>, value: V) {
+    let old = values.insert(step.key.clone(), value);
+    match (track, hash) {
+        (Some(track), Some(hash)) => track.record(step, hash, old),
+        (None, Some(hash)) => {
+            hashes.insert(step.key.clone(), hash);
+        }
+        _ => {}
+    }
+}
+
+fn drive<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, fuel: usize, hashing: bool, mut track: Option<&mut Track<F::Key, F::Value>>) -> Result<InferenceStepReport, InferenceError> {
     if cursor.cancelled {
         return Err(InferenceError::Cancelled);
     }
     if cursor.plan.is_none() {
         cursor.plan = Some(F::plan(snapshot));
     }
-    let total = cursor.total();
+    let InferenceCursor { plan, next, hashes, pending, progress, .. } = &mut *cursor;
+    let plan = plan.as_deref().expect("the plan is set above");
     let mut remaining = fuel.max(1);
     let mut report = InferenceStepReport::default();
 
-    while cursor.next < total {
-        let step = cursor.plan.as_ref().map(|plan| plan[cursor.next].clone()).expect("the plan is set above");
-        let mut parent_hashes: Vec<DepHash> = Vec::with_capacity(if hashing { step.parents.len() } else { 0 });
-        let mut parent_values: Vec<F::Value> = Vec::with_capacity(step.parents.len());
-        for parent in &step.parents {
-            let missing = || InferenceError::MissingParent { key: key_text(&step.key), parent: key_text(parent) };
-            if hashing {
-                parent_hashes.push(cursor.hashes.get(parent).copied().ok_or_else(missing)?);
-            }
-            parent_values.push(values.get(parent).cloned().ok_or_else(missing)?);
+    while *next < plan.len() {
+        let step = &plan[*next];
+        if pending.is_none() && track.as_deref_mut().is_some_and(|track| track.carries::<P, F>(snapshot, step, values)) {
+            *next += 1;
+            continue;
         }
-        let dep_hash = hashing.then(|| {
+        let dep_hash = if hashing {
+            let mut parent_hashes: Vec<DepHash> = Vec::with_capacity(step.parents.len());
+            for parent in &step.parents {
+                let hash = match track.as_deref() {
+                    Some(track) => track.hash_of(parent),
+                    None => hashes.get(parent).copied(),
+                };
+                parent_hashes.push(hash.ok_or_else(|| missing(&step.key, parent))?);
+            }
             let input = encode(&F::dep_input(snapshot, &step.key, &step.parents));
-            if step.parents.is_empty() { DepHash::root(F::FIELD_ID, F::SCHEMA_VERSION, &input) } else { DepHash::chain(F::FIELD_ID, F::SCHEMA_VERSION, &input, &parent_hashes) }
-        });
+            Some(if step.parents.is_empty() { DepHash::root(F::FIELD_ID, F::SCHEMA_VERSION, &input) } else { DepHash::chain(F::FIELD_ID, F::SCHEMA_VERSION, &input, &parent_hashes) })
+        } else {
+            None
+        };
 
-        if cursor.pending.is_none() {
+        if pending.is_none() {
+            if let Some((hash, track)) = dep_hash.zip(track.as_deref_mut()) {
+                if track.confirms(step, hash, values) {
+                    *next += 1;
+                    continue;
+                }
+            }
             if let Some((hash, value)) = dep_hash.zip(cache.as_deref_mut()).and_then(|(hash, cache)| cache.get::<F::Value>(hash).map(|value| (hash, value))) {
-                cursor.hashes.insert(step.key.clone(), hash);
-                values.insert(step.key, value);
-                cursor.next += 1;
+                commit(values, hashes, track.as_deref_mut(), step, Some(hash), value);
+                *next += 1;
                 report.hits += 1;
                 continue;
             }
         }
 
-        match F::compute_step(snapshot, &step.key, &parent_values, &mut cursor.pending, remaining) {
+        let mut parent_values: Vec<F::Value> = Vec::with_capacity(step.parents.len());
+        for parent in &step.parents {
+            parent_values.push(values.get(parent).cloned().ok_or_else(|| missing(&step.key, parent))?);
+        }
+        match F::compute_step(snapshot, &step.key, &parent_values, pending, remaining) {
             Err(fault) => {
-                if let Some(mut pending) = cursor.pending.take() {
-                    pending.cancel();
+                if let Some(mut stale) = pending.take() {
+                    stale.cancel();
                 }
                 return Err(InferenceError::Compute { key: key_text(&step.key), fault });
             }
-            Ok(ComputeStep::Working { fuel_used, progress }) => {
-                cursor.progress = progress;
+            Ok(ComputeStep::Working { fuel_used, progress: partial }) => {
+                *progress = partial;
                 report.fuel_used += fuel_used.max(1);
                 break;
             }
             Ok(ComputeStep::Done { value, fuel_used }) => {
-                cursor.pending = None;
-                cursor.progress = 0.0;
-                if let Some(hash) = dep_hash {
-                    if let Some(cache) = cache.as_deref_mut().filter(|cache| cache.enabled()) {
-                        cache.insert(hash, value.clone(), F::value_bytes(&value));
-                    }
-                    cursor.hashes.insert(step.key.clone(), hash);
+                *pending = None;
+                *progress = 0.0;
+                if let Some((hash, cache)) = dep_hash.zip(cache.as_deref_mut()).filter(|(_, cache)| cache.enabled()) {
+                    cache.insert(hash, value.clone(), F::value_bytes(&value));
                 }
-                values.insert(step.key, value);
-                cursor.next += 1;
+                commit(values, hashes, track.as_deref_mut(), step, dep_hash, value);
+                *next += 1;
                 report.computed += 1;
                 let spent = fuel_used.max(1);
                 report.fuel_used += spent;
@@ -510,7 +771,10 @@ fn step_driver<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut Infe
         }
     }
 
-    report.done = cursor.is_done();
+    report.done = *next >= plan.len();
+    if let Some(track) = track.filter(|_| report.done) {
+        track.sweep(values, plan);
+    }
     report.progress = cursor.fraction();
     Ok(report)
 }
@@ -520,14 +784,9 @@ pub fn try_infer_field<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&
     let mut cursor = InferenceCursor::new();
     let mut values = BTreeMap::new();
     let hashing = cache.as_deref().is_some_and(InferenceCache::enabled);
-    run_to_end::<P, F>(snapshot, cache.as_deref_mut(), &mut cursor, &mut values, hashing)?;
-    Ok(values)
-}
-
-fn run_to_end<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, hashing: bool) -> Result<(), InferenceError> {
     loop {
-        if step_driver::<P, F>(snapshot, cache.as_deref_mut(), cursor, values, usize::MAX, hashing)?.done {
-            return Ok(());
+        if drive::<P, F>(snapshot, cache.as_deref_mut(), &mut cursor, &mut values, usize::MAX, hashing, None)?.done {
+            return Ok(values);
         }
     }
 }
@@ -537,32 +796,48 @@ pub fn infer_field<P, F: InferredField<P>>(snapshot: &P, cache: Option<&mut Infe
     try_infer_field::<P, F>(snapshot, cache).unwrap_or_else(|error| panic!("{error}"))
 }
 
+/// ⏭️ One slice of an [`InferenceSession::begin_update`]: walks the plan of the new snapshot with the same fuel and cancellation as [`infer_field_step`], but an entity that neither the diff
+/// ([`InferredField::touched_by`]) nor a moved parent reaches is carried with its previous value and hash (no dependency evaluation, no hashing), and an entity whose dependency hash did not move keeps its previous value
+/// (no compute); only the rest is looked up in `cache` or computed. Entities that left the plan are removed when the plan is done.
+pub fn step_field_update<P, F: InferredField<P>>(snapshot: &P, cache: &mut InferenceCache, update: &mut FieldUpdate<F::Key, F::Value>, fuel: usize) -> Result<InferenceStepReport, InferenceError> {
+    if update.gated {
+        return Ok(InferenceStepReport { done: true, progress: 1.0, ..InferenceStepReport::default() });
+    }
+    let report = drive::<P, F>(snapshot, Some(cache), &mut update.cursor, &mut update.values, fuel, true, Some(&mut update.track))?;
+    update.computed += report.computed;
+    update.hits += report.hits;
+    Ok(report)
+}
+
+/// ⏩ The unbounded diff-driven update: [`InferenceSession::begin_update`], [`step_field_update`] to the end and [`InferenceSession::finish_update`]. The values stay in the session ([`InferenceSession::field_values`]);
+/// the delta names the entities that moved, so a consumer copies only those. Fails like [`try_infer_field`]; the session then distrusts its values and the next update examines every entity.
+pub fn infer_field_delta<P, F, D>(snapshot: &P, diff: &D, session: &mut InferenceSession, cache: &mut InferenceCache) -> Result<FieldDelta<F::Key, F::Value>, InferenceError>
+where
+    F: InferredField<P>,
+    D: crate::os_spr::command::DiffRegions,
+{
+    let mut update = session.begin_update::<P, F, D>(diff, cache.enabled());
+    let outcome = loop {
+        match step_field_update::<P, F>(snapshot, cache, &mut update, usize::MAX) {
+            Ok(report) if report.done => break Ok(()),
+            Ok(_) => {}
+            Err(error) => break Err(error),
+        }
+    };
+    let delta = session.finish_update(update);
+    outcome.map(|()| delta)
+}
+
 /// ⏩ Diff-gated variant: if `diff.touches()` doesn't intersect `F::reads()`, returns the session's
 /// previous full result for this field unchanged (tier-1 gate) instead of walking the plan at all.
-/// Falls through to [`infer_field`] (and refreshes the session when the result's root moved) otherwise.
+/// Otherwise it updates the session through [`infer_field_delta`] and returns a copy of the values.
 pub async fn infer_field_after_diff<P, F, D>(snapshot: &P, diff: &D, session: &mut InferenceSession, cache: &mut InferenceCache) -> BTreeMap<F::Key, F::Value>
 where
     F: InferredField<P>,
     D: crate::os_spr::command::DiffRegions,
 {
-    if !diff.touches().intersects_any(F::reads()) {
-        if let Some(stored) = session.roots.get(F::FIELD_ID).and_then(|entry| entry.result.downcast_ref::<BTreeMap<F::Key, F::Value>>()) {
-            return stored.clone();
-        }
-    }
-    let mut cursor = InferenceCursor::new();
-    let mut values = BTreeMap::new();
-    run_to_end::<P, F>(snapshot, Some(cache), &mut cursor, &mut values, true).unwrap_or_else(|error| panic!("{error}"));
-    let root = result_root::<F::Key, F::Value>(&values, &cursor);
-    if session.root(F::FIELD_ID) != Some(root) {
-        session.roots.insert(F::FIELD_ID, SessionEntry { root, result: Box::new(values.clone()) });
-    }
-    values
-}
-
-fn result_root<K: ToValue + Eq + std::hash::Hash, V>(values: &BTreeMap<K, V>, cursor: &InferenceCursor<K>) -> DepHash {
-    let leaves: Vec<String> = values.keys().map(|key| format!("{}={}", key_text(key), cursor.hash(key).map(|hash| hex::encode(hash.0)).unwrap_or_default())).collect();
-    DepHash(*semio_framework_hash::hash(semio_framework_hash::merkle_collection(leaves).as_bytes()).as_bytes())
+    infer_field_delta::<P, F, D>(snapshot, diff, session, cache).unwrap_or_else(|error| panic!("{error}"));
+    session.field_values::<P, F>().cloned().unwrap_or_default()
 }
 //#endregion 🔖️Driver
 

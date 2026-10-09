@@ -1,6 +1,6 @@
-//! 🔆️ `set-curtain-wall` payload. Adjusts the named parameters of a curtain wall (axis, base offset, top, grid spacings, mullion profile, materials, name); every field left out stays as it is.
+//! 🔆️ `set-curtain-wall` payload. Adjusts the named parameters of a curtain wall (axis, base offset, top, name); every field left out stays as it is. Its type is set by `set-curtain-wall-type-of`, its grid by `set-curtain-wall-grid`.
 
-use crate::{Axis, CurtainWallPatch, ModelDiff, ModelMutation, ModelSnapshot, Profile, TopConstraint};
+use crate::{Axis, CurtainWallPatch, ModelDiff, ModelMutation, ModelSnapshot, TopConstraint};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -14,28 +14,18 @@ pub struct SetCurtainWall {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub top: Option<TopConstraint>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub u_spacing: Option<f64>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub v_spacing: Option<f64>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub mullion: Option<Profile>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub panel_material: Option<String>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub mullion_material: Option<String>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
 impl SetCurtainWall {
     /// 🩹 The sparse entity patch this payload names: every provided field, restated values included.
     pub fn patch(&self) -> CurtainWallPatch {
-        CurtainWallPatch { axis: self.axis.clone(), base_offset: self.base_offset.clone(), top: self.top.clone(), u_spacing: self.u_spacing.clone(), v_spacing: self.v_spacing.clone(), mullion: self.mullion.clone(), panel_material: self.panel_material.clone(), mullion_material: self.mullion_material.clone(), name: self.name.clone(), ..Default::default() }
+        CurtainWallPatch { axis: self.axis.clone(), base_offset: self.base_offset, top: self.top.clone(), name: self.name.clone(), ..Default::default() }
     }
 
     /// 🧩 The payload that provides exactly the fields `patch` names.
     pub fn from_patch(id: String, patch: CurtainWallPatch) -> Self {
-        Self { id, axis: patch.axis, base_offset: patch.base_offset, top: patch.top, u_spacing: patch.u_spacing, v_spacing: patch.v_spacing, mullion: patch.mullion, panel_material: patch.panel_material, mullion_material: patch.mullion_material, name: patch.name }
+        Self { id, axis: patch.axis, base_offset: patch.base_offset, top: patch.top, name: patch.name }
     }
 }
 

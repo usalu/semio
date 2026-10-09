@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-annotation-style/schema.json",
+  "title": "SetAnnotationStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setAnnotationStyle"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Annotation style",
+          "de": "Beschriftungsstil"
+        },
+        "ref": {
+          "kind": "annotation-style"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "text_height": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Text height (m)",
+          "de": "Texthöhe (m)"
+        },
+        "group": "placement",
+        "order": 30,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "terminator": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Terminator",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Line end",
+          "de": "Linienende"
+        },
+        "group": "value",
+        "order": 40,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "unit": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/DimensionUnit",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Unit",
+          "de": "Einheit"
+        },
+        "group": "value",
+        "order": 50,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "precision": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "integer",
+        "role": "value",
+        "label": {
+          "en": "Decimals",
+          "de": "Nachkommastellen"
+        },
+        "group": "value",
+        "order": 60,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "mark_size": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Mark size (m)",
+          "de": "Markengröße (m)"
+        },
+        "group": "placement",
+        "order": 70,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "gap": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Extension gap (m)",
+          "de": "Hilfslinienabstand (m)"
+        },
+        "group": "placement",
+        "order": 80,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "overshoot": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Extension overshoot (m)",
+          "de": "Hilfslinienüberstand (m)"
+        },
+        "group": "placement",
+        "order": 90,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    }
+  }
+}

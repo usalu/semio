@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-ceiling-type/schema.json",
+  "title": "DeleteCeilingType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 4096
+  },
+  "properties": {
+    "mutation": {
+      "const": "deleteCeilingType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ceiling type",
+          "de": "Unterdeckentyp"
+        },
+        "ref": {
+          "kind": "ceiling-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

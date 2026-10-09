@@ -1,0 +1,239 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-wool": {
+      "name": "Mineral Wool",
+      "category": "Insulation",
+      "color": {
+        "r": 0.9,
+        "g": 0.85,
+        "b": 0.4
+      },
+      "density": 30,
+      "conductivity": 0.035,
+      "specific_heat": 840
+    },
+    "m-screed": {
+      "name": "Screed",
+      "category": "Concrete",
+      "color": {
+        "r": 0.6,
+        "g": 0.6,
+        "b": 0.6
+      },
+      "density": 2000,
+      "conductivity": 1.4,
+      "specific_heat": 1000
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {
+    "sl-200": {
+      "name": "Concrete 200",
+      "layers": [
+        {
+          "material": "m-screed",
+          "thickness": 0.2,
+          "function": "Structure"
+        }
+      ]
+    },
+    "sl-spare": {
+      "name": "Spare",
+      "layers": [
+        {
+          "material": "m-screed",
+          "thickness": 0.18,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "roof_types": {
+    "rf-tile": {
+      "name": "Tiled",
+      "layers": [
+        {
+          "material": "m-wool",
+          "thickness": 0.2,
+          "function": "Insulation"
+        },
+        {
+          "material": "m-brick",
+          "thickness": 0.03,
+          "function": "Finish"
+        }
+      ]
+    }
+  },
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {
+    "sl-spare": {
+      "Pset_TypeCommon": {
+        "Reference": {
+          "Text": {
+            "value": "T-1"
+          }
+        }
+      }
+    }
+  },
+  "classifications": {
+    "sl-spare": {
+      "cs-din": "331"
+    }
+  },
+  "classification_systems": {
+    "cs-din": {
+      "name": "DIN 276",
+      "edition": "2018-12",
+      "entries": [
+        {
+          "code": "300",
+          "title": "Bauwerk - Baukonstruktionen"
+        },
+        {
+          "code": "330",
+          "title": "Aussenwaende",
+          "parent": "300"
+        },
+        {
+          "code": "331",
+          "title": "Tragende Aussenwaende",
+          "parent": "330"
+        }
+      ]
+    }
+  }
+}

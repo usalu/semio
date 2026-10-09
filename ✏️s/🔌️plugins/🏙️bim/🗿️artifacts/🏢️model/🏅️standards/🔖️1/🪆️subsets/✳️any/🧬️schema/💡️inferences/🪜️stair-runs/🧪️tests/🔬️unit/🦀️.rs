@@ -12,7 +12,7 @@ fn close(left: f64, right: f64) -> bool {
 }
 
 fn stair(flight: StairFlight, top: TopConstraint) -> Stair {
-    Stair { storey: "st-ground".into(), start: Point2 { x: 1.0, y: 2.0 }, direction: 0.0, width: 1.0, flight, top, max_riser: 0.1875, min_tread: 0.25, stringer: crate::STANDARD_STRINGER, nosing: 0.0, tread_thickness: crate::STANDARD_TREAD_THICKNESS, riser: crate::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() }
+    Stair { phase: crate::Phase::New, storey: "st-ground".into(), start: Point2 { x: 1.0, y: 2.0 }, direction: 0.0, width: 1.0, flight, top, max_riser: 0.1875, min_tread: 0.25, stringer: crate::STANDARD_STRINGER, nosing: 0.0, tread_thickness: crate::STANDARD_TREAD_THICKNESS, riser: crate::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() }
 }
 
 fn with(stair: Stair) -> ModelSnapshot {

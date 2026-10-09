@@ -1,0 +1,12 @@
+{
+  "mutation": "setAreaScheme",
+  "id": "as-nsa",
+  "usages": [
+    "Kitchen",
+    "Sleeping"
+  ],
+  "zones": [
+    "z-day",
+    "z-night"
+  ]
+}

@@ -4,9 +4,10 @@
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/
 
 use crate::standards::v1::subsets::any::io::export::ifc::{codec, IFC_DIALECT};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{compute_storey_levels, StoreyLevel};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, registry};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 use crate::ModelSnapshot;
-use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::Dialect;
 use semio_s_artifact_stdio_ifc::part21::Part21Value;
@@ -24,6 +25,12 @@ pub mod data;
 pub mod walls;
 #[path = "🏗️elements/🦀️.rs"]
 pub mod elements;
+#[path = "🏘️zoning/🦀️.rs"]
+pub mod zoning;
+#[path = "🛝️ramps/🦀️.rs"]
+pub mod ramps;
+#[path = "🔲️ceilings/🦀️.rs"]
+pub mod ceilings;
 
 use frames::Rigid;
 use reader::Doc;
@@ -87,11 +94,14 @@ pub fn import_ifc2x3(bytes: &[u8]) -> Result<(ModelSnapshot, Vec<String>), Strin
     let document = codec::decode_document(bytes)?;
     let mut import = Import::new(Doc::new(&document));
     spatial::read(&mut import);
-    import.levels = compute_storey_levels(&import.model);
+    import.levels = registry::probe::<{ kinds::LEVELS }, _>(None, &import.model, |inferred| inferred.storey_levels.clone()).map_err(|error| error.to_string())?;
     data::read_materials(&mut import);
     data::read_types(&mut import);
     walls::read(&mut import);
     elements::read(&mut import);
+    ceilings::read(&mut import);
+    zoning::read(&mut import);
+    ramps::read(&mut import);
     data::read_attached(&mut import);
     spatial::report_unsupported(&mut import);
     Ok((import.model, import.notes))

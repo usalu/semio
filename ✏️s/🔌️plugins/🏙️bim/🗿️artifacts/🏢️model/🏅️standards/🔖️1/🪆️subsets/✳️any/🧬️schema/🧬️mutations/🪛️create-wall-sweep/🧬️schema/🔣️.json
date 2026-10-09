@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-wall-sweep/schema.json",
+  "title": "CreateWallSweep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "wall_sweep"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createWallSweep"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Wall sweep id",
+          "de": "Wandprofil-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "wall_sweep": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WallSweep",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Wall sweep",
+          "de": "Wandprofil"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

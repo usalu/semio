@@ -94,6 +94,10 @@ type DrawingLayerPatch {
   pathSegments: [PathSegment!]
   textContent: String
   textSize: Float
+  imageKey: String
+  imageWidth: Float
+  imageHeight: Float
+  shapeCoordinates: [DrawingShapeCoordinatePatch!]
 }
 
 # import DrawingTransform from "../🧬️mutations/🔗️.graphql"
@@ -102,3 +106,9 @@ type DrawingLayerPatch {
 # import StrokeStyle from "../🔗️.graphql"
 type DrawingFillPatch { value: FillStyle }
 type DrawingStrokePatch { value: StrokeStyle }
+
+type DrawingShapeCoordinatePatch {
+  field: String!
+  index: Int
+  value: Float!
+}

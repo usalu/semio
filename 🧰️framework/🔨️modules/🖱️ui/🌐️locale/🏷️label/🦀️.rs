@@ -95,6 +95,9 @@ pub struct LocalizedLabel {
     cells: [[Cow<'static, str>; Locale::COUNT]; Terminology::COUNT],
 }
 
+#[path = "♻️retirement/🦀️.rs"]
+mod retirement;
+
 impl LocalizedLabel {
     /// 🗺️ Builds the full matrix from a resolver called once per (terminology, locale) cell.
     // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9

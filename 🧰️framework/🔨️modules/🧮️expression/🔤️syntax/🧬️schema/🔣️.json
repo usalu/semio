@@ -1,0 +1,134 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/expression/syntax.json",
+ "title": "SyntaxFixtures",
+ "definitions": {
+  "Kind": {
+   "enum": [
+    "number",
+    "length",
+    "angle",
+    "area",
+    "volume",
+    "bool",
+    "text"
+   ]
+  },
+  "Value": {
+   "type": "object",
+   "required": [
+    "kind",
+    "value"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "kind": {
+     "$ref": "#/definitions/Kind"
+    },
+    "value": {
+     "type": [
+      "number",
+      "boolean",
+      "string"
+     ]
+    }
+   }
+  },
+  "Failure": {
+   "type": "object",
+   "required": [
+    "code",
+    "path"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "code": {
+     "type": "string",
+     "minLength": 1
+    },
+    "path": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0
+     }
+    }
+   }
+  },
+  "Tree": {
+   "$ref": "https://semio.tech/framework/expression/tree.json"
+  }
+ },
+ "type": "object",
+ "required": [
+  "cases",
+  "errors"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "name",
+     "source",
+     "canonical",
+     "python",
+     "ast"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "source": {
+      "type": "string"
+     },
+     "canonical": {
+      "type": "string"
+     },
+     "python": {
+      "type": "string"
+     },
+     "ast": {
+      "$ref": "#/definitions/Tree"
+     }
+    }
+   }
+  },
+  "errors": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "name",
+     "source",
+     "code",
+     "start",
+     "end"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "source": {
+      "type": "string"
+     },
+     "code": {
+      "type": "string"
+     },
+     "start": {
+      "type": "integer",
+      "minimum": 0
+     },
+     "end": {
+      "type": "integer",
+      "minimum": 0
+     }
+    }
+   }
+  }
+ }
+}

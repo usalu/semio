@@ -188,6 +188,12 @@ impl Dashboard {
         if let Err(error) = self.send(&ClientMsg::Attach { client_id: format!("dashboard-{}", std::process::id()) }) { self.notice = Some(error.to_string()); }
     }
 
+    /// 🔝️ Focuses the most recently started visible task after the requested snapshot completes.
+    pub fn focus_newest_session(&mut self, tui: &mut Tui) {
+        let newest = self.sessions.values().max_by_key(|session| (session.started_ms, &session.session_id)).map(|session| session.session_id.clone());
+        if let Some(target) = newest.and_then(|id| self.windows.iter().position(|window| window.session().is_some_and(|session| session.session_id == id))) { self.focus_window(tui, target); }
+    }
+
     /// 👁️ Shows a task's window again and brings it forward.
     pub fn reveal_session(&mut self, tui: &mut Tui, session_id: &str) {
         self.hidden.remove(session_id);
@@ -220,8 +226,11 @@ impl Dashboard {
 
     pub fn apply(&mut self, tui: &mut Tui, message: Message) -> bool {
         match message {
-            Message::Control(ServerMsg::Sessions { sessions, .. }) => {
+            Message::Control(ServerMsg::Sessions { sessions, more }) => {
                 for session in sessions { self.update_session(tui, session); }
+                if !more && std::mem::take(&mut self.restore_focus) {
+                    self.focus_newest_session(tui);
+                }
             }
             Message::Control(ServerMsg::ReplayStart { session_id, truncated }) => {
                 self.link.restoring = true;

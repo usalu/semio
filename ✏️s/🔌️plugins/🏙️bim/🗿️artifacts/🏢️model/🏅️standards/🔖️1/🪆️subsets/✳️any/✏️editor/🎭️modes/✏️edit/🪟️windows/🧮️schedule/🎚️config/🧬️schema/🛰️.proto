@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.app.bim.model.schedule_window_config;
+message BimScheduleWindowConfig {
+  string schedule = 1;
+  bool editing = 2;
+}

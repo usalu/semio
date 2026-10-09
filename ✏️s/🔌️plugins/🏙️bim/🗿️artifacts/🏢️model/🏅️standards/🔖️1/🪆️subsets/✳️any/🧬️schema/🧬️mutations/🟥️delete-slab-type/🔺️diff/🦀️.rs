@@ -1,7 +1,8 @@
-//! 🔺️ Diff constructor for `DeleteSlabType`: one deleted slab type entry; refused while a slab still uses the type.
+//! 🔺️ Diff constructor for `DeleteSlabType`: one deleted slab type entry together with the properties and classifications keyed by the type; refused while a slab still uses the type.
 
+use super::super::cascade;
 use super::DeleteSlabType;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::{Entry, KeyedDelta, ModelDiff, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteSlabType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
@@ -11,5 +12,7 @@ pub fn diff(payload: &DeleteSlabType, base: &ModelSnapshot) -> MutationOutcome<M
     if base.slabs.values().any(|row| row.slab_type == payload.id) {
         return MutationOutcome::refuse(OutcomeCode::TargetReferenced, format!("Slab type \"{}\" is still used by slabs.", payload.id), [payload.id.clone()]);
     }
-    MutationOutcome::new(ModelDiff::slab_types(payload.id.clone(), Entry::Deleted))
+    let mut removal = cascade::data_diff(base, &payload.id);
+    removal.slab_types = Some(KeyedDelta::one(payload.id.clone(), Entry::Deleted));
+    MutationOutcome::new(removal)
 }

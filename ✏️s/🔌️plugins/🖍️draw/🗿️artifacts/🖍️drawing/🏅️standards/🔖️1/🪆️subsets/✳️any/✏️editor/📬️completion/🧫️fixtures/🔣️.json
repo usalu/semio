@@ -1,0 +1,19 @@
+{
+  "schema": "drawing.completion-custody.v1",
+  "aliasCounts": [
+    1,
+    2,
+    4
+  ],
+  "vacantCapacities": [
+    1,
+    32,
+    4096
+  ],
+  "bodyBytes": 8194,
+  "zeroGrantRetains": true,
+  "oneBelowRetains": true,
+  "exactGrantReleases": true,
+  "unsupportedEffect": "request-sync",
+  "unsupportedRetains": true
+}

@@ -1,6 +1,6 @@
 /** 🖼️ Resolved world-space scene inputs with isolated scopes and cropped private paint. */
 import {PathRasterJob,type PathRasterInput} from "../../🧮️geometry/📷️raster/🟦️.ts";
-import type {WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
 import type {PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
 import type {CompositeBlend,CompositeAffine} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
 export type RasterSceneGroup={readonly id:string;readonly opacity:number;readonly blendMode:CompositeBlend};
@@ -24,6 +24,7 @@ const validId=(id:string)=>typeof id==="string"&&id.length>0&&id.length<=4096&&n
 type Scope={group:RasterSceneGroup;layers:CompositeLayer[]};
 /** 🧱️ Cropped path candidates and admitted assets remain private until tiled scene completion. */
 export class RasterSceneJob {
+ private retiredChildren:WorkRetirement[]=[];
  private readonly width:number;private readonly height:number;private readonly origin:readonly[number,number];private readonly tolerance:number;private readonly maxPixels:number;private readonly totalNodes:number;
  private readonly maxSourceBytes:number;private readonly totalAssets:number;
  private assetSource:readonly RasterSceneAsset[];private assetAt=0;private assetChar=0;private assetCurrent:RasterSceneAsset|null=null;private assets=0;private sourceBytes=0;private admittedImages=0;
@@ -34,7 +35,7 @@ export class RasterSceneJob {
  private crop:CompositeAffine=identity;private painter:PathRasterJob|null=null;private sampler:AffineImageJob|null=null;private compositor:CompositeJob|null=null;private output:PixelImage|null=null;private aborted=false;private failure:unknown=null;
  private painterRetirement:WorkRetirement|null=null;private painted:PixelImage|null=null;
  private samplerRetirement:WorkRetirement|null=null;private sampled:PixelImage|null=null;
- private compositorRetirement:WorkRetirement|null=null;
+ private compositorRetirement:WorkRetirement|null=null;private transferred=false;
  constructor(input:RasterSceneInput) {
   validateExtent(input.width,input.height);
   if(input.origin.length!==2||!input.origin.every(coordinate)||!Number.isFinite(input.tolerance)||input.tolerance<1e-6||input.tolerance>16||!Number.isSafeInteger(input.maxPixels)||input.maxPixels<1||input.maxPixels>67108864||input.nodes.length>1024||!Array.isArray(input.assets)||input.assets.length>1024||!Number.isSafeInteger(input.maxSourceBytes)||input.maxSourceBytes<1||input.maxSourceBytes>268439552)fail("Invalid scene raster contract");
@@ -112,7 +113,7 @@ export class RasterSceneJob {
   
   if(this.phase==="nodes"){
    if(!this.current){
-    if(this.at===this.source.length){if(this.stack.length){this.close();return;}this.source=[];this.catalog.clear();this.admitted.clear();this.compositor=new CompositeJob({width:this.width,height:this.height,origin:this.origin,images:this.images,layers:this.root});this.images=Object.create(null);this.root=[];this.closed.clear();this.ids.clear();this.phase="compositing";return;}
+    if(this.at===this.source.length){if(this.stack.length){this.close();return;}this.compositor=new CompositeJob({width:this.width,height:this.height,origin:this.origin,images:this.images,layers:this.root});this.phase="compositing";return;}
     const n=this.source[this.at++]!;
     if(!validId(n.id)||this.ids.has(n.id)||!validStyle(n)||typeof n.visible!=="boolean"||n.transform.length!==6||!n.transform.every(coordinate)||n.groups.length>32||!n.content||!["path","pixels","image"].includes(n.content.kind))fail("Invalid resolved scene node");
     this.ids.add(n.id);this.entry();this.current=n;this.groupAt=0;return;
@@ -131,23 +132,37 @@ export class RasterSceneJob {
    else{if(c.segments.length>65536)fail("Scene path exceeds segment budget");new PathRasterJob({width:1,height:1,origin:[0,0],transform:n.transform,tolerance:this.tolerance,segments:[],fillRule:c.fillRule,fill:c.fill,stroke:c.stroke});this.segment=0;this.from=[0,0];this.start=[0,0];this.contour=false;this.bounds=[Infinity,Infinity,-Infinity,-Infinity];this.phase="bounds";}
   }else if(this.phase==="bounds")this.bound();
   else if(this.phase==="path"){if(this.painter!.advance(1).done){const retired=this.painter!.intoRetirement();this.painterRetirement=retired.job;this.painted=retired.output!;this.painter=null;this.phase="pathCleanup";}}
-  else if(this.phase==="pathCleanup"){if(!this.painterRetirement!.terminalIsEmpty())this.painterRetirement!.advance(1);else{this.painterRetirement=null;const image=this.painted!;this.painted=null;this.add(image,this.crop);}}
+  else if(this.phase==="pathCleanup"){this.retiredChildren.push(this.painterRetirement!);this.painterRetirement=null;{const image=this.painted!;this.painted=null;this.add(image,this.crop);}}
   else if(this.phase==="image"){if(this.sampler!.advance(1).done){const retired=this.sampler!.intoRetirement();this.samplerRetirement=retired.job;this.sampled=retired.output!;this.sampler=null;this.phase="imageCleanup";}}
-  else if(this.phase==="imageCleanup"){if(!this.samplerRetirement!.terminalIsEmpty())this.samplerRetirement!.advance(1);else{this.samplerRetirement=null;const image=this.sampled!;this.sampled=null;this.add(image,this.crop);}}
+  else if(this.phase==="imageCleanup"){this.retiredChildren.push(this.samplerRetirement!);this.samplerRetirement=null;{const image=this.sampled!;this.sampled=null;this.add(image,this.crop);}}
   else if(this.phase==="compositing"){if(this.compositor!.advance(1).done){const retired=this.compositor!.intoRetirement();this.compositorRetirement=retired.job;this.output=retired.output!;this.compositor=null;this.phase="compositingCleanup";}}
-  else if(this.phase==="compositingCleanup"){if(!this.compositorRetirement!.terminalIsEmpty())this.compositorRetirement!.advance(1);else{this.compositorRetirement=null;this.current=null;this.phase="complete";}}
+  else if(this.phase==="compositingCleanup"){this.retiredChildren.push(this.compositorRetirement!);this.compositorRetirement=null;{this.current=null;this.phase="complete";}}
  }
  advance(budget:number):RasterSceneProgress{
   if(!Number.isSafeInteger(budget)||budget<=0)fail("Scene work grant must be a positive integer");if(this.aborted)cancelled();if(this.failure)throw this.failure;
-  try{for(let i=0;i<budget&&this.phase!=="complete";i++){this.step();this.work++;}}catch(error){this.failure=error;this.clear();throw error;}
+  try{for(let i=0;i<budget&&this.phase!=="complete";i++){const phase=this.phase;this.step();this.work++;if(this.phase!==phase)break;}}catch(error){this.failure=error;throw error;}
   return {phase:this.phase,nodes:this.nodes,totalNodes:this.totalNodes,pixels:this.pixels,assets:this.assets,totalAssets:this.totalAssets,sourceBytes:this.sourceBytes,admittedImages:this.admittedImages,work:this.work,done:this.phase==="complete"};
  }
- private clear():void{this.assetSource=[];this.assetCurrent=null;this.catalog.clear();this.admitted.clear();this.painter?.cancel();this.sampler?.cancel();this.compositor?.cancel();this.painter=null;this.painterRetirement=null;this.painted=null;this.sampler=null;this.samplerRetirement=null;this.sampled=null;this.compositor=null;this.compositorRetirement=null;this.output=null;this.current=null;this.source=[];this.stack=[];this.root=[];this.images=Object.create(null);this.ids.clear();this.closed.clear();}
- cancel():void{this.aborted=true;this.clear();}
+ /** 🧹️ Adopts genuine paint, sampler, compositor and remaining scene owners before relinquishing the job. */
+ intoRetirement():{job:WorkRetirement;output:PixelImage|null}{
+  if(this.transferred)throw Error("Raster scene ownership already transferred");this.transferred=true;const children=this.retiredChildren;this.retiredChildren=[];const images:PixelImage[]=[];
+  const adopt=(moved:{job:WorkRetirement;output:PixelImage|null})=>{children.push(moved.job);if(moved.output)images.push(moved.output);};
+  if(this.painter){adopt(this.painter.intoRetirement());this.painter=null;}if(this.sampler){adopt(this.sampler.intoRetirement());this.sampler=null;}if(this.compositor){adopt(this.compositor.intoRetirement());this.compositor=null;}
+  for(const child of [this.painterRetirement,this.samplerRetirement,this.compositorRetirement])if(child)children.push(child);this.painterRetirement=null;this.samplerRetirement=null;this.compositorRetirement=null;
+  if(this.painted)images.push(this.painted);if(this.sampled)images.push(this.sampled);this.painted=null;this.sampled=null;
+  const output=this.phase==="complete"&&!this.aborted&&!this.failure?this.output:null;if(this.output&&!output)images.push(this.output);this.output=null;this.aborted=true;
+  let source=this.source,assetSource=this.assetSource,current=this.current,assetCurrent=this.assetCurrent;this.source=[];this.assetSource=[];this.current=null;this.assetCurrent=null;let sourceAt=0,assetAt=0;
+  const catalog=this.catalog,admitted=this.admitted,ids=this.ids,closed=this.closed;this.catalog=new Map();this.admitted=new Map();this.ids=new Set();this.closed=new Set();
+  const layers=this.root;this.root=[];while(this.stack.length){const scope=this.stack.pop()!;layers.push({kind:"group",children:scope.layers,opacity:scope.group.opacity,blend:scope.group.blendMode,visible:true,transform:identity,mask:null});}
+  const imageRecords=this.images;this.images=Object.create(null);const keys=Object.keys(imageRecords);let slot=0;
+  const entry=(map:Map<unknown,unknown>|Set<unknown>)=>{const next=map.keys().next();if(!next.done){map.delete(next.value);return false;}return true;};
+  return{output,job:new UnitRetirement(()=>{switch(slot){case 0:{const child=children.at(-1);if(child){if(child.advance(1).done)children.pop();return false;}break;}case 1:if(sourceAt++<source.length)return false;source=[];break;case 2:if(assetAt++<assetSource.length)return false;assetSource=[];break;case 3:current=null;assetCurrent=null;break;case 4:if(!entry(catalog))return false;break;case 5:if(!entry(admitted))return false;break;case 6:if(!entry(ids))return false;break;case 7:if(!entry(closed))return false;break;case 8:{const layer=layers.pop();if(layer){if(layer.kind==="group")layers.push(...layer.children);return false;}break;}case 9:{const key=keys.pop();if(key!==undefined){delete imageRecords[key];return false;}break;}case 10:if(images.pop())return false;break;}return ++slot===11&&current===null&&assetCurrent===null;})};
+ }
+ cancel():void{this.aborted=true;}
  result():PixelImage{if(this.aborted)cancelled();if(this.failure)throw this.failure;if(this.phase!=="complete")throw Error("Scene raster incomplete");return this.output!;}
 }
 /** ⏳️ Yields between scene grants and publishes only a fully composed candidate. */
 export async function rasterizeScene(input:RasterSceneInput,options:RasterSceneOptions={}):Promise<PixelImage>{
  const check=()=>{if(options.signal?.aborted)cancelled();};check();const job=new RasterSceneJob(input);
- try{for(;;){check();const p=job.advance(options.workBudget??4096);options.onProgress?.(p);check();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}
+ let close:WorkRetirement|null=null,transferred=false;try{for(;;){check();const p=job.advance(options.workBudget??4096);options.onProgress?.(p);check();if(p.done){const moved=job.intoRetirement();transferred=true;close=moved.job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));close=null;check();return moved.output!;}await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();if(!transferred)close=job.intoRetirement().job;while(close&&!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));throw error;}
 }

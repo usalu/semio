@@ -1,4 +1,4 @@
-//! 🕹️ `set-opening` payload. Sparsely changes an opening: kind or type, sill override (an assigned null returns to the sill of the type), width and height overrides (an assigned null clears an override), hand and facing flips, name.
+//! 🕹️ `set-opening` payload. Sparsely changes an opening: kind or type, sill override (an assigned null returns to the sill of the type), width and height overrides (an assigned null clears an override), hand and facing flips, name, reveal (an assigned null clears the authored reveal depth, which centres the frame, or the reveal material, which leaves the jambs in the material of the wall layers).
 
 use crate::{Assigned, ModelDiff, ModelMutation, ModelSnapshot, OpeningKind};
 use protocol::{MutationKind, SemanticDescriptor};
@@ -21,6 +21,10 @@ pub struct SetOpening {
     pub flip_facing: Option<bool>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub reveal_depth: Option<Assigned<Option<f64>>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub reveal_material: Option<Assigned<Option<String>>>,
 }
 
 impl MutationKind<ModelSnapshot, ModelMutation> for SetOpening {

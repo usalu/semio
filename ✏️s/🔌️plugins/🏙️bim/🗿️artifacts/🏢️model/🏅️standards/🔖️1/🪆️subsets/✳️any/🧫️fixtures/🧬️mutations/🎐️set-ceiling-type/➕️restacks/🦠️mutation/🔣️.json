@@ -1,0 +1,16 @@
+{
+  "mutation": "setCeilingType",
+  "id": "ct-board",
+  "layers": [
+    {
+      "material": "m-board",
+      "thickness": 0.025,
+      "function": "Finish"
+    },
+    {
+      "material": "m-brick",
+      "thickness": 0.04,
+      "function": "Insulation"
+    }
+  ]
+}

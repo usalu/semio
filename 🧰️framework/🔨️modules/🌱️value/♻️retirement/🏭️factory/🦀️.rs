@@ -4,6 +4,8 @@ use std::{alloc::Layout, sync::Arc, mem::ManuallyDrop};
 
 #[path="📦️owned/🦀️.rs"]
 pub mod owned;
+#[path="📦️boxed/🦀️.rs"]
+pub mod boxed;
 
 /// 🧬️ Concrete factory ownership supplies an inline state before any alias retires.
 pub trait FactoryPayloadRetirement: Send + Sync + 'static {

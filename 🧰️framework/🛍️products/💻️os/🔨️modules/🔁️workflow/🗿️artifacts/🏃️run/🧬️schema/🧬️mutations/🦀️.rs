@@ -4,10 +4,10 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Leaves
 #[path = "🪵️append-run-log/🦀️.rs"]
 mod append_run_log;
-#[path = "🫥️retract-run-node/🦀️.rs"]
-mod retract_run_node;
-#[path = "🧽️retract-run-log/🦀️.rs"]
-mod retract_run_log;
+#[path = "🫥️remove-run-node/🦀️.rs"]
+mod remove_run_node;
+#[path = "🧽️remove-run-log/🦀️.rs"]
+mod remove_run_log;
 #[path = "🧷️set-run-header/🦀️.rs"]
 mod set_run_header;
 #[path = "🔓️set-run-seal/🦀️.rs"]
@@ -23,8 +23,8 @@ mod start_run_node;
 
 pub use append_run_log::AppendRunLog;
 pub use finish_run_node::FinishRunNode;
-pub use retract_run_log::RetractRunLog;
-pub use retract_run_node::RetractRunNode;
+pub use remove_run_log::RemoveRunLog;
+pub use remove_run_node::RemoveRunNode;
 pub use set_run_header::SetRunHeader;
 pub use set_run_seal::SetRunSeal;
 pub use seal_run::SealRun;
@@ -44,8 +44,8 @@ pub enum RunMutation {
     SealRun(SealRun),
     SetRunHeader(SetRunHeader),
     SetRunSeal(SetRunSeal),
-    RetractRunLog(RetractRunLog),
-    RetractRunNode(RetractRunNode),
+    RemoveRunLog(RemoveRunLog),
+    RemoveRunNode(RemoveRunNode),
 }
 //#endregion 🔖️Aggregate
 

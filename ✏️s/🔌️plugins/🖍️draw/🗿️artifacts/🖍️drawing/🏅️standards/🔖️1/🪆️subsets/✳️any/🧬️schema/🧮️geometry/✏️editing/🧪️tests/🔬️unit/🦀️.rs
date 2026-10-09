@@ -1,6 +1,35 @@
 //! 🧪️ Language-neutral node editing and source-preservation laws.
 use super::*;
 
+#[test]
+fn path_algorithms_shared_cases_and_semantic_undo() {
+    use protocol::Mutation;
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️algorithms/🔣️.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let source:Vec<PathSegment>=serde_json::from_value(case["before"].clone()).unwrap();
+        let edit:PathEdit=serde_json::from_value(case["operation"].clone()).unwrap();let saved=source.clone();
+        let result=edit_path(&source,&edit);assert_eq!(source,saved);
+        if case["error"]==true {assert!(result.is_err(),"{}",case["name"]);continue;}
+        let result=result.unwrap();assert_geometry(&serde_json::to_value(&result).unwrap(),&case["after"]);
+        let layer=crate::schema::create_drawing_path_layer("Algorithm",source.into());let id=crate::schema::layer_base(&layer).id.clone();
+        let before=crate::DrawingSnapshot {layers:vec![layer].into(),..Default::default()};
+        let mutation=crate::mutations::update_path_geometry(id,result.into());let undo=mutation.inverse(&before).unwrap();
+        let mut after=before.clone();crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();
+        for inverse in undo {crate::mutations::apply_drawing_mutation(&mut after,&inverse).unwrap();}assert_eq!(after,before);
+    }
+}
+
+#[test]
+fn path_simplification_work_grants_and_cancellation() {
+    let mut source=vec![PathSegment::Move {to:[0.0,0.0]}];source.extend((0..200).map(|index|PathSegment::Line {to:[f64::from(index+1),f64::from(index%2)]}));
+    for phase in [simplify::PathSimplifyPhase::Scanning,simplify::PathSimplifyPhase::Reducing,simplify::PathSimplifyPhase::Building,simplify::PathSimplifyPhase::Complete] {
+        let mut job=simplify::PathSimplifyJob::new(source.clone(),0.1).unwrap();let mut work=0;let mut reached=false;
+        assert!(job.result().is_err());
+        for _ in 0..100000 {let progress=job.advance(1).unwrap();assert!(progress.work-work<=1);work=progress.work;if progress.phase==phase {reached=true;break;}}
+        assert!(reached);job.cancel();assert!(job.result().is_err());assert!(job.advance(1).is_err());
+    }
+}
+
 fn assert_geometry(actual: &serde_json::Value, expected: &serde_json::Value) {
     match (actual, expected) {
         (serde_json::Value::Number(a), serde_json::Value::Number(b)) => assert!((a.as_f64().unwrap()-b.as_f64().unwrap()).abs()<1e-10),

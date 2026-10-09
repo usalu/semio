@@ -31,6 +31,18 @@
       "density": 2400.0,
       "conductivity": 1.0,
       "specific_heat": 900.0
+    },
+    "m-board": {
+      "name": "Plasterboard",
+      "category": "Finish",
+      "color": {
+        "r": 0.9,
+        "g": 0.9,
+        "b": 0.88
+      },
+      "density": 800.0,
+      "conductivity": 1.0,
+      "specific_heat": 900.0
     }
   },
   "wall_types": {
@@ -398,6 +410,7 @@
           "offset": 0.0
         }
       },
+      "phase": "New",
       "name": "Column"
     }
   },
@@ -438,6 +451,7 @@
       ],
       "holes": [],
       "offset": -0.05,
+      "phase": "New",
       "name": "Slab"
     },
     "sl-over-kitchen": {
@@ -506,6 +520,7 @@
         ]
       ],
       "offset": 0.0,
+      "phase": "New",
       "name": "Slab"
     }
   },
@@ -526,7 +541,8 @@
           }
         }
       },
-      "usage": "room"
+      "usage": "room",
+      "phase": "New"
     },
     "sp-kitchen": {
       "storey": "st-ground",
@@ -540,7 +556,8 @@
           }
         }
       },
-      "usage": "room"
+      "usage": "room",
+      "phase": "New"
     },
     "sp-outside": {
       "storey": "st-ground",
@@ -554,7 +571,8 @@
           }
         }
       },
-      "usage": "room"
+      "usage": "room",
+      "phase": "New"
     },
     "sp-in-wall": {
       "storey": "st-ground",
@@ -568,7 +586,8 @@
           }
         }
       },
-      "usage": "room"
+      "usage": "room",
+      "phase": "New"
     },
     "sp-round": {
       "storey": "st-ground",
@@ -594,7 +613,8 @@
           ]
         }
       },
-      "usage": "room"
+      "usage": "room",
+      "phase": "New"
     },
     "sp-box": {
       "storey": "st-ground",
@@ -634,7 +654,8 @@
           ]
         }
       },
-      "usage": "room"
+      "usage": "room",
+      "phase": "New"
     },
     "sp-upper": {
       "storey": "st-first",
@@ -648,9 +669,180 @@
           }
         }
       },
-      "usage": "room"
+      "usage": "room",
+      "phase": "New"
     }
   },
   "properties": {},
-  "classifications": {}
+  "classifications": {},
+  "ceiling_types": {
+    "cet-board": {
+      "name": "Board 12.5",
+      "layers": [
+        {
+          "material": "m-board",
+          "thickness": 0.0125,
+          "function": "Finish"
+        }
+      ]
+    },
+    "cet-deep": {
+      "name": "Board 50",
+      "layers": [
+        {
+          "material": "m-board",
+          "thickness": 0.05,
+          "function": "Finish"
+        }
+      ]
+    }
+  },
+  "ceilings": {
+    "ce-living": {
+      "storey": "st-ground",
+      "ceiling_type": "cet-board",
+      "boundary": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 5.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 5.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "holes": [],
+      "offset": 0.4,
+      "name": "Living ceiling"
+    },
+    "ce-kitchen": {
+      "storey": "st-ground",
+      "ceiling_type": "cet-deep",
+      "boundary": [
+        {
+          "point": {
+            "x": 5.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 5.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "holes": [
+        [
+          {
+            "point": {
+              "x": 7.0,
+              "y": 4.5
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 7.5,
+              "y": 4.5
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 7.5,
+              "y": 5.5
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 7.0,
+              "y": 5.5
+            },
+            "bulge": 0.0
+          }
+        ]
+      ],
+      "offset": 0.2,
+      "slope": {
+        "direction": 0.0,
+        "angle": 0.1
+      },
+      "name": "Kitchen sloped ceiling"
+    },
+    "ce-upper": {
+      "storey": "st-first",
+      "ceiling_type": "cet-deep",
+      "boundary": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 4.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 4.0,
+            "y": 3.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 0.0,
+            "y": 3.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "holes": [],
+      "offset": 0.0,
+      "name": "Upper ceiling"
+    }
+  }
 }

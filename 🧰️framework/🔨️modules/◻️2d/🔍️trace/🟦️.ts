@@ -44,7 +44,7 @@ export class BitmapTraceJob {
  private appendEdge(a:Vec2,b:Vec2,direction:number):void {
   if(this.edges.length>=this.input.maxEdges)invalid("Bitmap trace exceeds edge budget");const index=this.edges.length;this.edges.push({a,b,direction,used:false});this.edgeCount++;const key=this.key(a),next=this.outgoing.get(key)??[];next.push(index);this.outgoing.set(key,next);
  }
- private fallback():void {this.simplified=false;this.phase="emit";this.contour=0;this.at=0;this.candidate=[];this.flat=[];}
+ private fallback():void {this.simplified=false;this.phase="emit";this.contour=0;this.at=0;}
  private step():void {
   if(this.phase==="scan"){
    if(this.scanned===this.pixels){this.phase="contours";return;}
@@ -70,7 +70,7 @@ export class BitmapTraceJob {
    if(next<0)invalid("Bitmap trace contour is open");this.current=next;return;
   }
   if(this.phase==="compact"){
-   if(this.contour===this.raw.length){this.raw=[];this.edges=[];this.outgoing.clear();this.contour=0;this.at=0;this.phase=this.input.simplifyEpsilon>0?"simplify":"emit";return;}
+   if(this.contour===this.raw.length){this.contour=0;this.at=0;this.phase=this.input.simplifyEpsilon>0?"simplify":"emit";return;}
    const raw=this.raw[this.contour]!;if(this.at===0)this.base.push([]);
    const p=raw[this.at]!,previous=raw[(this.at+raw.length-1)%raw.length]!,next=raw[(this.at+1)%raw.length]!;
    if(cross(previous,p,next)!==0)this.base[this.contour]!.push(p);
@@ -143,10 +143,10 @@ export class BitmapTraceJob {
    case 11:this.split=null;break;case 12:this.output=[];break;
   }if(complete)slot++;return slot===13;};return{job:new UnitRetirement(step),mask};
  }
- cancel():void{this.cancelled=true;if(this.transferred)return;this.input={...this.input,mask:[]};this.output=[];this.edges=[];this.outgoing.clear();this.raw=[];this.base=[];this.candidate=[];this.flat=[];this.ring=[];this.ranges=[];this.kept.clear();this.changes.clear();this.positions.clear();this.split=null;}
+ cancel():void{this.cancelled=true;}
 }
 /** 🕰️ Cooperative tracing with abort checks before observer calls and result publication. */
 export async function traceBitmap(input:BitmapTraceInput,options:BitmapTraceOptions={}):Promise<PathSegment[]> {
  const job=new BitmapTraceJob(input),check=()=>{if(options.signal?.aborted){job.cancel();throw new DOMException("Bitmap trace cancelled","AbortError");}};
- try{check();for(;;){const p=job.advance(options.workBudget??4096);check();options.onProgress?.(p);check();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}
+ try{check();for(;;){const p=job.advance(options.workBudget??4096);check();options.onProgress?.(p);check();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const close=job.intoRetirement().job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
 }

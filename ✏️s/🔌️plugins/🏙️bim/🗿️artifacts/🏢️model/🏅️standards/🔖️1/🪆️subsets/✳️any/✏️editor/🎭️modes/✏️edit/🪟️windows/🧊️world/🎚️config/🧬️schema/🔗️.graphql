@@ -21,6 +21,7 @@ type BimWorldWindowConfig {
   projection: BimWorldProjection!
   isolatedStorey: String!
   hiddenStoreys: [String!]!
+  viewPhase: String!
   sectionEnabled: Boolean!
   sectionAxis: String!
   sectionOffset: Float!

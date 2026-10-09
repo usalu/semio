@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-schedule/schema.json",
+  "title": "CreateSchedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "schedule"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createSchedule"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Schedule id",
+          "de": "Listen-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "schedule": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Schedule",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Schedule",
+          "de": "Bauteilliste"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

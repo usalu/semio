@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/copy-elements/schema.json",
+  "title": "CopyElements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "ids",
+    "vector",
+    "prefix"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "copyElements"
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Elements",
+          "de": "Elemente"
+        },
+        "description": {
+          "en": "Elements to act on; unknown ids refuse the whole call, openings are acted on with their host.",
+          "de": "Zu bearbeitende Elemente; unbekannte Ids verweigern den ganzen Aufruf, Öffnungen werden mit ihrem Host bearbeitet."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "vector": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Translation (m)",
+          "de": "Verschiebung (m)"
+        },
+        "group": "translation",
+        "order": 20
+      }
+    },
+    "prefix": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Id prefix",
+          "de": "Id-Präfix"
+        },
+        "description": {
+          "en": "Prefix of the ids minted for the created records: prefix, copy number and the position of the source in id order.",
+          "de": "Präfix der Ids der angelegten Datensätze: Präfix, Kopiennummer und Position der Quelle in Id-Reihenfolge."
+        },
+        "group": "identity",
+        "order": 30
+      }
+    }
+  }
+}

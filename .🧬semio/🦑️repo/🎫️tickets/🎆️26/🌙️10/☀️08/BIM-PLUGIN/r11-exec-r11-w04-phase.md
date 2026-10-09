@@ -1,0 +1,45 @@
+# r11-w04-phase execution report (WP-04 storey and phase authoring)
+
+Status: **WRITTEN BUT UNVERIFIED**. No cargo test, no oracle through the harness and no bless could run: the BIM crate does not compile because its framework
+dependencies (`semio-framework-os-kernel` and the crates above it: playbook, dag `🕸️dag/🧵️retained`, plugin `👥️presence`, `🕹️interaction`) are in the middle of the owner's retirement
+refactor (commit 677; owned by `r11-store`, reports `r11-exec-store-a.md` / `-b.md` exist, `r11-exec-store.md` does not). Last gate run: `check12.txt`, 692 errors, 0 in `✏️s/**`
+(history of the run: 303 -> 246 -> 126 -> 98 -> 17 -> 7 -> 768 -> 290 -> 16 -> 692 as `r11-store` moved through the crates). Every error is in a framework crate, none in the BIM crate.
+
+S = `✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any`, T = the ticket folder.
+
+## Before -> after (against `r11-audit-w04-w05.md`, WP-04)
+
+| Audit item | Before | After |
+|---|---|---|
+| Outliner storey move (drag + accessible alternative) | missing | Movable element rows (kinds whose table row has a writable `storey` field) are draggable (`application/x-semio-bim-element`); every storey row carries a `Trigger::Drop` binding firing `setField {field: storey, value: <storey id>}`, i.e. `set-element-storey` (the drop payload is folded into `ids` by the action bridge). Menu/keyboard: every movable row has two menu row actions (`storeyUp`/`storeyDown`, arrow icons, labelled en+de), the palette commands `storeyUp`/`storeyDown` ("Move to Storey Above/Below" / "Ins Geschoss darüber/darunter verschieben", described) and the keys Alt+Up / Alt+Down. The commands move the targets (explicit ids, else the selection) one storey in level order of their building, all or nothing, one history row; refusal codes `bim.storey.target-missing`, `bim.storey.no-neighbour` with en+de notices. |
+| View phase consumed by plan and world windows | `View.phase` only filtered walls and their openings in `view-linework` | `view-linework` filters every phase-bearing kind through the one rule of `🎭️phase-visibility` (`phase_of`, `phases_in`: own phase, host's for an opening, new for ceilings/ramps) and its dependency reads the phases of all elements of the building; READS lists every phase collection. The plan window paints the view-linework of its view, so it follows. The world window gets a `view_phase` config field (`all`/`existing`/`new`/`demolished`/`temporary`, empty = all, unknown = all), the `setView view_phase` parameter, a "Phase filter" select in the window measures (en+de) and hides solids through `ModelInference.phase_visibility[storey].hides(...)`. |
+| `🎭️phase-visibility` feature + oracle + gating + cache transparency | inference + unit tests only | Case `S/🧪️tests/🎭️infer-bim-1-phases/{🥒️.feature,🐍️.py,🦀️.rs}` (`@oracle-bim-1-ifcopenshell-kernel`): the python oracle opens the committed house IFC with IfcOpenShell and rebuilds `{storey: {view phase: ids}}` from `Semio_Authoring.Phase`, containment/aggregation and `VoidsElements` alone, auditing partition and union; the subject answers from `ModelInference` through the new projection slug `phase-visibility` (`phase_visibility::table_json`). Unit tests added in `🎭️phase-visibility/🧪️tests`: a view phase draws exactly the elements of its phase for every kind, openings follow their host, warm = cold = uncached for view-linework and visibility after a phase edit and after a storey move; existing tests keep the gating (phase edit recomputes only `phase-visibility`, height edit leaves it alone). |
+| Examples (house/office) phases + one storey move | none | `T/r11-w04-phase-examples.ts` (called by `T/r4-x-examples-gen.ts`, which was run): house basement existing, WC partition demolished; office ground columns + slab existing, ground north curtain wall demolished. House `w-u-bath-east` is created on `st-ground` and moved with `set-element-storey` to `st-upper` by the replay (`🧬️derivations.json` gained `moved`; `checks::replay_derived` creates it on `from` and applies the mutation). Example tests added (house x2, office x1). `r4-x-examples-gen-rust.ts` was NOT run (stale template, a peer warned); the tests were added to the committed test files. |
+| IFC phase export re-bless + validate | `house.ifc` committed before the phases of the fixture snapshot | NOT done: needs `BIM_BLESS=1 cargo test ... projection`, then `bun ./📜️script.ts oracle quick --case 🏗️export-bim-1-ifc` and the new case. The fixture snapshot already carries the phases (`r10-w04-phase-house.ts` reports 0 changes). |
+| Sum-law tests of both leaves | present | Not run (no build). Both leaves have `inverse_restores...`/sum-law cases per fixture through `mutations::kit`. |
+
+## Files touched (S unless noted)
+
+Created: `✏️editor/🎮️commands/🪜️move-storey/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}`; `🧪️tests/🎭️infer-bim-1-phases/{🥒️.feature,🐍️.py,🦀️.rs}`; T: `r11-w04-phase-world-config.ts`, `r11-w04-phase-examples.ts`.
+Edited: `✏️editor/📌️panels/🌳️outliner/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}`; `✏️editor/🦀️.rs` (command table, bridge arms, args, fault rows, keybindings, `setField` drag alias); `✏️editor/🗣️terminology/🦀️.rs` (cmd_storey_up/down + describe, fault_storey_*, measure_view_phase); `✏️editor/🎮️commands/🪟️set-view/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}`; `✏️editor/🎛️chrome/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}`; `✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️world/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs,🎚️config/🦀️.rs,🎚️config/🧬️schema/{🔗️.graphql,🔣️.json,🛰️.proto,🟦️.ts}}`; `✏️editor/🧪️tests/⌨️completeness/🦀️.rs` and `✏️editor/🧪️tests/🔬️unit/🦀️.rs` (new tests/codes); `🧬️schema/💡️inferences/🎭️phase-visibility/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}`; `🧬️schema/💡️inferences/🖼️view-linework/{🔎️filters/🦀️.rs,🦀️.rs}` (READS); `🚪️io/📝️text/📸️snapshot/🦀️.rs` (slug); `📚️examples/🧰️checks/🦀️.rs`, `📚️examples/🏡️house/🧪️tests/🧩️example/🦀️.rs`, `📚️examples/🏢️office/🧪️tests/🧩️example/🦀️.rs`; assets regenerated by the generator: `🖼️assets/🏡️house/{📸️snapshot.json,🧬️derivations.json}`, `🖼️assets/🏢️office/📸️snapshot.json`. Artifact root `🏢️model/🦀️.rs`: mount of `move_storey`; T: `r4-x-examples-gen.ts`.
+
+## Commands and results
+
+- `🚦️gate.sh r11-w04-phase -- cargo check --manifest-path ✏️s/.../🏢️model/Cargo.toml -p semio-s-artifact-bim-model --lib --message-format=short` x12 (`T/🗑️generated/r11-w04-phase/check1..12.txt`): all exit 101, all errors in `🧰️framework/**` (see above).
+- `bun T/r11-w04-phase-world-config.ts`: 4 facets updated. `bun T/r4-x-examples-gen.ts`: house/office snapshots written. `bun T/r10-w04-phase-house.ts`: 0 changes.
+- `.venv python 🐍️.py table <🧫️fixtures/🏗️ifc>` of the new oracle against the committed (not re-blessed) house.ifc: runs, prints the table (only one Existing wall in the old file, as expected before the re-bless).
+- NOT run: `cargo test --lib`, wasm32-wasip2 check, harness `oracle/subject/parity` of the new case, `bun T/r3-f1-gen-*.ts` (no mutation kind was added or changed, so the generators have nothing to regenerate).
+
+## Verification list once the framework compiles (in this order)
+
+1. `cargo check -p semio-s-artifact-bim-model --lib --tests`, fix the compile errors of the files above (not compiled once: outliner `movable_item`/`row_target`/`row_action` imports and closure `full`; `Trigger::Drop` binding through `HasBase::try_on_with` on `TreeItemBuilder`; command module; world window; checks `moved` replay).
+2. `cargo test ... --lib move_storey outliner phase_visibility world set_view chrome completeness`; the outliner text projection test asserts the menu labels and the drag key appear in the rendered tree text: if the text projection does not print row actions/drag data, assert on the built `TreeItemProps` instead.
+3. `BIM_BLESS=1 cargo test ... bless_the_house_text bless_the_office_text` (DSL texts of both examples) and `BIM_BLESS=1 cargo test ... projection` (house.ifc), then the house/office example tests (replay incl. `the_bathroom_east_wall_replays_as_a_move...`), and `cargo test --lib` for the exact count.
+4. `python 🐍️.py check <🧫️fixtures/🏗️ifc>` of `🎭️infer-bim-1-phases` and the harness `oracle/subject/parity quick --case 🎭️infer-bim-1-phases` and `--case 🏗️export-bim-1-ifc`.
+
+## Open items
+
+- The viewer world window has no phase filter (its config is separate and read-only); the editor world window and the plan (through the view) have it.
+- The plan window test file (`🗺️plan/🧪️tests/🔬️unit/🦀️.rs`) still builds `BimPlanWindowConfig { storey: .. }` (w12 views migrated the config to `view`); a plan-window phase test belongs there once w12 fixes it. The phase effect on the plan drawing is covered by the view-linework tests in the phase-visibility test file.
+- `r4-x-examples-gen-rust.ts` is a stale template; the committed example test files are the source of truth now.
+- Row actions cost one `UiMap` (the row target `{id}`) per movable element row in the outliner window; if the UI-value arena budget is hit by a 600-row window the existing bulk test will show it, then restrict the target to the selected row.

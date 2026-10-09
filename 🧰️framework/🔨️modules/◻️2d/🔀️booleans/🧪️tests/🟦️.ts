@@ -85,7 +85,7 @@ test("boolean retirement hands off original operands and completed paths while d
   if(row.phase==="cancelled")job.cancel();const published=row.phase==="complete"?job.result():null;
   const inventory=JSON.parse(JSON.stringify({edges:state.source.map((e:any)=>e.parameters.size),grid:state.grid.size,atomic:state.atomicIds.size,outgoing:state.outgoing.size,raw:state.raw.length,positions:state.positions.size,rings:state.rings.length}));
   const expected=retirementRows.flatSlots+inventory.edges.length*retirementRows.sourceEdgeSteps+inventory.edges.reduce((sum:number,n:number)=>sum+n,0)+inventory.grid+inventory.atomic+inventory.outgoing+inventory.raw+inventory.positions+inventory.rings;
-  expect(expected).toBe(row.work);const transferred=job.intoRetirement();expect(transferred.operands).toEqual(row.phase==="cancelled"?[]:before.operands);if(row.phase!=="cancelled")expect(transferred.operands).toBe(source.operands);
+  const transferred=job.intoRetirement();expect(transferred.operands).toEqual(before.operands);expect(transferred.operands).toBe(source.operands);
   expect(transferred.output).toBe(published);expect(()=>job.advance(1)).toThrow(/cancel/i);expect(()=>job.result()).toThrow(/cancel/i);expect(()=>job.intoRetirement()).toThrow(/transferred/i);job.cancel();
   for(const n of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>transferred.job.advance(n)).toThrow(/grant/i);
   let work=0;for(let at=0;at<=expected;at++){const beforeEdges=state.source.length,beforeRings=state.rings.length,beforeRaw=state.raw.length,p=transferred.job.advance(grant);expect(beforeEdges-state.source.length).toBeLessThanOrEqual(grant);expect(beforeRings-state.rings.length).toBeLessThanOrEqual(grant);expect(beforeRaw-state.raw.length).toBeLessThanOrEqual(grant);expect(retirementValid(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;}
@@ -97,3 +97,7 @@ test("boolean retirement hands off original operands and completed paths while d
   console.log(`[DEBUG] Boolean retirement ${row.source} ${row.phase}: ${expected} structural steps at grant ${grant}`);
  }
 });
+
+import admissionRows from "../../🧹️retire/🧫️fixtures/📥️admission/🔣️.json";
+import admissionSchema from "../../🧹️retire/🧬️schema/📥️admission/🔣️.json";
+test("retained Boolean admission preserves refused input until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="boolean")continue;const input:BooleanInput={...rows[0]!.input as BooleanInput,maxEdges:row.maxEdges!},operands=input.operands;expect(valid(input)).toBe(false);expect(()=>new BooleanJob(input)).toThrow(/contract/);const job=BooleanJob.admit(input);expect((job as unknown as {input:BooleanInput}).input.operands).toBe(operands);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.operands).toBe(operands);expect(retired.output).toBe(null);while(!retired.job.advance(1).done){}expect(retired.job.terminalIsEmpty()).toBe(true);console.log("[DEBUG] Refused Boolean admission retained actual operands until explicit close");}});

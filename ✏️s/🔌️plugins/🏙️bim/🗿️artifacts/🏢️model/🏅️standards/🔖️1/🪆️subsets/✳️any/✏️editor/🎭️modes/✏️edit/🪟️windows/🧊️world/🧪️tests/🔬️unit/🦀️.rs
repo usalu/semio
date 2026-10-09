@@ -3,7 +3,7 @@ use serde_json::Value;
 
 fn demo() -> (ModelSnapshot, ModelInference) {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let inference = crate::editor::bim::inference::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 
@@ -87,4 +87,21 @@ async fn the_world_window_is_a_world3d_surface_bound_to_the_elements_domain() {
     assert_eq!(definition.body_key, BODY_KEY);
     assert!(matches!(definition.surface_kind, SurfaceKind::World3d));
     assert_eq!(definition.interactions.len(), 1);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_phase_filter_draws_only_the_elements_of_its_phase() {
+    let (mut snapshot, _) = demo();
+    snapshot.walls.get_mut("w-south").expect("wall").phase = crate::Phase::Demolished;
+    snapshot.walls.get_mut("w-east").expect("wall").phase = crate::Phase::Existing;
+    let inference = ModelInference::infer(&snapshot).expect("infers");
+    let drawn = |view_phase: &str| -> Vec<String> { instances(&scene(&snapshot, &inference, &BimWorldWindowConfig { view_phase: view_phase.into(), ..BimWorldWindowConfig::default() }, &[], &[], 1)).iter().map(|instance| instance["id"].as_str().expect("id").to_string()).collect() };
+    assert_eq!(drawn("").len(), 4, "an empty filter and 'all' draw every element");
+    assert_eq!(drawn("all"), drawn(""));
+    assert_eq!(drawn("demolished"), ["w-south"]);
+    assert_eq!(drawn("existing"), ["w-east"]);
+    assert_eq!(drawn("new"), ["w-north", "w-west"]);
+    assert!(drawn("temporary").is_empty());
+    assert_eq!(drawn("planned").len(), 4, "an unknown key filters nothing instead of hiding the model");
+    assert_eq!(view_phase(&BimWorldWindowConfig { view_phase: "Demolished".into(), ..BimWorldWindowConfig::default() }), ViewPhase::Demolished);
 }

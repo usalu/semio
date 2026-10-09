@@ -1,0 +1,14 @@
+{
+  "mutation": "setSchedule",
+  "id": "sch-walls",
+  "group": [
+    {
+      "key": {
+        "Field": {
+          "field": "Type"
+        }
+      }
+    }
+  ],
+  "itemize": false
+}

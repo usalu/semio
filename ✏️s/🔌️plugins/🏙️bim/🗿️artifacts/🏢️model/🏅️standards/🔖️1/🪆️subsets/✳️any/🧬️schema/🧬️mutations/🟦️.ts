@@ -1,5 +1,5 @@
 /** 🏙️ BIM model direct-mutation discriminated union. */
-import type { Axis, Baluster, Beam, BeamType, Building, Classification, Column, ColumnType, CurtainWall, DoorLeaves, DoorType, GridLine, Infill, Layer, LocationLine, Material, MaterialCategory, Opening, OpeningKind, Point2, Profile, PropertyValue, Railing, Rgb, RiserKind, Roof, RoofShape, RoofType, Site, Slab, SlabType, Slope, Space, SpaceBoundary, Stair, StairFlight, StairStringer, Storey, Swing, TopConstraint, Vertex, Wall, WallType, WindowType } from "../🟦️.ts";
+import type { AnnotationAnchor, AnnotationStyle, AreaMeasure, AreaScheme, Axis, Baluster, Beam, BeamType, Building, Ceiling, CeilingType, ClassificationItem, ClassificationSystem, Column, ColumnType, CurtainGrid, CurtainPanel, CurtainPanelOverride, CurtainWall, CurtainWallType, DetailLevel, Dimension, DimensionUnit, DoorLeaves, DoorType, EndJoin, ExprPoint3, Family, FamilyCategory, FamilySolid, GridLine, Infill, Layer, Leader, LocationLine, Material, MaterialCategory, Opening, OpeningKind, Orientation, Paper, ParameterKind, Phase, Point2, Profile, PropertyDef, PropertyTemplate, PropertyValue, Railing, RailingHost, Ramp, Rgb, RiserKind, Roof, RoofShape, RoofType, Schedule, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleSort, Sheet, SheetRevision, Site, Slab, SlabType, Slope, SolidShape, Space, SpaceBoundary, Stair, StairFlight, StairStringer, Storey, Swing, Tag, TagCategory, TemplateTarget, Terminator, TextNote, TopConstraint, Vertex, View, ViewCamera, ViewCategory, ViewCrop, ViewPlane, Viewport, Wall, WallSide, WallSweep, WallType, WindowType, Zone } from "../🟦️.ts";
 
 export interface CreateSite {
   mutation: "createSite";
@@ -338,11 +338,6 @@ export interface SetCurtainWall {
   axis?: Axis;
   base_offset?: number;
   top?: TopConstraint;
-  u_spacing?: number;
-  v_spacing?: number;
-  mullion?: Profile;
-  panel_material?: string;
-  mullion_material?: string;
   name?: string;
 }
 
@@ -383,9 +378,8 @@ export interface SetBeam {
   mutation: "setBeam";
   id: string;
   beam_type?: string;
-  start?: Point2;
-  end?: Point2;
   top_offset?: number;
+  end_top_offset?: Record<string, unknown>;
   name?: string;
 }
 
@@ -469,6 +463,8 @@ export interface SetOpening {
   flip_hand?: boolean;
   flip_facing?: boolean;
   name?: string;
+  reveal_depth?: Record<string, unknown>;
+  reveal_material?: Record<string, unknown>;
 }
 
 export interface CreateStair {
@@ -521,6 +517,7 @@ export interface SetRailing {
   post_profile?: Profile;
   baluster?: Baluster;
   infill?: Infill;
+  host?: RailingHost;
   material?: string;
   base_offset?: number;
   name?: string;
@@ -544,6 +541,10 @@ export interface SetSpace {
   name?: string;
   boundary?: SpaceBoundary;
   usage?: string;
+  zone?: Record<string, unknown>;
+  floor_finish?: Record<string, unknown>;
+  wall_finish?: Record<string, unknown>;
+  ceiling_finish?: Record<string, unknown>;
 }
 
 export interface MoveElements {
@@ -588,17 +589,623 @@ export interface RemoveElementProperty {
 export interface SetElementClassification {
   mutation: "setElementClassification";
   id: string;
-  classification: Classification;
+  system: string;
+  code: string;
 }
 
 export interface RemoveElementClassification {
   mutation: "removeElementClassification";
   id: string;
+  system: string;
 }
 
 export interface PlaceElements {
   mutation: "placeElements";
   placements: Record<string, unknown>;
+}
+
+export interface SetElementStorey {
+  mutation: "setElementStorey";
+  id: string;
+  storey: string;
+}
+
+export interface SetElementPhase {
+  mutation: "setElementPhase";
+  id: string;
+  phase: Phase;
+}
+
+export interface SetWallEndJoin {
+  mutation: "setWallEndJoin";
+  id: string;
+  end: string;
+  join?: EndJoin;
+}
+
+export interface CopyElements {
+  mutation: "copyElements";
+  ids: string[];
+  vector: Point2;
+  prefix: string;
+}
+
+export interface MirrorElements {
+  mutation: "mirrorElements";
+  ids: string[];
+  line_start: Point2;
+  line_end: Point2;
+  prefix?: string;
+}
+
+export interface ArrayElements {
+  mutation: "arrayElements";
+  ids: string[];
+  prefix: string;
+  pattern: Record<string, unknown>;
+}
+
+export interface AlignElements {
+  mutation: "alignElements";
+  ids: string[];
+  axis: string;
+  edge: string;
+  target: number;
+}
+
+export interface OffsetWall {
+  mutation: "offsetWall";
+  id: string;
+  new_id: string;
+  distance: number;
+}
+
+export interface TrimExtendWall {
+  mutation: "trimExtendWall";
+  id: string;
+  end: string;
+  target: string;
+}
+
+export interface SplitSlab {
+  mutation: "splitSlab";
+  id: string;
+  new_id: string;
+  line_start: Point2;
+  line_end: Point2;
+}
+
+export interface SplitBeam {
+  mutation: "splitBeam";
+  id: string;
+  t: number;
+  new_id: string;
+}
+
+export interface CreateCeilingType {
+  mutation: "createCeilingType";
+  id: string;
+  ceiling_type: CeilingType;
+}
+
+export interface DeleteCeilingType {
+  mutation: "deleteCeilingType";
+  id: string;
+}
+
+export interface SetCeilingType {
+  mutation: "setCeilingType";
+  id: string;
+  name?: string;
+  layers?: Layer[];
+}
+
+export interface CreateCeiling {
+  mutation: "createCeiling";
+  id: string;
+  ceiling: Ceiling;
+}
+
+export interface DeleteCeiling {
+  mutation: "deleteCeiling";
+  id: string;
+}
+
+export interface SetCeilingBoundary {
+  mutation: "setCeilingBoundary";
+  id: string;
+  boundary: Vertex[];
+  holes: Vertex[][];
+}
+
+export interface SetCeiling {
+  mutation: "setCeiling";
+  id: string;
+  ceiling_type?: string;
+  offset?: number;
+  slope?: Slope;
+  name?: string;
+}
+
+export interface CreateZone {
+  mutation: "createZone";
+  id: string;
+  zone: Zone;
+}
+
+export interface SetZone {
+  mutation: "setZone";
+  id: string;
+  name: string;
+  category: string;
+  occupancy_density: number;
+}
+
+export interface DeleteZone {
+  mutation: "deleteZone";
+  id: string;
+}
+
+export interface CreateAreaScheme {
+  mutation: "createAreaScheme";
+  id: string;
+  area_scheme: AreaScheme;
+}
+
+export interface SetAreaScheme {
+  mutation: "setAreaScheme";
+  id: string;
+  name: string;
+  measure: AreaMeasure;
+  usages: string[];
+  zones: string[];
+}
+
+export interface DeleteAreaScheme {
+  mutation: "deleteAreaScheme";
+  id: string;
+}
+
+export interface CreateWallSweep {
+  mutation: "createWallSweep";
+  id: string;
+  wall_sweep: WallSweep;
+}
+
+export interface SetWallSweep {
+  mutation: "setWallSweep";
+  id: string;
+  host?: string;
+  side?: WallSide;
+  profile?: Profile;
+  height?: number;
+  inset?: number;
+  material?: string;
+  name?: string;
+}
+
+export interface DeleteWallSweep {
+  mutation: "deleteWallSweep";
+  id: string;
+}
+
+export interface SetWallBaseSlab {
+  mutation: "setWallBaseSlab";
+  id: string;
+  slab?: string;
+}
+
+export interface CreateRamp {
+  mutation: "createRamp";
+  id: string;
+  ramp: Ramp;
+}
+
+export interface SetRamp {
+  mutation: "setRamp";
+  id: string;
+  path: Vertex[];
+  width: number;
+  landing_start: number;
+  landing_end: number;
+  landing_turn: number;
+  max_slope: number;
+  thickness: number;
+  material: string;
+  base_offset: number;
+  top: TopConstraint;
+  railing_left: boolean;
+  railing_right: boolean;
+  name: string;
+}
+
+export interface DeleteRamp {
+  mutation: "deleteRamp";
+  id: string;
+}
+
+export interface CreateDimension {
+  mutation: "createDimension";
+  id: string;
+  dimension: Dimension;
+}
+
+export interface DeleteDimension {
+  mutation: "deleteDimension";
+  id: string;
+}
+
+export interface SetDimension {
+  mutation: "setDimension";
+  id: string;
+  anchors?: AnnotationAnchor[];
+  angle?: number;
+  offset?: number;
+  style?: string;
+  lock?: Record<string, unknown>;
+  name?: string;
+}
+
+export interface CreateTag {
+  mutation: "createTag";
+  id: string;
+  tag: Tag;
+}
+
+export interface DeleteTag {
+  mutation: "deleteTag";
+  id: string;
+}
+
+export interface SetTag {
+  mutation: "setTag";
+  id: string;
+  element?: string;
+  category?: TagCategory;
+  offset?: Point2;
+  style?: string;
+}
+
+export interface CreateTextNote {
+  mutation: "createTextNote";
+  id: string;
+  text_note: TextNote;
+}
+
+export interface DeleteTextNote {
+  mutation: "deleteTextNote";
+  id: string;
+}
+
+export interface SetTextNote {
+  mutation: "setTextNote";
+  id: string;
+  position?: Point2;
+  text?: string;
+  rotation?: number;
+  style?: string;
+}
+
+export interface CreateLeader {
+  mutation: "createLeader";
+  id: string;
+  leader: Leader;
+}
+
+export interface DeleteLeader {
+  mutation: "deleteLeader";
+  id: string;
+}
+
+export interface SetLeader {
+  mutation: "setLeader";
+  id: string;
+  anchor?: AnnotationAnchor;
+  offset?: Point2;
+  text?: string;
+  style?: string;
+}
+
+export interface CreateAnnotationStyle {
+  mutation: "createAnnotationStyle";
+  id: string;
+  annotation_style: AnnotationStyle;
+}
+
+export interface DeleteAnnotationStyle {
+  mutation: "deleteAnnotationStyle";
+  id: string;
+}
+
+export interface SetAnnotationStyle {
+  mutation: "setAnnotationStyle";
+  id: string;
+  name?: string;
+  text_height?: number;
+  terminator?: Terminator;
+  unit?: DimensionUnit;
+  precision?: number;
+  mark_size?: number;
+  gap?: number;
+  overshoot?: number;
+}
+
+export interface CreateView {
+  mutation: "createView";
+  id: string;
+  view: View;
+}
+
+export interface SetView {
+  mutation: "setView";
+  id: string;
+  name?: string;
+  storey?: string;
+  plane?: ViewPlane;
+  camera?: ViewCamera;
+  cut_height?: Record<string, unknown>;
+  depth?: number;
+  crop?: ViewCrop;
+  hidden?: ViewCategory[];
+  phase?: Phase;
+  scale?: number;
+  detail?: DetailLevel;
+}
+
+export interface DeleteView {
+  mutation: "deleteView";
+  id: string;
+}
+
+export interface CreateSchedule {
+  mutation: "createSchedule";
+  id: string;
+  schedule: Schedule;
+}
+
+export interface SetSchedule {
+  mutation: "setSchedule";
+  id: string;
+  name?: string;
+  category?: ScheduleCategory;
+  columns?: ScheduleColumn[];
+  sort?: ScheduleSort[];
+  filter?: ScheduleFilter[];
+  group?: ScheduleGroup[];
+  itemize?: boolean;
+  storeys?: string[];
+  phases?: Phase[];
+}
+
+export interface DeleteSchedule {
+  mutation: "deleteSchedule";
+  id: string;
+}
+
+export interface CreateSheet {
+  mutation: "createSheet";
+  id: string;
+  sheet: Sheet;
+}
+
+export interface SetSheet {
+  mutation: "setSheet";
+  id: string;
+  number?: string;
+  name?: string;
+  paper?: Paper;
+  orientation?: Orientation;
+  project?: string;
+  drawn_by?: string;
+  checked_by?: string;
+  date?: string;
+  revision?: string;
+  scale_label?: string;
+}
+
+export interface DeleteSheet {
+  mutation: "deleteSheet";
+  id: string;
+}
+
+export interface CreateViewport {
+  mutation: "createViewport";
+  id: string;
+  viewport: Viewport;
+}
+
+export interface SetViewport {
+  mutation: "setViewport";
+  id: string;
+  sheet?: string;
+  view?: string;
+  position?: Point2;
+  scale?: number;
+  crop?: ViewCrop;
+  label?: Record<string, unknown>;
+}
+
+export interface DeleteViewport {
+  mutation: "deleteViewport";
+  id: string;
+}
+
+export interface CreateSheetRevision {
+  mutation: "createSheetRevision";
+  id: string;
+  sheet_revision: SheetRevision;
+}
+
+export interface SetSheetRevision {
+  mutation: "setSheetRevision";
+  id: string;
+  number?: string;
+  date?: string;
+  description?: string;
+  author?: string;
+}
+
+export interface DeleteSheetRevision {
+  mutation: "deleteSheetRevision";
+  id: string;
+}
+
+export interface CreatePropertyTemplate {
+  mutation: "createPropertyTemplate";
+  id: string;
+  template: PropertyTemplate;
+}
+
+export interface SetPropertyTemplate {
+  mutation: "setPropertyTemplate";
+  id: string;
+  name?: string;
+  applies_to?: TemplateTarget[];
+  properties?: PropertyDef[];
+}
+
+export interface DeletePropertyTemplate {
+  mutation: "deletePropertyTemplate";
+  id: string;
+}
+
+export interface CreateClassificationSystem {
+  mutation: "createClassificationSystem";
+  id: string;
+  system: ClassificationSystem;
+}
+
+export interface SetClassificationSystem {
+  mutation: "setClassificationSystem";
+  id: string;
+  name?: string;
+  edition?: string;
+  source?: Record<string, unknown>;
+  entries?: ClassificationItem[];
+}
+
+export interface DeleteClassificationSystem {
+  mutation: "deleteClassificationSystem";
+  id: string;
+}
+
+export interface SetBeamAxis {
+  mutation: "setBeamAxis";
+  id: string;
+  axis: Axis;
+}
+
+export interface SetColumnTilt {
+  mutation: "setColumnTilt";
+  id: string;
+  tilt?: Slope;
+}
+
+export interface CreateCurtainWallType {
+  mutation: "createCurtainWallType";
+  id: string;
+  curtain_wall_type: CurtainWallType;
+}
+
+export interface SetCurtainWallType {
+  mutation: "setCurtainWallType";
+  id: string;
+  name?: string;
+  u_grid?: CurtainGrid;
+  v_grid?: CurtainGrid;
+  interior_mullion?: Profile;
+  border_mullion?: Profile;
+  panel?: CurtainPanel;
+  panel_material?: string;
+  mullion_material?: string;
+}
+
+export interface DeleteCurtainWallType {
+  mutation: "deleteCurtainWallType";
+  id: string;
+}
+
+export interface SetCurtainWallTypeOf {
+  mutation: "setCurtainWallTypeOf";
+  id: string;
+  curtain_wall_type: string;
+}
+
+export interface SetCurtainWallGrid {
+  mutation: "setCurtainWallGrid";
+  id: string;
+  u_grid?: CurtainGrid;
+  v_grid?: CurtainGrid;
+}
+
+export interface CreateCurtainPanelOverride {
+  mutation: "createCurtainPanelOverride";
+  id: string;
+  curtain_panel_override: CurtainPanelOverride;
+}
+
+export interface SetCurtainPanelOverride {
+  mutation: "setCurtainPanelOverride";
+  id: string;
+  panel: CurtainPanel;
+}
+
+export interface DeleteCurtainPanelOverride {
+  mutation: "deleteCurtainPanelOverride";
+  id: string;
+}
+
+export interface CreateFamily {
+  mutation: "createFamily";
+  id: string;
+  family: Family;
+}
+
+export interface DeleteFamily {
+  mutation: "deleteFamily";
+  id: string;
+}
+
+export interface SetFamily {
+  mutation: "setFamily";
+  id: string;
+  name?: string;
+  category?: FamilyCategory;
+}
+
+export interface SetFamilyParameter {
+  mutation: "setFamilyParameter";
+  family: string;
+  name: string;
+  kind?: ParameterKind;
+  value?: string;
+}
+
+export interface RemoveFamilyParameter {
+  mutation: "removeFamilyParameter";
+  family: string;
+  name: string;
+}
+
+export interface CreateFamilySolid {
+  mutation: "createFamilySolid";
+  id: string;
+  solid: FamilySolid;
+}
+
+export interface DeleteFamilySolid {
+  mutation: "deleteFamilySolid";
+  id: string;
+}
+
+export interface SetFamilySolid {
+  mutation: "setFamilySolid";
+  id: string;
+  name?: string;
+  shape?: SolidShape;
+  material?: string;
+  visible?: string;
+  offset?: ExprPoint3;
 }
 
 export type ModelMutation =
@@ -689,4 +1296,89 @@ export type ModelMutation =
   | RemoveElementProperty
   | SetElementClassification
   | RemoveElementClassification
-  | PlaceElements;
+  | PlaceElements
+  | SetElementStorey
+  | SetElementPhase
+  | SetWallEndJoin
+  | CopyElements
+  | MirrorElements
+  | ArrayElements
+  | AlignElements
+  | OffsetWall
+  | TrimExtendWall
+  | SplitSlab
+  | SplitBeam
+  | CreateCeilingType
+  | DeleteCeilingType
+  | SetCeilingType
+  | CreateCeiling
+  | DeleteCeiling
+  | SetCeilingBoundary
+  | SetCeiling
+  | CreateZone
+  | SetZone
+  | DeleteZone
+  | CreateAreaScheme
+  | SetAreaScheme
+  | DeleteAreaScheme
+  | CreateWallSweep
+  | SetWallSweep
+  | DeleteWallSweep
+  | SetWallBaseSlab
+  | CreateRamp
+  | SetRamp
+  | DeleteRamp
+  | CreateDimension
+  | DeleteDimension
+  | SetDimension
+  | CreateTag
+  | DeleteTag
+  | SetTag
+  | CreateTextNote
+  | DeleteTextNote
+  | SetTextNote
+  | CreateLeader
+  | DeleteLeader
+  | SetLeader
+  | CreateAnnotationStyle
+  | DeleteAnnotationStyle
+  | SetAnnotationStyle
+  | CreateView
+  | SetView
+  | DeleteView
+  | CreateSchedule
+  | SetSchedule
+  | DeleteSchedule
+  | CreateSheet
+  | SetSheet
+  | DeleteSheet
+  | CreateViewport
+  | SetViewport
+  | DeleteViewport
+  | CreateSheetRevision
+  | SetSheetRevision
+  | DeleteSheetRevision
+  | CreatePropertyTemplate
+  | SetPropertyTemplate
+  | DeletePropertyTemplate
+  | CreateClassificationSystem
+  | SetClassificationSystem
+  | DeleteClassificationSystem
+  | SetBeamAxis
+  | SetColumnTilt
+  | CreateCurtainWallType
+  | SetCurtainWallType
+  | DeleteCurtainWallType
+  | SetCurtainWallTypeOf
+  | SetCurtainWallGrid
+  | CreateCurtainPanelOverride
+  | SetCurtainPanelOverride
+  | DeleteCurtainPanelOverride
+  | CreateFamily
+  | DeleteFamily
+  | SetFamily
+  | SetFamilyParameter
+  | RemoveFamilyParameter
+  | CreateFamilySolid
+  | DeleteFamilySolid
+  | SetFamilySolid;

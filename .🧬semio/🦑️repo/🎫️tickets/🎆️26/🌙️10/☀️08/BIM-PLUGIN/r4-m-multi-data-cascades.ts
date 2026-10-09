@@ -29,7 +29,7 @@ export const leaves: Leaf[] = [
     kind: "delete-site", emoji: 0x1f9f9, variant: "DeleteSite", verb: "delete", entity: "site", binaryTag: 1, displayName: "Delete Site",
     doc: "Removes a site together with its buildings and everything inside them (storeys, grid lines, walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces, openings) and their properties and classifications; refuses while a surviving element still constrains its top to a removed storey.",
     props: [target("site", { en: "Site", de: "Standort" })],
-    inverseRows: { bounded: 65536 },
+    inverseRows: { bounded: 8191 },
     label: { en: 'format!("Delete site \\"{}\\" with everything on it", self.id)', de: 'format!("Standort \\"{}\\" samt Inhalt löschen", self.id)' },
     target: one,
     cases: [
@@ -43,7 +43,7 @@ export const leaves: Leaf[] = [
     kind: "delete-building", emoji: 0x1f3da, variant: "DeleteBuilding", verb: "delete", entity: "building", binaryTag: 3, displayName: "Delete Building",
     doc: "Removes a building together with its storeys, grid lines and everything on them (walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces, openings) and their properties and classifications; refuses while a surviving element still constrains its top to a removed storey.",
     props: [target("building", { en: "Building", de: "Gebäude" })],
-    inverseRows: { bounded: 65536 },
+    inverseRows: { bounded: 8191 },
     label: { en: 'format!("Delete building \\"{}\\" with everything in it", self.id)', de: 'format!("Gebäude \\"{}\\" samt Inhalt löschen", self.id)' },
     target: one,
     cases: [
@@ -57,7 +57,7 @@ export const leaves: Leaf[] = [
     kind: "delete-storey", emoji: 0x1f6ae, variant: "DeleteStorey", verb: "delete", entity: "storey", binaryTag: 8, displayName: "Delete Storey",
     doc: "Removes a storey together with everything on it (walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces and the openings of its walls) and their properties and classifications; refuses while a surviving element still constrains its top to the storey.",
     props: [target("storey", { en: "Storey", de: "Geschoss" })],
-    inverseRows: { bounded: 65536 },
+    inverseRows: { bounded: 8191 },
     label: { en: 'format!("Delete storey \\"{}\\" with everything on it", self.id)', de: 'format!("Geschoss \\"{}\\" samt Inhalt löschen", self.id)' },
     target: one,
     cases: [

@@ -1,4 +1,4 @@
-//! 🔺️ Diff constructor for `DeleteStorey`: the storey and everything on it (walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces and the openings of its walls) leave in one sparse diff together with everything that depends on them
+//! 🔺️ Diff constructor for `DeleteStorey`: the storey and everything on it (the views and schedules scoped to it, walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces and the openings of its walls) leave in one sparse diff together with everything that depends on them
 //! (see the shared cascade), including the properties and classifications of every removed element. A storey that a
 //! surviving element's top constraint still points at cannot cascade and is refused as `mutation.target-referenced`.
 

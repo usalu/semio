@@ -1,0 +1,720 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Ramps",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-concrete": {
+      "name": "Concrete",
+      "category": "Concrete",
+      "color": {
+        "r": 0.6,
+        "g": 0.6,
+        "b": 0.6
+      },
+      "density": 2400.0,
+      "conductivity": 1.8,
+      "specific_heat": 1000.0
+    }
+  },
+  "wall_types": {},
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "elevation": 100.0,
+      "true_north": 0.0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "elevation": 0.0
+    }
+  },
+  "storeys": {
+    "st-base": {
+      "building": "bldg-1",
+      "name": "Basement",
+      "level": -1,
+      "height": 2.6
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3.0
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {},
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "ramps": {
+    "r-straight": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 10.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.5
+        }
+      },
+      "railing_left": true,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-at-limit": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 3.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 10.0,
+            "y": 3.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.5833333333333334
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-steep": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 10.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.7
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-bent": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 6.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 6.0,
+            "y": 14.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.6
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-zigzag": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 12.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 17.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 17.0,
+            "y": 5.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 22.0,
+            "y": 5.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.7
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-smooth-join": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 12.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 16.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 20.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.4
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-curved": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 12.0,
+            "y": 12.0
+          },
+          "bulge": 0.41421356237309503
+        },
+        {
+          "point": {
+            "x": 17.0,
+            "y": 17.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.3
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-to-first": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 30.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 70.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Storey": {
+          "storey": "st-first",
+          "offset": 0.0
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-to-first-short": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 30.0,
+            "y": 3.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 40.0,
+            "y": 3.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Storey": {
+          "storey": "st-first",
+          "offset": 0.0
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-storey-top": {
+      "storey": "st-first",
+      "path": [
+        {
+          "point": {
+            "x": 30.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 70.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-down": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 30.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 40.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.5,
+      "top": {
+        "Unconnected": {
+          "height": -0.5
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-no-run": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 30.0,
+            "y": 12.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 40.0,
+            "y": 12.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 6.0,
+      "landing_end": 6.0,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.3
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-flat": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 30.0,
+            "y": 15.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 40.0,
+            "y": 15.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.0
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-merged": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 30.0,
+            "y": 18.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 36.0,
+            "y": 18.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 36.0,
+            "y": 23.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 6.0,
+      "landing_end": 20.0,
+      "landing_turn": 3.0,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.0
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-degenerate": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "point": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.3
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    },
+    "r-wide": {
+      "storey": "st-first",
+      "path": [
+        {
+          "point": {
+            "x": 50.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 60.0,
+            "y": 9.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 2.4,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.1,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.4
+        }
+      },
+      "railing_left": true,
+      "railing_right": true,
+      "name": "Ramp"
+    },
+    "r-orphan": {
+      "storey": "st-nowhere",
+      "path": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 10.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "width": 1.2,
+      "landing_start": 1.5,
+      "landing_end": 1.5,
+      "landing_turn": 1.5,
+      "max_slope": 0.08333333333333333,
+      "thickness": 0.2,
+      "material": "m-concrete",
+      "base_offset": 0.0,
+      "top": {
+        "Unconnected": {
+          "height": 0.5
+        }
+      },
+      "railing_left": false,
+      "railing_right": false,
+      "name": "Ramp"
+    }
+  },
+  "spaces": {},
+  "properties": {},
+  "classifications": {}
+}

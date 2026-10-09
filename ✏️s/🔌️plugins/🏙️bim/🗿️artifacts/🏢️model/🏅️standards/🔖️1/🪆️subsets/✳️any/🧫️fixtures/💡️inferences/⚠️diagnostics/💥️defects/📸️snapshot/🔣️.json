@@ -16,9 +16,9 @@
         "g": 0.35,
         "b": 0.25
       },
-      "density": 1800.0,
-      "conductivity": 1.0,
-      "specific_heat": 900.0
+      "density": 1800,
+      "conductivity": 1,
+      "specific_heat": 900
     },
     "m-insulation": {
       "name": "Mineral Wool",
@@ -28,9 +28,9 @@
         "g": 0.85,
         "b": 0.3
       },
-      "density": 40.0,
-      "conductivity": 1.0,
-      "specific_heat": 900.0
+      "density": 40,
+      "conductivity": 1,
+      "specific_heat": 900
     },
     "m-concrete": {
       "name": "Concrete",
@@ -40,9 +40,9 @@
         "g": 0.6,
         "b": 0.6
       },
-      "density": 2400.0,
-      "conductivity": 1.0,
-      "specific_heat": 900.0
+      "density": 2400,
+      "conductivity": 1,
+      "specific_heat": 900
     },
     "m-steel": {
       "name": "Steel",
@@ -52,9 +52,9 @@
         "g": 0.6,
         "b": 0.6
       },
-      "density": 7800.0,
-      "conductivity": 1.0,
-      "specific_heat": 900.0
+      "density": 7800,
+      "conductivity": 1,
+      "specific_heat": 900
     },
     "m-glass": {
       "name": "Glass",
@@ -64,9 +64,9 @@
         "g": 0.8,
         "b": 0.9
       },
-      "density": 2500.0,
-      "conductivity": 1.0,
-      "specific_heat": 900.0
+      "density": 2500,
+      "conductivity": 1,
+      "specific_heat": 900
     },
     "m-wood": {
       "name": "Wood",
@@ -76,9 +76,9 @@
         "g": 0.4,
         "b": 0.2
       },
-      "density": 500.0,
-      "conductivity": 1.0,
-      "specific_heat": 900.0
+      "density": 500,
+      "conductivity": 1,
+      "specific_heat": 900
     }
   },
   "wall_types": {
@@ -171,7 +171,7 @@
   "door_types": {
     "dr-100": {
       "name": "Door 100",
-      "width": 1.0,
+      "width": 1,
       "height": 2.1,
       "frame_width": 0.05,
       "frame_depth": 0.1,
@@ -180,13 +180,43 @@
       "material": "m-wood"
     }
   },
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 2 x 1",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 2
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.1
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.1
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "mullion_material": "m-steel"
+    }
+  },
   "sites": {
     "site-1": {
       "name": "Plot",
-      "latitude": 47.0,
-      "longitude": 8.0,
-      "elevation": 0.0,
-      "true_north": 0.0,
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 0,
+      "true_north": 0,
       "boundary": []
     }
   },
@@ -195,11 +225,11 @@
       "site": "site-1",
       "name": "House",
       "origin": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 0,
+        "y": 0
       },
-      "rotation": 0.0,
-      "elevation": 0.0
+      "rotation": 0,
+      "elevation": 0
     }
   },
   "storeys": {
@@ -207,7 +237,7 @@
       "building": "bldg-1",
       "name": "Ground",
       "level": 0,
-      "height": 3.0
+      "height": 3
     },
     "st-first": {
       "building": "bldg-1",
@@ -219,13 +249,13 @@
       "building": "bldg-1",
       "name": "Duplicate",
       "level": 1,
-      "height": 3.0
+      "height": 3
     },
     "st-far": {
       "building": "bldg-1",
       "name": "Far",
       "level": 4,
-      "height": 3.0
+      "height": 3
     }
   },
   "grids": {
@@ -233,24 +263,24 @@
       "building": "bldg-1",
       "label": "A",
       "start": {
-        "x": 0.0,
-        "y": -1.0
+        "x": 0,
+        "y": -1
       },
       "end": {
-        "x": 0.0,
-        "y": 7.0
+        "x": 0,
+        "y": 7
       }
     },
     "g-1": {
       "building": "bldg-1",
       "label": "1",
       "start": {
-        "x": -1.0,
-        "y": 0.0
+        "x": -1,
+        "y": 0
       },
       "end": {
-        "x": 9.0,
-        "y": 0.0
+        "x": 9,
+        "y": 0
       }
     }
   },
@@ -261,20 +291,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           },
           "end": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -286,20 +316,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           },
           "end": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -311,20 +341,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
           "end": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -336,20 +366,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           },
           "end": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -361,20 +391,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 4.0,
-            "y": 0.0
+            "x": 4,
+            "y": 0
           },
           "end": {
-            "x": 4.0,
-            "y": 3.0
+            "x": 4,
+            "y": 3
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -386,20 +416,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           },
           "end": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -411,20 +441,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           },
           "end": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -436,20 +466,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           },
           "end": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -461,20 +491,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 1.0,
-            "y": 2.0
+            "x": 1,
+            "y": 2
           },
           "end": {
-            "x": 3.0,
-            "y": 2.0
+            "x": 3,
+            "y": 2
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -486,20 +516,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 2.0,
-            "y": 2.0
+            "x": 2,
+            "y": 2
           },
           "end": {
-            "x": 2.0,
-            "y": 2.0
+            "x": 2,
+            "y": 2
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -511,20 +541,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 6.0,
-            "y": 0.0
+            "x": 6,
+            "y": 0
           },
           "end": {
-            "x": 6.0,
-            "y": 3.0
+            "x": 6,
+            "y": 3
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -534,34 +564,26 @@
   "curtain_walls": {
     "cw-first-north": {
       "storey": "st-first",
+      "curtain_wall_type": "cwt-1",
       "axis": {
         "Line": {
           "start": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
           "end": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           }
         }
       },
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
-      "u_spacing": 2.0,
-      "v_spacing": 1.0,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.06,
-          "depth": 0.1
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
+      "phase": "New",
       "name": "North Facade"
     }
   },
@@ -570,16 +592,17 @@
       "storey": "st-ground",
       "column_type": "ct-400",
       "position": {
-        "x": 6.0,
-        "y": 3.0
+        "x": 6,
+        "y": 3
       },
-      "rotation": 0.0,
-      "base_offset": 0.0,
+      "rotation": 0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
+      "phase": "New",
       "name": "C1"
     },
     "c-2": {
@@ -589,13 +612,14 @@
         "x": 6.2,
         "y": 3.1
       },
-      "rotation": 0.0,
-      "base_offset": 0.0,
+      "rotation": 0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
+      "phase": "New",
       "name": "C2"
     }
   },
@@ -603,15 +627,20 @@
     "b-1": {
       "storey": "st-ground",
       "beam_type": "bt-30x50",
-      "start": {
-        "x": 0.0,
-        "y": 4.5
-      },
-      "end": {
-        "x": 8.0,
-        "y": 4.5
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 4.5
+          },
+          "end": {
+            "x": 8,
+            "y": 4.5
+          }
+        }
       },
       "top_offset": -0.25,
+      "phase": "New",
       "name": "B1"
     }
   },
@@ -622,35 +651,36 @@
       "boundary": [
         {
           "point": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         }
       ],
       "holes": [],
-      "offset": 0.0,
+      "offset": 0,
+      "phase": "New",
       "name": "Ground Slab"
     },
     "sl-first": {
@@ -659,66 +689,67 @@
       "boundary": [
         {
           "point": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         }
       ],
       "holes": [
         [
           {
             "point": {
-              "x": 1.0,
+              "x": 1,
               "y": 4.7
             },
-            "bulge": 0.0
+            "bulge": 0
           },
           {
             "point": {
               "x": 5.5,
               "y": 4.7
             },
-            "bulge": 0.0
+            "bulge": 0
           },
           {
             "point": {
               "x": 5.5,
               "y": 5.7
             },
-            "bulge": 0.0
+            "bulge": 0
           },
           {
             "point": {
-              "x": 1.0,
+              "x": 1,
               "y": 5.7
             },
-            "bulge": 0.0
+            "bulge": 0
           }
         ]
       ],
-      "offset": 0.0,
+      "offset": 0,
+      "phase": "New",
       "name": "First Slab"
     }
   },
@@ -729,41 +760,42 @@
       "footprint": [
         {
           "point": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         },
         {
           "point": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           },
-          "bulge": 0.0
+          "bulge": 0
         }
       ],
       "shape": {
         "Gable": {
           "pitch": 0.5,
-          "ridge_direction": 0.0
+          "ridge_direction": 0
         }
       },
       "overhang": 0.3,
       "base_offset": 2.8,
+      "phase": "New",
       "name": "Roof"
     }
   },
@@ -775,7 +807,7 @@
           "door_type": "dr-100"
         }
       },
-      "offset": 2.0,
+      "offset": 2,
       "flip_hand": false,
       "flip_facing": false,
       "name": "Door"
@@ -799,7 +831,7 @@
           "window_type": "wnd-120"
         }
       },
-      "offset": 4.0,
+      "offset": 4,
       "sill_override": 1.5,
       "flip_hand": false,
       "flip_facing": false,
@@ -824,7 +856,7 @@
           "door_type": "dr-100"
         }
       },
-      "offset": 1.0,
+      "offset": 1,
       "flip_hand": false,
       "flip_facing": false,
       "name": "Orphan"
@@ -834,15 +866,15 @@
     "s-1": {
       "storey": "st-ground",
       "start": {
-        "x": 1.0,
+        "x": 1,
         "y": 5.2
       },
-      "direction": 0.0,
-      "width": 1.0,
+      "direction": 0,
+      "width": 1,
       "flight": "Straight",
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "max_riser": 0.18,
@@ -855,21 +887,22 @@
       "nosing": 0,
       "tread_thickness": 0.04,
       "riser": "Closed",
-      "landing_depth": 1.0,
+      "landing_depth": 1,
+      "phase": "New",
       "name": "Stair"
     },
     "s-comfort": {
       "storey": "st-ground",
       "start": {
-        "x": 1.0,
-        "y": 1.0
+        "x": 1,
+        "y": 1
       },
-      "direction": 0.0,
-      "width": 1.0,
+      "direction": 0,
+      "width": 1,
       "flight": "Straight",
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "max_riser": 0.18,
@@ -882,7 +915,8 @@
       "nosing": 0,
       "tread_thickness": 0.04,
       "riser": "Closed",
-      "landing_depth": 1.0,
+      "landing_depth": 1,
+      "phase": "New",
       "name": "Steep"
     }
   },
@@ -891,7 +925,7 @@
       "storey": "st-ground",
       "path": [
         {
-          "x": 1.0,
+          "x": 1,
           "y": 4.65
         },
         {
@@ -899,7 +933,7 @@
           "y": 4.65
         }
       ],
-      "height": 1.0,
+      "height": 1,
       "post_spacing": 1.2,
       "profile": {
         "Rectangle": {
@@ -915,7 +949,8 @@
       },
       "infill": "None",
       "material": "m-steel",
-      "base_offset": 0.0,
+      "base_offset": 0,
+      "phase": "New",
       "name": "Rail"
     }
   },
@@ -932,33 +967,34 @@
                 "x": 0.15,
                 "y": 0.15
               },
-              "bulge": 0.0
+              "bulge": 0
             },
             {
               "point": {
                 "x": 7.85,
                 "y": 0.15
               },
-              "bulge": 0.0
+              "bulge": 0
             },
             {
               "point": {
                 "x": 7.85,
                 "y": 5.85
               },
-              "bulge": 0.0
+              "bulge": 0
             },
             {
               "point": {
                 "x": 0.15,
                 "y": 5.85
               },
-              "bulge": 0.0
+              "bulge": 0
             }
           ]
         }
       },
-      "usage": "Living"
+      "usage": "Living",
+      "phase": "New"
     },
     "sp-hall": {
       "storey": "st-ground",
@@ -967,12 +1003,13 @@
       "boundary": {
         "Bounded": {
           "seed": {
-            "x": 2.0,
-            "y": 2.0
+            "x": 2,
+            "y": 2
           }
         }
       },
-      "usage": "Circulation"
+      "usage": "Circulation",
+      "phase": "New"
     },
     "sp-twin": {
       "storey": "st-ground",
@@ -981,12 +1018,13 @@
       "boundary": {
         "Bounded": {
           "seed": {
-            "x": 7.0,
-            "y": 5.0
+            "x": 7,
+            "y": 5
           }
         }
       },
-      "usage": "Living"
+      "usage": "Living",
+      "phase": "New"
     }
   }
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "removeFamilyParameter",
+  "family": "fam-table",
+  "name": "depth"
+}

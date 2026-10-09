@@ -1,0 +1,5 @@
+{
+  "mutation": "setSchedule",
+  "id": "sch-roofs",
+  "name": "Roofs"
+}

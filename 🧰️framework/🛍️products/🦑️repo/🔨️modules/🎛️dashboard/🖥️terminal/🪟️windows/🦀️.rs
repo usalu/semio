@@ -53,6 +53,7 @@ pub(super) struct DashboardWindow {
     pub root: NodeId,
     pub list: NodeId,
     pub input: Option<NodeId>,
+    pub editor_slot: Option<usize>,
     pub caption: Option<NodeId>,
     pub tree: Option<NodeId>,
     pub body: Body,
@@ -62,7 +63,11 @@ pub(super) struct DashboardWindow {
 impl DashboardWindow {
     /// 🎯️ The node that holds keyboard focus while this window does.
     pub fn focus(&self) -> NodeId {
-        match (&self.body, self.tree) { (Body::Launcher(launcher), Some(tree)) if launcher.stage() == super::launcher::Stage::Browse => tree, _ => self.list }
+        match (&self.body, self.tree, self.input) {
+            (Body::Launcher(launcher), Some(tree), _) if launcher.stage() == super::launcher::Stage::Browse => tree,
+            (Body::Launcher(launcher), _, Some(input)) if launcher.editing() => input,
+            _ => self.list,
+        }
     }
 
     pub fn is_output(&self) -> bool { matches!(self.body, Body::Output { .. }) }
@@ -104,6 +109,7 @@ pub(super) struct Dashboard {
     pub armed: bool,
     pub armed_at: Option<std::time::Instant>,
     pub input_mode: bool,
+    pub restore_focus: bool,
     pub link: Link,
     pub state: LinkState,
     pub notice: Option<String>,
@@ -132,7 +138,7 @@ impl Dashboard {
         let (keymap, _) = preferences.keymap();
         let light = preferences.appearance == "light";
         let mut dashboard = Self {
-            root, registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false,
+            root, registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false, restore_focus: false,
             link: Link::default(), state: LinkState::Connecting, notice: None, sessions: BTreeMap::new(), hidden: HashSet::new(), shutdown_since: None, effects: Vec::new(), quit_requested: false, last_focus: std::cell::Cell::new(0), menu: None, glyphs: GlyphSet::Unicode, waker: None,
         };
         let (id, chrome) = dashboard.shell.windows[0].clone();
@@ -220,7 +226,7 @@ impl Dashboard {
             }
             Kind::Overview | Kind::Settings | Kind::Help => (add_widget(tui, root, list_state(), Dimension::Weight(1)), None, None, match kind { Kind::Overview => Body::Overview, Kind::Settings => Body::Settings, _ => Body::Help }),
         };
-        DashboardWindow { id, chrome, root, list, input, caption, tree: tree_node, body, pane: Pane::default() }
+        DashboardWindow { id, chrome, root, list, input, editor_slot: None, caption, tree: tree_node, body, pane: Pane::default() }
     }
 
     /// 🔁️ Replaces the body of an existing window, e.g. the launcher by the terminal of the task it started.
@@ -282,6 +288,7 @@ impl Dashboard {
     /// 🔝️ Brings a window forward in its stack and gives it the keyboard.
     pub fn focus_window(&mut self, tui: &mut Tui, index: usize) {
         let Some(window) = self.windows.get(index) else { return };
+        self.restore_focus = false;
         let (id, node, output) = (window.id.clone(), window.focus(), window.is_output());
         activate_stack_tab(&mut self.layout, &id);
         self.remount(tui);
@@ -348,7 +355,6 @@ impl Dashboard {
     pub fn apply_capabilities(&mut self, tui: &mut Tui, unicode_full: bool) {
         self.glyphs = if unicode_full { GlyphSet::Unicode } else { GlyphSet::Ascii };
         tui.theme.set_glyphs(self.glyphs);
-        tui.set_width_mode(if unicode_full { ui_tui::tui::text::WidthMode::Cluster } else { ui_tui::tui::text::WidthMode::Scalar });
     }
 
     fn body_title(&self, window: &DashboardWindow) -> String {

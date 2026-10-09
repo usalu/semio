@@ -340,6 +340,17 @@
             ]
           },
           {
+            "id": "run-script",
+            "verb": "run",
+            "command": ["bun", "nx", "exec", "--projects={project}", "--", "bun", "{workspace}/{script}"],
+            "cwd": "{directory}",
+            "parameters": [
+              { "id": "script", "kind": "text", "required": true },
+              { "id": "project", "kind": "text", "default": "workspace" },
+              { "id": "directory", "kind": "text", "default": "" }
+            ]
+          },
+          {
             "id": "native-cargo",
             "verb": "run",
             "command": [

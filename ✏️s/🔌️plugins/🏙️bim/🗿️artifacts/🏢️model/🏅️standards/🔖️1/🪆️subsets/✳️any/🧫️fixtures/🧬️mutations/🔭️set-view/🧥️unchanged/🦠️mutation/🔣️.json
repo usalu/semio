@@ -1,0 +1,6 @@
+{
+  "mutation": "setView",
+  "id": "v-section",
+  "name": "Section A",
+  "scale": 100
+}

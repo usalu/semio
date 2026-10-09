@@ -6,6 +6,14 @@ fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("durable group fixture")
 }
 
+fn copy_grant(bytes: usize) -> crate::os_store::ArtifactStoreOneItemGrant {
+    crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
+}
+
+fn demanded_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+}
+
 fn hex(value: &str) -> Vec<u8> {
     value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
 }
@@ -181,8 +189,9 @@ async fn owned_three_stores() -> (ArtifactStore<DemoSnapshot, DemoMutation>, Art
 
 fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
     for _ in 0..4_096 {
-        let step = crate::os_store::SpaceMember::close_owned_step(store, 1, 512).expect("durable group fixture Store closes under its bounded owner grant");
-        if step == crate::os_store::SnapshotRetirementStep::Complete {
+        let grant = demanded_grant(crate::os_store::SpaceMember::close_owned_demands(store, 512).expect("durable group fixture Store quotes its bounded owner demand"));
+        let step = crate::os_store::SpaceMember::close_owned_step(store, grant).expect("durable group fixture Store closes under its bounded owner grant");
+        if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             assert!(crate::os_store::SpaceMember::close_owned_terminal_is_empty(store));
             return;
         }
@@ -196,15 +205,15 @@ async fn assert_erased_snapshot_authority(store: &mut ArtifactStore<DemoSnapshot
     let read = crate::os_store::SpaceMember::snapshot_read_erased(store).await.expect("erased group read publishes its selected authority");
     assert_eq!(read.typed::<DemoSnapshot>().expect("erased group read retains the exact snapshot type").n, Some(expected));
     assert!(store.snapshot_read_leases.authority_matches(generation, revision));
-    let mut retirement = crate::os_store::SpaceMember::retire_snapshot_read_erased(store, read).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
+    let mut read = Some(read);
+    let birth = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: 4096, maximum_depth: 64 };
+    let (retirement, _) = crate::os_store::SpaceMember::retire_snapshot_read_erased(store, &mut read, birth).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
+    let mut retirement = retirement.expect("erased group read retirement is born under its funded grant");
     for _ in 0..64 {
-        match retirement.close_step(1, 4096).expect("erased group read retirement remains infallible") {
-            crate::os_store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                return;
-            }
-            crate::os_store::SnapshotRetirementStep::Pending { .. } => {}
-            crate::os_store::SnapshotRetirementStep::Blocked => panic!("erased group read retirement has no external wait"),
+        let demand = semio_framework_value::RetirementDemand { copy_bytes: retirement.next_copy_byte_demand().unwrap(), capacity_bytes: retirement.next_capacity_byte_demand(4096).unwrap(), release_bytes: retirement.next_release_byte_demand().unwrap(), depth: retirement.next_depth_demand().unwrap() };
+        if matches!(retirement.close_step(demanded_grant(demand)).expect("erased group read retirement remains infallible"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+            assert!(retirement.terminal_is_empty());
+            return;
         }
     }
     panic!("erased group read retirement must terminate within its bounded fixture");
@@ -303,11 +312,11 @@ impl DurableOwnedGroupJournalCommitV1 for FakeJournalCommit {
         self.close_started = true;
     }
 
-    fn close_step(&mut self, grant: crate::os_store::ArtifactStoreOneItemGrant) -> Result<crate::os_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.close_started || !grant.permits_one() {
-            return Ok(crate::os_store::SnapshotRetirementStep::Blocked);
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        if !self.close_started || grant.maximum_items == 0 {
+            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
         }
-        Ok(crate::os_store::SnapshotRetirementStep::Complete)
+        Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -346,7 +355,7 @@ fn map_assembly(
 }
 
 fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     for _ in 0..512 {
         match assembly.advance(grant).expect("fixed-three assembly turn") {
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted => return,
@@ -358,7 +367,7 @@ fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
 }
 
 fn drain_assembly_rejection(assembly: &mut DemoMapAssembly) -> DurableOwnedThreeStoreMapAssemblyOwnersV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation> {
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     for _ in 0..512 {
         match assembly.advance(grant).expect("rejected fixed-three assembly cleanup turn") {
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal => return assembly.take_terminal_owners().expect("terminal assembly returns every owner"),
@@ -386,7 +395,7 @@ async fn durable_map_three_store_assembly_uses_exact_gis_factories_and_binds_one
     assert!(factories.iter().all(|factory| Arc::strong_count(factory) == 1), "each explicit role factory leaves the assembly immediately after admission");
     let mut host = assembly.take_mounted_host().expect("valid assembly transfers only the existing fixed host");
     assert!(assembly.terminal_is_empty());
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     for _ in 0..128 {
         match host.advance(grant).expect("mounted assembly commit turn") {
             DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(_) => assert!(host.acknowledge()),
@@ -432,7 +441,7 @@ async fn durable_map_three_store_assembly_cancellation_before_journal_restores_a
     let (parent, drawing, value) = owned_three_stores().await;
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let (mut assembly, _) = map_assembly(parent, drawing, value, None, FakeJournalResolution::Commit, state.clone());
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while assembly.phase() != DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing {
         assembly.advance(grant).expect("pre-cancellation assembly turn");
     }
@@ -451,7 +460,7 @@ async fn durable_map_three_store_assembly_uncertain_journal_retains_same_host_un
     let (mut assembly, _) = map_assembly(parent, drawing, value, None, FakeJournalResolution::ErrorThenCommit, state.clone());
     drive_assembly_to_mounted(&mut assembly);
     let mut host = assembly.take_mounted_host().expect("prepared assembly transfers one fixed host");
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let mut uncertain = false;
     for _ in 0..128 {
         match host.advance(grant) {
@@ -700,7 +709,7 @@ async fn durable_store_private_committed_record_recovers_all_three_stores_withou
         DurableOwnedMapRecoveryStartV1::Apply(host) => host,
         DurableOwnedMapRecoveryStartV1::AlreadyApplied(_) => panic!("base frontiers cannot report an applied decision"),
     };
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingParent));
     assert!(matches!(host.advance(grant), DurableOwnedMapRecoveryAdvanceV1::Progress(_)), "committed parent stages before a recoverable drawing dependency fault");
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing));
@@ -774,20 +783,20 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
     let mut coordinator = bound_three(&parent, &drawing, &value).begin_retained_commit().expect("Store creates one retained group coordinator");
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::Commit, state: Arc::clone(&state) };
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while coordinator.phase() != DurableOwnedThreeStoreCommitPhaseV1::StartingJournal {
         coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("fixed-three staging turn");
         let read = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("pending partial staging reads all-old");
         assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(0), Some(0), Some(0)]);
     }
     let decision_bytes = coordinator.decision_pack.as_ref().expect("starting journal retains decision bytes").len();
-    let one_byte = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 };
+    let one_byte = copy_grant(1);
     assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, one_byte).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
     assert_eq!(state.lock().unwrap().begins, 0);
-    let insufficient = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: decision_bytes - 1 };
+    let insufficient = copy_grant(decision_bytes - 1);
     assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, insufficient).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
     assert_eq!(state.lock().unwrap().begins, 0);
-    let exact = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: decision_bytes };
+    let exact = copy_grant(decision_bytes);
     assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, exact).unwrap(), DurableOwnedThreeStoreCommitAdvanceV1::Progress(DurableOwnedThreeStoreCommitPhaseV1::Journal));
     assert_eq!(state.lock().unwrap().begins, 1);
     let mut observed_pending = false;
@@ -869,7 +878,7 @@ async fn durable_store_group_cancellation_waits_for_trusted_absence_then_restore
     let mut coordinator = bound_three(&parent, &drawing, &value).begin_retained_commit().expect("Store creates one retained group coordinator");
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::AbsentAfterCancel, state: Arc::clone(&state) };
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while coordinator.phase() != DurableOwnedThreeStoreCommitPhaseV1::Journal {
         coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("pre-journal stage");
     }
@@ -901,7 +910,7 @@ async fn durable_store_group_stage_error_retains_abort_owner_until_every_root_is
     let mut coordinator = bound_three(&parent, &drawing, &value).begin_retained_commit().expect("Store creates one retained group coordinator");
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::Commit, state: Arc::clone(&state) };
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("parent stages before injected drawing failure");
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing);
     let drawing_retirement_factory = drawing.snapshot_retirement_factory.take();
@@ -931,7 +940,7 @@ async fn durable_store_group_uncertain_journal_error_retries_same_owner_without_
     let mut coordinator = bound_three(&parent, &drawing, &value).begin_retained_commit().expect("Store creates one retained group coordinator");
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::ErrorThenCommit, state: Arc::clone(&state) };
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while coordinator.phase() != DurableOwnedThreeStoreCommitPhaseV1::Journal {
         coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("pre-journal stage");
     }
@@ -972,7 +981,7 @@ async fn durable_map_fixed_host_slot_retains_every_live_owner_across_request_err
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let sink = Box::new(FakeJournalSink { resolution: FakeJournalResolution::ErrorThenCommit, state: Arc::clone(&state) });
     let mut host = coordinator.mount_map(parent, drawing, value, sink);
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let mut observed_uncertain_error = false;
     let mut observed_committed = false;
     for _ in 0..128 {
@@ -1018,7 +1027,7 @@ async fn durable_map_fixed_host_slot_cancellation_after_uncertain_io_waits_for_t
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let sink = Box::new(FakeJournalSink { resolution: FakeJournalResolution::ErrorThenAbsentAfterCancel, state: Arc::clone(&state) });
     let mut host = coordinator.mount_map(parent, drawing, value, sink);
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let mut dropped_uncertain_request = false;
     for _ in 0..128 {
         match host.advance(grant) {
@@ -1058,7 +1067,7 @@ async fn durable_store_group_rejects_foreign_anchor_receipt_before_visibility_an
     let mut coordinator = bound_three(&parent, &drawing, &value).begin_retained_commit().expect("Store creates one retained group coordinator");
     let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
     let mut sink = FakeJournalSink { resolution: FakeJournalResolution::WrongAnchorThenAbsentAfterCancel, state: Arc::clone(&state) };
-    let grant = crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES };
+    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     while coordinator.phase() != DurableOwnedThreeStoreCommitPhaseV1::Journal {
         coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("pre-journal stage");
     }

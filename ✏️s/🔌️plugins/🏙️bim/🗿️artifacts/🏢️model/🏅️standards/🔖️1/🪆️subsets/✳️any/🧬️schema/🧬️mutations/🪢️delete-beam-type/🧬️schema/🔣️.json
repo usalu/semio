@@ -8,6 +8,9 @@
     "mutation",
     "id"
   ],
+  "x-semio-inverse-rows": {
+    "bounded": 4096
+  },
   "properties": {
     "mutation": {
       "const": "deleteBeamType"

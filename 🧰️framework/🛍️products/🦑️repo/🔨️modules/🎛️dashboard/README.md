@@ -60,7 +60,7 @@ file and never hides a valid command):
 
 - `ready { port, portEnv, path, printed }`: the task is ready when its output shows
   `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready address is that match plus `path`, or with
-  `printed` the whole printed address. The daemon detects it.
+  `printed` the whole printed address. The daemon checks that exact local HTTP endpoint for a 2xx or 3xx response before publishing readiness. Bounded probes run outside the supervisor loop and are cancelled when a task stops or restarts.
 - `requires`: commands started (or reused) and awaited first. A compound's `members` and a target's or
   tool's `requires` share one shape: `"<id>"` or `{ "run": "<id>", "parameters": {…}, "env": {…} }`, where
   `env` states a relationship between members, for example the hub address a shell joins.
@@ -81,6 +81,11 @@ file and never hides a valid command):
 - Playgrounds gain `renderer`, `example` (its slug or bare id), `user-slot`, `app-role`, `language`,
   `terminology`, `appearance` and, from their catalog row, `hub`, `data` and `local-only`.
 
+Authored scripts use `tool:workspace/run-script`: `script` is the workspace-relative `📜️script.ts`,
+`project` selects its Nx owner (default `workspace`), and `directory` selects the working directory
+(default the workspace root). Extra arguments follow `--`, and explicit environment values use
+`--env KEY=value`. This entry invokes the authored script through Nx; named recurring workflows
+belong in their owner's target or typed declaration.
 Everything resolves to plain argument lists (never a shell). A finite Nx task starts from the project
 graph Nx last published instead of rebuilding it, by setting `NX_FORCE_REUSE_CACHED_GRAPH=true`; file
 hashes and the task cache still read the current sources. Rebuilding that graph is what Nx reports as
@@ -159,6 +164,12 @@ free extra environment. A live preview shows what the choice resolves to: the se
 members of a compound and the exact command. A command that changes repository state (closing or
 reopening a ticket) asks for confirmation. Starting resolves the selection with the registry and sends one
 group to the daemon; services that already run are not started again. `Esc` goes back one step.
+
+Text fields use the framework input widget and show the hardware cursor at the actual caret.
+Arrow keys, Home, End, Backspace, Delete, pointer positioning and bracketed paste edit that field;
+line breaks in pasted command parameters become spaces. The configured Start action launches
+with one click, including when a text field still has keyboard focus. Confirmation previews remain
+pending until their visible Start action is activated.
 
 ### ⌨️ Keys
 

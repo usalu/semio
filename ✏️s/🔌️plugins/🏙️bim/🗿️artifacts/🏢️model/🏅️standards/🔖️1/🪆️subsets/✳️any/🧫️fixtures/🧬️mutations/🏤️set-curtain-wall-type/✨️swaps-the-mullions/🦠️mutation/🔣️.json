@@ -1,0 +1,16 @@
+{
+  "mutation": "setCurtainWallType",
+  "id": "cwt-1",
+  "interior_mullion": {
+    "Rectangle": {
+      "width": 0.04,
+      "depth": 0.12
+    }
+  },
+  "border_mullion": {
+    "Rectangle": {
+      "width": 0.1,
+      "depth": 0.2
+    }
+  }
+}

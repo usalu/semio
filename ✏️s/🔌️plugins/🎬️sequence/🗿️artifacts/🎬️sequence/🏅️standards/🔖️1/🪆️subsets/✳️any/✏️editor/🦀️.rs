@@ -3080,7 +3080,7 @@ impl ArtifactEditor for SequencePlayApp {
         } else {
             Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context))
         };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -3104,7 +3104,7 @@ impl ArtifactEditor for SequencePlayApp {
                 SEQUENCE_RETAINED_MAXIMUM_UNITS
             },
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

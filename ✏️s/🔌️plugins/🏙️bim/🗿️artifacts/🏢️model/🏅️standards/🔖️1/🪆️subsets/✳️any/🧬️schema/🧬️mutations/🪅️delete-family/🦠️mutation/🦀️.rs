@@ -1,0 +1,26 @@
+//! 🪅️ `delete-family` payload. Removes a family with its parameters and solids; refused while a column type, beam type, curtain wall or railing uses it as a profile.
+
+use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+pub struct DeleteFamily {
+    pub id: String,
+}
+
+impl MutationKind<ModelSnapshot, ModelMutation> for DeleteFamily {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "family", kind: "delete-family", record: "DeleteFamily" };
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
+        Ok(super::inverse::inverse(self, base))
+    }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete family \"{}\" with its parts", self.id), &format!("Familie \"{}\" mit ihren Teilen löschen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}

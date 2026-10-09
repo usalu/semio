@@ -1,11 +1,11 @@
 //! 🧱️ The point-chain tools: wall (straight and arc), curtain wall, beam, railing, grid line and the measure. A click sets a point; the rubber band follows the pointer to the
 //! next snapped point; a wall segment, a curtain wall segment, a beam or a grid line is written the moment its last point is clicked, so each is one history row, and a chain
-//! of walls goes on from the end of the last one until it closes on its first point, is finished or escapes. A railing is written whole when the chain finishes. The measure
+//! of walls goes on from the end of the last one until it closes on its first point, is finished or escapes. A railing and a ramp are written whole when the chain finishes. The measure
 //! writes nothing, ever.
 
 use super::plane::{axis_of, bulge_through, dist, flatten, point2, same, P};
 use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
-use crate::{Beam, CurtainWall, GridLine, LocationLine, Phase, Profile, Railing, TopConstraint, Wall};
+use crate::{Beam, CurtainWall, GridLine, LocationLine, Phase, Profile, Railing, Ramp, TopConstraint, Vertex, Wall};
 use crate::ModelMutation;
 
 /// 📏️ The shortest segment a chain writes, in metres.
@@ -17,6 +17,8 @@ const CURTAIN_SPACING: f64 = 1.5;
 /// 🛤️ The default height of a railing and the spacing of its posts, in metres.
 const RAILING_HEIGHT: f64 = 1.0;
 const RAILING_POSTS: f64 = 1.2;
+/// 🛝️ The rise of a drawn ramp until its top constraint is edited, in metres.
+const RAMP_RISE: f64 = 0.5;
 
 /// 🧱️ Which chain tool this is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -26,6 +28,7 @@ pub enum Kind {
     CurtainWall,
     Beam,
     Railing,
+    Ramp,
     Grid,
     Measure,
 }
@@ -60,9 +63,9 @@ impl Chain {
         let Some(storey) = ctx.storey().map(str::to_string) else { return Step::refuse(STOREY_MISSING) };
         let Some(wall_type) = ctx.library_type(&ctx.snapshot.wall_types) else { return Step::refuse(TYPE_MISSING) };
         let count = ctx.snapshot.walls.values().filter(|wall| wall.storey == storey).count();
-        let name = ctx.name_of(|labels| labels.kind_wall, "Wall", count);
+        let name = ctx.name_of(|labels| labels.kind_wall, count);
         let id = ctx.mint("wall");
-        let wall = Wall { storey, wall_type, axis: axis_of(start, end, bulge), location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name };
+        let wall = Wall { storey, wall_type, axis: axis_of(start, end, bulge), location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, start_join: None, end_join: None, base_slab: None, name };
         Step::write(ctx, ModelMutation::CreateWall(crate::mutations::create_wall::CreateWall { id, wall }))
     }
 
@@ -73,9 +76,9 @@ impl Chain {
         let mullion = snapshot.materials.iter().find(|(_, material)| material.category == crate::MaterialCategory::Metal).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone());
         let (Some(panel_material), Some(mullion_material)) = (panel, mullion) else { return Step::refuse(TYPE_MISSING) };
         let count = snapshot.curtain_walls.values().filter(|wall| wall.storey == storey).count();
-        let name = ctx.name_of(|labels| labels.kind_curtain_wall, "Curtain wall", count);
+        let name = ctx.name_of(|labels| labels.kind_curtain_wall, count);
         let id = ctx.mint("curtain-wall");
-        let curtain_wall = CurtainWall { storey, axis: axis_of(start, end, 0.0), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_spacing: CURTAIN_SPACING, v_spacing: CURTAIN_SPACING, mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel_material, mullion_material, name };
+        let curtain_wall = CurtainWall { storey, axis: axis_of(start, end, 0.0), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_spacing: CURTAIN_SPACING, v_spacing: CURTAIN_SPACING, mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel_material, mullion_material, phase: crate::Phase::New, name };
         Step::write(ctx, ModelMutation::CreateCurtainWall(crate::mutations::create_curtain_wall::CreateCurtainWall { id, curtain_wall }))
     }
 
@@ -83,9 +86,9 @@ impl Chain {
         let Some(storey) = ctx.storey().map(str::to_string) else { return Step::refuse(STOREY_MISSING) };
         let Some(beam_type) = ctx.library_type(&ctx.snapshot.beam_types) else { return Step::refuse(TYPE_MISSING) };
         let count = ctx.snapshot.beams.values().filter(|beam| beam.storey == storey).count();
-        let name = ctx.name_of(|labels| labels.kind_beam, "Beam", count);
+        let name = ctx.name_of(|labels| labels.kind_beam, count);
         let id = ctx.mint("beam");
-        let beam = Beam { storey, beam_type, start: point2(start), end: point2(end), top_offset: 0.0, name };
+        let beam = Beam { storey, beam_type, start: point2(start), end: point2(end), top_offset: 0.0, phase: crate::Phase::New, name };
         Step::write(ctx, ModelMutation::CreateBeam(crate::mutations::create_beam::CreateBeam { id, beam }))
     }
 
@@ -103,10 +106,37 @@ impl Chain {
         let snapshot = ctx.snapshot;
         let Some(material) = snapshot.materials.iter().find(|(_, material)| material.category == crate::MaterialCategory::Metal).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone()) else { return Step::refuse(TYPE_MISSING) };
         let count = snapshot.railings.values().filter(|railing| railing.storey == storey).count();
-        let name = ctx.name_of(|labels| labels.kind_railing, "Railing", count);
+        let name = ctx.name_of(|labels| labels.kind_railing, count);
         let id = ctx.mint("railing");
-        let railing = Railing { storey, path: self.vertices.iter().map(|p| point2(*p)).collect(), height: RAILING_HEIGHT, post_spacing: RAILING_POSTS, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material, base_offset: 0.0, name };
+        let railing = Railing { storey, path: self.vertices.iter().map(|p| point2(*p)).collect(), height: RAILING_HEIGHT, post_spacing: RAILING_POSTS, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material, base_offset: 0.0, host: None, phase: crate::Phase::New, name };
         Step::write(ctx, ModelMutation::CreateRailing(crate::mutations::create_railing::CreateRailing { id, railing }))
+    }
+
+    fn ramp(&self, ctx: &mut ToolContext<'_>) -> Step {
+        let Some(storey) = ctx.storey().map(str::to_string) else { return Step::refuse(STOREY_MISSING) };
+        let snapshot = ctx.snapshot;
+        let Some(material) = snapshot.materials.iter().find(|(_, material)| material.category == crate::MaterialCategory::Concrete).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone()) else { return Step::refuse(TYPE_MISSING) };
+        let count = snapshot.ramps.values().filter(|ramp| ramp.storey == storey).count();
+        let name = ctx.name_of(|labels| labels.kind_ramp, count);
+        let id = ctx.mint("ramp");
+        let path = self.vertices.iter().map(|p| Vertex { point: point2(*p), bulge: 0.0 }).collect();
+        let ramp = Ramp {
+            storey,
+            path,
+            width: crate::STANDARD_RAMP_WIDTH,
+            landing_start: crate::STANDARD_RAMP_LANDING,
+            landing_end: crate::STANDARD_RAMP_LANDING,
+            landing_turn: crate::STANDARD_RAMP_LANDING,
+            max_slope: crate::STANDARD_RAMP_MAX_SLOPE,
+            thickness: crate::STANDARD_RAMP_THICKNESS,
+            material,
+            base_offset: 0.0,
+            top: TopConstraint::Unconnected { height: RAMP_RISE },
+            railing_left: false,
+            railing_right: false,
+            name,
+        };
+        Step::write(ctx, ModelMutation::CreateRamp(crate::mutations::create_ramp::CreateRamp { id, ramp }))
     }
 
     fn down(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
@@ -115,7 +145,7 @@ impl Chain {
         let at = hit.point;
         self.hover = Some(hit);
         match self.kind {
-            Kind::Railing => {
+            Kind::Railing | Kind::Ramp => {
                 if self.vertices.last().is_none_or(|last| !same(*last, at)) {
                     self.vertices.push(at);
                 }
@@ -185,7 +215,11 @@ impl Chain {
     }
 
     fn finish(&mut self, ctx: &mut ToolContext<'_>) -> Step {
-        let step = if self.kind == Kind::Railing && self.vertices.len() >= 2 { self.railing(ctx) } else { Step::default() };
+        let step = match self.kind {
+            Kind::Railing if self.vertices.len() >= 2 => self.railing(ctx),
+            Kind::Ramp if self.vertices.len() >= 2 => self.ramp(ctx),
+            _ => Step::default(),
+        };
         if step.refused != Some(REJECTED) {
             self.reset();
         }
@@ -210,6 +244,10 @@ fn letters(ordinal: usize) -> String {
 }
 
 impl Tool for Chain {
+    fn anchor(&self) -> Option<P> {
+        self.anchor.or(self.vertices.last().copied())
+    }
+
     fn event(&mut self, ctx: &mut ToolContext<'_>, event: &ToolEvent) -> Step {
         match event {
             ToolEvent::Move(pointer) => {
@@ -245,7 +283,7 @@ impl Tool for Chain {
             }
             _ => {}
         }
-        if self.kind == Kind::Railing && !self.vertices.is_empty() {
+        if matches!(self.kind, Kind::Railing | Kind::Ramp) && !self.vertices.is_empty() {
             let mut path = self.vertices.clone();
             path.extend(hover);
             marks.push(Mark::path(&path, false, Style::Ghost));

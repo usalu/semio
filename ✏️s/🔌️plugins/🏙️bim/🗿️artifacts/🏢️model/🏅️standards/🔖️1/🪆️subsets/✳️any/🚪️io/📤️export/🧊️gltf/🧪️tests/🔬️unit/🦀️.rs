@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::export::gltf::testkit::{house, read, third_party, HOUSE_DIR};
 use crate::standards::v1::subsets::any::io::io;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
-use semio_framework::io::io_mechanism::IoEntryDirection;
+use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 
 #[test]
 fn the_declaration_lists_the_gltf_export_between_the_bim_and_the_gltf_dialect() {
@@ -19,18 +19,18 @@ fn the_export_entry_turns_a_packed_model_into_the_glb_bytes() {
     let declaration = io();
     let entry = declaration.entries.iter().find(|entry| entry.into == GLTF_DIALECT).expect("the glTF entry");
     let produced = (entry.run)(&IoPayload::Binary(pack::encode(&model))).expect("the entry runs");
-    assert_eq!(produced.value, IoPayload::Binary(export_glb(&model).0));
+    assert_eq!(produced.value, IoPayload::Binary(export_glb(&model).expect("exports").0));
     assert!(produced.diagnostics.is_empty());
 }
 
 #[test]
 fn the_gltf_crate_reads_the_house_node_tree_meshes_and_accessors() {
     let model = house();
-    let (bytes, notes) = export_glb(&model);
+    let (bytes, notes) = export_glb(&model).expect("exports");
     assert!(notes.is_empty());
     let (document, blob) = third_party(&bytes);
     let solids = compute_element_solids(&model);
-    let (gltf, _) = model_to_gltf(&model);
+    let (gltf, _) = model_to_gltf(&model).expect("the model infers");
     assert_eq!(document.nodes().len(), gltf.nodes.len());
     assert_eq!(document.nodes().filter(|node| node.mesh().is_some()).count(), solids.len());
     assert_eq!(document.scenes().len(), 1);
@@ -56,7 +56,7 @@ fn the_gltf_crate_reads_the_house_node_tree_meshes_and_accessors() {
 #[test]
 fn the_gltf_crate_composes_the_same_world_position_for_a_known_vertex() {
     let model = house();
-    let (bytes, _) = export_glb(&model);
+    let (bytes, _) = export_glb(&model).expect("exports");
     let (document, blob) = third_party(&bytes);
     let solids = compute_element_solids(&model);
     let node = document.nodes().find(|node| node.extras().as_ref().is_some_and(|extras| serde_json::from_str::<serde_json::Value>(extras.get()).is_ok_and(|value| value["id"] == "w-south"))).expect("the south wall");
@@ -80,7 +80,7 @@ fn the_gltf_crate_composes_the_same_world_position_for_a_known_vertex() {
 
 #[test]
 fn the_committed_house_file_is_the_current_export() {
-    let (bytes, _) = export_glb(&house());
+    let (bytes, _) = export_glb(&house()).expect("exports");
     if std::env::var("BIM_BLESS").is_ok() {
         std::fs::create_dir_all(HOUSE_DIR).expect("the fixture directory");
         std::fs::write(format!("{HOUSE_DIR}/🏠️house.glb"), &bytes).expect("the file is written");
@@ -90,10 +90,10 @@ fn the_committed_house_file_is_the_current_export() {
 
 #[test]
 fn the_exported_house_is_a_valid_binary_container_with_a_json_chunk_the_spec_accepts() {
-    let (bytes, _) = export_glb(&house());
-    let (json, buffer) = container::split_glb(&bytes).expect("the container splits");
-    let value: serde_json::Value = serde_json::from_str(json.trim_end()).expect("valid JSON");
-    assert_eq!(value["asset"]["version"], "2.0");
-    assert_eq!(value["buffers"][0]["byteLength"].as_u64(), Some(buffer.len() as u64));
-    assert!(value["nodes"].as_array().unwrap().iter().all(|node| node["name"].as_str().is_some_and(|name| !name.is_empty())));
+    let (bytes, _) = export_glb(&house()).expect("exports");
+    let decoded = codec::decode(&bytes).expect("the stdio codec decodes the container");
+    assert_eq!(decoded.document.asset.version, "2.0");
+    assert_eq!(decoded.document.buffers[0].byte_length, decoded.buffers[0].len());
+    assert!(decoded.document.nodes.iter().all(|node| node.name.as_deref().is_some_and(|name| !name.is_empty())));
+    assert_eq!(decoded.document, model_to_gltf(&house()).expect("the house infers").0.to_snapshot().document, "the container carries exactly the document that was built");
 }

@@ -92,7 +92,13 @@ pub fn solve(scene: &mut Scene, viewport: Rect) {
     layout_node(scene, scene.root(), viewport);
 }
 
+fn clear_rects(scene: &mut Scene, id: NodeId) {
+    scene.node_raw_mut(id).rect = Rect::default();
+    for child in scene.node(id).children().to_vec() { clear_rects(scene, child); }
+}
+
 fn layout_node(scene: &mut Scene, id: NodeId, rect: Rect) {
+    if !scene.node(id).visible { clear_rects(scene, id); return; }
     scene.node_raw_mut(id).rect = rect;
     let constraint = scene.node(id).constraint;
     let [top, right, bottom, left] = match &scene.node(id).content {
@@ -100,7 +106,9 @@ fn layout_node(scene: &mut Scene, id: NodeId, rect: Rect) {
         _ => constraint.padding,
     };
     let inner = rect.inset_sides(top, right, bottom, left);
-    let children: Vec<NodeId> = scene.node(id).children().to_vec();
+    let siblings = scene.node(id).children().to_vec();
+    let children: Vec<NodeId> = siblings.iter().copied().filter(|child| scene.node(*child).visible).collect();
+    for child in siblings { if !scene.node(child).visible { clear_rects(scene, child); } }
     if children.is_empty() {
         return;
     }

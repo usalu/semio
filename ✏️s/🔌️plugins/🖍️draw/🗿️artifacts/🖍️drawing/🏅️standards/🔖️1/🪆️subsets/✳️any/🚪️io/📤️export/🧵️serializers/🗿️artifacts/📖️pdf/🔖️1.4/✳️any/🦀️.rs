@@ -672,3 +672,5 @@ fn pdf_string(text: &str) -> String {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="🧵️write/🦀️.rs"] pub mod write;

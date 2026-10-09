@@ -96,15 +96,15 @@ pub fn family_of(kind: &OpeningKind) -> Option<SolidFamily> {
     }
 }
 
-/// 🚪️ The filler of an opening in the frame the host resolved for it: the parts of its window or door type placed in the local frame, centred on the host thickness (the lateral centre follows the faces of the frame, so a flipped opening centres correctly). Empty for an invalid frame or a missing type; `None` for a void, which has no filler.
+/// 🚪️ The filler of an opening in the frame the host resolved for it: the parts of its window or door type placed in the local frame, centred on the host thickness (the lateral centre follows the faces of the frame, so a flipped opening centres correctly) or, with an authored reveal, set back by the reveal depth from the front face. Empty for an invalid frame or a missing type; `None` for a void, which has no filler.
 pub fn filler_solid(snapshot: &ModelSnapshot, opening: &Opening, frame: &OpeningFrame) -> Option<ElementSolid> {
     let place: Affine3 = frame.local.affine();
-    let centre = (frame.face_front - frame.face_back) / 2.0;
+    let placed = |depth: f64| frame.setback.map_or((frame.face_front - frame.face_back) / 2.0, |setback| frame.face_front - setback - depth.max(0.0) / 2.0);
     match &opening.kind {
         OpeningKind::Window { window_type } => {
             let mut builder = SolidBuilder::new(SolidFamily::Window);
             if let (true, Some(window)) = (frame.valid, snapshot.window_types.get(window_type)) {
-                for (part, glazing, mesh) in window_parts(window, frame.width, frame.height, centre) {
+                for (part, glazing, mesh) in window_parts(window, frame.width, frame.height, placed(window.frame_depth)) {
                     builder.add(part, if glazing { "" } else { window.material.as_str() }, 0, &mesh.transformed(&place));
                 }
             }
@@ -113,7 +113,7 @@ pub fn filler_solid(snapshot: &ModelSnapshot, opening: &Opening, frame: &Opening
         OpeningKind::Door { door_type } => {
             let mut builder = SolidBuilder::new(SolidFamily::Door);
             if let (true, Some(door)) = (frame.valid, snapshot.door_types.get(door_type)) {
-                for (part, mesh) in door_parts(door, frame.width, frame.height, centre) {
+                for (part, mesh) in door_parts(door, frame.width, frame.height, placed(door.frame_depth)) {
                     builder.add(part, &door.material, 0, &mesh.transformed(&place));
                 }
             }

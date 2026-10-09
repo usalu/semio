@@ -47,11 +47,15 @@ function arc(from:Vec2,segment:Extract<PathSegment,{kind:"arc"}>,m:readonly numb
 export type PathFlattenRetirementProgress=WorkRetirementProgress;
 export type PathFlattenRetirement=WorkRetirement;
 /** ⏱️ Adaptive local contours with device-space error bounds and work-granted subdivision. */
+const retainedAdmission=Symbol("retained flatten admission");
 export class PathFlattenJob {
  private contours:FlatContour[]=[];private current:FlatContour|null=null;private stack:Curve[]=[];private pen:Vec2=[0,0];private start:Vec2=[0,0];
  private index=0;private count=0;private work=0;private done=false;private cancelled=false;private transferred=false;private outputExposed=false;private failed:unknown=null;
- constructor(private input:PathFlattenInput) {
-  if(input.transform.length!==6||!input.transform.every(valid)||!Number.isFinite(input.tolerance)||input.tolerance<1e-6||input.tolerance>16||input.segments.length>MAX_POINTS)invalid("Invalid path preparation contract");
+ /** 📥️ Refused source contracts remain owned until explicit close. */
+ static admit(input:PathFlattenInput):PathFlattenJob{return new PathFlattenJob(input,retainedAdmission);}
+ constructor(private input:PathFlattenInput,admission?:typeof retainedAdmission) {
+  try{
+  if(input.transform.length!==6||!input.transform.every(valid)||!Number.isFinite(input.tolerance)||input.tolerance<1e-6||input.tolerance>16||input.segments.length>MAX_POINTS)invalid("Invalid path preparation contract");}catch(error){if(admission!==retainedAdmission)throw error;this.failed=error;}
  }
  private append(p:Vec2):void {
   point(p);transformed(p,this.input.transform);if(this.count>=MAX_POINTS)invalid("Path preparation exceeds point budget");this.current!.points.push([p[0],p[1]]);this.count++;

@@ -138,6 +138,35 @@
         "order": 44
       }
     },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RailingHost"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Host (null releases it)",
+          "de": "Träger (null löst ihn)"
+        },
+        "group": "value",
+        "order": 45
+      }
+    },
     "material": {
       "type": "string",
       "x-semio-ui": {

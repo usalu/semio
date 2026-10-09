@@ -1,0 +1,26 @@
+//! 🗜️ `delete-property-template` payload. Removes a property set template from the library. Templates own no entries: the property sets of elements stay as they are, they merely lose their definition.
+
+use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+pub struct DeletePropertyTemplate {
+    pub id: String,
+}
+
+impl MutationKind<ModelSnapshot, ModelMutation> for DeletePropertyTemplate {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "property-template", kind: "delete-property-template", record: "DeletePropertyTemplate" };
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
+        Ok(super::inverse::inverse(self, base))
+    }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete property template \"{}\"", self.id), &format!("Eigenschaftsvorlage \"{}\" löschen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}

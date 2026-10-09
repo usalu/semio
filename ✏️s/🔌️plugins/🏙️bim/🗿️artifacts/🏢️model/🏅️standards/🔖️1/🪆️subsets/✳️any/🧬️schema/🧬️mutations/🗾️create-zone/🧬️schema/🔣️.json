@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-zone/schema.json",
+  "title": "CreateZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "zone"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createZone"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Zone id",
+          "de": "Zonen-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "zone": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Zone",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

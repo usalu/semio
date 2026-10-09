@@ -35,7 +35,7 @@ impl From<String> for RasterError {
 //#region RasterImage
 /// 🎨️ Row-major 8-bit RGBA image with interleaved channels; pixel `(x, y)` occupies
 /// `pixels[(y * width + x) * 4 ..][..4]`.
-#[derive(Clone, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
 pub struct RasterImage {
     pub width: u32,
     pub height: u32,
@@ -106,6 +106,7 @@ mod deflate {
     //#endregion Adler32
 
     //#region BitIo
+    #[derive(semio_framework_value::RetireOwned)]
     struct BitWriter {
         out: Vec<u8>,
         cur: u8,
@@ -419,6 +420,7 @@ mod deflate {
         writer.write_bits(code, bits);
     }
 
+    #[derive(semio_framework_value::RetireOwned)]
     pub(super) struct ZlibEncodeCursor {
         writer: BitWriter,
         adler_a: u32,
@@ -678,6 +680,7 @@ fn read_chunks_from(data: &[u8], mut pos: usize) -> Result<Vec<PngChunk<'_>>, St
 //#endregion PngChunkIo
 
 //#region PngIhdr
+#[derive(semio_framework_value::RetireOwned)]
 struct Ihdr {
     width: u32,
     height: u32,

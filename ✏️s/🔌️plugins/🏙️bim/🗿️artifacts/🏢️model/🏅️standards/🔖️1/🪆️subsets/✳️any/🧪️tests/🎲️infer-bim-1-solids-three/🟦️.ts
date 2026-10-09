@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 /**
- * 🧊️ Third-party ORACLE (three.js) for the `🧊️element-solids` meshes of the walls, curtain walls and opening fillers.
+ * 🧊️ Third-party ORACLE (three.js) for the `🧊️element-solids` meshes of the walls, curtain walls, opening fillers and ceilings (the volume of a ceiling is the net area of its outline times the thickness of its layers, tilted or not).
  *
  * Each case under `🧫️fixtures/💡️inferences/🧊️element-solids` commits the authored `snapshot` and the blessed `meshes` (welded positions and triangle indices) of
  * the solids the subject inferred from it. This file loads those meshes into `THREE.BufferGeometry` and measures them with three's own `Triangle`, `Vector3` and
@@ -23,8 +23,9 @@ import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../
 // #endregion 🔌️Adapters
 
 // #region 🧫️Cases
-const CASES = ["straight-openings", "room-joins", "curtain-grid"] as const;
-const uriOf = (name: string) => `shared://💡️inferences/🧊️element-solids/${name}/🔣️.json`;
+const CASES = ["straight-openings", "room-joins", "curtain-grid", "ceilings-meshes"] as const;
+const DIRECTORY = { "straight-openings": "🚪️straight-openings", "room-joins": "🧩️room-joins", "curtain-grid": "🏬️curtain-grid", "ceilings-meshes": "🪵️ceilings-meshes" } as const;
+const uriOf = (name: (typeof CASES)[number]) => `shared://💡️inferences/🧊️element-solids/${DIRECTORY[name]}/🔣️.json`;
 
 type Mesh = { positions: number[]; indices: number[] };
 type Row = { volume: number; area: number; bounds: { min: number[]; max: number[] }; triangles: number };

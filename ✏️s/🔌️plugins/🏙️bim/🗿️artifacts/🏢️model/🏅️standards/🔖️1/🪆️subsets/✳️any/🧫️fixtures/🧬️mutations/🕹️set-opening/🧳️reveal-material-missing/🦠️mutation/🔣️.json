@@ -1,0 +1,7 @@
+{
+  "mutation": "setOpening",
+  "id": "o-1",
+  "reveal_material": {
+    "value": "m-ghost"
+  }
+}

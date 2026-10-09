@@ -1,0 +1,7 @@
+{
+  "mutation": "setAreaScheme",
+  "id": "as-nsa",
+  "zones": [
+    "z-attic"
+  ]
+}

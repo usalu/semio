@@ -13,7 +13,7 @@ fn changes(payload: &PlaceElements, base: &ModelSnapshot) -> Result<Change, Refu
     }
     let mut change = Change { before: Default::default(), after: Default::default() };
     for (id, target) in &payload.placements {
-        let Some(current) = elements::placement(base, id) else {
+        let Some(current) = elements::state(base, id) else {
             let code = if elements::exists(base, id) { OutcomeCode::Invariant } else { OutcomeCode::TargetMissing };
             return Err(Refusal::new(code, format!("Element \"{id}\" has no placement to set."), [id.clone()]));
         };

@@ -1,0 +1,6 @@
+{
+  "mutation": "setWallEndJoin",
+  "id": "w-east",
+  "end": "Start",
+  "join": "None"
+}

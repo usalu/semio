@@ -1,0 +1,20 @@
+{
+  "mutation": "createSheet",
+  "id": "sh-2",
+  "sheet": {
+    "number": "A-104",
+    "name": "Details",
+    "paper": {
+      "Iso": {
+        "size": "A3"
+      }
+    },
+    "orientation": "Landscape",
+    "project": "House on the hill",
+    "drawn_by": "UG",
+    "checked_by": "AB",
+    "date": "2026-10-09",
+    "revision": "B",
+    "scale_label": "As indicated"
+  }
+}

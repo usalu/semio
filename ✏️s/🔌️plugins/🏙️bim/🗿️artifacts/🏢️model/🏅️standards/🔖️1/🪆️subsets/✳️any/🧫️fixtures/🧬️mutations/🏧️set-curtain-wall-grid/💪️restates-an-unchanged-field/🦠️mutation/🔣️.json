@@ -1,0 +1,21 @@
+{
+  "mutation": "setCurtainWallGrid",
+  "id": "cw-1",
+  "u_grid": {
+    "value": {
+      "Lines": {
+        "positions": [
+          2,
+          4
+        ]
+      }
+    }
+  },
+  "v_grid": {
+    "value": {
+      "Spacing": {
+        "spacing": 0.5
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "mutation": "createPropertyTemplate",
+  "id": "pt-wall",
+  "template": {
+    "name": "Other",
+    "applies_to": [
+      "Wall"
+    ],
+    "properties": []
+  }
+}

@@ -1,14 +1,17 @@
 //! 📏️ Device-tolerance path preparation for https://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes.
 use crate::{PathSegment,Vec2};
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PathFlattenInput {pub segments:Vec<PathSegment>,pub transform:[f64;6],pub tolerance:f64}
 #[derive(Clone,Debug,PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FlatContour {pub points:Vec<Vec2>,pub closed:bool}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum PathFlattenPhase {Preparing,Subdividing,Complete}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct PathFlattenProgress {pub phase:PathFlattenPhase,pub completed:usize,pub total:usize,pub points:usize,pub work:u64,pub done:bool}
 #[derive(Clone,Debug,PartialEq,Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum PathFlattenError {Invalid(&'static str),Incomplete,Cancelled}
 impl std::fmt::Display for PathFlattenError {
  fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result {match self {Self::Invalid(message)=>f.write_str(message),Self::Incomplete=>f.write_str("Path preparation is incomplete"),Self::Cancelled=>f.write_str("Path preparation cancelled")}}
@@ -58,14 +61,18 @@ fn arc(from:Vec2,segment:&PathSegment,m:[f64;6])->Result<Option<Curve>,PathFlatt
 }
 
 /// 🕰️ Owned contours with adaptive device-space flatness and bounded source/subdivision steps.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PathFlattenJob {
  input:PathFlattenInput,contours:Vec<FlatContour>,current:Option<usize>,stack:Vec<Curve>,pen:Vec2,start:Vec2,index:usize,count:usize,work:u64,done:bool,cancelled:bool,failed:Option<PathFlattenError>,
 }
 impl PathFlattenJob {
- pub fn new(input:PathFlattenInput)->Result<Self,PathFlattenError> {
+ pub fn new(input:PathFlattenInput)->Result<Self,PathFlattenError> {Self::validate(&input)?;Ok(Self::admit(input))}
+ fn validate(input:&PathFlattenInput)->Result<(),PathFlattenError> {
   if !input.transform.into_iter().all(valid)||!input.tolerance.is_finite()||!(1e-6..=16.0).contains(&input.tolerance)||input.segments.len()>MAX_POINTS {return Err(PathFlattenError::Invalid("Invalid path preparation contract"));}
-  Ok(Self {input,contours:Vec::new(),current:None,stack:Vec::new(),pen:[0.0;2],start:[0.0;2],index:0,count:0,work:0,done:false,cancelled:false,failed:None})
+  Ok(())
  }
+ /// 📥️ Refused source contracts remain owned until their physical close.
+ pub fn admit(input:PathFlattenInput)->Self {let failed=Self::validate(&input).err();Self {input,contours:Vec::new(),current:None,stack:Vec::new(),pen:[0.0;2],start:[0.0;2],index:0,count:0,work:0,done:false,cancelled:false,failed}}
  fn append(&mut self,p:Vec2)->Result<(),PathFlattenError> {
   point(p)?;transformed(p,self.input.transform)?;if self.count>=MAX_POINTS {return Err(PathFlattenError::Invalid("Path preparation exceeds point budget"));}
   self.contours[self.current.unwrap()].points.push(p);self.count+=1;Ok(())
@@ -120,19 +127,11 @@ impl PathFlattenJob {
  pub fn into_result(self)->Result<Vec<FlatContour>,PathFlattenError> {self.result()?;Ok(self.contours)}
 }
 pub type PathFlattenRetirementProgress=crate::retirement::WorkRetirementProgress;
-/// 🧹️ Retains incomplete contours until each owned point buffer has retired.
-pub struct PathFlattenRetirement{job:Option<PathFlattenJob>,slot:u8,counter:crate::retirement::WorkRetirementCounter}
-impl PathFlattenRetirement{
- pub fn terminal_is_empty(&self)->bool{self.job.is_none()}
- fn step(&mut self){let job=self.job.as_mut().unwrap();let complete=match self.slot{
-  0=>{job.input.segments=Vec::new();true},1=>{job.stack=Vec::new();true},
-  2=>if job.contours.pop().is_some(){false}else{job.contours=Vec::new();true},_=>unreachable!(),
- };if complete{self.slot+=1;}if self.slot==3{self.job=None;}}
- pub fn advance(&mut self,grant:usize)->Result<PathFlattenRetirementProgress,PathFlattenError>{let mut counter=self.counter;let result=counter.advance(grant,||{self.step();self.terminal_is_empty()});self.counter=counter;result.map_err(PathFlattenError::Invalid)}
-}
+semio_framework_value::artifact_retire_leaf!(PathFlattenPhase,PathFlattenProgress,Ellipse,Curve);
+crate::physical_work_retirement!(PathFlattenRetirement,PathFlattenJob,PathFlattenError,|_:&str|PathFlattenError::Invalid("Path retirement refused its physical grant"));
 impl PathFlattenJob{
  /// 🧹️ Moves complete output to its caller and keeps unpublished contours private during cleanup.
- pub fn into_retirement(mut self)->(PathFlattenRetirement,Option<Vec<FlatContour>>){let output=if self.done&&!self.cancelled&&self.failed.is_none(){Some(std::mem::take(&mut self.contours))}else{None};self.cancelled=true;self.current=None;(PathFlattenRetirement{job:Some(self),slot:0,counter:Default::default()},output)}
+ pub fn into_retirement(mut self)->(PathFlattenRetirement,Option<Vec<FlatContour>>){let output=if self.done&&!self.cancelled&&self.failed.is_none(){Some(std::mem::take(&mut self.contours))}else{None};self.cancelled=true;self.current=None;(PathFlattenRetirement::new(self),output)}
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

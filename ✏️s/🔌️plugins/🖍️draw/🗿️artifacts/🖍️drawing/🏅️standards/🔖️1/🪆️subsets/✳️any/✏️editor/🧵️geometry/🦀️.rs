@@ -11,6 +11,8 @@ use semio_framework::kernel::{Effect,JobPlacement};
 use semio_framework_plugin::{AppRenderOperationContext,ArtifactView,PluginCloseStep};
 use semio_framework_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,JobBudget,JobStep};
 use std::{cell::RefCell,rc::Rc};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 const KIND:&str="semio.draw.mounted-vector";
 const INSTANCES:usize=64;
 const SHELLS:usize=256;
@@ -21,21 +23,30 @@ pub(crate) fn limits()->DocumentSceneLimits{DocumentSceneLimits{max_nodes:1024,m
 pub(crate) fn algorithms()->DocumentAlgorithmLimits{DocumentAlgorithmLimits{max_work:1000000000,trace:DocumentTraceLimits{max_pixels:16777216,max_admitted_pixels:67108864,max_source_bytes:268439552,max_edges:65536,max_segments:65536,max_retained_segments:65536,max_work:1000000000},booleans:DocumentBooleanLimits{tolerance:0.05,epsilon:1e-8,max_depth:32,max_references:32768,max_edges:65536,max_parameters:262144,max_atomic_edges:65536,max_segments:65536,max_retained_segments:262144,max_work:1000000000}}}
 pub(crate) fn paint_limits()->PaintedSceneLimits{PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000}}
 struct State{
- identity:SceneIdentity,job_id:u64,producer:Option<DocumentVectorJob<'static>>,cache:Option<ScenePaintJob>,paint_cleanup:Option<ScenePaintRetirement>,cleanup:Option<DocumentVectorRetirement<'static>>,returned:Option<store::SnapshotReadReturn>,
+ identity:SceneIdentity,job_id:u64,producer:Option<DocumentVectorJob<'static>>,cache:Option<ScenePaintJob>,paint_cleanup:Option<ScenePaintRetirement>,cleanup:Option<DocumentVectorRetirement<'static>>,returned:Option<ControlledRetirement<store::SnapshotReadReturn>>,
  visual:Option<PreparedScene>,discard:Option<PreparedSceneCloseJob>,raw_discard:Option<ScenePlanCloseJob>,cancelled:bool,work:u64,
 }
 impl State{
- fn new(identity:SceneIdentity,job_id:u64,read:store::SnapshotRead<DrawingSnapshot>)->Self{Self{identity,job_id,producer:Some(DocumentVectorJob::from_snapshot_read(read,limits(),algorithms()).expect("mounted source counts and fixed limits were preflighted")),cache:None,paint_cleanup:None,cleanup:None,returned:None,visual:None,discard:None,raw_discard:None,cancelled:false,work:0}}
+ fn new(identity:SceneIdentity,job_id:u64,read:store::SnapshotRead<DrawingSnapshot>)->Self{Self{identity,job_id,producer:Some(DocumentVectorJob::from_snapshot_read(read,limits(),algorithms())),cache:None,paint_cleanup:None,cleanup:None,returned:None,visual:None,discard:None,raw_discard:None,cancelled:false,work:0}}
  fn transfer(&mut self,adopt:bool){if let Some(mut cache)=self.cache.take(){if !adopt{cache.cancel();}let(cleanup,output)=cache.into_retirement();self.paint_cleanup=Some(cleanup);if adopt{self.visual=Some(output.expect("only complete cache output may publish"));}else if let Some(scene)=output{self.discard=Some(PreparedSceneCloseJob::new(scene));}}if let Some(job)=self.producer.take(){let(cleanup,output)=job.into_retirement();self.cleanup=Some(cleanup);if let Some(plan)=output{self.raw_discard=Some(ScenePlanCloseJob::new(plan));}}}
- fn cleanup_one(&mut self)->bool{
-  if let Some(cleanup)=&mut self.paint_cleanup{if !cleanup.terminal_is_empty(){cleanup.advance(1).expect("positive painted scene cleanup");return true;}self.paint_cleanup=None;return true;}
-  if let Some(discard)=&mut self.discard{if !discard.terminal_is_empty(){discard.advance(1).expect("positive discarded painted scene grant");return true;}self.discard=None;return true;}
-  if let Some(discard)=&mut self.raw_discard{if !discard.terminal_is_empty(){discard.advance(1).expect("positive discarded vector scene grant");return true;}self.raw_discard=None;return true;}
-  if let Some(cleanup)=&mut self.cleanup{let progress=cleanup.advance(1).expect("positive mounted cleanup grant");if !progress.done{return true;}if let Some(read)=cleanup.take_snapshot_read(){self.returned=read.return_to_registry_witness();assert!(self.returned.is_some(),"mounted vector source returned exactly once");return true;}if !cleanup.terminal_is_empty(){return false;}self.cleanup=None;return true;}
-  if let Some(returned)=&self.returned{if !returned.terminal_is_empty(){return false;}self.returned=None;return true;}
-  false
+ fn cleanup_pending(&self)->bool{self.paint_cleanup.is_some()||self.discard.is_some()||self.raw_discard.is_some()||self.cleanup.is_some()||self.returned.is_some()}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+  let mut progress=RetainedCloneProgress::default();
+  if let Some(child)=&mut self.paint_cleanup{if !child.terminal_is_empty(){return child.close_step(grant);}self.paint_cleanup=None;progress.copied_items=1;}
+  else if let Some(child)=&mut self.discard{if !child.terminal_is_empty(){return child.close_step(grant);}self.discard=None;progress.copied_items=1;}
+  else if let Some(child)=&mut self.raw_discard{if !child.terminal_is_empty(){return child.close_step(grant);}self.raw_discard=None;progress.copied_items=1;}
+  else if let Some(child)=&mut self.cleanup{if let Some(read)=child.take_snapshot_read(){let witness=read.return_to_registry_witness().expect("mounted source returned exactly once");self.returned=Some(ControlledRetirement::new(witness).unwrap_or_else(|(error,_)|panic!("snapshot return owner refused: {error}")));progress.copied_items=1;}else if !child.terminal_is_empty(){return child.close_step(grant);}else{self.cleanup=None;progress.copied_items=1;}}
+  else if let Some(child)=&mut self.returned{if !child.terminal_is_empty(){return child.step(grant);}self.returned=None;progress.copied_items=1;}
+  Ok(if self.cleanup_pending(){RetainedCloneStep::Progress(progress)}else{RetainedCloneStep::Complete(progress)})
  }
- fn retire_one(&mut self)->bool{self.cancelled=true;if self.producer.is_some()||self.cache.is_some(){self.transfer(false);return true;}if let Some(scene)=self.visual.take(){self.discard=Some(PreparedSceneCloseJob::new(scene));return true;}self.cleanup_one()}
+ fn demands(&self,body:usize)->Result<[usize;4],ValueError>{
+  macro_rules! child{($child:expr)=>{if let Some(child)=$child{if child.terminal_is_empty(){return Ok([0,0,0,1]);}return Ok([child.next_copy_byte_demand()?,child.next_capacity_byte_demand(body)?,child.next_release_byte_demand()?,child.next_depth_demand()?]);}}}
+  child!(&self.paint_cleanup);child!(&self.discard);child!(&self.raw_discard);child!(&self.cleanup);
+  child!(&self.returned);
+  Ok([0;4])
+ }
+ fn begin_close(&mut self){self.cancelled=true;self.transfer(false);if let Some(scene)=self.visual.take(){self.discard=Some(PreparedSceneCloseJob::new(scene));}}
  fn empty(&self)->bool{self.producer.is_none()&&self.cache.is_none()&&self.paint_cleanup.is_none()&&self.cleanup.is_none()&&self.returned.is_none()&&self.visual.is_none()&&self.discard.is_none()&&self.raw_discard.is_none()}
 }
 #[derive(Clone,Copy)]
@@ -116,10 +127,26 @@ pub fn with_query<R>(captured:SceneIdentity,query:impl FnOnce(SceneAdmissionStat
  let Some(shell)=shell else{return query(baseline,None)};let Ok(owner)=shell.try_borrow()else{return query(if baseline==SceneAdmissionStatus::Failed{baseline}else{SceneAdmissionStatus::Pending},None)};
  let state=owner.as_ref();let plan=state.and_then(|state|state.visual.as_ref());let visual=state.filter(|_|plan.is_some()).map(|state|state.identity);let status=scene_admission(captured,Some(i.identity),visual,preparing,i.failed);query(status,if status==SceneAdmissionStatus::Ready{Some(MountedSceneQuery{scene:plan.unwrap(),source:state.unwrap().identity,build:state.unwrap().job_id})}else{None})
 }
-/// 🧹️ Advance one actual structural cleanup unit; byte credit is deliberately not fabricated.
+/// 🎟️ The exact mounted owner delegates each cleanup currency to its original child.
+pub struct GeometryOwner{instance:u32}
+impl GeometryOwner{
+ pub fn new(instance:u32)->Self{Self{instance}}
+ fn terminal(registry:&Registry,instance:u32)->bool{!registry.instances.iter().flatten().any(|entry|entry.identity.instance==instance)&&registry.shells.iter().all(|shell|shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_none_or(|state|state.identity.instance!=instance)))}
+ fn slot(registry:&Registry,instance:u32)->Result<Option<usize>,ValueError>{for offset in 0..SHELLS{let slot=(registry.cursor+offset)%SHELLS;let owner=registry.shells[slot].try_borrow().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing geometry worker is checked out"))?;if owner.as_ref().is_some_and(|state|state.identity.instance==instance&&state.cleanup_pending()){return Ok(Some(slot));}}Ok(None)}
+ fn demands(&self,body:usize)->Result<[usize;4],ValueError>{MOUNTED.with(|registry|{let registry=registry.borrow();let Some(slot)=Self::slot(&registry,self.instance)?else{return Ok([0;4])};let owner=registry.shells[slot].try_borrow().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing geometry worker is checked out"))?;owner.as_ref().unwrap().demands(body)})}
+ pub fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?[0])}
+ pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?[1])}
+ pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?[2])}
+ pub fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?[3])}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let Some(slot)=Self::slot(&registry,self.instance)?else{return Ok(if Self::terminal(&registry,self.instance){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})};let mut owner=registry.shells[slot].try_borrow_mut().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing geometry worker is checked out"))?;let state=owner.as_mut().unwrap();let step=state.close_step(grant)?;let empty=state.empty();if empty{*owner=None;}drop(owner);if empty{for instance in registry.instances.iter_mut().flatten(){if instance.candidate==Some(slot){instance.candidate=None;}if instance.visual==Some(slot){instance.visual=None;}}registry.retiring[slot]=false;}Ok(if Self::terminal(&registry,self.instance){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})}
+ /// 🚪️ Normal lifecycle handoff retains private children before caller-funded cleanup.
+ pub fn begin_close(&mut self)->Result<(),ValueError>{MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let index=self.instance as usize%INSTANCES;if registry.instances[index].is_some_and(|instance|instance.identity.instance==self.instance){registry.instances[index]=None;}for slot in 0..SHELLS{let mut owner=registry.shells[slot].try_borrow_mut().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing geometry worker is checked out"))?;if let Some(state)=owner.as_mut().filter(|state|state.identity.instance==self.instance){state.begin_close();drop(owner);registry.retiring[slot]=true;}}Ok(())})}
+ pub fn terminal_is_empty(&self)->bool{terminal_is_empty(self.instance)}
+}
+/// 🧹️ The two-currency host cannot authorize physical cleanup of retained geometry.
 pub fn maintenance(instance:u32,maximum_items:usize,maximum_bytes:usize)->PluginCloseStep{
  if maximum_items==0||maximum_bytes==0{return PluginCloseStep::Pending{released_items:0,released_bytes:0};}
- MOUNTED.with(|r|{let mut r=r.borrow_mut();for offset in 0..SHELLS{let slot=(r.cursor+offset)%SHELLS;let matches=r.shells[slot].try_borrow().is_ok_and(|owner|owner.as_ref().is_some_and(|state|state.identity.instance==instance&&(r.retiring[slot]||state.paint_cleanup.is_some()||state.cleanup.is_some()||state.returned.is_some()||state.discard.is_some()||state.raw_discard.is_some())));if !matches{continue;}r.cursor=(slot+1)%SHELLS;let mut owner=match r.shells[slot].try_borrow_mut(){Ok(owner)=>owner,Err(_)=>return PluginCloseStep::Blocked{reason:"Drawing geometry worker is checked out"}};let state=owner.as_mut().unwrap();let progressed=if r.retiring[slot]{state.retire_one()}else{state.cleanup_one()};let empty=state.empty();let identity=state.identity;if empty{*owner=None;}drop(owner);if empty{if let Some(i)=r.instances[identity.instance as usize%INSTANCES].as_mut().filter(|i|i.identity.instance==identity.instance){if i.candidate==Some(slot){i.candidate=None;}if i.visual==Some(slot){i.visual=None;}}r.retiring[slot]=false;return PluginCloseStep::Pending{released_items:1,released_bytes:0};}return PluginCloseStep::Pending{released_items:usize::from(progressed),released_bytes:0};}PluginCloseStep::Complete})
+ MOUNTED.with(|registry|{let registry=registry.borrow();if registry.shells.iter().enumerate().any(|(slot,shell)|shell.try_borrow().map_or(true,|owner|owner.as_ref().is_some_and(|state|state.identity.instance==instance&&(registry.retiring[slot]||state.cleanup_pending()||state.cancelled)))){PluginCloseStep::Blocked{reason:"Drawing geometry cleanup requires item, copy, capacity, release and depth grants"}}else{PluginCloseStep::Complete}})
 }
 /// 🚪️ Detach instance references before retaining each exact owned shell for cleanup.
 pub fn close(instance:u32,maximum_items:usize,maximum_bytes:usize)->PluginCloseStep{MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=instance as usize%INSTANCES;if let Some(i)=r.instances[index].filter(|i|i.identity.instance==instance){for slot in [i.candidate,i.visual].into_iter().flatten(){r.retiring[slot]=true;}r.instances[index]=None;}});maintenance(instance,maximum_items,maximum_bytes)}

@@ -1,0 +1,11 @@
+{
+  "mutation": "setElementProperty",
+  "id": "wt-300",
+  "pset": "Pset_WallTypeCommon",
+  "property": "Reference",
+  "value": {
+    "Text": {
+      "value": "W-310"
+    }
+  }
+}

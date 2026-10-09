@@ -1,0 +1,14 @@
+{
+  "mutation": "setLeader",
+  "id": "lead-1",
+  "anchor": {
+    "WallFace": {
+      "wall": "w-east",
+      "side": "Left"
+    }
+  },
+  "offset": {
+    "x": -1,
+    "y": 0.5
+  }
+}

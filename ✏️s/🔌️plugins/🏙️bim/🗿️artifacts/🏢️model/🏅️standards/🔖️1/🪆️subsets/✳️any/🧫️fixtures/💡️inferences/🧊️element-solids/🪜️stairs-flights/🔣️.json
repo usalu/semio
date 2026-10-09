@@ -120,6 +120,7 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 1.0,
+        "phase": "New",
         "name": "Straight"
       },
       "st-straight-free": {
@@ -147,6 +148,7 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 0.9,
+        "phase": "New",
         "name": "Straight, own height"
       },
       "st-l-left": {
@@ -179,6 +181,7 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 1.0,
+        "phase": "New",
         "name": "L turn left"
       },
       "st-l-right": {
@@ -212,6 +215,7 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 1.2,
+        "phase": "New",
         "name": "L turn right"
       },
       "st-u": {
@@ -243,6 +247,7 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 1.0,
+        "phase": "New",
         "name": "U turn"
       },
       "st-spiral": {
@@ -275,6 +280,7 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 0.9,
+        "phase": "New",
         "name": "Spiral"
       },
       "st-spiral-cw": {
@@ -307,6 +313,7 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 0.8,
+        "phase": "New",
         "name": "Clockwise spiral"
       },
       "st-one-riser": {
@@ -334,6 +341,7 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 1.0,
+        "phase": "New",
         "name": "One riser"
       },
       "st-no-rise": {
@@ -361,14 +369,225 @@
         "tread_thickness": 0.04,
         "riser": "Closed",
         "landing_depth": 1.0,
+        "phase": "New",
         "name": "No rise"
+      },
+      "st-closed-stringer": {
+        "storey": "st-ground",
+        "start": {
+          "x": 0.0,
+          "y": 12.0
+        },
+        "direction": 0.0,
+        "width": 1.0,
+        "flight": "Straight",
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "max_riser": 0.18,
+        "min_tread": 0.25,
+        "stringer": {
+          "kind": "Closed",
+          "width": 0.06,
+          "depth": 0.24
+        },
+        "nosing": 0.03,
+        "tread_thickness": 0.04,
+        "riser": "Closed",
+        "landing_depth": 1.0,
+        "phase": "New",
+        "name": "Closed stringers and nosing"
+      },
+      "st-open-stringer": {
+        "storey": "st-ground",
+        "start": {
+          "x": 0.0,
+          "y": 15.0
+        },
+        "direction": 0.0,
+        "width": 1.0,
+        "flight": "Straight",
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "max_riser": 0.18,
+        "min_tread": 0.25,
+        "stringer": {
+          "kind": "Open",
+          "width": 0.05,
+          "depth": 0.2
+        },
+        "nosing": 0.02,
+        "tread_thickness": 0.05,
+        "riser": "Open",
+        "landing_depth": 1.0,
+        "phase": "New",
+        "name": "Open stringers, open risers"
+      },
+      "st-open-stringer-closed-risers": {
+        "storey": "st-ground",
+        "start": {
+          "x": 0.0,
+          "y": 18.0
+        },
+        "direction": 0.0,
+        "width": 1.0,
+        "flight": "Straight",
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "max_riser": 0.18,
+        "min_tread": 0.25,
+        "stringer": {
+          "kind": "Open",
+          "width": 0.05,
+          "depth": 0.2
+        },
+        "nosing": 0,
+        "tread_thickness": 0.05,
+        "riser": "Closed",
+        "landing_depth": 1.0,
+        "phase": "New",
+        "name": "Open stringers, closed risers"
+      },
+      "st-mono-stringer": {
+        "storey": "st-ground",
+        "start": {
+          "x": 0.0,
+          "y": 21.0
+        },
+        "direction": 0.0,
+        "width": 1.2,
+        "flight": "Straight",
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "max_riser": 0.18,
+        "min_tread": 0.25,
+        "stringer": {
+          "kind": "Mono",
+          "width": 0.12,
+          "depth": 0.22
+        },
+        "nosing": 0,
+        "tread_thickness": 0.05,
+        "riser": "Open",
+        "landing_depth": 1.2,
+        "phase": "New",
+        "name": "Mono stringer, open risers"
+      },
+      "st-l-closed-deep": {
+        "storey": "st-ground",
+        "start": {
+          "x": 10.0,
+          "y": 12.0
+        },
+        "direction": 0.0,
+        "width": 1.0,
+        "flight": {
+          "LTurn": {
+            "split": 0.5,
+            "turn": "Left"
+          }
+        },
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "max_riser": 0.18,
+        "min_tread": 0.25,
+        "stringer": {
+          "kind": "Closed",
+          "width": 0.06,
+          "depth": 0.24
+        },
+        "nosing": 0.02,
+        "tread_thickness": 0.04,
+        "riser": "Closed",
+        "landing_depth": 1.4,
+        "phase": "New",
+        "name": "L turn, deep landing, closed stringers"
+      },
+      "st-u-open-deep": {
+        "storey": "st-ground",
+        "start": {
+          "x": 20.0,
+          "y": 12.0
+        },
+        "direction": 1.5707963267948966,
+        "width": 1.0,
+        "flight": {
+          "UTurn": {
+            "gap": 0.1
+          }
+        },
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "max_riser": 0.18,
+        "min_tread": 0.25,
+        "stringer": {
+          "kind": "Open",
+          "width": 0.05,
+          "depth": 0.2
+        },
+        "nosing": 0,
+        "tread_thickness": 0.05,
+        "riser": "Closed",
+        "landing_depth": 1.3,
+        "phase": "New",
+        "name": "U turn, deep landing, open stringers"
+      },
+      "st-spiral-stringer": {
+        "storey": "st-ground",
+        "start": {
+          "x": 30.0,
+          "y": 12.0
+        },
+        "direction": 0.0,
+        "width": 0.9,
+        "flight": {
+          "Spiral": {
+            "radius": 1.5,
+            "sweep": 4.5
+          }
+        },
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "max_riser": 0.2,
+        "min_tread": 0.2,
+        "stringer": {
+          "kind": "Closed",
+          "width": 0.06,
+          "depth": 0.24
+        },
+        "nosing": 0,
+        "tread_thickness": 0.04,
+        "riser": "Closed",
+        "landing_depth": 0.9,
+        "phase": "New",
+        "name": "Spiral with a stringer"
       }
     }
   },
   "expected": {
     "st-straight": {
       "family": "Stair",
-      "volume": 6.409411764706,
+      "volume": 0.258258823529,
       "volume_tolerance": 1e-09,
       "min": [
         0.0,
@@ -386,11 +605,16 @@
       "riser_height": 0.176470588235,
       "tread": 0.267058823529,
       "steps": 16,
-      "plan_area": 4.272941176471
+      "plan_area": 4.272941176471,
+      "parts": {
+        "step": 0.170917647059,
+        "riser": 0.087341176471
+      },
+      "diagnostic": null
     },
     "st-straight-free": {
       "family": "Stair",
-      "volume": 3.891085714286,
+      "volume": 0.191211428571,
       "volume_tolerance": 1e-09,
       "min": [
         -0.45,
@@ -408,11 +632,16 @@
       "riser_height": 0.171428571429,
       "tread": 0.277142857143,
       "steps": 13,
-      "plan_area": 3.242571428571
+      "plan_area": 3.242571428571,
+      "parts": {
+        "step": 0.129702857143,
+        "riser": 0.061508571429
+      },
+      "diagnostic": null
     },
     "st-l-left": {
       "family": "Stair",
-      "volume": 7.573494809689,
+      "volume": 0.287576470588,
       "volume_tolerance": 1e-09,
       "min": [
         10.0,
@@ -430,11 +659,17 @@
       "riser_height": 0.176470588235,
       "tread": 0.267058823529,
       "steps": 16,
-      "plan_area": 5.005882352941
+      "plan_area": 5.005882352941,
+      "parts": {
+        "step": 0.160235294118,
+        "riser": 0.087341176471,
+        "landing": 0.04
+      },
+      "diagnostic": null
     },
     "st-l-right": {
       "family": "Stair",
-      "volume": 9.082438754325,
+      "volume": 0.358644705882,
       "volume_tolerance": 1e-09,
       "min": [
         10.0,
@@ -452,11 +687,17 @@
       "riser_height": 0.170588235294,
       "tread": 0.278823529412,
       "steps": 16,
-      "plan_area": 6.458823529412
+      "plan_area": 6.458823529412,
+      "parts": {
+        "step": 0.200752941176,
+        "riser": 0.100291764706,
+        "landing": 0.0576
+      },
+      "diagnostic": null
     },
     "st-u": {
       "family": "Stair",
-      "volume": 9.320553633218,
+      "volume": 0.331576470588,
       "volume_tolerance": 1e-09,
       "min": [
         18.4,
@@ -474,16 +715,22 @@
       "riser_height": 0.176470588235,
       "tread": 0.267058823529,
       "steps": 16,
-      "plan_area": 6.105882352941
+      "plan_area": 6.105882352941,
+      "parts": {
+        "step": 0.160235294118,
+        "riser": 0.087341176471,
+        "landing": 0.084
+      },
+      "diagnostic": null
     },
     "st-spiral": {
       "family": "Stair",
-      "volume": 6.378749993453,
-      "volume_tolerance": 0.0027783,
+      "volume": 0.170099999825,
+      "volume_tolerance": 3.969e-05,
       "min": [
         28.533704823502,
         -0.45,
-        0.0
+        0.16
       ],
       "max": [
         31.49999999987,
@@ -496,16 +743,20 @@
       "riser_height": 0.2,
       "tread": 0.3375,
       "steps": 14,
-      "plan_area": 4.252499995635
+      "plan_area": 4.252499995635,
+      "parts": {
+        "step": 0.170099999825
+      },
+      "diagnostic": null
     },
     "st-spiral-cw": {
       "family": "Stair",
-      "volume": 3.327999996327,
-      "volume_tolerance": 0.0016128,
+      "volume": 0.102399999887,
+      "volume_tolerance": 2.688e-05,
       "min": [
         35.09183700563,
         -1.999999999952,
-        0.0
+        0.16
       ],
       "max": [
         37.199999999988,
@@ -518,10 +769,208 @@
       "riser_height": 0.2,
       "tread": 0.266666666667,
       "steps": 12,
-      "plan_area": 2.559999997174
+      "plan_area": 2.559999997174,
+      "parts": {
+        "step": 0.102399999887
+      },
+      "diagnostic": null
     },
     "st-one-riser": null,
-    "st-no-rise": null
+    "st-no-rise": null,
+    "st-closed-stringer": {
+      "family": "Stair",
+      "volume": 0.400981379049,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.03,
+        11.44,
+        0.0
+      ],
+      "max": [
+        4.272941176471,
+        12.56,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "riser_count": 17,
+      "riser_height": 0.176470588235,
+      "tread": 0.267058823529,
+      "steps": 16,
+      "plan_area": 4.752941176471,
+      "parts": {
+        "step": 0.190117647059,
+        "riser": 0.087341176471,
+        "stringer": 0.12352255552
+      },
+      "diagnostic": null
+    },
+    "st-open-stringer": {
+      "family": "Stair",
+      "volume": 0.348079137832,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.02,
+        14.5,
+        0.0
+      ],
+      "max": [
+        4.272941176471,
+        15.5,
+        2.823529411765
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "riser_count": 17,
+      "riser_height": 0.176470588235,
+      "tread": 0.267058823529,
+      "steps": 16,
+      "plan_area": 4.592941176471,
+      "parts": {
+        "step": 0.229647058824,
+        "stringer": 0.118432079008
+      },
+      "diagnostic": null
+    },
+    "st-open-stringer-closed-risers": {
+      "family": "Stair",
+      "volume": 0.432173009301,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        17.5,
+        0.0
+      ],
+      "max": [
+        4.272941176471,
+        18.5,
+        2.823529411765
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "riser_count": 17,
+      "riser_height": 0.176470588235,
+      "tread": 0.267058823529,
+      "steps": 16,
+      "plan_area": 4.272941176471,
+      "parts": {
+        "step": 0.213647058824,
+        "riser": 0.101176470588,
+        "stringer": 0.117349479889
+      },
+      "diagnostic": null
+    },
+    "st-mono-stringer": {
+      "family": "Stair",
+      "volume": 0.362789797647,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        20.4,
+        0.0
+      ],
+      "max": [
+        4.272941176471,
+        21.6,
+        2.823529411765
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "riser_count": 17,
+      "riser_height": 0.176470588235,
+      "tread": 0.267058823529,
+      "steps": 16,
+      "plan_area": 5.127529411765,
+      "parts": {
+        "step": 0.256376470588,
+        "stringer": 0.106413327059
+      },
+      "diagnostic": null
+    },
+    "st-l-closed-deep": {
+      "family": "Stair",
+      "volume": 0.431333229205,
+      "volume_tolerance": 1e-09,
+      "min": [
+        9.98,
+        11.44,
+        0.0
+      ],
+      "max": [
+        13.596470588235,
+        14.369411764706,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "riser_count": 17,
+      "riser_height": 0.176470588235,
+      "tread": 0.267058823529,
+      "steps": 16,
+      "plan_area": 5.705882352941,
+      "parts": {
+        "step": 0.172235294118,
+        "riser": 0.087341176471,
+        "stringer": 0.115756758617,
+        "landing": 0.056
+      },
+      "diagnostic": null
+    },
+    "st-u-open-deep": {
+      "family": "Stair",
+      "volume": 0.541810724484,
+      "volume_tolerance": 1e-09,
+      "min": [
+        18.4,
+        12.0,
+        0.0
+      ],
+      "max": [
+        20.5,
+        15.436470588235,
+        2.823529411765
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "riser_count": 17,
+      "riser_height": 0.176470588235,
+      "tread": 0.267058823529,
+      "steps": 16,
+      "plan_area": 6.735882352941,
+      "parts": {
+        "step": 0.200294117647,
+        "riser": 0.101176470588,
+        "stringer": 0.103840136249,
+        "landing": 0.1365
+      },
+      "diagnostic": null
+    },
+    "st-spiral-stringer": {
+      "family": "Stair",
+      "volume": 0.170099999825,
+      "volume_tolerance": 3.969e-05,
+      "min": [
+        28.533704823502,
+        11.55,
+        0.16
+      ],
+      "max": [
+        31.49999999987,
+        14.549999999479,
+        2.8
+      ],
+      "bounds_tolerance": 0.000105,
+      "curved": true,
+      "riser_count": 15,
+      "riser_height": 0.2,
+      "tread": 0.3375,
+      "steps": 14,
+      "plan_area": 4.252499995635,
+      "parts": {
+        "step": 0.170099999825
+      },
+      "diagnostic": "stair.stringer-ignored-on-spiral"
+    }
   },
   "meshes": {}
 }

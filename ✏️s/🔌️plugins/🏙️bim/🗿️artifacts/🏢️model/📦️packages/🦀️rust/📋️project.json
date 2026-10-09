@@ -57,6 +57,36 @@
         "command": "bun ./📜️script.ts verify-snapshot-sqlite",
         "forwardAllArgs": true
       }
+    },
+    "test-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "test-subject": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test subject",
+        "forwardAllArgs": true
+      }
+    },
+    "test-parity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test parity",
+        "forwardAllArgs": true
+      }
     }
   }
 }

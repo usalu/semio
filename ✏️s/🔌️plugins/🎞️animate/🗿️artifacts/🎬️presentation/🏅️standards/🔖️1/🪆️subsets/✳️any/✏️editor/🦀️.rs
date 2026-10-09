@@ -380,7 +380,7 @@ fn animate_presentation_selected_ids(interaction: &protocol::InteractionState) -
 }
 
 /// 📏️ Every retained verb here is ONE semantic work item — the job reduces the whole command in a
-/// single `BoundedArtifactCommandWork` step, and `ArtifactRetainedCommandPayload::try_new` is handed
+/// single `BoundedArtifactCommandWork` step, and `ArtifactRetainedCommandPayload::new` is handed
 /// `ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS` (1) as its preflight ceiling, so an extent priced per
 /// emitted ROW is refused outright (`retained command exceeds semantic work capacity` — measured on
 /// `seedGrid` 2×2 before this was corrected). Fan-out is therefore bounded HERE, by refusing the
@@ -1012,7 +1012,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -1028,7 +1028,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             ANIMATE_PRESENTATION_RETAINED_RAW_BYTES,
             ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

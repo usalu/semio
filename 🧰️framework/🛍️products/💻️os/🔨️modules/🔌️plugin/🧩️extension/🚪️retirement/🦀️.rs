@@ -1,7 +1,8 @@
 //! 🚪️ Extension resources and declarative payloads retain their owners through bounded close.
 
-use super::{plugin_internal_fault, ExtensionBundle, ExtensionManifest, ExtensionRequestHandler, Fault, FaultCode, FaultOrigin, PluginCloseStep};
-use store::os_store::SnapshotRetirementStep;
+use super::{plugin_internal_fault, ExtensionBundle, ExtensionManifest, ExtensionRequestHandler, Fault, FaultCode, FaultOrigin};
+use crate::app::PluginLifecycleStep;
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 
 /// 🧳️ Owns the resources captured by extension handlers; terminal destruction must be shallow.
 pub trait ExtensionResourceOwner: Send + 'static {
@@ -15,32 +16,35 @@ pub trait ExtensionResourceOwner: Send + 'static {
         false
     }
     fn begin_close(&mut self);
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+    /// ♻️ Advances one owner under the complete caller grant; a turn below any demanded axis yields an empty receipt.
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
     fn terminal_is_empty(&self) -> bool;
-    fn next_close_byte_demand(&self) -> usize {
-        1
-    }
+    /// 📏️ The minimal grant on every independent axis that the next `close_step` needs.
+    fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError>;
     fn cancel_close(&mut self) {}
     fn resume_close(&mut self) {}
 }
 
-pub(super) fn snapshot_close_step(step: SnapshotRetirementStep) -> PluginCloseStep {
-    match step {
-        SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-        SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
-        SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "extension metadata owner is shared" },
-    }
+/// 🎟️ Self-funds one turn from its own quote for cold callers that no scheduler grants.
+pub(super) fn cold_grant(demand: RetirementDemand) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: if demand.copy_bytes == 0 { 0 } else { demand.copy_bytes.max(65536) }, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+}
+
+fn yields(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
+    grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes
+}
+
+fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
+    demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "extension retirement depth overflow"))?;
+    Ok(demand)
+}
+
+fn value_fault(error: ValueError) -> Fault {
+    close_fault("extension.close-demand", &error.into_message())
 }
 
 fn close_fault(code: &str, message: &str) -> Fault {
     Fault::new(FaultOrigin::Framework, FaultCode::new(code), message)
-}
-
-pub(super) fn admit_step(step: PluginCloseStep, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
-    if matches!(step, PluginCloseStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes) {
-        return Err(close_fault("extension.close-budget", "extension resource owner exceeded its item or byte grant"));
-    }
-    Ok(step)
 }
 
 impl ExtensionBundle {
@@ -116,67 +120,85 @@ impl ExtensionBundle {
     }
 
     /// ⏱️ Retires resource payloads, then individual handler captures, then manifest metadata.
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
-            return Ok(PluginCloseStep::Complete);
+            return Ok(PluginLifecycleStep::Complete(idle));
         }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(value_fault)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(close_fault("extension.close-depth", "extension retirement exceeds its admitted depth"));
+        }
+        if yields(grant, demand) {
+            return Ok(PluginLifecycleStep::Progress(idle));
         }
         if self.close_cancelled {
-            return Ok(PluginCloseStep::Blocked { reason: "extension close paused" });
+            return Ok(PluginLifecycleStep::Blocked { reason: "extension close paused" });
         }
         self.begin_close();
         if let Some(owner) = &mut *self.resource_owner {
             if owner.terminal_is_empty() {
                 let released_bytes = std::mem::size_of_val(owner.as_ref());
-                if released_bytes > maximum_bytes {
-                    return Ok(PluginCloseStep::AwaitingInput { reason: "extension resource shell requires a larger byte grant" });
-                }
                 self.resource_owner.take();
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes });
+                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..idle }));
             }
-            let step = admit_step(owner.close_step(maximum_items, maximum_bytes)?, maximum_items, maximum_bytes)?;
-            if step == PluginCloseStep::Complete && !owner.terminal_is_empty() {
-                return Err(close_fault("extension.close-live-owner", "extension resource owner reported Complete without terminal emptiness"));
+            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+            let step = owner.close_step(child)?;
+            if step.progress().is_some_and(|progress| !progress.fits(child)) {
+                return Err(close_fault("extension.close-budget", "extension resource owner exceeded its independent grant"));
             }
-            return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+            return match step {
+                PluginLifecycleStep::Complete(_) if !owner.terminal_is_empty() => Err(close_fault("extension.close-live-owner", "extension resource owner reported Complete without terminal emptiness")),
+                PluginLifecycleStep::Complete(progress) => Ok(PluginLifecycleStep::Progress(progress)),
+                step => Ok(step),
+            };
         }
         if !self.metadata_retirement.is_empty() {
-            let step = self.metadata_retirement.step(maximum_items, maximum_bytes)?;
-            return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+            return match self.metadata_retirement.step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })? {
+                PluginLifecycleStep::Complete(progress) => Ok(PluginLifecycleStep::Progress(progress)),
+                step => Ok(step),
+            };
         }
         if !self.handlers.is_empty() {
             let (key, _) = self.handlers.pop().expect("exclusive handler retirement retains its key");
             self.metadata_retirement.push(key);
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..idle }));
         }
         if self.handlers.capacity() != 0 {
             self.metadata_retirement.push(std::mem::take(&mut *self.handlers));
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..idle }));
         }
         if !self.manifest_retired || !self.manifest.payload_is_empty() {
             let manifest = std::mem::replace(&mut *self.manifest, ExtensionManifest::empty());
             self.manifest_retired = true;
             self.metadata_retirement.push(manifest);
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..idle }));
         }
-        Ok(PluginCloseStep::Complete)
+        Ok(PluginLifecycleStep::Complete(idle))
     }
 
     pub fn terminal_is_empty(&self) -> bool {
         self.closing && self.resource_owner.is_none() && self.handlers.is_empty() && self.handlers.capacity() == 0 && self.manifest_retired && self.manifest.payload_is_empty() && self.metadata_retirement.is_empty()
     }
 
-    /// 📏️ Exact byte admission required by the next retained allocation release.
-    pub fn next_close_byte_demand(&self) -> usize {
+    /// 📏️ Exact per-axis admission required by the next retained allocation move, birth or release.
+    pub fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(owner) = self.resource_owner.as_ref() {
-            return if owner.terminal_is_empty() { std::mem::size_of_val(owner.as_ref()) } else { owner.next_close_byte_demand() };
+            return if owner.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { nested(owner.retirement_demands(maximum_body_bytes)?) };
         }
         if !self.metadata_retirement.is_empty() {
-            return self.metadata_retirement.next_close_byte_demand();
+            return nested(self.metadata_retirement.retirement_demands());
         }
-        1
+        if !self.handlers.is_empty() {
+            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<(String, ExtensionRequestHandler)>(), capacity_bytes: push_bytes::<String>(), depth: 1, ..Default::default() });
+        }
+        if self.handlers.capacity() != 0 {
+            return Ok(RetirementDemand { copy_bytes: std::mem::size_of_val(&*self.handlers), capacity_bytes: push_bytes_of(&*self.handlers), depth: 1, ..Default::default() });
+        }
+        if !self.manifest_retired || !self.manifest.payload_is_empty() {
+            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<ExtensionManifest>(), capacity_bytes: push_bytes::<ExtensionManifest>(), depth: 1, ..Default::default() });
+        }
+        Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
     /// ❄️ Completes explicit disposal for cold construction and inspection callers.
@@ -184,9 +206,10 @@ impl ExtensionBundle {
         self.begin_close();
         self.resume_close();
         loop {
-            match self.close_step(64, 65536.max(self.next_close_byte_demand()))? {
-                PluginCloseStep::Complete => return Ok(()),
-                PluginCloseStep::Pending { .. } => {}
+            let demand = self.retirement_demands(0).map_err(value_fault)?;
+            match self.close_step(cold_grant(demand))? {
+                PluginLifecycleStep::Complete(_) => return Ok(()),
+                PluginLifecycleStep::Progress(progress) if progress != RetainedCloneProgress::default() => {}
                 _ => return Err(close_fault("extension.cold-close-blocked", "cold extension disposal requires exclusive resource authority")),
             }
         }
@@ -338,27 +361,39 @@ impl ExtensionBundleRegistry {
     pub(super) fn terminal_is_empty(&self) -> bool {
         self.current.is_none() && self.replacement.is_none()
     }
-    pub(super) fn next_close_byte_demand(&self) -> usize {
-        self.current.as_ref().map_or(1, ExtensionBundle::next_close_byte_demand)
+    pub(super) fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+        match self.current.as_ref() {
+            Some(current) if !current.terminal_is_empty() => nested(current.retirement_demands(maximum_body_bytes)?),
+            Some(_) => Ok(RetirementDemand { depth: 1, ..Default::default() }),
+            None => Ok(Default::default()),
+        }
     }
 
-    pub(super) fn close_step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
+    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
-            return Ok(PluginCloseStep::Complete);
+            return Ok(PluginLifecycleStep::Complete(idle));
         }
-        if items == 0 || bytes == 0 {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(value_fault)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(close_fault("extension.close-depth", "extension registry retirement exceeds its admitted depth"));
+        }
+        if yields(grant, demand) {
+            return Ok(PluginLifecycleStep::Progress(idle));
         }
         if self.paused {
-            return Ok(PluginCloseStep::Blocked { reason: "extension close paused" });
+            return Ok(PluginLifecycleStep::Blocked { reason: "extension close paused" });
         }
         if !self.has_retirement() {
             self.begin_close();
         }
         let current = self.current.as_mut().expect("installed extension retains a current owner");
         if !current.terminal_is_empty() {
-            let step = current.close_step(items, bytes)?;
-            return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+            return match current.close_step(child)? {
+                PluginLifecycleStep::Complete(progress) => Ok(PluginLifecycleStep::Progress(progress)),
+                step => Ok(step),
+            };
         }
         self.current.take();
         if let Some(mut replacement) = self.replacement.take() {
@@ -369,13 +404,26 @@ impl ExtensionBundleRegistry {
             self.active = self.activation_requested && !self.retire_all;
             self.activation_requested = false;
         }
-        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        let progress = RetainedCloneProgress { copied_items: 1, ..idle };
+        Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
+}
+
+fn push_bytes<T>() -> usize {
+    std::mem::size_of::<PendingMetadata>().saturating_add(std::mem::size_of::<T>())
+}
+
+fn push_bytes_of<T>(_: &T) -> usize {
+    push_bytes::<T>()
 }
 
 pub(super) trait MetadataOwner: Send + 'static {
     fn release_bytes(&self) -> usize {
         std::mem::size_of_val(self)
+    }
+    /// 🧮️ Exact capacity of the pending nodes that expanding this owner births.
+    fn expansion_bytes(&self) -> usize {
+        0
     }
     fn expand(self: Box<Self>, close: &mut MetadataRetirement) -> Result<(), String>;
 }
@@ -397,28 +445,34 @@ impl MetadataRetirement {
     pub(super) fn is_empty(&self) -> bool {
         self.pending.is_none()
     }
-    pub(super) fn next_close_byte_demand(&self) -> usize {
-        self.pending.as_ref().map_or(0, |pending| std::mem::size_of::<PendingMetadata>().saturating_add(pending.owner.release_bytes()))
+    pub(super) fn retirement_demands(&self) -> RetirementDemand {
+        self.pending.as_ref().map_or_else(Default::default, |pending| RetirementDemand {
+            capacity_bytes: pending.owner.expansion_bytes(),
+            release_bytes: std::mem::size_of::<PendingMetadata>().saturating_add(pending.owner.release_bytes()),
+            depth: 1,
+            ..Default::default()
+        })
     }
 
-    pub(super) fn step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
+    pub(super) fn step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        let idle = RetainedCloneProgress::default();
         if self.is_empty() {
-            return Ok(PluginCloseStep::Complete);
+            return Ok(PluginLifecycleStep::Complete(idle));
         }
-        if items == 0 || bytes == 0 {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let demand = self.retirement_demands();
+        if grant.maximum_depth < demand.depth {
+            return Err(close_fault("extension.close-depth", "extension metadata retirement exceeds its admitted depth"));
         }
-        let released_bytes = self.next_close_byte_demand();
-        if released_bytes > bytes {
-            return Ok(PluginCloseStep::AwaitingInput { reason: "extension metadata allocation requires a larger byte grant" });
+        if yields(grant, demand) {
+            return Ok(PluginLifecycleStep::Progress(idle));
         }
         if let Some(pending) = self.pending.take() {
             let PendingMetadata { owner, next } = *pending;
             *self.pending = next;
             owner.expand(self).map_err(plugin_internal_fault)?;
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes });
         }
-        Ok(PluginCloseStep::Complete)
+        let progress = RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, released_bytes: demand.release_bytes, ..idle };
+        Ok(if self.is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 }
 
@@ -445,6 +499,14 @@ impl MetadataOwner for String {
     }
 }
 impl MetadataOwner for super::DslValue {
+    fn expansion_bytes(&self) -> usize {
+        match self {
+            Self::String(value) => push_bytes_of(value),
+            Self::Array(values) => push_bytes_of(values),
+            Self::Object(values) => push_bytes_of(values),
+            _ => 0,
+        }
+    }
     fn expand(self: Box<Self>, close: &mut MetadataRetirement) -> Result<(), String> {
         match *self {
             Self::String(value) => close.push(value),
@@ -459,6 +521,9 @@ impl<T: MetadataOwner> MetadataOwner for Vec<T> {
     fn release_bytes(&self) -> usize {
         std::mem::size_of::<Self>().saturating_add(if self.is_empty() { self.capacity().saturating_mul(std::mem::size_of::<T>()) } else { 0 })
     }
+    fn expansion_bytes(&self) -> usize {
+        if self.is_empty() { 0 } else { push_bytes::<Self>().saturating_add(push_bytes::<T>()) }
+    }
     fn expand(mut self: Box<Self>, close: &mut MetadataRetirement) -> Result<(), String> {
         if let Some(value) = self.pop() {
             close.push(*self);
@@ -468,6 +533,9 @@ impl<T: MetadataOwner> MetadataOwner for Vec<T> {
     }
 }
 impl<T: MetadataOwner, U: MetadataOwner> MetadataOwner for (T, U) {
+    fn expansion_bytes(&self) -> usize {
+        push_bytes::<T>().saturating_add(push_bytes::<U>())
+    }
     fn expand(self: Box<Self>, close: &mut MetadataRetirement) -> Result<(), String> {
         let (first, second) = *self;
         close.push(first);
@@ -481,6 +549,9 @@ impl MetadataOwner for ExtensionRequestHandler {
     }
 }
 impl<T: MetadataOwner> MetadataOwner for Option<T> {
+    fn expansion_bytes(&self) -> usize {
+        if self.is_some() { push_bytes::<T>() } else { 0 }
+    }
     fn expand(self: Box<Self>, close: &mut MetadataRetirement) -> Result<(), String> {
         if let Some(value) = *self {
             close.push(value);
@@ -492,6 +563,9 @@ impl<T: MetadataOwner> MetadataOwner for Option<T> {
 macro_rules! retire_metadata {
     ($type:ty, $($field:ident),+ $(,)?) => {
         impl MetadataOwner for $type {
+            fn expansion_bytes(&self) -> usize {
+                0usize $(.saturating_add(push_bytes_of(&self.$field)))+
+            }
             fn expand(self: Box<Self>, close: &mut MetadataRetirement) -> Result<(), String> {
                 $(close.push(self.$field);)+
                 Ok(())
@@ -518,6 +592,9 @@ impl MetadataOwner for semio_framework::CapabilityRequirement {
     }
 }
 impl MetadataOwner for semio_framework::kernel::CapabilityId {
+    fn expansion_bytes(&self) -> usize {
+        push_bytes_of(&self.0)
+    }
     fn expand(self: Box<Self>, close: &mut MetadataRetirement) -> Result<(), String> {
         close.push(self.0);
         Ok(())

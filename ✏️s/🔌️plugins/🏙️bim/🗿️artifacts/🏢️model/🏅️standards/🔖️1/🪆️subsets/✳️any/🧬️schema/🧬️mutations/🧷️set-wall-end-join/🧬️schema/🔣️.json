@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-wall-end-join/schema.json",
+  "title": "SetWallEndJoin",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "end"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setWallEndJoin"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "end": {
+      "type": "string",
+      "enum": [
+        "Start",
+        "End"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Wall end",
+          "de": "Wandende"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "join": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/EndJoin",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Join (empty = automatic)",
+          "de": "Verbindung (leer = automatisch)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

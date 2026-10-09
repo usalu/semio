@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { existsSync } from "node:fs";
 /** 🧭️ Behaviours of the journey fixture workspace: each mode is one task the dashboard journeys start. */
 const [mode = "", ...rest] = process.argv.slice(2);
 const mark = process.env.JOURNEY_MARK ?? "unset";
@@ -14,7 +15,7 @@ if (mode === "words") {
   out("WORDS-BYE");
 } else if (mode === "serve") {
   const port = Number(process.env.JOURNEY_PORT);
-  const server = Bun.serve({ port, hostname: "127.0.0.1", fetch: (request) => new Response(`journey-ok ${mark} ${new URL(request.url).pathname}`) });
+  const server = Bun.serve({ port, hostname: "127.0.0.1", fetch: async (request) => { if (process.env.JOURNEY_HTTP_DELAY) await Bun.sleep(Number(process.env.JOURNEY_HTTP_DELAY)); return process.env.JOURNEY_HTTP_GATE && !existsSync(process.env.JOURNEY_HTTP_GATE) ? new Response("warming", { status: 503 }) : new Response(`journey-ok ${mark} ${new URL(request.url).pathname}`); } });
   out(`journey server listening on http://127.0.0.1:${server.port}`);
   await new Promise(() => {});
 } else if (mode === "ticker") {

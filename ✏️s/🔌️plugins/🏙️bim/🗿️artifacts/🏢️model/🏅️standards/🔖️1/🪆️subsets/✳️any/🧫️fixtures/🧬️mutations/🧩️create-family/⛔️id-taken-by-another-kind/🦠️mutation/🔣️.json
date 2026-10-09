@@ -1,0 +1,8 @@
+{
+  "mutation": "createFamily",
+  "id": "w-south",
+  "family": {
+    "name": "Wall",
+    "category": "Furniture"
+  }
+}

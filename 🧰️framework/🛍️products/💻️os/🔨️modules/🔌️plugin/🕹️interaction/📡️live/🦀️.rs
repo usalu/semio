@@ -7,7 +7,8 @@ use super::{
 };
 use protocol::{LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryRejection, LocalInteractionQueryReply, LocalInteractionQueryToken};
 use std::mem::ManuallyDrop;
-use store::{ArtifactStoreOneItemGrant, SnapshotRead, SnapshotRetirementStep};
+use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use store::{ArtifactStoreOneItemGrant, SnapshotRead};
 
 //#region 🔢️RuntimeGeneration
 /// 🔢️ This allocator belongs to the runtime, never to a reusable app instance slot.
@@ -27,18 +28,7 @@ impl LocalInteractionQueryGeneration {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum LocalInteractionLiveStep {
     Blocked,
-    Advanced { emitted_bytes: usize, retired_bytes: usize, released_items: usize },
-    Complete,
-}
-
-impl LocalInteractionLiveStep {
-    fn retirement(step: SnapshotRetirementStep) -> Self {
-        match step {
-            SnapshotRetirementStep::Blocked => Self::Blocked,
-            SnapshotRetirementStep::Complete => Self::Complete,
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => Self::Advanced { emitted_bytes: 0, retired_bytes: released_bytes, released_items },
-        }
-    }
+    Advanced { emitted_bytes: usize, retired_bytes: usize },
 }
 
 struct LiveState<D, C, Q: LocalInteractionQueryCapture> {
@@ -111,31 +101,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
     }
 
     pub(crate) fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<LocalInteractionLiveStep, String> {
-        if grant.maximum_items == 0 {
+        if grant.maximum_items == 0 || self.closing {
             return Ok(LocalInteractionLiveStep::Blocked);
-        }
-        if self.closing {
-            if let Some(bytes) = self.owned.error_bytes.as_mut() {
-                if !bytes.is_empty() {
-                    let released_bytes = bytes.len().min(grant.maximum_bytes);
-                    if released_bytes == 0 {
-                        return Ok(LocalInteractionLiveStep::Blocked);
-                    }
-                    bytes.truncate(bytes.len() - released_bytes);
-                    return Ok(LocalInteractionLiveStep::Advanced { emitted_bytes: 0, retired_bytes: released_bytes, released_items: 0 });
-                }
-                self.owned.error_bytes = None;
-                return Ok(LocalInteractionLiveStep::Advanced { emitted_bytes: 0, retired_bytes: 0, released_items: 1 });
-            }
-            if let Some(query) = self.owned.query.as_mut() {
-                if !query.terminal_is_empty() {
-                    return query
-                        .close_step(grant)
-                        .map_err(semio_framework_value::ValueError::into_message)
-                        .map(|step| LocalInteractionLiveStep::retirement(if step == SnapshotRetirementStep::Complete { SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } } else { step }));
-                }
-            }
-            return self.owned.inputs.close_step(grant).map(LocalInteractionLiveStep::retirement);
         }
         if !self.started {
             return Ok(LocalInteractionLiveStep::Blocked);
@@ -145,7 +112,7 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         let before_retired = query.retired_bytes();
         match query.advance(grant) {
             Ok(LocalInteractionQueryStep::Blocked | LocalInteractionQueryStep::PageReady) => Ok(LocalInteractionLiveStep::Blocked),
-            Ok(LocalInteractionQueryStep::Advanced { emitted_bytes, retired_bytes }) => Ok(LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes, released_items: 0 }),
+            Ok(LocalInteractionQueryStep::Advanced { emitted_bytes, retired_bytes }) => Ok(LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes }),
             Ok(LocalInteractionQueryStep::Closing) => Ok(LocalInteractionLiveStep::Blocked),
             Err(reason) => {
                 let emitted_bytes = (query.completed_bytes() - before_emitted) as usize;
@@ -153,9 +120,65 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
                 self.owned.error_bytes = Some(reason.into_bytes());
                 self.failed = true;
                 self.begin_close();
-                Ok(LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes, released_items: 0 })
+                Ok(LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes })
             }
         }
+    }
+
+    pub(crate) fn is_closing(&self) -> bool {
+        self.closing
+    }
+
+    /// 📏️ Exact per-axis quote of the next closing turn: error bytes, then the query, then the input returns.
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> {
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "live local interaction depth overflow"))?;
+            Ok(demand)
+        };
+        if let Some(bytes) = self.owned.error_bytes.as_ref() {
+            return Ok(if bytes.is_empty() { RetirementDemand { release_bytes: bytes.capacity(), depth: 1, ..Default::default() } } else { RetirementDemand { copy_bytes: 1, depth: 1, ..Default::default() } });
+        }
+        if let Some(query) = self.owned.query.as_ref().filter(|query| !query.terminal_is_empty()) {
+            return nested(query.retirement_demands(body)?);
+        }
+        nested(self.owned.inputs.retirement_demands())
+    }
+
+    /// ♻️ Closes one original owner under the complete caller grant; nested owners receive one item and one less depth.
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let idle = RetainedCloneProgress::default();
+        if self.owners_are_empty() {
+            return Ok(RetainedCloneStep::Complete(idle));
+        }
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(idle));
+        }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "live local interaction close exceeds admitted depth"));
+        }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(idle));
+        }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        let step = if let Some(bytes) = self.owned.error_bytes.as_mut() {
+            if bytes.is_empty() {
+                let released_bytes = bytes.capacity();
+                self.owned.error_bytes = None;
+                RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..idle })
+            } else {
+                let copied_bytes = bytes.len().min(grant.maximum_copy_bytes);
+                bytes.truncate(bytes.len() - copied_bytes);
+                RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..idle })
+            }
+        } else if let Some(query) = self.owned.query.as_mut().filter(|query| !query.terminal_is_empty()) {
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, query.close_step(child)?, query.terminal_is_empty(), "live local interaction query")?
+        } else {
+            let inputs = &mut self.owned.inputs;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, inputs.close_step(child)?, inputs.terminal_is_empty(), "live local interaction inputs")?
+        };
+        let progress = step.progress();
+        Ok(if self.owners_are_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
 
     pub(crate) fn take_reply(&mut self) -> Option<LocalInteractionQueryReply> {

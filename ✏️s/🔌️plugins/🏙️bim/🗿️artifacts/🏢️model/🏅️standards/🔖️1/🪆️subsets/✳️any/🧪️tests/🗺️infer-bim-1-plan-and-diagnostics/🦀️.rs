@@ -1,5 +1,5 @@
 //! 🗺️ BIM inference case `infer-bim-1-plan-and-diagnostics`, Rust adapter (subject role only). The third-party reproduction lives in `🐍️.py`
-//! beside this file; this adapter answers the same four scenarios from `ModelInference` of the very same committed snapshots, and the
+//! beside this file; this adapter answers the same scenarios (the plan metrics and findings, and the JSON and CSV exports of the findings) from `ModelInference` of the very same committed snapshots, and the
 //! platform compares both projections under `floating-point-v1`. It registers no oracle handler: a subject that re-read the committed
 //! expectation would be a self-comparison reporting a pass.
 //!
@@ -11,6 +11,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::{csv, json};
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, encode_inference_projection_json};
 
     fn infer(ctx: &Context, slug: &str) -> Result<Outcome, String> {
@@ -31,6 +32,34 @@ mod subject {
     pub fn diagnostics(ctx: &Context) -> Result<Outcome, String> {
         infer(ctx, "diagnostics")
     }
+
+    fn snapshot_of(ctx: &Context) -> Result<semio_s_artifact_bim_model::ModelSnapshot, String> {
+        let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
+        decode_model_snapshot_json(&String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the committed snapshot is not UTF-8: {error}"))?)
+    }
+
+    /// 🧾️ The adjudicated findings read back from the JSON export of the model.
+    pub fn export_json(ctx: &Context) -> Result<Outcome, String> {
+        let text = json::export_diagnostics(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
+        let table = json::adjudicated_json(&text)?;
+        let parsed = parse_json(&table)?;
+        Ok(Outcome::with_raw(table.into_bytes(), parsed))
+    }
+
+    /// 🚨️ The groups of the diagnostics panel of the model: per severity, the storeys by level and the kinds of finding with their counts.
+    pub fn panel_groups(ctx: &Context) -> Result<Outcome, String> {
+        let table = semio_s_artifact_bim_model::editor::bim::panels::diagnostics::groups_json_of(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
+        let parsed = parse_json(&table)?;
+        Ok(Outcome::with_raw(table.into_bytes(), parsed))
+    }
+
+    /// 📊️ Every finding read back from the CSV export of the model.
+    pub fn export_csv(ctx: &Context) -> Result<Outcome, String> {
+        let text = csv::export_diagnostics(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
+        let table = csv::findings_json(&text);
+        let parsed = parse_json(&table)?;
+        Ok(Outcome::with_raw(table.into_bytes(), parsed))
+    }
 }
 //#endregion 🔖️Subject
 
@@ -41,7 +70,7 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        built = built.subject("plan-metrics-house", subject::plan_metrics).subject("plan-metrics-curved", subject::plan_metrics).subject("diagnostics-clean", subject::diagnostics).subject("diagnostics-defects", subject::diagnostics);
+        built = built.subject("plan-metrics-house", subject::plan_metrics).subject("plan-metrics-curved", subject::plan_metrics).subject("plan-metrics-cut-heights", subject::plan_metrics).subject("diagnostics-clean", subject::diagnostics).subject("diagnostics-defects", subject::diagnostics).subject("diagnostics-export-json", subject::export_json).subject("diagnostics-export-csv", subject::export_csv).subject("diagnostics-panel-groups", subject::panel_groups);
     }
     built
 }

@@ -19,3 +19,35 @@ Feature: Open the IFC 2x3 export of the BIM house with IfcOpenShell and measure 
     Given the committed house shared://🏗️ifc/🏠️house/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🏠️house/🏠️house.ifc
     When the file is opened and every product is counted, located and measured
     Then the counts per IFC class, the containment per storey and the net volumes equal the subject's within 1e-9
+
+  @id-export-ifc-notated
+  @level-quick
+  @mode-differential
+  Scenario: Every dimension, tag, note and leader of an annotated room is an IfcAnnotation that IfcOpenShell reads back with its kind, printed text, curves, literals and total
+    Given the committed room shared://💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🪧️notated/🪧️notated.ifc
+    When the file is opened and every IfcAnnotation is located in its storey and its Annotation2D representation and quantities are read
+    Then the counts per IFC class, the containment per storey and the annotations equal the subject's within 1e-9 and every dimension total equals the distance of the shapely-adjudicated inference table
+
+  @id-export-ifc-ceilings
+  @level-quick
+  @mode-differential
+  Scenario: Every ceiling is an IfcCovering whose flat sweep IfcOpenShell tessellates to the volume of its written base quantities
+    Given the committed ceilings shared://🏗️ifc/🔲️ceilings/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🔲️ceilings/🔲️ceilings.ifc
+    When the file is opened and every IfcCovering is counted, located in its storey and measured by the kernel
+    Then the counts per IFC class, the containment per storey and the net volumes of the flat ceilings, the area of the outline less its holes times the layer thickness, equal the subject's within 1e-9
+
+  @id-export-ifc-ramps
+  @level-quick
+  @mode-differential
+  Scenario: Every ramp is an IfcRamp aggregating an IfcRampFlight per sloped flight and a landing slab per landing, whose quantities IfcOpenShell reads back and whose parts the kernel measures
+    Given the committed ramps shared://💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🛝️ramps/🛝️ramps.ifc
+    When the file is opened and every IfcRamp is located in its storey, decomposed into its parts, read for its base quantities and tessellated by the kernel
+    Then the counts per IFC class, the containment per storey and the net volumes equal the subject's within 1e-9 and every ramp equals the shapely-adjudicated ramp-runs table: flights, landings, length, width, rise, plan area and gross volume
+
+  @id-export-ifc-stepped
+  @level-quick
+  @mode-differential
+  Scenario: The house written by the stepped export job after a cancelled attempt has the entity counts, containment and kernel volumes IfcOpenShell measures in the committed file
+    Given the committed house shared://🏗️ifc/🏠️house/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🏠️house/🏠️house.ifc
+    When an export job is cancelled half-way, a second job on the same inference session runs to its end and its file is read back, while the committed file is opened and every product is counted, located and measured
+    Then the counts per IFC class, the containment per storey and the net volumes equal the subject's within 1e-9

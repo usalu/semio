@@ -1,0 +1,8 @@
+{
+  "mutation": "setPropertyTemplate",
+  "id": "pt-door",
+  "applies_to": [
+    "Door",
+    "Door"
+  ]
+}

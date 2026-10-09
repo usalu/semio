@@ -17,6 +17,7 @@ pub struct FieldRow {
     pub input: InputKind,
     pub read: fn(&ModelSnapshot, &str) -> Option<String>,
     pub write: Option<fn(&ModelSnapshot, &str, &str) -> Option<ModelMutation>>,
+    pub choices: Option<fn(&ModelSnapshot, &BimLabels) -> Vec<(String, String)>>,
 }
 
 /// 💡️ One inferred, read-only value of an entity.
@@ -45,7 +46,7 @@ pub struct EntityKind {
 //#endregion 🔖️Types
 
 //#region 🔖️Helpers
-use crate::{Assigned, Baluster, DoorLeaves, Infill, Layer, LayerFunction, LocationLine, MaterialCategory, Phase, Point2, Profile, Rgb, RiserKind, RoofShape, SpaceBoundary, StairFlight, StairStringer, StringerKind, Swing, Vertex};
+use crate::{Assigned, Baluster, DoorLeaves, EndJoin, Infill, Layer, LayerFunction, LocationLine, MaterialCategory, Phase, Point2, Profile, Rgb, RiserKind, RoofShape, SpaceBoundary, StairFlight, StairStringer, StringerKind, Swing, Vertex};
 use semio_framework_plugin::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -168,6 +169,7 @@ fn profile_text(profile: &Profile) -> String {
         Profile::Circle { diameter } => format!("circle {}", number(*diameter)),
         Profile::IShape { width, depth, web, flange } => format!("i {} × {} web {} flange {}", number(*width), number(*depth), number(*web), number(*flange)),
         Profile::Custom { outline } => format!("custom {} vertices", outline.len()),
+        Profile::Family { family } => format!("family {family}"),
     }
 }
 
@@ -176,6 +178,9 @@ fn parse_profile(text: &str) -> Option<Profile> {
     if let Some(rest) = text.strip_prefix("rectangle") {
         let (width, depth) = rest.split_once('×')?;
         return Some(Profile::Rectangle { width: parse_number(width)?, depth: parse_number(depth)? });
+    }
+    if let Some(family) = text.strip_prefix("family").map(str::trim).filter(|family| !family.is_empty()) {
+        return Some(Profile::Family { family: family.to_string() });
     }
     text.strip_prefix("circle").and_then(parse_number).map(|diameter| Profile::Circle { diameter })
 }
@@ -230,6 +235,23 @@ fn parse_baluster(text: &str) -> Option<Option<Baluster>> {
     Some(Some(Baluster { profile: parse_profile(profile)?, spacing: parse_number(spacing)? }))
 }
 
+/// 🔗️ The text of the authored join preference of a wall end: `auto` when the geometry decides, else `miter`, `butt` or `none`.
+pub fn join_text(join: Option<EndJoin>) -> String {
+    join.map_or("auto".to_string(), |join| format!("{join:?}").to_ascii_lowercase())
+}
+
+/// 🔗️ The join preference a text names: `auto` (the geometry decides), `miter`, `butt` or `none`.
+pub fn parse_join(text: &str) -> Option<Option<EndJoin>> {
+    let text = text.trim().to_ascii_lowercase();
+    match text.as_str() {
+        "auto" => Some(None),
+        "miter" => Some(Some(EndJoin::Miter)),
+        "butt" => Some(Some(EndJoin::Butt)),
+        "none" => Some(Some(EndJoin::None)),
+        _ => None,
+    }
+}
+
 fn parse_location(text: &str) -> Option<LocationLine> {
     variant(text, &[LocationLine::Center, LocationLine::Interior, LocationLine::Exterior, LocationLine::CoreCenter])
 }
@@ -245,6 +267,93 @@ fn parse_leaves(text: &str) -> Option<DoorLeaves> {
 
 fn parse_swing(text: &str) -> Option<Swing> {
     variant(text, &[Swing::Left, Swing::Right])
+}
+
+/// 🔷️ The text of a vertex loop: `x, y` per vertex, `⌒ bulge` after a bulging one, joined by `; `.
+pub fn loop_text(vertices: &[Vertex]) -> String {
+    vertices.iter().map(|vertex| if vertex.bulge == 0.0 { point(vertex.point.x, vertex.point.y) } else { format!("{} ⌒ {}", point(vertex.point.x, vertex.point.y), number(vertex.bulge)) }).collect::<Vec<_>>().join("; ")
+}
+
+/// 🔷️ The vertex loop a text names: at least three `x, y` or `x, y ⌒ bulge` vertices joined by `;`.
+pub fn parse_loop(text: &str) -> Option<Vec<Vertex>> {
+    let vertices = text
+        .split(';')
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let (at, bulge) = match part.split_once('⌒') {
+                Some((at, bulge)) => (at, parse_number(bulge)?),
+                None => (part, 0.0),
+            };
+            Some(Vertex { point: parse_point(at)?, bulge })
+        })
+        .collect::<Option<Vec<_>>>()?;
+    (vertices.len() >= 3).then_some(vertices)
+}
+
+/// 🕳️ The text of the hole loops of a slab, joined by ` | `.
+pub fn holes_text(holes: &[Vec<Vertex>]) -> String {
+    holes.iter().map(|hole| loop_text(hole)).collect::<Vec<_>>().join(" | ")
+}
+
+/// 🕳️ The hole loops a text names; empty text is no hole.
+pub fn parse_holes(text: &str) -> Option<Vec<Vec<Vertex>>> {
+    text.split('|').map(str::trim).filter(|part| !part.is_empty()).map(parse_loop).collect()
+}
+
+/// 🏠️ The text of a roof shape: its name and its angles in radians and lengths in metres.
+pub fn roof_shape_text(shape: &RoofShape) -> String {
+    match shape {
+        RoofShape::Flat => "flat".to_string(),
+        RoofShape::Shed { pitch, direction } => format!("shed {} {}", number(*pitch), number(*direction)),
+        RoofShape::Gable { pitch, ridge_direction } => format!("gable {} {}", number(*pitch), number(*ridge_direction)),
+        RoofShape::Hip { pitch } => format!("hip {}", number(*pitch)),
+        RoofShape::Mansard { lower_pitch, upper_pitch, break_height } => format!("mansard {} {} {}", number(*lower_pitch), number(*upper_pitch), number(*break_height)),
+    }
+}
+
+fn words_of(text: &str) -> Option<(String, Vec<String>)> {
+    let mut words = text.split_whitespace().map(str::to_lowercase);
+    Some((words.next()?, words.collect()))
+}
+
+fn numbers_of(words: &[String]) -> Option<Vec<f64>> {
+    words.iter().map(|word| word.parse::<f64>().ok().filter(|value| value.is_finite())).collect()
+}
+
+/// 🏠️ The roof shape a text names: `flat`, `shed pitch direction`, `gable pitch ridge-direction`, `hip pitch` or `mansard lower upper break`.
+pub fn parse_roof_shape(text: &str) -> Option<RoofShape> {
+    let (name, words) = words_of(text)?;
+    match (name.as_str(), numbers_of(&words)?.as_slice()) {
+        ("flat", []) => Some(RoofShape::Flat),
+        ("shed", [pitch, direction]) => Some(RoofShape::Shed { pitch: *pitch, direction: *direction }),
+        ("gable", [pitch, ridge_direction]) => Some(RoofShape::Gable { pitch: *pitch, ridge_direction: *ridge_direction }),
+        ("hip", [pitch]) => Some(RoofShape::Hip { pitch: *pitch }),
+        ("mansard", [lower_pitch, upper_pitch, break_height]) => Some(RoofShape::Mansard { lower_pitch: *lower_pitch, upper_pitch: *upper_pitch, break_height: *break_height }),
+        _ => None,
+    }
+}
+
+/// 🪜️ The text of a stair flight: its name and its split, gap, radius and sweep.
+pub fn flight_text(flight: &StairFlight) -> String {
+    match flight {
+        StairFlight::Straight => "straight".to_string(),
+        StairFlight::LTurn { split, turn } => format!("l-turn {} {}", number(*split), if matches!(turn, crate::Turn::Left) { "left" } else { "right" }),
+        StairFlight::UTurn { gap } => format!("u-turn {}", number(*gap)),
+        StairFlight::Spiral { radius, sweep } => format!("spiral {} {}", number(*radius), number(*sweep)),
+    }
+}
+
+/// 🪜️ The stair flight a text names: `straight`, `l-turn split left|right`, `u-turn gap` or `spiral radius sweep`.
+pub fn parse_flight(text: &str) -> Option<StairFlight> {
+    let (name, words) = words_of(text)?;
+    match (name.as_str(), words.as_slice()) {
+        ("straight", []) => Some(StairFlight::Straight),
+        ("l-turn", [split, turn]) => Some(StairFlight::LTurn { split: split.parse().ok().filter(|value: &f64| value.is_finite())?, turn: match turn.as_str() { "left" => crate::Turn::Left, "right" => crate::Turn::Right, _ => return None } }),
+        ("u-turn", [gap]) => Some(StairFlight::UTurn { gap: gap.parse().ok().filter(|value: &f64| value.is_finite())? }),
+        ("spiral", [radius, sweep]) => Some(StairFlight::Spiral { radius: radius.parse().ok().filter(|value: &f64| value.is_finite())?, sweep: sweep.parse().ok().filter(|value: &f64| value.is_finite())? }),
+        _ => None,
+    }
 }
 
 /// 🧩️ Builds the leaf of a `set-*` mutation that names exactly one parameter: the leaf's own value decoding fills every other slot with "unchanged".
@@ -276,16 +385,22 @@ fn rename_element(_: &ModelSnapshot, id: &str, name: &str) -> Option<ModelMutati
 
 macro_rules! field {
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr) => {
-        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: None }
+        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: None, choices: None }
     };
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, rename) => {
-        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: Some(rename_element) }
+        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: Some(rename_element), choices: None }
     };
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, $parse:ident => $module:ident :: $leaf:ident) => {
-        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: Some(|_, id, value| set!($module::$leaf, id, $key, &$parse(value)?)) }
+        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: Some(|_, id, value| set!($module::$leaf, id, $key, &$parse(value)?)), choices: None }
     };
     ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, |$ws:pat_param, $wid:pat_param, $value:pat_param| $write:expr) => {
-        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: Some(|$ws, $wid, $value| $write) }
+        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: Some(|$ws, $wid, $value| $write), choices: None }
+    };
+    ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, choices: $choices:path, $parse:ident => $module:ident :: $leaf:ident) => {
+        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: Some(|_, id, value| set!($module::$leaf, id, $key, &$parse(value)?)), choices: Some($choices) }
+    };
+    ($key:literal, $label:ident, $input:ident, |$s:pat_param, $id:pat_param| $read:expr, choices: $choices:path, write: $write:path) => {
+        FieldRow { key: $key, label: |labels| labels.$label, input: InputKind::$input, read: |$s, $id| $read, write: Some($write), choices: Some($choices) }
     };
 }
 
@@ -318,6 +433,33 @@ macro_rules! kind {
     };
 }
 //#endregion 🔖️Helpers
+
+#[path = "🖼️views/🦀️.rs"]
+pub mod views;
+
+#[path = "📋️schedules/🦀️.rs"]
+pub mod schedules;
+
+#[path = "🏘️zoning/🦀️.rs"]
+pub mod zoning;
+
+#[path = "🪧️notations/🦀️.rs"]
+pub mod notations;
+
+#[path = "📄️sheets/🦀️.rs"]
+pub mod sheets;
+
+#[path = "🔲️ceilings/🦀️.rs"]
+pub mod ceilings;
+
+#[path = "🕰️phasing/🦀️.rs"]
+pub mod phasing;
+
+#[path = "🛝️ramps/🦀️.rs"]
+pub mod ramps;
+
+#[path = "🏷️psets/🦀️.rs"]
+pub mod psets;
 
 //#region 🔖️Fields
 static SITE_FIELDS: &[FieldRow] = &[
@@ -353,18 +495,21 @@ static GRID_FIELDS: &[FieldRow] = &[
 
 static WALL_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.walls.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.walls.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.walls.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.walls.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("wall_type", field_wall_type, Text, |s, id| s.walls.get(id).map(|row| row.wall_type.clone()), parse_text => set_wall_type_of::SetWallTypeOf),
     field!("axis", field_axis, Text, |s, id| s.walls.get(id).map(|row| axis_text(&row.axis)), parse_axis => set_wall_axis::SetWallAxis),
     field!("location", field_location, Text, |s, id| s.walls.get(id).map(|row| format!("{:?}", row.location)), parse_location => set_wall_location::SetWallLocation),
     field!("base_offset", field_base_offset, Number, |s, id| s.walls.get(id).map(|row| number(row.base_offset)), parse_number => set_wall_base_offset::SetWallBaseOffset),
     field!("top", field_top, Text, |s, id| s.walls.get(id).map(|row| top_text(&row.top)), parse_top => set_wall_top::SetWallTop),
-    field!("phase", field_phase, Text, |s, id| s.walls.get(id).map(|row| format!("{:?}", row.phase))),
+    field!("start_join", field_start_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.start_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::mutations::modify::WallEnd::Start, join: parse_join(value)? }))),
+    field!("end_join", field_end_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.end_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::mutations::modify::WallEnd::End, join: parse_join(value)? }))),
 ];
 
 static CURTAIN_WALL_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.curtain_walls.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.curtain_walls.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.curtain_walls.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.curtain_walls.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("axis", field_axis, Text, |s, id| s.curtain_walls.get(id).map(|row| axis_text(&row.axis)), parse_axis => set_curtain_wall::SetCurtainWall),
     field!("base_offset", field_base_offset, Number, |s, id| s.curtain_walls.get(id).map(|row| number(row.base_offset)), parse_number => set_curtain_wall::SetCurtainWall),
     field!("top", field_top, Text, |s, id| s.curtain_walls.get(id).map(|row| top_text(&row.top)), parse_top => set_curtain_wall::SetCurtainWall),
@@ -376,7 +521,8 @@ static CURTAIN_WALL_FIELDS: &[FieldRow] = &[
 
 static COLUMN_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.columns.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.columns.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.columns.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.columns.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("column_type", field_column_type, Text, |s, id| s.columns.get(id).map(|row| row.column_type.clone()), parse_text => set_column::SetColumn),
     field!("position", field_position, Text, |s, id| s.columns.get(id).map(|row| point(row.position.x, row.position.y)), parse_point => set_column::SetColumn),
     field!("rotation", field_rotation, Number, |s, id| s.columns.get(id).map(|row| number(row.rotation)), parse_number => set_column::SetColumn),
@@ -386,7 +532,8 @@ static COLUMN_FIELDS: &[FieldRow] = &[
 
 static BEAM_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.beams.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.beams.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.beams.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.beams.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("beam_type", field_beam_type, Text, |s, id| s.beams.get(id).map(|row| row.beam_type.clone()), parse_text => set_beam::SetBeam),
     field!("start", field_start, Text, |s, id| s.beams.get(id).map(|row| point(row.start.x, row.start.y)), parse_point => set_beam::SetBeam),
     field!("end", field_end, Text, |s, id| s.beams.get(id).map(|row| point(row.end.x, row.end.y)), parse_point => set_beam::SetBeam),
@@ -395,16 +542,21 @@ static BEAM_FIELDS: &[FieldRow] = &[
 
 static SLAB_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.slabs.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.slabs.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.slabs.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.slabs.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("slab_type", field_slab_type, Text, |s, id| s.slabs.get(id).map(|row| row.slab_type.clone()), parse_text => set_slab::SetSlab),
     field!("offset", field_offset, Number, |s, id| s.slabs.get(id).map(|row| number(row.offset)), parse_number => set_slab::SetSlab),
+    field!("boundary", field_boundary, Text, |s, id| s.slabs.get(id).map(|row| loop_text(&row.boundary)), |s, id, value| Some(ModelMutation::SetSlabBoundary(crate::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: parse_loop(value)?, holes: s.slabs.get(id)?.holes.clone() }))),
+    field!("holes", field_holes, Text, |s, id| s.slabs.get(id).map(|row| holes_text(&row.holes)), |s, id, value| Some(ModelMutation::SetSlabBoundary(crate::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: s.slabs.get(id)?.boundary.clone(), holes: parse_holes(value)? }))),
 ];
 
 static ROOF_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.roofs.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.roofs.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.roofs.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.roofs.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("roof_type", field_roof_type, Text, |s, id| s.roofs.get(id).map(|row| row.roof_type.clone())),
-    field!("shape", field_shape, Text, |s, id| s.roofs.get(id).map(|row| format!("{:?}", row.shape))),
+    field!("shape", field_shape, Text, |s, id| s.roofs.get(id).map(|row| roof_shape_text(&row.shape)), parse_roof_shape => set_roof_shape::SetRoofShape),
+    field!("footprint", field_footprint, Text, |s, id| s.roofs.get(id).map(|row| loop_text(&row.footprint)), parse_loop => set_roof_footprint::SetRoofFootprint),
     field!("overhang", field_overhang, Number, |s, id| s.roofs.get(id).map(|row| number(row.overhang)), parse_number => set_roof_shape::SetRoofShape),
     field!("base_offset", field_base_offset, Number, |s, id| s.roofs.get(id).map(|row| number(row.base_offset)), parse_number => set_roof_shape::SetRoofShape),
 ];
@@ -435,11 +587,12 @@ static OPENING_FIELDS: &[FieldRow] = &[
 
 static STAIR_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.stairs.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.stairs.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.stairs.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.stairs.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("start", field_start, Text, |s, id| s.stairs.get(id).map(|row| point(row.start.x, row.start.y)), parse_point => set_stair::SetStair),
     field!("direction", field_rotation, Number, |s, id| s.stairs.get(id).map(|row| number(row.direction)), parse_number => set_stair::SetStair),
     field!("width", field_width, Number, |s, id| s.stairs.get(id).map(|row| number(row.width)), parse_number => set_stair::SetStair),
-    field!("flight", field_flight, Text, |s, id| s.stairs.get(id).map(|row| format!("{:?}", row.flight))),
+    field!("flight", field_flight, Text, |s, id| s.stairs.get(id).map(|row| flight_text(&row.flight)), parse_flight => set_stair::SetStair),
     field!("top", field_top, Text, |s, id| s.stairs.get(id).map(|row| top_text(&row.top)), parse_top => set_stair::SetStair),
     field!("max_riser", field_max_riser, Number, |s, id| s.stairs.get(id).map(|row| number(row.max_riser)), parse_number => set_stair::SetStair),
     field!("min_tread", field_min_tread, Number, |s, id| s.stairs.get(id).map(|row| number(row.min_tread)), parse_number => set_stair::SetStair),
@@ -452,7 +605,8 @@ static STAIR_FIELDS: &[FieldRow] = &[
 
 static RAILING_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.railings.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.railings.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.railings.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.railings.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("height", field_height, Number, |s, id| s.railings.get(id).map(|row| number(row.height)), parse_number => set_railing::SetRailing),
     field!("post_spacing", field_post_spacing, Number, |s, id| s.railings.get(id).map(|row| number(row.post_spacing)), parse_number => set_railing::SetRailing),
     field!("profile", field_rail_profile, Text, |s, id| s.railings.get(id).map(|row| profile_text(&row.profile)), parse_profile => set_railing::SetRailing),
@@ -461,13 +615,22 @@ static RAILING_FIELDS: &[FieldRow] = &[
     field!("infill", field_infill, Text, |s, id| s.railings.get(id).map(|row| infill_text(&row.infill)), parse_infill => set_railing::SetRailing),
     field!("material", field_material, Text, |s, id| s.railings.get(id).map(|row| row.material.clone()), parse_text => set_railing::SetRailing),
     field!("base_offset", field_base_offset, Number, |s, id| s.railings.get(id).map(|row| number(row.base_offset)), parse_number => set_railing::SetRailing),
+    field!("host", field_host, Text, |s, id| s.railings.get(id).map(|row| row.host.as_ref().map(|host| host.element.clone()).unwrap_or_default()), choices: ramps::host_choices, write: ramps::write_host),
+    field!("host_side", field_host_side, Text, |s, id| s.railings.get(id).map(|row| row.host.as_ref().map(|host| format!("{:?}", host.side)).unwrap_or_default()), choices: ramps::side_choices, write: ramps::write_host_side),
+    field!("host_edge", field_host_edge, Number, |s, id| s.railings.get(id).map(|row| row.host.as_ref().map(|host| host.edge.to_string()).unwrap_or_default()), |s, id, value| ramps::write_host_edge(s, id, value)),
+    field!("host_inset", field_host_inset, Number, |s, id| s.railings.get(id).map(|row| row.host.as_ref().map(|host| number(host.inset)).unwrap_or_default()), |s, id, value| ramps::write_host_inset(s, id, value)),
 ];
 
 static SPACE_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.spaces.get(id).map(|row| row.name.clone()), rename),
-    field!("storey", field_storey, Text, |s, id| s.spaces.get(id).map(|row| row.storey.clone())),
+    field!("storey", field_storey, Text, |s, id| s.spaces.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
+    field!("phase", field_phase, Text, |s, id| s.spaces.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("number", field_number, Text, |s, id| s.spaces.get(id).map(|row| row.number.clone()), parse_text => set_space::SetSpace),
     field!("usage", field_usage, Text, |s, id| s.spaces.get(id).map(|row| row.usage.clone()), parse_text => set_space::SetSpace),
+    field!("zone", field_zone, Text, |s, id| s.spaces.get(id).map(|row| row.zone.clone().unwrap_or_default()), choices: zoning::zone_choices, write: zoning::write_zone),
+    field!("floor_finish", field_floor_finish, Text, |s, id| s.spaces.get(id).map(|row| row.floor_finish.clone().unwrap_or_default()), choices: zoning::material_choices, write: zoning::write_floor_finish),
+    field!("wall_finish", field_wall_finish, Text, |s, id| s.spaces.get(id).map(|row| row.wall_finish.clone().unwrap_or_default()), choices: zoning::material_choices, write: zoning::write_wall_finish),
+    field!("ceiling_finish", field_ceiling_finish, Text, |s, id| s.spaces.get(id).map(|row| row.ceiling_finish.clone().unwrap_or_default()), choices: zoning::material_choices, write: zoning::write_ceiling_finish),
 ];
 
 static MATERIAL_FIELDS: &[FieldRow] = &[
@@ -543,6 +706,9 @@ static QUANTITY_INFERRED: &[InferredRow] = &[
     inferred!("area", field_area, |_, inference, id| inference.quantities.elements.get(id).map(|row| row.area()).filter(|area| *area > 0.0).map(number)),
     inferred!("volume", field_volume, |_, inference, id| inference.quantities.elements.get(id).filter(|row| row.net_volume > 0.0).map(|row| number(row.net_volume))),
     inferred!("mass", field_mass, |_, inference, id| inference.quantities.elements.get(id).filter(|row| row.mass > 0.0).map(|row| number(row.mass))),
+    inferred!("floor_finish_area", field_floor_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Floor)),
+    inferred!("wall_finish_area", field_wall_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Wall)),
+    inferred!("ceiling_finish_area", field_ceiling_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Ceiling)),
 ];
 //#endregion 🔖️Inferred
 
@@ -592,7 +758,7 @@ fn create_wall(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> 
     let (start, end) = along(row);
     Ok(ModelMutation::CreateWall(crate::mutations::create_wall::CreateWall {
         id: id.into(),
-        wall: crate::Wall { storey, wall_type, axis: Axis::Line { start, end }, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: name.into() },
+        wall: crate::Wall { storey, wall_type, axis: Axis::Line { start, end }, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, start_join: None, end_join: None, base_slab: None, name: name.into() },
     }))
 }
 
@@ -612,6 +778,7 @@ fn create_curtain_wall(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &
             mullion: Profile::Rectangle { width: 0.05, depth: 0.1 },
             panel_material: material.clone(),
             mullion_material: material,
+            phase: Phase::New,
             name: name.into(),
         },
     }))
@@ -623,7 +790,7 @@ fn create_column(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -
     let position = Point2 { x: snapshot.columns.values().filter(|column| column.storey == storey).count() as f64 * 3.0, y: 0.0 };
     Ok(ModelMutation::CreateColumn(crate::mutations::create_column::CreateColumn {
         id: id.into(),
-        column: crate::Column { storey, column_type, position, rotation: 0.0, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: name.into() },
+        column: crate::Column { storey, column_type, position, rotation: 0.0, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -631,7 +798,7 @@ fn create_beam(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> 
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let beam_type = first(&snapshot.beam_types).ok_or("bim.create.beam-type-missing")?;
     let (start, end) = along(snapshot.beams.values().filter(|beam| beam.storey == storey).count() as f64);
-    Ok(ModelMutation::CreateBeam(crate::mutations::create_beam::CreateBeam { id: id.into(), beam: crate::Beam { storey, beam_type, start, end, top_offset: 0.0, name: name.into() } }))
+    Ok(ModelMutation::CreateBeam(crate::mutations::create_beam::CreateBeam { id: id.into(), beam: crate::Beam { storey, beam_type, start, end, top_offset: 0.0, phase: Phase::New, name: name.into() } }))
 }
 
 fn create_slab(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
@@ -639,7 +806,7 @@ fn create_slab(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> 
     let slab_type = first(&snapshot.slab_types).ok_or("bim.create.slab-type-missing")?;
     Ok(ModelMutation::CreateSlab(crate::mutations::create_slab::CreateSlab {
         id: id.into(),
-        slab: crate::Slab { storey, slab_type, boundary: rectangle(4.0, 4.0), holes: Vec::new(), offset: 0.0, slope: None, name: name.into() },
+        slab: crate::Slab { storey, slab_type, boundary: rectangle(4.0, 4.0), holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -648,7 +815,7 @@ fn create_roof(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> 
     let roof_type = first(&snapshot.roof_types).ok_or("bim.create.roof-type-missing")?;
     Ok(ModelMutation::CreateRoof(crate::mutations::create_roof::CreateRoof {
         id: id.into(),
-        roof: crate::Roof { storey, roof_type, footprint: rectangle(4.0, 4.0), shape: RoofShape::Flat, overhang: 0.3, base_offset: 0.0, name: name.into() },
+        roof: crate::Roof { storey, roof_type, footprint: rectangle(4.0, 4.0), shape: RoofShape::Flat, overhang: 0.3, base_offset: 0.0, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -661,7 +828,7 @@ fn create_opening(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) 
     };
     Ok(ModelMutation::CreateOpening(crate::mutations::create_opening::CreateOpening {
         id: id.into(),
-        opening: crate::Opening { host, kind, offset: 1.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: name.into() },
+        opening: crate::Opening { host, kind, offset: 1.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: name.into() },
     }))
 }
 
@@ -683,6 +850,7 @@ fn create_stair(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) ->
             tread_thickness: crate::STANDARD_TREAD_THICKNESS,
             riser: crate::STANDARD_RISER,
             landing_depth: 1.2,
+            phase: Phase::New,
             name: name.into(),
         },
     }))
@@ -694,7 +862,7 @@ fn create_railing(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) 
     let (start, end) = along(snapshot.railings.values().filter(|railing| railing.storey == storey).count() as f64);
     Ok(ModelMutation::CreateRailing(crate::mutations::create_railing::CreateRailing {
         id: id.into(),
-        railing: crate::Railing { storey, path: vec![start, end], height: 1.0, post_spacing: 1.2, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material, base_offset: 0.0, name: name.into() },
+        railing: crate::Railing { storey, path: vec![start, end], height: 1.0, post_spacing: 1.2, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material, base_offset: 0.0, host: None, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -703,7 +871,7 @@ fn create_space(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) ->
     let number = (snapshot.spaces.values().filter(|space| space.storey == storey).count() + 1).to_string();
     Ok(ModelMutation::CreateSpace(crate::mutations::create_space::CreateSpace {
         id: id.into(),
-        space: crate::Space { storey, number, name: name.into(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: 1.0, y: 1.0 } }, usage: String::new() },
+        space: crate::Space { storey, number, name: name.into(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: 1.0, y: 1.0 } }, usage: String::new(), phase: Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None },
     }))
 }
 
@@ -785,6 +953,8 @@ pub static ENTITIES: &[EntityKind] = &[
         delete: delete!(delete_beam::DeleteBeam), rename: Some(rename_element), create: Some(create_beam), fields: BEAM_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("slab", "layout-panel-top", false, kind_slab, group_slabs, slabs . name, parent: |s, id| s.slabs.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_slab::DeleteSlab), rename: Some(rename_element), create: Some(create_slab), fields: SLAB_FIELDS, inferred: QUANTITY_INFERRED),
+    kind!("ceiling", "panel-top", false, kind_ceiling, group_ceilings, ceilings . name, parent: |s, id| s.ceilings.get(id).map(|row| row.storey.clone()),
+        delete: delete!(delete_ceiling::DeleteCeiling), rename: Some(rename_element), create: Some(ceilings::create_ceiling), fields: ceilings::CEILING_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("roof", "house", false, kind_roof, group_roofs, roofs . name, parent: |s, id| s.roofs.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_roof::DeleteRoof), rename: Some(rename_element), create: Some(create_roof), fields: ROOF_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("opening", "door-open", false, kind_opening, group_openings, openings . name, parent: |s, id| s.openings.get(id).map(|row| row.host.clone()),
@@ -793,14 +963,31 @@ pub static ENTITIES: &[EntityKind] = &[
         delete: delete!(delete_stair::DeleteStair), rename: Some(rename_element), create: Some(create_stair), fields: STAIR_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("railing", "fence", false, kind_railing, group_railings, railings . name, parent: |s, id| s.railings.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_railing::DeleteRailing), rename: Some(rename_element), create: Some(create_railing), fields: RAILING_FIELDS, inferred: QUANTITY_INFERRED),
+    kind!("ramp", "trending-up", false, kind_ramp, group_ramps, ramps . name, parent: |s, id| s.ramps.get(id).map(|row| row.storey.clone()),
+        delete: delete!(delete_ramp::DeleteRamp), rename: Some(rename_element), create: Some(ramps::create_ramp), fields: ramps::RAMP_FIELDS, inferred: ramps::RAMP_INFERRED),
     kind!("space", "square-dashed", false, kind_space, group_spaces, spaces . name, parent: |s, id| s.spaces.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_space::DeleteSpace), rename: Some(rename_element), create: Some(create_space), fields: SPACE_FIELDS, inferred: QUANTITY_INFERRED),
+    kind!("zone", "group", false, kind_zone, group_zones, zones . name, parent: |_, _| None,
+        delete: delete!(delete_zone::DeleteZone), rename: Some(rename_element), create: Some(zoning::create_zone), fields: zoning::ZONE_FIELDS, inferred: zoning::ZONE_INFERRED),
+    kind!("area-scheme", "ruler", false, kind_area_scheme, group_area_schemes, area_schemes . name, parent: |_, _| None,
+        delete: delete!(delete_area_scheme::DeleteAreaScheme), rename: Some(rename_element), create: Some(zoning::create_area_scheme), fields: zoning::AREA_SCHEME_FIELDS, inferred: zoning::AREA_SCHEME_INFERRED),
+    kind!("view", "scan-eye", false, kind_view, group_views, views . name, parent: |s, id| s.views.get(id).map(|row| row.storey.clone().unwrap_or_else(|| row.building.clone())),
+        delete: delete!(delete_view::DeleteView), rename: renaming!(set_view::SetView), create: Some(views::create_view), fields: views::VIEW_FIELDS, inferred: &[]),
+    notations::DIMENSION,
+    notations::TAG,
+    notations::TEXT_NOTE,
+    notations::LEADER,
+    sheets::SHEET,
+    sheets::VIEWPORT,
+    sheets::REVISION,
     kind!("material", "palette", true, kind_material, group_materials, materials . name, parent: |_, _| None,
         delete: delete!(delete_material::DeleteMaterial), rename: renaming!(set_material::SetMaterial), create: Some(create_material), fields: MATERIAL_FIELDS, inferred: &[]),
     kind!("wall-type", "brick-wall", true, kind_wall_type, group_wall_types, wall_types . name, parent: |_, _| None,
         delete: delete!(delete_wall_type::DeleteWallType), rename: renaming!(set_wall_type::SetWallType), create: Some(create_wall_type), fields: WALL_TYPE_FIELDS, inferred: &[]),
     kind!("slab-type", "layout-panel-top", true, kind_slab_type, group_slab_types, slab_types . name, parent: |_, _| None,
         delete: delete!(delete_slab_type::DeleteSlabType), rename: renaming!(set_slab_type::SetSlabType), create: Some(create_slab_type), fields: SLAB_TYPE_FIELDS, inferred: &[]),
+    kind!("ceiling-type", "panel-top", true, kind_ceiling_type, group_ceiling_types, ceiling_types . name, parent: |_, _| None,
+        delete: delete!(delete_ceiling_type::DeleteCeilingType), rename: renaming!(set_ceiling_type::SetCeilingType), create: Some(ceilings::create_ceiling_type), fields: ceilings::CEILING_TYPE_FIELDS, inferred: &[]),
     kind!("roof-type", "house", true, kind_roof_type, group_roof_types, roof_types . name, parent: |_, _| None,
         delete: delete!(delete_roof_type::DeleteRoofType), rename: renaming!(set_roof_type::SetRoofType), create: Some(create_roof_type), fields: ROOF_TYPE_FIELDS, inferred: &[]),
     kind!("column-type", "columns", true, kind_column_type, group_column_types, column_types . name, parent: |_, _| None,
@@ -811,8 +998,122 @@ pub static ENTITIES: &[EntityKind] = &[
         delete: delete!(delete_window_type::DeleteWindowType), rename: renaming!(set_window_type::SetWindowType), create: Some(create_window_type), fields: WINDOW_TYPE_FIELDS, inferred: &[]),
     kind!("door-type", "door-closed", true, kind_door_type, group_door_types, door_types . name, parent: |_, _| None,
         delete: delete!(delete_door_type::DeleteDoorType), rename: renaming!(set_door_type::SetDoorType), create: Some(create_door_type), fields: DOOR_TYPE_FIELDS, inferred: &[]),
+    notations::ANNOTATION_STYLE,
+    kind!("schedule", "table", true, kind_schedule, group_schedules, schedules . name, parent: |_, _| None,
+        delete: delete!(delete_schedule::DeleteSchedule), rename: renaming!(set_schedule::SetSchedule), create: Some(schedules::create_schedule), fields: schedules::SCHEDULE_FIELDS, inferred: &[]),
+    kind!("property-template", "list-checks", true, kind_property_template, group_property_templates, property_templates . name, parent: |_, _| None,
+        delete: delete!(delete_property_template::DeletePropertyTemplate), rename: renaming!(set_property_template::SetPropertyTemplate), create: Some(psets::create_property_template), fields: psets::PROPERTY_TEMPLATE_FIELDS, inferred: psets::PROPERTY_TEMPLATE_INFERRED),
+    kind!("classification-system", "library", true, kind_classification_system, group_classification_systems, classification_systems . name, parent: |_, _| None,
+        delete: delete!(delete_classification_system::DeleteClassificationSystem), rename: renaming!(set_classification_system::SetClassificationSystem), create: Some(psets::create_classification_system), fields: psets::CLASSIFICATION_SYSTEM_FIELDS, inferred: psets::CLASSIFICATION_SYSTEM_INFERRED),
 ];
 //#endregion 🔖️Table
+
+//#region 🔖️Project
+/// 📇️ The id the project record answers to in `setField`: the project is no entity of the table, so its parameters are rows of their own.
+pub const PROJECT_ID: &str = "project";
+
+fn project_info(edit: impl FnOnce(&mut crate::mutations::set_project_info::SetProjectInfo)) -> Option<ModelMutation> {
+    let mut info = crate::mutations::set_project_info::SetProjectInfo { name: None, description: None, author: None, organization: None, phase_names: None };
+    edit(&mut info);
+    Some(ModelMutation::SetProjectInfo(info))
+}
+
+/// 📇️ The editable parameters of the project record, each one a `set-project-info` patch of that single field.
+pub static PROJECT_FIELDS: &[FieldRow] = &[
+    field!("name", field_name, Text, |s, _| Some(s.project.name.clone()), |_, _, value| project_info(|info| info.name = Some(value.trim().to_string()))),
+    field!("description", field_description, Text, |s, _| Some(s.project.description.clone()), |_, _, value| project_info(|info| info.description = Some(value.trim().to_string()))),
+    field!("author", field_author, Text, |s, _| Some(s.project.author.clone()), |_, _, value| project_info(|info| info.author = Some(value.trim().to_string()))),
+    field!("organization", field_organization, Text, |s, _| Some(s.project.organization.clone()), |_, _, value| project_info(|info| info.organization = Some(value.trim().to_string()))),
+    field!("phase_names", field_phase_names, Text, |s, _| Some(s.project.phase_names.join(", ")), |_, _, value| project_info(|info| info.phase_names = Some(value.split(',').map(str::trim).filter(|name| !name.is_empty()).map(str::to_string).collect()))),
+];
+//#endregion 🔖️Project
+
+//#region 🔖️Classification
+/// 🗂️ The classifications of a holder as text: the name of the system and the code, one per system, joined by `; `.
+pub fn classification_text(snapshot: &ModelSnapshot, id: &str) -> String {
+    snapshot.classifications.get(id).into_iter().flatten().map(|(system, code)| format!("{} {code}", snapshot.classification_systems.get(system).map_or(system.as_str(), |row| row.name.as_str()))).collect::<Vec<_>>().join("; ")
+}
+
+/// 🧾️ Every parameter row of a kind.
+pub fn fields_of(row: &EntityKind) -> impl Iterator<Item = &'static FieldRow> {
+    row.fields.iter()
+}
+//#endregion 🔖️Classification
+
+//#region 🔖️Properties
+/// 🏷️ The measure kinds of a typed property value, in the order the entry grammar names them.
+pub const PROPERTY_TYPES: &[&str] = &["text", "real", "integer", "boolean", "length", "area", "volume", "angle"];
+
+/// 🏷️ The kind name of a property value.
+pub fn property_type(value: &crate::PropertyValue) -> &'static str {
+    use crate::PropertyValue::*;
+    match value {
+        Text { .. } => "text",
+        Real { .. } => "real",
+        Integer { .. } => "integer",
+        Boolean { .. } => "boolean",
+        Length { .. } => "length",
+        Area { .. } => "area",
+        Volume { .. } => "volume",
+        Angle { .. } => "angle",
+    }
+}
+
+/// 🏷️ The text of a property value, without its kind.
+pub fn property_text(value: &crate::PropertyValue) -> String {
+    use crate::PropertyValue::*;
+    match value {
+        Text { value } => value.clone(),
+        Real { value } | Length { value } | Area { value } | Volume { value } | Angle { value } => number(*value),
+        Integer { value } => value.to_string(),
+        Boolean { value } => value.to_string(),
+    }
+}
+
+/// 🏷️ The property value a text names: of the given kind, else inferred (`true` and `false` are flags, whole numbers are integers, other numbers are reals, anything else is text).
+pub fn property_value(text: &str, kind: Option<&str>) -> Option<crate::PropertyValue> {
+    use crate::PropertyValue::*;
+    let text = text.trim();
+    let measure = || text.parse::<f64>().ok().filter(|value| value.is_finite());
+    match kind.map(str::to_lowercase).as_deref() {
+        Some("text") => Some(Text { value: text.to_string() }),
+        Some("real") => measure().map(|value| Real { value }),
+        Some("integer") => text.parse().ok().map(|value| Integer { value }),
+        Some("boolean") => text.parse().ok().map(|value| Boolean { value }),
+        Some("length") => measure().map(|value| Length { value }),
+        Some("area") => measure().map(|value| Area { value }),
+        Some("volume") => measure().map(|value| Volume { value }),
+        Some("angle") => measure().map(|value| Angle { value }),
+        Some(_) => None,
+        None => Some(match text {
+            "true" => Boolean { value: true },
+            "false" => Boolean { value: false },
+            _ => text.parse().ok().map(|value| Integer { value }).or_else(|| measure().map(|value| Real { value })).unwrap_or_else(|| Text { value: text.to_string() }),
+        }),
+    }
+}
+
+/// 🏷️ One typed entry `Set.Property[:kind] = value`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PropertyEntry {
+    pub pset: String,
+    pub property: String,
+    pub kind: Option<String>,
+    pub value: String,
+}
+
+/// 🏷️ The entry a text names: the property set before the first dot, the property name after it, an optional `:kind`, then `=` and the value.
+pub fn property_entry(text: &str) -> Option<PropertyEntry> {
+    let (name, value) = text.split_once('=')?;
+    let (pset, property) = name.trim().split_once('.')?;
+    let (property, kind) = match property.rsplit_once(':') {
+        Some((property, kind)) => (property, Some(kind.trim().to_lowercase())),
+        None => (property, None),
+    };
+    let (pset, property) = (pset.trim(), property.trim());
+    (!pset.is_empty() && !property.is_empty()).then(|| PropertyEntry { pset: pset.to_string(), property: property.to_string(), kind, value: value.trim().to_string() })
+}
+//#endregion 🔖️Properties
 
 //#region 🔖️Lookup
 /// 🔎️ The kind row of a kind id.
@@ -836,7 +1137,7 @@ pub fn storey_of(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
     match row.kind {
         "storey" => Some(id.to_string()),
         "opening" => (row.parent)(snapshot, id).and_then(|host| storey_of(snapshot, &host)),
-        "site" | "building" | "grid" => None,
+        "site" | "building" | "grid" | "view" | "zone" | "area-scheme" | "sheet" | "viewport" | "sheet-revision" => None,
         _ if row.library => None,
         _ => (row.parent)(snapshot, id),
     }

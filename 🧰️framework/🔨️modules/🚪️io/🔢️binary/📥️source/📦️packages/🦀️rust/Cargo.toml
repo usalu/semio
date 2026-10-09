@@ -17,6 +17,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../../🔤️base64/📦️packages/🦀️rust" }
 
 [dev-dependencies]

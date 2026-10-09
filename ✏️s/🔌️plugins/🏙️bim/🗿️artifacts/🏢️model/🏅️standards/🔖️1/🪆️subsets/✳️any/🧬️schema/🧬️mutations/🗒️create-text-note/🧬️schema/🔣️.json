@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-text-note/schema.json",
+  "title": "CreateTextNote",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "text_note"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createTextNote"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Text note id",
+          "de": "Textnotiz-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "text_note": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TextNote",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Text note",
+          "de": "Textnotiz"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

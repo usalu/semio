@@ -16,6 +16,7 @@
           { "id": "burst", "verb": "build", "command": ["bun", "{workspace}/📜️script.ts", "burst"], "parameters": [{ "id": "bytes", "kind": "text", "default": "1048576", "valuePositional": true }] },
           { "id": "fail", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "exit"], "parameters": [{ "id": "code", "kind": "text", "default": "3", "valuePositional": true }] },
           { "id": "env", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "env"] },
+          { "id": "text", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "env"], "env": { "JOURNEY_MARK": "{value}" }, "parameters": [{ "id": "value", "kind": "text", "required": true }] },
           { "id": "title", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "title"] },
           { "id": "resize", "verb": "watch", "command": ["bun", "{workspace}/📜️script.ts", "resize"], "continuous": true },
           { "id": "probe", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "probe", "http://127.0.0.1:47101/health"], "requires": ["tool:journey-fixture/serve-a"] }

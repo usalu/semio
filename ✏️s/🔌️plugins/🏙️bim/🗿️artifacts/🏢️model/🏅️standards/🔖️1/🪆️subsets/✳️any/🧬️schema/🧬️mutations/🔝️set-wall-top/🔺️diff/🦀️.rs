@@ -1,6 +1,8 @@
 //! 🔺️ Diff constructor for `SetWallTop`: a one-field wall patch. A storey constraint must name a storey of the wall's building;
+//! an attach (`Roof`, `Slab`, `Ceiling`) must name an existing roof, slab or ceiling of the same building with a finite offset and no loop of references (authored reads only);
 //! the resolved height is inferred, never written.
 
+use super::super::wall_depth::attach_flaw;
 use super::SetWallTop;
 use crate::{Entry, ModelDiff, ModelSnapshot, TopConstraint, WallPatch};
 use protocol::{MutationOutcome, OutcomeCode};
@@ -16,6 +18,9 @@ pub fn diff(payload: &SetWallTop, base: &ModelSnapshot) -> MutationOutcome<Model
             Some(row) if Some(&row.building) != own => return MutationOutcome::refuse(OutcomeCode::Invariant, format!("Storey \"{target}\" belongs to another building."), ["top", "storey"]),
             Some(_) => {}
         }
+    }
+    if let Some(flaw) = attach_flaw(base, Some(&payload.id), &wall.storey, &payload.top, wall.base_slab.as_deref()) {
+        return flaw.refuse();
     }
     if wall.top == payload.top {
         return MutationOutcome::refuse(OutcomeCode::NoOp, format!("Wall \"{}\" already has this top.", payload.id), [payload.id.clone()]);

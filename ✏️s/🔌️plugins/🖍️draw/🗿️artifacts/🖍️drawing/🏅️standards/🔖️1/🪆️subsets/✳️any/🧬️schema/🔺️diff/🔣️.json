@@ -375,6 +375,68 @@
               "type": "null"
             }
           ]
+        },
+        "imageKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "imageWidth": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "imageHeight": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "shapeCoordinates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "field",
+              "value"
+            ],
+            "properties": {
+              "field": {
+                "enum": [
+                  "rectX",
+                  "rectY",
+                  "rectWidth",
+                  "rectHeight",
+                  "ellipseCx",
+                  "ellipseCy",
+                  "ellipseRx",
+                  "ellipseRy",
+                  "circleCx",
+                  "circleCy",
+                  "circleR",
+                  "lineX1",
+                  "lineY1",
+                  "lineX2",
+                  "lineY2",
+                  "polygonX",
+                  "polygonY"
+                ]
+              },
+              "index": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
         }
       }
     },

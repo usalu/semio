@@ -1,51 +1,34 @@
-//! 🧹️ Consumes complete scene plans one shallow owner or container entry per grant.
-use crate::{FillStyle,StrokeStyle,PathSegment,GradientStop};
-use semio_framework_value::list::PagedList;
-use crate::schema::DrawingSceneGroup;
-use crate::schema::scene_preparation::{DocumentScenePlan,DocumentSceneNode,DocumentSceneContent,DocumentSceneError};
-use crate::schema::scene_raster::RasterSceneAsset;
-use std::{sync::Arc,vec::IntoIter};
-enum Owner{
- Plan(DocumentScenePlan),Assets(IntoIter<RasterSceneAsset>),Asset(RasterSceneAsset),Nodes(IntoIter<DocumentSceneNode>),Node(DocumentSceneNode),
- Groups(IntoIter<DrawingSceneGroup>),Group(DrawingSceneGroup),Content(DocumentSceneContent),Strings(IntoIter<String>),String(String),Source(Arc<semio_framework_pixels::RasterImage>),
- Address(Vec<u16>),Segments(Vec<PathSegment>),Fill(FillStyle),Stroke(StrokeStyle),Stops(PagedList<GradientStop,{usize::MAX}>),Dash(PagedList<f64,{usize::MAX}>),
-}
+//! 🧹️ Physically retires the original typed scene plan under admitted byte and item grants.
+use crate::schema::scene_preparation::{DocumentScenePlan,DocumentSceneError};
+use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement}};
 #[derive(Clone,Copy,Debug)]
 pub struct ScenePlanCloseProgress{pub phase:&'static str,pub owners:u64,pub work:u64,pub done:bool}
-/// 🧹️ Owns the transferred plan until every deep container reaches an empty shell.
-pub struct ScenePlanCloseJob{stack:Vec<Owner>,owners:u64,work:u64}
+/// 🧺️ Keeps every original allocation until its physical release is funded.
+pub struct ScenePlanCloseJob{owner:ControlledRetirement<DocumentScenePlan>,work:u64}
 impl ScenePlanCloseJob{
- pub fn new(plan:DocumentScenePlan)->Self{let mut stack=Vec::with_capacity(12);stack.push(Owner::Plan(plan));Self{stack,owners:0,work:0}}
- fn paint(&mut self,fill:Option<FillStyle>,stroke:Option<StrokeStyle>){if let Some(value)=fill{self.stack.push(Owner::Fill(value));}if let Some(value)=stroke{self.stack.push(Owner::Stroke(value));}}
- fn step(&mut self)->bool{
-  match self.stack.pop().unwrap(){
-   Owner::Plan(p)=>{self.stack.push(Owner::Assets(p.assets.into_iter()));self.stack.push(Owner::Nodes(p.nodes.into_iter()));},
-   Owner::Assets(mut entries)=>{if let Some(value)=entries.next_back(){self.stack.push(Owner::Assets(entries));self.stack.push(Owner::Asset(value));return false;}},
-   Owner::Nodes(mut entries)=>{if let Some(value)=entries.next_back(){self.stack.push(Owner::Nodes(entries));self.stack.push(Owner::Node(value));return false;}},
-   Owner::Groups(mut entries)=>{if let Some(value)=entries.next_back(){self.stack.push(Owner::Groups(entries));self.stack.push(Owner::Group(value));return false;}},
-   Owner::Strings(mut entries)=>{if let Some(value)=entries.next_back(){self.stack.push(Owner::Strings(entries));self.stack.push(Owner::String(value));return false;}},
-   Owner::Asset(a)=>{self.stack.push(Owner::String(a.id));self.stack.push(Owner::Source(a.image));},
-   Owner::Node(n)=>{self.stack.push(Owner::Address(n.source_path));self.stack.push(Owner::String(n.id));self.stack.push(Owner::String(n.blend_mode));self.stack.push(Owner::Groups(n.groups.into_iter()));self.stack.push(Owner::Content(n.content));},
-   Owner::Group(g)=>{self.stack.push(Owner::String(g.id));self.stack.push(Owner::String(g.blend_mode));},
-   Owner::Content(c)=>match c{
-    DocumentSceneContent::Path{segments,fill,stroke,..}=>{self.stack.push(Owner::Segments(segments));self.paint(fill,stroke);},
-    DocumentSceneContent::Image{asset,..}=>self.stack.push(Owner::String(asset)),
-    DocumentSceneContent::Group{children,..}=>self.stack.push(Owner::Strings(children.into_iter())),
-    DocumentSceneContent::Text{content,fill,stroke,..}=>{self.stack.push(Owner::String(content));self.paint(fill,stroke);},
-    DocumentSceneContent::Boolean{operation,children,fill,stroke,..}=>{self.stack.push(Owner::String(operation));self.stack.push(Owner::Strings(children.into_iter()));self.paint(fill,stroke);},
-    DocumentSceneContent::Trace{source,fill,stroke,..}=>{self.stack.push(Owner::String(source));self.paint(fill,stroke);},
-   },
-   Owner::Fill(FillStyle::LinearGradient{stops,..}|FillStyle::RadialGradient{stops,..})=>self.stack.push(Owner::Stops(stops)),
-   Owner::Stroke(s)=>{if let Some(dash)=s.dash{self.stack.push(Owner::Dash(dash));}},
-   Owner::Address(value)=>drop(value),Owner::String(value)=>drop(value),Owner::Source(value)=>drop(value),Owner::Segments(value)=>drop(value),Owner::Stops(value)=>drop(value),Owner::Dash(value)=>drop(value),Owner::Fill(_)=>{},
-  }true
+ pub fn new(plan:DocumentScenePlan)->Self{Self{owner:ControlledRetirement::new(plan).unwrap_or_else(|(error,_)|panic!("scene plan retirement authority refused: {error}")),work:0}}
+ pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let step=self.owner.step(grant)?;self.work+=step.progress().copied_items as u64;Ok(step)}
+ pub fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
+ pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(body)}
+ pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_release_byte_demand()}
+ pub fn next_depth_demand(&self)->Result<usize,ValueError>{self.owner.next_depth_demand()}
+ pub fn advance(&mut self,items:usize)->Result<ScenePlanCloseProgress,DocumentSceneError>{
+  let invalid=|error:ValueError|DocumentSceneError::Invalid(error.to_string());
+  if items==0||items as u128>9_007_199_254_740_991{return Err(DocumentSceneError::Invalid("Invalid scene retirement work grant".into()));}
+  for _ in 0..items{
+   if self.terminal_is_empty(){break;}
+   let copy=self.next_copy_byte_demand().map_err(invalid)?;let release=self.next_release_byte_demand().map_err(invalid)?;
+   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_capacity_byte_demand(if copy==0{release}else{copy}).map_err(invalid)?,maximum_release_bytes:release,maximum_depth:self.next_depth_demand().map_err(invalid)?};
+   if self.close_step(grant).map_err(invalid)?.progress()==Default::default(){break;}
+  }
+  let done=self.terminal_is_empty();Ok(ScenePlanCloseProgress{phase:if done{"complete"}else{"closing"},owners:self.work,work:self.work,done})
  }
- pub fn advance(&mut self,grant:usize)->Result<ScenePlanCloseProgress,DocumentSceneError>{
-  if grant==0||grant as u128>9_007_199_254_740_991{return Err(DocumentSceneError::Invalid("Invalid scene retirement work grant".into()));}
-  for _ in 0..grant{if self.stack.is_empty(){break;}if self.step(){self.owners+=1;}self.work+=1;}
-  let done=self.terminal_is_empty();Ok(ScenePlanCloseProgress{phase:if done{"complete"}else{"closing"},owners:self.owners,work:self.work,done})
- }
- pub fn terminal_is_empty(&self)->bool{self.stack.is_empty()}
+}
+impl RetireOwned for ScenePlanCloseJob{
+ fn retirement(self)->Box<dyn RetirementCursor>{self.owner.retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{self.owner.retirement_birth_bytes()}
+ fn controlled_retirement_supported()->bool{true}
 }
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]

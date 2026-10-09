@@ -4,6 +4,13 @@ Feature: The dashboard is the only control plane for developer processes
   inside a real pseudo-terminal (Rust adapter with portable-pty as the driver and vt100 as the screen model).
   Every scenario title is the name of one test in its adapter.
 
+  @pty
+  Scenario: Launcher text editing follows the visible hardware cursor
+    Given a required text parameter containing wide text and a combining cluster
+    When the developer moves its visible cursor, edits and pastes text
+    Then the independent terminal model shows the cursor at the edited position
+    And the started task receives the edited value
+
   @cli
   Scenario: A detached server prints its address once it is ready
     Given a fixture server command that declares a ready port
@@ -122,3 +129,55 @@ Feature: The dashboard is the only control plane for developer processes
     Given a task started from the launcher
     When a developer lists the tasks with the command line
     Then the task appears with its command id and a running status
+
+  @pty
+  Scenario: The terminal driver preserves committed Unicode text
+    Given the shared native console commit corpus
+    When an independent raw terminal driver echoes each committed text
+    Then its VT100 screen contains exactly the corpus text
+
+  @pty
+  Scenario: A configured command starts with one click
+    Given a configured text parameter and keyboard focus in a text editor
+    When the developer clicks the visible start action once
+    Then the task starts once and receives the configured text
+
+  @pty
+  Scenario: Rendered form text remains inside its window
+    Given a configuration form whose preview contains workspace paths with emoji
+    When the form is painted and edited
+    Then every body row stays between the window borders on the independent screen
+  @pty
+  Scenario: A control-space prefix arms the next key
+    Given a dashboard configured with the control-space prefix
+    When the terminal sends the NUL byte for control-space
+    Then the footer reports that the next key is armed
+    And the following new-task key opens the launcher
+  @pty
+  Scenario: Hover and selection are visible and select the clicked command
+    Given a launcher displaying several fixture commands
+    When the pointer moves over an unselected command and clicks it
+    Then the independent terminal cell attributes show hover and selected states
+    And activating the selection starts that command once
+  @pty
+  Scenario: The launcher uses all available window space
+    Given a 34-row terminal displaying thirteen fixture commands
+    When the parameter form is hidden and the command tree is visible
+    Then all thirteen command leaves fit in the available window body
+    And no invisible form reserves an empty half of the window
+
+  @cli
+  Scenario: A listening server waits for a successful HTTP response
+    Given a real server listening on its declared port and returning HTTP 503
+    When the dashboard reads its announced local address
+    Then the task has no ready address while the service warms up
+    When the same declared HTTP endpoint answers successfully
+    Then the dashboard announces that address and the independent HTTP client receives HTTP 200
+  @cli
+  Scenario: A pending HTTP probe remains responsive and is cancelled with its task
+    Given a listening server whose HTTP handler waits longer than the readiness probe budget
+    When the dashboard checks readiness
+    Then another control client lists tasks within the interaction budget
+    When the developer stops the task
+    Then the task exits and releases its port
+    And a completed or cancelled probe cannot publish a ready address for that ended task

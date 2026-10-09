@@ -2,8 +2,7 @@ syntax = "proto3";
 package semio.app.bim.model.plan_window_config;
 import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
 message BimPlanWindowConfig {
-  string storey = 1;
-  double cut_height = 2;
-  bool framed = 3;
-  semio.framework.ui.viewport.Viewport2d viewport = 4;
+  string view = 1;
+  bool framed = 2;
+  semio.framework.ui.viewport.Viewport2d viewport = 3;
 }

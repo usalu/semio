@@ -1,0 +1,32 @@
+{
+  "mutation": "createCurtainWallType",
+  "id": "cwt-3",
+  "curtain_wall_type": {
+    "name": "Flat",
+    "u_grid": {
+      "Spacing": {
+        "spacing": 0
+      }
+    },
+    "v_grid": {
+      "Spacing": {
+        "spacing": 1.5
+      }
+    },
+    "interior_mullion": {
+      "Rectangle": {
+        "width": 0.05,
+        "depth": 0.15
+      }
+    },
+    "border_mullion": {
+      "Rectangle": {
+        "width": 0.08,
+        "depth": 0.15
+      }
+    },
+    "panel": "Glass",
+    "panel_material": "m-glass",
+    "mullion_material": "m-steel"
+  }
+}

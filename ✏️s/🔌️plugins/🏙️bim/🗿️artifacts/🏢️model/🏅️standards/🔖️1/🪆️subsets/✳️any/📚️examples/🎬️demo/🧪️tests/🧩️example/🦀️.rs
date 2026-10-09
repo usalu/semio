@@ -55,4 +55,9 @@ mod shared {
         crate::examples::checks::infer(&model);
         crate::examples::checks::assert_replay("demo", &model);
     }
+
+    #[semio_framework_async_macros::async_test]
+    async fn the_example_views_are_the_ones_the_command_makes() {
+        crate::examples::checks::assert_views_are_the_commands("demo", &ASSET.model());
+    }
 }

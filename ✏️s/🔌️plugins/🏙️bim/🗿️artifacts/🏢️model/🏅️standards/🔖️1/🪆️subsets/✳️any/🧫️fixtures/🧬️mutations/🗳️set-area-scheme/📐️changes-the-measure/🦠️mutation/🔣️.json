@@ -1,0 +1,6 @@
+{
+  "mutation": "setAreaScheme",
+  "id": "as-nsa",
+  "name": "Gross sales area",
+  "measure": "Gross"
+}

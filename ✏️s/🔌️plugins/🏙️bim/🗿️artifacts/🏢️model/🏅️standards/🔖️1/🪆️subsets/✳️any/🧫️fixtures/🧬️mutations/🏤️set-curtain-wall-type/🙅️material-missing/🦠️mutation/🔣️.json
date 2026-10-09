@@ -1,0 +1,5 @@
+{
+  "mutation": "setCurtainWallType",
+  "id": "cwt-1",
+  "mullion_material": "m-ghost"
+}

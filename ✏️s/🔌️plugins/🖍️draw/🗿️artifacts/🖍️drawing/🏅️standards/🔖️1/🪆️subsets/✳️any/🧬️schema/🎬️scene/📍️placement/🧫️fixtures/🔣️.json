@@ -1,0 +1,779 @@
+[
+  {
+    "assets": {},
+    "name": "triangle area centroid",
+    "selected": [
+      "shape"
+    ],
+    "roots": [
+      {
+        "id": "shape",
+        "name": "shape",
+        "kind": "path",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              6
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    ],
+    "oracle": {
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "d": "M0 0L12 0L0 6Z"
+    },
+    "expected": {
+      "basis": "area",
+      "centroid": [
+        4,
+        2
+      ],
+      "bounds": [
+        0,
+        0,
+        12,
+        6
+      ],
+      "area": 36
+    }
+  },
+  {
+    "assets": {},
+    "name": "affine triangle area centroid",
+    "selected": [
+      "shape"
+    ],
+    "roots": [
+      {
+        "id": "shape",
+        "name": "shape",
+        "kind": "path",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 5,
+          "rotation": 0,
+          "shear": 1,
+          "scaleX": 2,
+          "scaleY": 3,
+          "y": 7
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              6
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    ],
+    "oracle": {
+      "matrix": [
+        2,
+        0,
+        1,
+        3,
+        5,
+        7
+      ],
+      "d": "M0 0L12 0L0 6Z"
+    },
+    "expected": {
+      "basis": "area",
+      "centroid": [
+        15,
+        13
+      ],
+      "bounds": [
+        5,
+        7,
+        29,
+        25
+      ],
+      "area": 216
+    }
+  },
+  {
+    "assets": {},
+    "name": "hole subtracts signed moments",
+    "selected": [
+      "shape"
+    ],
+    "roots": [
+      {
+        "id": "shape",
+        "name": "shape",
+        "kind": "path",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              8
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              8
+            ]
+          },
+          {
+            "kind": "close"
+          },
+          {
+            "kind": "move",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              6,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              6,
+              6
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    ],
+    "oracle": {
+      "fillRule": "evenodd",
+      "d": "M0 0H12V8H0Z M2 2H6V6H2Z",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    "expected": {
+      "basis": "area",
+      "centroid": [
+        6.4,
+        4
+      ],
+      "bounds": [
+        0,
+        0,
+        12,
+        8
+      ],
+      "area": 80
+    }
+  },
+  {
+    "roots": [
+      {
+        "id": "shape",
+        "name": "shape",
+        "kind": "path",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero"
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "basis": "length",
+      "centroid": [
+        6,
+        0
+      ],
+      "bounds": [
+        0,
+        0,
+        12,
+        0
+      ],
+      "area": 0
+    },
+    "assets": {},
+    "name": "bare line length centroid",
+    "selected": [
+      "shape"
+    ]
+  },
+  {
+    "roots": [
+      {
+        "id": "shape",
+        "name": "shape",
+        "kind": "path",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero"
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              3,
+              7
+            ]
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "basis": "bounds",
+      "centroid": [
+        3,
+        7
+      ],
+      "bounds": [
+        3,
+        7,
+        3,
+        7
+      ],
+      "area": 0
+    },
+    "assets": {},
+    "name": "isolated point bounds centroid",
+    "selected": [
+      "shape"
+    ]
+  },
+  {
+    "roots": [],
+    "expected": {
+      "basis": "empty",
+      "centroid": [
+        0,
+        0
+      ],
+      "bounds": null,
+      "area": 0
+    },
+    "assets": {},
+    "name": "empty scene finite anchor",
+    "selected": []
+  },
+  {
+    "selected": [
+      "result"
+    ],
+    "source": "complete referenced difference",
+    "expected": {
+      "basis": "area",
+      "centroid": [
+        5.166666666666667,
+        5.166666666666667
+      ],
+      "bounds": [
+        0,
+        0,
+        10,
+        10
+      ],
+      "area": 75
+    },
+    "oracle": {
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "d": "M0 0H10V10H0Z M2 2V7H7V2Z"
+    },
+    "name": "resolved Boolean signed moments"
+  },
+  {
+    "selected": [
+      "a"
+    ],
+    "source": "affine image selection",
+    "expected": {
+      "basis": "area",
+      "centroid": [
+        7.5,
+        8.5
+      ],
+      "bounds": [
+        5,
+        7,
+        10,
+        10
+      ],
+      "area": 12
+    },
+    "oracle": {
+      "matrix": [
+        2,
+        0,
+        1,
+        3,
+        5,
+        7
+      ],
+      "d": "M0 0H2V1H0Z"
+    },
+    "name": "affine image geometry centroid"
+  },
+  {
+    "assets": {},
+    "name": "reflected affine triangle centroid",
+    "selected": [
+      "shape"
+    ],
+    "roots": [
+      {
+        "id": "shape",
+        "name": "shape",
+        "kind": "path",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 5,
+          "rotation": 0,
+          "shear": 1,
+          "scaleX": -2,
+          "scaleY": 3,
+          "y": 7
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              6
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    ],
+    "oracle": {
+      "matrix": [
+        -2,
+        0,
+        1,
+        3,
+        5,
+        7
+      ],
+      "d": "M0 0L12 0L0 6Z"
+    },
+    "expected": {
+      "basis": "area",
+      "centroid": [
+        -1,
+        13
+      ],
+      "bounds": [
+        -19,
+        7,
+        11,
+        25
+      ],
+      "area": 216
+    }
+  },
+  {
+    "assets": {},
+    "name": "overlapping layers use union moments",
+    "selected": [
+      "shape",
+      "right"
+    ],
+    "roots": [
+      {
+        "id": "shape",
+        "name": "shape",
+        "kind": "path",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              10,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              10,
+              10
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              10
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      },
+      {
+        "id": "right",
+        "name": "right",
+        "kind": "path",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 5,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              10,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              10,
+              10
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              10
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    ],
+    "oracle": {
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "d": "M0 0L15 0L15 10L0 10Z"
+    },
+    "expected": {
+      "basis": "area",
+      "centroid": [
+        7.5,
+        5
+      ],
+      "bounds": [
+        0,
+        0,
+        15,
+        10
+      ],
+      "area": 150
+    }
+  },
+  {
+    "name": "resolved bitmap trace hole centroid",
+    "source": "native pixel cell hole",
+    "oracle": {
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "fillRule": "nonzero",
+      "d": "M0 0L3 0L3 3L0 3Z M1 1L1 2L2 2L2 1Z"
+    },
+    "selected": [
+      "result"
+    ],
+    "expected": {
+      "area": 8,
+      "centroid": [
+        1.5,
+        1.5
+      ],
+      "bounds": [
+        0,
+        0,
+        3,
+        3
+      ],
+      "basis": "area"
+    }
+  }
+]

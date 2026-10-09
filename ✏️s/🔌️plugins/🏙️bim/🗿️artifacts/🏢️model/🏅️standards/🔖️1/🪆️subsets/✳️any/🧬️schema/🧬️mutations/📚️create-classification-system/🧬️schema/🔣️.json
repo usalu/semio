@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-classification-system/schema.json",
+  "title": "CreateClassificationSystem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "system"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createClassificationSystem"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "System id",
+          "de": "System-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "system": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ClassificationSystem",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Classification system",
+          "de": "Klassifikationssystem"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

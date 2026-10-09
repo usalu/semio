@@ -1,0 +1,6 @@
+{
+  "mutation": "setFamilyParameter",
+  "family": "fam-table",
+  "name": "width",
+  "value": "1.8 m"
+}

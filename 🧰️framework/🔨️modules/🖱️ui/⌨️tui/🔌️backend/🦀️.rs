@@ -969,7 +969,7 @@ mod native_windows {
     use crate::tui::component::windows_abi::{
         CreateEventW, GetConsoleCP, GetConsoleMode, GetConsoleOutputCP, GetConsoleScreenBufferInfo, GetNumberOfConsoleInputEvents, OwnedHandle, ReadConsoleInputW, SetConsoleCP, SetConsoleCtrlHandler, SetConsoleMode, SetConsoleOutputCP, SetEvent, WaitForMultipleObjects, WriteFile,
         CONSOLE_SCREEN_BUFFER_INFO, CTRL_BREAK_EVENT, CTRL_CLOSE_EVENT, CTRL_LOGOFF_EVENT, CTRL_SHUTDOWN_EVENT, DISABLE_NEWLINE_AUTO_RETURN, ENABLE_ECHO_INPUT, ENABLE_EXTENDED_FLAGS, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT, ENABLE_QUICK_EDIT_MODE, ENABLE_VIRTUAL_TERMINAL_INPUT,
-        ENABLE_VIRTUAL_TERMINAL_PROCESSING, ENABLE_WINDOW_INPUT, HANDLE, INFINITE, INPUT_RECORD, KEY_EVENT, WAIT_OBJECT_0, WAIT_TIMEOUT, WINDOW_BUFFER_SIZE_EVENT,
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING, ENABLE_WINDOW_INPUT, HANDLE, INFINITE, INPUT_RECORD, KEY_EVENT, VK_MENU, VK_SPACE, VK_2, CONTROL_KEYS, WAIT_OBJECT_0, WAIT_TIMEOUT, WINDOW_BUFFER_SIZE_EVENT,
     };
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::{Arc, Mutex};
@@ -1057,7 +1057,8 @@ mod native_windows {
             match record.EventType {
                 KEY_EVENT => {
                     let key = unsafe { record.Event.KeyEvent };
-                    if key.bKeyDown != 0 && key.uChar != 0 {
+                    let control_space = key.bKeyDown != 0 && matches!(key.wVirtualKeyCode, VK_SPACE | VK_2) && key.dwControlKeyState & CONTROL_KEYS != 0;
+                    if ((key.bKeyDown != 0 || key.wVirtualKeyCode == VK_MENU) && key.uChar != 0) || control_space {
                         for _ in 0..key.wRepeatCount.clamp(1, 256) {
                             decoder.push(key.uChar, bytes);
                         }

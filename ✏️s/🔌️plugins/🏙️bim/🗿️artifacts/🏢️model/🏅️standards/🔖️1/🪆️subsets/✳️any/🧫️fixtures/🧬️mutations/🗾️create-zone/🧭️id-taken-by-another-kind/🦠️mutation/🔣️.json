@@ -1,0 +1,9 @@
+{
+  "mutation": "createZone",
+  "id": "sp-1",
+  "zone": {
+    "name": "Other",
+    "category": "Tenant",
+    "occupancy_density": 0.1
+  }
+}

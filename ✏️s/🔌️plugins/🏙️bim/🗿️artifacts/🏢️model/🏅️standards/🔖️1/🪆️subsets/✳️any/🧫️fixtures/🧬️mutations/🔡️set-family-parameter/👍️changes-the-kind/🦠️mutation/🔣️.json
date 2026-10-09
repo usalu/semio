@@ -1,0 +1,7 @@
+{
+  "mutation": "setFamilyParameter",
+  "family": "fam-table",
+  "name": "double",
+  "kind": "Real",
+  "value": "2 * width / 1 m"
+}

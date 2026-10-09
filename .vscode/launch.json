@@ -25989,6 +25989,60 @@
       }
     },
     {
+      "name": "🧪️test🖍️draw🎫️🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run draw-ticket-verification:test --outputStyle=stream",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/nx/cache"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.401
+      }
+    },
+    {
+      "name": "🔍️check🖍️draw🎫️🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run draw-ticket-verification:check --outputStyle=stream",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/nx/cache"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.402
+      }
+    },
+    {
+      "name": "🕸️generate🖍️draw🎫️🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run draw-ticket-verification:graph-generate --outputStyle=stream",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/nx/workspace-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/nx/cache"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.403
+      }
+    },
+    {
       "name": "🧪️test🖍️draw📷️raster🟦️",
       "type": "node-terminal",
       "request": "launch",
@@ -25998,6 +26052,268 @@
         "group": "3_dev",
         "order": 386.41
       }
+    },
+    {
+      "name": "🧪️test🖍️draw🩹️field-history🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- field-history",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group": "3_dev", "order": 386.4101}
+    },
+    {
+      "name": "🧪️test🖍️draw📋️clipboard🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- clipboard",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group": "3_dev", "order": 386.41015}
+    },
+    {
+      "name": "🧪️test🖍️draw🔷️coordinates🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- shape-coordinates",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group": "3_dev", "order": 386.4102}
+    },
+    {
+      "name": "🧪️test🖍️draw📥️image-owners🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:pixels-test -- image-sources",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group": "3_dev", "order": 386.4104}
+    },
+    {
+      "name": "🧪️test🖍️draw♻️physical-leaves🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:pixels-test -- retained_physical",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group":"3_dev","order":386.41042}
+    },
+    {
+      "name": "🧪️test🖍️draw♻️physical-leaves🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pixels:test-typescript -- physical-retirement",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group":"3_dev","order":386.41044}
+    },
+    {
+      "name": "🧪️test🖍️draw♻️geometry-leaves🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:geometry-test",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group":"3_dev","order":386.41046}
+    },
+    {
+      "name": "🧪️test🖍️draw📍️scene-placement🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- scene-placement",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group":"3_dev","order":386.41048}
+    },
+    {
+      "name": "🧪️test🖍️draw📥️image-import🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- image-import",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group": "3_dev", "order": 386.4105}
+    },
+    {
+      "name": "🧪️test🖍️draw📤️png-encode🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:pixels-test -- png_encoding",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group":"3_dev","order":386.41051}
+    },
+    {
+      "name": "🧪️test🖍️draw📤️png-export🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- png-export",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group": "3_dev", "order": 386.41052}
+    },
+    {
+      "name": "🧪️test🖍️draw📤️png-export🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:native-test -- png_export",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group":"3_dev","order":386.41053}
+    },
+    {
+      "name": "🧪️test🖍️draw📤️svg-write🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- svg-write",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group":"3_dev","order":386.41054}
+    },
+    {
+      "name": "🧪️test🖍️draw📤️svg-write🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:native-test -- svg_write",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group":"3_dev","order":386.410541}
+    },
+    {
+      "name": "🧪️test🖍️draw📤️pdf-write🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- pdf-write",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group":"3_dev","order":386.410542}
+    },
+      {
+        "name": "🧪️test🖍️draw📤️pdf-write🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run draw-ticket-verification:native-test -- pdf_write",
+        "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+        "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+        "presentation": {"group":"3_dev","order":386.410543}
+      },
+    {
+      "name": "🧪️test🖍️draw🔤️font-outline🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- font-outline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group":"3_dev","order":386.410544}
+    },
+    {
+      "name": "🧪️test🖍️draw↗️affine-rendering🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- affine-rendering",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group": "3_dev", "order": 386.41055}
+    },
+    {
+      "name": "🧪️test🖍️draw↗️affine-quad🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:ui-test",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group": "3_dev", "order": 386.4106}
+    },
+    {
+      "name": "🧪️test🖍️draw↗️affine-glyph-engine🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:ui-test -- engine",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group": "3_dev", "order": 386.41065}
+    },
+    {
+      "name": "🧪️test🖍️draw🌐️label-retirement🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run draw-ticket-verification:locale-test",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+      "env": {"NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},
+      "presentation": {"group":"3_dev","order":386.4107}
+    },
+    {
+      "name": "🧪️test🖍️draw♻️command-metadata🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test-retained-metadata",
+      "cwd": "${workspaceFolder}",
+      "env": {"SEMIO_TEST_ARTIFACT_DIR":"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/retained-metadata"},
+      "presentation": {"group":"3_dev","order":386.4108}
+    },
+    {
+      "name": "🧪️test🖍️draw🧾️source-return🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:test-returned-read-custody",
+      "cwd": "${workspaceFolder}",
+      "env": {"SEMIO_TEST_ARTIFACT_DIR":"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/returned-read"},
+      "presentation": {"group":"3_dev","order":386.4109}
+    },
+    {
+      "name": "🧪️test🔌️plugin♻️raw-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test-retained-raw-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.41091
+      }
+    },
+    {
+      "name": "🧪️test🔌️plugin♻️raw-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test-retained-raw-native",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/retained-raw"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.41092
+      }
+    },
+    {
+      "type":"node-terminal","request":"launch","name":"🧪️test 🖍️draw 🌱️boxed-factory 🦀️","command":"bun nx run draw-ticket-verification:value-test","cwd":"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx","presentation":{"group":"3_dev","order":386.41095}
+    },
+    {
+      "type":"node-terminal","request":"launch","name":"🧪️test 🖍️draw 🌱️boxed-factory 🟦️","command":"bun nx run draw-ticket-verification:value-typescript","cwd":"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx","presentation":{"group":"3_dev","order":386.41096}
+    },
+    {"type":"node-terminal","request":"launch","name":"🧪️test 🖍️draw 🪟️issued-mutation 🟦️","command":"bun nx run draw-ticket-verification:window-source-test","cwd":"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx","presentation":{"group":"3_dev","order":386.41097}},
+    {"type":"node-terminal","request":"launch","name":"🧪️test 🖍️draw 🪟️issued-mutation 🦀️","command":"bun nx run draw-ticket-verification:window-native-test","cwd":"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx","presentation":{"group":"3_dev","order":386.41098}},
+    {
+      "name": "🧪️test🌱️value🔐️unique🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-value:test-shared-unique",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.41093
+      }
+    },
+    {
+      "name": "🧪️test🌱️value🔐️unique🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/value-rs:test -- --lib shared_unique -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🗑️generated/value"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.41094
+      }
+    },
+    {
+      "name": "🧪️test🖍️draw✏️path🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/draw-js:test -- path-editing",
+      "cwd": "${workspaceFolder}",
+      "presentation": {"group": "3_dev", "order": 386.411}
     },
     {
       "name": "🧪️test🖍️draw📷️scene🟦️",

@@ -24,7 +24,7 @@ export class PathRasterJob {
  private fill:PreparedFill|null;private strokeColor:Color|null;private style:StrokeGeometryStyle|null;
  private source:readonly PathSegment[];private segments:PathSegment[]=[];private flat:FlatContour[]=[];private fillContours:Vec2[][]=[];private strokeContours:FlatContour[]=[];
  private flatten:PathFlattenJob|null=null;private outline:StrokeOutlineJob|null=null;private coverage:CoverageJob|null=null;private fillMask:CoverageMask|null=null;private strokeMask:CoverageMask|null=null;
- private outlineRetirement:WorkRetirement|null=null;private strokePolygons:Vec2[][]=[];
+ private retiredCoverages:WorkRetirement[]=[];private outlineRetirement:WorkRetirement|null=null;private strokePolygons:Vec2[][]=[];
  private coverageRetirement:WorkRetirement|null=null;
  private flattenRetirement:WorkRetirement|null=null;
  private fillRetirement:WorkRetirement|null=null;
@@ -57,13 +57,11 @@ export class PathRasterJob {
  private step():void {
   if(this.phase==="preparing") {
    if(this.at<this.source.length) {this.segments.push(this.source[this.at++]!);this.completed=this.at;}
-   else {this.flatten=new PathFlattenJob({segments:this.segments,transform:this.transform,tolerance:this.tolerance});this.source=[];this.at=0;this.enter("flattening");}
+   else {this.flatten=new PathFlattenJob({segments:this.segments,transform:this.transform,tolerance:this.tolerance});this.at=0;this.enter("flattening");}
   } else if(this.phase==="flattening") {
    const p=this.flatten!.advance(1);this.completed=p.completed;this.total=p.total;
    if(p.done) {const retired=this.flatten!.intoRetirement();this.flat=retired.output!;this.flattenRetirement=retired.job;this.flatten=null;this.enter("flattenCleanup",p.points+this.flat.length);}
-  } else if(this.phase==="flattenCleanup") {
-   if(!this.flattenRetirement!.terminalIsEmpty())this.flattenRetirement!.advance(1);
-   else {this.flattenRetirement=null;this.segments=[];this.enter("contours",this.total);}
+  } else if(this.phase==="flattenCleanup") {this.enter("contours",this.total);
   } else if(this.phase==="contours") {
    const c=this.flat[this.at];
    if(c) {
@@ -73,22 +71,19 @@ export class PathRasterJob {
     this.completed++;
    } else this.enter("contoursCleanup");
   } else if(this.phase==="contoursCleanup") {
-   if(retireContour(this.flat)){this.flat=[];if(this.style){this.outline=new StrokeOutlineJob({contours:this.strokeContours,transform:this.transform,tolerance:this.tolerance,style:this.style});this.enter("stroke");}else this.startFill();}
+   if(this.style){this.outline=new StrokeOutlineJob({contours:this.strokeContours,transform:this.transform,tolerance:this.tolerance,style:this.style});this.enter("stroke");}else this.startFill();
   } else if(this.phase==="stroke") {
    const p=this.outline!.advance(1);this.completed=p.completed;this.total=p.total;
    if(p.done){const retired=this.outline!.intoRetirement();this.strokePolygons=retired.output!;this.outlineRetirement=retired.job;this.outline=null;this.enter("strokeCleanup");}
-  } else if(this.phase==="strokeCleanup") {
-   if(!this.outlineRetirement!.terminalIsEmpty())this.outlineRetirement!.advance(1);
-   else if(retireContour(this.strokeContours)){this.strokeContours=[];this.outlineRetirement=null;this.startFill();}
+  } else if(this.phase==="strokeCleanup") {this.startFill();
   } else if(this.phase==="fillCoverage"||this.phase==="strokeCoverage") {
    const p=this.coverage!.advance(1);this.completed=p.completed;this.total=p.total;
    if(p.done) {
-    const fill=this.phase==="fillCoverage",retired=this.coverage!.intoRetirement();this.coverageRetirement=retired.job;this.coverage=null;
+    const fill=this.phase==="fillCoverage",retired=this.coverage!.intoRetirement();if(this.coverageRetirement)this.retiredCoverages.push(this.coverageRetirement);this.coverageRetirement=retired.job;this.coverage=null;
     if(fill)this.fillMask=retired.output!;else this.strokeMask=retired.output!;this.enter(fill?"fillCoverageCleanup":"strokeCoverageCleanup");
    }
   } else if(this.phase==="fillCoverageCleanup"||this.phase==="strokeCoverageCleanup") {
-   if(!this.coverageRetirement!.terminalIsEmpty())this.coverageRetirement!.advance(1);
-   else {const fill=this.phase==="fillCoverageCleanup",contours=fill?this.fillContours:this.strokePolygons;if(retireContour(contours)){this.coverageRetirement=null;if(fill){this.fillContours=[];this.startStroke();}else{this.strokePolygons=[];this.at=0;this.enter("painting",this.count);}}}
+   if(this.phase==="fillCoverageCleanup")this.startStroke();else{this.at=0;this.enter("painting",this.count);}
   } else if(this.phase==="painting") {
    if(this.at===this.count) {this.enter("complete",this.count);this.completed=this.count;return;}
    const at=this.at++,fa=this.fillMask?.coverage[at]??0,sa=this.strokeMask?.coverage[at]??0;
@@ -112,11 +107,11 @@ export class PathRasterJob {
   if(this.transferred)invalid("Path raster ownership already transferred");this.transferred=true;const output=this.phase==="complete"&&!this.cancelled&&!this.failed?{width:this.width,height:this.height,pixels:this.pixels}:null;if(output)this.pixels=new Uint8Array(0);this.cancelled=true;
   if(this.flatten){this.flatten.cancel();this.flattenRetirement=this.flatten.intoRetirement().job;this.flatten=null;}
   if(this.outline){this.outline.cancel();this.outlineRetirement=this.outline.intoRetirement().job;this.outline=null;}
-  if(this.coverage){this.coverage.cancel();this.coverageRetirement=this.coverage.intoRetirement().job;this.coverage=null;}
+  if(this.coverage){this.coverage.cancel();if(this.coverageRetirement)this.retiredCoverages.push(this.coverageRetirement);this.coverageRetirement=this.coverage.intoRetirement().job;this.coverage=null;}
   if(this.fill){this.fillRetirement=this.fill.intoRetirement();this.fill=null;}let slot=0;
   const child=(key:"flattenRetirement"|"outlineRetirement"|"coverageRetirement"|"fillRetirement"):boolean=>{const owner=this[key];if(owner&&!owner.terminalIsEmpty()){owner.advance(1);return false;}this[key]=null;return true;};
   const step=():boolean=>{let complete=true;switch(slot){
-   case 0:complete=child("flattenRetirement");break;case 1:complete=child("outlineRetirement");break;case 2:complete=child("coverageRetirement");break;case 3:complete=child("fillRetirement");break;
+   case 0:complete=child("flattenRetirement");break;case 1:complete=child("outlineRetirement");break;case 2:if(this.retiredCoverages.length){const owner=this.retiredCoverages.at(-1)!;if(owner.terminalIsEmpty())this.retiredCoverages.pop();else owner.advance(1);complete=false;}else complete=child("coverageRetirement");break;case 3:complete=child("fillRetirement");break;
    case 4:this.source=[];break;case 5:this.segments=[];break;
    case 6:complete=retireContour(this.flat);if(complete)this.flat=[];break;case 7:complete=retireContour(this.fillContours);if(complete)this.fillContours=[];break;case 8:complete=retireContour(this.strokeContours);if(complete)this.strokeContours=[];break;case 9:complete=retireContour(this.strokePolygons);if(complete)this.strokePolygons=[];break;
    case 10:this.fillMask=null;break;case 11:this.strokeMask=null;break;case 12:if(this.style)this.style={...this.style,dash:[]};break;case 13:this.style=null;this.strokeColor=null;break;case 14:this.pixels=new Uint8Array(0);break;case 15:this.transform.length=0;if(this.inverse)this.inverse.length=0;this.failed=null;break;

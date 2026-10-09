@@ -5,6 +5,18 @@
     {
       "type": "object",
       "additionalProperties": false,
+      "required": ["kind", "index", "mode"],
+      "properties": {"kind": {"const": "node"}, "index": {"type": "integer", "minimum": 0}, "mode": {"enum": ["corner", "smooth", "symmetric"]}}
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "tolerance"],
+      "properties": {"kind": {"const": "simplify"}, "tolerance": {"type": "number", "minimum": 0.000001, "maximum": 1000000}}
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
       "required": [
         "kind",
         "points",

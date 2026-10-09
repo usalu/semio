@@ -1,10 +1,15 @@
 /** ✏️ Pure node editing in path-local coordinates. */
 import { parsePathGeometrySegment, type PathGeometrySegment } from "../../🟦️.ts";
 import { splitCubic, arcGeometry, arcPoint, inverse, type Point, type Matrix } from "../🟦️.ts";
+import { editNode } from "./🎛️node/🟦️.ts";
+import { PathSimplifyJob } from "./📉️simplify/🟦️.ts";
+export { PathSimplifyJob } from "./📉️simplify/🟦️.ts";
 
 export type PathPoint = "anchor" | "control1" | "control2";
 export interface PathPointRef { readonly index: number; readonly point: PathPoint; }
 export type PathEdit =
+  | { kind: "node"; index: number; mode: "corner"|"smooth"|"symmetric" }
+  | { kind: "simplify"; tolerance: number }
   | { kind: "deletePoints"; points: readonly PathPointRef[] }
   | { kind: "translate"; points: readonly PathPointRef[]; delta: [number,number] }
   | { kind: "position"; index: number; point: PathPoint; to: [number,number] }
@@ -37,6 +42,12 @@ function contours(segments: PathGeometrySegment[]): [number, number][] {
 export function editPath(source: readonly PathGeometrySegment[], operation: PathEdit): PathGeometrySegment[] {
   const segments = source.map(item => parsePathGeometrySegment(item));
   const ranges = contours(segments);
+  if(operation.kind==="node")return editNode(segments,operation.index,operation.mode);
+  if(operation.kind==="simplify") {
+    const job=new PathSimplifyJob(segments,operation.tolerance);
+    if(!job.advance(262144).done)throw new Error("Path simplification exceeds interactive planning capacity");
+    return job.result();
+  }
   if(operation.kind==="translate") return translatePathPoints(segments,operation.points,operation.delta);
   if (operation.kind === "deletePoints") {
     if (operation.points.length === 0) return segments;
@@ -160,6 +171,7 @@ export function editPath(source: readonly PathGeometrySegment[], operation: Path
       if (!next || next.kind === "move" || next.kind === "close") segments.splice(start, end - start);
       else { segments[index + 1] = { kind: "move", to: [...next.to] }; segments.splice(index, 1); }
     } else segments.splice(index, 1);
+    if(end-start===3 && source[end-1]?.kind==="close")segments.splice(start+1,1);
   } else if (operation.kind === "coordinate" || operation.kind === "position") {
     if(operation.kind==="coordinate" && !["x","y"].includes(operation.axis))throw new Error("Invalid coordinate");
     let to=dragPathPoint(item,operation.point,[1,0,0,1,0,0],[0,0],[0,0],false);

@@ -1,0 +1,6 @@
+{
+  "mutation": "splitBeam",
+  "id": "b-a",
+  "t": 0.5,
+  "new_id": "b-b"
+}

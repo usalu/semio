@@ -430,7 +430,43 @@ class SnapshotSqliteRefusalScript extends BundleScript {
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
+/** ♻️ Verifies actual retained operation and localized history allocation authorities. */
+class RetainedMetadataScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("test-retained-metadata accepts no arguments");
+    if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+    const receipts=await runRepositoryExactCargoLaws({cwd:this.root,env:process.env,groups:[{package:"semio-framework-plugin",target:{kind:"lib"},laws:["retained_command::metadata_retirement::tests::retained_command_metadata_preserves_original_history_and_physical_authority"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,buildBudgetMs:Number(process.env.SEMIO_BUILD_BUDGET_MS??3_600_000),listBudgetMs:60_000,lawBudgetMs:120_000,progress(event){console.log(`[DEBUG] retained-metadata ${event.stage}: ${event.law??""}`);}});
+    console.log(`[DEBUG] retained-metadata receipts=${receipts.length}`);
+  }
+}
+
+/** ♻️ Checks original raw backing receipts independently of logical copy work. */
+class RetainedRawScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-retained-raw requires source or native");
+  const {runBudgetedTestCommand}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧵️retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🪟️mounted/♻️frontier/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:120_000,throwOnFailure:true});
+  if(segments[0]==="source")return;
+  if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+  const receipts=await runRepositoryExactCargoLaws({cwd:this.root,env:process.env,groups:[{package:"semio-framework-plugin",target:{kind:"lib"},laws:["app::plugin_builder_contract_tests::retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement","retained_command::admission::tests::retained_raw_admission_has_no_failure_destructor_or_undeclared_allocation"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,buildBudgetMs:3_600_000,listBudgetMs:60_000,lawBudgetMs:120_000,progress(event){console.log(`[DEBUG] retained-raw ${event.stage}`);}});
+  console.log(`[DEBUG] retained-raw receipts=${receipts.length}`);
+ }
+}
+
+/** 📬️ Verifies exact window mutation wrappers and their independently issued payload custody. */
+class WindowMutationScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-window-mutation requires source or native");
+  const {runBudgetedTestCommand}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"),file=resolve(this.root,"../../🪟️window/📬️mutation/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
+  if(segments[0]==="source")return;
+  if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+  const receipts=await runRepositoryExactCargoLaws({cwd:this.root,env:process.env,groups:[{package:"semio-framework-plugin",target:{kind:"lib"},laws:["window_mutation::tests::window_original_mutation_wrappers_have_exact_physical_custody"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,buildBudgetMs:3_600_000,listBudgetMs:60_000,lawBudgetMs:120000,progress(event){console.log(`[DEBUG] window-mutation ${event.stage}`);}});
+  console.log(`[DEBUG] window-mutation nativeReceipts=${receipts.length}`);
+ }
+}
+const router = new ScriptRouter(import.meta.dir).register("test-window-mutation",WindowMutationScript).register("test-retained-raw",RetainedRawScript).register("test-retained-metadata",RetainedMetadataScript).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
   .register("canonical-architecture", CanonicalArchitectureScript)
   .register("cooperative-host-check", CooperativeHostCheckScript)
   .register("document-backbone-binding-check", DocumentBackboneBindingCheckScript)

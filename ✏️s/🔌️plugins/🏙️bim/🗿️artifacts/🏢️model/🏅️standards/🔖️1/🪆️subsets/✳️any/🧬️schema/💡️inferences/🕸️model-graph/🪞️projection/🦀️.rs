@@ -1,5 +1,5 @@
 //! 🪞️ The projection of node values into `ModelInference`: each kind of node is one entry of one field (`Storey(id)` → `storey_levels[id]`, `Solid` → `element_solids[id]` when it has triangles,
-//! `Room(storey)` → the rooms of its spaces in `spaces`, `Quantity`/`Totals` → `quantities`, every `Diagnostics` node → the ordered `diagnostics`). The same functions fill a whole
+//! `Room(storey)` → the rooms of its spaces in `spaces`, `Quantity`/`Totals` → `quantities`, `Zone` → `zone_totals`, `Scheme` → `scheme_totals`, every `Diagnostics` node → the ordered `diagnostics`, `DiagnosticIndex` → `diagnostic_index`). The same functions fill a whole
 //! inference ([`project`]) and update a held one entry by entry ([`apply`], [`retract`]).
 
 use super::super::super::diagnostics::{ordered, Diagnostic};
@@ -26,6 +26,9 @@ pub fn apply(inference: &mut ModelInference, value: ModelValue) {
         (ModelNode::StairRun(id), Data::Run(run)) => {
             inference.stair_runs.insert(id, Arc::unwrap_or_clone(run));
         }
+        (ModelNode::RampRun(id), Data::RampRun(run)) => {
+            inference.ramp_runs.insert(id, Arc::unwrap_or_clone(run));
+        }
         (ModelNode::Solid(key), Data::Solid(entry)) => {
             let solid = Arc::unwrap_or_clone(entry).solid;
             if solid.is_empty() {
@@ -35,8 +38,20 @@ pub fn apply(inference: &mut ModelInference, value: ModelValue) {
             }
         }
         (ModelNode::Room(_), Data::Rooms(rooms)) => inference.spaces.extend(Arc::unwrap_or_clone(rooms)),
+        (ModelNode::Annotation(storey), Data::Annotations(set)) => {
+            inference.annotations.insert(storey, Arc::unwrap_or_clone(set));
+        }
+        (ModelNode::Properties(id), Data::Properties(properties)) => {
+            inference.effective_properties.insert(id, Arc::unwrap_or_clone(properties));
+        }
         (ModelNode::Plan(storey), Data::Plan(plan)) => {
             inference.plan_linework.insert(storey, Arc::unwrap_or_clone(plan));
+        }
+        (ModelNode::View(id), Data::View(view)) => {
+            inference.view_linework.insert(id, Arc::unwrap_or_clone(view));
+        }
+        (ModelNode::Sheet(id), Data::Sheet(layout)) => {
+            inference.sheet_layouts.insert(id, Arc::unwrap_or_clone(layout));
         }
         (ModelNode::Quantity(id), Data::Quantity(quantity)) => match quantity {
             Some(quantity) => {
@@ -46,6 +61,22 @@ pub fn apply(inference: &mut ModelInference, value: ModelValue) {
                 inference.quantities.elements.remove(&id);
             }
         },
+        (ModelNode::Schedule(id), Data::Schedule(table)) => {
+            inference.schedules.insert(id, Arc::unwrap_or_clone(table));
+        }
+        (ModelNode::Zone(id), Data::Zone(totals)) => {
+            inference.zone_totals.insert(id, Arc::unwrap_or_clone(totals));
+        }
+        (ModelNode::Scheme(id), Data::Scheme(totals)) => {
+            inference.scheme_totals.insert(id, Arc::unwrap_or_clone(totals));
+        }
+        (ModelNode::Family(id), Data::Family(family)) => {
+            inference.families.insert(id, Arc::unwrap_or_clone(family));
+        }
+        (ModelNode::PhaseVisibility(storey), Data::Phases(visibility)) => {
+            inference.phase_visibility.insert(storey, Arc::unwrap_or_clone(visibility));
+        }
+        (ModelNode::DiagnosticIndex, Data::Index(index)) => inference.diagnostic_index = Arc::unwrap_or_clone(index),
         (ModelNode::Totals(scope), Data::Totals(totals)) => {
             let totals = Arc::unwrap_or_clone(totals);
             match scope {
@@ -88,17 +119,47 @@ pub fn retract(inference: &mut ModelInference, value: &ModelValue) {
         (ModelNode::StairRun(id), _) => {
             inference.stair_runs.remove(id);
         }
+        (ModelNode::RampRun(id), _) => {
+            inference.ramp_runs.remove(id);
+        }
         (ModelNode::Solid(key), _) => {
             inference.element_solids.remove(&key.id);
         }
         (ModelNode::Room(_), Data::Rooms(rooms)) => rooms.keys().for_each(|id| {
             inference.spaces.remove(id);
         }),
+        (ModelNode::Annotation(storey), _) => {
+            inference.annotations.remove(storey);
+        }
+        (ModelNode::Properties(id), _) => {
+            inference.effective_properties.remove(id);
+        }
         (ModelNode::Plan(storey), _) => {
             inference.plan_linework.remove(storey);
         }
+        (ModelNode::View(id), _) => {
+            inference.view_linework.remove(id);
+        }
+        (ModelNode::Sheet(id), _) => {
+            inference.sheet_layouts.remove(id);
+        }
         (ModelNode::Quantity(id), _) => {
             inference.quantities.elements.remove(id);
+        }
+        (ModelNode::Schedule(id), _) => {
+            inference.schedules.remove(id);
+        }
+        (ModelNode::Zone(id), _) => {
+            inference.zone_totals.remove(id);
+        }
+        (ModelNode::Scheme(id), _) => {
+            inference.scheme_totals.remove(id);
+        }
+        (ModelNode::Family(id), _) => {
+            inference.families.remove(id);
+        }
+        (ModelNode::PhaseVisibility(storey), _) => {
+            inference.phase_visibility.remove(storey);
         }
         (ModelNode::Totals(TotalsScope::Storey(id)), _) => {
             inference.quantities.storeys.remove(id);
@@ -107,6 +168,7 @@ pub fn retract(inference: &mut ModelInference, value: &ModelValue) {
             inference.quantities.buildings.remove(id);
         }
         (ModelNode::Totals(TotalsScope::Project), _) => inference.quantities.project = Default::default(),
+        (ModelNode::DiagnosticIndex, _) => inference.diagnostic_index = Default::default(),
         _ => {}
     }
 }

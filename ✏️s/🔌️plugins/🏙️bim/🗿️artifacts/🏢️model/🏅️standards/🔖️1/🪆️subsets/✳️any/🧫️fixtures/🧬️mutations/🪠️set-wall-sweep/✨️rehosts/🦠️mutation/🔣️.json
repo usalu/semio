@@ -1,0 +1,5 @@
+{
+  "mutation": "setWallSweep",
+  "id": "ws-base",
+  "host": "w-east"
+}

@@ -52,18 +52,22 @@ class PreferencesScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "unit") {
+      const { rest } = resolveTestLevel(segments.slice(1));
+      await runRepositoryCargoTests([crate], this.repoRoot, rest); return;
+    }
+    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧭️authority/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
+    if (segments[0] === "authority") return;
     if (segments[0] === "execution") {
       const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/tests/dashboard-execution");
       await mkdir(artifacts, { recursive: true });
       runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧊️execution/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_TEST_ARTIFACT_DIR: artifacts }) }); return;
     }
-    if (BATTLE_SUITES.includes(segments[0] ?? "")) { battle(this.root, this.repoRoot, segments[0]!); return; }
+    if (BATTLE_SUITES.includes(segments[0] ?? "")) { await battle(this.root, this.repoRoot, segments[0]!); return; }
     const { rest } = resolveTestLevel(segments);
     process.env.SEMIO_TEST_PATH ??= process.env.PATH;
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🌀️control-plane/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
-    const target = process.env.CARGO_TARGET_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/cargo/target");
-    runCmd("cargo", ["build", "-p", crate, "--bin", "semio"], { cwd: this.repoRoot, env: devToolingEnv() });
-    const native = devToolingEnv({ SEMIO_DASHBOARD_BIN: join(target, "debug", process.platform === "win32" ? "semio.exe" : "semio") });
+    const native = devToolingEnv({ SEMIO_DASHBOARD_BIN: await dashboardExecutable(this.root, this.repoRoot) });
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🎮️registry/🟦️.ts")], { cwd: this.repoRoot, env: native });
     runCmd("bun", ["test", "--timeout", "240000", join(this.root, "../../🧪️tests/🧭️cli/🟦️.ts")], { cwd: this.repoRoot, env: native });
     await runRepositoryCargoTests([crate], this.repoRoot, rest);
@@ -73,22 +77,22 @@ class TestScript extends BundleScript {
 const BATTLE_SUITES = ["coverage", "journeys", "load", "smoke"];
 
 /**
- * ⚔️ Battle tests (`test coverage|journeys|load|smoke`): the real debug `semio` against the real monorepo or the
+ * ⚔️ Battle tests (`test coverage|journeys|load|smoke`): the installed native `semio` against the real monorepo or the
  * journey fixture workspace. The pseudo-terminal suites are Rust test executables run directly, never under
  * `cargo test`, whose job object forbids the breakaway the daemon needs.
  */
-function battle(root: string, repoRoot: string, suite: string): void {
+async function battle(root: string, repoRoot: string, suite: string): Promise<void> {
   const dashboardRoot = join(root, "../..");
-  const target = process.env.CARGO_TARGET_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/cargo/target");
-  runCmd("cargo", ["build", "-p", crate, "--bin", "semio"], { cwd: repoRoot, env: devToolingEnv() });
-  const env = devToolingEnv({ SEMIO_TEST_CLI: process.env.SEMIO_TEST_CLI ?? join(target, "debug", process.platform === "win32" ? "semio.exe" : "semio") });
+  const target = process.env.CARGO_TARGET_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/cargo/dashboard-journeys");
+  const env = devToolingEnv({ CARGO_TARGET_DIR: target, SEMIO_TEST_CLI: process.env.SEMIO_TEST_CLI ?? await dashboardExecutable(root, repoRoot) });
   const suites: Record<string, string[]> = { coverage: ["🗺️coverage/🟦️.ts"], journeys: ["🧭️journeys/🟦️.ts"], load: ["🧭️journeys/🏋️load/🟦️.ts"], smoke: ["🧭️journeys/💨️smoke/🟦️.ts"] };
   for (const file of suites[suite]!) runCmd("bun", ["test", join(dashboardRoot, "🧪️tests", file), "--timeout", "3600000"], { cwd: repoRoot, env });
   const rust = { journeys: "journeys", load: "load" }[suite];
   if (!rust) return;
   const manifest = join(dashboardRoot, "🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.toml");
-  const built = Bun.spawnSync(["cargo", "test", "--manifest-path", manifest, "--test", rust, "--no-run", "--message-format=json"], { cwd: repoRoot, env, stdout: "pipe", stderr: "inherit" });
-  const executable = built.stdout.toString().split("\n").flatMap((line) => { try { return [JSON.parse(line).executable as string | null]; } catch { return []; } }).filter(Boolean).at(-1);
+  const built = Bun.spawnSync(["cargo", "test", "--manifest-path", manifest, "--test", rust, "--no-run", "--locked", "--message-format=json"], { cwd: repoRoot, env, stdout: "pipe", stderr: "inherit" });
+  if (built.exitCode !== 0) throw new Error(`${rust} compilation exited ${built.exitCode}`);
+  const executable = built.stdout.toString().split("\n").flatMap((line) => { try { const row = JSON.parse(line); return row.target?.name === rust && row.target?.kind?.includes("test") ? [row.executable as string | null] : []; } catch { return []; } }).filter(Boolean).at(-1);
   if (!executable) throw new Error(`no ${rust} test executable was built`);
   runCmd(executable, ["--test-threads=1"], { cwd: repoRoot, env });
 }

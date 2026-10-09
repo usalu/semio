@@ -1,0 +1,25 @@
+{
+  "mutation": "createDimension",
+  "id": "dim-thickness",
+  "dimension": {
+    "storey": "st-ground",
+    "anchors": [
+      {
+        "WallFace": {
+          "wall": "w-south",
+          "side": "Left"
+        }
+      },
+      {
+        "WallFace": {
+          "wall": "w-south",
+          "side": "Right"
+        }
+      }
+    ],
+    "angle": 1.5707963267948966,
+    "offset": 1,
+    "style": "as-plan",
+    "name": "South thickness"
+  }
+}

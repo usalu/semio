@@ -685,7 +685,7 @@ impl ArtifactEditor for Grid3dEditor {
             authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = Box::new(Grid3dCommandWork { tool_id, completed: false });
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -701,7 +701,7 @@ impl ArtifactEditor for Grid3dEditor {
             GRID3D_RETAINED_RAW_BYTES,
             GRID3D_RETAINED_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

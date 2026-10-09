@@ -534,5 +534,125 @@
       "blondel_ok": true,
       "compliant": false
     }
+  },
+  "s-lturn-deep": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 16,
+    "riser_height": 0.1875,
+    "tread_count": 15,
+    "tread": 0.25,
+    "stride": 0.625,
+    "width": 1.0,
+    "run_length": 3.5,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 8,
+        "treads": 7,
+        "start": {
+          "x": 20.0,
+          "y": 0.0
+        },
+        "direction": 1.0,
+        "tread": 0.25,
+        "base_z": 0.0,
+        "length": 1.75
+      },
+      {
+        "first_riser": 9,
+        "risers": 8,
+        "treads": 7,
+        "start": {
+          "x": 21.11912607932025,
+          "y": 2.668343459636575
+        },
+        "direction": 2.5707963267948966,
+        "tread": 0.25,
+        "base_z": 1.5,
+        "length": 1.75
+      }
+    ],
+    "landings": [
+      {
+        "after_flight": 0,
+        "z": 1.5,
+        "centre": {
+          "x": 21.37777087996376,
+          "y": 2.145751011260136
+        },
+        "direction": 1.0,
+        "width": 1.0,
+        "depth": 1.6
+      }
+    ],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-uturn-deep": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 16,
+    "riser_height": 0.1875,
+    "tread_count": 15,
+    "tread": 0.25,
+    "stride": 0.625,
+    "width": 1.0,
+    "run_length": 3.5,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 8,
+        "treads": 7,
+        "start": {
+          "x": 30.0,
+          "y": 0.0
+        },
+        "direction": 1.5707963267948966,
+        "tread": 0.25,
+        "base_z": 0.0,
+        "length": 1.75
+      },
+      {
+        "first_riser": 9,
+        "risers": 8,
+        "treads": 7,
+        "start": {
+          "x": 28.8,
+          "y": 1.7500000000000002
+        },
+        "direction": 4.71238898038469,
+        "tread": 0.25,
+        "base_z": 1.5,
+        "length": 1.75
+      }
+    ],
+    "landings": [
+      {
+        "after_flight": 0,
+        "z": 1.5,
+        "centre": {
+          "x": 29.4,
+          "y": 2.5
+        },
+        "direction": 1.5707963267948966,
+        "width": 2.2,
+        "depth": 1.5
+      }
+    ],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
   }
 }

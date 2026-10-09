@@ -9,6 +9,17 @@ pub const HOUSE: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/
 /// 📁️ The directory of the committed SVG export of the house and the table the lxml + shapely oracle measured from it.
 pub const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️svg/🏠️house");
 
+/// 🪧️ The committed annotated room of the annotation inference: dimensions, tags, a note and a leader around four walls, a window, a grid line and a column.
+pub const NOTATED: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
+
+/// 📁️ The directory of the committed SVG export of the annotated room and the table the lxml + shapely oracle measured from it.
+pub const NOTATED_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️svg/🪧️notated");
+
+/// 🪧️ The decoded annotated room.
+pub fn notated() -> ModelSnapshot {
+    from_json_str(NOTATED, JsonMemberPolicy::Reject).expect("the committed room decodes")
+}
+
 /// 🏠️ The decoded house model.
 pub fn house() -> ModelSnapshot {
     from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("the committed house decodes")
@@ -22,6 +33,11 @@ pub fn svg(model: &ModelSnapshot) -> String {
 /// 📖️ A committed file of the house fixture directory.
 pub fn read(name: &str) -> Vec<u8> {
     std::fs::read(format!("{HOUSE_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))
+}
+
+/// 📖️ A committed file of the annotated room fixture directory.
+pub fn read_notated(name: &str) -> Vec<u8> {
+    std::fs::read(format!("{NOTATED_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))
 }
 
 /// 🔖️ One start or empty tag as the third-party reader sees it: element name and attributes.

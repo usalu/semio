@@ -22,3 +22,12 @@ fn numbers_and_strings_are_read_through_their_type_wrappers() {
     assert_eq!(string_of(&Part21Value::Str("y".into())).as_deref(), Some("y"));
     assert_eq!(string_of(&Part21Value::Unset), None);
 }
+
+#[test]
+fn phases_map_by_name_and_default_to_new() {
+    assert_eq!(phase("Existing"), Phase::Existing);
+    assert_eq!(phase("Demolished"), Phase::Demolished);
+    assert_eq!(phase("Temporary"), Phase::Temporary);
+    assert_eq!(phase("New"), Phase::New);
+    assert_eq!(phase(""), Phase::New);
+}

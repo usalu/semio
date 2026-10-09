@@ -23,8 +23,8 @@ test("whole painted path retirement retains real children, private candidates an
   const spies=[PathFlattenJob,StrokeOutlineJob,CoverageJob,PreparedFill].map(kind=>{const prototype=kind.prototype as any,original=prototype.intoRetirement;return spyOn(prototype,"intoRetirement").mockImplementation(function(this:object){const result=original.call(this),owner="job"in result?result.job:result,record={source:this,job:owner,work:0};records.push(record);const advance=owner.advance.bind(owner);owner.advance=(unit:number)=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return result;});});
   try{if(row.mode==="failure")expect(()=>job.advance(4096)).toThrow();else{let reached=false;for(let at=0;at<2000000;at++){if(state.phase===row.phase){reached=true;break;}job.advance(1);}expect(reached).toBe(true);if(row.steps)job.advance(row.steps);}
    const active=[state.flatten,state.outline,state.coverage,state.fill].filter(Boolean),closing=["flattenRetirement","outlineRetirement","coverageRetirement"].map(key=>[key,state[key]] as const),pixels=state.pixels,published=row.mode==="published"?job.result():null;
-   if(row.mode==="cancelled"||published){job.cancel();if(!published)expect(state.pixels).toBe(pixels);for(const [key,owner]of closing)if(owner)expect(state[key]).toBe(owner);for(const child of active)expect([state.flatten,state.outline,state.coverage,state.fill]).toContain(child);}
-   const retired=(job as any).intoRetirement();expect(retired.output===null).toBe(row.phase!=="complete"||row.mode!=="live");if(retired.output)expect(retired.output.pixels).toBe(pixels);for(const [key,owner]of closing)if(owner)expect(state[key]).toBe(owner);for(const child of active)expect(records.some(record=>record.source===child)).toBe(true);
+   if(row.mode==="cancelled"||published){job.cancel();if(!published)expect(state.pixels).toBe(pixels);for(const [key,owner]of closing)if(owner)expect(state[key]===owner||state.retiredCoverages.includes(owner)).toBe(true);for(const child of active)expect([state.flatten,state.outline,state.coverage,state.fill]).toContain(child);}
+   const retired=(job as any).intoRetirement();expect(retired.output===null).toBe(row.phase!=="complete"||row.mode!=="live");if(retired.output)expect(retired.output.pixels).toBe(pixels);for(const [key,owner]of closing)if(owner)expect(state[key]===owner||state.retiredCoverages.includes(owner)).toBe(true);for(const child of active)expect(records.some(record=>record.source===child)).toBe(true);
    expect(()=>job.result()).toThrow(/cancelled/);expect(()=>job.advance(1)).toThrow(/cancelled/);expect(()=>(job as any).intoRetirement()).toThrow(/transferred/);job.cancel();for(const invalid of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>retired.job.advance(invalid)).toThrow(/grant/i);
    const inventory=()=>[state.flat,state.fillContours,state.strokeContours,state.strokePolygons].reduce((n:number,contours:any[])=>n+contours.length+contours.reduce((sum,c)=>sum+(Array.isArray(c)?c:c.points).length,0),0);let work=0,done=false;
    for(let at=0;at<2000000;at++){const owners=inventory(),p=retired.job.advance(grant);expect(validateRetirement(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);expect(owners-inventory()).toBeLessThanOrEqual(grant);work=p.work;if(p.done){done=true;break;}}
@@ -43,14 +43,12 @@ test("async whole path drains real owners after final cancellation and callback 
   }finally{spy.mockRestore();}
  }
 });
-test("painted paths consume real flattened contours before conversion",async()=>{
- const original=PathFlattenJob.prototype.intoRetirement;let comparisons=0;
- for(const row of flattenCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any;let adopted=0,childWork=0,owner:ReturnType<PathFlattenJob["intoRetirement"]>|null=null;
-  const spy=spyOn(PathFlattenJob.prototype,"intoRetirement").mockImplementation(function(this:PathFlattenJob){adopted++;const contours=this.result(),retired=original.call(this);owner=retired;expect(retired.output).toBe(contours);const advance=retired.job.advance.bind(retired.job);retired.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe("flattenCleanup");expect(state.flat).toBe(contours);expect(state.flatten).toBeNull();expect(state.fillContours).toHaveLength(0);expect(state.strokeContours).toHaveLength(0);expect(state.coverage).toBeNull();const p=advance(unit);expect(p.work-childWork).toBe(1);childWork=p.work;return p;};return retired;});
-  try{let done=false,work=0;for(let at=0;at<2000000;at++){if(state.phase==="contours")expect(owner!.job.terminalIsEmpty()).toBe(true);const p=job.advance(grant);expect(validateProgress(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done){done=true;break;}}expect(done).toBe(true);}finally{spy.mockRestore();}
-  expect(adopted).toBe(1);expect(childWork).toBe(row.work);expect(owner!.job.terminalIsEmpty()).toBe(true);expect(state.flattenRetirement).toBeNull();expect([...job.result().pixels]).toEqual(source.expected);expect(input).toEqual(before);const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(job.result().pixels,reference)).toBeLessThanOrEqual(2);comparisons++;
+test("painted paths retain real flattened ownership through publication",async()=>{
+ let comparisons=0;
+ for(const row of flattenCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any;
+  while(!job.advance(grant).done){}const owner=state.flattenRetirement;expect(owner).not.toBeNull();expect(owner.terminalIsEmpty()).toBe(false);const image=job.result();expect([...image.pixels]).toEqual(source.expected);const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();expect(retired.output!.pixels).toBe(image.pixels);while(!retired.job.advance(grant).done){}expect(owner.terminalIsEmpty()).toBe(true);expect(input).toEqual(before);comparisons++;
  }
- process.stderr.write(`[DEBUG] Actual painted flatten handoff: ${comparisons} neutral/grant SVG comparisons; contour conversion waits for real child retirement\n`);
+ process.stderr.write(`[DEBUG] Painted paths retained flatten backing through publication: ${comparisons} independent SVG comparisons and explicit final closes\n`);
 });
 function complete(input:PathRasterInput,budget=4096) {
  const job=new PathRasterJob(input);let work=0;
@@ -147,28 +145,12 @@ test("reversing quadratic retains the ideal segment area despite renderer cusp v
  expect(max).toBeLessThanOrEqual(8);console.error(`[DEBUG] Reversing quadratic equals exact doubled line area; native canvas cusp variation=${max}`);
 });
 
-test("painted paths retire the real stroke before downstream coverage",async()=>{
+test("painted paths retain real stroke owners through sealed publication",async()=>{
  let comparisons=0;
- for(const row of strokeCases)for(const grant of [1,7,4096]) {
-  const source=cases.find(c=>c.name===row.source)!;expect(source).toBeDefined();const input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any;
-  let work=0,cleanupWork=0,cleanupCalls=0,observed=false,completed=false,polygons:unknown=null,retired:any=null;
-  for(let step=0;step<2000000;step++) {
-   const closing=state.phase==="strokeCleanup",owner=state.outlineRetirement;
-   if(closing) {
-    observed=true;expect(state.outline).toBeNull();expect(state.coverage).toBeNull();expect(state.fillMask).toBeNull();expect(state.strokeMask).toBeNull();expect(()=>job.result()).toThrow(/incomplete/);if(!polygons)polygons=state.strokePolygons;expect(state.strokePolygons).toBe(polygons);
-    if(!retired){retired=owner;const advance=owner.advance.bind(owner);owner.advance=(unit:number)=>{expect(unit).toBe(1);expect(state.coverage).toBeNull();expect(state.fillMask).toBeNull();expect(state.strokeMask).toBeNull();const p=advance(unit);expect(p.work-cleanupWork).toBe(1);cleanupWork=p.work;cleanupCalls++;return p;};}
-    expect(owner).toBe(retired);
-   }
-   const budget=closing||retired?grant:1,p=job.advance(budget);expect(validateProgress(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(budget);work=p.work;
-   if(closing){if(state.phase==="strokeCleanup")expect(state.outlineRetirement).toBe(owner);else{expect(owner.terminalIsEmpty()).toBe(true);expect(state.outlineRetirement).toBeNull();}}
-   if(p.done){completed=true;break;}
-  }
-  expect(completed).toBe(true);expect(observed).toBe(row.work.typescript>0);expect(cleanupWork).toBe(row.work.typescript);expect(cleanupCalls).toBe(row.work.typescript);expect([...job.result().pixels]).toEqual(source.expected);expect(input).toEqual(before);
-  let reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();
-  if(source.name==="zero length round cap") {const raw=await sharp(Buffer.from(svg(input,128))).ensureAlpha().raw().toBuffer();let alpha=0;for(let at=3;at<raw.length;at+=4)alpha+=raw[at]!;reference=Buffer.from([255,0,0,Math.round(alpha/(128*128))]);}
-  expect(delta(job.result().pixels,reference)).toBeLessThanOrEqual(2);comparisons++;
+ for(const row of strokeCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any;while(!job.advance(grant).done){}const owner=state.outlineRetirement;if(owner)expect(owner.terminalIsEmpty()).toBe(false);const image=job.result();expect([...image.pixels]).toEqual(source.expected);expect(input).toEqual(before);
+  let reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();if(source.name==="zero length round cap"){const raw=await sharp(Buffer.from(svg(input,128))).ensureAlpha().raw().toBuffer();let alpha=0;for(let at=3;at<raw.length;at+=4)alpha+=raw[at]!;reference=Buffer.from([255,0,0,Math.round(alpha/(128*128))]);}expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();while(!retired.job.advance(grant).done){}if(owner)expect(owner.terminalIsEmpty()).toBe(true);comparisons++;
  }
- process.stderr.write(`[DEBUG] Actual painted-path stroke handoff: ${comparisons} neutral/grant SVG comparisons; downstream coverage waits for terminal child retirement\n`);
+ process.stderr.write(`[DEBUG] Painted stroke retained owners: ${comparisons} independent SVG outputs and final closes\n`);
 });
 
 test("painted stroke cleanup refuses invalid grants and interrupted output",()=>{
@@ -181,14 +163,11 @@ test("painted stroke cleanup refuses invalid grants and interrupted output",()=>
  }
 });
 
-test("painted paths consume actual coverage masks before downstream work",async()=>{
+test("painted paths retain actual coverage owners and masks through publication",async()=>{
  const original=CoverageJob.prototype.intoRetirement;let comparisons=0;
- for(const row of coverageCases)for(const grant of [1,7,4096]){
-  const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{kind:string;owner:ReturnType<CoverageJob["intoRetirement"]>;work:number}[]=[];
-  const spy=spyOn(CoverageJob.prototype,"intoRetirement").mockImplementation(function(this:CoverageJob){const kind=state.phase==="fillCoverage"?"fill":"stroke",mask=this.result(),owner=original.call(this);expect(owner.output).toBe(mask);const record={kind,owner,work:0};records.push(record);const advance=owner.job.advance.bind(owner.job);owner.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe(`${kind}CoverageCleanup`);expect(state.coverage).toBeNull();expect(state[`${kind}Mask`]).toBe(mask);expect(state.pixels.every((v:number)=>v===0)).toBe(true);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return owner;});
-  try{let done=false,work=0;for(let at=0;at<2000000;at++){const p=job.advance(grant);expect(validateProgress(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done){done=true;break;}}expect(done).toBe(true);}finally{spy.mockRestore();}
-  expect(records.map(r=>r.kind)).toEqual(row.coverage);for(const record of records){expect(record.work).toBeGreaterThanOrEqual(14);expect(record.owner.job.terminalIsEmpty()).toBe(true);expect(record.owner.output!.coverage.length).toBe(input.width*input.height);}expect(state.coverageRetirement).toBeNull();expect([...job.result().pixels]).toEqual(source.expected);expect(input).toEqual(before);
-  const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(job.result().pixels,reference)).toBeLessThanOrEqual(2);comparisons++;
+ for(const row of coverageCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{kind:string;owner:ReturnType<CoverageJob["intoRetirement"]>}[]=[];
+  const spy=spyOn(CoverageJob.prototype,"intoRetirement").mockImplementation(function(this:CoverageJob){const kind=state.phase==="fillCoverage"?"fill":"stroke",mask=this.result(),owner=original.call(this);expect(owner.output).toBe(mask);records.push({kind,owner});return owner;});
+  try{while(!job.advance(grant).done){}}finally{spy.mockRestore();}expect(records.map(r=>r.kind)).toEqual(row.coverage);for(const record of records){expect(record.owner.job.terminalIsEmpty()).toBe(false);expect(record.owner.output!.coverage.length).toBe(input.width*input.height);}const image=job.result();expect([...image.pixels]).toEqual(source.expected);expect(input).toEqual(before);const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();while(!retired.job.advance(grant).done){}for(const record of records)expect(record.owner.job.terminalIsEmpty()).toBe(true);comparisons++;
  }
- process.stderr.write(`[DEBUG] Actual painted coverage handoff: ${comparisons} neutral/grant SVG comparisons; masks move once and painting waits for real private sweep retirement\n`);
+ process.stderr.write(`[DEBUG] Painted coverage retained owners: ${comparisons} independent SVG outputs and final closes\n`);
 });

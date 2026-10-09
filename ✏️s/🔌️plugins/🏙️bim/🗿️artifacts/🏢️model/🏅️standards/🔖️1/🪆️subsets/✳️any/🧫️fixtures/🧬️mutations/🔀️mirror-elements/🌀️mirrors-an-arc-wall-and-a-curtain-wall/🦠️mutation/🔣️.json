@@ -1,0 +1,15 @@
+{
+  "mutation": "mirrorElements",
+  "ids": [
+    "w-arc",
+    "cw-1"
+  ],
+  "line_start": {
+    "x": 0,
+    "y": 3
+  },
+  "line_end": {
+    "x": 1,
+    "y": 3
+  }
+}

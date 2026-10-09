@@ -1,0 +1,13 @@
+{
+  "mutation": "createView",
+  "id": "v-section",
+  "view": {
+    "building": "bldg-1",
+    "name": "Section A",
+    "kind": "Section",
+    "depth": 100,
+    "hidden": [],
+    "scale": 100,
+    "detail": "Medium"
+  }
+}

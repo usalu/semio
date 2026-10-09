@@ -37,6 +37,7 @@
     "shape": "Flat",
     "overhang": 0,
     "base_offset": 0.1,
+    "phase": "New",
     "name": "Flat roof"
   }
 }

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/pixels/retained-leaf-close",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "bytes",
+    "aliases",
+    "weakLeases"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "image",
+        "mask"
+      ]
+    },
+    "bytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "aliases": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "weakLeases": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

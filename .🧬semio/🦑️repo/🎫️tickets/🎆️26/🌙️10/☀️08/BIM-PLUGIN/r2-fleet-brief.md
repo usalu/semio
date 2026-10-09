@@ -43,8 +43,13 @@ Repo root: `C:\git\semio` (Git Bash `/c/git/semio`). Windows 11, Git Bash + Powe
   Foreground only (never `run_in_background`, never `Monitor`). A first build in a slot may take ~5 min.
 - Bless/test env vars (e.g. `BIM_BLESS=1`) go before `cargo` inside the gate call: `"$T/🚦️gate.sh" x -- env BIM_BLESS=1 cargo test ...`.
 - Never kill cargo/rustc processes you did not start.
-- Artifact crate: `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-bim-model --message-format=short`
-  then `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-bim-model <filter>` (native). Wasm check:
+- WORKSPACE LAYOUT CHANGED (owner commit 675, 2026-10-08): every artifact is its own Cargo workspace. `✏️s/Cargo.toml`
+  no longer lists plugin artifacts. Use `--manifest-path ✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml` (and
+  `--manifest-path <artifact>/Cargo.toml` for any other artifact, e.g. drawing/shooting/stdio). Framework geometry/2d/3d
+  crates are root workspace members (`--manifest-path Cargo.toml`). Wherever this brief or a recipe says
+  `--manifest-path ✏️s/Cargo.toml -p semio-s-artifact-bim-model`, substitute the artifact manifest.
+- Artifact crate: `cargo check --manifest-path ✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml -p semio-s-artifact-bim-model --message-format=short`
+  then `cargo test --manifest-path ✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml -p semio-s-artifact-bim-model <filter>` (native). Wasm check:
   add `--target wasm32-wasip2`. Run from `/c/git/semio`. Pipe long output to `T/🗑️generated/<label>/*.txt` and grep it.
 - Use a timeout of 600000 ms on cargo calls; if a build exceeds it, re-run (incremental).
 

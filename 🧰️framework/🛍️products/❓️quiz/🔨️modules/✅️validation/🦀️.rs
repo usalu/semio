@@ -128,6 +128,7 @@ pub fn quiz_issues(quiz: &Quiz) -> Vec<ValidationIssue> {
     issues.slug("/id".to_string(), &quiz.id);
     issues.length("/emoji".to_string(), &quiz.emoji, 1, 16);
     issues.text("/title", &quiz.title);
+    issues.short("", quiz.short.as_ref());
     issues.text("/description", &quiz.description);
     issues.at_least("/tasks".to_string(), quiz.tasks.len(), 1, IssueCode::ItemsTooFew);
     for (index, task) in quiz.tasks.iter().enumerate() {
@@ -153,6 +154,7 @@ pub fn catalog_issues(catalog: &Catalog, quizzes: &[Quiz]) -> Vec<ValidationIssu
     }
     issues.slug("/id".to_string(), &catalog.id);
     issues.text("/title", &catalog.title);
+    issues.short("", catalog.short.as_ref());
     issues.text("/introduction/title", &catalog.introduction.title);
     issues.at_least("/introduction/paragraphs".to_string(), catalog.introduction.paragraphs.len(), 1, IssueCode::ItemsTooFew);
     for (index, paragraph) in catalog.introduction.paragraphs.iter().enumerate() {

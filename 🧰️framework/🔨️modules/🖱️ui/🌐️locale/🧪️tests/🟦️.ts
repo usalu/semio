@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import Ajv from "ajv";
 
 import { parseTree, getNodeValue, type Node as JsonNode, type ParseError } from "jsonc-parser";
 import { spawnSync } from "node:child_process";
@@ -8,11 +9,32 @@ import { join, resolve } from "node:path";
 import * as TOML from "@iarna/toml";
 import axes from "../../🎚️axes/🔣️.json";
 import fixture from "../🧫️fixtures/🔣️.json";
+import Ajv2020 from "ajv/dist/2020.js";
+import retirementFixture from "../🏷️label/♻️retirement/🧫️fixtures/🔣️.json";
+import retirementSchema from "../🏷️label/♻️retirement/🧬️schema/🔣️.json";
+import labelSchema from "../🧬️schema/🏷️localized-label/🔣️.json";
 import { Locale, Terminology, LocalizedLabel, LocaleContractError, type LabelValue } from "../🟦️.ts";
 
 
 const repoRoot = resolve(import.meta.dir, "../../../../..");
+const matrixOracle = new Ajv({ strict: true }).compile(labelSchema);
 const source = (path: string): string => readFileSync(join(repoRoot, path), "utf8");
+test("physical label fixture preserves every explicit locale cell against independent JSON decoding", () => {
+  const validate = new Ajv2020({ strict: true }).compile(retirementSchema);
+  expect(validate(retirementFixture), JSON.stringify(validate.errors)).toBe(true);
+  for (const row of retirementFixture.cases) {
+    const cells = Object.fromEntries(axes.terminologies.map((terminology, ti) => [terminology.id, Object.fromEntries(axes.locales.map((locale, li) => [locale.id, row.cells[ti * axes.locales.length + li]!.text]))]));
+    const reference = oracle(JSON.stringify(cells));
+    expect(reference.accepted).toBe(true);
+    const input: LabelValue = { kind: "object", entries: axes.terminologies.map((terminology, ti) => [terminology.id, { kind: "object", entries: axes.locales.map((locale, li) => [locale.id, { kind: "string", value: row.cells[ti * axes.locales.length + li]!.text }]) }]) };
+    const label = LocalizedLabel.fromValue(input);
+    for (const [ti, terminology] of axes.terminologies.entries()) for (const [li, locale] of axes.locales.entries()) {
+      const cell = row.cells[ti * axes.locales.length + li]!;
+      expect(label.resolve(Terminology.parse(terminology.id), Locale.parse(locale.id))).toBe((reference.value as Record<string, Record<string, string>>)[terminology.id]![locale.id]!);
+      expect(cell.owned ? cell.capacity >= Buffer.byteLength(cell.text) : cell.capacity === 0).toBe(true);
+    }
+  }
+});
 function duplicates(node: JsonNode): boolean {
   if (node.type === "object") {
     const names = (node.children ?? []).map(property => property.children![0]!.value as string);
@@ -24,7 +46,7 @@ function oracle(raw: string): { accepted: boolean; value: unknown } {
   const errors: ParseError[] = [], tree = parseTree(raw, errors, { allowTrailingComma: false, disallowComments: true });
   if (!tree || errors.length || duplicates(tree)) return { accepted: false, value: null };
   const value: unknown = getNodeValue(tree);
-  return { accepted: matrix(value), value };
+  return { accepted: matrixOracle(value), value };
 }
 function retain(name: string, value: unknown): void {
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;

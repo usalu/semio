@@ -1,7 +1,8 @@
 Feature: The daemon knows when a server is ready
   A long-running task declares the port it serves on. The daemon reads the visible output of the task,
   never its control sequences, and the task is ready when the output shows a local web address with
-  exactly that port. The ready address is the match followed by the declared path, or with the printed
+  exactly that port and the exact announced handler answers HTTP with a 2xx or 3xx status. Bounded probes
+  run outside the daemon event loop and cancel when the task stops or restarts. The ready address is the match followed by the declared path, or with the printed
   option the whole printed address up to the next whitespace. Views and `semio run --wait-ready` consume
   the session change that carries it.
 

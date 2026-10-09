@@ -246,13 +246,17 @@ impl LauncherState {
 
     /// 🖱️ Selects the line `item` of the form; a second click on the start line starts.
     pub fn click(&mut self, widget: &mut WidgetState, item: usize) -> Outcome {
+        if self.stage == Stage::Confirm {
+            let start = self.form.as_ref().map(|form| Self::slot_lines(form, labels(self.locale), self.locale)[form.start_slot()] + 1);
+            return if start == Some(self.offset + item) { self.apply(widget, Input::Activate) } else { Outcome::Idle };
+        }
         if self.stage != Stage::Configure { return Outcome::Idle; }
         let line = self.offset + item;
         let Some(form) = self.form.as_ref() else { return Outcome::Idle };
         let slot = Self::slot_lines(form, labels(self.locale), self.locale).iter().position(|candidate| *candidate == line);
         let start = form.start_slot();
         match (slot, self.form.as_mut()) {
-            (Some(slot), Some(form)) if slot == form.focus && slot == start => self.apply(widget, Input::Activate),
+            (Some(slot), Some(form)) if slot == start => { form.focus = slot; self.apply(widget, Input::Activate) },
             (Some(slot), Some(form)) => { form.focus = slot; self.reveal(); Outcome::Idle }
             _ => Outcome::Idle,
         }
@@ -404,6 +408,22 @@ impl LauncherState {
         let offset = self.offset.min(lines.len().saturating_sub(1));
         let items: Vec<String> = lines.into_iter().skip(offset).take(self.page).collect();
         Screen { input, placeholder, caption, selected: selected.saturating_sub(offset).min(items.len().saturating_sub(1)), items }
+    }
+
+    /// ✍️️ Whether the selected form slot accepts text and owns the terminal cursor.
+    pub fn editing(&self) -> bool {
+        self.editor_slot().is_some()
+    }
+
+    /// 🧷️ The identity of the current editor; a different form slot resets its caret.
+    pub fn editor_slot(&self) -> Option<usize> {
+        self.form.as_ref().filter(|form| self.stage == Stage::Configure && (form.focus == form.args_slot() || form.focus == form.env_slot() || form.fields.get(form.focus).is_some_and(|field| field.parameter.kind == ParameterKind::Text))).map(|form| form.focus)
+    }
+
+    /// 📨️ Commits a value edited by the shared input widget to the selected form slot.
+    pub fn edited(&mut self, value: String) {
+        if !self.editing() { return; }
+        if let Some(form) = self.form.as_mut() { if let Some(text) = Self::text(form) { *text = value; } Self::normalize(form); }
     }
 
     fn editor(&self, form: &Form, text: &DashboardLabels) -> (String, String) {

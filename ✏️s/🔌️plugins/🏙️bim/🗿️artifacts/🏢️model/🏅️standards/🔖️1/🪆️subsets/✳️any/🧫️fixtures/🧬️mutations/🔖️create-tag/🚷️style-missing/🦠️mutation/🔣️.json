@@ -1,0 +1,14 @@
+{
+  "mutation": "createTag",
+  "id": "tag-south",
+  "tag": {
+    "storey": "st-ground",
+    "element": "w-south",
+    "category": "Name",
+    "offset": {
+      "x": 0,
+      "y": -0.5
+    },
+    "style": "as-ghost"
+  }
+}

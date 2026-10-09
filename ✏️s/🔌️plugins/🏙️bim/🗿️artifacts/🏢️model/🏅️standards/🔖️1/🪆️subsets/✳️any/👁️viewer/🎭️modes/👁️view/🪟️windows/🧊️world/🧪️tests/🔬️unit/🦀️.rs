@@ -9,6 +9,10 @@ fn demo() -> ModelSnapshot {
     parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses")
 }
 
+fn inferred(snapshot: &ModelSnapshot) -> ModelInference {
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, snapshot, Clone::clone)
+}
+
 fn measures_of(config: &config::BimViewerWorldWindowConfig, locale: Locale) -> serde_json::Value {
     let labels = bim_viewer_labels(&ViewModel::new(locale, Terminology::Native));
     serde_json::to_value(measures(&demo(), config, labels, viewer_action)).expect("measures serialise")
@@ -24,8 +28,10 @@ fn the_window_is_a_world3d_surface_with_stable_ids() {
 
 #[test]
 fn an_empty_and_a_demo_model_render() {
-    assert!(render(&ModelSnapshot::default(), &config::BimViewerWorldWindowConfig::default(), &Marks::default()).is_ok());
-    assert!(render(&demo(), &config::BimViewerWorldWindowConfig::default(), &Marks::default()).is_ok());
+    let empty = ModelSnapshot::default();
+    assert!(render(&empty, &inferred(&empty), &config::BimViewerWorldWindowConfig::default(), &Marks::default()).is_ok());
+    let model = demo();
+    assert!(render(&model, &inferred(&model), &config::BimViewerWorldWindowConfig::default(), &Marks::default()).is_ok());
 }
 
 #[test]

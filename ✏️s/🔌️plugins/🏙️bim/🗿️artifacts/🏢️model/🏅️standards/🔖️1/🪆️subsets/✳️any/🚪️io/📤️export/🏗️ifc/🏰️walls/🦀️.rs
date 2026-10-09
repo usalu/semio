@@ -7,7 +7,7 @@ use super::writer::{en, real, refs, rf};
 use super::{data, Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::opening_frames::resolve_size;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{segment_of, WallLayout};
-use crate::{Axis, Opening, OpeningKind, Phase, Wall};
+use crate::{Axis, Opening, OpeningKind, Wall};
 use semio_framework_geometry::bulge::{band_loop, BulgeSeg};
 use std::collections::BTreeMap;
 
@@ -78,9 +78,6 @@ fn wall(x: &mut Export<'_>, id: &str, wall: &Wall, hosts: &mut BTreeMap<String, 
     if let Some(set) = x.links.layer_sets.get(&("wall", wall.wall_type.clone())).copied() {
         let usage = x.ifc.add("IFCMATERIALLAYERSETUSAGE", vec![rf(set), en("AXIS2"), en("NEGATIVE"), real(left)]);
         x.links.materials.entry(usage).or_default().push(element);
-    }
-    if wall.phase != Phase::New {
-        x.links.authoring.push((element, vec![("Phase", data::label(&format!("{:?}", wall.phase)))]));
     }
     x.quantify(element, "Qto_WallBaseQuantities", id, |row| {
         vec![

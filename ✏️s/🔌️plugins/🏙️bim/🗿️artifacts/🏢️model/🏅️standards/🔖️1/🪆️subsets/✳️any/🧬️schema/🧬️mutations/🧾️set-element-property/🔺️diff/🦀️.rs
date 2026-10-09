@@ -16,7 +16,7 @@ fn finite(value: &PropertyValue) -> bool {
 }
 
 pub fn diff(payload: &SetElementProperty, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if !elements::exists(base, &payload.id) {
+    if !elements::holds_data(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Element \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     if payload.pset.is_empty() {

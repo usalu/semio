@@ -7,6 +7,7 @@
 // (`💻️os/📦️packages/🦀️rust/🦀️.rs:347`), so importing them again from `semio_framework_value_derive`
 // is a same-namespace redefinition (E0252), not a second namespace.
 use semio_framework_value::DslValue;
+semio_framework_value::artifact_retire_leaf!(MediaType);
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
@@ -109,6 +110,8 @@ pub enum ActionKind {
     /// Framework-provided hover/selection — auto-injected, never app-declared.
     Interaction,
 }
+
+semio_framework_value::artifact_retire_leaf!(ActionKind);
 
 //#region 🔖️ArgSchema
 // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6: the

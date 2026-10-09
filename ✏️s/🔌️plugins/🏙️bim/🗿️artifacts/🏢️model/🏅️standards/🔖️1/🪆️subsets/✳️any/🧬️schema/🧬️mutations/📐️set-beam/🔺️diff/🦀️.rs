@@ -1,17 +1,10 @@
-//! 🔺️ Diff constructor for `SetBeam`: a sparse beam patch naming only the fields that really change. The beam type must exist and
-//! the resulting beam must keep its length. No elevation is written: it is inferred.
+//! 🔺️ Diff constructor for `SetBeam`: a sparse beam patch naming only the fields that really change. The beam type must exist and both top offsets must be finite
+//! (the end offset is assigned: none makes the beam level again). The axis is the business of `set-beam-axis`; no elevation is written, it is inferred.
 
+use super::super::wall_geometry::offsets_flaw;
 use super::SetBeam;
-use crate::{BeamPatch, Entry, ModelDiff, ModelSnapshot, Point2};
+use crate::{Entry, ModelDiff, ModelSnapshot, Patch};
 use protocol::{MutationOutcome, OutcomeCode};
-
-fn changed<T: Clone + PartialEq>(value: &Option<T>, current: &T) -> Option<T> {
-    value.as_ref().filter(|next| *next != current).cloned()
-}
-
-fn finite(point: &Point2) -> bool {
-    point.x.is_finite() && point.y.is_finite()
-}
 
 pub fn diff(payload: &SetBeam, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let Some(beam) = base.beams.get(&payload.id) else {
@@ -22,28 +15,13 @@ pub fn diff(payload: &SetBeam, base: &ModelSnapshot) -> MutationOutcome<ModelDif
             return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Beam type \"{kind}\" does not exist."), ["beam_type"]);
         }
     }
-    if payload.start.as_ref().is_some_and(|point| !finite(point)) {
-        return MutationOutcome::refuse(OutcomeCode::Invariant, "A beam start must be finite.", ["start"]);
+    let end = payload.end_top_offset.as_ref().and_then(|assigned| assigned.value);
+    if let Some(flaw) = offsets_flaw(payload.top_offset.unwrap_or(beam.top_offset), end) {
+        return flaw.refuse();
     }
-    if payload.end.as_ref().is_some_and(|point| !finite(point)) {
-        return MutationOutcome::refuse(OutcomeCode::Invariant, "A beam end must be finite.", ["end"]);
-    }
-    if payload.top_offset.is_some_and(|offset| !offset.is_finite()) {
-        return MutationOutcome::refuse(OutcomeCode::Invariant, "A beam top offset must be finite.", ["top_offset"]);
-    }
-    let patch = BeamPatch {
-        beam_type: changed(&payload.beam_type, &beam.beam_type),
-        start: changed(&payload.start, &beam.start),
-        end: changed(&payload.end, &beam.end),
-        top_offset: changed(&payload.top_offset, &beam.top_offset),
-        name: changed(&payload.name, &beam.name),
-        ..Default::default()
-    };
-    if patch == BeamPatch::default() {
+    let patch = payload.patch().minimal(beam);
+    if patch.is_empty() {
         return MutationOutcome::refuse(OutcomeCode::NoOp, format!("Beam \"{}\" already has these values.", payload.id), [payload.id.clone()]);
-    }
-    if patch.start.unwrap_or(beam.start) == patch.end.unwrap_or(beam.end) {
-        return MutationOutcome::refuse(OutcomeCode::Invariant, "A beam must have length.", [if patch.end.is_some() { "end" } else { "start" }]);
     }
     MutationOutcome::new(ModelDiff::beams(payload.id.clone(), Entry::Patched(patch)))
 }

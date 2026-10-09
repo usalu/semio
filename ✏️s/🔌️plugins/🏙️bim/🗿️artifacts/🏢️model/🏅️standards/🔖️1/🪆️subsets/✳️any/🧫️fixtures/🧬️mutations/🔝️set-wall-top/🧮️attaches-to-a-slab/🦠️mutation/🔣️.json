@@ -1,0 +1,10 @@
+{
+  "mutation": "setWallTop",
+  "id": "w-east",
+  "top": {
+    "Slab": {
+      "slab": "sl-ground",
+      "offset": 0.1
+    }
+  }
+}

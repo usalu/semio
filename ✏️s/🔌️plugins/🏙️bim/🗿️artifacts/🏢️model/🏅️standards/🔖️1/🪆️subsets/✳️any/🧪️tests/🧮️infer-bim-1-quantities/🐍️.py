@@ -18,6 +18,11 @@ library that has never seen this repository:
 The parametric law is a metamorphic property: raising one storey height by `delta` adds `delta * length` to the gross side area of every
 `StoreyTop` wall on it, `delta * footprint area` to its volume, `delta` to the height of its columns, and moves nothing else.
 
+The authoring law is a second one. A case directory that carries a `🦠️mutation/🔣️.json` (`setElementStorey` or `setElementPhase`) is the model BEFORE the
+mutation: the oracle applies the one authored field itself (`apply_mutation`, never the subject's code), requires that the element and the
+openings it hosts take the new storey or phase, that every other row of the take-off is untouched, and that the totals per storey (per phase) move
+exactly those rows. The committed table of such a case is the take-off of the model AFTER the mutation.
+
 The committed expectations under `🧫️fixtures/💡️inferences/🧮️quantities/<case>/💡️inference/🧮️quantities/🔣️.json` are WRITTEN by this
 file (`write`), never by hand, and the Rust subject is compared against them.
 
@@ -92,9 +97,9 @@ def density(snapshot, material):
 
 
 # region 🔖️Rows
-def empty(kind, storey, type_id=""):
+def empty(kind, storey, type_id="", phase="New"):
     """🧮️ A row with every measure zero."""
-    return {"kind": kind, "storey": storey, "type_id": type_id, "count": 1, "length": 0.0, "width": 0.0, "height": 0.0, "perimeter": 0.0, "gross_side_area": 0.0, "opening_area": 0.0, "net_side_area": 0.0, "gross_area": 0.0, "net_area": 0.0, "surface_area": 0.0, "gross_volume": 0.0, "net_volume": 0.0, "mass": 0.0, "risers": 0, "layers": []}
+    return {"kind": kind, "storey": storey, "phase": phase, "type_id": type_id, "count": 1, "length": 0.0, "width": 0.0, "height": 0.0, "perimeter": 0.0, "gross_side_area": 0.0, "opening_area": 0.0, "net_side_area": 0.0, "gross_area": 0.0, "net_area": 0.0, "surface_area": 0.0, "gross_volume": 0.0, "net_volume": 0.0, "mass": 0.0, "risers": 0, "layers": [], "finishes": []}
 
 
 def layer_row(snapshot, material, thickness, area, volume):
@@ -128,7 +133,7 @@ def layer_area(curve, layout, footprint, upper, lower):
 def wall_row(snapshot, levels, layouts, wall_id):
     """🧱️ The quantities of one wall."""
     wall, layout = snapshot["walls"][wall_id], layouts[wall_id]
-    row = empty("Wall", wall["storey"], wall["wall_type"])
+    row = empty("Wall", wall["storey"], wall["wall_type"], wall["phase"])
     curve = joins().axis_curve(wall["axis"])
     footprint = joins().sampled_polygon([(xy(vertex["point"]), vertex["bulge"]) for vertex in layout["footprint"]]) if layout["footprint"] else None
     height, length = layout["height"], curve.length
@@ -177,7 +182,7 @@ def resolve(snapshot, opening):
 def slab_row(snapshot, slab_id):
     """⬜️ The quantities of one slab."""
     slab = snapshot["slabs"][slab_id]
-    row = empty("Slab", slab["storey"], slab["slab_type"])
+    row = empty("Slab", slab["storey"], slab["slab_type"], slab["phase"])
     spaces = spaces_oracle()
     outer = [(xy(vertex["point"]), vertex["bulge"]) for vertex in slab["boundary"]]
     holes = [[(xy(vertex["point"]), vertex["bulge"]) for vertex in hole] for hole in slab["holes"]]
@@ -216,7 +221,7 @@ def column_row(snapshot, levels, column_id):
     height = max(top - base, 0.0)
     area, perimeter = profile(kind)
     volume = area * height
-    row = empty("Column", column["storey"], column["column_type"])
+    row = empty("Column", column["storey"], column["column_type"], column["phase"])
     row.update(length=height, height=height, perimeter=perimeter, gross_area=area, net_area=area, gross_volume=volume, net_volume=volume, mass=volume * density(snapshot, kind["material"]), layers=[layer_row(snapshot, kind["material"], 0.0, area, volume)])
     return row
 
@@ -228,7 +233,7 @@ def beam_row(snapshot, beam_id):
     length = LineString([xy(beam["start"]), xy(beam["end"])]).length
     area, perimeter = profile(kind)
     volume = area * length
-    row = empty("Beam", beam["storey"], beam["beam_type"])
+    row = empty("Beam", beam["storey"], beam["beam_type"], beam["phase"])
     row.update(length=length, perimeter=perimeter, gross_area=area, net_area=area, gross_volume=volume, net_volume=volume, mass=volume * density(snapshot, kind["material"]), layers=[layer_row(snapshot, kind["material"], 0.0, area, volume)])
     return row
 
@@ -239,7 +244,7 @@ def space_rows(snapshot):
     for space_id, found in spaces_oracle().tables(snapshot).items():
         if found["status"] not in ("Inferred", "Explicit"):
             continue
-        row = empty("Space", snapshot["spaces"][space_id]["storey"])
+        row = empty("Space", snapshot["spaces"][space_id]["storey"], phase=snapshot["spaces"][space_id]["phase"])
         row.update(height=found["clear_height"], perimeter=found["perimeter"], gross_area=found["area"], net_area=found["net_floor_area"], gross_volume=found["volume"], net_volume=found["volume"])
         rows[space_id] = row
     return rows
@@ -280,12 +285,15 @@ def add(total, row):
     for entry in row["layers"]:
         if entry["material"]:
             add_layer(total["materials"].setdefault(entry["material"], zero()), entry)
+    phase = row["phase"].lower()
+    add_element(total["phases"].setdefault(phase, zero()), row)
+    add_element(total["phase_kinds"].setdefault("%s:%s" % (phase, key), zero()), row)
 
 
 def summarise(snapshot, elements):
     """➕️ The totals per storey, building and project over a set of rows (ids in order)."""
-    result = {"elements": elements, "storeys": {}, "buildings": {}, "project": {"kinds": {}, "types": {}, "materials": {}}}
-    fresh = lambda: {"kinds": {}, "types": {}, "materials": {}}
+    fresh = lambda: {"kinds": {}, "types": {}, "materials": {}, "finishes": {}, "phases": {}, "phase_kinds": {}}
+    result = {"elements": elements, "storeys": {}, "buildings": {}, "project": fresh()}
     for element_id in sorted(elements):
         row = elements[element_id]
         add(result["project"], row)
@@ -371,6 +379,61 @@ def parametric_problems(snapshot):
     return problems
 
 
+STOREYED = ["walls", "curtain_walls", "columns", "beams", "slabs", "ceilings", "roofs", "stairs", "railings", "ramps", "spaces"]
+PHASED = ["walls", "curtain_walls", "columns", "beams", "slabs", "roofs", "stairs", "railings", "spaces"]
+
+
+def apply_mutation(snapshot, mutation):
+    """🦠️ The model after a `setElementStorey` or `setElementPhase` mutation: the one authored field of the one element, set in whichever collection holds the id.
+    An independent re-implementation of the rule (no refusal logic): the committed cases only carry mutations the subject accepts."""
+    field, collections = {"setElementStorey": ("storey", STOREYED), "setElementPhase": ("phase", PHASED)}[mutation["mutation"]]
+    changed = copy.deepcopy(snapshot)
+    for key in collections:
+        row = changed.get(key, {}).get(mutation["id"])
+        if row is not None:
+            row[field] = mutation[field]
+            return changed
+    raise AssertionError("%s names no element that carries a %s" % (mutation["id"], field))
+
+
+def mutation_problems(snapshot, mutation):
+    """🧪️ The law of moving an element: the mutated element takes the new storey (or phase) and keeps every opening it hosts (the hosted openings follow, so its opening area
+    is unchanged), every other row of the take-off that does not depend on the moved geometry is unchanged, and the totals move exactly the row: a storey (or phase)
+    loses what the other gains, the project counts nothing new."""
+    after, problems = apply_mutation(snapshot, mutation), []
+    one, two = table(snapshot), table(after)
+    moved = [mutation["id"]]
+    field = "storey" if mutation["mutation"] == "setElementStorey" else "phase"
+    for element_id in moved:
+        row, was = two["elements"].get(element_id), one["elements"].get(element_id)
+        if row is None:
+            problems.append("%s has no row after the mutation" % element_id)
+        elif row[field] != mutation[field]:
+            problems.append("%s: %s is %s after the mutation, not %s" % (element_id, field, row[field], mutation[field]))
+        elif was is not None and abs(row["opening_area"] - was["opening_area"]) > EXACT * 10:
+            problems.append("%s: its openings %s the host (opening area %.12g, was %.12g)" % (element_id, "did not follow" if row["opening_area"] < was["opening_area"] else "overshoot", row["opening_area"], was["opening_area"]))
+    for element_id, row in one["elements"].items():
+        if element_id not in moved and row["kind"] != "Wall" and row != two["elements"].get(element_id):
+            problems.append("%s changed with the mutation of %s" % (element_id, mutation["id"]))
+    rows = [one["elements"][element_id] for element_id in moved if element_id in one["elements"]]
+    source = rows[0][field] if rows else None
+    kinds = {}
+    for row in rows:
+        kinds[KEYS[row["kind"]]] = kinds.get(KEYS[row["kind"]], 0) + row["count"]
+    for kind, count in kinds.items():
+        if field == "storey":
+            had = lambda total, key: total["storeys"].get(key, {}).get("kinds", {}).get(kind, {}).get("count", 0)
+        else:
+            had = lambda total, key: total["project"]["phase_kinds"].get("%s:%s" % (key.lower(), kind), {}).get("count", 0)
+        if had(two, source) != had(one, source) - count:
+            problems.append("%s: %d %s row(s) left %s, which holds %d afterwards instead of %d" % (mutation["id"], count, kind, source, had(two, source), had(one, source) - count))
+        if had(two, mutation[field]) != had(one, mutation[field]) + count:
+            problems.append("%s: %d %s row(s) joined %s, which holds %d afterwards instead of %d" % (mutation["id"], count, kind, mutation[field], had(two, mutation[field]), had(one, mutation[field]) + count))
+        if two["project"]["kinds"].get(kind, {}).get("count", 0) != one["project"]["kinds"].get(kind, {}).get("count", 0):
+            problems.append("%s: the project count of %s changed" % (mutation["id"], kind))
+    return problems
+
+
 # endregion 🔖️Audit
 
 
@@ -384,6 +447,25 @@ def case_snapshot(ctx):
     """📸️ The snapshot fixture URI a scenario names, resolved through the host."""
     uri = next(candidate for candidate in ctx.step_input_uris() if "📸️snapshot" in candidate)
     return json.loads(ctx.input_bytes(uri).decode("utf-8"))
+
+
+def case_mutation(ctx):
+    """🦠️ The mutation payload a scenario names, resolved through the host."""
+    uri = next(candidate for candidate in ctx.step_input_uris() if "🦠️mutation" in candidate)
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
+
+
+def storey_move_handler(ctx):
+    """🛗️ Oracle answer for the take-off of a model after `setElementStorey`: the independent move, the law of moving, GEOS and the parametric law agree."""
+    from semio_repo_test import Outcome
+
+    snapshot, mutation = case_snapshot(ctx), case_mutation(ctx)
+    moved = apply_mutation(snapshot, mutation)
+    problems = mutation_problems(snapshot, mutation) + problems_of(moved)
+    if problems:
+        raise AssertionError("; ".join(problems))
+    payload = table(moved)
+    return Outcome(payload, raw=json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
 
 
 def quantities_handler(ctx):
@@ -402,7 +484,7 @@ def adapter():
     """🧭️ Registration in the ORACLE role only, by the feature's scenario id."""
     from semio_repo_test import Adapter
 
-    return Adapter("python").oracle("quantities-building", quantities_handler)
+    return Adapter("python").oracle("quantities-building", quantities_handler).oracle("quantities-storey-move", storey_move_handler)
 
 
 # endregion 🔖️Handlers
@@ -416,6 +498,11 @@ def main(arguments):
     for snapshot_path in sorted(root.glob("*/📸️snapshot/🔣️.json")):
         case = snapshot_path.parents[1]
         snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        mutation_path = case / "🦠️mutation" / "🔣️.json"
+        if mutation_path.exists():
+            mutation = json.loads(mutation_path.read_text(encoding="utf-8"))
+            failures += ["%s: %s" % (case.name, problem) for problem in mutation_problems(snapshot, mutation)]
+            snapshot = apply_mutation(snapshot, mutation)
         failures += ["%s: %s" % (case.name, problem) for problem in problems_of(snapshot)]
         computed = table(snapshot)
         target = case / "💡️inference" / "🧮️quantities" / "🔣️.json"

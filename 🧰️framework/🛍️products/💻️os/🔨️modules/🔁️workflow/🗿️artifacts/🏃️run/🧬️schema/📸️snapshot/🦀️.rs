@@ -16,6 +16,9 @@ pub enum RunStatus {
     Failed,
     Canceled,
 }
+impl semio_framework_dsl_record::BorrowedDslField for RunStatus {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Enum(&[("pending", 0), ("running", 1), ("succeeded", 2), ("failed", 3), ("canceled", 4)]);
+}
 
 pub(crate) fn run_status_ordinal(status: RunStatus) -> u32 {
     match status {
@@ -73,6 +76,9 @@ pub enum RunNodeStatus {
     CacheHit,
     Failed,
 }
+impl semio_framework_dsl_record::BorrowedDslField for RunNodeStatus {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Enum(&[("computed", 0), ("cacheHit", 1), ("failed", 2)]);
+}
 
 pub(crate) fn run_node_status_ordinal(status: RunNodeStatus) -> u32 {
     match status {
@@ -124,6 +130,21 @@ impl semio_framework_dsl_record::DslField for RunNodeStatus {
 pub enum RunTrigger {
     Manual { actor: String },
     Automation { automation_ref: String, event_fingerprint: String },
+}
+impl semio_framework_dsl_record::BorrowedDslRecord for RunTrigger {
+    const RECORD: semio_framework_dsl_record::BorrowedRecordSpec = semio_framework_dsl_record::BorrowedRecordSpec {
+        keyword: None,
+        layout: semio_framework_dsl_record::RecordLayout::Inline,
+        fields: &[
+            semio_framework_dsl_record::BorrowedFieldSpec::new(0, "kind", semio_framework_dsl_record::BorrowedShape::Text),
+            semio_framework_dsl_record::BorrowedFieldSpec { optional: true, ..semio_framework_dsl_record::BorrowedFieldSpec::new(1, "actor", semio_framework_dsl_record::BorrowedShape::Text) },
+            semio_framework_dsl_record::BorrowedFieldSpec { optional: true, ..semio_framework_dsl_record::BorrowedFieldSpec::new(2, "automation_ref", semio_framework_dsl_record::BorrowedShape::Text) },
+            semio_framework_dsl_record::BorrowedFieldSpec { optional: true, ..semio_framework_dsl_record::BorrowedFieldSpec::new(3, "event_fingerprint", semio_framework_dsl_record::BorrowedShape::Text) },
+        ],
+    };
+}
+impl semio_framework_dsl_record::BorrowedDslField for RunTrigger {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);
 }
 
 fn run_trigger_to_record_controlled(value:&RunTrigger,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{

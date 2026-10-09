@@ -1,14 +1,12 @@
-//! 🔺️ Diff constructor for `CreateBeam`: one created beam entry. The storey and the beam type must exist and the beam must have
-//! length. The beam top lies the signed, finite `top_offset` above (positive) or below (negative) the storey top: no elevation is stored, it is inferred.
+//! 🔺️ Diff constructor for `CreateBeam`: one created beam entry. The storey and the beam type must exist, the axis (a line or an arc, like the axis of a wall) must have length and
+//! a real sweep, and both top offsets must be finite. The beam top lies the signed `top_offset` above (positive) or below (negative) the storey top at the start and the
+//! `end_top_offset` at the end: no elevation is stored, it is inferred.
 
 use super::super::elements;
+use super::super::wall_geometry::{flaw, offsets_flaw};
 use super::CreateBeam;
-use crate::{Entry, ModelDiff, ModelSnapshot, Point2};
+use crate::{Entry, ModelDiff, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
-
-fn finite(point: &Point2) -> bool {
-    point.x.is_finite() && point.y.is_finite()
-}
 
 pub fn diff(payload: &CreateBeam, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let beam = &payload.beam;
@@ -21,17 +19,11 @@ pub fn diff(payload: &CreateBeam, base: &ModelSnapshot) -> MutationOutcome<Model
     if !base.beam_types.contains_key(&beam.beam_type) {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Beam type \"{}\" does not exist.", beam.beam_type), ["beam", "beam_type"]);
     }
-    if !finite(&beam.start) {
-        return MutationOutcome::refuse(OutcomeCode::Invariant, "A beam start must be finite.", ["beam", "start"]);
+    if let Some(flaw) = flaw(&beam.axis) {
+        return flaw.under(&["beam", "axis"]).refuse();
     }
-    if !finite(&beam.end) {
-        return MutationOutcome::refuse(OutcomeCode::Invariant, "A beam end must be finite.", ["beam", "end"]);
-    }
-    if !beam.top_offset.is_finite() {
-        return MutationOutcome::refuse(OutcomeCode::Invariant, "A beam top offset must be finite.", ["beam", "top_offset"]);
-    }
-    if beam.start == beam.end {
-        return MutationOutcome::refuse(OutcomeCode::Invariant, "A beam must have length.", ["beam", "end"]);
+    if let Some(flaw) = offsets_flaw(beam.top_offset, beam.end_top_offset) {
+        return flaw.under(&["beam"]).refuse();
     }
     MutationOutcome::new(ModelDiff::beams(payload.id.clone(), Entry::Created(beam.clone())))
 }

@@ -8,3 +8,12 @@ pub mod gltf;
 
 #[path = "🎨️svg/🦀️.rs"]
 pub mod svg;
+
+#[path = "📊️csv/🦀️.rs"]
+pub mod csv;
+
+#[path = "🧾️json/🦀️.rs"]
+pub mod json;
+
+#[path = "📄️sheets/🦀️.rs"]
+pub mod sheets;

@@ -1,0 +1,128 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/expression/kinds.json",
+ "title": "KindFixtures",
+ "definitions": {
+  "Kind": {
+   "enum": [
+    "number",
+    "length",
+    "angle",
+    "area",
+    "volume",
+    "bool",
+    "text"
+   ]
+  },
+  "Value": {
+   "type": "object",
+   "required": [
+    "kind",
+    "value"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "kind": {
+     "$ref": "#/definitions/Kind"
+    },
+    "value": {
+     "type": [
+      "number",
+      "boolean",
+      "string"
+     ]
+    }
+   }
+  },
+  "Failure": {
+   "type": "object",
+   "required": [
+    "code",
+    "path"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "code": {
+     "type": "string",
+     "minLength": 1
+    },
+    "path": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 0
+     }
+    }
+   }
+  },
+  "Tree": {
+   "$ref": "https://semio.tech/framework/expression/tree.json"
+  }
+ },
+ "type": "object",
+ "required": [
+  "cases"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "cases": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "name",
+     "source",
+     "python",
+     "params",
+     "expected"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "source": {
+      "type": "string"
+     },
+     "python": {
+      "type": "string"
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "$ref": "#/definitions/Kind"
+      }
+     },
+     "expected": {
+      "oneOf": [
+       {
+        "type": "object",
+        "required": [
+         "kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+         "kind": {
+          "$ref": "#/definitions/Kind"
+         }
+        }
+       },
+       {
+        "type": "object",
+        "required": [
+         "error"
+        ],
+        "additionalProperties": false,
+        "properties": {
+         "error": {
+          "$ref": "#/definitions/Failure"
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  }
+ }
+}

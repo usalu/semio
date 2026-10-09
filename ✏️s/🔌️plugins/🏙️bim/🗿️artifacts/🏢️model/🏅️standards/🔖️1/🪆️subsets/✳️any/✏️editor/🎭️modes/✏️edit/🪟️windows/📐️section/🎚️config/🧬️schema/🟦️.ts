@@ -11,13 +11,9 @@ const num = (value: unknown, at: string): number => { if (typeof value !== "numb
 const count = (value: unknown, at: string): number => { if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) throw new TypeError(`${at} must be a non-negative safe integer`); return value; };
 const flag = (value: unknown, at: string): boolean => { if (typeof value !== "boolean") throw new TypeError(`${at} must be a boolean`); return value; };
 const list = <T,>(value: unknown, at: string, item: (entry: unknown, at: string) => T): T[] => { if (!Array.isArray(value)) throw new TypeError(`${at} must be an array`); return value.map((entry, index) => item(entry, `${at}[${index}]`)); };
-/** 🎚️ Persisted section line, depth and navigation of one exact BIM section window. */
+/** 🎚️ Persisted section or elevation view and navigation of one exact BIM section window. */
 export interface BimSectionWindowConfig {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-  depth: number;
+  view: string;
   framed: boolean;
   viewport: Viewport2d;
 }
@@ -27,13 +23,9 @@ export type BimSectionWindowConfigMutation = { kind: "replace"; config: BimSecti
 export type BimSectionWindowConfigDiff = Partial<BimSectionWindowConfig>;
 /** 🚪️ Parses one exact BimSectionWindowConfig. */
 export function parseBimSectionWindowConfig(value: unknown): BimSectionWindowConfig {
-  const row = exact(value, "$", ["startX", "startY", "endX", "endY", "depth", "framed", "viewport"]);
+  const row = exact(value, "$", ["view", "framed", "viewport"]);
   return {
-    startX: num(row.startX, "$.startX"),
-    startY: num(row.startY, "$.startY"),
-    endX: num(row.endX, "$.endX"),
-    endY: num(row.endY, "$.endY"),
-    depth: num(row.depth, "$.depth"),
+    view: text(row.view, "$.view"),
     framed: flag(row.framed, "$.framed"),
     viewport: parseViewport2d(row.viewport),
   };

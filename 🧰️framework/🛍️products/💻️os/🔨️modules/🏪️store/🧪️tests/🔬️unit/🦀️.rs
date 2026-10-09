@@ -451,7 +451,7 @@ fn drain_channel_for_test(remote: &ChannelBackboneRemote) -> Result<Vec<Backbone
 
 #[test]
 fn snapshot_read_lease_capacity_plus_one_returns_the_exact_owner_and_every_registered_owner_retires() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let mut reads = Vec::with_capacity(SNAPSHOT_READ_LEASE_CAPACITY);
     for index in 0..SNAPSHOT_READ_LEASE_CAPACITY {
         let owner = Arc::new(index);
@@ -476,7 +476,7 @@ fn snapshot_read_lease_capacity_plus_one_returns_the_exact_owner_and_every_regis
 
 #[test]
 fn snapshot_commit_authority_rejects_stale_generation_and_revision() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let first = [7; 32];
     let second = [9; 32];
     assert!(registry.publish_authority(4, first));
@@ -490,7 +490,7 @@ fn snapshot_commit_authority_rejects_stale_generation_and_revision() {
 
 #[test]
 fn dropped_snapshot_read_remains_observable_until_one_slot_per_step_cleanup_takes_its_guard() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(String::from("retained"));
     let lease = registry.try_issue(owner.clone()).expect("snapshot read lease admission");
     let index = lease.index;
@@ -514,7 +514,7 @@ fn dropped_snapshot_read_remains_observable_until_one_slot_per_step_cleanup_take
 
 #[test]
 fn stale_snapshot_read_generation_never_removes_a_reused_slot() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(7u32);
     let lease = registry.try_issue(owner.clone()).expect("first exact lease");
     let index = lease.index;
@@ -530,7 +530,7 @@ fn stale_snapshot_read_generation_never_removes_a_reused_slot() {
 
 #[test]
 fn snapshot_read_lease_contention_returns_the_exact_untouched_owner() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(String::from("contention-owner"));
     let guard = registry.state.try_lock().expect("hold exact registry contention fixture");
     let rejected = match registry.try_issue(owner.clone()) {
@@ -802,13 +802,11 @@ fn completed_record_owner(id: &str) -> Box<dyn ArtifactEnvelopeCompletedRecord<(
 
 fn drain_completed_record(mut owner: Box<dyn ArtifactEnvelopeCompletedRecord<(), ()>>) {
     for _ in 0..10_000 {
-        match owner.close_step(1, 17).expect("completed record bounded close") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 17);
+        match owner.close_step(envelope_field_close_grant()).expect("completed record bounded close") {
+            RetainedCloneStep::Progress(progress) => {
+                assert!(progress.fits(envelope_field_close_grant()));
             }
-            SnapshotRetirementStep::Blocked => panic!("owned completed record has no external wait"),
-            SnapshotRetirementStep::Complete => {
+            RetainedCloneStep::Complete(_) => {
                 assert!(owner.terminal_is_empty());
                 drop(owner);
                 return;
@@ -1111,10 +1109,6 @@ impl ArtifactEnvelopeFieldDecoder<(), ()> for TestEnvelopeFieldDecoder {
         Ok(ArtifactEnvelopeFieldDecodeStep::RecordComplete)
     }
 
-    fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
-        Ok(0)
-    }
-
     fn maximum_close_byte_demand(&self) -> usize {
         0
     }
@@ -1123,12 +1117,28 @@ impl ArtifactEnvelopeFieldDecoder<(), ()> for TestEnvelopeFieldDecoder {
         0
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_close_copy_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
+        if grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         self.terminal = true;
-        Ok(SnapshotRetirementStep::Complete)
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1148,10 +1158,14 @@ fn artifact_envelope_decode_test_cursor(chunks: &[&[u8]]) -> OwnedSchemaRecordCu
     OwnedSchemaRecordCursor::try_new(artifact_envelope_owned_schema(), tokens).unwrap_or_else(|_| panic!("valid envelope schema"))
 }
 
+fn envelope_field_close_grant() -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, maximum_capacity_bytes: ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, maximum_release_bytes: ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, maximum_depth: 16 }
+}
+
 fn drive_test_envelope_field_return(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>, detached: &mut Option<ArtifactEnvelopeReturnedFieldDecoder<(), ()>>) {
     if let Some(retirement) = detached.as_mut() {
-        let step = retirement.close_step(1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("test app return pump closes one exact decoder owner");
-        if step == SnapshotRetirementStep::Complete {
+        let step = retirement.close_step(envelope_field_close_grant()).expect("test app return pump closes one exact decoder owner");
+        if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(retirement.terminal_is_empty());
             drop(detached.take());
         }
@@ -1250,8 +1264,8 @@ fn cancelled_and_rejected_envelope_decodes_close_one_exact_owner_per_grant() {
     let mut detached = None;
     while !rejected.terminal_is_empty() {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let step = rejected.close_step(1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("retained decode rejection closes");
-        assert!(matches!(step, SnapshotRetirementStep::Pending { .. } | SnapshotRetirementStep::Complete));
+        let step = rejected.close_step(envelope_field_close_grant()).expect("retained decode rejection closes");
+        assert!(step.progress().fits(envelope_field_close_grant()));
         close_turns += 1;
         assert!(close_turns < 16);
     }
@@ -1274,19 +1288,15 @@ fn artifact_envelope_public_rejection_preserves_record_lease_ticket_double_retur
     assert_eq!(Arc::as_ptr(&rejected.field_registry), registry_identity);
     assert_eq!(rejected.diagnostic, diagnostic);
     assert!(!registry.ticket_reclaimed(field_ticket));
-    assert_eq!(rejected.close_step(0, 0), Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+    assert_eq!(rejected.close_step(RetainedCloneGrant::default()), Ok(RetainedCloneStep::Progress(Default::default())));
     assert_eq!(rejected.record.as_ref().map(|record| record.tokens.pages.slots.as_ptr()), Some(record_identity));
     assert_eq!(rejected.fields.as_ref().map(ArtifactEnvelopeFieldDecoderLease::ticket), Some(field_ticket));
 
     let mut detached = None;
     for _ in 0..16 {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let step = rejected.close_step(1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("public rejection closes one exact owner");
-        assert!(
-            matches!(step, SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
-                || step == SnapshotRetirementStep::Blocked
-                || step == SnapshotRetirementStep::Complete
-        );
+        let step = rejected.close_step(envelope_field_close_grant()).expect("public rejection closes one exact owner");
+        assert!(step.progress().fits(envelope_field_close_grant()));
         if rejected.terminal_is_empty() {
             break;
         }
@@ -1325,13 +1335,13 @@ fn interactive_envelope_close_reclaims_every_owner_through_the_job_protocol() {
     let mut detached = None;
     for _ in 0..16 {
         drive_test_envelope_field_return(&registry, &mut detached);
-        match job.close_step(1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-            InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+        match job.close_step(envelope_field_close_grant()) {
+            InteractiveJobCloseStep::Pending { progress } => {
+                assert!(progress.fits(envelope_field_close_grant()));
             }
             InteractiveJobCloseStep::Blocked => {}
-            InteractiveJobCloseStep::Complete => {
+            InteractiveJobCloseStep::Refused(kind) => panic!("interactive envelope close refused: {kind:?}"),
+            InteractiveJobCloseStep::Complete { .. } => {
                 assert!(job.terminal_is_empty());
                 assert!(registry.terminal_is_empty());
                 return;
@@ -1417,7 +1427,7 @@ fn envelope_field_registry_capacity_and_contention_return_the_exact_decoder_befo
 /// already been freed and reissued.
 #[test]
 fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let aliased_root = Arc::new(11u32);
     let mut aliased = registry.try_issue(aliased_root.clone()).expect("exact aliased lease");
     assert!(aliased.return_now());
@@ -1450,7 +1460,7 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
 
 #[test]
 fn stale_snapshot_read_generation_cannot_aba_remove_a_reused_slot() {
-    let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(1u16);
     let first = registry.try_issue(owner.clone()).expect("first exact lease");
     let stale_index = first.index;
@@ -1671,6 +1681,12 @@ where
     }
     fn take_returned_snapshot_read_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         SpaceMember::take_returned_snapshot_read_retirement(&mut self.0, grant)
+    }
+    fn snapshot_read_retirement_demand(&self) -> semio_framework_value::RetirementDemand {
+        SpaceMember::snapshot_read_retirement_demand(&self.0)
+    }
+    fn returned_snapshot_read_retirement_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        SpaceMember::returned_snapshot_read_retirement_demand(&self.0)
     }
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
         SpaceMember::snapshot_read_leases_terminal_is_empty(&self.0)
@@ -3691,11 +3707,11 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     let mut replay = Some(store.begin_derived_report_replay(protocol::HistoryInputDrafts::new(), None).expect("genuine history replay"));
     let owner = replay.as_ref().expect("retained replay") as *const _;
     let plan = replay.as_ref().unwrap().plan.as_ref().unwrap() as *const _;
-    let registry = Arc::as_ptr(&replay.as_ref().unwrap().registry);
+    let registry = replay.as_ref().unwrap().registry.identity();
     assert!(store.finish_derived_report_replay(&mut replay).is_err(), "unfinished admission retains its actual owner");
     assert_eq!(owner, replay.as_ref().expect("unfinished replay retained") as *const _);
     assert_eq!(plan, replay.as_ref().unwrap().plan.as_ref().unwrap() as *const _);
-    assert_eq!(registry, Arc::as_ptr(&replay.as_ref().unwrap().registry));
+    assert_eq!(registry, replay.as_ref().unwrap().registry.identity());
     loop {
         let demand=replay.as_ref().unwrap().planning_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).unwrap();
         let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
@@ -3703,7 +3719,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     }
     assert!(foreign.finish_derived_report_replay(&mut replay).is_err(), "foreign finishing cannot consume the source owner");
     assert_eq!(owner, replay.as_ref().expect("foreign-refused replay retained") as *const _);
-    assert_eq!(registry, Arc::as_ptr(&replay.as_ref().unwrap().registry));
+    assert_eq!(registry, replay.as_ref().unwrap().registry.identity());
     assert_eq!(replay.as_ref().unwrap().replay.as_ref().unwrap().state.as_ref().unwrap().n, Some(6));
     let (result, head) = store.finish_derived_report_replay(&mut replay).expect("sealed completed replay");
     assert!(replay.is_none());
@@ -3719,12 +3735,12 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     let mut stale = Some(store.begin_derived_report_replay(protocol::HistoryInputDrafts::new(), None).expect("second actual replay"));
     let owner = stale.as_ref().expect("retained stale replay") as *const _;
     let plan = stale.as_ref().unwrap().plan.as_ref().unwrap() as *const _;
-    let registry = Arc::as_ptr(&stale.as_ref().unwrap().registry);
+    let registry = stale.as_ref().unwrap().registry.identity();
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("new actual frontier");
     assert!(store.finish_derived_report_replay(&mut stale).is_err(), "stale admission cannot consume the actual replay owner");
     assert_eq!(owner, stale.as_ref().expect("stale replay retained") as *const _);
     assert_eq!(plan, stale.as_ref().unwrap().plan.as_ref().unwrap() as *const _);
-    assert_eq!(registry, Arc::as_ptr(&stale.as_ref().unwrap().registry));
+    assert_eq!(registry, stale.as_ref().unwrap().registry.identity());
     assert!(stale.as_ref().unwrap().replay.is_none(), "stale planning never begins projection work");
     drop(stale);
     close_demo_artifact_store(&mut store);
@@ -3812,7 +3828,7 @@ async fn store_close_releases_a_returned_read_before_its_displaced_root() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "returned-before-displaced", DemoSnapshot { n: Some(0) }, None)).await;
     store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let read = store.snapshot_read().expect("read captures the pre-edit root");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply displaces the captured root");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply displaces the captured root");
     drop(read);
     close_demo_artifact_store(&mut store);
     assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 1, "the edited current root retires exactly once");
@@ -3825,9 +3841,13 @@ async fn erased_member_snapshot_read_releases_its_alias_before_the_live_current_
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "erased-live-reader", DemoSnapshot { n: Some(3) }, None)).await;
     store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    let read = SpaceMember::snapshot_read_erased_now(&store).expect("erased member read");
-    let mut retirement = SpaceMember::retire_snapshot_read_erased(&mut store, read).unwrap_or_else(|rejected| panic!("{}", rejected.reason));
-    assert_eq!(retirement.close_step(1, 512).expect("erased read releases its alias"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+    let grant = physical_test_close_grant();
+    let mut read = Some(SpaceMember::snapshot_read_erased_now(&store).expect("erased member read"));
+    let (retirement, admission) = SpaceMember::retire_snapshot_read_erased(&mut store, &mut read, grant).expect("erased read admission is funded by its grant");
+    assert!(read.is_none() && admission.fits(grant));
+    let mut retirement = retirement.expect("admitted erased read retirement");
+    let step = retirement.close_step(grant).expect("erased read releases its alias");
+    assert!(step.progress().fits(grant) && step.progress().copied_items == 1);
     assert!(retirement.terminal_is_empty());
     drop(retirement);
     close_demo_artifact_store(&mut store);
@@ -3848,20 +3868,13 @@ async fn retained_genesis_aliases_retire_each_decoded_allocation_once() {
         store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         for command in case["commands"].as_array().unwrap() {
             let command = match command.as_str().unwrap() { "apply" => ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }, "applyNext" => ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 8 })], transaction: None }, "undo" => ArtifactCommand::Undo, "redo" => ArtifactCommand::Redo, other => panic!("unknown neutral command {other}") };
-            store.dispatch(command).await.expect("neutral command executes");
+            test_support::dispatch_test_command(&mut store, command).await.expect("neutral command executes");
         }
         assert_eq!(serde_json::to_value(store.snapshot_ref()).unwrap(), case["final"]);
         let read = case["liveReader"].as_bool().unwrap_or(false).then(|| store.snapshot_read().expect("registered external reader"));
         let tail = case["tailReader"].as_bool().unwrap_or(false).then(|| Arc::clone(&store.tail_undo_cache.as_ref().expect("mutated tail owner").1));
         if read.is_some() || tail.is_some() {
-            let mut blocked = false;
-            for _ in 0..16_384 {
-                match SpaceMember::close_owned_step(&mut store, 1, 512).expect("reader boundary close grant") {
-                    SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 512),
-                    SnapshotRetirementStep::Blocked => { blocked = true; break; },
-                    SnapshotRetirementStep::Complete => panic!("external reader must retain its exact authority"),
-                }
-            }
+            let blocked = close_stalls_at_reader_boundary(&mut store);
             assert!(blocked);
             assert!(!SpaceMember::close_owned_terminal_is_empty(&store));
             assert_eq!(genesis.load(std::sync::atomic::Ordering::SeqCst), 0);
@@ -3874,6 +3887,21 @@ async fn retained_genesis_aliases_retire_each_decoded_allocation_once() {
         assert_eq!(genesis.load(std::sync::atomic::Ordering::SeqCst) as u64, case["genesisRetirements"].as_u64().unwrap());
         eprintln!("[DEBUG] retained genesis alias {} completed exact allocation retirement", case["name"].as_str().unwrap());
     }
+}
+
+/// 🚧️ Drives a store close under its exact quoted per-axis demands until a funded turn makes no progress: the live external reader boundary.
+fn close_stalls_at_reader_boundary(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) -> bool {
+    let copy = physical_test_close_grant().maximum_copy_bytes;
+    for _ in 0..16_384 {
+        let demand = store.close_owned_demands(copy).expect("current independent Store close frontier");
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(copy), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        match store.close_owned_step(grant).expect("store close advances to the reader boundary") {
+            RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => return true,
+            RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
+            RetainedCloneStep::Complete(_) => panic!("a live snapshot read must retain its exact root"),
+        }
+    }
+    false
 }
 
 pub(super) fn demo_closable_store_owners() -> DocumentStoreOwners<DemoSnapshot, DemoMutation> {
@@ -3900,6 +3928,21 @@ struct DemoRetainedCloneEditCursor {
     active_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
     cancelled: bool,
     closing: bool,
+}
+
+impl DemoRetainedCloneEditCursor {
+    fn close_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        use semio_framework_value::RetirementDemand;
+        if let Some(retirement) = self.active_retirement.as_ref() {
+            let mut demand = artifact_retirement_box_demands(retirement, body)?;
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "retained clone fixture close depth overflow"))?;
+            return Ok(demand);
+        }
+        if let Some(mutation) = self.inverse.as_ref().and_then(|inverse| inverse.last()) {
+            return Ok(RetirementDemand { capacity_bytes: DemoMutationRetirementFactory.retirement_birth_bytes(mutation), depth: 2, ..Default::default() });
+        }
+        Ok(RetirementDemand { depth: 1, ..Default::default() })
+    }
 }
 
 impl RetainedCloneEdit<DemoSnapshot, DemoMutation> for DemoRetainedCloneEdit {
@@ -3972,30 +4015,59 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
         started
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Blocked);
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(empty));
         }
-        if let Some(retirement) = self.active_retirement.as_mut() {
-            let step = retirement.close_step(1, maximum_bytes)?;
-            if step != SnapshotRetirementStep::Complete {
-                return Ok(step);
-            }
-            if !retirement.terminal_is_empty() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone fixture mutation retirement completed with a live owner"));
-            }
-            self.active_retirement = None;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        if self.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(empty));
+        }
+        let demand = self.close_demand(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "retained clone fixture close exceeds granted depth"));
+        }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(empty));
+        }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active_retirement.is_some() {
+            let step = artifact_retirement_box_close_step(&mut self.active_retirement, child)?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(inverse) = self.inverse.as_mut() {
             if let Some(mutation) = inverse.pop() {
-                self.active_retirement = Some(DemoMutationRetirementFactory.retire_owned(mutation));
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                return match DemoMutationRetirementFactory.retire_owned(mutation, child) {
+                    Ok((owner, progress)) => {
+                        self.active_retirement = Some(owner);
+                        Ok(RetainedCloneStep::Progress(progress))
+                    }
+                    Err((error, mutation)) => {
+                        inverse.push(mutation);
+                        Err(error)
+                    }
+                };
             }
             self.inverse = None;
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
-        Ok(SnapshotRetirementStep::Complete)
+        Ok(RetainedCloneStep::Complete(empty))
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demand(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        Ok(self.close_demand(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demand(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demand(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -4020,8 +4092,12 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Prob
         self.inner.preflight(mutation, lane)
     }
 
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation>> {
-        self.inner.begin(request).map(|inner| Box::new(ProbedRetainedClonePreparation { inner, dropped: Arc::clone(&self.dropped) }) as Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>)
+    fn begin_demand(&self, mutation: &DemoMutation, lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
+        self.inner.begin_demand(mutation, lane)
+    }
+
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation>)> {
+        self.inner.begin(request, grant).map(|(inner, progress)| (Box::new(ProbedRetainedClonePreparation { inner, dropped: Arc::clone(&self.dropped) }) as Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, progress))
     }
 }
 
@@ -4055,8 +4131,24 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for ProbedRetai
         self.inner.begin_close();
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
         self.inner.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        self.inner.next_close_copy_byte_demand()
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        self.inner.next_close_capacity_byte_demand(maximum_copy_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        self.inner.next_close_release_byte_demand()
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        self.inner.next_close_depth_demand()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -4251,8 +4343,25 @@ impl RetainedCloneEditCursor<RetainedTextSnapshot, RetainedTextMutation> for Ret
         started
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        Ok(if self.closing { SnapshotRetirementStep::Complete } else { SnapshotRetirementStep::Blocked })
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        Ok(if self.closing && grant.maximum_items != 0 { RetainedCloneStep::Complete(empty) } else { RetainedCloneStep::Progress(empty) })
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(1)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -4260,19 +4369,30 @@ impl RetainedCloneEditCursor<RetainedTextSnapshot, RetainedTextMutation> for Ret
     }
 }
 
-fn close_retained_clone_preparation_publication<P: Send + Sync + 'static, M>(publication: &mut ArtifactStoreBatchPublication<P, M>, grant: ArtifactStoreOneItemGrant) -> usize {
+const FIXTURE_ONE_ITEM_DEPTH: usize = 64;
+
+/// 🎟️ Grants every independent byte axis the same per-turn ceiling a neutral fixture states once.
+fn uniform_one_item_grant(maximum_items: usize, maximum_bytes: usize) -> ArtifactStoreOneItemGrant {
+    ArtifactStoreOneItemGrant { maximum_items, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: maximum_bytes, maximum_release_bytes: maximum_bytes, maximum_depth: FIXTURE_ONE_ITEM_DEPTH }
+}
+
+/// 📜️ Reads a neutral fixture's item and byte ceilings as one uniform scheduler grant.
+fn fixture_one_item_grant(row: &serde_json::Value) -> ArtifactStoreOneItemGrant {
+    uniform_one_item_grant(row["maximumItems"].as_u64().expect("fixture maximum items") as usize, row["maximumBytes"].as_u64().expect("fixture maximum bytes") as usize)
+}
+
+fn close_retained_clone_preparation_publication<P: Send + Sync + 'static, M: Send + 'static>(publication: &mut ArtifactStoreBatchPublication<P, M>, maximum_bytes: usize) -> usize {
     publication.begin_close();
     for turn in 1..10_000 {
-        match publication.close_step(grant).expect("retained clone publication closes") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1, "one close turn releases at most one retained frontier");
-                assert!(released_bytes <= grant.maximum_bytes, "one close turn stays inside its byte grant");
-            }
-            SnapshotRetirementStep::Blocked => {}
-            SnapshotRetirementStep::Complete => {
-                assert!(publication.terminal_is_empty());
-                return turn;
-            }
+        let copy = publication.next_copy_byte_demand().expect("current publication copy demand");
+        let capacity = publication.next_capacity_byte_demand(copy).expect("current publication capacity demand");
+        assert!(copy + capacity <= maximum_bytes, "one close turn quotes copy and capacity inside its byte ceiling");
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: publication.next_release_byte_demand().expect("current publication release demand"), maximum_depth: publication.next_depth_demand().expect("current publication depth demand") };
+        let step = publication.close_step(grant).expect("retained clone publication closes");
+        assert!(step.progress().fits(grant) && step.progress().copied_items <= 1, "one close turn stays inside its granted axes");
+        if matches!(step, RetainedCloneStep::Complete(_)) {
+            assert!(publication.terminal_is_empty());
+            return turn;
         }
     }
     panic!("retained clone publication did not reach terminal empty");
@@ -4281,7 +4401,7 @@ fn close_retained_clone_preparation_publication<P: Send + Sync + 'static, M>(pub
 #[semio_framework_async_macros::async_test]
 async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["grant"]["maximumItems"].as_u64().expect("maximum items") as usize, maximum_bytes: fixture["grant"]["maximumBytes"].as_u64().expect("maximum bytes") as usize };
+    let grant = fixture_one_item_grant(&fixture["grant"]);
     for (index, row) in fixture["cases"].as_array().expect("lifecycle cases").iter().enumerate() {
         let initial = row["initial"].as_i64().expect("initial") as i32;
         let value = row["value"].as_i64().expect("value") as i32;
@@ -4345,7 +4465,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
                 }
                 "cancel" => assert!(store.cancel_apply_batch(&mut publication)),
                 "stale" => {
-                    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: initial + 1 })], transaction: None }).await.expect("superseding edit publishes");
+                    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: initial + 1 })], transaction: None }).await.expect("superseding edit publishes");
                     let error = match store.advance_apply_batch(&mut publication, grant) {
                         Err(error) => error,
                         Ok(_) => panic!("retained clone publication must reject its stale base"),
@@ -4386,7 +4506,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
                 }
                 _ => {}
             }
-            let close_turns = close_retained_clone_preparation_publication(&mut publication, grant);
+            let close_turns = close_retained_clone_preparation_publication(&mut publication, grant.maximum_copy_bytes);
             assert!(close_turns > 1, "the retained owner lifecycle remains interruptible through terminal close");
             terminal_empty = publication.terminal_is_empty();
         }
@@ -4398,9 +4518,9 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
         });
         assert_eq!(actual, row["expected"], "{} matches the language-neutral lifecycle oracle", row["id"]);
         if kind == "success" {
-            store.dispatch(ArtifactCommand::Undo).await.expect("retained clone publication undo");
+            test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("retained clone publication undo");
             assert_eq!(store.snapshot_ref().n, Some(initial));
-            store.dispatch(ArtifactCommand::Redo).await.expect("retained clone publication redo");
+            test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("retained clone publication redo");
             assert_eq!(store.snapshot_ref().n, Some(value));
         }
         close_demo_artifact_store(&mut store);
@@ -4411,7 +4531,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
 async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
     let row = &fixture["handoff"];
-    let grant = ArtifactStoreOneItemGrant { maximum_items: row["closeGrant"]["maximumItems"].as_u64().expect("handoff maximum items") as usize, maximum_bytes: row["closeGrant"]["maximumBytes"].as_u64().expect("handoff maximum bytes") as usize };
+    let grant = fixture_one_item_grant(&row["closeGrant"]);
     let dropped = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> =
         Arc::new(ProbedRetainedClonePreparationFactory { inner: retained_clone_preparation_factory(DemoRetainedCloneEditMode::Apply), dropped: Arc::clone(&dropped) });
@@ -4439,14 +4559,12 @@ async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() 
     let mut close_turns = 0usize;
     loop {
         close_turns += 1;
-        match store.maintenance_retirements_step(grant.maximum_items, grant.maximum_bytes).expect("Store maintenance retires the handed-off publication") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= grant.maximum_items);
-                assert!(released_bytes <= grant.maximum_bytes);
-            }
-            SnapshotRetirementStep::Blocked => {}
-            SnapshotRetirementStep::Complete => break,
-        }
+        let demand = store.maintenance_retirements_demands(grant.maximum_copy_bytes).expect("Store maintenance quotes the handed-off publication frontier");
+        assert!(demand.copy_bytes + demand.capacity_bytes <= grant.maximum_copy_bytes);
+        let turn = RetainedCloneGrant { maximum_items: grant.maximum_items, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let step = store.maintenance_retirements_step(turn).expect("Store maintenance retires the handed-off publication");
+        assert!(step.progress().fits(turn) && step.progress().copied_items <= grant.maximum_items);
+        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         assert!(close_turns < 4_096, "Store maintenance reaches terminal emptiness");
     }
     let actual = serde_json::json!({
@@ -4462,7 +4580,7 @@ async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() 
 #[semio_framework_async_macros::async_test]
 async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_store_grant() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["grant"]["maximumItems"].as_u64().expect("maximum items") as usize, maximum_bytes: fixture["grant"]["maximumBytes"].as_u64().expect("maximum bytes") as usize };
+    let grant = fixture_one_item_grant(&fixture["grant"]);
     let text_bytes = fixture["largeCapacity"]["stringByteLength"].as_u64().expect("large string byte length") as usize;
     let expected_code = fixture["largeCapacity"]["expectedCode"].as_str().expect("large capacity refusal code");
     let initial = RetainedTextSnapshot { text: "x".repeat(text_bytes) };
@@ -4504,27 +4622,23 @@ async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_
     assert!(error.to_string().contains(expected_code), "capacity refusal exposes the stable language-neutral code: {error}");
     assert_eq!(store.snapshot_ref(), &initial);
     assert!(store.applied_edit_ids().is_empty());
-    assert!(close_retained_clone_preparation_publication(&mut publication, grant) > 1);
-    for _ in 0..65_536 {
-        match SpaceMember::close_owned_step(&mut store, 1, grant.maximum_bytes).expect("retained text store closes") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= grant.maximum_bytes);
-            }
-            SnapshotRetirementStep::Blocked => {}
-            SnapshotRetirementStep::Complete => {
-                assert!(SpaceMember::close_owned_terminal_is_empty(&store));
-                return;
-            }
-        }
-    }
-    panic!("retained text store did not close within its bounded turn envelope");
+    assert!(close_retained_clone_preparation_publication(&mut publication, grant.maximum_copy_bytes) > 1);
+    close_test_store(&mut store);
+    assert!(SpaceMember::close_owned_terminal_is_empty(&store));
+}
+
+/// 📏️ Grants exactly the quoted per-axis demand of the next ephemeral cleanup turn.
+fn quoted_ephemeral_close_grant(publication: &ArtifactEphemeralOneItemPublication<DemoSnapshot, DemoMutation>) -> ArtifactStoreOneItemGrant {
+    let demand = publication.retirement_demands(64).expect("current ephemeral cleanup frontier");
+    ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 
 fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublication<DemoSnapshot, DemoMutation>) {
-    for _ in 0..16 {
-        let step = publication.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 8 }).expect("ephemeral publication closes");
-        if step == SnapshotRetirementStep::Complete {
+    for _ in 0..64 {
+        let grant = quoted_ephemeral_close_grant(publication);
+        let step = publication.close_step(grant).expect("ephemeral publication closes");
+        assert!(step.progress().fits(grant.retained_grant()));
+        if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(publication.terminal_is_empty());
             return;
         }
@@ -4543,7 +4657,7 @@ async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_ge
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(1), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 7 })], HistoryLane::Document, Some(&admitted), None)
         .expect("explicit domain factory admits");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let grant = uniform_one_item_grant(1, 512);
     let receipt = loop {
         if let ArtifactStoreOneItemAdvance::Published(receipt) = store.advance_apply_batch(&mut publication, grant).expect("one bounded durable step") {
             break receipt;
@@ -4587,7 +4701,7 @@ async fn publish_demo_batch_with(
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), store.local_actor_id().0.clone(), mutations, HistoryLane::Document, Some(&factory), None)
         .unwrap_or_else(|rejected| panic!("batched admission: {}", rejected.reason));
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let grant = uniform_one_item_grant(1, 512);
     for _ in 0..65_536 {
         match store.advance_apply_batch(&mut publication, grant) {
             Ok(ArtifactStoreOneItemAdvance::Published(receipt)) => return (publication, Ok(receipt)),
@@ -4650,7 +4764,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
 
     let mut oracle = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-oracle", DemoSnapshot { n: Some(0) }, None)).await;
     oracle.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    oracle.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await.expect("the batched command oracle applies the same list");
+    test_support::dispatch_test_command(&mut oracle, ArtifactCommand::Apply { mutations, transaction: None }).await.expect("the batched command oracle applies the same list");
     let expected = oracle.envelope.vcs.edits.last().expect("oracle edit");
     assert_eq!(staged.forwards, expected.forwards, "a staged gesture records the same forwards ArtifactCommand::Apply does");
     assert_eq!(staged.inverse, expected.inverse, "a staged gesture records the same inverse ordering ArtifactCommand::Apply does");
@@ -4669,10 +4783,10 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     }
     assert_ne!(forwards.n, Some(0), "consuming the staged inverse head-first is NOT the undo of the gesture");
 
-    store.dispatch(ArtifactCommand::Undo).await.expect("one gesture is one undo step");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("one gesture is one undo step");
     assert_eq!(store.snapshot_ref().n, Some(0), "one undo reverts the whole gesture");
     assert!(store.applied_edit_ids().is_empty());
-    store.dispatch(ArtifactCommand::Redo).await.expect("one gesture is one redo step");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("one gesture is one redo step");
     assert_eq!(store.snapshot_ref().n, Some(ITEMS as i32));
     close_demo_artifact_store(&mut store);
 }
@@ -4823,7 +4937,7 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(4), generation, store.content_revision_now(), "retained-test".into(), (0..32).map(|_| DemoMutation::AddN(AddN { delta: 1 })).collect(), HistoryLane::Document, Some(&factory), None)
         .expect("a thirty-two item gesture admits");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let grant = uniform_one_item_grant(1, 512);
     while publication.staged_items() < 3 {
         store.advance_apply_batch(&mut publication, grant).expect("bounded staging turn");
     }
@@ -4843,13 +4957,13 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let capacity = store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 13 })], transaction: None }).await.unwrap();
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 13 })], transaction: None }).await.unwrap();
     assert_eq!(store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
     assert_eq!(serde_json::json!(store.generation_now()), fixture["rebase"]["afterGeneration"]);
     let revision = store.content_revision_now();
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
     let mut publication = store.begin_apply_batch(semio_framework_job::OperationId(93), store.generation_now(), revision, "fixture".into(), vec![DemoMutation::SetN(SetN { n: 97 })], HistoryLane::Document, Some(&factory), None).unwrap();
-    let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
+    let grant = fixture_one_item_grant(&fixture);
     for _ in 0..64 {
         if matches!(store.advance_apply_batch(&mut publication, grant).unwrap(), ArtifactStoreOneItemAdvance::Published(_)) {
             break;
@@ -4874,7 +4988,7 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(11), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 12 })], HistoryLane::Document, Some(&forged), None)
         .expect("Store-minted immutable authority admits the domain owner");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let grant = uniform_one_item_grant(1, 512);
     while publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
         assert!(matches!(store.advance_apply_batch(&mut publication, grant), Ok(ArtifactStoreOneItemAdvance::Progress(_))));
     }
@@ -4916,7 +5030,7 @@ async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generati
     assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
 
     for n in 1..=65 {
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("an edit past one history page");
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("an edit past one history page");
     }
     assert_eq!(store.applied_edit_ids().len(), 65);
     assert_eq!(serde_json::to_value(store.snapshot_root().as_ref()).unwrap(), serde_json::json!({ "n": 65 }));
@@ -4939,7 +5053,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(11), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 5 })], HistoryLane::Document, Some(&ahead), None)
         .expect("a stamped clock strictly ahead of the Store clock admits");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let grant = uniform_one_item_grant(1, 512);
     let receipt = loop {
         if let ArtifactStoreOneItemAdvance::Published(receipt) = store.advance_apply_batch(&mut publication, grant).expect("one bounded stamped step") {
             break receipt;
@@ -4994,7 +5108,7 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(21), generation, store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 3 })], HistoryLane::Document, Some(&genesis), None)
         .expect("a genesis document is after nothing, so the minted stamp admits");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let grant = uniform_one_item_grant(1, 512);
     loop {
         if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut publication, grant).expect("one bounded genesis step") {
             break;
@@ -5027,7 +5141,7 @@ async fn artifact_store_stamped_publication_carries_its_committed_identity_into_
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-identity", DemoSnapshot { n: Some(0) }, None)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let grant = uniform_one_item_grant(1, 512);
 
     let approval = "7d6bd4f3246ae47f074ed7a02011c0cf";
     let stamp = HybridLogicalTimestamp { actor: 1, physical_ms: 1_004, logical: 0 };
@@ -5074,17 +5188,33 @@ impl ArtifactEphemeralPreparationTask<DemoSnapshot, DemoMutation> for FaultingEp
         if !self.invalid_receipt {
             return Err("injected construction failure".into());
         }
-        Ok(ArtifactEphemeralPreparationTaskStep::Prepared { root: DemoSnapshot { n: Some(99) }, checkpoint: ArtifactStoreOneItemCheckpoint { completed_items: 1, completed_bytes: grant.maximum_bytes as u64 + 1, ..Default::default() } })
+        Ok(ArtifactEphemeralPreparationTaskStep::Prepared { root: DemoSnapshot { n: Some(99) }, checkpoint: ArtifactStoreOneItemCheckpoint { completed_items: 1, completed_bytes: grant.maximum_copy_bytes as u64 + 1, ..Default::default() } })
     }
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+}
+
+impl ErasedSnapshotRetirement for FaultingEphemeralTask {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         assert!(self.closing);
-        Ok(SnapshotRetirementStep::Complete)
+        let empty = RetainedCloneProgress::default();
+        Ok(if grant.maximum_items == 0 { RetainedCloneStep::Progress(empty) } else { RetainedCloneStep::Complete(empty) })
     }
     fn terminal_is_empty(&self) -> bool {
         self.closing
+    }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(0)
+    }
+    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> {
+        Ok(0)
+    }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(0)
+    }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(1)
     }
 }
 
@@ -5099,7 +5229,7 @@ fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
     );
     for row in fixture["cases"].as_array().unwrap() {
         let mutation = || DemoMutation::SetN(SetN { n: row["mutation"].as_i64().unwrap() as i32 });
-        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 };
+        let grant = uniform_one_item_grant(1, 7);
         let mut presence = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
         let presence_root_factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
         presence.install_local_retirement_factory(presence_root_factory.clone()).unwrap();
@@ -5113,24 +5243,14 @@ fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
         for publication in [&mut presence_publication, &mut transient_publication] {
             assert_eq!(publication.fault(), Some(presence_error.as_str()));
             assert_eq!(format!("{:?}", publication.phase()), fixture["phase"].as_str().unwrap());
-            assert_eq!(publication.close_step(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            for _ in 0..256 {
-                match publication.close_step(grant).unwrap() {
-                    SnapshotRetirementStep::Complete => break,
-                    SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 7),
-                    SnapshotRetirementStep::Blocked => panic!("isolated fault owner must close"),
-                }
-            }
+            assert_eq!(publication.close_step(uniform_one_item_grant(0, 4096)).unwrap().progress(), RetainedCloneProgress::default());
+            close_ephemeral_publication(publication);
             assert!(publication.terminal_is_empty());
         }
         assert_eq!(serde_json::to_value(presence.local().n).unwrap(), fixture["initial"]);
         assert_eq!(serde_json::to_value(transient.current_root().n).unwrap(), fixture["initial"]);
         let mut retirement = presence.begin_retirement(Arc::new(DemoSnapshot { n: Some(0) }), |value| value.n == Some(0)).ok().unwrap();
-        for _ in 0..256 {
-            if retirement.close_step(1, 7).unwrap() == SnapshotRetirementStep::Complete {
-                break;
-            }
-        }
+        test_support::drive_retirement(&mut retirement).expect("presence retirement reaches its terminal-empty witness under its quoted demands");
         assert!(retirement.terminal_is_empty());
     }
 }
@@ -5144,7 +5264,7 @@ fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
 /// checkpoint the same way.
 #[semio_framework_async_macros::async_test]
 async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owner_release() {
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
+    let grant = uniform_one_item_grant(1, 64);
     let factory = DemoEphemeralPreparationFactory::admissible();
     let mut transient = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
     let mut publication = transient.begin_publish_one(semio_framework_job::OperationId(41), 0, DemoMutation::SetN(SetN { n: 4 }), Some(&factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("ephemeral publication admits");
@@ -5171,9 +5291,9 @@ async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owne
     assert!(published.completed_items > 0, "a published ephemeral gesture reports the work it actually did, not zero");
     assert!(publication.acknowledge());
     for _ in 0..2048 {
-        let step = publication.close_step(grant).expect("ephemeral close advances");
+        let step = publication.close_step(quoted_ephemeral_close_grant(&publication)).expect("ephemeral close advances");
         check(publication.progress(), &mut seen, "close");
-        if step == SnapshotRetirementStep::Complete {
+        if matches!(step, RetainedCloneStep::Complete(_)) {
             break;
         }
     }
@@ -5183,12 +5303,12 @@ async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owne
 
 #[semio_framework_async_macros::async_test]
 async fn presence_and_transient_one_item_publications_are_retained_stale_safe_cancelable_and_exactly_closed() {
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
+    let grant = uniform_one_item_grant(1, 64);
     let presence_factory = DemoEphemeralPreparationFactory::admissible();
     let mut presence = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
     let root_factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
     presence.install_local_retirement_factory(root_factory.clone()).unwrap();
-    let old_presence_root = Arc::downgrade(&presence.local);
+    let old_presence_root = Arc::downgrade(presence.local.as_ref().expect("live local presence owner"));
     let mut presence_publication = presence.begin_publish_one(semio_framework_job::OperationId(5), 0, DemoMutation::SetN(SetN { n: 5 }), Some(&presence_factory), Some(root_factory.clone())).expect("presence factory admits");
     let presence_receipt = loop {
         if let ArtifactStoreOneItemAdvance::Published(receipt) = presence.advance_publish_one(&mut presence_publication, grant).expect("presence step") {
@@ -5201,11 +5321,11 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
     assert!(std::ptr::eq(presence_root.as_ref(), presence.local()));
     assert!(presence_publication.acknowledge());
     assert!(old_presence_root.upgrade().is_some(), "displaced presence root remains retained before bounded close");
-    let _ = presence_publication.close_step(grant).expect("presence close advances one owner");
+    let _ = presence_publication.close_step(quoted_ephemeral_close_grant(&presence_publication)).expect("presence close advances one owner");
     assert!(old_presence_root.upgrade().is_some(), "first close unit cannot destroy the displaced root");
     close_ephemeral_publication(&mut presence_publication);
     for _ in 0..2048 {
-        if presence.maintenance_local_reads_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete {
+        if matches!(presence.maintenance_local_reads_step(physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
             break;
         }
     }
@@ -5235,7 +5355,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
     assert!(Arc::ptr_eq(&transient_root, &transient.current_root()));
     assert!(transient_publication.acknowledge());
     assert!(old_transient_root.upgrade().is_some(), "displaced transient root remains retained before bounded close");
-    let _ = transient_publication.close_step(grant).expect("transient close advances one owner");
+    let _ = transient_publication.close_step(quoted_ephemeral_close_grant(&transient_publication)).expect("transient close advances one owner");
     assert!(old_transient_root.upgrade().is_some(), "first close unit cannot destroy the displaced transient root");
     close_ephemeral_publication(&mut transient_publication);
     assert!(old_transient_root.upgrade().is_none(), "bounded retirement releases the displaced transient root");
@@ -5245,11 +5365,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
     assert!(transient.begin_publish_one(semio_framework_job::OperationId(10), 1, DemoMutation::SetN(SetN { n: 7 }), None, Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
     drop(presence_root);
     let mut close = presence.begin_retirement(Arc::new(DemoSnapshot { n: Some(0) }), |value| value.n == Some(0)).ok().unwrap();
-    for _ in 0..2048 {
-        if close.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete {
-            break;
-        }
-    }
+    test_support::drive_retirement(&mut close).expect("presence retirement reaches its terminal-empty witness under its quoted demands");
     assert!(close.terminal_is_empty());
 }
 
@@ -5339,18 +5455,29 @@ fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEn
     })
 }
 
+/// 📏️ Drives an erased retirement on its exact quoted demands while every turn stays inside a fixture's item and byte ceilings.
+fn drive_retirement_within(owner: &mut dyn ErasedSnapshotRetirement, maximum_items: usize, maximum_bytes: usize) {
+    for _ in 0..4096 {
+        if owner.terminal_is_empty() {
+            return;
+        }
+        let copy = owner.next_copy_byte_demand().expect("current copy demand");
+        let capacity = owner.next_capacity_byte_demand(copy).expect("current capacity demand");
+        assert!(copy <= maximum_bytes && capacity <= maximum_bytes, "one turn quotes its payload and allocation inside the byte ceiling");
+        let grant = RetainedCloneGrant { maximum_items, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: owner.next_release_byte_demand().expect("current release demand"), maximum_depth: owner.next_depth_demand().expect("current depth demand").max(1) };
+        let step = owner.close_step(grant).expect("bounded retirement turn");
+        assert!(step.progress().fits(grant) && step.progress().copied_items <= maximum_items && step.progress().released_bytes <= maximum_bytes);
+        if matches!(step, RetainedCloneStep::Complete(_)) {
+            return;
+        }
+    }
+    panic!("retirement did not reach its terminal-empty witness inside its bounded turns");
+}
+
 fn close_group_read_fixture(envelope: ArtifactEnvelope<GroupReadTriggerSnapshot, ()>) {
     let mut owners = envelope.into_owners();
     let mut cursor = ArtifactStoreCursorRetirement::new(owners.cursor.take().unwrap());
-    for _ in 0..1_024 {
-        let step = cursor.close_step(1, 4_096).unwrap();
-        if step == SnapshotRetirementStep::Complete {
-            break;
-        }
-        if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1 && released_bytes <= 4_096);
-        }
-    }
+    test_support::drive_retirement(&mut cursor).expect("group read fixture cursor reaches its terminal-empty witness under its quoted demands");
     assert!(cursor.terminal_is_empty());
     while owners.vcs.edits.pop().is_some() {}
 }
@@ -5363,7 +5490,7 @@ fn retained_group_envelope_read_captures_history_and_cursor_before_decision() {
         let view = owner.lock().unwrap().view();
         let inject_commit = case["capture"] == "pending" && case["decision"] == "committed";
         let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: inject_commit.then(|| owner.clone()), reads: Arc::clone(&reads) });
+        let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: inject_commit.then(|| owner.clone()), reads: reads.clone() });
         let prepared_ids: Vec<String> = serde_json::from_value(fixture["prepared"]["appliedEditIds"].clone()).unwrap();
         envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners { applied_edit_ids: prepared_ids.clone().into(), redo_edit_ids: Vec::new().into(), checkpoint_id: None }, &view).unwrap();
         for id in &prepared_ids[1..] {
@@ -5397,11 +5524,7 @@ fn retained_group_envelope_read_captures_history_and_cursor_before_decision() {
             envelope.cursor.as_mut().unwrap().abort_group_owned(&view).unwrap()
         };
         let mut retirement = ArtifactStoreCursorRetirement::new(ArtifactCursor::from_owners(retired_cursor));
-        for _ in 0..1_024 {
-            if retirement.close_step(1, 4_096).unwrap() == SnapshotRetirementStep::Complete {
-                break;
-            }
-        }
+        test_support::drive_retirement(&mut retirement).expect("retired group cursor reaches its terminal-empty witness under its quoted demands");
         assert!(retirement.terminal_is_empty());
         close_group_read_fixture(envelope);
     }
@@ -5414,7 +5537,7 @@ fn retained_group_envelope_read_rejects_foreign_cursor_visibility_before_seriali
     let mut cursor_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
     let cursor = cursor_owner.view();
     let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: None, reads: Arc::clone(&reads) });
+    let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: None, reads: reads.clone() });
     let reservation = envelope.vcs.edits.reserve_group_one(&history).unwrap();
     envelope.vcs.edits.stage_group_reserved(reservation, group_read_fixture_edit("foreign"), &history).unwrap();
     envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners::default(), &cursor).unwrap();
@@ -5458,14 +5581,7 @@ async fn retained_group_cursor_shares_history_visibility_and_retires_displaced_r
     history.adopt_group(&view).expect("nonpublishing history adoption");
     assert_eq!(serde_json::to_value(&cursor).expect("adopted cursor serialization"), fixture["after"]);
     let mut retirement = ArtifactStoreCursorRetirement::new(ArtifactCursor::from_owners(displaced));
-    let grant = (fixture["maximumItems"].as_u64().expect("item grant") as usize, fixture["maximumBytes"].as_u64().expect("byte grant") as usize);
-    for _ in 0..1024 {
-        match retirement.close_step(grant.0, grant.1).expect("bounded displaced cursor close") {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= grant.0 && released_bytes <= grant.1),
-            SnapshotRetirementStep::Blocked => panic!("cursor root owns every retirement byte"),
-        }
-    }
+    drive_retirement_within(&mut retirement, fixture["maximumItems"].as_u64().expect("item grant") as usize, fixture["maximumBytes"].as_u64().expect("byte grant") as usize);
     assert!(retirement.terminal_is_empty());
     while history.pop().is_some() {}
     assert!(history.terminal_is_empty());
@@ -5505,13 +5621,7 @@ async fn retained_group_cursor_empty_base_and_dropped_publisher_return_every_sta
     let cancelled = cursor.abort_group_owned(&view).expect("exact staged cursor survives publisher drop");
     assert_eq!(serde_json::to_value(&cancelled).expect("cancelled owner"), fixture["after"]);
     let mut retirement = ArtifactStoreCursorRetirement::new(ArtifactCursor::from_owners(cancelled));
-    for _ in 0..1024 {
-        match retirement.close_step(1, 4096).expect("cancelled cursor retirement") {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
-            SnapshotRetirementStep::Blocked => panic!("cancelled cursor must remain closeable"),
-        }
-    }
+    drive_retirement_within(&mut retirement, 1, 4096);
     assert!(retirement.terminal_is_empty());
     assert!(cursor.applied_edit_ids.is_empty());
 }
@@ -5533,15 +5643,7 @@ async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_b
     assert_eq!(applied, expected);
     assert!(dag.terminal_is_empty());
     let mut retirement = ArtifactStoreStringVectorRetirement::new(duplicates);
-    let maximum_items = fixture["maximumItems"].as_u64().expect("item grant") as usize;
-    let maximum_bytes = fixture["maximumBytes"].as_u64().expect("byte grant") as usize;
-    for _ in 0..1024 {
-        match retirement.close_step(maximum_items, maximum_bytes).expect("exact rejected identity retirement") {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= maximum_items && released_bytes <= maximum_bytes),
-            SnapshotRetirementStep::Blocked => panic!("owned seed identities must progress"),
-        }
-    }
+    drive_retirement_within(&mut retirement, fixture["maximumItems"].as_u64().expect("item grant") as usize, fixture["maximumBytes"].as_u64().expect("byte grant") as usize);
     assert!(retirement.terminal_is_empty());
     let oversized = vec![MutationId("x".repeat(crate::os_spr::causal::MUTATION_DAG_IDENTIFIER_BYTES + 1))];
     assert!(super::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&oversized).is_err());
@@ -5554,7 +5656,7 @@ async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
     let mut original = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: Some(0) }, None)).await;
     original.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     for n in [1, 2, 3] {
-        original.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("seed revision edit");
+        test_support::dispatch_test_command(&mut original, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("seed revision edit");
     }
     let original_revision = original.content_revision().await;
     let mut changed = owned_test_envelope(&original).await;
@@ -5578,7 +5680,7 @@ async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
 /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
 async fn foreign_mutation_envelope(actor: &str, operation: DemoMutation) -> crate::os_spr::MutationEnvelope {
     let mut peer = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
-    peer.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("peer apply");
+    test_support::dispatch_test_command(&mut peer, ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("peer apply");
     let edit = peer.envelope().vcs.edits.last().expect("peer edit").clone();
     let document_id = ArtifactId(peer.envelope().id.clone());
     let schema = SchemaId(peer.envelope().schema.clone());
@@ -5625,8 +5727,8 @@ async fn remote_ingest_requires_duplicate_mutation_payload_equivalence() {
 #[semio_framework_async_macros::async_test]
 async fn a_remote_transition_repeating_a_known_id_with_another_payload_is_refused_without_mutation() {
     let mut author = fresh_demo_store().await;
-    author.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("author edit");
-    author.dispatch(ArtifactCommand::Undo).await.expect("author undo");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("author edit");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::Undo).await.expect("author undo");
     let events = author.event_log().expect("author event log");
     let mut replica = fresh_demo_store().await;
     for event in events.clone() {
@@ -5649,13 +5751,13 @@ async fn a_remote_transition_repeating_a_known_id_with_another_payload_is_refuse
 #[semio_framework_async_macros::async_test]
 async fn checkpoint_transitions_resolve_against_each_replicas_own_edits() {
     let mut a = fresh_demo_store().await;
-    a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 }), DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("a's two-operation edit");
+    test_support::dispatch_test_command(&mut a, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 }), DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("a's two-operation edit");
     let mut b = fresh_demo_store().await;
     for event in a.event_log().expect("a's log") {
         b.ingest_remote(event).await.expect("b ingests a's operations");
     }
-    b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b checkpoint".into()), authors: Vec::new() }).await.expect("b's own checkpoint");
-    a.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a checkpoint".into()), authors: Vec::new() }).await.expect("a's own checkpoint");
+    test_support::dispatch_test_command(&mut b, ArtifactCommand::CommitCheckpoint { message: Some("b checkpoint".into()), authors: Vec::new() }).await.expect("b's own checkpoint");
+    test_support::dispatch_test_command(&mut a, ArtifactCommand::CommitCheckpoint { message: Some("a checkpoint".into()), authors: Vec::new() }).await.expect("a's own checkpoint");
     for event in a.event_log().expect("a's log") {
         b.ingest_remote(event).await.expect("b ingests a's checkpoint transition");
     }
@@ -5878,8 +5980,8 @@ async fn ledger_matches_a_fresh_replay_of_the_same_envelopes() {
 #[semio_framework_async_macros::async_test]
 async fn applied_edit_ids_stay_sorted_by_hlc_after_a_backdated_remote_insert() {
     let mut store = fresh_demo_store().await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply 1");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("local apply 2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply 1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("local apply 2");
     let local_ids = store.applied_edit_ids().to_vec();
 
     let backdated = mutation_envelope_at("backdated-actor", "op-backdated", DemoMutation::SetN(SetN { n: 99 }), HybridLogicalTimestamp::new(9, 1), Vec::new());
@@ -6105,16 +6207,8 @@ async fn conflict_retirement_cursors_quarantined_payloads_messages_actors_and_id
         timestamp,
     };
     let mut retirement = ArtifactStoreConflictRetirement::new(conflict);
-    let mut turns = 0;
-    while !retirement.terminal_is_empty() {
-        match retirement.close_step(1, 13).expect("bounded conflict close") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 13),
-            SnapshotRetirementStep::Blocked => panic!("owned conflict retirement has no external wait"),
-            SnapshotRetirementStep::Complete => assert!(retirement.terminal_is_empty()),
-        }
-        turns += 1;
-        assert!(turns < 100_000, "deep conflict retirement terminates across repeated interruption");
-    }
+    test_support::drive_retirement(&mut retirement).expect("deep conflict retirement terminates across repeated interruption under its quoted demands");
+    assert!(retirement.terminal_is_empty());
 }
 
 /// 🚧️ MEDIUM-3: a peer that keeps sending a batch this replica keeps quarantining can grow
@@ -6224,8 +6318,8 @@ async fn quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_
 #[semio_framework_async_macros::async_test]
 async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).await.expect("checkpoint");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).await.expect("checkpoint");
     let original_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
     let before = owned_test_envelope(&store).await;
     let invalid = crate::os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: demo_child_dialect() }, checkpoint_id: "child-checkpoint".into() };
@@ -6248,7 +6342,7 @@ async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation(
 async fn materialize_replays_forward_mutations() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
     assert_eq!(store.envelope().vcs.edits.len(), 1);
 }
@@ -6257,10 +6351,10 @@ async fn materialize_replays_forward_mutations() {
 async fn undo_redo_round_trip() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(0));
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("redo");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
 }
 
@@ -6286,13 +6380,13 @@ async fn history_lane_defaults_to_document() {
 async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc1");
     let doc1_id = store.applied_edit_ids()[0].clone();
-    store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 100 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 100 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction1");
     let interaction1_id = store.applied_edit_ids()[1].clone();
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply doc2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply doc2");
     let doc2_id = store.applied_edit_ids()[2].clone();
-    store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 200 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 200 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction2");
     let interaction2_id = store.applied_edit_ids()[3].clone();
 
     assert_eq!(store.envelope().lanes.get(&interaction1_id), Some(&HistoryLane::Interaction));
@@ -6300,18 +6394,18 @@ async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
     assert!(store.envelope().lanes.get(&doc1_id).is_none(), "an ordinary Document-lane edit never gets a `lanes` entry (sparse ledger)");
     assert!(store.envelope().lanes.get(&doc2_id).is_none());
 
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo skips interaction2 to revert doc2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo skips interaction2 to revert doc2");
     assert_eq!(store.applied_edit_ids(), &[doc1_id.clone(), interaction1_id.clone(), interaction2_id.clone()], "doc2 removed; both interaction edits remain applied");
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&doc2_id));
 
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo doc1 despite interaction edits between it and the tail");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo doc1 despite interaction edits between it and the tail");
     assert_eq!(store.applied_edit_ids(), &[interaction1_id.clone(), interaction2_id.clone()]);
     assert_eq!(store.redo_edit_ids(), &[doc2_id.clone(), doc1_id.clone()]);
 
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo doc1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("redo doc1");
     assert_eq!(store.applied_edit_ids(), &[doc1_id.clone(), interaction1_id.clone(), interaction2_id.clone()]);
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&doc2_id));
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo doc2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("redo doc2");
     assert_eq!(store.applied_edit_ids(), &[doc1_id.clone(), interaction1_id.clone(), doc2_id.clone(), interaction2_id.clone()]);
     assert!(store.redo_edit_ids().is_empty());
 }
@@ -6328,19 +6422,19 @@ async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
 async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc");
-    store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction");
     let doc_id = store.applied_edit_ids()[0].clone();
     let interaction_id = store.applied_edit_ids()[1].clone();
 
-    store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).await.expect("undo in interaction lane");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).await.expect("undo in interaction lane");
     assert_eq!(store.applied_edit_ids(), std::slice::from_ref(&doc_id));
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&interaction_id));
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "reverting the interaction edit restores the document edit's own value");
 
-    assert_eq!(store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Document }).await.unwrap_err(), VcsError::NothingToRedo);
+    assert_eq!(test_support::dispatch_test_command(&mut store, ArtifactCommand::RedoInLane { lane: HistoryLane::Document }).await.unwrap_err(), VcsError::NothingToRedo);
 
-    store.dispatch(ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction }).await.expect("redo in interaction lane");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction }).await.expect("redo in interaction lane");
     assert_eq!(store.applied_edit_ids(), &[doc_id.clone(), interaction_id.clone()]);
     assert!(store.redo_edit_ids().is_empty());
 }
@@ -6354,15 +6448,15 @@ async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane
 async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lane() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction1");
-    store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction2");
     assert_eq!(store.applied_edit_ids().len(), 2);
 
-    let error = store.dispatch(ArtifactCommand::Undo).await.unwrap_err();
+    let error = test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.unwrap_err();
     assert_eq!(error, VcsError::NothingToUndo, "no Document-lane entry exists to undo; both interaction edits must stay untouched");
     assert_eq!(store.applied_edit_ids().len(), 2, "default undo must not remove either interaction edit");
 
-    store.dispatch(ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).await.expect("undo in interaction lane");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction }).await.expect("undo in interaction lane");
     assert_eq!(store.applied_edit_ids().len(), 1);
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
 }
@@ -6373,9 +6467,9 @@ async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lan
 async fn history_lane_interaction_entries_survive_owned_document_round_trip() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc");
     let doc_id = store.applied_edit_ids()[0].clone();
-    store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 42 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 42 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction");
     let interaction_id = store.applied_edit_ids()[1].clone();
     assert_eq!(store.envelope().lanes.get(&interaction_id), Some(&HistoryLane::Interaction));
 
@@ -6385,7 +6479,7 @@ async fn history_lane_interaction_entries_survive_owned_document_round_trip() {
 
     let mut reloaded = ArtifactStore::new(reloaded_envelope).await;
     assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "reload seeds applied_edit_ids from the persisted cursor, same as any other edit");
-    reloaded.dispatch(ArtifactCommand::Undo).await.expect("undo on the reloaded store still skips the interaction edit");
+    test_support::dispatch_test_command(&mut reloaded, ArtifactCommand::Undo).await.expect("undo on the reloaded store still skips the interaction edit");
     assert_eq!(reloaded.applied_edit_ids(), std::slice::from_ref(&interaction_id), "the document edit was removed; the interaction edit is the only one left applied");
     assert!(reloaded.redo_edit_ids().contains(&doc_id), "the reverted document edit now sits on the redo stack");
 }
@@ -6443,7 +6537,7 @@ async fn artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event
     assert!(Arc::ptr_eq(&before, &same), "capturing an immutable operation root must only retain the existing Arc");
     assert_eq!(generation, store.generation_now());
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("apply");
     let after = store.snapshot_root();
     assert!(!Arc::ptr_eq(&before, &after), "a committed event publishes a new immutable root");
     assert_eq!(before.n, Some(0), "an already-admitted operation retains its exact pre-event snapshot");
@@ -6469,11 +6563,7 @@ async fn presence_local_read_is_o1_and_never_clones_the_payload_at_capture() {
     drop(before);
     drop(after);
     let mut close = store.begin_retirement(Arc::new(DemoSnapshot { n: Some(0) }), |value| value.n == Some(0)).ok().unwrap();
-    for _ in 0..2048 {
-        if close.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete {
-            break;
-        }
-    }
+    test_support::drive_retirement(&mut close).expect("presence retirement reaches its terminal-empty witness under its quoted demands");
     assert!(close.terminal_is_empty());
 }
 
@@ -6496,7 +6586,7 @@ async fn transient_root_is_o1_and_retains_the_exact_pre_reset_value() {
 async fn apply_computes_backwards_from_pre_state() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let edit = &store.envelope().vcs.edits[0];
     assert_eq!(edit.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })]);
 }
@@ -6505,8 +6595,8 @@ async fn apply_computes_backwards_from_pre_state() {
 async fn commit_checkpoint_wraps_edits_into_change() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
     assert_eq!(store.envelope().vcs.changes.len(), 1);
     assert_eq!(store.envelope().vcs.checkpoints.len(), 1);
     assert_eq!(store.envelope().vcs.checkpoints[0].message, Some("init".into()));
@@ -6516,12 +6606,12 @@ async fn commit_checkpoint_wraps_edits_into_change() {
 async fn checkout_checkpoint_restores_applied_edits() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
     let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply2");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(9));
-    store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("checkout");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("checkout");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
 }
 
@@ -6529,19 +6619,19 @@ async fn checkout_checkpoint_restores_applied_edits() {
 async fn alternatives_switch_restores_checkpoint_chain() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CreateAlternative { name: "branch-a".into() }).await.expect("create alternative");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CreateAlternative { name: "branch-a".into() }).await.expect("create alternative");
     let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative follows the trunk").id.clone();
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply on branch");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply on branch");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
     {
         let trunk = store.trunk_alternative_id();
-        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk })
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::SwitchAlternative { alternative_id: trunk })
     }
     .await
     .expect("back to the trunk");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "the trunk tip does not show another line's uncommitted edit");
-    store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).await.expect("back to the alternative");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).await.expect("back to the alternative");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "the alternative tip keeps the edit that was authored on it");
 }
 
@@ -6549,19 +6639,19 @@ async fn alternatives_switch_restores_checkpoint_chain() {
 async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
     let c1 = store.envelope().vcs.checkpoints[0].id.clone();
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).await.expect("commit c2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).await.expect("commit c2");
     let transitions = store.envelope().transitions.len();
-    store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() }).await.expect("checkout c1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() }).await.expect("checkout c1");
     assert_eq!(store.envelope().transitions.len(), transitions, "a checkout is this viewer's head and authors no shared event");
     assert_eq!(store.current_checkpoint_id().await, Some(c1.as_str()));
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "an explicit checkout hides the later trunk commit");
     {
         let trunk = store.trunk_alternative_id();
-        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk })
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::SwitchAlternative { alternative_id: trunk })
     }
     .await
     .expect("back to the trunk tip");
@@ -6574,11 +6664,11 @@ async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
 async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
-    store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create alternative");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("branch commit".into()), authors: Vec::new() }).await.expect("commit on branch");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create alternative");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("branch commit".into()), authors: Vec::new() }).await.expect("commit on branch");
     assert_eq!(store.envelope().vcs.alternatives.last().expect("the branched alternative").checkpoint_ids.len(), 2);
     assert_eq!(store.envelope().vcs.alternatives.first().expect("the trunk").checkpoint_ids.len(), 1, "the branch commit never grows the trunk");
     assert_eq!(store.envelope().vcs.checkpoints.len(), 2);
@@ -6588,10 +6678,10 @@ async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
 async fn history_columns_orders_newest_first_and_labels_trunk_root() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).await.expect("commit c2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).await.expect("commit c2");
     let columns = store.history_columns().await;
     assert_eq!(columns.len(), 2);
     assert_eq!(columns[0].description, Some("c2".into()), "newest checkpoint must be first");
@@ -6606,32 +6696,32 @@ async fn history_columns_orders_newest_first_and_labels_trunk_root() {
 async fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
     let root = store.envelope().vcs.checkpoints[0].id.clone();
 
-    store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create feature-a");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).await.expect("commit a1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create feature-a");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).await.expect("commit a1");
 
     {
         let trunk = store.trunk_alternative_id();
-        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk })
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::SwitchAlternative { alternative_id: trunk })
     }
     .await
     .expect("back to the trunk");
-    store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).await.expect("create feature-b");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).await.expect("commit b1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CreateAlternative { name: "feature-b".into() }).await.expect("create feature-b");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).await.expect("commit b1");
 
     {
         let trunk = store.trunk_alternative_id();
-        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk })
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::SwitchAlternative { alternative_id: trunk })
     }
     .await
     .expect("trunk again");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("main resumed".into()), authors: Vec::new() }).await.expect("commit main resumed");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("main resumed".into()), authors: Vec::new() }).await.expect("commit main resumed");
 
     let columns = store.history_columns().await;
     assert_eq!(columns.len(), 4, "root + a1 + b1 + main-resumed");
@@ -6705,11 +6795,11 @@ async fn memory_backbone_pair_propagates_edits_bidirectionally() {
     store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
     store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
 
-    store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply on a");
+    test_support::dispatch_test_command(&mut store_a, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply on a");
     store_b.tick().await.expect("tick b");
     assert_eq!(store_b.snapshot().expect("snapshot b").n, Some(1), "b receives a's edit");
 
-    store_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply on b");
+    test_support::dispatch_test_command(&mut store_b, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply on b");
     store_a.tick().await.expect("tick a");
     assert_eq!(store_a.snapshot().expect("snapshot a").n, Some(2), "a receives b's edit");
 }
@@ -6723,7 +6813,7 @@ async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_
     for _ in 0..32 {
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 17, maximum_capacity_bytes: 0, maximum_release_bytes: retirement.next_release_byte_demand().expect("original backing release demand"), maximum_depth: retirement.next_depth_demand().expect("original backing depth demand") };
         match retirement.close_step(grant).expect("bounded pre-peer close") {
-            semio_framework_value::retained_clone::RetainedCloneStep::Blocked => {
+            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => {
                 observed_blocked = true;
                 break;
             }
@@ -6737,8 +6827,7 @@ async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_
     while !retirement.terminal_is_empty() {
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 17, maximum_capacity_bytes: 0, maximum_release_bytes: retirement.next_release_byte_demand().expect("original backing release demand"), maximum_depth: retirement.next_depth_demand().expect("original backing depth demand") };
         match retirement.close_step(grant).expect("bounded post-peer close") {
-            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
-            semio_framework_value::retained_clone::RetainedCloneStep::Blocked => panic!("no external queue owner remains after peer close"),
+            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => { assert!(progress.fits(grant)); assert!(progress != RetainedCloneProgress::default(), "no external queue owner remains after peer close"); },
             semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); },
         }
         turns += 1;
@@ -6757,7 +6846,7 @@ async fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
     store_a.detach_backbone().expect("detach source backbone");
     assert!(store_a.backbone_ref().is_none());
 
-    store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply after detach still works on the in-memory graph");
+    test_support::dispatch_test_command(&mut store_a, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply after detach still works on the in-memory graph");
     assert_eq!(store_a.snapshot().expect("snapshot a").n, Some(9));
     store_b.tick().await.expect("tick b");
     assert_eq!(store_b.snapshot().expect("snapshot b").n, Some(0), "detached edits never reach the peer");
@@ -6768,7 +6857,7 @@ async fn loaded_envelope_with_stale_backbone_ref_never_auto_attaches() {
     let stale = || create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, Some(ArtifactBackboneRef { uri: "folder:///nonexistent/path".into() }));
     let mut store = ArtifactStore::new(stale()).await;
     assert!(!store.tick().await.expect("tick with no live backbone is a no-operation"), "no backbone was ever attached, so there is nothing to pump");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply works purely against the in-memory graph");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply works purely against the in-memory graph");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
 
     store.reset(stale()).await.expect("reset");
@@ -6869,6 +6958,19 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
     assert!(document_codec("no-such-schema").await.expect("registry availability").is_none());
 }
 
+/// 🪪 Drives a linked codec's apply-ops thunk under a fixture caller-owned identity authority and returns its original cumulative receipt.
+async fn apply_ops_under_fixture_identity(codec: &ArtifactCodec, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<(Vec<u8>, Vec<u8>, String), VcsError> {
+    const CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+        assert!(progress.owned_bytes <= CEILING);
+        true
+    };
+    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(CEILING, &mut observer).expect("declared fixture identity authority");
+    let result = (codec.apply_ops_binary)(pack, spr, ops, &mut identity).await;
+    drop(identity.pause().expect("original cumulative fixture identity receipt"));
+    result
+}
+
 /// 🧩️ The NATIVE twin of the guest's `codec.apply-ops`: a LINKED Rust codec reducing a NONEMPTY
 /// batch. `apply_ops_binary` is the path stdio and gis take on a hub — the hub links their codecs
 /// and never asks their components — and it builds a throwaway `ArtifactStore` to reduce into.
@@ -6888,18 +6990,18 @@ async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its
     drop(envelope.into_owners());
     let baseline = baseline.expect("print document pack");
 
-    let empty = (codec.apply_ops_binary)(&baseline.pack, &baseline.spr, &crate::os_spr::encode_ops_vec(&[])).await.expect("an empty batch returns the baseline");
+    let empty = apply_ops_under_fixture_identity(&codec, &baseline.pack, &baseline.spr, &crate::os_spr::encode_ops_vec(&[])).await.expect("an empty batch returns the baseline");
     assert!(!empty.0.is_empty() && !empty.1.is_empty(), "an empty apply-ops batch must return the baseline pair, not an empty one");
 
     let op = <DemoMutation as crate::os_spr::OpBinary>::encode_op(&DemoMutation::SetN(SetN { n: 9 })).expect("encode set-n");
     let ops = crate::os_spr::encode_ops_vec(&[op]);
-    let applied = (codec.apply_ops_binary)(&baseline.pack, &baseline.spr, &ops).await.expect("a nonempty batch reduces and closes its store");
+    let applied = apply_ops_under_fixture_identity(&codec, &baseline.pack, &baseline.spr, &ops).await.expect("a nonempty batch reduces and closes its store");
     assert!(!applied.0.is_empty() && !applied.1.is_empty(), "apply_ops_binary produced an empty pair");
     let history = crate::os_spr::decode_history(&applied.1, &crate::os_spr::DecodeOptions::default()).await.expect("applied history");
     assert_eq!(history.doc_id, "demo-apply-ops");
     assert_eq!(history.schema, "test.document-codec-apply-ops/v1");
     assert_eq!(history.edits.len(), 1, "one op in the batch must land exactly one edit, got {}", history.edits.len());
-    let passed = (codec.apply_ops_binary)(&applied.0, &applied.1, &crate::os_spr::encode_ops_vec(&[])).await.expect("an empty batch passes a populated pair through");
+    let passed = apply_ops_under_fixture_identity(&codec, &applied.0, &applied.1, &crate::os_spr::encode_ops_vec(&[])).await.expect("an empty batch passes a populated pair through");
     assert!(!passed.0.is_empty() && !passed.1.is_empty(), "an empty batch over a populated pair returns that pair");
     let mirror = (codec.print_mirror)(&applied.0, &applied.1).await.expect("a populated pair mirrors");
     assert!(mirror.ops.contains("set-n"), "the mirror prints the pair's edit: {}", mirror.ops);
@@ -6920,11 +7022,11 @@ async fn replay_envelopes_onto_pair_equals_the_replica_that_folded_the_same_ledg
     let genesis_pair = genesis_pair.expect("genesis pair");
 
     let mut author = fresh_demo_store().await;
-    author.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("first edit");
-    author.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("second edit");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("first edit");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("second edit");
     let prefix_events = author.event_log().expect("prefix ledger");
-    author.dispatch(ArtifactCommand::Undo).await.expect("undo the second edit");
-    author.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("check in".into()), authors: Vec::new() }).await.expect("checkpoint");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::Undo).await.expect("undo the second edit");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::CommitCheckpoint { message: Some("check in".into()), authors: Vec::new() }).await.expect("checkpoint");
     let events = author.event_log().expect("whole ledger");
     let author_pair = print_document_pack(author.envelope()).await.expect("author pair");
     let author_history = crate::os_spr::decode_history(&author_pair.spr, &crate::os_spr::DecodeOptions::default()).await.expect("author history");
@@ -7010,19 +7112,19 @@ async fn projection_result_gate_rejects_results_after_every_invalidating_store_t
     let mut store = ArtifactStore::new(envelope).await;
 
     let before_apply = projection_probe(&store, ArtifactProjectionCause::Apply).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     assert_projection_is_stale(&store, before_apply).await;
 
     let before_undo = projection_probe(&store, ArtifactProjectionCause::Undo).await;
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo");
     assert_projection_is_stale(&store, before_undo).await;
 
     let before_redo = projection_probe(&store, ArtifactProjectionCause::Redo).await;
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("redo");
     assert_projection_is_stale(&store, before_redo).await;
 
     let before_remote = projection_probe(&store, ArtifactProjectionCause::RemoteIngest).await;
-    store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("projection-peer", DemoMutation::SetN(SetN { n: 2 })).await }).await.expect("remote ingest");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("projection-peer", DemoMutation::SetN(SetN { n: 2 })).await }).await.expect("remote ingest");
     assert_projection_is_stale(&store, before_remote).await;
 
     let before_reset = projection_probe(&store, ArtifactProjectionCause::Reset).await;
@@ -7030,10 +7132,10 @@ async fn projection_result_gate_rejects_results_after_every_invalidating_store_t
     store.reset(reset_envelope).await.expect("reset");
     assert_projection_is_stale(&store, before_reset).await;
 
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("checkpoint");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("checkpoint");
     let checkpoint_id = store.current_checkpoint_id().await.expect("checkpoint id").to_string();
     let before_checkout = projection_probe(&store, ArtifactProjectionCause::Checkout).await;
-    store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("checkout");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("checkout");
     assert_projection_is_stale(&store, before_checkout).await;
 }
 
@@ -7054,14 +7156,14 @@ async fn projection_result_gate_rejects_results_after_dependency_and_checkpoint_
     assert_eq!(store.invalidate_after_external_resource_change().expect("resource invalidation").cause, ArtifactProjectionCause::ExternalResourceChange);
     assert_projection_is_stale(&store, before_resource).await;
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply before checkpoint");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply before checkpoint");
     let before_checkpoint = projection_probe(&store, ArtifactProjectionCause::Checkpoint).await;
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("non-empty checkpoint");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("non-empty checkpoint");
     assert_projection_is_stale(&store, before_checkpoint).await;
     assert_eq!(store.last_projection_invalidation().expect("checkpoint invalidation").cause, ArtifactProjectionCause::Checkpoint);
 
     let generation = store.generation();
-    let error = store.dispatch(ArtifactCommand::PruneDrafts).await.expect_err("draft pruning is explicitly unavailable");
+    let error = test_support::dispatch_test_command(&mut store, ArtifactCommand::PruneDrafts).await.expect_err("draft pruning is explicitly unavailable");
     assert!(matches!(error, VcsError::ValidationFailed(_)));
     assert_eq!(store.generation(), generation, "a rejected prune cannot invalidate or report a success");
 }
@@ -7077,7 +7179,7 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
     assert!(matches!(super::ArtifactStore::new(malformed_constructor, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
 
     let mut legacy_seed = ArtifactStore::new(fresh()).await;
-    legacy_seed.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("seed edit");
+    test_support::dispatch_test_command(&mut legacy_seed, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("seed edit");
     let files = print_document_pack(legacy_seed.envelope()).await.expect("owned history encode");
     let mut cursorless = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned history decode").into_envelope();
     cursorless.cursor = None;
@@ -7108,8 +7210,8 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
 async fn attach_folds_a_pushed_event_log() {
     let (channel, remote) = ChannelBackbone::pair("chan").await;
     let mut seed_store = fresh_demo_store().await;
-    seed_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
-    seed_store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("seed".into()), authors: Vec::new() }).await.expect("commit");
+    test_support::dispatch_test_command(&mut seed_store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut seed_store, ArtifactCommand::CommitCheckpoint { message: Some("seed".into()), authors: Vec::new() }).await.expect("commit");
     remote.push(BackboneMessage::Genesis { pack: seed_store.envelope().vcs.genesis.pack().to_vec() }).await.expect("push genesis");
     remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&seed_store.event_log().expect("seed log")) }).await.expect("push events");
 
@@ -7128,7 +7230,7 @@ async fn channel_backbone_round_trips_between_store_and_actor() {
     let attach_flush = drain_channel_for_test(&remote).expect("drain attach");
     assert!(matches!(attach_flush.as_slice(), [BackboneMessage::Genesis { .. }]), "attach announces the genesis of an event-free document and nothing else: {attach_flush:?}");
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: None }).await.expect("apply");
     let outbound = drain_channel_for_test(&remote).expect("drain apply");
     assert!(outbound.iter().any(|message| matches!(message, BackboneMessage::Mutations { .. })), "a local apply is sent outbound as mutations: {outbound:?}");
 
@@ -7173,11 +7275,11 @@ async fn pump_acks_ingested_operations() {
 async fn exact_base_only_undo_refuses_a_foreign_tail() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply");
-    store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await }).await.expect("ingest foreign");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await }).await.expect("ingest foreign");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "foreign edit sits at the tail");
 
-    let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).await.expect_err("undo must refuse a foreign tail");
+    let error = test_support::dispatch_test_command(&mut store, ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None }).await.expect_err("undo must refuse a foreign tail");
     assert!(matches!(error, VcsError::ForeignEdit(_)), "got {error:?}");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "the timeline is untouched after refusal");
 }
@@ -7186,19 +7288,19 @@ async fn exact_base_only_undo_refuses_a_foreign_tail() {
 async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply");
     let local_edit_id = store.applied_edit_ids()[0].clone();
     let foreign = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await;
     let foreign_id = foreign.mutation_id.0.clone();
-    store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign }).await.expect("ingest foreign");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::IngestRemote { envelope: foreign }).await.expect("ingest foreign");
     assert_eq!(store.applied_edit_ids().len(), 2, "local + foreign are both applied");
 
-    store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None }).await.expect("transform undo removes the local edit from mid-timeline");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None }).await.expect("transform undo removes the local edit from mid-timeline");
     assert_eq!(store.applied_edit_ids(), std::slice::from_ref(&foreign_id), "only the local edit is removed; the concurrent foreign edit stays applied");
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&local_edit_id), "the local edit is on the redo stack");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "snapshot re-materializes from the foreign edit alone");
 
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo brings the local edit back");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("redo brings the local edit back");
     assert_eq!(store.applied_edit_ids(), &[local_edit_id, foreign_id], "redo reinstates the local edit at its own HLC position, before the later concurrent edit — where every replica folds it");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "the later concurrent edit still wins");
 }
@@ -7209,16 +7311,16 @@ async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
 #[semio_framework_async_macros::async_test]
 async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local a1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local a1");
     let local_a1 = store.applied_edit_ids()[0].clone();
     let author = store.local_actor_id().0.clone();
     let foreign = foreign_mutation_envelope("author-b", DemoMutation::SetN(SetN { n: 2 })).await;
     let foreign_id = foreign.mutation_id.0.clone();
-    store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign }).await.expect("ingest foreign");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("local a2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::IngestRemote { envelope: foreign }).await.expect("ingest foreign");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("local a2");
     let local_a2 = store.applied_edit_ids().iter().find(|id| **id != local_a1 && **id != foreign_id).expect("a2").clone();
 
-    store.dispatch(ArtifactCommand::Undo).await.expect("plain undo skips foreign and undoes local a2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("plain undo skips foreign and undoes local a2");
     assert_eq!(store.applied_edit_ids(), &[local_a1.clone(), foreign_id.clone()]);
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&local_a2));
 
@@ -7227,7 +7329,7 @@ async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
     let mut reloaded = ArtifactStore::new_with_actor(parsed.envelope, ActorId(author)).await;
     assert_eq!(reloaded.applied_edit_ids(), &[local_a1.clone(), foreign_id.clone()], "reload preserves selective undo projection");
     assert_eq!(reloaded.redo_edit_ids(), std::slice::from_ref(&local_a2), "durable collaborative redo stack survives reload");
-    reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo after reload reinstates the local edit");
+    test_support::dispatch_test_command(&mut reloaded, ArtifactCommand::Redo).await.expect("redo after reload reinstates the local edit");
     assert_eq!(reloaded.applied_edit_ids(), &[local_a1, foreign_id, local_a2]);
     assert!(reloaded.redo_edit_ids().is_empty());
 }
@@ -7236,9 +7338,9 @@ async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
 async fn compensating_undo_dispatches_semantic_command() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let undo_apply = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 0 })], transaction: None };
-    store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).await.expect("compensating undo");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).await.expect("compensating undo");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(0));
 }
 
@@ -7247,7 +7349,7 @@ async fn edit_mutations_exposes_the_latest_edit() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
     assert!(store.edit_mutations().is_none(), "no edits yet");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let (forwards, inverse, meta) = store.edit_mutations().expect("edit operations");
     assert_eq!(forwards, &[DemoMutation::SetN(SetN { n: 5 })]);
     assert_eq!(inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })], "inverse restores the pre-state");
@@ -7262,14 +7364,14 @@ async fn a_streamed_transaction_grows_one_edit_over_many_ticks() {
     let mut store = ArtifactStore::new(envelope).await;
     let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000d1".into(), tool: "s.demo@1/*#editor#drag".into() };
     for n in 1..=50 {
-        store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
     }
-    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id.clone() }).await.expect("commit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitTransaction { transaction_id: transaction.id.clone() }).await.expect("commit");
     assert_eq!(store.envelope().vcs.edits.len(), 1, "one gesture is one edit");
     let edit = store.envelope().vcs.edits.last().expect("edit");
     assert_eq!((edit.forwards.len(), edit.inverse.len(), edit.mutation_meta.len()), (50, 50, 50));
     assert_eq!(store.snapshot().expect("snapshot").n, Some(50));
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("snapshot after undo").n, Some(0), "one undo reverts the whole 50-tick gesture");
 }
 
@@ -7283,10 +7385,10 @@ async fn a_streamed_edit_revision_is_its_own_from_scratch_digest() {
     let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000d2".into(), tool: "s.demo@1/*#editor#type".into() };
     let mut revisions = std::collections::HashSet::new();
     for n in 1..=256 {
-        store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
         assert!(revisions.insert(store.content_revision_now()), "tick {n} moves the revision");
     }
-    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id.clone() }).await.expect("commit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitTransaction { transaction_id: transaction.id.clone() }).await.expect("commit");
     assert_eq!(store.envelope().vcs.edits.len(), 1, "the run is one edit");
     let files = print_document_pack(store.envelope()).await.expect("owned document encode");
     let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned document decode").envelope).await;
@@ -7409,7 +7511,7 @@ async fn demo_op_binary_rejects_unknown_format_and_ordinal() {
 async fn print_edit_lines_emits_one_indented_line_per_forward_op() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     let edit = store.envelope().vcs.edits.last().expect("edit");
     let printed = print_edit_lines(edit).await.expect("print edit lines");
     assert!(printed.starts_with("edit "), "got {printed:?}");
@@ -7420,8 +7522,8 @@ async fn print_edit_lines_emits_one_indented_line_per_forward_op() {
 async fn document_text_round_trips_after_apply_and_checkpoint() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
 }
@@ -7453,29 +7555,29 @@ async fn stateful_current_matches_full_replay_across_interleaved_commands() {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 }), DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply multi-op edit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 }), DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply multi-op edit");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
 
     let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000d3".into(), tool: "s.demo@1/*#editor#drag".into() };
-    store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: transaction.clone() }).await.expect("tick 1");
-    store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: transaction.clone() }).await.expect("tick 2");
-    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id }).await.expect("commit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: transaction.clone() }).await.expect("tick 1");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: transaction.clone() }).await.expect("tick 2");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitTransaction { transaction_id: transaction.id }).await.expect("commit");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(4));
     assert_eq!(store.envelope().vcs.edits.len(), 2, "the streamed gesture started its own edit, not a third");
 
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("redo");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(4));
 
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply after checkpoint");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply after checkpoint");
     test_support::assert_live_equals_replay(&store).await;
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo after checkpoint");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo after checkpoint");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(4));
 }
@@ -7553,13 +7655,13 @@ async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + 'static, M: Sp
 #[semio_framework_async_macros::async_test]
 async fn register_space_documents_registers_manifest_collections_and_artifacts_together() {
     let mut manifest = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: Some(0) }, None)).await;
-    manifest.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply manifest edit");
+    test_support::dispatch_test_command(&mut manifest, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply manifest edit");
     let mut collection_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: Some(0) }, None)).await;
-    collection_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply collection a edit");
+    test_support::dispatch_test_command(&mut collection_a, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply collection a edit");
     let mut collection_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-b", DemoSnapshot { n: Some(0) }, None)).await;
-    collection_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply collection b edit");
+    test_support::dispatch_test_command(&mut collection_b, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply collection b edit");
     let mut artifact_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: Some(0) }, None)).await;
-    artifact_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("apply artifact edit");
+    test_support::dispatch_test_command(&mut artifact_a, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("apply artifact edit");
 
     let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_space_documents(manifest, vec![collection_a, collection_b], vec![artifact_a]).await;
@@ -7569,7 +7671,14 @@ async fn register_space_documents_registers_manifest_collections_and_artifacts_t
     assert!(host.member("collection-b").await.is_some(), "collection b registered");
     assert!(host.member("artifact-a").await.is_some(), "artifact registered");
 
-    let space_checkpoint_id = host.commit_space_checkpoint("initial space checkpoint".into(), Vec::new()).await.expect("commit space checkpoint");
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+        assert!(progress.owned_bytes <= IDENTITY_CEILING);
+        true
+    };
+    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(IDENTITY_CEILING, &mut observer).expect("declared fixture identity authority");
+    let space_checkpoint_id = host.commit_space_checkpoint("initial space checkpoint".into(), Vec::new(), &mut identity).await.expect("commit space checkpoint");
+    drop(identity.pause().expect("original cumulative fixture identity receipt"));
     let snapshot = host.meta_snapshot().await.expect("meta snapshot");
     let checkpoint = snapshot.checkpoints.iter().find(|checkpoint| checkpoint.id == space_checkpoint_id).expect("checkpoint recorded");
     assert_eq!(checkpoint.members.len(), 4, "manifest + 2 collections + 1 artifact all pinned atomically in one space checkpoint");
@@ -10607,29 +10716,29 @@ fn fresh_vcs_release_publishes_actual_retained_backing_demand() {
         let mut backing = Vec::<u8>::new(); backing.try_reserve_exact(extent).unwrap(); assert_eq!(backing.capacity(), extent);
         let mut owner = ArtifactEnvelopeFreshVcsAuthority::<DemoSnapshot, DemoMutation> {
             cursor: OwnedSchemaNestedRecordCursor::try_new(OwnedSchemaRecordSpec { fields: ARTIFACT_ENVELOPE_FRESH_VCS_FIELDS }).unwrap(),
-            snapshot: None, snapshot_target: ArtifactEnvelopeFreshSnapshotTarget::new(), genesis_pack: None, active: None, pending: None,
+            snapshot: None, snapshot_target: ArtifactEnvelopeFreshSnapshotTarget::new(), genesis_pack: None, genesis_bytes: None, active: None, pending: None,
             edits: None, changes: None, checkpoints: None, alternatives: None, value: None,
             retirement: Some(Box::new(DemandingBufferRetirement { buffer: Some(backing) })),
             initial_snapshot_factory: Arc::new(DemoInitialSnapshotRetirementFactory), mutation_factory: Arc::new(DemoMutationRetirementFactory), edit_decoder: Arc::new(UnusedEditDecoder),
             maximum_snapshot_close_byte_demand: admission, maximum_retained_snapshot_close_bytes: admission, terminal: false,
         };
-        let advertised = owner.next_close_byte_demand().unwrap();
-        let physical = owner.retirement.as_ref().unwrap().next_close_byte_demand();
+        let advertised = owner.next_close_release_byte_demand().unwrap();
+        let physical = owner.retirement.as_ref().unwrap().next_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (caller_step, _, caller_released) = crate::test_allocation::observe_backing(|| owner.close_step(1, caller).unwrap());
+        let (caller_step, _, caller_released) = crate::test_allocation::observe_backing(|| owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }).unwrap());
         let caller_expected = row["releasedBytes"].as_u64().unwrap() as usize;
         let mut progress = vec![(caller_step, caller_released)];
         for _ in 0..8 {
             if owner.terminal_is_empty() { break; }
-            let demand = owner.next_close_byte_demand().unwrap();
-            let (step, _, released) = crate::test_allocation::observe_backing(|| owner.close_step(1, demand).unwrap());
+            let grant = artifact_retirement_self_grant(owner.close_demands(0).unwrap(), 0);
+            let (step, _, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant).unwrap());
             progress.push((step, released));
         }
         let funded_terminal = owner.terminal_is_empty();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } owner.close_step(1, admission).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = artifact_retirement_self_grant(owner.close_demands(0).unwrap(), 0); owner.close_step(grant).unwrap(); }
         assert!(owner.terminal_is_empty(), "exact independently admitted allocation grant drains the fixture before assertions");
         eprintln!("[DEBUG] Fresh VCS physical backing={extent} advertised={advertised} inner-demand={physical} eight-turn-terminal={funded_terminal} actual-release-progress={progress:?}");
-        let exact_accounting = progress.iter().all(|(step, actual)| match step { SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes == actual, SnapshotRetirementStep::Complete | SnapshotRetirementStep::Blocked => *actual == 0 });
+        let exact_accounting = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
         if advertised != physical || !funded_terminal || !exact_accounting || caller_released != caller_expected { failures.push((extent, advertised, physical, funded_terminal, exact_accounting)); }
     }
     assert!(failures.is_empty(), "the fresh VCS driver publishes sufficient exact physical demands: {failures:?}");
@@ -10685,16 +10794,16 @@ fn fresh_field_release_propagates_retained_target_allocation_demand() {
         let mut buffer = Vec::new(); buffer.try_reserve_exact(extent).unwrap(); assert_eq!(buffer.capacity(), extent);
         let mut owner = ArtifactEnvelopeFreshFieldDecoder::new(semio_framework_job::OperationId(7002), semio_framework_job::Generation(1), Arc::new(ReleaseOnlyCatalog), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), ArtifactEnvelopeCompletedRecordRegistry::new(), ArtifactEnvelopeDecodeCompletion::new());
         owner.active_retirement = Some(Box::new(DemandingBufferRetirement { buffer: Some(buffer) }));
-        let demand = owner.next_close_byte_demand().unwrap();
+        let demand = owner.next_close_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (caller_step, _, caller_released) = crate::test_allocation::observe_backing(|| owner.close_step(1, caller).unwrap());
+        let (caller_step, _, caller_released) = crate::test_allocation::observe_backing(|| owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }).unwrap());
         let caller_expected = row["releasedBytes"].as_u64().unwrap() as usize;
         let mut progress = vec![(caller_step, caller_released)];
-        for _ in 0..8 { if owner.terminal_is_empty() { break; } let demand = owner.next_close_byte_demand().unwrap(); let (step, _, released) = crate::test_allocation::observe_backing(|| owner.close_step(1, demand).unwrap()); progress.push((step, released)); }
+        for _ in 0..8 { if owner.terminal_is_empty() { break; } let grant = artifact_retirement_self_grant(owner.close_demands(0).unwrap(), 0); let (step, _, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant).unwrap()); progress.push((step, released)); }
         let terminal = owner.terminal_is_empty();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } owner.close_step(1, admission).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = artifact_retirement_self_grant(owner.close_demands(0).unwrap(), 0); owner.close_step(grant).unwrap(); }
         assert!(owner.terminal_is_empty());
-        let exact_accounting = progress.iter().all(|(step, actual)| match step { SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes == actual, SnapshotRetirementStep::Complete | SnapshotRetirementStep::Blocked => *actual == 0 });
+        let exact_accounting = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
         eprintln!("[DEBUG] Fresh field target backing={extent} advertised={demand} eight-turn-terminal={terminal} actual-release-progress={progress:?}");
         if demand != extent || !terminal || !exact_accounting || caller_released != caller_expected { failures.push((extent, demand, terminal, exact_accounting)); }
     }
@@ -10708,26 +10817,29 @@ fn fresh_vcs_preserves_terminal_snapshot_cursor_box_under_grant() {
     impl<const N: usize> ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot> for TerminalSnapshotCursor<N> {
         fn accept_token(&mut self, _: OwnedSchemaToken, _: bool, _: &OwnedSchemaRecordCursor, _: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> { panic!("terminal cursor has no decode work") }
         fn publish_reserved(&mut self, _: &mut dyn ArtifactEnvelopeSnapshotFieldTarget<DemoSnapshot>, _: ArtifactEnvelopeFieldReservation, _: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> { panic!("terminal cursor has no publish work") }
-        fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { Ok(0) }
         fn maximum_close_byte_demand(&self) -> usize { N }
         fn maximum_retained_close_bytes(&self) -> usize { N }
-        fn close_step(&mut self, _: usize, _: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> { Ok(SnapshotRetirementStep::Complete) }
+        fn next_close_copy_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { Ok(0) }
+        fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic> { Ok(0) }
+        fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { Ok(0) }
+        fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { Ok(0) }
+        fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn terminal_is_empty(&self) -> bool { true }
     }
     struct UnusedEditDecoder;
     impl ArtifactOwnedHistoryEntryDecoder<Edit<DemoMutation>> for UnusedEditDecoder {
         fn begin_entry(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath, _: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<DemoMutation>>>) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<Edit<DemoMutation>>> { panic!("terminal snapshot fixture has no history decode work") }
     }
-    fn check<const N: usize>(row: &serde_json::Value, admission: usize) -> (bool, usize, usize, usize, SnapshotRetirementStep) {
+    fn check<const N: usize>(row: &serde_json::Value, admission: usize) -> (bool, usize, usize, usize, RetainedCloneStep) {
         let mut owner = ArtifactEnvelopeFreshVcsAuthority::try_new(Box::new(TerminalSnapshotCursor::<N>([0; N])), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Arc::new(UnusedEditDecoder)).unwrap_or_else(|_| panic!("bounded terminal snapshot scaffold admits"));
-        let demand = owner.next_close_byte_demand().unwrap();
+        let demand = owner.next_close_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (step, _, released) = crate::test_allocation::observe_backing(|| owner.close_step(1, caller).unwrap());
+        let (step, _, released) = crate::test_allocation::observe_backing(|| owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }).unwrap());
         let retained = owner.snapshot.is_some();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } owner.close_step(1, admission).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = artifact_retirement_self_grant(owner.close_demands(0).unwrap(), 0); owner.close_step(grant).unwrap(); }
         assert!(owner.terminal_is_empty());
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;
-        let reported = match step { SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => usize::MAX };
+        let reported = step.progress().released_bytes;
         eprintln!("[DEBUG] Fresh VCS terminal snapshot cursor extent={N} demand={demand} caller={caller} actual-release={released} step={step:?} retained={retained}");
         (demand == N && released == expected && reported == released && retained == (expected == 0), N, demand, released, step)
     }
@@ -10767,19 +10879,19 @@ fn fresh_vcs_active_history_decoder_propagates_physical_release_demand() {
         array.values = None;
         *array.active_decoder = Some(Box::new(edit));
         let mut owner = ArtifactEnvelopeFreshVcsAuthority::<DemoSnapshot, DemoMutation> {
-            cursor: OwnedSchemaNestedRecordCursor::try_new(OwnedSchemaRecordSpec { fields: ARTIFACT_ENVELOPE_FRESH_VCS_FIELDS }).unwrap(), snapshot: None, snapshot_target: ArtifactEnvelopeFreshSnapshotTarget::new(), genesis_pack: None,
+            cursor: OwnedSchemaNestedRecordCursor::try_new(OwnedSchemaRecordSpec { fields: ARTIFACT_ENVELOPE_FRESH_VCS_FIELDS }).unwrap(), snapshot: None, snapshot_target: ArtifactEnvelopeFreshSnapshotTarget::new(), genesis_pack: None, genesis_bytes: None,
             active: Some(ArtifactEnvelopeFreshVcsActive::Edits(array)), pending: None, edits: None, changes: None, checkpoints: None, alternatives: None, value: None, retirement: None,
             initial_snapshot_factory: Arc::new(DemoInitialSnapshotRetirementFactory), mutation_factory: mutation_factory.clone(), edit_decoder: decoder.clone(), maximum_snapshot_close_byte_demand: admission, maximum_retained_snapshot_close_bytes: admission, terminal: false,
         };
-        let demand = owner.next_close_byte_demand().unwrap();
+        let demand = owner.next_close_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
-        let (step, _, actual) = crate::test_allocation::observe_backing(|| owner.close_step(1, caller).unwrap());
+        let (step, _, actual) = crate::test_allocation::observe_backing(|| owner.close_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: caller, maximum_depth: 16, ..Default::default() }).unwrap());
         let mut progress = vec![(step, actual)];
-        for _ in 0..16 { if owner.terminal_is_empty() { break; } let demand = owner.next_close_byte_demand().unwrap(); let (step, _, released) = crate::test_allocation::observe_backing(|| owner.close_step(1, demand).unwrap()); progress.push((step, released)); }
+        for _ in 0..16 { if owner.terminal_is_empty() { break; } let grant = artifact_retirement_self_grant(owner.close_demands(0).unwrap(), 0); let (step, _, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant).unwrap()); progress.push((step, released)); }
         let terminal = owner.terminal_is_empty();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } owner.close_step(1, admission).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } let grant = artifact_retirement_self_grant(owner.close_demands(0).unwrap(), 0); owner.close_step(grant).unwrap(); }
         assert!(owner.terminal_is_empty());
-        let exact = progress.iter().all(|(step, actual)| match step { SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes == actual, _ => *actual == 0 });
+        let exact = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
         eprintln!("[DEBUG] Active edit history physical={extent} advertised={demand} terminal={terminal} exact={exact} progress={progress:?}");
         if demand != extent || actual != row["releasedBytes"].as_u64().unwrap() as usize || !terminal || !exact { failures.push((extent, demand, terminal, exact)); }
     }
@@ -11330,7 +11442,7 @@ fn live_read_factory_admission_preserves_exact_registry_generation_on_refusal() 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
     let policy = &fixture["grant"];
     let grant = RetainedCloneGrant { maximum_items: policy["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize };
-    let mut registry = Some(Arc::new(SnapshotReadLeaseRegistry::new()));
+    let mut registry = Some(crate::os_store::SnapshotReadRegistryHandle::new());
     let original = Arc::new(17i32);
     let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<i32>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<i32>::default());
     let lease = registry.as_ref().unwrap().try_issue(Arc::clone(&original)).unwrap();

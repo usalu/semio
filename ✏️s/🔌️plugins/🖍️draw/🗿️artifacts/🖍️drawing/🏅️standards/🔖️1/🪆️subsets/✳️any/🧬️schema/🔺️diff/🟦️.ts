@@ -1,3 +1,4 @@
+import {SHAPE_COORDINATE_FIELDS,type ShapeCoordinateField} from "../🔷️shape/✏️coordinates/🟦️.ts";
 import {parseFillRule,type FillRule} from "../🎨️fill/🌀️rule/🟦️.ts";
 /** 🔺️ Mirrors Rust `DrawingDiff` (sparse field delta over the drawing artifact; sibling `🦀️.rs`,
  * `#[serde(rename_all = "camelCase", default)]`). Every top-level field is an optional patch slot;
@@ -109,6 +110,10 @@ export interface DrawingLayerPatch {
   pathSegments?: PathGeometrySegment[];
   textContent?: string;
   textSize?: number;
+  imageKey?:string;
+  imageWidth?:number;
+  imageHeight?:number;
+  shapeCoordinates?:{field:ShapeCoordinateField;index?:number|null;value:number}[];
 }
 
 //#region 🚪️Parsers
@@ -250,6 +255,13 @@ export function parseDrawingLayerPatch(value: unknown, at = "$"): DrawingLayerPa
     booleanOperation: text("booleanOperation"),
     traceParams: row["traceParams"] == null ? undefined : parseDrawingTraceParams(row["traceParams"], at+".traceParams"),
     layer: row["layer"] == null ? undefined : parseDrawingLayerNode(row["layer"], at+".layer"),
+    shapeCoordinates:row.shapeCoordinates==null?undefined:drawingDrawingDiffGuardArray(row.shapeCoordinates,`${at}.shapeCoordinates`).map((coordinate,index)=>{
+      const point=drawingDrawingDiffGuardObject(coordinate,`${at}.shapeCoordinates[${index}]`);
+      return {field:drawingDrawingDiffGuardMember(point.field,`${at}.shapeCoordinates[${index}].field`,SHAPE_COORDINATE_FIELDS),index:point.index==null?undefined:drawingDrawingDiffGuardNumber(point.index,`${at}.shapeCoordinates[${index}].index`),value:drawingDrawingDiffGuardNumber(point.value,`${at}.shapeCoordinates[${index}].value`)};
+    }),
+    imageKey:text("imageKey"),
+    imageWidth:row.imageWidth==null?undefined:drawingDrawingDiffGuardNumber(row.imageWidth,`${at}.imageWidth`),
+    imageHeight:row.imageHeight==null?undefined:drawingDrawingDiffGuardNumber(row.imageHeight,`${at}.imageHeight`),
     textContent: text("textContent"),
     textSize: row["textSize"] == null ? undefined : drawingDrawingDiffGuardNumber(row["textSize"], `${at}.textSize`),
     pathSegments: row["pathSegments"] == null ? undefined : drawingDrawingDiffGuardArray(row["pathSegments"], `${at}.pathSegments`).map((item, index) => parsePathGeometrySegment(item, `${at}.pathSegments[${index}]`)),

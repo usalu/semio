@@ -14,22 +14,167 @@ message ModelArtifact {
   map<string, BeamType> beam_types = 8;
   map<string, WindowType> window_types = 9;
   map<string, DoorType> door_types = 10;
-  map<string, Site> sites = 11;
-  map<string, Building> buildings = 12;
-  map<string, Storey> storeys = 13;
-  map<string, GridLine> grids = 14;
-  map<string, Wall> walls = 15;
-  map<string, CurtainWall> curtain_walls = 16;
-  map<string, Column> columns = 17;
-  map<string, Beam> beams = 18;
-  map<string, Slab> slabs = 19;
-  map<string, Roof> roofs = 20;
-  map<string, Opening> openings = 21;
-  map<string, Stair> stairs = 22;
-  map<string, Railing> railings = 23;
-  map<string, Space> spaces = 24;
-  map<string, PropertySetRows> properties = 25;
-  map<string, Classification> classifications = 26;
+  map<string, CurtainWallType> curtain_wall_types = 11;
+  map<string, Site> sites = 12;
+  map<string, Building> buildings = 13;
+  map<string, Storey> storeys = 14;
+  map<string, GridLine> grids = 15;
+  map<string, Wall> walls = 16;
+  map<string, CurtainWall> curtain_walls = 17;
+  map<string, CurtainPanelOverride> curtain_panel_overrides = 18;
+  map<string, Column> columns = 19;
+  map<string, Beam> beams = 20;
+  map<string, Slab> slabs = 21;
+  map<string, Roof> roofs = 22;
+  map<string, Opening> openings = 23;
+  map<string, Stair> stairs = 24;
+  map<string, Railing> railings = 25;
+  map<string, Ramp> ramps = 26;
+  map<string, Space> spaces = 27;
+  map<string, CeilingType> ceiling_types = 28;
+  map<string, Ceiling> ceilings = 29;
+  map<string, Zone> zones = 30;
+  map<string, AreaScheme> area_schemes = 31;
+  map<string, View> views = 32;
+  map<string, Sheet> sheets = 33;
+  map<string, Viewport> viewports = 34;
+  map<string, SheetRevision> sheet_revisions = 35;
+  map<string, Dimension> dimensions = 36;
+  map<string, Tag> tags = 37;
+  map<string, TextNote> text_notes = 38;
+  map<string, Leader> leaders = 39;
+  map<string, AnnotationStyle> annotation_styles = 40;
+  map<string, Family> families = 41;
+  map<string, FamilyParameter> family_parameters = 42;
+  map<string, FamilySolid> family_solids = 43;
+  map<string, WallSweep> wall_sweeps = 44;
+  map<string, Schedule> schedules = 45;
+  map<string, PropertyTemplate> property_templates = 46;
+  map<string, ClassificationSystem> classification_systems = 47;
+  map<string, PropertySetRows> properties = 48;
+  map<string, ClassificationSetRows> classifications = 49;
+}
+
+enum PropertyKind {
+  PROPERTYKIND_UNSPECIFIED = 0;
+  PROPERTYKIND_TEXT = 1;
+  PROPERTYKIND_REAL = 2;
+  PROPERTYKIND_INTEGER = 3;
+  PROPERTYKIND_BOOLEAN = 4;
+  PROPERTYKIND_LENGTH = 5;
+  PROPERTYKIND_AREA = 6;
+  PROPERTYKIND_VOLUME = 7;
+  PROPERTYKIND_ANGLE = 8;
+}
+
+enum TemplateTarget {
+  TEMPLATETARGET_UNSPECIFIED = 0;
+  TEMPLATETARGET_SITE = 1;
+  TEMPLATETARGET_BUILDING = 2;
+  TEMPLATETARGET_STOREY = 3;
+  TEMPLATETARGET_WALL = 4;
+  TEMPLATETARGET_CURTAINWALL = 5;
+  TEMPLATETARGET_COLUMN = 6;
+  TEMPLATETARGET_BEAM = 7;
+  TEMPLATETARGET_SLAB = 8;
+  TEMPLATETARGET_CEILING = 9;
+  TEMPLATETARGET_ROOF = 10;
+  TEMPLATETARGET_WINDOW = 11;
+  TEMPLATETARGET_DOOR = 12;
+  TEMPLATETARGET_VOID = 13;
+  TEMPLATETARGET_STAIR = 14;
+  TEMPLATETARGET_RAMP = 15;
+  TEMPLATETARGET_RAILING = 16;
+  TEMPLATETARGET_SPACE = 17;
+  TEMPLATETARGET_ZONE = 18;
+  TEMPLATETARGET_WALLTYPE = 19;
+  TEMPLATETARGET_SLABTYPE = 20;
+  TEMPLATETARGET_CEILINGTYPE = 21;
+  TEMPLATETARGET_ROOFTYPE = 22;
+  TEMPLATETARGET_COLUMNTYPE = 23;
+  TEMPLATETARGET_BEAMTYPE = 24;
+  TEMPLATETARGET_WINDOWTYPE = 25;
+  TEMPLATETARGET_DOORTYPE = 26;
+}
+
+enum AnchorEnd {
+  ANCHOREND_UNSPECIFIED = 0;
+  ANCHOREND_START = 1;
+  ANCHOREND_END = 2;
+}
+
+enum WallSide {
+  WALLSIDE_UNSPECIFIED = 0;
+  WALLSIDE_LEFT = 1;
+  WALLSIDE_RIGHT = 2;
+}
+
+enum TagCategory {
+  TAGCATEGORY_UNSPECIFIED = 0;
+  TAGCATEGORY_NAME = 1;
+  TAGCATEGORY_TYPE = 2;
+  TAGCATEGORY_NUMBER = 3;
+  TAGCATEGORY_SIZE = 4;
+}
+
+enum Terminator {
+  TERMINATOR_UNSPECIFIED = 0;
+  TERMINATOR_TICK = 1;
+  TERMINATOR_ARROW = 2;
+  TERMINATOR_DOT = 3;
+}
+
+enum DimensionUnit {
+  DIMENSIONUNIT_UNSPECIFIED = 0;
+  DIMENSIONUNIT_METRE = 1;
+  DIMENSIONUNIT_CENTIMETRE = 2;
+  DIMENSIONUNIT_MILLIMETRE = 3;
+}
+
+enum FamilyCategory {
+  FAMILYCATEGORY_UNSPECIFIED = 0;
+  FAMILYCATEGORY_FURNITURE = 1;
+  FAMILYCATEGORY_EQUIPMENT = 2;
+  FAMILYCATEGORY_CASEWORK = 3;
+  FAMILYCATEGORY_PLUMBING = 4;
+  FAMILYCATEGORY_LIGHTING = 5;
+  FAMILYCATEGORY_MECHANICAL = 6;
+  FAMILYCATEGORY_ELECTRICAL = 7;
+  FAMILYCATEGORY_GENERIC = 8;
+  FAMILYCATEGORY_PROFILE = 9;
+}
+
+enum ParameterKind {
+  PARAMETERKIND_UNSPECIFIED = 0;
+  PARAMETERKIND_LENGTH = 1;
+  PARAMETERKIND_ANGLE = 2;
+  PARAMETERKIND_REAL = 3;
+  PARAMETERKIND_INTEGER = 4;
+  PARAMETERKIND_BOOLEAN = 5;
+  PARAMETERKIND_TEXT = 6;
+  PARAMETERKIND_MATERIAL = 7;
+}
+
+enum SolidAxis {
+  SOLIDAXIS_UNSPECIFIED = 0;
+  SOLIDAXIS_X = 1;
+  SOLIDAXIS_Y = 2;
+  SOLIDAXIS_Z = 3;
+}
+
+enum IsoSize {
+  ISOSIZE_UNSPECIFIED = 0;
+  ISOSIZE_A0 = 1;
+  ISOSIZE_A1 = 2;
+  ISOSIZE_A2 = 3;
+  ISOSIZE_A3 = 4;
+  ISOSIZE_A4 = 5;
+}
+
+enum Orientation {
+  ORIENTATION_UNSPECIFIED = 0;
+  ORIENTATION_LANDSCAPE = 1;
+  ORIENTATION_PORTRAIT = 2;
 }
 
 enum MaterialCategory {
@@ -103,6 +248,286 @@ enum RiserKind {
   RISERKIND_CLOSED = 2;
 }
 
+enum ScheduleCategory {
+  SCHEDULECATEGORY_UNSPECIFIED = 0;
+  SCHEDULECATEGORY_WALL = 1;
+  SCHEDULECATEGORY_CURTAINWALL = 2;
+  SCHEDULECATEGORY_SLAB = 3;
+  SCHEDULECATEGORY_ROOF = 4;
+  SCHEDULECATEGORY_COLUMN = 5;
+  SCHEDULECATEGORY_BEAM = 6;
+  SCHEDULECATEGORY_WINDOW = 7;
+  SCHEDULECATEGORY_DOOR = 8;
+  SCHEDULECATEGORY_VOID = 9;
+  SCHEDULECATEGORY_STAIR = 10;
+  SCHEDULECATEGORY_RAILING = 11;
+  SCHEDULECATEGORY_SPACE = 12;
+  SCHEDULECATEGORY_FINISH = 13;
+  SCHEDULECATEGORY_MATERIAL = 14;
+}
+
+enum ScheduleField {
+  SCHEDULEFIELD_UNSPECIFIED = 0;
+  SCHEDULEFIELD_ID = 1;
+  SCHEDULEFIELD_NAME = 2;
+  SCHEDULEFIELD_KIND = 3;
+  SCHEDULEFIELD_STOREY = 4;
+  SCHEDULEFIELD_LEVEL = 5;
+  SCHEDULEFIELD_TYPE = 6;
+  SCHEDULEFIELD_PHASE = 7;
+  SCHEDULEFIELD_MATERIAL = 8;
+  SCHEDULEFIELD_HOST = 9;
+  SCHEDULEFIELD_NUMBER = 10;
+  SCHEDULEFIELD_USAGE = 11;
+  SCHEDULEFIELD_SURFACE = 12;
+  SCHEDULEFIELD_SWING = 13;
+  SCHEDULEFIELD_LEAVES = 14;
+  SCHEDULEFIELD_PANES = 15;
+  SCHEDULEFIELD_COUNT = 16;
+  SCHEDULEFIELD_LENGTH = 17;
+  SCHEDULEFIELD_WIDTH = 18;
+  SCHEDULEFIELD_HEIGHT = 19;
+  SCHEDULEFIELD_PERIMETER = 20;
+  SCHEDULEFIELD_GROSSSIDEAREA = 21;
+  SCHEDULEFIELD_OPENINGAREA = 22;
+  SCHEDULEFIELD_NETSIDEAREA = 23;
+  SCHEDULEFIELD_GROSSAREA = 24;
+  SCHEDULEFIELD_NETAREA = 25;
+  SCHEDULEFIELD_SURFACEAREA = 26;
+  SCHEDULEFIELD_GROSSVOLUME = 27;
+  SCHEDULEFIELD_NETVOLUME = 28;
+  SCHEDULEFIELD_MASS = 29;
+  SCHEDULEFIELD_RISERS = 30;
+  SCHEDULEFIELD_THICKNESS = 31;
+  SCHEDULEFIELD_LAYERAREA = 32;
+  SCHEDULEFIELD_LAYERVOLUME = 33;
+  SCHEDULEFIELD_LAYERMASS = 34;
+  SCHEDULEFIELD_FINISHAREA = 35;
+}
+
+enum ScheduleOp {
+  SCHEDULEOP_UNSPECIFIED = 0;
+  SCHEDULEOP_EQUALS = 1;
+  SCHEDULEOP_NOTEQUALS = 2;
+  SCHEDULEOP_CONTAINS = 3;
+  SCHEDULEOP_GREATER = 4;
+  SCHEDULEOP_GREATEROREQUAL = 5;
+  SCHEDULEOP_LESS = 6;
+  SCHEDULEOP_LESSOREQUAL = 7;
+  SCHEDULEOP_EMPTY = 8;
+  SCHEDULEOP_NOTEMPTY = 9;
+}
+
+enum EndJoin {
+  ENDJOIN_UNSPECIFIED = 0;
+  ENDJOIN_MITER = 1;
+  ENDJOIN_BUTT = 2;
+  ENDJOIN_NONE = 3;
+}
+
+enum ViewKind {
+  VIEWKIND_UNSPECIFIED = 0;
+  VIEWKIND_PLAN = 1;
+  VIEWKIND_CEILINGPLAN = 2;
+  VIEWKIND_SECTION = 3;
+  VIEWKIND_ELEVATION = 4;
+  VIEWKIND_ORTHOGRAPHIC = 5;
+  VIEWKIND_PERSPECTIVE = 6;
+}
+
+enum DetailLevel {
+  DETAILLEVEL_UNSPECIFIED = 0;
+  DETAILLEVEL_COARSE = 1;
+  DETAILLEVEL_MEDIUM = 2;
+  DETAILLEVEL_FINE = 3;
+}
+
+enum ViewCategory {
+  VIEWCATEGORY_UNSPECIFIED = 0;
+  VIEWCATEGORY_WALLS = 1;
+  VIEWCATEGORY_CURTAINWALLS = 2;
+  VIEWCATEGORY_COLUMNS = 3;
+  VIEWCATEGORY_BEAMS = 4;
+  VIEWCATEGORY_SLABS = 5;
+  VIEWCATEGORY_ROOFS = 6;
+  VIEWCATEGORY_OPENINGS = 7;
+  VIEWCATEGORY_STAIRS = 8;
+  VIEWCATEGORY_RAILINGS = 9;
+  VIEWCATEGORY_SPACES = 10;
+  VIEWCATEGORY_GRIDS = 11;
+}
+
+enum HostSide {
+  HOSTSIDE_UNSPECIFIED = 0;
+  HOSTSIDE_LEFT = 1;
+  HOSTSIDE_RIGHT = 2;
+}
+
+enum AreaMeasure {
+  AREAMEASURE_UNSPECIFIED = 0;
+  AREAMEASURE_GROSS = 1;
+  AREAMEASURE_NET = 2;
+}
+
+message AnnotationAnchorPoint {
+  Point2 point = 1;
+}
+
+message AnnotationAnchorWallFace {
+  string wall = 1;
+  WallSide side = 2;
+}
+
+message AnnotationAnchorWallAxis {
+  string wall = 1;
+}
+
+message AnnotationAnchorWallEnd {
+  string wall = 1;
+  AnchorEnd end = 2;
+}
+
+message AnnotationAnchorOpeningCentre {
+  string opening = 1;
+}
+
+message AnnotationAnchorGrid {
+  string grid = 1;
+}
+
+message AnnotationAnchorColumnCentre {
+  string column = 1;
+}
+
+message AnnotationAnchor {
+  oneof variant {
+    AnnotationAnchorPoint point = 1;
+    AnnotationAnchorWallFace wallface = 2;
+    AnnotationAnchorWallAxis wallaxis = 3;
+    AnnotationAnchorWallEnd wallend = 4;
+    AnnotationAnchorOpeningCentre openingcentre = 5;
+    AnnotationAnchorGrid grid = 6;
+    AnnotationAnchorColumnCentre columncentre = 7;
+  }
+}
+
+message ParametricProfileRectangle {
+  string width = 1;
+  string depth = 2;
+}
+
+message ParametricProfileCircle {
+  string diameter = 1;
+}
+
+message ParametricProfileIShape {
+  string width = 1;
+  string depth = 2;
+  string web = 3;
+  string flange = 4;
+}
+
+message ParametricProfilePolygon {
+  repeated ExprPoint points = 1;
+}
+
+message ParametricProfile {
+  oneof variant {
+    ParametricProfileRectangle rectangle = 1;
+    ParametricProfileCircle circle = 2;
+    ParametricProfileIShape ishape = 3;
+    ParametricProfilePolygon polygon = 4;
+  }
+}
+
+message SolidShapeExtrusion {
+  ParametricProfile profile = 1;
+  string base = 2;
+  string height = 3;
+}
+
+message SolidShapeRevolution {
+  ParametricProfile profile = 1;
+  SolidAxis axis = 2;
+  string angle = 3;
+}
+
+message SolidShapeSweep {
+  ParametricProfile profile = 1;
+  repeated ExprPoint path = 2;
+}
+
+message SolidShapeCuboid {
+  string x = 1;
+  string y = 2;
+  string z = 3;
+  string width = 4;
+  string depth = 5;
+  string height = 6;
+}
+
+message SolidShape {
+  oneof variant {
+    SolidShapeExtrusion extrusion = 1;
+    SolidShapeRevolution revolution = 2;
+    SolidShapeSweep sweep = 3;
+    SolidShapeCuboid cuboid = 4;
+  }
+}
+
+message PaperIso {
+  IsoSize size = 1;
+}
+
+message PaperCustom {
+  double width = 1;
+  double height = 2;
+}
+
+message Paper {
+  oneof variant {
+    PaperIso iso = 1;
+    PaperCustom custom = 2;
+  }
+}
+
+message CurtainGridSpacing {
+  double spacing = 1;
+}
+
+message CurtainGridLines {
+  repeated double positions = 1;
+}
+
+message CurtainGrid {
+  oneof variant {
+    CurtainGridSpacing spacing = 1;
+    CurtainGridLines lines = 2;
+  }
+}
+
+message CurtainPanelSolid {
+  string material = 1;
+}
+
+message CurtainPanelDoor {
+  string door_type = 1;
+}
+
+message CurtainPanelWindow {
+  string window_type = 1;
+}
+
+message CurtainPanel {
+  oneof variant {
+    bool glass = 1;
+    CurtainPanelSolid solid = 2;
+    CurtainPanelDoor door = 3;
+    CurtainPanelWindow window = 4;
+    bool empty = 5;
+  }
+}
+
 message AxisLine {
   Point2 start = 1;
   Point2 end = 2;
@@ -134,11 +559,29 @@ message TopConstraintStorey {
   double offset = 2;
 }
 
+message TopConstraintRoof {
+  string roof = 1;
+  double offset = 2;
+}
+
+message TopConstraintSlab {
+  string slab = 1;
+  double offset = 2;
+}
+
+message TopConstraintCeiling {
+  string ceiling = 1;
+  double offset = 2;
+}
+
 message TopConstraint {
   oneof variant {
     TopConstraintUnconnected unconnected = 1;
     TopConstraintStoreyTop storeytop = 2;
     TopConstraintStorey storey = 3;
+    TopConstraintRoof roof = 4;
+    TopConstraintSlab slab = 5;
+    TopConstraintCeiling ceiling = 6;
   }
 }
 
@@ -162,12 +605,17 @@ message ProfileCustom {
   repeated Vertex outline = 1;
 }
 
+message ProfileFamily {
+  string family = 1;
+}
+
 message Profile {
   oneof variant {
     ProfileRectangle rectangle = 1;
     ProfileCircle circle = 2;
     ProfileIShape ishape = 3;
     ProfileCustom custom = 4;
+    ProfileFamily family = 5;
   }
 }
 
@@ -321,6 +769,170 @@ message SpaceBoundary {
   }
 }
 
+message ScheduleKeyField {
+  ScheduleField field = 1;
+}
+
+message ScheduleKeyProperty {
+  string set = 1;
+  string name = 2;
+}
+
+message ScheduleKey {
+  oneof variant {
+    ScheduleKeyField field = 1;
+    ScheduleKeyProperty property = 2;
+  }
+}
+
+message PropertyDef {
+  string name = 1;
+  PropertyKind kind = 2;
+  optional string unit = 3;
+  optional string description = 4;
+  bool required = 5;
+  optional PropertyValue default_value = 6;
+  repeated PropertyValue allowed = 7;
+  optional double minimum = 8;
+  optional double maximum = 9;
+}
+
+message PropertyTemplate {
+  string name = 1;
+  repeated TemplateTarget applies_to = 2;
+  repeated PropertyDef properties = 3;
+}
+
+message ClassificationItem {
+  string code = 1;
+  string title = 2;
+  optional string parent = 3;
+}
+
+message ClassificationSystem {
+  string name = 1;
+  string edition = 2;
+  optional string source = 3;
+  repeated ClassificationItem entries = 4;
+}
+
+message Dimension {
+  string storey = 1;
+  repeated AnnotationAnchor anchors = 2;
+  double angle = 3;
+  double offset = 4;
+  string style = 5;
+  optional double lock = 6;
+  string name = 7;
+}
+
+message Tag {
+  string storey = 1;
+  string element = 2;
+  TagCategory category = 3;
+  Point2 offset = 4;
+  string style = 5;
+}
+
+message TextNote {
+  string storey = 1;
+  Point2 position = 2;
+  string text = 3;
+  double rotation = 4;
+  string style = 5;
+}
+
+message Leader {
+  string storey = 1;
+  AnnotationAnchor anchor = 2;
+  Point2 offset = 3;
+  string text = 4;
+  string style = 5;
+}
+
+message AnnotationStyle {
+  string name = 1;
+  double text_height = 2;
+  Terminator terminator = 3;
+  DimensionUnit unit = 4;
+  uint32 precision = 5;
+  double mark_size = 6;
+  double gap = 7;
+  double overshoot = 8;
+}
+
+message ExprPoint {
+  string x = 1;
+  string y = 2;
+}
+
+message ExprPoint3 {
+  string x = 1;
+  string y = 2;
+  string z = 3;
+}
+
+message Family {
+  string name = 1;
+  FamilyCategory category = 2;
+}
+
+message FamilyParameter {
+  string family = 1;
+  string name = 2;
+  ParameterKind kind = 3;
+  string value = 4;
+}
+
+message FamilySolid {
+  string family = 1;
+  string name = 2;
+  SolidShape shape = 3;
+  string material = 4;
+  string visible = 5;
+  ExprPoint3 offset = 6;
+}
+
+message Sheet {
+  string number = 1;
+  string name = 2;
+  Paper paper = 3;
+  Orientation orientation = 4;
+  string project = 5;
+  string drawn_by = 6;
+  string checked_by = 7;
+  string date = 8;
+  string revision = 9;
+  string scale_label = 10;
+}
+
+message Viewport {
+  string sheet = 1;
+  string view = 2;
+  Point2 position = 3;
+  uint32 scale = 4;
+  optional ViewCrop crop = 5;
+  optional string label = 6;
+}
+
+message SheetRevision {
+  string sheet = 1;
+  string number = 2;
+  string date = 3;
+  string description = 4;
+  string author = 5;
+}
+
+message WallSweep {
+  string host = 1;
+  WallSide side = 2;
+  Profile profile = 3;
+  double height = 4;
+  double inset = 5;
+  string material = 6;
+  string name = 7;
+}
+
 message Point2 {
   double x = 1;
   double y = 2;
@@ -353,6 +965,13 @@ message Baluster {
   double spacing = 2;
 }
 
+message RailingHost {
+  string element = 1;
+  HostSide side = 2;
+  uint32 edge = 3;
+  double inset = 4;
+}
+
 message Layer {
   string material = 1;
   double thickness = 2;
@@ -382,6 +1001,11 @@ message WallType {
 }
 
 message SlabType {
+  string name = 1;
+  repeated Layer layers = 2;
+}
+
+message CeilingType {
   string name = 1;
   repeated Layer layers = 2;
 }
@@ -465,20 +1089,40 @@ message Wall {
   double base_offset = 5;
   TopConstraint top = 6;
   Phase phase = 7;
-  string name = 8;
+  optional EndJoin start_join = 8;
+  optional EndJoin end_join = 9;
+  string name = 10;
+  optional string base_slab = 11;
+}
+
+message CurtainWallType {
+  string name = 1;
+  CurtainGrid u_grid = 2;
+  CurtainGrid v_grid = 3;
+  Profile interior_mullion = 4;
+  Profile border_mullion = 5;
+  CurtainPanel panel = 6;
+  string panel_material = 7;
+  string mullion_material = 8;
+}
+
+message CurtainPanelOverride {
+  string curtain = 1;
+  uint32 u = 2;
+  uint32 v = 3;
+  CurtainPanel panel = 4;
 }
 
 message CurtainWall {
   string storey = 1;
-  Axis axis = 2;
-  double base_offset = 3;
-  TopConstraint top = 4;
-  double u_spacing = 5;
-  double v_spacing = 6;
-  Profile mullion = 7;
-  string panel_material = 8;
-  string mullion_material = 9;
-  string name = 10;
+  string curtain_wall_type = 2;
+  Axis axis = 3;
+  double base_offset = 4;
+  TopConstraint top = 5;
+  optional CurtainGrid u_grid = 6;
+  optional CurtainGrid v_grid = 7;
+  Phase phase = 8;
+  string name = 9;
 }
 
 message Column {
@@ -486,23 +1130,37 @@ message Column {
   string column_type = 2;
   Point2 position = 3;
   double rotation = 4;
-  double base_offset = 5;
-  TopConstraint top = 6;
-  string name = 7;
+  optional Slope tilt = 5;
+  double base_offset = 6;
+  TopConstraint top = 7;
+  Phase phase = 8;
+  string name = 9;
 }
 
 message Beam {
   string storey = 1;
   string beam_type = 2;
-  Point2 start = 3;
-  Point2 end = 4;
-  double top_offset = 5;
-  string name = 6;
+  Axis axis = 3;
+  double top_offset = 4;
+  optional double end_top_offset = 5;
+  Phase phase = 6;
+  string name = 7;
 }
 
 message Slab {
   string storey = 1;
   string slab_type = 2;
+  repeated Vertex boundary = 3;
+  repeated VertexList holes = 4;
+  double offset = 5;
+  optional Slope slope = 6;
+  Phase phase = 7;
+  string name = 8;
+}
+
+message Ceiling {
+  string storey = 1;
+  string ceiling_type = 2;
   repeated Vertex boundary = 3;
   repeated VertexList holes = 4;
   double offset = 5;
@@ -517,7 +1175,8 @@ message Roof {
   RoofShape shape = 4;
   double overhang = 5;
   double base_offset = 6;
-  string name = 7;
+  Phase phase = 7;
+  string name = 8;
 }
 
 message Opening {
@@ -530,6 +1189,8 @@ message Opening {
   bool flip_hand = 7;
   bool flip_facing = 8;
   string name = 9;
+  optional double reveal_depth = 10;
+  optional string reveal_material = 11;
 }
 
 message Stair {
@@ -546,7 +1207,8 @@ message Stair {
   double tread_thickness = 11;
   RiserKind riser = 12;
   double landing_depth = 13;
-  string name = 14;
+  Phase phase = 14;
+  string name = 15;
 }
 
 message Railing {
@@ -560,7 +1222,26 @@ message Railing {
   Infill infill = 8;
   string material = 9;
   double base_offset = 10;
-  string name = 11;
+  optional RailingHost host = 11;
+  Phase phase = 12;
+  string name = 13;
+}
+
+message Ramp {
+  string storey = 1;
+  repeated Vertex path = 2;
+  double width = 3;
+  double landing_start = 4;
+  double landing_end = 5;
+  double landing_turn = 6;
+  double max_slope = 7;
+  double thickness = 8;
+  string material = 9;
+  double base_offset = 10;
+  TopConstraint top = 11;
+  bool railing_left = 12;
+  bool railing_right = 13;
+  string name = 14;
 }
 
 message Space {
@@ -569,12 +1250,91 @@ message Space {
   string name = 3;
   SpaceBoundary boundary = 4;
   string usage = 5;
+  Phase phase = 6;
+  optional string zone = 7;
+  optional string floor_finish = 8;
+  optional string wall_finish = 9;
+  optional string ceiling_finish = 10;
 }
 
-message Classification {
-  string system = 1;
-  string code = 2;
-  string title = 3;
+message Zone {
+  string name = 1;
+  string category = 2;
+  double occupancy_density = 3;
+}
+
+message AreaScheme {
+  string name = 1;
+  AreaMeasure measure = 2;
+  repeated string usages = 3;
+  repeated string zones = 4;
+}
+
+message ViewPlane {
+  Point2 start = 1;
+  Point2 end = 2;
+}
+
+message ViewCrop {
+  Point2 min = 1;
+  Point2 max = 2;
+}
+
+message ViewCamera {
+  Point2 target = 1;
+  double target_height = 2;
+  double azimuth = 3;
+  double pitch = 4;
+  double distance = 5;
+}
+
+message View {
+  string building = 1;
+  string name = 2;
+  ViewKind kind = 3;
+  optional string storey = 4;
+  optional ViewPlane plane = 5;
+  optional ViewCamera camera = 6;
+  optional double cut_height = 7;
+  double depth = 8;
+  optional ViewCrop crop = 9;
+  repeated ViewCategory hidden = 10;
+  optional Phase phase = 11;
+  uint32 scale = 12;
+  DetailLevel detail = 13;
+}
+
+message ScheduleColumn {
+  ScheduleKey key = 1;
+  optional string heading = 2;
+  bool total = 3;
+}
+
+message ScheduleSort {
+  ScheduleKey key = 1;
+  bool descending = 2;
+}
+
+message ScheduleFilter {
+  ScheduleKey key = 1;
+  ScheduleOp op = 2;
+  string value = 3;
+}
+
+message ScheduleGroup {
+  ScheduleKey key = 1;
+}
+
+message Schedule {
+  string name = 1;
+  ScheduleCategory category = 2;
+  repeated ScheduleColumn columns = 3;
+  repeated ScheduleSort sort = 4;
+  repeated ScheduleFilter filter = 5;
+  repeated ScheduleGroup group = 6;
+  bool itemize = 7;
+  repeated string storeys = 8;
+  repeated Phase phases = 9;
 }
 
 message VertexRow {
@@ -589,8 +1349,40 @@ message PropertyGroup {
   map<string, PropertyValue> properties = 1;
 }
 
+message ClassificationSetRows {
+  map<string, string> codes = 1;
+}
+
+message ExprPointList {
+  repeated ExprPoint items = 1;
+}
+
+message DoubleList {
+  repeated double items = 1;
+}
+
 message VertexList {
   repeated Vertex items = 1;
+}
+
+message PropertyValueList {
+  repeated PropertyValue items = 1;
+}
+
+message TemplateTargetList {
+  repeated TemplateTarget items = 1;
+}
+
+message PropertyDefList {
+  repeated PropertyDef items = 1;
+}
+
+message ClassificationItemList {
+  repeated ClassificationItem items = 1;
+}
+
+message AnnotationAnchorList {
+  repeated AnnotationAnchor items = 1;
 }
 
 message StringList {
@@ -607,4 +1399,28 @@ message Point2List {
 
 message VertexListList {
   repeated VertexList items = 1;
+}
+
+message ViewCategoryList {
+  repeated ViewCategory items = 1;
+}
+
+message ScheduleColumnList {
+  repeated ScheduleColumn items = 1;
+}
+
+message ScheduleSortList {
+  repeated ScheduleSort items = 1;
+}
+
+message ScheduleFilterList {
+  repeated ScheduleFilter items = 1;
+}
+
+message ScheduleGroupList {
+  repeated ScheduleGroup items = 1;
+}
+
+message PhaseList {
+  repeated Phase items = 1;
 }

@@ -1,0 +1,17 @@
+{
+  "mutation": "createView",
+  "id": "v-first",
+  "view": {
+    "building": "bldg-1",
+    "name": "First plan",
+    "kind": "Plan",
+    "depth": 100,
+    "hidden": [
+      "Beams",
+      "Walls"
+    ],
+    "scale": 100,
+    "detail": "Medium",
+    "storey": "st-first"
+  }
+}

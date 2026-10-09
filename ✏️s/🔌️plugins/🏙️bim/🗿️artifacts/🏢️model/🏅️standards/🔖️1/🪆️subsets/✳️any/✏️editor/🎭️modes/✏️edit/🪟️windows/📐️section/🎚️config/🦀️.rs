@@ -1,4 +1,4 @@
-//! 🎚️ Persisted local state for one exact BIM section window: the section line in plan coordinates, how deep it looks and its navigation.
+//! 🎚️ Persisted local state for one exact BIM section window: which section or elevation view it shows and its navigation. The plane and the depth are authored in the view.
 
 use crate::editor::bim::kit::window_config;
 
@@ -10,11 +10,7 @@ window_config! {
     owner_path: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️section/🎚️config",
     display: "Set BIM Section Window Configuration",
     type BimSectionWindowConfig, BimSectionWindowConfigDiff, BimSectionWindowConfigMutation, BimSectionWindowConfigOwner;
-    start_x: f64 = 0.0;
-    start_y: f64 = 0.0;
-    end_x: f64 = 10.0;
-    end_y: f64 = 0.0;
-    depth: f64 = 5.0;
+    view: String = String::new();
     framed: bool = false;
     #[dsl(block)]
     viewport: store::Viewport2d = store::Viewport2d { x: 5.0, y: -1.5, zoom: 40.0 };

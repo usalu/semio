@@ -1,3 +1,7 @@
+import type {SetShapeCoordinate} from "../../../🔀️transform/🧬️schema/🧬️mutations/🔷️shape-coordinate/🦠️mutation/🟦️.ts";
+import type {ImportImageAsset} from "../../../🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🦠️mutation/🟦️.ts";
+import type {RemoveImageAsset} from "../../../🧱️structure/🧬️schema/🧬️mutations/🗑️remove-image-asset/🦠️mutation/🟦️.ts";
+import type {UpdateImage} from "../../../🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🦠️mutation/🟦️.ts";
 import type {SetGroupIsolation} from "../../../🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🦠️mutation/🟦️.ts";
 import type {SetLayerFillRule} from "../../../🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🦠️mutation/🟦️.ts";
 /** 🧩️ Drawing direct-mutation discriminated union — mirrors the Rust `DrawingMutation` dispatch enum
@@ -129,9 +133,13 @@ export type DrawingMutation =
   | ({ mutation: "reorderLayer" } & ReorderLayer)
   | ({ mutation: "updatePathGeometry" } & UpdatePathGeometry)
   | ({ mutation: "updateText" } & UpdateText)
+  | ({mutation:"updateImage"}&UpdateImage)
+  | ({mutation:"setShapeCoordinate"}&SetShapeCoordinate)
   | ({ mutation: "setLayerFillRule" } & SetLayerFillRule)
   | ({ mutation: "setGroupIsolation" } & SetGroupIsolation)
   | ({ mutation: "dragLayers" } & DragLayers)
   | ({ mutation: "rotateLayers" } & RotateLayers)
   | ({ mutation: "scaleLayers" } & ScaleLayers)
-  | ({ mutation: "dragPathPoints" } & DragPathPoints);
+  | ({ mutation: "dragPathPoints" } & DragPathPoints)
+  | ({mutation:"importImageAsset"}&ImportImageAsset)
+  | ({mutation:"removeImageAsset"}&RemoveImageAsset);

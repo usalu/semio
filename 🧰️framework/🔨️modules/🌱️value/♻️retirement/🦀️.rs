@@ -117,7 +117,7 @@ macro_rules! artifact_retire_struct {
     };
 }
 
-artifact_retire_leaf!((), bool, char, u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
+artifact_retire_leaf!(&'static str, (), bool, char, u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
 
 struct Bytes(ManuallyDrop<Vec<u8>>, bool);
 impl RetirementCursor for Bytes {
@@ -316,6 +316,8 @@ impl<T: RetireOwned> RetireOwned for Option<T> {
     fn retirement_birth_bytes(&self) -> Option<usize> { self.as_ref().map_or_else(|| sequence_birth_bytes(&[]), RetireOwned::retirement_birth_bytes) }
     fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
 }
+/// 📏️ Prices the concrete cursor that retains an original typed box.
+pub const fn boxed_owner_birth_bytes<T:RetireOwned>()->usize{size_of::<BoxedOwner<T>>()}
 struct BoxedOwner<T: RetireOwned> {
     boxed: ManuallyDrop<Option<Box<T>>>,
     value: ManuallyDrop<Option<T>>,

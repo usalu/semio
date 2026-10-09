@@ -1,17 +1,18 @@
 //! 🎯️ The select tool and the handles it owns. A press picks the topmost element under the pointer and selects it (shift adds, ctrl or meta subtracts, both invert); a press on
 //! nothing starts a marquee (left to right selects what it contains, right to left what it touches). With one wall selected its two end handles and its midpoint handle
-//! are live: dragging an end moves the wall's end (`set-wall-axis`), dragging the midpoint bends the wall through the pointer (`set-wall-axis` with a bulge). Pressing an opening and
+//! are live: dragging an end moves the wall's end (`set-wall-axis`), dragging the midpoint bends the wall through the pointer (`set-wall-axis` with a bulge). With one slab or roof selected every corner of its outline is a handle: dragging one
+//! reshapes the outline (`set-slab-boundary`, `set-roof-footprint`). Pressing an opening and
 //! dragging slides it along its host or onto another wall (`move-opening`, with the new host when it lands on another wall). In the section window the top line of every storey is a handle: dragging it sets the
 //! storey height (`set-storey-height`) and every wall, opening and stair that follows the storey follows by inference.
 
 use super::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
-use super::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, same, P};
+use super::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
 use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::mutations::placement::{placement_issue, width_of};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
-use crate::{Axis, ModelInference, ModelMutation, ModelSnapshot};
+use crate::{Axis, ModelInference, ModelMutation, ModelSnapshot, Vertex};
 use std::collections::BTreeMap;
 
 /// 📏️ The flattening tolerance of a dragged arc, in metres.
@@ -37,6 +38,7 @@ enum Mode {
     Idle,
     Marquee { start: P, current: P, merge: &'static str },
     Handle { wall: String, kind: HandleKind, current: P },
+    Vertex { id: String, roof: bool, index: usize, current: P },
     Sliding { id: String, from: (String, f64), current: P, reach: f64 },
     Height { storey: String, value: f64 },
 }
@@ -61,9 +63,18 @@ pub fn wall_handles(snapshot: &ModelSnapshot, selected: &[String]) -> Option<(St
     Some((only.clone(), [start, end, axis_point_at(&wall.axis, axis_length(&wall.axis) / 2.0)]))
 }
 
-/// 🔧️ The marks of the live handles in a plan: a handle dot on both ends and on the midpoint of the one selected wall.
+/// 🔧️ The corners of the outline of the one selected slab or roof, with whether it is a roof: the handles the author drags to reshape it.
+pub fn outline_handles(snapshot: &ModelSnapshot, selected: &[String]) -> Option<(String, bool, Vec<P>)> {
+    let [only] = selected else { return None };
+    let corners = |vertices: &[Vertex]| vertices.iter().map(|vertex| from_point2(vertex.point)).collect();
+    snapshot.slabs.get(only).map(|slab| (only.clone(), false, corners(&slab.boundary))).or_else(|| snapshot.roofs.get(only).map(|roof| (only.clone(), true, corners(&roof.footprint))))
+}
+
+/// 🔧️ The marks of the live handles in a plan: a handle dot on both ends and on the midpoint of the one selected wall, and on every corner of the one selected slab or roof.
 pub fn plan_marks(snapshot: &ModelSnapshot, selected: &[String]) -> Vec<Mark> {
-    wall_handles(snapshot, selected).map(|(_, handles)| handles.iter().map(|at| Mark::dot(*at, Style::Handle)).collect()).unwrap_or_default()
+    let wall = wall_handles(snapshot, selected).map(|(_, handles)| handles.to_vec()).unwrap_or_default();
+    let outline = outline_handles(snapshot, selected).map(|(_, _, corners)| corners).unwrap_or_default();
+    wall.into_iter().chain(outline).map(|at| Mark::dot(at, Style::Handle)).collect()
 }
 
 /// 🔧️ The marks of the storey top handles in a section: a guide along the top of every storey with a handle dot at its left end.
@@ -74,6 +85,28 @@ pub fn section_marks(inference: &ModelInference, start: P, end: P) -> Vec<Mark> 
 
 fn handle_at(handles: &[P; 3], at: P, reach: f64) -> Option<HandleKind> {
     [(HandleKind::Start, handles[0]), (HandleKind::End, handles[1]), (HandleKind::Curve, handles[2])].into_iter().filter(|(_, handle)| dist(*handle, at) <= reach).min_by(|a, b| dist(a.1, at).total_cmp(&dist(b.1, at))).map(|(kind, _)| kind)
+}
+
+fn corner_at(corners: &[P], at: P, reach: f64) -> Option<usize> {
+    corners.iter().enumerate().filter(|(_, corner)| dist(**corner, at) <= reach).min_by(|a, b| dist(*a.1, at).total_cmp(&dist(*b.1, at))).map(|(index, _)| index)
+}
+
+/// 🔷️ The outline with its corner `index` moved to `to`, every bulge kept; none for an index past the end.
+fn moved_corner(vertices: &[Vertex], index: usize, to: P) -> Option<Vec<Vertex>> {
+    (index < vertices.len()).then(|| vertices.iter().enumerate().map(|(position, vertex)| if position == index { Vertex { point: point2(to), bulge: vertex.bulge } } else { vertex.clone() }).collect())
+}
+
+/// 🔷️ The mutation that moves corner `index` of the slab or roof `id` to `to`; none when the corner does not exist or does not move.
+fn dragged_outline(snapshot: &ModelSnapshot, id: &str, roof: bool, index: usize, to: P) -> Option<ModelMutation> {
+    if roof {
+        let footprint = &snapshot.roofs.get(id)?.footprint;
+        let moved = moved_corner(footprint, index, to).filter(|moved| moved != footprint)?;
+        Some(ModelMutation::SetRoofFootprint(crate::mutations::set_roof_footprint::SetRoofFootprint { id: id.into(), footprint: moved }))
+    } else {
+        let slab = snapshot.slabs.get(id)?;
+        let moved = moved_corner(&slab.boundary, index, to).filter(|moved| moved != &slab.boundary)?;
+        Some(ModelMutation::SetSlabBoundary(crate::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: moved, holes: slab.holes.clone() }))
+    }
 }
 
 fn dragged_axis(snapshot: &ModelSnapshot, wall: &str, kind: HandleKind, to: P) -> Option<Axis> {
@@ -146,6 +179,12 @@ impl Select {
                 return Step::default();
             }
         }
+        if let Some((id, roof, corners)) = outline_handles(ctx.snapshot, ctx.selected) {
+            if let Some(index) = corner_at(&corners, pointer.at, reach * 1.5) {
+                self.mode = Mode::Vertex { id, roof, index, current: corners[index] };
+                return Step::default();
+            }
+        }
         let hit = linework(ctx).and_then(|linework| plan::pick(linework, (pointer.at[0], pointer.at[1]), reach));
         let merge = pointer.modifiers.merge();
         match hit.and_then(|id| target_of(ctx, &id)) {
@@ -192,6 +231,10 @@ impl Select {
                     _ => Step::default(),
                 }
             }
+            Mode::Vertex { id, roof, index, .. } => {
+                let to = ctx.snapped(pointer, None, std::slice::from_ref(&id), &[]).point;
+                dragged_outline(ctx.snapshot, &id, roof, index, to).map_or_else(Step::default, |mutation| Step::write(ctx, mutation))
+            }
             Mode::Sliding { id, from, .. } => match self.slide(ctx, &id, &from, pointer.at, reach) {
                 Some((_, _, mutation, true)) => Step::write(ctx, mutation),
                 Some((_, _, _, false)) | None => Step::default(),
@@ -222,6 +265,7 @@ impl Tool for Select {
                         let anchor = ctx.snapshot.walls.get(wall.as_str()).map(|row| axis_ends(&row.axis)).map(|(start, end)| if *kind == HandleKind::Start { end } else { start });
                         *current = if *kind == HandleKind::Curve { pointer.at } else { ctx.snapped(pointer, anchor, std::slice::from_ref(wall), &[]).point };
                     }
+                    Mode::Vertex { id, current, .. } => *current = ctx.snapped(pointer, None, std::slice::from_ref(id), &[]).point,
                     Mode::Height { value, .. } => *value = pointer.at[1],
                     Mode::Idle => {}
                 }
@@ -248,6 +292,15 @@ impl Tool for Select {
                 if let Some(axis) = dragged_axis(ctx.snapshot, wall, *kind, *current) {
                     let (start, end) = axis_ends(&axis);
                     marks.push(Mark::path(&flatten(start, end, super::plane::axis_bulge(&axis), FLATTEN_TOLERANCE), false, Style::Ghost));
+                    marks.push(Mark::dot(*current, Style::Handle));
+                }
+            }
+            Mode::Vertex { id, index, current, .. } => {
+                let corners = outline_handles(ctx.snapshot, std::slice::from_ref(id)).map(|(_, _, corners)| corners).unwrap_or_default();
+                if *index < corners.len() {
+                    let mut ring = corners;
+                    ring[*index] = *current;
+                    marks.push(Mark::path(&ring, true, Style::Ghost));
                     marks.push(Mark::dot(*current, Style::Handle));
                 }
             }

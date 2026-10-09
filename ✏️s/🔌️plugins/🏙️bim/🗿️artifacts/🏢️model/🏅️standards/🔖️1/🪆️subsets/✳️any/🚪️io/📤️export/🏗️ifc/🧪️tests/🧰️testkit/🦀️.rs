@@ -13,6 +13,22 @@ pub fn house() -> ModelSnapshot {
     from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("the committed house decodes")
 }
 
+/// 🪧️ The committed annotated room: dimensions, tags, a note and a leader around four walls, a window, a grid line and a column.
+pub const NOTATED: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
+
+/// 🪧️ The decoded annotated room.
+pub fn notated() -> ModelSnapshot {
+    from_json_str(NOTATED, JsonMemberPolicy::Reject).expect("the committed room decodes")
+}
+
+/// 🔲️ The committed ceilings: a board ceiling with a hole, a sloped and a diagonally sloped tile ceiling and one with a half-round end, on two storeys.
+pub const CEILINGS: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🔲️ceilings/📸️snapshot/🔣️.json");
+
+/// 🔲️ The decoded ceilings model.
+pub fn ceilings() -> ModelSnapshot {
+    from_json_str(CEILINGS, JsonMemberPolicy::Reject).expect("the committed ceilings decode")
+}
+
 /// 📄️ The Part-21 document of a model.
 pub fn document(model: &ModelSnapshot) -> Part21Document {
     model_to_part21(model).expect("the model exports").0

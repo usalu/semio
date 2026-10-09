@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-sheet-revision/schema.json",
+  "title": "CreateSheetRevision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "sheet_revision"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createSheetRevision"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Revision id",
+          "de": "Änderungs-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "sheet_revision": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SheetRevision",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Revision",
+          "de": "Änderung"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

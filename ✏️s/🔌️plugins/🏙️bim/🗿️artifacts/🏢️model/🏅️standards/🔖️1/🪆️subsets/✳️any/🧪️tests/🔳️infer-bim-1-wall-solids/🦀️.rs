@@ -31,10 +31,10 @@ mod subject {
 
     /// 🧊️ `{wall id: {volume, z_min, z_max}}` of every straight wall of the committed `straight-openings` case, from the inferred `element-solids` (openings subtracted).
     pub fn wall_solids_openings(ctx: &Context) -> Result<Outcome, String> {
-        use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
+        use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::model_graph::registry;
         let document = ctx.input_json(OPENINGS_CASE)?;
         let snapshot = decode_model_snapshot_json(&document.get("snapshot").ok_or_else(|| "the case has no snapshot".to_string())?.to_string())?;
-        let solids = compute_element_solids(&snapshot);
+        let solids = registry::try_with_inference(None, &snapshot, |inferred| inferred.element_solids.clone()).map_err(|error| error.to_string())?;
         let rows: Vec<String> = snapshot
             .walls
             .iter()

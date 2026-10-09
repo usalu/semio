@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-classification-system/schema.json",
+  "title": "DeleteClassificationSystem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 8191
+  },
+  "properties": {
+    "mutation": {
+      "const": "deleteClassificationSystem"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "System",
+          "de": "System"
+        },
+        "ref": {
+          "kind": "classification-system"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

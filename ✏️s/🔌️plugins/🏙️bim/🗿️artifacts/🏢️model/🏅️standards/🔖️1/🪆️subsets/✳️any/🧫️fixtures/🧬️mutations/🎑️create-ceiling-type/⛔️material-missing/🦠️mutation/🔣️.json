@@ -1,0 +1,14 @@
+{
+  "mutation": "createCeilingType",
+  "id": "ct-mineral",
+  "ceiling_type": {
+    "name": "Ghost",
+    "layers": [
+      {
+        "material": "m-ghost",
+        "thickness": 0.02,
+        "function": "Structure"
+      }
+    ]
+  }
+}

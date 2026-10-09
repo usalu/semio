@@ -68,7 +68,7 @@ impl FieldProjectionSource for Source<'_>{
  fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{
   if path.is_empty(){return Ok(V::Record(&[1]))}
   if path[0]!=0{return Err(absent())}
-  Ok(match self.node_at_path(&path[1..])?{J::Null=>V::IntrinsicNull,J::Bool(value)=>V::IntrinsicBool(value),J::Number(value)=>V::IntrinsicNumber(value),J::String(value)=>V::IntrinsicText(value),J::Array(length)=>V::IntrinsicArray(length),J::Object(length)=>V::IntrinsicObject(length)})
+  Ok(match self.node_at_path(&path[1..])?{J::Null=>V::IntrinsicNull,J::Bool(value)=>V::IntrinsicBool(value),J::Number(value)=>V::IntrinsicNumber(value),J::String(value)=>V::IntrinsicText(value),J::NativeString(_)=>return Err(ValueError::new(K::InvariantViolated,"borrowed history source has no native text nodes")),J::Array(length)=>V::IntrinsicArray(length),J::Object(length)=>V::IntrinsicObject(length)})
  }
  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
   if path.first()!=Some(&0){return Err(absent())}self.object_key_at_path(&path[1..],index)

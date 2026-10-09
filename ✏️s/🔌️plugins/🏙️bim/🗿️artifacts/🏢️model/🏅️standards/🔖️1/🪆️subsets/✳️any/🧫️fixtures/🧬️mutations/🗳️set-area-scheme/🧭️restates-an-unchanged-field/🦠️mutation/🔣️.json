@@ -1,0 +1,9 @@
+{
+  "mutation": "setAreaScheme",
+  "id": "as-nsa",
+  "measure": "Net",
+  "usages": [
+    "Kitchen",
+    "Sleeping"
+  ]
+}

@@ -1,6 +1,7 @@
 //! 🏗️ Slabs, columns, beams, spaces and grids of an IFC file: the swept `Body` gives the outline or profile and the extent, the placement the position, rotation and level.
 
 use super::reader::{opt_text, text, Doc, Loop, Section};
+use super::spatial::phase_of;
 use super::Import;
 use crate::{Beam, BeamType, Column, ColumnType, GridLine, Layer, LayerFunction, Point2, Profile, Slab, SlabType, Space, SpaceBoundary, TopConstraint, Vertex};
 use semio_s_artifact_stdio_ifc::part21::Part21Value;
@@ -67,7 +68,7 @@ fn slab(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let top = to_building.point(body.position.origin)[2] + thickness;
     let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
     let slab_type = layered_slab_type(i, ifc, thickness);
-    i.model.slabs.insert(id.clone(), Slab { storey, slab_type, boundary: vertices(&outer, &map), holes: holes.iter().map(|hole| vertices(hole, &map)).collect(), offset: top - elevation, slope: None, name: if label_text == id { String::new() } else { label_text } });
+    i.model.slabs.insert(id.clone(), Slab { storey, slab_type, boundary: vertices(&outer, &map), holes: holes.iter().map(|hole| vertices(hole, &map)).collect(), offset: top - elevation, slope: None, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
     i.ids.insert(ifc, id);
 }
 
@@ -101,7 +102,7 @@ fn column(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     };
     let base_z = to_building.point(body.position.origin)[2];
     let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
-    i.model.columns.insert(id.clone(), Column { storey, column_type, position: Point2 { x: to_building.origin[0], y: to_building.origin[1] }, rotation: to_building.heading(), base_offset: base_z - elevation, top: TopConstraint::Unconnected { height: body.depth * body.direction[2].abs() }, name: if label_text == id { String::new() } else { label_text } });
+    i.model.columns.insert(id.clone(), Column { storey, column_type, position: Point2 { x: to_building.origin[0], y: to_building.origin[1] }, rotation: to_building.heading(), base_offset: base_z - elevation, top: TopConstraint::Unconnected { height: body.depth * body.direction[2].abs() }, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
     i.ids.insert(ifc, id);
 }
 
@@ -138,7 +139,7 @@ fn beam(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let end = Point2 { x: start.x + direction[0] * body.depth, y: start.y + direction[1] * body.depth };
     let top = to_building.point(body.position.origin)[2] + profile_top(&body.section);
     let storey_top = i.levels.get(&storey).map_or(0.0, |level| level.top_elevation);
-    i.model.beams.insert(id.clone(), Beam { storey, beam_type, start, end, top_offset: top - storey_top, name: if label_text == id { String::new() } else { label_text } });
+    i.model.beams.insert(id.clone(), Beam { storey, beam_type, start, end, top_offset: top - storey_top, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
     i.ids.insert(ifc, id);
 }
 
@@ -162,7 +163,7 @@ fn space(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
         let world = to_building.point(body.position.point([point[0], point[1], 0.0]));
         Point2 { x: world[0], y: world[1] }
     };
-    i.model.spaces.insert(id.clone(), Space { storey, number: text(args, 2), name: label_text, boundary: SpaceBoundary::Explicit { outline: vertices(outer, &map) }, usage: text(args, 3) });
+    i.model.spaces.insert(id.clone(), Space { storey, number: text(args, 2), name: label_text, boundary: SpaceBoundary::Explicit { outline: vertices(outer, &map) }, usage: text(args, 3), phase: phase_of(&i.doc, ifc), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
     i.ids.insert(ifc, id);
 }
 

@@ -1,0 +1,10 @@
+{
+  "mutation": "setWallTop",
+  "id": "w-east",
+  "top": {
+    "Roof": {
+      "roof": "r-main",
+      "offset": -0.05
+    }
+  }
+}

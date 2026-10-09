@@ -659,3 +659,189 @@ async fn dependencies_are_hashed_only_when_a_cache_can_use_them() {
     assert!(session.root(CountedSum::FIELD_ID).is_some(), "the session root is a fold of dependency hashes, so the gated driver always hashes");
 }
 //#endregion 🧪️HashingOnlyWithACache
+
+//#region 🧪️DiffUpdate
+#[derive(Clone)]
+struct EditSnapshot {
+    weights: BTreeMap<String, i64>,
+    nodes: Vec<(String, Vec<String>)>,
+    inputs: Arc<AtomicUsize>,
+}
+
+fn strings_of(value: &serde_json::Value) -> Vec<String> {
+    value.as_array().unwrap().iter().map(|item| item.as_str().unwrap().to_string()).collect()
+}
+
+impl EditSnapshot {
+    fn from_fixture(fixture: &serde_json::Value) -> Self {
+        let nodes = fixture["nodes"].as_array().unwrap();
+        Self { weights: nodes.iter().map(|node| (node["key"].as_str().unwrap().to_string(), node["weight"].as_i64().unwrap())).collect(), nodes: nodes.iter().map(|node| (node["key"].as_str().unwrap().to_string(), strings_of(&node["parents"]))).collect(), inputs: Arc::default() }
+    }
+
+    fn edit(&mut self, step: &serde_json::Value) {
+        for (key, weight) in step["setWeights"].as_object().into_iter().flatten() {
+            self.weights.insert(key.clone(), weight.as_i64().unwrap());
+        }
+        for key in step["drop"].as_array().into_iter().flatten() {
+            let key = key.as_str().unwrap();
+            self.weights.remove(key);
+            self.nodes.retain(|(name, _)| name != key);
+        }
+        for node in step["add"].as_array().into_iter().flatten() {
+            let key = node["key"].as_str().unwrap().to_string();
+            self.weights.insert(key.clone(), node["weight"].as_i64().unwrap());
+            self.nodes.push((key, strings_of(&node["parents"])));
+        }
+        for (key, parents) in step["setParents"].as_object().into_iter().flatten() {
+            self.nodes.iter_mut().filter(|(name, _)| name == key).for_each(|(_, row)| *row = strings_of(parents));
+        }
+    }
+}
+
+struct EditSum;
+impl InferredField<EditSnapshot> for EditSum {
+    type Key = String;
+    type Value = i64;
+    type Dependency = Vec<i64>;
+    const FIELD_ID: &'static str = "test.dag.edit-sum";
+    const SCHEMA_VERSION: u32 = 1;
+    fn reads() -> &'static [&'static str] {
+        &["weights", "nodes"]
+    }
+    fn plan(snapshot: &EditSnapshot) -> Vec<InferenceStep<Self::Key>> {
+        snapshot.nodes.iter().map(|(key, parents)| InferenceStep { key: key.clone(), parents: parents.clone() }).collect()
+    }
+    fn dep_input(snapshot: &EditSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
+        snapshot.inputs.fetch_add(1, Ordering::SeqCst);
+        vec![snapshot.weights.get(key).copied().unwrap_or(0)]
+    }
+    fn compute(snapshot: &EditSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
+        snapshot.weights.get(key).copied().unwrap_or(0) + parents.iter().sum::<i64>()
+    }
+    fn touched_by(_snapshot: &EditSnapshot, key: &Self::Key, touched: &crate::os_spr::command::TouchedPaths) -> bool {
+        touched.intersects_parts(&["weights", key])
+    }
+}
+
+struct Strings(Vec<String>);
+impl crate::os_spr::command::DiffRegions for Strings {
+    fn touches(&self) -> crate::os_spr::command::TouchedPaths {
+        crate::os_spr::command::TouchedPaths::new(self.0.iter().cloned())
+    }
+}
+
+fn touches_of(step: &serde_json::Value) -> Strings {
+    Strings(strings_of(&step["touches"]))
+}
+
+fn values_of(expected: &serde_json::Value) -> BTreeMap<String, i64> {
+    serde_json::from_value(expected.clone()).unwrap()
+}
+
+fn sorted_keys(delta: &FieldDelta<String, i64>) -> Vec<String> {
+    let mut keys: Vec<String> = delta.changes.iter().map(|change| change.key.clone()).collect();
+    keys.sort();
+    keys
+}
+
+fn diff_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔄️diff-update/🔣️.json")).unwrap()
+}
+
+fn count_of(row: &serde_json::Value, name: &str) -> usize {
+    row[name].as_u64().unwrap() as usize
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_diff_update_serves_exactly_the_entities_the_diff_and_their_parents_moved_and_equals_a_pure_recompute() {
+    let fixture = diff_fixture();
+    let mut snapshot = EditSnapshot::from_fixture(&fixture);
+    let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, ..Default::default() }).await;
+    let mut session = InferenceSession::new().await;
+    let first = infer_field_delta::<EditSnapshot, EditSum, _>(&snapshot, &Strings(vec!["weights".into()]), &mut session, &mut cache).unwrap();
+    assert_eq!(session.field_values::<EditSnapshot, EditSum>().unwrap(), &values_of(&fixture["first"]["values"]));
+    assert_eq!((first.computed, first.carried, first.confirmed), (count_of(&fixture["first"], "computed"), count_of(&fixture["first"], "carried"), count_of(&fixture["first"], "confirmed")));
+    for step in fixture["steps"].as_array().unwrap() {
+        let name = step["name"].as_str().unwrap();
+        snapshot.edit(step);
+        let before = snapshot.inputs.load(Ordering::SeqCst);
+        let delta = infer_field_delta::<EditSnapshot, EditSum, _>(&snapshot, &touches_of(step), &mut session, &mut cache).unwrap();
+        let expected = values_of(&step["values"]);
+        assert_eq!(session.field_values::<EditSnapshot, EditSum>().unwrap(), &expected, "{name}");
+        assert_eq!(expected, infer_field::<EditSnapshot, EditSum>(&snapshot, None), "{name}: the update equals a pure recompute");
+        let mut changed = strings_of(&step["changed"]);
+        changed.sort();
+        assert_eq!(sorted_keys(&delta), changed, "{name}");
+        assert_eq!((delta.computed, delta.carried, delta.confirmed, delta.gated, delta.done), (count_of(step, "computed"), count_of(step, "carried"), count_of(step, "confirmed"), step["gated"].as_bool().unwrap(), true), "{name}");
+        let evaluated = snapshot.inputs.load(Ordering::SeqCst) - before;
+        assert_eq!(evaluated, delta.computed + delta.confirmed, "{name}: only entities that are not carried evaluate their dependency");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_cancelled_diff_update_leaves_the_session_distrusting_its_values_until_a_whole_update_ran() {
+    let fixture = diff_fixture();
+    let mut snapshot = EditSnapshot::from_fixture(&fixture);
+    let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, ..Default::default() }).await;
+    let mut session = InferenceSession::new().await;
+    for step in fixture["steps"].as_array().unwrap() {
+        snapshot.edit(step);
+        infer_field_delta::<EditSnapshot, EditSum, _>(&snapshot, &touches_of(step), &mut session, &mut cache).unwrap();
+    }
+    let cancel = &fixture["cancel"];
+    snapshot.edit(cancel);
+    let mut update = session.begin_update::<EditSnapshot, EditSum, _>(&touches_of(cancel), true);
+    let report = step_field_update::<EditSnapshot, EditSum>(&snapshot, &mut cache, &mut update, count_of(cancel, "fuel")).unwrap();
+    assert_eq!(report.done, cancel["doneAfterFuel"].as_bool().unwrap());
+    update.cancel();
+    assert!(matches!(step_field_update::<EditSnapshot, EditSum>(&snapshot, &mut cache, &mut update, 1), Err(InferenceError::Cancelled)));
+    let partial = session.finish_update(update);
+    assert!(!partial.done);
+    let held = session.field_values::<EditSnapshot, EditSum>().unwrap();
+    assert!(values_of(&cancel["finished"]).iter().all(|(key, value)| held[key] == *value), "what the update finished stays");
+    let then = &cancel["then"];
+    let delta = infer_field_delta::<EditSnapshot, EditSum, _>(&snapshot, &touches_of(then), &mut session, &mut cache).unwrap();
+    assert_eq!(session.field_values::<EditSnapshot, EditSum>().unwrap(), &values_of(&then["values"]));
+    assert_eq!((delta.computed, delta.carried, delta.confirmed, delta.gated), (count_of(then, "computed"), count_of(then, "carried"), count_of(then, "confirmed"), then["gated"].as_bool().unwrap()));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_diff_update_without_an_enabled_cache_is_a_plain_recompute_of_every_entity() {
+    let fixture = diff_fixture();
+    let mut snapshot = EditSnapshot::from_fixture(&fixture);
+    let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
+    let mut session = InferenceSession::new().await;
+    infer_field_delta::<EditSnapshot, EditSum, _>(&snapshot, &Strings(vec!["weights".into()]), &mut session, &mut cache).unwrap();
+    let step = &fixture["steps"][0];
+    snapshot.edit(step);
+    let delta = infer_field_delta::<EditSnapshot, EditSum, _>(&snapshot, &touches_of(step), &mut session, &mut cache).unwrap();
+    assert_eq!((delta.computed, delta.carried, delta.confirmed), (6, 0, 0));
+    assert_eq!(session.field_values::<EditSnapshot, EditSum>().unwrap(), &values_of(&step["values"]));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_chain_hash_equals_the_merkle_node_it_replaced_and_the_default_touched_by_says_yes() {
+    let (a, b) = (DepHash::root("f", 1, b"a"), DepHash::root("f", 1, b"b"));
+    let mut own = b"f".to_vec();
+    own.push(0);
+    own.extend_from_slice(&1u32.to_le_bytes());
+    own.push(0);
+    own.extend_from_slice(b"input");
+    let hex = |bytes: &[u8; 32]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let mut children = vec![hex(&a.0), hex(&b.0)];
+    children.sort();
+    let folded = semio_framework_hash::merkle_node(&[&semio_framework_hash::hash(&own).to_hex()], children);
+    assert_eq!(hex(&DepHash::chain("f", 1, b"input", &[b, a]).0), folded, "the chain hash equals the merkle node over the hex of the sorted parents");
+    let snapshot = base_snapshot().await;
+    assert!(WeightSum::touched_by(&snapshot, &"root".to_string(), &crate::os_spr::command::TouchedPaths::default()));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn touched_paths_match_a_part_with_slashes_and_ancestors_without_splitting() {
+    let touched = crate::os_spr::command::TouchedPaths::new(["walls/a/b/axis", "storeys"]);
+    assert!(touched.intersects_parts(&["walls", "a/b"]) && touched.intersects_parts(&["walls", "a", "b"]) && touched.intersects_parts(&["walls"]));
+    assert!(touched.intersects_parts(&["storeys", "st-1"]), "a coarse write region covers every row beneath it");
+    assert!(!touched.intersects_parts(&["walls", "a/c"]) && !touched.intersects_parts(&["wall"]) && !touched.intersects_parts(&["walls", "a/bb"]));
+    assert_eq!(touched.intersects_parts(&["walls", "a/b"]), touched.intersects_prefix("walls/a/b"));
+}
+//#endregion 🧪️DiffUpdate

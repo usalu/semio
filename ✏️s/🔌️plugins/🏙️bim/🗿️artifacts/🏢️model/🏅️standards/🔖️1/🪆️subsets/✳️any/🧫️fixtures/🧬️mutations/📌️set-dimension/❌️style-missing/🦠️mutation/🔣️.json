@@ -1,0 +1,5 @@
+{
+  "mutation": "setDimension",
+  "id": "dim-south",
+  "style": "as-ghost"
+}

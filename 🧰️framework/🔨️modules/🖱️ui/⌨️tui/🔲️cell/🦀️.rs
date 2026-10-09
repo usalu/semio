@@ -1,5 +1,5 @@
 use crate::tui::geometry::{Pos, Rect, Size};
-use crate::tui::text::{char_cells, cluster_cells_in, clusters, WidthMode};
+use crate::tui::text::{char_cells, cluster_cells_in, clusters, scalar_mark, WidthMode};
 use crate::tui::theme::Rgb;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
@@ -217,7 +217,7 @@ impl CellBuffer {
         let mut chars = cluster.chars();
         let Some(lead) = chars.next() else { return };
         let rest = chars.as_str();
-        let tail = if rest.is_empty() || self.mode == WidthMode::Scalar { 0 } else { intern_tail(rest) };
+        let tail = if rest.is_empty() { 0 } else if self.mode == WidthMode::Scalar { let marks: String = rest.chars().filter(|c| scalar_mark(*c)).collect(); if marks.is_empty() { 0 } else { intern_tail(&marks) } } else { intern_tail(rest) };
         self.write(at.x, at.y, Cell { ch: lead, ..template }, tail);
     }
 
@@ -230,16 +230,19 @@ impl CellBuffer {
         }
         for cluster in clusters(s) {
             if self.mode == WidthMode::Scalar {
-                for c in cluster.chars() {
+                let mut scalars = cluster.chars().peekable();
+                while let Some(c) = scalars.next() {
                     let w = char_cells(c);
                     if w == 0 {
                         continue;
                     }
+                    let mut marks = String::new();
+                    while scalars.peek().is_some_and(|c| char_cells(*c) == 0) { let mark = scalars.next().unwrap(); if scalar_mark(mark) { marks.push(mark); } }
                     if x + u16::from(w) > clip.x + clip.width {
                         return written;
                     }
                     if x >= clip.x {
-                        self.put(x, pos.y, Cell { ch: c, fg, bg, attrs, width: w });
+                        self.write(x, pos.y, Cell { ch: c, fg, bg, attrs, width: w }, if marks.is_empty() { 0 } else { intern_tail(&marks) });
                     }
                     x += u16::from(w);
                     written += u16::from(w);

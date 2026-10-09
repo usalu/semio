@@ -588,7 +588,7 @@ mod plugin_builder_contract_tests {
     }
 
     async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> crate::retained_command::ArtifactRetainedCommandPayload<TestApp> {
-        crate::retained_command::ArtifactRetainedCommandPayload::try_new(
+        crate::retained_command::ArtifactRetainedCommandPayload::new(
             crate::retained_command::ArtifactRetainedCommandInputs {
                 command: TestCommand::SetLabel { value: "wire".into() },
                 snapshot: std::sync::Arc::new(TestSnapshot::default()),
@@ -605,11 +605,10 @@ mod plugin_builder_contract_tests {
             3,
             Box::new(TestRetainedCommandWork { cursor: 0 }),
         )
-        .expect("test retained command payload")
     }
 
     async fn test_retained_child_command_payload(completion: ArtifactToolCompletion<TestApp>, emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>) -> crate::retained_command::ArtifactRetainedCommandPayload<TestApp> {
-        crate::retained_command::ArtifactRetainedCommandPayload::try_new(
+        crate::retained_command::ArtifactRetainedCommandPayload::new(
             crate::retained_command::ArtifactRetainedCommandInputs {
                 command: TestCommand::SetLabel { value: "wire".into() },
                 snapshot: std::sync::Arc::new(TestSnapshot::default()),
@@ -626,7 +625,6 @@ mod plugin_builder_contract_tests {
             1,
             Box::new(TestRetainedChildCommandWork { emit: Some(emit) }),
         )
-        .expect("test retained child command payload")
     }
 
     fn test_retained_wire_input(bus: &ActionBus, bytes: &[u8]) -> (ToolWireAdmission, action_bus::RetainedToolWireInput) {
@@ -3020,10 +3018,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
             }
 
-            fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-                Ok(0)
-            }
-
             fn maximum_close_byte_demand(&self) -> usize {
                 0
             }
@@ -3032,12 +3026,28 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 0
             }
 
-            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-                if maximum_items == 0 {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+                Ok(0)
+            }
+
+            fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+                Ok(0)
+            }
+
+            fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+                Ok(0)
+            }
+
+            fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+                Ok(0)
+            }
+
+            fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+                if grant.maximum_items == 0 {
+                    return Ok(store::RetainedCloneStep::Progress(Default::default()));
                 }
                 self.terminal = true;
-                Ok(store::SnapshotRetirementStep::Complete)
+                Ok(store::RetainedCloneStep::Complete(Default::default()))
             }
 
             fn terminal_is_empty(&self) -> bool {
@@ -3086,16 +3096,32 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 false
             }
 
-            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-                if maximum_items == 0 {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, semio_framework_value::ValueError> {
+                if grant.maximum_items == 0 {
+                    return Ok(store::RetainedCloneStep::Progress(Default::default()));
                 }
                 if self.remaining != 0 {
                     self.remaining -= 1;
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                    return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
                 self.terminal = true;
-                Ok(store::SnapshotRetirementStep::Complete)
+                Ok(store::RetainedCloneStep::Complete(Default::default()))
+            }
+
+            fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+                Ok(0)
+            }
+
+            fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+                Ok(0)
+            }
+
+            fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+                Ok(0)
+            }
+
+            fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+                Ok(0)
             }
 
             fn terminal_is_empty(&self) -> bool {
@@ -3117,7 +3143,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             Ok(ticket) => ticket,
             Err((_fault, mut owner)) => {
                 while !owner.terminal_is_empty() {
-                    let _ = owner.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("rejected completed owner bounded close");
+                    let _ = owner.close_step(store::RetainedCloneGrant { maximum_items: 1, ..Default::default() }).expect("rejected completed owner bounded close");
                 }
                 panic!("app completed-record registry must admit one exact owner")
             }
@@ -3139,7 +3165,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             Err(fault) => assert_eq!(fault, store::ArtifactEnvelopeCompletedRecordFault::Stale),
             Ok(mut owner) => {
                 while !owner.terminal_is_empty() {
-                    let _ = owner.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("unexpected completed owner bounded close");
+                    let _ = owner.close_step(store::RetainedCloneGrant { maximum_items: 1, ..Default::default() }).expect("unexpected completed owner bounded close");
                 }
                 panic!("maintenance did not reclaim the exact completed record")
             }

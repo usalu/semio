@@ -4,7 +4,13 @@
 use super::frames::{ccw, cw};
 use super::writer::{en, opt_text, real, rf};
 use super::{Export, Quantity};
+use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
+
+fn finish_area(row: &ElementQuantity, surface: FinishSurface) -> f64 {
+    row.finishes.iter().filter(|finish| finish.surface == surface).map(|finish| finish.area).sum()
+}
 
 /// 🏠️ Writes every space.
 pub fn emit(x: &mut Export<'_>) {
@@ -36,9 +42,11 @@ pub fn emit(x: &mut Export<'_>) {
         let entity = x.ifc.rooted("IFCSPACE", id, &row.number, &row.usage, args);
         x.links.elements.insert(id.clone(), entity);
         x.links.aggregated.entry(storey.ifc).or_default().push(entity);
+        x.phase(id, entity);
+        super::zoning::finishes(x, id, entity);
         if resolved {
             x.quantify(entity, "Qto_SpaceBaseQuantities", id, |row| {
-                vec![Quantity::Length("Height", row.height), Quantity::Area("GrossFloorArea", row.gross_area), Quantity::Area("NetFloorArea", row.net_area), Quantity::Volume("GrossVolume", row.gross_volume), Quantity::Length("GrossPerimeter", row.perimeter)]
+                vec![Quantity::Length("Height", row.height), Quantity::Area("GrossFloorArea", row.gross_area), Quantity::Area("NetFloorArea", row.net_area), Quantity::Volume("GrossVolume", row.gross_volume), Quantity::Length("GrossPerimeter", row.perimeter), Quantity::Area("GrossWallArea", row.perimeter * row.height), Quantity::Area("NetWallArea", finish_area(row, FinishSurface::Wall)), Quantity::Area("NetCeilingArea", finish_area(row, FinishSurface::Ceiling))]
             });
         }
     }

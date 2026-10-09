@@ -1,0 +1,16 @@
+{
+  "mutation": "arrayElements",
+  "ids": [
+    "c-1"
+  ],
+  "prefix": "ar",
+  "pattern": {
+    "Linear": {
+      "count": 3,
+      "spacing": {
+        "x": 3,
+        "y": 0
+      }
+    }
+  }
+}

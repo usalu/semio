@@ -15,7 +15,7 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "booleanOperation": "subtract",
+          "booleanOperation": "difference",
           "pathSegments": null,
           "textContent": null,
           "textSize": null,

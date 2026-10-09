@@ -1,0 +1,6 @@
+{
+  "mutation": "offsetWall",
+  "id": "w-attic",
+  "new_id": "w-offset",
+  "distance": 2
+}

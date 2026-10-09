@@ -62,6 +62,7 @@ pub(crate) fn quiz() -> Quiz {
         id: "energy".to_string(),
         emoji: "⚡".to_string(),
         title: text("Energy"),
+        short: None,
         description: text("About energy"),
         tasks: vec![
             Task::Classification(classification("standards", None)),

@@ -1,12 +1,10 @@
-//! 🧬️ The typed glTF 2.0 document of the BIM export: PBR materials, triangle meshes (one primitive per material) and a node tree, written as one JSON
-//! document plus one binary buffer. Positions and normals are `f32` triples in glTF's Y-up frame; transforms are the node TRS of the spec.
+//! 🧬️ The BIM scene of the glTF export: PBR materials, triangle meshes (one primitive per material) and a node tree, lowered into the typed `s.stdio.gltf` snapshot (one document plus one binary buffer).
+//! Positions and normals are `f32` triples in glTF's Y-up frame; transforms are the node TRS of the spec.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 
-use super::container::pack_glb;
+use super::codec;
 use semio_framework_value::DslValue;
 
-const FLOAT: u64 = 5126;
-const UNSIGNED_INT: u64 = 5125;
 const ARRAY_BUFFER: u64 = 34962;
 const ELEMENT_ARRAY_BUFFER: u64 = 34963;
 const TRIANGLES: u64 = 4;
@@ -82,124 +80,103 @@ pub struct GltfModel {
 }
 //#endregion 🔖️Values
 
-//#region 🔖️Json
-fn object<const N: usize>(rows: [(&str, DslValue); N]) -> DslValue {
-    DslValue::object(rows.into_iter().map(|(key, value)| (key.to_string(), value)))
+//#region 🔖️Snapshot
+fn json(value: &DslValue) -> codec::Json {
+    match value {
+        DslValue::Null => codec::Json::Null,
+        DslValue::Bool(flag) => codec::Json::Bool(*flag),
+        DslValue::Number(number) => codec::Json::Number(number.as_f64()),
+        DslValue::String(text) => codec::Json::String(text.clone()),
+        DslValue::Bytes(bytes) => codec::Json::Array(bytes.iter().map(|byte| codec::Json::Number(f64::from(*byte))).collect()),
+        DslValue::Array(items) => codec::Json::Array(items.iter().map(json).collect()),
+        DslValue::Object(rows) => codec::Json::Object(rows.iter().map(|(key, item)| (key.clone(), json(item))).collect()),
+    }
 }
 
-fn index(value: usize) -> DslValue {
-    DslValue::uint(value as u64)
+fn present(value: &DslValue) -> Option<codec::Json> {
+    (!value.is_null()).then(|| json(value))
 }
 
-fn floats(values: &[f64]) -> DslValue {
-    DslValue::Array(values.iter().map(|value| DslValue::float(*value)).collect())
+fn wide<const N: usize>(values: [f32; N]) -> [f64; N] {
+    values.map(f64::from)
 }
 
-fn singles(values: &[f32]) -> DslValue {
-    DslValue::Array(values.iter().map(|value| DslValue::float(f64::from(*value))).collect())
+fn material(material: &GltfMaterial) -> codec::Material {
+    codec::Material {
+        name: Some(material.name.clone()),
+        pbr_metallic_roughness: Some(codec::Pbr { base_color_factor: wide(material.color), metallic_factor: f64::from(material.metallic), roughness_factor: f64::from(material.roughness), ..codec::Pbr::default() }),
+        alpha_mode: if material.blend { codec::AlphaMode::Blend } else { codec::AlphaMode::Opaque },
+        ..codec::Material::default()
+    }
 }
 
-fn text(value: &str) -> DslValue {
-    DslValue::String(value.to_string())
-}
-
-fn material_json(material: &GltfMaterial) -> DslValue {
-    let mut rows = vec![
-        ("name".to_string(), text(&material.name)),
-        ("pbrMetallicRoughness".to_string(), object([("baseColorFactor", singles(&material.color)), ("metallicFactor", DslValue::float(f64::from(material.metallic))), ("roughnessFactor", DslValue::float(f64::from(material.roughness)))])),
-    ];
-    if material.blend {
-        rows.push(("alphaMode".to_string(), text("BLEND")));
-    }
-    DslValue::object(rows)
-}
-
-fn node_json(node: &GltfNode) -> DslValue {
-    let mut rows = vec![("name".to_string(), text(&node.name))];
-    if let Some(translation) = node.translation {
-        rows.push(("translation".to_string(), floats(&translation)));
-    }
-    if let Some(rotation) = node.rotation {
-        rows.push(("rotation".to_string(), floats(&rotation)));
-    }
-    if let Some(mesh) = node.mesh {
-        rows.push(("mesh".to_string(), index(mesh)));
-    }
-    if !node.children.is_empty() {
-        rows.push(("children".to_string(), DslValue::Array(node.children.iter().map(|child| index(*child)).collect())));
-    }
-    if !node.extras.is_null() {
-        rows.push(("extras".to_string(), node.extras.clone()));
-    }
-    DslValue::object(rows)
+fn node(node: &GltfNode) -> codec::Node {
+    codec::Node { name: Some(node.name.clone()), translation: node.translation, rotation: node.rotation, mesh: node.mesh, children: node.children.clone(), extras: present(&node.extras), ..codec::Node::default() }
 }
 
 #[derive(Default)]
-struct Buffer {
+struct Binary {
     bytes: Vec<u8>,
-    views: Vec<DslValue>,
-    accessors: Vec<DslValue>,
+    views: Vec<codec::BufferView>,
+    accessors: Vec<codec::Accessor>,
 }
 
-impl Buffer {
+impl Binary {
     fn view(&mut self, data: &[u8], target: u64) -> usize {
         let offset = self.bytes.len();
         self.bytes.extend_from_slice(data);
-        self.views.push(object([("buffer", index(0)), ("byteOffset", index(offset)), ("byteLength", index(data.len())), ("target", DslValue::uint(target))]));
+        self.views.push(codec::BufferView { buffer: 0, byte_offset: offset, byte_length: data.len(), byte_stride: None, target: Some(target), name: None, extensions: None, extras: None });
         self.views.len() - 1
     }
 
-    fn accessor(&mut self, view: usize, component: u64, count: usize, kind: &str, range: Option<([f32; 3], [f32; 3])>) -> usize {
-        let mut rows = vec![("bufferView", index(view)), ("componentType", DslValue::uint(component)), ("count", index(count)), ("type", text(kind))];
-        if let Some((min, max)) = range {
-            rows.push(("min", singles(&min)));
-            rows.push(("max", singles(&max)));
-        }
-        self.accessors.push(DslValue::object(rows.into_iter().map(|(key, value)| (key.to_string(), value))));
+    fn accessor(&mut self, view: usize, component_type: codec::ComponentType, count: usize, kind: codec::AccessorType, range: Option<([f32; 3], [f32; 3])>) -> usize {
+        let (min, max) = range.map_or((None, None), |(min, max)| (Some(wide(min).to_vec()), Some(wide(max).to_vec())));
+        self.accessors.push(codec::Accessor { buffer_view: Some(view), byte_offset: 0, component_type, normalized: false, count, kind, max, min, sparse: None, name: None, extensions: None, extras: None });
         self.accessors.len() - 1
     }
 
-    fn primitive(&mut self, primitive: &GltfPrimitive) -> DslValue {
+    fn primitive(&mut self, primitive: &GltfPrimitive) -> codec::Primitive {
         let bytes = |values: &[f32]| values.iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<u8>>();
         let corners = primitive.positions.len() / 3;
         let positions = self.view(&bytes(&primitive.positions), ARRAY_BUFFER);
-        let positions = self.accessor(positions, FLOAT, corners, "VEC3", primitive.bounds());
+        let positions = self.accessor(positions, codec::ComponentType::Float, corners, codec::AccessorType::Vec3, primitive.bounds());
         let normals = self.view(&bytes(&primitive.normals), ARRAY_BUFFER);
-        let normals = self.accessor(normals, FLOAT, corners, "VEC3", None);
+        let normals = self.accessor(normals, codec::ComponentType::Float, corners, codec::AccessorType::Vec3, None);
         let indices = self.view(&primitive.indices.iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<u8>>(), ELEMENT_ARRAY_BUFFER);
-        let indices = self.accessor(indices, UNSIGNED_INT, primitive.indices.len(), "SCALAR", None);
-        object([("attributes", object([("POSITION", index(positions)), ("NORMAL", index(normals))])), ("indices", index(indices)), ("material", index(primitive.material)), ("mode", DslValue::uint(TRIANGLES))])
+        let indices = self.accessor(indices, codec::ComponentType::UnsignedInt, primitive.indices.len(), codec::AccessorType::Scalar, None);
+        codec::Primitive { attributes: vec![("POSITION".into(), positions), ("NORMAL".into(), normals)], indices: Some(indices), material: Some(primitive.material), mode: Some(TRIANGLES), ..codec::Primitive::default() }
     }
 }
 
 impl GltfModel {
-    /// 🧾️ The JSON text of the document and the binary buffer its accessors point into.
-    pub fn to_json_and_buffer(&self) -> (String, Vec<u8>) {
-        let mut buffer = Buffer::default();
-        let meshes: Vec<DslValue> = self.meshes.iter().map(|mesh| object([("name", text(&mesh.name)), ("primitives", DslValue::Array(mesh.primitives.iter().map(|primitive| buffer.primitive(primitive)).collect()))])).collect();
-        let mut rows = vec![
-            ("asset".to_string(), object([("version", text("2.0")), ("generator", text("semio BIM")), ("extras", self.extras.clone())])),
-            ("scene".to_string(), index(0)),
-            ("scenes".to_string(), DslValue::Array(vec![object([("name", text(&self.name)), ("nodes", DslValue::Array(self.roots.iter().map(|root| index(*root)).collect()))])])),
-            ("nodes".to_string(), DslValue::Array(self.nodes.iter().map(node_json).collect())),
-            ("meshes".to_string(), DslValue::Array(meshes)),
-            ("materials".to_string(), DslValue::Array(self.materials.iter().map(material_json).collect())),
-        ];
-        if !buffer.bytes.is_empty() {
-            rows.push(("accessors".to_string(), DslValue::Array(buffer.accessors)));
-            rows.push(("bufferViews".to_string(), DslValue::Array(buffer.views)));
-            rows.push(("buffers".to_string(), DslValue::Array(vec![object([("byteLength", index(buffer.bytes.len()))])])));
-        }
-        (semio_framework_pack_json::to_json_string(&DslValue::object(rows)), buffer.bytes)
+    /// 🧾️ The typed `s.stdio.gltf` snapshot of the scene: one scene, the nodes, meshes and materials, and one buffer holding every accessor's data (none for a scene without meshes).
+    pub fn to_snapshot(&self) -> codec::Snapshot {
+        let mut binary = Binary::default();
+        let meshes = self.meshes.iter().map(|mesh| codec::Mesh { name: Some(mesh.name.clone()), primitives: mesh.primitives.iter().map(|primitive| binary.primitive(primitive)).collect(), ..codec::Mesh::default() }).collect();
+        let asset = codec::Asset { generator: Some("semio BIM".into()), extras: present(&self.extras), ..codec::Asset::default() };
+        let scene = codec::Scene { nodes: self.roots.clone(), name: Some(self.name.clone()), extensions: None, extras: None };
+        let buffers = if binary.bytes.is_empty() { Vec::new() } else { vec![codec::Buffer { byte_length: binary.bytes.len(), uri: None, name: None, extensions: None, extras: None }] };
+        let document = codec::Document {
+            asset,
+            scene: Some(0),
+            scenes: vec![scene],
+            nodes: self.nodes.iter().map(node).collect(),
+            meshes,
+            materials: self.materials.iter().map(material).collect(),
+            accessors: binary.accessors,
+            buffer_views: binary.views,
+            buffers,
+            ..codec::Document::default()
+        };
+        codec::Snapshot { document, buffers: if binary.bytes.is_empty() { Vec::new() } else { vec![binary.bytes] }, source_form: codec::SourceForm::Glb, ..codec::Snapshot::default() }
     }
 
-    /// 📦️ The binary glTF (`model/gltf-binary`) bytes of the document.
-    pub fn to_glb(&self) -> Vec<u8> {
-        let (json, buffer) = self.to_json_and_buffer();
-        pack_glb(&json, &buffer)
+    /// 📦️ The binary glTF (`model/gltf-binary`) bytes of the scene.
+    pub fn to_glb(&self) -> Result<Vec<u8>, String> {
+        codec::encode(&self.to_snapshot())
     }
 }
-//#endregion 🔖️Json
+//#endregion 🔖️Snapshot
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

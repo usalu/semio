@@ -66,7 +66,7 @@ dashboard_labels! {
     prefs_saved: "Preferences saved", "Einstellungen gespeichert";
     prefs_keymap_problem: "keymap: {problem}", "Tastenbelegung: {problem}";
     key_unbound: "{keys} is not bound", "{keys} ist nicht belegt";
-    key_armed: "waiting for the next key", "warte auf die nächste Taste";
+    key_armed: "waiting for the next key", "nächste Taste erwartet";
     start_waiting: "Waiting for workspace daemon; {cancel} cancels", "Warten auf Arbeitsbereich; {cancel} bricht ab";
     pane_waiting: "[semio] waiting for workspace daemon", "[semio] warten auf Arbeitsbereich";
     pane_limit: "[semio] pending task limit reached", "[semio] Grenze wartender Aufgaben erreicht";

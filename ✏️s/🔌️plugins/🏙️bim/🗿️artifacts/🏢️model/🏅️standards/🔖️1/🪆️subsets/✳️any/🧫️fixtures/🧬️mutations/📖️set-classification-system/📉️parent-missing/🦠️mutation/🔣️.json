@@ -1,0 +1,11 @@
+{
+  "mutation": "setClassificationSystem",
+  "id": "cs-din",
+  "entries": [
+    {
+      "code": "330",
+      "title": "Aussenwaende",
+      "parent": "300"
+    }
+  ]
+}

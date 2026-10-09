@@ -26,7 +26,7 @@ LANES = [
     dict(dir=W + "/📐️section/🎚️config/🧬️schema", name="BimSectionWindowConfig", slug="section-window-config", package="section_window_config", doc="Persisted section line, depth and navigation of one exact BIM section window.",
          fields=[("startX", "double"), ("startY", "double"), ("endX", "double"), ("endY", "double"), ("depth", "double"), ("framed", "bool"), ("viewport", "Viewport2d")], defs={}),
     dict(dir=S + "/🫧️transient/🧬️schema", name="BimWindowTransient", slug="window-transient", package="window_transient", doc="Ephemeral local interaction state of one exact BIM window.",
-         fields=[("engagementInput", "string"), ("pointerGeneration", "uint")], defs={}),
+         fields=[("engagementInput", "string"), ("pointerGeneration", "uint"), ("preview", "string")], defs={}),
 ]
 
 JSON = {"string": {"type": "string"}, "double": {"type": "number"}, "bool": {"type": "boolean"}, "uint": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}}

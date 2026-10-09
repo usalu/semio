@@ -1,0 +1,62 @@
+{
+  "nodes": [
+    { "key": "root", "weight": 1, "parents": [] },
+    { "key": "a", "weight": 2, "parents": ["root"] },
+    { "key": "b", "weight": 3, "parents": ["root"] },
+    { "key": "c", "weight": 4, "parents": ["a"] },
+    { "key": "d", "weight": 5, "parents": ["a", "b"] },
+    { "key": "e", "weight": 6, "parents": ["c", "d"] }
+  ],
+  "first": { "values": { "root": 1, "a": 3, "b": 4, "c": 7, "d": 12, "e": 25 }, "computed": 6, "carried": 0, "confirmed": 0 },
+  "steps": [
+    {
+      "name": "b moves and its descendants follow",
+      "touches": ["weights/b"],
+      "setWeights": { "b": 10 },
+      "values": { "root": 1, "a": 3, "b": 11, "c": 7, "d": 19, "e": 32 },
+      "changed": ["b", "d", "e"], "computed": 3, "carried": 3, "confirmed": 0, "gated": false
+    },
+    {
+      "name": "a touched region that restates the value",
+      "touches": ["weights/a"],
+      "values": { "root": 1, "a": 3, "b": 11, "c": 7, "d": 19, "e": 32 },
+      "changed": [], "computed": 0, "carried": 5, "confirmed": 1, "gated": false
+    },
+    {
+      "name": "a region outside the reads",
+      "touches": ["camera"],
+      "values": { "root": 1, "a": 3, "b": 11, "c": 7, "d": 19, "e": 32 },
+      "changed": [], "computed": 0, "carried": 0, "confirmed": 0, "gated": true
+    },
+    {
+      "name": "an entity leaves and another joins",
+      "touches": ["nodes"],
+      "drop": ["e"],
+      "add": [{ "key": "f", "weight": 8, "parents": ["c"] }],
+      "values": { "root": 1, "a": 3, "b": 11, "c": 7, "d": 19, "f": 15 },
+      "changed": ["e", "f"], "computed": 1, "carried": 5, "confirmed": 0, "gated": false
+    },
+    {
+      "name": "an entity loses a parent",
+      "touches": ["nodes"],
+      "setParents": { "d": ["a"] },
+      "values": { "root": 1, "a": 3, "b": 11, "c": 7, "d": 8, "f": 15 },
+      "changed": ["d"], "computed": 1, "carried": 5, "confirmed": 0, "gated": false
+    },
+    {
+      "name": "the root moves and everything below follows",
+      "touches": ["weights/root"],
+      "setWeights": { "root": 2 },
+      "values": { "root": 2, "a": 4, "b": 12, "c": 8, "d": 9, "f": 16 },
+      "changed": ["root", "a", "b", "c", "d", "f"], "computed": 6, "carried": 0, "confirmed": 0, "gated": false
+    }
+  ],
+  "cancel": {
+    "touches": ["weights/root"],
+    "setWeights": { "root": 3 },
+    "fuel": 2,
+    "doneAfterFuel": false,
+    "finished": { "root": 3, "a": 5 },
+    "then": { "touches": ["camera"], "values": { "root": 3, "a": 5, "b": 13, "c": 9, "d": 10, "f": 17 }, "computed": 4, "carried": 0, "confirmed": 2, "gated": false }
+  }
+}

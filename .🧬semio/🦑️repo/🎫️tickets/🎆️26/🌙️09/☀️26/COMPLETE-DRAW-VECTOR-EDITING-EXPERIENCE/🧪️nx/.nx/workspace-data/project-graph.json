@@ -1,0 +1,246 @@
+{
+  "nodes": {
+    "draw-ticket-verification": {
+      "name": "draw-ticket-verification",
+      "type": "app",
+      "data": {
+        "root": ".",
+        "name": "draw-ticket-verification",
+        "tags": [
+          "npm:private"
+        ],
+        "metadata": {
+          "targetGroups": {},
+          "js": {
+            "packageName": "draw-ticket-verification",
+            "isInPackageManagerWorkspaces": false
+          }
+        },
+        "targets": {
+          "geometry-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts geometry-test",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "native-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts native-test",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "check": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts check",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "graph-generate": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts graph-generate",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "ui-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts ui-test",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "pixels-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts pixels-test",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "pixels-typescript": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts pixels-typescript",
+              "cwd": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "locale-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts locale-test",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "locale-contract": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts locale-contract",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "locale-check": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts locale-check",
+              "cwd": ".",
+              "forwardAllArgs": true,
+              "usePty": false
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "read-return-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts read-return-test",
+              "cwd": "."
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "raw-source-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts raw-source-test",
+              "cwd": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "raw-native-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts raw-native-test",
+              "cwd": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "value-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts value-test",
+              "usePty": false,
+              "forwardAllArgs": true,
+              "cwd": "."
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "value-typescript": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts value-typescript",
+              "usePty": false,
+              "forwardAllArgs": true,
+              "cwd": "."
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "value-unique-typescript": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "cwd": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx",
+              "command": "bun ./📜️script.ts value-unique-typescript"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "window-source-test": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts window-source-test",
+              "cwd": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️26\\COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE\\🧪️nx"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "window-native-test": {
+            "cache": false,
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts window-native-test",
+              "cwd": "C:\\git\\semio\\.🧬semio\\🦑️repo\\🎫️tickets\\🎆️26\\🌙️09\\☀️26\\COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE\\🧪️nx"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    }
+  },
+  "externalNodes": {},
+  "dependencies": {
+    "draw-ticket-verification": []
+  },
+  "version": "6.0",
+  "errors": [],
+  "computedAt": 1791517821786
+}

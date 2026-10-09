@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-ceiling-type/schema.json",
+  "title": "CreateCeilingType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "ceiling_type"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createCeilingType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Ceiling type id",
+          "de": "Unterdeckentyp-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "ceiling_type": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CeilingType",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Ceiling type",
+          "de": "Unterdeckentyp"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

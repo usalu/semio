@@ -1,0 +1,6 @@
+{
+  "mutation": "removeElementProperty",
+  "id": "wt-300",
+  "pset": "Pset_WallTypeCommon",
+  "property": "Reference"
+}

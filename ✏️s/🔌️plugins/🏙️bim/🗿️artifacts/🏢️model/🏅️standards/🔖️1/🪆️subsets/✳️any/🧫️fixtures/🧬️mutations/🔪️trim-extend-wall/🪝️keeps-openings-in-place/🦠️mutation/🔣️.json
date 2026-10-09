@@ -1,0 +1,6 @@
+{
+  "mutation": "trimExtendWall",
+  "id": "w-south",
+  "end": "Start",
+  "target": "w-west"
+}

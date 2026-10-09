@@ -1,0 +1,10 @@
+{
+  "mutation": "alignElements",
+  "ids": [
+    "w-south",
+    "w-east"
+  ],
+  "axis": "X",
+  "edge": "Min",
+  "target": 2
+}

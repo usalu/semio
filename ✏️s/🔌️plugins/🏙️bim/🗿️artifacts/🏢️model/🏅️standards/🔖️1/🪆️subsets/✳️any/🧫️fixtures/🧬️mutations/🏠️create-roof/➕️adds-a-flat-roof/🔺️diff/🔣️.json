@@ -35,6 +35,7 @@
       ],
       "name": "Flat roof",
       "overhang": 0.0,
+      "phase": "New",
       "roof_type": "rt-tiles",
       "shape": "Flat",
       "storey": "st-first"

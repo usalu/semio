@@ -1,7 +1,8 @@
 //! 🔺️ Diff constructor for `CreateColumn`: one created column entry. The storey and the column type must exist, a storey constraint
-//! must name a storey of the same building, and the authored top must lie above the base. No height is stored: it is inferred.
+//! must name a storey of the same building, and the authored top must lie above the base, a tilt leans by at most 60 degrees. No height is stored: it is inferred.
 
 use super::super::elements;
+use super::super::wall_geometry::tilt_flaw;
 use super::CreateColumn;
 use super::super::placement::rise;
 use crate::{Entry, ModelDiff, ModelSnapshot, TopConstraint};
@@ -30,6 +31,9 @@ pub fn diff(payload: &CreateColumn, base: &ModelSnapshot) -> MutationOutcome<Mod
     }
     if !column.rotation.is_finite() {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A column rotation must be finite.", ["column", "rotation"]);
+    }
+    if let Some(flaw) = column.tilt.as_ref().and_then(tilt_flaw) {
+        return flaw.under(&["column", "tilt"]).refuse();
     }
     if !column.base_offset.is_finite() {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A column base offset must be finite.", ["column", "base_offset"]);

@@ -145,12 +145,17 @@ pub struct Ifc {
 impl Ifc {
     /// 🌱️ Allocates the owner history, the model context with its body, axis and footprint sub-contexts and the world origin.
     pub fn new(author: &str, organization: &str, true_north: f64) -> Self {
+        Self::started(author, organization, true_north, "ADDED")
+    }
+
+    /// 🌱️ The same shared context with the `ChangeAction` of the owner history named: IFC4 requires a modification date next to `ADDED`, so a file without dates writes `NOCHANGE`.
+    pub fn started(author: &str, organization: &str, true_north: f64, change_action: &str) -> Self {
         let mut ifc = Self { builder: Part21Builder::new(), shared: BTreeMap::new(), owner: 0, context: 0, body: 0, axis: 0, footprint: 0, origin: 0 };
         let person = ifc.add("IFCPERSON", vec![unset(), text(author), unset(), unset(), unset(), unset(), unset(), unset()]);
         let organisation = ifc.add("IFCORGANIZATION", vec![unset(), text(organization), unset(), unset(), unset()]);
         let account = ifc.add("IFCPERSONANDORGANIZATION", vec![rf(person), rf(organisation), unset()]);
         let application = ifc.add("IFCAPPLICATION", vec![rf(organisation), text("1"), text("semio BIM"), text("semio.bim")]);
-        ifc.owner = ifc.add("IFCOWNERHISTORY", vec![rf(account), rf(application), unset(), en("ADDED"), unset(), unset(), unset(), int(0)]);
+        ifc.owner = ifc.add("IFCOWNERHISTORY", vec![rf(account), rf(application), unset(), en(change_action), unset(), unset(), unset(), int(0)]);
         ifc.origin = ifc.axis3([0.0, 0.0, 0.0], None, None);
         let north = ifc.dir2([-true_north.sin(), true_north.cos()]);
         ifc.context = ifc.add("IFCGEOMETRICREPRESENTATIONCONTEXT", vec![unset(), text("Model"), int(3), real(1e-6), rf(ifc.origin), rf(north)]);
@@ -160,6 +165,13 @@ impl Ifc {
         ifc.axis = sub(&mut ifc, "Axis", "GRAPH_VIEW");
         ifc.footprint = sub(&mut ifc, "FootPrint", "PLAN_VIEW");
         ifc
+    }
+
+    /// 📏️ The `IfcUnitAssignment` of the SI units the file uses: metre, square metre, cubic metre and radian.
+    pub fn units(&mut self) -> u64 {
+        let rows = [("LENGTHUNIT", "METRE"), ("AREAUNIT", "SQUARE_METRE"), ("VOLUMEUNIT", "CUBIC_METRE"), ("PLANEANGLEUNIT", "RADIAN")];
+        let ids: Vec<u64> = rows.iter().map(|(unit, name)| self.add("IFCSIUNIT", vec![derived(), en(unit), unset(), en(name)])).collect();
+        self.add("IFCUNITASSIGNMENT", vec![refs(&ids)])
     }
 
     /// ➕️ Allocates one instance.

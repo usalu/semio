@@ -10,16 +10,20 @@ impl ArtifactInstanceOperationOwner for MediaOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
-    fn maintenance_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(PluginCloseStep::Complete)
+    fn retirement_demands(&self, _body: usize) -> Result<crate::app::RetirementDemand, crate::app::ValueError> {
+        Ok(crate::app::RetirementDemand { release_bytes: if self.closed { 0 } else { self.label.capacity() }, depth: usize::from(!self.closed), ..Default::default() })
     }
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        if !self.closed && (maximum_items == 0 || maximum_bytes < self.label.capacity()) {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    fn maintenance_step(&mut self, _grant: crate::app::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+        Ok(crate::app::PluginLifecycleStep::Complete(Default::default()))
+    }
+    fn close_step(&mut self, grant: crate::app::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+        if !self.closed && (grant.maximum_items == 0 || grant.maximum_release_bytes < self.label.capacity()) {
+            return Ok(crate::app::PluginLifecycleStep::Progress(Default::default()));
         }
+        let released_bytes = self.label.capacity();
         self.label = String::new();
         self.closed = true;
-        Ok(PluginCloseStep::Complete)
+        Ok(crate::app::PluginLifecycleStep::Complete(crate::app::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
     }
     fn terminal_is_empty(&self) -> bool {
         self.closed && self.label.is_empty()

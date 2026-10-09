@@ -1251,7 +1251,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             let initial = self.initial.take().expect("decoded initial window config state remains");
             let pack = std::mem::take(&mut self.files.as_mut().expect("verified window config Pack remains").pack);
             let digest = self.initial_digest.take().expect("decoded window config digest remains");
-            let genesis = crate::os_vcs::io::binary::genesis::AdmittedArtifactGenesis::from_verified_pack(initial, pack, digest);
+            let genesis = semio_framework_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis::from_verified_pack(initial, pack, digest);
             let validation = self.validation.take().expect("decoded validation window config state remains");
             let current = self.current.take().expect("decoded current window config state remains");
             let history = self.history.take().expect("decoded window config history remains");

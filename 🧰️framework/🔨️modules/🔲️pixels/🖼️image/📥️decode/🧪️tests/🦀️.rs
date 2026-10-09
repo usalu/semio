@@ -33,3 +33,29 @@ fn image_sources_exact_limits_and_live_phase_cancellation(){
  assert_eq!(seen,["header","validate","decode","png"]);
  eprintln!("[DEBUG] Native exact source/binary/pixel caps and all live preparation phases verified");
 }
+
+/// ♻️ Shared source cases retain real children through cancellation and explicit retirement.
+#[test]
+fn image_sources_transfer_results_and_retire_actual_child_allocations() {
+ use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+ let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let mut witnesses=0;
+ for row in rows.as_array().unwrap().iter().step_by(7) {
+  for stop in [0,1,100,1000,usize::MAX] {
+   let mut source=input(&row["input"]);let saved=source.data.clone();let before=saved.as_str().to_string();
+   let mut job=ImageDecodeJob::new(source.clone()).unwrap();let mut done=false;
+   for at in 0..2000000 {if at==stop {break;}if job.advance(1).unwrap().done {done=true;break;}}
+   if stop==usize::MAX {assert!(done);let output=job.take_result().unwrap();assert_eq!(output.pixels,oracle(&before));}
+   job.cancel();assert!(job.result().is_err());assert!(job.advance(1).is_err());
+   assert_eq!(saved.as_str(),before);source.data=Arc::new(String::new());drop(saved);
+   let mut closing=ControlledRetirement::new(job).unwrap_or_else(|_|panic!("Image owner must support controlled retirement"));
+   assert!(matches!(closing.step(RetainedCloneGrant::default()).unwrap(),RetainedCloneStep::Progress(progress) if progress==Default::default()));
+   let mut closed=false;
+   for _ in 0..100000 {
+    let copy=closing.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:closing.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:closing.next_release_byte_demand().unwrap(),maximum_depth:closing.next_depth_demand().unwrap()};
+    match closing.step(grant).unwrap(){RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(grant));closed=true;break;},RetainedCloneStep::Progress(progress)=>assert!(progress.fits(grant))}
+   }
+   assert!(closed&&closing.terminal_is_empty());witnesses+=1;
+  }
+ }
+ eprintln!("[DEBUG] Native image source original-owner retirement witnesses={witnesses}");
+}

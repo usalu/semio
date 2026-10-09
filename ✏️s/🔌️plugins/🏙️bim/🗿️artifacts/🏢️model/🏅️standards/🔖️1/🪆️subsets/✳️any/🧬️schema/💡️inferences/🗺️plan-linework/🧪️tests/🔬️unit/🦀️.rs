@@ -257,3 +257,149 @@ async fn a_height_edit_recomputes_the_plans_of_the_storeys_it_reaches_and_a_dens
     let recomputed = session.update(&edited, &height).plan_linework.clone();
     assert!(close(recomputed["st-first"].cut_elevation - first["st-first"].cut_elevation, 0.4));
 }
+
+fn cut_at(height: Option<f64>) -> ModelSnapshot {
+    let mut snapshot = house();
+    snapshot.storeys.get_mut("st-ground").expect("storey").cut_height = height;
+    snapshot
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_plan_is_cut_at_the_height_its_storey_authors_and_at_the_convention_otherwise() {
+    let plans = compute_plan_linework(&cut_at(Some(0.5)));
+    assert!(close(plans["st-ground"].cut_height, 0.5) && close(plans["st-ground"].cut_elevation, 0.5), "the ground storey authors 0.5");
+    assert!(close(plans["st-first"].cut_height, 1.2) && close(plans["st-first"].cut_elevation, 3.0 + 1.2), "the first storey authors none: the convention");
+    assert_eq!(compute_plan_linework(&cut_at(None)), compute_plan_linework(&house()), "no authored height is the default height");
+    assert!(close(storey_cut_height(&house(), "missing"), crate::DEFAULT_CUT_HEIGHT));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn lowering_the_cut_below_a_sill_and_raising_it_above_a_door_open_and_close_the_gaps_in_the_poche() {
+    let low = plan(&cut_at(Some(0.5)), "st-ground");
+    assert_eq!(regions(&low, "w-south", PlanKind::WallCut).len(), 2, "the window starts at 0.9: only the door still cuts the plane");
+    assert_eq!(of(&low, "o-win-south", PlanKind::WindowFrame)[0].style, PlanStyle::Hidden);
+    assert_eq!(of(&low, "o-door", PlanKind::DoorLeaf)[0].style, PlanStyle::Cut);
+    let high = plan(&cut_at(Some(2.5)), "st-ground");
+    assert_eq!(regions(&high, "w-south", PlanKind::WallCut).len(), 1, "the door and the window end below 2.5: the wall is whole");
+    assert_eq!(of(&high, "o-door", PlanKind::DoorLeaf)[0].style, PlanStyle::Projection);
+    assert_eq!(of(&high, "o-win-south", PlanKind::WindowFrame)[0].style, PlanStyle::Projection);
+    assert!(high.area_of(PlanKind::WallCut) > plan(&house(), "st-ground").area_of(PlanKind::WallCut), "closing the gaps adds poché");
+}
+
+#[test]
+fn editing_the_cut_height_of_a_storey_redraws_its_plan_only() {
+    use crate::{Assigned, Entry, ModelDiff, StoreyPatch};
+    let snapshot = house();
+    let mut session = ModelInferenceSession::new();
+    session.update(&snapshot, &ModelDiff::default());
+    let edit = ModelDiff::storeys("st-ground", Entry::Patched(StoreyPatch { cut_height: Some(Assigned::new(Some(0.5))), ..Default::default() }));
+    let edited = protocol::apply_diff(&edit, &snapshot).expect("applies");
+    let incremental = session.update(&edited, &edit).clone();
+    let report = session.report().clone();
+    assert!(!report.gated, "the diff touches the storeys the graph reads");
+    assert_eq!(report.computed_by_kind.get("plan"), Some(&1), "exactly the plan of the storey is redrawn: {report:?}");
+    assert_eq!(report.computed_by_kind.get("wall-layout"), None, "no layout reads the cut height");
+    assert!(close(incremental.plan_linework["st-ground"].cut_height, 0.5) && close(incremental.plan_linework["st-first"].cut_height, 1.2));
+    assert_eq!(incremental, ModelInference::infer(&edited).expect("infers"), "and the result equals a fresh inference");
+}
+
+const RAMPS: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
+
+fn ramps() -> ModelSnapshot {
+    from_json_str(RAMPS, JsonMemberPolicy::Reject).expect("ramps decode")
+}
+
+fn area_of(vertices: &[PlanVertex]) -> f64 {
+    let twice: f64 = vertices.iter().zip(vertices.iter().cycle().skip(1)).map(|(a, b)| a.x * b.y - b.x * a.y).sum();
+    twice.abs() / 2.0
+}
+
+fn texts<'a>(plan: &'a PlanLinework, element: &str, kind: PlanKind) -> Vec<&'a PlanText> {
+    plan.texts.iter().filter(|text| text.element == element && text.kind == kind).collect()
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ramp_below_the_cut_draws_its_outline_two_landing_lines_the_up_arrow_and_the_slope_tag() {
+    let ground = plan(&ramps(), "st-ground");
+    let outline = of(&ground, "r-straight", PlanKind::RampOutline);
+    assert!(outline.len() == 1 && outline[0].closed && outline[0].vertices.len() == 4 && outline[0].style == PlanStyle::Projection, "the slab ends at 0.5 m, below the cut at 1.2 m");
+    assert!(close(area_of(&outline[0].vertices), 12.0), "the strip is 10 m x 1.2 m");
+    let landings = of(&ground, "r-straight", PlanKind::RampLanding);
+    assert_eq!(landings.len(), 2, "one line where each landing meets the sloped flight");
+    let mut xs: Vec<f64> = landings.iter().map(|line| line.vertices[0].x).collect();
+    xs.sort_by(f64::total_cmp);
+    assert!(close(xs[0], 1.5) && close(xs[1], 8.5));
+    assert!(landings.iter().all(|line| line.style == PlanStyle::Projection && close((line.vertices[0].y - line.vertices[1].y).abs(), 1.2) && close(line.vertices[0].x, line.vertices[1].x)), "across the width");
+    let arrow = of(&ground, "r-straight", PlanKind::RampArrow);
+    assert_eq!(arrow.len(), 2, "the shaft and the head");
+    let shaft = arrow.iter().find(|line| line.vertices.len() == 2 && close(line.vertices[0].x, 0.0)).expect("shaft");
+    assert!(close(shaft.vertices[1].x, 10.0) && arrow.iter().all(|line| line.style == PlanStyle::Annotation));
+    let tag = texts(&ground, "r-straight", PlanKind::RampTag);
+    assert_eq!(tag.len(), 1);
+    assert_eq!((tag[0].label.as_str(), tag[0].detail.as_str(), tag[0].style), ("7.1 %", "1:14.0", PlanStyle::Annotation));
+    assert!(close(tag[0].x, 5.0) && close(tag[0].y, 0.0) && close(tag[0].rotation, 0.0) && close(tag[0].measure.expect("slope"), 0.5 / 7.0));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ramp_is_cut_below_the_cut_plane_in_projection_and_above_it_hidden() {
+    let ground = plan(&ramps(), "st-ground");
+    assert_eq!(of(&ground, "r-to-first", PlanKind::RampOutline)[0].style, PlanStyle::Cut, "it climbs through the cut plane");
+    assert_eq!(of(&ground, "r-straight", PlanKind::RampOutline)[0].style, PlanStyle::Projection);
+    let mut raised = ramps();
+    raised.ramps.get_mut("r-straight").expect("ramp").base_offset = 1.5;
+    let hidden = plan(&raised, "st-ground");
+    assert!(of(&hidden, "r-straight", PlanKind::RampOutline).iter().chain(of(&hidden, "r-straight", PlanKind::RampLanding).iter()).all(|line| line.style == PlanStyle::Hidden), "a ramp whose slab starts above the cut is dashed");
+    assert!(of(&hidden, "r-straight", PlanKind::RampArrow).iter().all(|line| line.style == PlanStyle::Annotation), "the arrow is an annotation either way");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_bent_ramp_keeps_the_mitre_a_landing_line_at_each_end_of_the_corner_landing_and_a_bent_arrow() {
+    let ground = plan(&ramps(), "st-ground");
+    let outline = &of(&ground, "r-bent", PlanKind::RampOutline)[0];
+    assert!(outline.vertices.len() == 6 && close(area_of(&outline.vertices), 13.2), "the mitred L has the area width x length");
+    assert_eq!(of(&ground, "r-bent", PlanKind::RampLanding).len(), 4, "the foot and the head landing plus both ends of the corner landing");
+    let shaft = of(&ground, "r-bent", PlanKind::RampArrow).into_iter().find(|line| close(line.vertices[0].x, 0.0) && close(line.vertices[0].y, 9.0)).expect("bent shaft");
+    assert!(shaft.vertices.len() == 3 && close(shaft.vertices[1].x, 6.0) && close(shaft.vertices[1].y, 9.0) && close(shaft.vertices[2].y, 14.0));
+    let tag = &texts(&ground, "r-bent", PlanKind::RampTag)[0];
+    assert!(close(tag.x, 5.5) && close(tag.y, 9.0) && close(tag.rotation, 0.0), "the tag sits at the middle of the path, 5.5 m along: {tag:?}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn curved_ramps_keep_their_arcs_and_descending_ramps_point_their_arrow_down() {
+    let ground = plan(&ramps(), "st-ground");
+    assert!(of(&ground, "r-curved", PlanKind::RampOutline)[0].vertices.iter().any(|vertex| vertex.bulge != 0.0), "arcs stay arcs");
+    assert!(of(&ground, "r-curved", PlanKind::RampArrow).iter().any(|line| line.vertices[0].bulge != 0.0), "and so does the arrow shaft");
+    let down = of(&ground, "r-down", PlanKind::RampArrow).into_iter().find(|line| line.vertices.len() == 2).expect("shaft");
+    assert!(close(down.vertices[0].x, 40.0) && close(down.vertices[1].x, 30.0), "the arrow starts at the high end of the path and points to the low one");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ramp_without_a_path_or_on_a_missing_storey_draws_nothing() {
+    let plans = compute_plan_linework(&ramps());
+    let silent = |element: &str| element != "r-degenerate" && element != "r-orphan";
+    assert!(plans.values().all(|sheet| sheet.polylines.iter().all(|line| silent(&line.element)) && sheet.regions.iter().all(|region| silent(&region.element)) && sheet.texts.iter().all(|text| silent(&text.element))));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_ramp_primitives_have_unique_ids_and_name_their_ramp() {
+    let ground = plan(&ramps(), "st-ground");
+    let ids: BTreeSet<&str> = ground.polylines.iter().map(|line| line.id.as_str()).chain(ground.texts.iter().map(|text| text.id.as_str())).collect();
+    assert_eq!(ids.len(), ground.polylines.len() + ground.texts.len(), "unique ids");
+    let kinds = [PlanKind::RampOutline, PlanKind::RampLanding, PlanKind::RampArrow];
+    assert!(ground.polylines.iter().filter(|line| kinds.contains(&line.kind)).all(|line| line.element.starts_with("r-") && ramps().ramps.contains_key(&line.element)));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_ramp_edit_redraws_the_plan_of_its_storey_only() {
+    use crate::{Entry, ModelDiff, RampPatch};
+    let snapshot = ramps();
+    let mut session = ModelInferenceSession::new();
+    let first = session.update(&snapshot, &ModelDiff::default()).plan_linework.clone();
+    let wider = ModelDiff::ramps("r-straight", Entry::Patched(RampPatch { width: Some(2.0), ..Default::default() }));
+    let edited = protocol::apply_diff(&wider, &snapshot).expect("applies");
+    let incremental = session.update(&edited, &wider).plan_linework.clone();
+    assert_eq!(session.report().computed_by_kind.get("plan"), Some(&1), "exactly the plan of the ramp's storey is redrawn: {:?}", session.report());
+    assert_eq!(incremental["st-first"], first["st-first"], "the other storey keeps its sheet");
+    assert!(close(area_of(&of(&incremental["st-ground"], "r-straight", PlanKind::RampOutline)[0].vertices), 20.0));
+    assert_eq!(incremental, ModelInference::infer(&edited).expect("infers").plan_linework, "and the result equals a fresh inference");
+}

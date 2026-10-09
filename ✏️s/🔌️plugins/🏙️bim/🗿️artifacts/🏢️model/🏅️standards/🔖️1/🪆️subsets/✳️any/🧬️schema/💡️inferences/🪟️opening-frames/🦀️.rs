@@ -4,7 +4,7 @@
 //! override and two flips. Everything else is resolved here: size and sill (override, else type; a window sill is its sill override, else the type sill),
 //! the point and tangent on the host axis at arc length `offset` (line or arc), the local frame (origin at the opening centre at sill
 //! level on the host location line, `z` up, `y` the host's left normal, both `x` and `y` turned by `flip_facing`), the world frame
-//! (building origin, rotation and datum), the cut rectangle in the host's `(s, z)` development, the reveal depth (host thickness),
+//! (building origin, rotation and datum), the cut rectangle in the host's `(s, z)` development, the reveal depth (the authored reveal, else the host thickness), the setback of the frame and the reveal material,
 //! the door swing and window glazing as plan strokes, and the validity of the placement.
 //!
 //! The graph is storey → wall or curtain layout → host → opening, so one storey height edit, one `set-wall-axis` or one wall top edit
@@ -16,11 +16,12 @@
 //! host that has its full thickness (the join-trimmed extent) and strictly below the top, with the one tolerance [`LENGTH_EPS`]; a hole that touches the
 //! border of the face is [`OpeningIssue::OutsideTrimmedExtent`].
 
-use super::super::curtain_layout::CurtainLayout;
+use super::super::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
 use super::super::element_solids::plan_kit::{depth_of, mark, seg};
 use super::super::storey_levels::StoreyLevel;
+use super::super::wall_layout::attach::{elevation_at, ElevationPoint};
 use super::super::wall_layout::{face_ends, WallLayout};
-use crate::{Axis, CurtainWall, DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, Point2, Swing, Wall, WindowType};
+use crate::{Axis, CurtainWall, DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, Point2, Profile, Swing, Wall, WindowType};
 use semio_framework_geometry::placement::Affine3;
 use semio_framework_geometry::vector::{perp, LENGTH_EPS};
 use semio_framework_geometry::{Point, Vec2};
@@ -99,6 +100,10 @@ pub struct PlanStroke {
     pub shape: PlanShape,
 }
 
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
 /// 🪟️ The resolved placement of one opening. Lengths in metres, `local` in building coordinates (`z` up from the building datum), `world` after the building origin, rotation and datum.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct OpeningFrame {
@@ -108,6 +113,12 @@ pub struct OpeningFrame {
     pub offset: f64,
     pub cut: OpeningCut,
     pub reveal_depth: f64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub setback: Option<f64>,
+    #[value(default, skip_serializing_if = "String::is_empty")]
+    pub reveal_material: String,
+    #[value(default, skip_serializing_if = "is_false")]
+    pub facing_right: bool,
     pub face_front: f64,
     pub face_back: f64,
     pub host_length: f64,
@@ -132,6 +143,9 @@ impl Default for OpeningFrame {
             offset: 0.0,
             cut: OpeningCut::default(),
             reveal_depth: 0.0,
+            setback: None,
+            reveal_material: String::new(),
+            facing_right: false,
             face_front: 0.0,
             face_back: 0.0,
             host_length: 0.0,
@@ -163,19 +177,49 @@ pub struct HostExtent {
     pub origin: Point2,
     pub rotation: f64,
     pub trim: (f64, f64),
+    pub base_profile: Vec<ElevationPoint>,
+    pub top_profile: Vec<ElevationPoint>,
 }
 
 impl HostExtent {
     /// 🧱️ The host a wall is, from its layout: the vertical extent, thickness and faces are the layout's, the trimmed extent follows the join-trimmed faces.
     pub fn of_wall(wall: &Wall, layout: &WallLayout, own: &StoreyLevel, placement: (Point2, f64)) -> Self {
         let trim = face_ends(layout, &wall.axis).map_or((0.0, layout.length), |ends| ends.full_thickness());
-        Self { axis: wall.axis.clone(), base_z: layout.base_z, height: layout.height, thickness: layout.thickness, length: layout.length, face_left: layout.offset_left, face_right: layout.offset_right, datum: own.absolute_elevation - own.elevation, origin: placement.0, rotation: placement.1, trim }
+        Self { axis: wall.axis.clone(), base_z: layout.base_z, height: layout.height, thickness: layout.thickness, length: layout.length, face_left: layout.offset_left, face_right: layout.offset_right, datum: own.absolute_elevation - own.elevation, origin: placement.0, rotation: placement.1, trim, base_profile: layout.base_profile.clone(), top_profile: layout.top_profile.clone() }
     }
 
-    /// 🪞️ The host a curtain wall is, from its layout: its mullion depth is the thickness, centred on the axis, and it has its full thickness along the whole axis.
-    pub fn of_curtain(curtain: &CurtainWall, layout: &CurtainLayout, own: &StoreyLevel, placement: (Point2, f64)) -> Self {
-        let thickness = depth_of(&curtain.mullion);
-        Self { axis: curtain.axis.clone(), base_z: layout.base_z, height: layout.height, thickness, length: layout.length, face_left: thickness / 2.0, face_right: thickness / 2.0, datum: own.absolute_elevation - own.elevation, origin: placement.0, rotation: placement.1, trim: (0.0, layout.length) }
+    /// 🪞️ The host a curtain wall is, from its layout and the interior mullion of its type: the mullion depth (a default while the type is missing) is the thickness, centred on the axis, and it has its full thickness along the whole axis.
+    pub fn of_curtain(curtain: &CurtainWall, mullion: Option<&Profile>, layout: &CurtainLayout, own: &StoreyLevel, placement: (Point2, f64)) -> Self {
+        let thickness = mullion.map_or(DEFAULT_MULLION_DEPTH, depth_of);
+        Self { axis: curtain.axis.clone(), base_z: layout.base_z, height: layout.height, thickness, length: layout.length, face_left: thickness / 2.0, face_right: thickness / 2.0, datum: own.absolute_elevation - own.elevation, origin: placement.0, rotation: placement.1, trim: (0.0, layout.length), base_profile: Vec::new(), top_profile: Vec::new() }
+    }
+
+    /// 📈️ The absolute height of the base of the host at arc length `s`: the base profile of an attached base, the flat base otherwise.
+    pub fn base_at(&self, s: f64) -> f64 {
+        if self.base_profile.is_empty() {
+            self.base_z
+        } else {
+            elevation_at(&self.base_profile, s)
+        }
+    }
+
+    /// 📈️ The absolute height of the top of the host at arc length `s`: the top profile of an attached top, the flat top otherwise.
+    pub fn top_at(&self, s: f64) -> f64 {
+        if self.top_profile.is_empty() {
+            self.base_z + self.height
+        } else {
+            elevation_at(&self.top_profile, s)
+        }
+    }
+
+    /// 📏️ The height above the local base (the base at the centre of the cut) up to which a cut may reach: the flat height, or the lowest top over the arc length range of the cut less that base.
+    pub fn limit(&self, cut: &OpeningCut) -> f64 {
+        if self.top_profile.is_empty() && self.base_profile.is_empty() {
+            return self.height;
+        }
+        let base = self.base_at((cut.s_min + cut.s_max) / 2.0);
+        let inner = self.top_profile.iter().map(|point| point.s).filter(|s| *s > cut.s_min && *s < cut.s_max);
+        [cut.s_min, cut.s_max].into_iter().chain(inner).map(|s| self.top_at(s)).fold(f64::INFINITY, f64::min) - base
     }
 
     /// ↔️ The lateral centre of the host thickness (left positive): the offset of the middle of the host from its location line.
@@ -245,7 +289,8 @@ pub fn building_placement(snapshot: &ModelSnapshot, storey: &str) -> (Point2, f6
 pub fn host_issues(cut: &OpeningCut, host: &HostExtent) -> Vec<OpeningIssue> {
     let mut issues = Vec::new();
     let beyond = cut.s_min < -LENGTH_EPS || cut.s_max > host.length + LENGTH_EPS;
-    let above = cut.z_max > host.height + LENGTH_EPS;
+    let limit = host.limit(cut);
+    let above = cut.z_max > limit + LENGTH_EPS;
     if beyond {
         issues.push(OpeningIssue::OutsideHostExtent);
     }
@@ -256,7 +301,7 @@ pub fn host_issues(cut: &OpeningCut, host: &HostExtent) -> Vec<OpeningIssue> {
         issues.push(OpeningIssue::AboveHostTop);
     }
     let (lo, hi) = host.trim;
-    let inside = cut.s_min > lo + LENGTH_EPS && cut.s_max < hi - LENGTH_EPS && cut.z_max < host.height - LENGTH_EPS;
+    let inside = cut.s_min > lo + LENGTH_EPS && cut.s_max < hi - LENGTH_EPS && cut.z_max < limit - LENGTH_EPS;
     if !beyond && !above && !inside {
         issues.push(OpeningIssue::OutsideTrimmedExtent);
     }
@@ -344,14 +389,17 @@ pub fn frame_of(snapshot: &ModelSnapshot, id: &str, own: &CutRect, host: Option<
     let facing = if opening.flip_facing { -1.0 } else { 1.0 };
     let (x, y) = (tangent * facing, perp(tangent) * facing);
     let (face_front, face_back) = if opening.flip_facing { (host.face_right, host.face_left) } else { (host.face_left, host.face_right) };
-    let z = host.base_z + size.sill;
+    let z = host.base_at(opening.offset) + size.sill;
     let local = Frame { origin: Vec3 { x: centre.x, y: centre.y, z }, x_axis: Vec3 { x: x.x, y: x.y, z: 0.0 }, y_axis: Vec3 { x: y.x, y: y.y, z: 0.0 }, z_axis: Vec3 { x: 0.0, y: 0.0, z: 1.0 } };
     let (leaves, hand) = match &opening.kind {
         OpeningKind::Door { door_type } => snapshot.door_types.get(door_type).map_or((DoorLeaves::Single, None), |door| (door.leaves, Some(effective_hand(opening, door)))),
         _ => (DoorLeaves::Single, None),
     };
     OpeningFrame {
-        reveal_depth: host.thickness,
+        reveal_depth: opening.reveal_depth.map_or(host.thickness, |depth| depth.clamp(0.0, host.thickness)),
+        setback: opening.reveal_depth.map(|depth| depth.clamp(0.0, host.thickness)),
+        reveal_material: opening.reveal_material.clone().unwrap_or_default(),
+        facing_right: opening.flip_facing,
         face_front,
         face_back,
         host_length: host.length,
@@ -376,6 +424,7 @@ pub fn dependency(snapshot: &ModelSnapshot, opening: &Opening) -> DslValue {
 }
 
 /// 🪟️ The frame of every opening (the `OpeningFrame` nodes of the model graph).
+#[cfg(test)]
 pub fn compute_opening_frames(snapshot: &ModelSnapshot) -> BTreeMap<String, OpeningFrame> {
     std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::FRAMES }>(snapshot).opening_frames)
 }

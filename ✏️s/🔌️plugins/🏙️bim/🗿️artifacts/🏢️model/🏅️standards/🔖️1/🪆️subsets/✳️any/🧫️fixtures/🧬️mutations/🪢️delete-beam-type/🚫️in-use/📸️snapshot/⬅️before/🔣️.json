@@ -216,15 +216,20 @@
     "b-1": {
       "storey": "st-ground",
       "beam_type": "bt-i300",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 4,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          }
+        }
       },
       "top_offset": 0,
+      "phase": "New",
       "name": "B1"
     }
   },

@@ -1,0 +1,657 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Families",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-oak": {
+      "name": "Oak",
+      "category": "Wood",
+      "color": {
+        "r": 0.6,
+        "g": 0.45,
+        "b": 0.3
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1600
+    },
+    "m-steel": {
+      "name": "Steel",
+      "category": "Metal",
+      "color": {
+        "r": 0.6,
+        "g": 0.45,
+        "b": 0.3
+      },
+      "density": 7850,
+      "conductivity": 0.2,
+      "specific_heat": 1600
+    }
+  },
+  "wall_types": {},
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {},
+  "buildings": {},
+  "storeys": {},
+  "grids": {},
+  "walls": {},
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {},
+  "families": {
+    "fam-table": {
+      "name": "Table",
+      "category": "Furniture"
+    },
+    "fam-hea": {
+      "name": "HEA 200",
+      "category": "Profile"
+    },
+    "fam-rhs": {
+      "name": "RHS 100x60",
+      "category": "Profile"
+    },
+    "fam-round": {
+      "name": "Pipe 114",
+      "category": "Profile"
+    },
+    "fam-broken": {
+      "name": "Broken",
+      "category": "Generic"
+    }
+  },
+  "family_parameters": {
+    "fam-table.width": {
+      "family": "fam-table",
+      "name": "width",
+      "kind": "Length",
+      "value": "1.6 m"
+    },
+    "fam-table.depth": {
+      "family": "fam-table",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.8 m"
+    },
+    "fam-table.height": {
+      "family": "fam-table",
+      "name": "height",
+      "kind": "Length",
+      "value": "0.74 m"
+    },
+    "fam-table.top_thickness": {
+      "family": "fam-table",
+      "name": "top_thickness",
+      "kind": "Length",
+      "value": "30 mm"
+    },
+    "fam-table.leg_section": {
+      "family": "fam-table",
+      "name": "leg_section",
+      "kind": "Length",
+      "value": "60 mm"
+    },
+    "fam-table.leg_inset": {
+      "family": "fam-table",
+      "name": "leg_inset",
+      "kind": "Length",
+      "value": "50 mm"
+    },
+    "fam-table.leg_height": {
+      "family": "fam-table",
+      "name": "leg_height",
+      "kind": "Length",
+      "value": "height - top_thickness"
+    },
+    "fam-table.leg_x": {
+      "family": "fam-table",
+      "name": "leg_x",
+      "kind": "Length",
+      "value": "width - leg_inset - leg_section"
+    },
+    "fam-table.leg_y": {
+      "family": "fam-table",
+      "name": "leg_y",
+      "kind": "Length",
+      "value": "depth - leg_inset - leg_section"
+    },
+    "fam-table.legs": {
+      "family": "fam-table",
+      "name": "legs",
+      "kind": "Integer",
+      "value": "4"
+    },
+    "fam-table.wide": {
+      "family": "fam-table",
+      "name": "wide",
+      "kind": "Boolean",
+      "value": "width > 1.4 m"
+    },
+    "fam-table.ratio": {
+      "family": "fam-table",
+      "name": "ratio",
+      "kind": "Real",
+      "value": "width / depth"
+    },
+    "fam-table.area": {
+      "family": "fam-table",
+      "name": "area",
+      "kind": "Real",
+      "value": "round(width * depth / 1 m2 * 100) / 100"
+    },
+    "fam-table.tilt": {
+      "family": "fam-table",
+      "name": "tilt",
+      "kind": "Angle",
+      "value": "if wide then 15 deg else 0 deg"
+    },
+    "fam-table.finish": {
+      "family": "fam-table",
+      "name": "finish",
+      "kind": "Material",
+      "value": "\"m-oak\""
+    },
+    "fam-table.label": {
+      "family": "fam-table",
+      "name": "label",
+      "kind": "Text",
+      "value": "\"Dining table\""
+    },
+    "fam-hea.h": {
+      "family": "fam-hea",
+      "name": "h",
+      "kind": "Length",
+      "value": "190 mm"
+    },
+    "fam-hea.b": {
+      "family": "fam-hea",
+      "name": "b",
+      "kind": "Length",
+      "value": "200 mm"
+    },
+    "fam-hea.tw": {
+      "family": "fam-hea",
+      "name": "tw",
+      "kind": "Length",
+      "value": "6.5 mm"
+    },
+    "fam-hea.tf": {
+      "family": "fam-hea",
+      "name": "tf",
+      "kind": "Length",
+      "value": "10 mm"
+    },
+    "fam-rhs.width": {
+      "family": "fam-rhs",
+      "name": "width",
+      "kind": "Length",
+      "value": "100 mm"
+    },
+    "fam-rhs.depth": {
+      "family": "fam-rhs",
+      "name": "depth",
+      "kind": "Length",
+      "value": "60 mm"
+    },
+    "fam-round.diameter": {
+      "family": "fam-round",
+      "name": "diameter",
+      "kind": "Length",
+      "value": "114 mm"
+    },
+    "fam-broken.base": {
+      "family": "fam-broken",
+      "name": "base",
+      "kind": "Length",
+      "value": "1 m"
+    },
+    "fam-broken.loop_a": {
+      "family": "fam-broken",
+      "name": "loop_a",
+      "kind": "Length",
+      "value": "loop_b + 1 m"
+    },
+    "fam-broken.loop_b": {
+      "family": "fam-broken",
+      "name": "loop_b",
+      "kind": "Length",
+      "value": "loop_a + 1 m"
+    },
+    "fam-broken.after_loop": {
+      "family": "fam-broken",
+      "name": "after_loop",
+      "kind": "Length",
+      "value": "loop_a * 2"
+    },
+    "fam-broken.syntax": {
+      "family": "fam-broken",
+      "name": "syntax",
+      "kind": "Length",
+      "value": "2 *"
+    },
+    "fam-broken.after_syntax": {
+      "family": "fam-broken",
+      "name": "after_syntax",
+      "kind": "Length",
+      "value": "syntax + 1 m"
+    },
+    "fam-broken.unknown": {
+      "family": "fam-broken",
+      "name": "unknown",
+      "kind": "Length",
+      "value": "ghost + 1 m"
+    },
+    "fam-broken.zero": {
+      "family": "fam-broken",
+      "name": "zero",
+      "kind": "Real",
+      "value": "1 / 0"
+    },
+    "fam-broken.mixed": {
+      "family": "fam-broken",
+      "name": "mixed",
+      "kind": "Length",
+      "value": "1 m + 30 deg"
+    },
+    "fam-broken.number_for_length": {
+      "family": "fam-broken",
+      "name": "number_for_length",
+      "kind": "Length",
+      "value": "2"
+    },
+    "fam-broken.fraction": {
+      "family": "fam-broken",
+      "name": "fraction",
+      "kind": "Integer",
+      "value": "2.5"
+    },
+    "fam-broken.no_material": {
+      "family": "fam-broken",
+      "name": "no_material",
+      "kind": "Material",
+      "value": "\"m-ghost\""
+    },
+    "fam-broken.negative": {
+      "family": "fam-broken",
+      "name": "negative",
+      "kind": "Length",
+      "value": "-1 m"
+    }
+  },
+  "family_solids": {
+    "s-top": {
+      "family": "fam-table",
+      "name": "Top",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "leg_height",
+          "width": "width",
+          "depth": "depth",
+          "height": "top_thickness"
+        }
+      },
+      "material": "finish",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-leg-1": {
+      "family": "fam-table",
+      "name": "Leg 1",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_inset",
+          "y": "leg_inset",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-leg-2": {
+      "family": "fam-table",
+      "name": "Leg 2",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "leg_inset",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-leg-3": {
+      "family": "fam-table",
+      "name": "Leg 3",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-leg-4": {
+      "family": "fam-table",
+      "name": "Leg 4",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_inset",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-shelf": {
+      "family": "fam-table",
+      "name": "Shelf",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "Rectangle": {
+              "width": "width - 2 * leg_inset",
+              "depth": "depth - 2 * leg_inset"
+            }
+          },
+          "base": "0 m",
+          "height": "20 mm"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "width > 2 m",
+      "offset": {
+        "x": "width / 2",
+        "y": "depth / 2",
+        "z": "150 mm"
+      }
+    },
+    "s-foot": {
+      "family": "fam-table",
+      "name": "Foot",
+      "shape": {
+        "Revolution": {
+          "profile": {
+            "Polygon": {
+              "points": [
+                {
+                  "x": "0 m",
+                  "y": "0 m"
+                },
+                {
+                  "x": "30 mm",
+                  "y": "0 m"
+                },
+                {
+                  "x": "25 mm",
+                  "y": "15 mm"
+                },
+                {
+                  "x": "0 m",
+                  "y": "15 mm"
+                }
+              ]
+            }
+          },
+          "axis": "Z",
+          "angle": "360 deg"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "leg_inset + leg_section / 2",
+        "y": "leg_inset + leg_section / 2",
+        "z": "0 m"
+      }
+    },
+    "s-rail": {
+      "family": "fam-table",
+      "name": "Rail",
+      "shape": {
+        "Sweep": {
+          "profile": {
+            "Rectangle": {
+              "width": "20 mm",
+              "depth": "20 mm"
+            }
+          },
+          "path": [
+            {
+              "x": "0 m",
+              "y": "0 m"
+            },
+            {
+              "x": "width",
+              "y": "0 m"
+            },
+            {
+              "x": "width",
+              "y": "depth"
+            }
+          ]
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "leg_height - 30 mm"
+      }
+    },
+    "s-hea": {
+      "family": "fam-hea",
+      "name": "HEA 200",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "IShape": {
+              "width": "b",
+              "depth": "h",
+              "web": "tw",
+              "flange": "tf"
+            }
+          },
+          "base": "0 m",
+          "height": "1 m"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-rhs": {
+      "family": "fam-rhs",
+      "name": "RHS",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "Rectangle": {
+              "width": "width",
+              "depth": "depth"
+            }
+          },
+          "base": "0 m",
+          "height": "1 m"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-round": {
+      "family": "fam-round",
+      "name": "Pipe",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "Circle": {
+              "diameter": "diameter"
+            }
+          },
+          "base": "0 m",
+          "height": "1 m"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-bad-height": {
+      "family": "fam-broken",
+      "name": "Flat",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "base",
+          "depth": "base",
+          "height": "negative"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-bad-name": {
+      "family": "fam-broken",
+      "name": "Ghost",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "ghost",
+          "depth": "base",
+          "height": "base"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-bad-loop": {
+      "family": "fam-broken",
+      "name": "Loop",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "loop_a",
+          "depth": "base",
+          "height": "base"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-bad-material": {
+      "family": "fam-broken",
+      "name": "Material",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "base",
+          "depth": "base",
+          "height": "base"
+        }
+      },
+      "material": "\"m-ghost\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    }
+  }
+}

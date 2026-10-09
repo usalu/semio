@@ -43,7 +43,7 @@ async fn every_committed_mutation_round_trips_text_and_binary() {
 async fn delete_storey_declares_a_bounded_footprint_and_the_others_one_row() {
     use super::super::delete_storey::DeleteStorey;
     use super::super::set_storey_height::SetStoreyHeight;
-    assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::DeleteStorey(DeleteStorey { id: "st".into() })), 65536);
+    assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::DeleteStorey(DeleteStorey { id: "st".into() })), 8191);
     assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::SetStoreyHeight(SetStoreyHeight { id: "st".into(), height: 3.0 })), 1);
 }
 
@@ -90,4 +90,28 @@ async fn the_rise_to_another_storey_is_the_elevation_gap() {
     assert!((rise - (gap - 0.2 - 0.1)).abs() < 1e-12);
     assert_eq!(placement::rise(&base, "st-ground", 0.0, &TopConstraint::Storey { storey: "st-nowhere".into(), offset: 0.0 }), None);
     assert_eq!(placement::rise(&base, "st-ground", 0.0, &TopConstraint::StoreyTop { offset: 0.0 }), Some(base.storeys["st-ground"].height));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_inverse_of_every_committed_applied_modify_and_delete_case_fits_the_rows_its_leaf_declares() {
+    use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
+    let kinds = ["copy-elements", "mirror-elements", "array-elements", "align-elements", "offset-wall", "trim-extend-wall", "split-slab", "split-beam", "set-wall-end-join", "delete-elements", "delete-site", "delete-building", "delete-storey"];
+    let mut checked = 0;
+    for leaf in std::fs::read_dir(&root).expect("the fixture root").flatten().filter(|leaf| kinds.contains(&leaf.file_name().to_string_lossy().trim_start_matches(|character: char| !character.is_ascii())))
+    {
+        for case in std::fs::read_dir(leaf.path()).expect("the leaf cases").flatten() {
+            let read = |relative: &str| std::fs::read_to_string(case.path().join(relative)).expect("a fixture document");
+            if !read("🎯️outcome/🔣️.json").contains("\"applied\"") {
+                continue;
+            }
+            let mutation: ModelMutation = from_json_str(&read("🦠️mutation/🔣️.json"), JsonMemberPolicy::Reject).expect("the mutation decodes");
+            let before: ModelSnapshot = from_json_str(&read("📸️snapshot/⬅️before/🔣️.json"), JsonMemberPolicy::Reject).expect("the before snapshot decodes");
+            let rows = mutation.inverse(&before).expect("an inverse").len();
+            let declared = Mutation::<ModelSnapshot>::inverse_rows(&mutation);
+            assert!(rows >= 1 && rows <= declared, "{}: the inverse has {rows} rows where the leaf declares {declared}", case.path().display());
+            checked += 1;
+        }
+    }
+    assert!(checked >= 30, "the applied cases of the modify and delete leaves were found: {checked}");
 }

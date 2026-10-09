@@ -1,7 +1,8 @@
-//! 🔺️ Diff constructor for `DeleteWallType`: one deleted wall type entry; refused while a wall still uses the type.
+//! 🔺️ Diff constructor for `DeleteWallType`: one deleted wall type entry together with the properties and classifications keyed by the type; refused while a wall still uses the type.
 
+use super::super::cascade;
 use super::DeleteWallType;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::{Entry, KeyedDelta, ModelDiff, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteWallType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
@@ -11,5 +12,7 @@ pub fn diff(payload: &DeleteWallType, base: &ModelSnapshot) -> MutationOutcome<M
     if base.walls.values().any(|row| row.wall_type == payload.id) {
         return MutationOutcome::refuse(OutcomeCode::TargetReferenced, format!("Wall type \"{}\" is still used by walls.", payload.id), [payload.id.clone()]);
     }
-    MutationOutcome::new(ModelDiff::wall_types(payload.id.clone(), Entry::Deleted))
+    let mut removal = cascade::data_diff(base, &payload.id);
+    removal.wall_types = Some(KeyedDelta::one(payload.id.clone(), Entry::Deleted));
+    MutationOutcome::new(removal)
 }

@@ -44,6 +44,11 @@ pub(crate) fn char_cells(c: char) -> u8 {
         1
     }
 }
+
+/// 🪶️ A zero-cell mark preserved in scalar rendering without joining glyphs or changing emoji presentation.
+pub(crate) fn scalar_mark(c: char) -> bool {
+    char_cells(c) == 0 && matches!(break_class(c), Break::Extend | Break::SpacingMark) && !matches!(c, '\u{200c}' | '\u{200d}' | '\u{fe00}'..='\u{fe0f}' | '\u{e0000}'..='\u{e007f}' | '\u{e0100}'..='\u{e01ef}')
+}
 //#endregion 📏️Scalar Classes
 
 //#region 🧩️Cluster Segmentation

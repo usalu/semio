@@ -9,7 +9,7 @@ fn target(kind: &str, id: &str) -> (String, String) {
 
 fn room_with_window() -> ModelSnapshot {
     let mut snapshot = room();
-    snapshot.openings.insert("o-1".into(), Opening { host: "w-south".into(), kind: OpeningKind::Window { window_type: "win-12".into() }, offset: 2.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: "Window 1".into() });
+    snapshot.openings.insert("o-1".into(), Opening { host: "w-south".into(), kind: OpeningKind::Window { window_type: "win-12".into() }, offset: 2.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window 1".into() });
     snapshot
 }
 
@@ -110,7 +110,7 @@ async fn an_opening_slides_along_its_wall_and_onto_another_one() {
 #[semio_framework_async_macros::async_test]
 async fn an_opening_that_would_overlap_or_not_move_is_left_alone() {
     let mut snapshot = room_with_window();
-    snapshot.openings.insert("o-2".into(), Opening { host: "w-south".into(), kind: OpeningKind::Window { window_type: "win-12".into() }, offset: 5.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: "Window 2".into() });
+    snapshot.openings.insert("o-2".into(), Opening { host: "w-south".into(), kind: OpeningKind::Window { window_type: "win-12".into() }, offset: 5.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window 2".into() });
     let mut rig = Rig::plan("select", snapshot);
     rig.down(2.0, 0.0);
     assert!(rig.up(5.2, 0.0).mutations.is_empty(), "onto its neighbour: refused before it is written");
@@ -132,7 +132,7 @@ async fn the_storey_height_handle_of_the_section_sets_the_storey_height() {
     assert_eq!(set.id, "st-ground");
     assert!((set.height - 3.6).abs() < 1e-9, "snapped to 5 cm: {}", set.height);
     assert!((rig.snapshot.storeys["st-ground"].height - 3.6).abs() < 1e-9);
-    let marks = section_marks(&crate::editor::bim::inference::with_inference(None, &rig.snapshot, |inference| inference.clone()), [0.0, 0.0], [8.0, 0.0]);
+    let marks = section_marks(&crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &rig.snapshot, |inference| inference.clone()), [0.0, 0.0], [8.0, 0.0]);
     assert_eq!(marks.len(), 4, "a guide and a handle for each of the two storeys");
 }
 
@@ -157,4 +157,63 @@ async fn escape_drops_a_drag_without_a_trace() {
     rig.escape();
     assert!(rig.up(-1.0, 0.5).mutations.is_empty());
     assert_eq!(rig.snapshot, room());
+}
+
+fn room_with_outlines() -> ModelSnapshot {
+    let mut snapshot = room();
+    for (kind, id) in [("slab", "slab-1"), ("roof", "roof-1")] {
+        let create = crate::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
+        let mutation = create(&snapshot, id, "st-ground", "Sample").expect("creates");
+        snapshot = crate::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
+    }
+    snapshot
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_corners_of_the_one_selected_slab_or_roof_are_handles_and_nothing_else_is() {
+    let snapshot = room_with_outlines();
+    let corners = |selected: &[&str]| outline_handles(&snapshot, &selected.iter().map(|id| id.to_string()).collect::<Vec<_>>()).map(|(id, roof, corners)| (id, roof, corners.len()));
+    assert_eq!(corners(&["slab-1"]), Some(("slab-1".to_string(), false, 4)));
+    assert_eq!(corners(&["roof-1"]), Some(("roof-1".to_string(), true, 4)));
+    assert_eq!(corners(&["slab-1", "roof-1"]), None, "two selected outlines have no handles");
+    assert_eq!(corners(&["w-south"]), None);
+    let marks = plan_marks(&snapshot, &["slab-1".to_string()]);
+    assert_eq!(marks.iter().filter(|mark| mark.shape == Shape::Dot).count(), 4, "a handle dot on every corner");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn dragging_a_slab_corner_writes_one_set_slab_boundary_and_keeps_the_other_corners_and_holes() {
+    let mut rig = Rig::plan("select", room_with_outlines());
+    rig.selected = vec!["slab-1".into()];
+    let before = rig.snapshot.slabs["slab-1"].clone();
+    rig.down(4.0, 4.0);
+    rig.mv(6.0, 5.0);
+    assert!(rig.shows(Shape::Path), "the moved outline shows as a ghost while dragging");
+    let step = rig.up(6.0, 5.0);
+    assert!(matches!(only_mutation(&step), ModelMutation::SetSlabBoundary(set) if set.id == "slab-1"));
+    let after = &rig.snapshot.slabs["slab-1"];
+    assert_eq!((after.boundary[2].point.x, after.boundary[2].point.y), (6.0, 5.0));
+    assert_eq!((&after.boundary[0], &after.boundary[1], &after.boundary[3]), (&before.boundary[0], &before.boundary[1], &before.boundary[3]));
+    assert_eq!(after.holes, before.holes);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn dragging_a_roof_corner_writes_one_set_roof_footprint() {
+    let mut rig = Rig::plan("select", room_with_outlines());
+    rig.selected = vec!["roof-1".into()];
+    rig.down(0.0, 4.0);
+    rig.mv(-1.0, 7.0);
+    let step = rig.up(-1.0, 7.0);
+    assert!(matches!(only_mutation(&step), ModelMutation::SetRoofFootprint(set) if set.id == "roof-1"));
+    assert_eq!((rig.snapshot.roofs["roof-1"].footprint[3].point.x, rig.snapshot.roofs["roof-1"].footprint[3].point.y), (-1.0, 7.0));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_drag_that_ends_where_it_began_or_a_press_away_from_the_corners_writes_nothing() {
+    let mut rig = Rig::plan("select", room_with_outlines());
+    rig.selected = vec!["slab-1".into()];
+    rig.down(4.0, 4.0);
+    assert!(rig.up(4.0, 4.0).mutations.is_empty(), "the corner did not move");
+    let away = rig.down(2.0, 2.0);
+    assert!(away.mutations.is_empty() && away.pick.is_some(), "away from the corners the press picks as it always does");
 }

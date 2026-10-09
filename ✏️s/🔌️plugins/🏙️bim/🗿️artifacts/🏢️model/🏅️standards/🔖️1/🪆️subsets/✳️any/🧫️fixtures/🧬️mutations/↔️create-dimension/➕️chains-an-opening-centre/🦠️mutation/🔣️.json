@@ -1,0 +1,30 @@
+{
+  "mutation": "createDimension",
+  "id": "dim-chain",
+  "dimension": {
+    "storey": "st-ground",
+    "anchors": [
+      {
+        "WallEnd": {
+          "wall": "w-south",
+          "end": "Start"
+        }
+      },
+      {
+        "OpeningCentre": {
+          "opening": "o-win"
+        }
+      },
+      {
+        "WallEnd": {
+          "wall": "w-south",
+          "end": "End"
+        }
+      }
+    ],
+    "angle": 0,
+    "offset": 0.8,
+    "style": "as-plan",
+    "name": "Window position"
+  }
+}

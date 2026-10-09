@@ -5,87 +5,73 @@
     {
       "source": "overlapping union",
       "phase": "fresh",
-      "offset": 0,
-      "work": 25
+      "offset": 0
     },
     {
       "source": "overlapping union",
       "phase": "preparing",
-      "offset": 2,
-      "work": 29
+      "offset": 2
     },
     {
       "source": "overlapping union",
       "phase": "indexing",
-      "offset": 2,
-      "work": 57
+      "offset": 2
     },
     {
       "source": "overlapping union",
       "phase": "intersections",
-      "offset": 2,
-      "work": 57
+      "offset": 2
     },
     {
       "source": "overlapping union",
       "phase": "splitting",
-      "offset": 2,
-      "work": 60
+      "offset": 2
     },
     {
       "source": "overlapping union",
       "phase": "classifying",
-      "offset": 2,
-      "work": 63
+      "offset": 2
     },
     {
       "source": "overlapping union",
       "phase": "contours",
-      "offset": 2,
-      "work": 72
+      "offset": 2
     },
     {
       "source": "overlapping union",
       "phase": "compacting",
-      "offset": 2,
-      "work": 80
+      "offset": 2
     },
     {
       "source": "overlapping union",
       "phase": "emitting",
-      "offset": 2,
-      "work": 81
+      "offset": 2
     },
     {
       "source": "overlapping union",
       "phase": "complete",
-      "offset": 0,
-      "work": 81
+      "offset": 0
     },
     {
       "source": "contained difference creates hole",
       "phase": "complete",
-      "offset": 0,
-      "work": 73
+      "offset": 0
     },
     {
       "source": "disjoint union",
       "phase": "emitting",
-      "offset": 4,
-      "work": 73
+      "offset": 4
     },
     {
       "source": "overlapping union",
       "phase": "failure",
       "offset": 0,
-      "maxParameters": 2,
-      "work": 29
+      "maxParameters": 2
     },
     {
       "source": "overlapping union",
       "phase": "cancelled",
-      "offset": 8,
-      "work": 25
+      "offset": 8
     }
   ]
 }

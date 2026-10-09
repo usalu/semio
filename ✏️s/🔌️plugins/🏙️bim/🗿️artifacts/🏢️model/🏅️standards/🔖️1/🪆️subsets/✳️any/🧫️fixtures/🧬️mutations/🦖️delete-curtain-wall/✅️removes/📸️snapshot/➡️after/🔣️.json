@@ -3,13 +3,13 @@
   "beams": {},
   "buildings": {
     "bldg-1": {
-      "elevation": 0.0,
+      "elevation": 0,
       "name": "House",
       "origin": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 0,
+        "y": 0
       },
-      "rotation": 0.0,
+      "rotation": 0,
       "site": "site-1"
     }
   },
@@ -18,6 +18,36 @@
   "columns": {},
   "curtain_walls": {},
   "door_types": {},
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 1.5 x 1.2",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.2
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.15
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.15
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "mullion_material": "m-alu"
+    }
+  },
   "grids": {},
   "materials": {
     "m-alu": {
@@ -28,9 +58,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800.0,
+      "density": 1800,
       "name": "Aluminium",
-      "specific_heat": 900.0
+      "specific_heat": 900
     },
     "m-brick": {
       "category": "Masonry",
@@ -40,9 +70,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800.0,
+      "density": 1800,
       "name": "Brick",
-      "specific_heat": 900.0
+      "specific_heat": 900
     },
     "m-glass": {
       "category": "Glass",
@@ -52,9 +82,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800.0,
+      "density": 1800,
       "name": "Glass",
-      "specific_heat": 900.0
+      "specific_heat": 900
     }
   },
   "openings": {},
@@ -73,11 +103,11 @@
   "sites": {
     "site-1": {
       "boundary": [],
-      "elevation": 100.0,
-      "latitude": 47.0,
-      "longitude": 8.0,
+      "elevation": 100,
+      "latitude": 47,
+      "longitude": 8,
       "name": "Plot",
-      "true_north": 0.0
+      "true_north": 0
     }
   },
   "slab_types": {},
@@ -93,7 +123,7 @@
     },
     "st-ground": {
       "building": "bldg-1",
-      "height": 3.0,
+      "height": 3,
       "level": 0,
       "name": "Ground"
     }
@@ -115,16 +145,16 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
           "start": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           }
         }
       },
-      "base_offset": 0.0,
+      "base_offset": 0,
       "location": "Center",
       "name": "East",
       "phase": "New",
@@ -140,23 +170,23 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           },
           "start": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           }
         }
       },
-      "base_offset": 0.0,
+      "base_offset": 0,
       "location": "Center",
       "name": "South",
       "phase": "New",
       "storey": "st-ground",
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "wall_type": "wt-300"

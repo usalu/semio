@@ -1,0 +1,7 @@
+{
+  "mutation": "setView",
+  "id": "v-ground",
+  "cut_height": {
+    "value": null
+  }
+}

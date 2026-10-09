@@ -43,6 +43,7 @@
     },
     "overhang": 0.3,
     "base_offset": 0,
+    "phase": "New",
     "name": "Mansard roof"
   }
 }

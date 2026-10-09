@@ -1,10 +1,10 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, testkit::house, IFC_DIALECT};
-use semio_framework::io::io_mechanism::IoEntryDirection;
+use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 use semio_framework::io_schema::IoPayload;
 
-fn entry(direction: IoEntryDirection) -> &'static semio_framework::io::io_mechanism::IoEntry {
+fn entry(direction: IoEntryDirection) -> &'static semio_framework_os_kernel::io::io_mechanism::IoEntry {
     io().entries.iter().find(|entry| entry.direction == direction && (entry.from == IFC_DIALECT || entry.into == IFC_DIALECT)).expect("the IFC entry")
 }
 
@@ -38,7 +38,7 @@ fn the_io_declaration_lists_the_native_pack_and_text_codec_and_every_foreign_hop
     use crate::standards::v1::subsets::any::io::export::{gltf::ModelIntoGlb, ifc::ModelIntoIfc2x3, svg::ModelIntoSvg};
     use crate::standards::v1::subsets::any::io::import::ifc::IfcIntoModel;
     use crate::standards::v1::subsets::any::io::text::snapshot as text;
-    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     let declaration = io();
     assert_eq!(declaration.native.codec.schema, crate::BIM_MODEL_DOCUMENT_SCHEMA);
     let model = house();
@@ -51,6 +51,7 @@ fn the_io_declaration_lists_the_native_pack_and_text_codec_and_every_foreign_hop
             (IoEntryDirection::Export, "s.bim.model", "s.stdio.ifc", "2x3"),
             (IoEntryDirection::Export, "s.bim.model", "s.stdio.gltf", "2.0"),
             (IoEntryDirection::Export, "s.bim.model", "s.stdio.svg", "1.1"),
+            (IoEntryDirection::Export, "s.bim.model", "s.stdio.csv", "rfc4180"),
             (IoEntryDirection::Import, "s.stdio.ifc", "s.bim.model", "1"),
         ]
     );

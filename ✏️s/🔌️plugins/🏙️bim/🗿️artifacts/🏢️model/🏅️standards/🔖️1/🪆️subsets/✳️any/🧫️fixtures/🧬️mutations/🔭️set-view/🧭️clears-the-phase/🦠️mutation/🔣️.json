@@ -1,0 +1,7 @@
+{
+  "mutation": "setView",
+  "id": "v-ground",
+  "phase": {
+    "value": null
+  }
+}

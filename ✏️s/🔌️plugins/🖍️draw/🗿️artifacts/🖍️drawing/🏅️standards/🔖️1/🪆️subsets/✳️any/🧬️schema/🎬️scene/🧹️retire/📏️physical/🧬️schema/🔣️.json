@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.draw.scene.physical-retirement.v1",
+  "type": "object",
+  "required": [
+    "version",
+    "cases",
+    "grant",
+    "expected"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "enum": [
+              null,
+              "painted",
+              "raster"
+            ]
+          }
+        }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "required": [
+        "maximumItems",
+        "refusedItems",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "refusedItems": {
+          "const": 0
+        },
+        "capacity": {
+          "const": "next-demand"
+        },
+        "release": {
+          "const": "next-demand"
+        },
+        "depth": {
+          "const": "next-demand"
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "allocations",
+        "releases",
+        "terminalBackingBytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "allocations": {
+          "const": "receipt.retainedCapacityBytes"
+        },
+        "releases": {
+          "const": "receipt.releasedBytes"
+        },
+        "terminalBackingBytes": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

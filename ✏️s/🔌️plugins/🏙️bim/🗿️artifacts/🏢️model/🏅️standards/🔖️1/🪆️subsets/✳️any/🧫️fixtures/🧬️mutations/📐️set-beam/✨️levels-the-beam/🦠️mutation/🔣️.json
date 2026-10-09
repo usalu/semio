@@ -1,0 +1,7 @@
+{
+  "mutation": "setBeam",
+  "id": "b-a",
+  "end_top_offset": {
+    "value": null
+  }
+}

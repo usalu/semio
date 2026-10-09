@@ -1,0 +1,470 @@
+{
+  "snapshot": {
+    "schema": "s.bim.model@1",
+    "project": {
+      "name": "Ceilings",
+      "description": "",
+      "author": "",
+      "organization": "",
+      "phase_names": []
+    },
+    "materials": {
+      "m-board": {
+        "name": "Plasterboard",
+        "category": "Finish",
+        "color": {
+          "r": 0.9,
+          "g": 0.9,
+          "b": 0.88
+        },
+        "density": 800,
+        "conductivity": 1,
+        "specific_heat": 900
+      },
+      "m-wool": {
+        "name": "Mineral wool",
+        "category": "Insulation",
+        "color": {
+          "r": 0.9,
+          "g": 0.85,
+          "b": 0.4
+        },
+        "density": 30,
+        "conductivity": 1,
+        "specific_heat": 900
+      }
+    },
+    "sites": {
+      "site-1": {
+        "name": "Plot",
+        "latitude": 47,
+        "longitude": 8,
+        "elevation": 100,
+        "true_north": 0,
+        "boundary": []
+      }
+    },
+    "buildings": {
+      "bldg-1": {
+        "site": "site-1",
+        "name": "Frame",
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "rotation": 0,
+        "elevation": 2.5
+      }
+    },
+    "storeys": {
+      "st-ground": {
+        "building": "bldg-1",
+        "name": "Ground",
+        "level": 0,
+        "height": 3
+      },
+      "st-first": {
+        "building": "bldg-1",
+        "name": "First",
+        "level": 1,
+        "height": 2.8
+      }
+    },
+    "ceiling_types": {
+      "ct-board": {
+        "name": "Board on wool",
+        "layers": [
+          {
+            "material": "m-board",
+            "thickness": 0.0125,
+            "function": "Finish"
+          },
+          {
+            "material": "m-wool",
+            "thickness": 0.05,
+            "function": "Insulation"
+          }
+        ]
+      },
+      "ct-tile": {
+        "name": "Tile",
+        "layers": [
+          {
+            "material": "m-board",
+            "thickness": 0.02,
+            "function": "Finish"
+          }
+        ]
+      },
+      "ct-bare": {
+        "name": "Bare",
+        "layers": []
+      }
+    },
+    "ceilings": {
+      "c-holed": {
+        "storey": "st-ground",
+        "ceiling_type": "ct-board",
+        "boundary": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 6,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 6,
+              "y": 4
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 4
+            },
+            "bulge": 0
+          }
+        ],
+        "holes": [
+          [
+            {
+              "point": {
+                "x": 2,
+                "y": 1
+              },
+              "bulge": 0
+            },
+            {
+              "point": {
+                "x": 3,
+                "y": 1
+              },
+              "bulge": 0
+            },
+            {
+              "point": {
+                "x": 3,
+                "y": 2
+              },
+              "bulge": 0
+            },
+            {
+              "point": {
+                "x": 2,
+                "y": 2
+              },
+              "bulge": 0
+            }
+          ]
+        ],
+        "offset": 0.3,
+        "name": "Holed"
+      },
+      "c-sloped": {
+        "storey": "st-ground",
+        "ceiling_type": "ct-tile",
+        "boundary": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 5,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 5,
+              "y": 4
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 4
+            },
+            "bulge": 0
+          }
+        ],
+        "holes": [],
+        "offset": 0.1,
+        "slope": {
+          "direction": 0,
+          "angle": 0.05
+        },
+        "name": "Sloped"
+      },
+      "c-diagonal-slope": {
+        "storey": "st-first",
+        "ceiling_type": "ct-tile",
+        "boundary": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 3
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 3
+            },
+            "bulge": 0
+          }
+        ],
+        "holes": [],
+        "offset": 0.2,
+        "slope": {
+          "direction": 1.0471975511965976,
+          "angle": 0.1
+        },
+        "name": "Diagonal fall"
+      },
+      "c-curved": {
+        "storey": "st-first",
+        "ceiling_type": "ct-board",
+        "boundary": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 0
+            },
+            "bulge": 1
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 4
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 4
+            },
+            "bulge": 0
+          }
+        ],
+        "holes": [
+          [
+            {
+              "point": {
+                "x": 1,
+                "y": 2
+              },
+              "bulge": 1
+            },
+            {
+              "point": {
+                "x": 2,
+                "y": 2
+              },
+              "bulge": 1
+            }
+          ]
+        ],
+        "offset": 0.25,
+        "name": "Curved with round hole"
+      },
+      "c-bare": {
+        "storey": "st-ground",
+        "ceiling_type": "ct-bare",
+        "boundary": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 1,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 1,
+              "y": 1
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 1
+            },
+            "bulge": 0
+          }
+        ],
+        "holes": [],
+        "offset": 0,
+        "name": "No layers"
+      },
+      "c-unknown-type": {
+        "storey": "st-ground",
+        "ceiling_type": "ct-none",
+        "boundary": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 1,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 1,
+              "y": 1
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 1
+            },
+            "bulge": 0
+          }
+        ],
+        "holes": [],
+        "offset": 0,
+        "name": "Unknown type"
+      }
+    }
+  },
+  "expected": {
+    "c-holed": {
+      "family": "Ceiling",
+      "volume": 1.4375,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        2.6375
+      ],
+      "max": [
+        6.0,
+        4.0,
+        2.7
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.0625,
+      "top_z": 2.7,
+      "fall": 0.0
+    },
+    "c-sloped": {
+      "family": "Ceiling",
+      "volume": 0.4,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        2.629791458122
+      ],
+      "max": [
+        5.0,
+        4.0,
+        2.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.02,
+      "top_z": 2.9,
+      "fall": 0.250208541878
+    },
+    "c-diagonal-slope": {
+      "family": "Ceiling",
+      "volume": 0.24,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.11865353111
+      ],
+      "max": [
+        4.0,
+        3.0,
+        5.6
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.02,
+      "top_z": 5.6,
+      "fall": 0.46134646889
+    },
+    "c-curved": {
+      "family": "Ceiling",
+      "volume": 1.343611696486,
+      "volume_tolerance": 6.1850105e-05,
+      "min": [
+        0.0,
+        0.0,
+        5.4875
+      ],
+      "max": [
+        6.0,
+        4.0,
+        5.55
+      ],
+      "bounds_tolerance": 0.000105,
+      "curved": true,
+      "thickness": 0.0625,
+      "top_z": 5.55,
+      "fall": 0.0
+    },
+    "c-bare": null,
+    "c-unknown-type": null
+  },
+  "meshes": {}
+}

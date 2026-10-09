@@ -1,0 +1,14 @@
+{
+  "mutation": "setView",
+  "id": "v-section",
+  "plane": {
+    "start": {
+      "x": 0,
+      "y": 4
+    },
+    "end": {
+      "x": 8,
+      "y": 4
+    }
+  }
+}

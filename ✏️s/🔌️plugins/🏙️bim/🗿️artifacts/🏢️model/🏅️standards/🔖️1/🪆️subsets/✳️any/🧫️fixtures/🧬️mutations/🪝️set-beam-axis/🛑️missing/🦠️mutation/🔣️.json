@@ -1,0 +1,16 @@
+{
+  "mutation": "setBeamAxis",
+  "id": "b-gone",
+  "axis": {
+    "Line": {
+      "start": {
+        "x": 0,
+        "y": 0
+      },
+      "end": {
+        "x": 4,
+        "y": 0
+      }
+    }
+  }
+}

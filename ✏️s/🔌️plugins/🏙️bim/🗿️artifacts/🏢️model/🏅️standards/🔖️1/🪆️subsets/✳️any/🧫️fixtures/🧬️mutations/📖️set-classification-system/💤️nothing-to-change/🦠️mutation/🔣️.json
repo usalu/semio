@@ -1,0 +1,6 @@
+{
+  "mutation": "setClassificationSystem",
+  "id": "cs-din",
+  "name": "DIN 276",
+  "edition": "2018-12"
+}

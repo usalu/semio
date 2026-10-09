@@ -10,12 +10,14 @@ type ModelDiff {
   beam_types: [BeamTypeEntry!]
   window_types: [WindowTypeEntry!]
   door_types: [DoorTypeEntry!]
+  curtain_wall_types: [CurtainWallTypeEntry!]
   sites: [SiteEntry!]
   buildings: [BuildingEntry!]
   storeys: [StoreyEntry!]
   grids: [GridLineEntry!]
   walls: [WallEntry!]
   curtain_walls: [CurtainWallEntry!]
+  curtain_panel_overrides: [CurtainPanelOverrideEntry!]
   columns: [ColumnEntry!]
   beams: [BeamEntry!]
   slabs: [SlabEntry!]
@@ -23,13 +25,153 @@ type ModelDiff {
   openings: [OpeningEntry!]
   stairs: [StairEntry!]
   railings: [RailingEntry!]
+  ramps: [RampEntry!]
   spaces: [SpaceEntry!]
+  ceiling_types: [CeilingTypeEntry!]
+  ceilings: [CeilingEntry!]
+  zones: [ZoneEntry!]
+  area_schemes: [AreaSchemeEntry!]
+  views: [ViewEntry!]
+  sheets: [SheetEntry!]
+  viewports: [ViewportEntry!]
+  sheet_revisions: [SheetRevisionEntry!]
+  dimensions: [DimensionEntry!]
+  tags: [TagEntry!]
+  text_notes: [TextNoteEntry!]
+  leaders: [LeaderEntry!]
+  annotation_styles: [AnnotationStyleEntry!]
+  families: [FamilyEntry!]
+  family_parameters: [FamilyParameterEntry!]
+  family_solids: [FamilySolidEntry!]
+  wall_sweeps: [WallSweepEntry!]
+  schedules: [ScheduleEntry!]
+  property_templates: [PropertyTemplateEntry!]
+  classification_systems: [ClassificationSystemEntry!]
   properties: [PropertySetEntry!]
-  classifications: [ClassificationEntry!]
+  classifications: [ClassificationSetEntry!]
 }
 
 type AssignedValue {
   present: Boolean!
+}
+
+type PropertyTemplatePatch {
+  name: String
+  applies_to: [TemplateTarget!]
+  properties: [PropertyDef!]
+}
+
+type ClassificationSystemPatch {
+  name: String
+  edition: String
+  source: String
+  entries: [ClassificationItem!]
+}
+
+type DimensionPatch {
+  storey: String
+  anchors: [AnnotationAnchor!]
+  angle: Float
+  offset: Float
+  style: String
+  lock: Float
+  name: String
+}
+
+type TagPatch {
+  storey: String
+  element: String
+  category: TagCategory
+  offset: Point2
+  style: String
+}
+
+type TextNotePatch {
+  storey: String
+  position: Point2
+  text: String
+  rotation: Float
+  style: String
+}
+
+type LeaderPatch {
+  storey: String
+  anchor: AnnotationAnchor
+  offset: Point2
+  text: String
+  style: String
+}
+
+type AnnotationStylePatch {
+  name: String
+  text_height: Float
+  terminator: Terminator
+  unit: DimensionUnit
+  precision: Int
+  mark_size: Float
+  gap: Float
+  overshoot: Float
+}
+
+type FamilyPatch {
+  name: String
+  category: FamilyCategory
+}
+
+type FamilyParameterPatch {
+  family: String
+  name: String
+  kind: ParameterKind
+  value: String
+}
+
+type FamilySolidPatch {
+  family: String
+  name: String
+  shape: SolidShape
+  material: String
+  visible: String
+  offset: ExprPoint3
+}
+
+type SheetPatch {
+  number: String
+  name: String
+  paper: Paper
+  orientation: Orientation
+  project: String
+  drawn_by: String
+  checked_by: String
+  date: String
+  revision: String
+  scale_label: String
+}
+
+type ViewportPatch {
+  sheet: String
+  view: String
+  position: Point2
+  scale: Int
+  crop: ViewCrop
+  label: String
+}
+
+type SheetRevisionPatch {
+  sheet: String
+  number: String
+  date: String
+  description: String
+  author: String
+}
+
+type WallSweepPatch {
+  host: String
+  side: WallSide
+  profile: Profile
+  height: Float
+  inset: Float
+  material: String
+  name: String
 }
 
 type ProjectPatch {
@@ -55,6 +197,11 @@ type WallTypePatch {
 }
 
 type SlabTypePatch {
+  name: String
+  layers: [Layer!]
+}
+
+type CeilingTypePatch {
   name: String
   layers: [Layer!]
 }
@@ -138,19 +285,39 @@ type WallPatch {
   base_offset: Float
   top: TopConstraint
   phase: Phase
+  start_join: EndJoin
+  end_join: EndJoin
   name: String
+  base_slab: String
+}
+
+type CurtainWallTypePatch {
+  name: String
+  u_grid: CurtainGrid
+  v_grid: CurtainGrid
+  interior_mullion: Profile
+  border_mullion: Profile
+  panel: CurtainPanel
+  panel_material: String
+  mullion_material: String
+}
+
+type CurtainPanelOverridePatch {
+  curtain: String
+  u: Int
+  v: Int
+  panel: CurtainPanel
 }
 
 type CurtainWallPatch {
   storey: String
+  curtain_wall_type: String
   axis: Axis
   base_offset: Float
   top: TopConstraint
-  u_spacing: Float
-  v_spacing: Float
-  mullion: Profile
-  panel_material: String
-  mullion_material: String
+  u_grid: CurtainGrid
+  v_grid: CurtainGrid
+  phase: Phase
   name: String
 }
 
@@ -159,23 +326,37 @@ type ColumnPatch {
   column_type: String
   position: Point2
   rotation: Float
+  tilt: Slope
   base_offset: Float
   top: TopConstraint
+  phase: Phase
   name: String
 }
 
 type BeamPatch {
   storey: String
   beam_type: String
-  start: Point2
-  end: Point2
+  axis: Axis
   top_offset: Float
+  end_top_offset: Float
+  phase: Phase
   name: String
 }
 
 type SlabPatch {
   storey: String
   slab_type: String
+  boundary: [Vertex!]
+  holes: [[Vertex!]!]
+  offset: Float
+  slope: Slope
+  phase: Phase
+  name: String
+}
+
+type CeilingPatch {
+  storey: String
+  ceiling_type: String
   boundary: [Vertex!]
   holes: [[Vertex!]!]
   offset: Float
@@ -190,6 +371,7 @@ type RoofPatch {
   shape: RoofShape
   overhang: Float
   base_offset: Float
+  phase: Phase
   name: String
 }
 
@@ -203,6 +385,8 @@ type OpeningPatch {
   flip_hand: Boolean
   flip_facing: Boolean
   name: String
+  reveal_depth: Float
+  reveal_material: String
 }
 
 type StairPatch {
@@ -219,6 +403,7 @@ type StairPatch {
   tread_thickness: Float
   riser: RiserKind
   landing_depth: Float
+  phase: Phase
   name: String
 }
 
@@ -233,6 +418,25 @@ type RailingPatch {
   infill: Infill
   material: String
   base_offset: Float
+  host: RailingHost
+  phase: Phase
+  name: String
+}
+
+type RampPatch {
+  storey: String
+  path: [Vertex!]
+  width: Float
+  landing_start: Float
+  landing_end: Float
+  landing_turn: Float
+  max_slope: Float
+  thickness: Float
+  material: String
+  base_offset: Float
+  top: TopConstraint
+  railing_left: Boolean
+  railing_right: Boolean
   name: String
 }
 
@@ -242,16 +446,60 @@ type SpacePatch {
   name: String
   boundary: SpaceBoundary
   usage: String
+  phase: Phase
+  zone: String
+  floor_finish: String
+  wall_finish: String
+  ceiling_finish: String
 }
 
-type ClassificationPatch {
-  system: String
-  code: String
-  title: String
+type ZonePatch {
+  name: String
+  category: String
+  occupancy_density: Float
+}
+
+type AreaSchemePatch {
+  name: String
+  measure: AreaMeasure
+  usages: [String!]
+  zones: [String!]
+}
+
+type ViewPatch {
+  building: String
+  name: String
+  kind: ViewKind
+  storey: String
+  plane: ViewPlane
+  camera: ViewCamera
+  cut_height: Float
+  depth: Float
+  crop: ViewCrop
+  hidden: [ViewCategory!]
+  phase: Phase
+  scale: Int
+  detail: DetailLevel
+}
+
+type SchedulePatch {
+  name: String
+  category: ScheduleCategory
+  columns: [ScheduleColumn!]
+  sort: [ScheduleSort!]
+  filter: [ScheduleFilter!]
+  group: [ScheduleGroup!]
+  itemize: Boolean
+  storeys: [String!]
+  phases: [Phase!]
 }
 
 type PropertySetPatch {
   assigned: [PropertyRow!]
+}
+
+type ClassificationSetPatch {
+  assigned: [ClassificationRow!]
 }
 
 enum EntryKind {
@@ -317,6 +565,13 @@ type DoorTypeEntry {
   patch: DoorTypePatch
 }
 
+type CurtainWallTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: CurtainWallType
+  patch: CurtainWallTypePatch
+}
+
 type SiteEntry {
   id: String!
   entry: EntryKind!
@@ -357,6 +612,13 @@ type CurtainWallEntry {
   entry: EntryKind!
   created: CurtainWall
   patch: CurtainWallPatch
+}
+
+type CurtainPanelOverrideEntry {
+  id: String!
+  entry: EntryKind!
+  created: CurtainPanelOverride
+  patch: CurtainPanelOverridePatch
 }
 
 type ColumnEntry {
@@ -408,11 +670,158 @@ type RailingEntry {
   patch: RailingPatch
 }
 
+type RampEntry {
+  id: String!
+  entry: EntryKind!
+  created: Ramp
+  patch: RampPatch
+}
+
 type SpaceEntry {
   id: String!
   entry: EntryKind!
   created: Space
   patch: SpacePatch
+}
+
+type CeilingTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: CeilingType
+  patch: CeilingTypePatch
+}
+
+type CeilingEntry {
+  id: String!
+  entry: EntryKind!
+  created: Ceiling
+  patch: CeilingPatch
+}
+
+type ZoneEntry {
+  id: String!
+  entry: EntryKind!
+  created: Zone
+  patch: ZonePatch
+}
+
+type AreaSchemeEntry {
+  id: String!
+  entry: EntryKind!
+  created: AreaScheme
+  patch: AreaSchemePatch
+}
+
+type ViewEntry {
+  id: String!
+  entry: EntryKind!
+  created: View
+  patch: ViewPatch
+}
+
+type SheetEntry {
+  id: String!
+  entry: EntryKind!
+  created: Sheet
+  patch: SheetPatch
+}
+
+type ViewportEntry {
+  id: String!
+  entry: EntryKind!
+  created: Viewport
+  patch: ViewportPatch
+}
+
+type SheetRevisionEntry {
+  id: String!
+  entry: EntryKind!
+  created: SheetRevision
+  patch: SheetRevisionPatch
+}
+
+type DimensionEntry {
+  id: String!
+  entry: EntryKind!
+  created: Dimension
+  patch: DimensionPatch
+}
+
+type TagEntry {
+  id: String!
+  entry: EntryKind!
+  created: Tag
+  patch: TagPatch
+}
+
+type TextNoteEntry {
+  id: String!
+  entry: EntryKind!
+  created: TextNote
+  patch: TextNotePatch
+}
+
+type LeaderEntry {
+  id: String!
+  entry: EntryKind!
+  created: Leader
+  patch: LeaderPatch
+}
+
+type AnnotationStyleEntry {
+  id: String!
+  entry: EntryKind!
+  created: AnnotationStyle
+  patch: AnnotationStylePatch
+}
+
+type FamilyEntry {
+  id: String!
+  entry: EntryKind!
+  created: Family
+  patch: FamilyPatch
+}
+
+type FamilyParameterEntry {
+  id: String!
+  entry: EntryKind!
+  created: FamilyParameter
+  patch: FamilyParameterPatch
+}
+
+type FamilySolidEntry {
+  id: String!
+  entry: EntryKind!
+  created: FamilySolid
+  patch: FamilySolidPatch
+}
+
+type WallSweepEntry {
+  id: String!
+  entry: EntryKind!
+  created: WallSweep
+  patch: WallSweepPatch
+}
+
+type ScheduleEntry {
+  id: String!
+  entry: EntryKind!
+  created: Schedule
+  patch: SchedulePatch
+}
+
+type PropertyTemplateEntry {
+  id: String!
+  entry: EntryKind!
+  created: PropertyTemplate
+  patch: PropertyTemplatePatch
+}
+
+type ClassificationSystemEntry {
+  id: String!
+  entry: EntryKind!
+  created: ClassificationSystem
+  patch: ClassificationSystemPatch
 }
 
 type PropertySetEntry {
@@ -422,10 +831,10 @@ type PropertySetEntry {
   patch: PropertySetPatch
 }
 
-type ClassificationEntry {
+type ClassificationSetEntry {
   id: String!
   entry: EntryKind!
-  created: Classification
-  patch: ClassificationPatch
+  created: ClassificationSetRows
+  patch: ClassificationSetPatch
 }
 

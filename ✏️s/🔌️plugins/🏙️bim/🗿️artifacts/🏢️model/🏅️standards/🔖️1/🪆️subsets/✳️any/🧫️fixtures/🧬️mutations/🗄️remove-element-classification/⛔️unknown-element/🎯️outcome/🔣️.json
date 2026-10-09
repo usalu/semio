@@ -2,6 +2,6 @@
   "status": "rejected",
   "code": "mutation.target-missing",
   "path": [
-    "w-missing"
+    "w-nowhere"
   ]
 }

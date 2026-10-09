@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-family-parameter/schema.json",
+  "title": "SetFamilyParameter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "family",
+    "name"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setFamilyParameter"
+    },
+    "family": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Family",
+          "de": "Familie"
+        },
+        "ref": {
+          "kind": "family"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Parameter name",
+          "de": "Parametername"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "kind": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ParameterKind",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Kind",
+          "de": "Art"
+        },
+        "group": "value",
+        "order": 30,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "value": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Formula",
+          "de": "Formel"
+        },
+        "group": "value",
+        "order": 40,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    }
+  }
+}

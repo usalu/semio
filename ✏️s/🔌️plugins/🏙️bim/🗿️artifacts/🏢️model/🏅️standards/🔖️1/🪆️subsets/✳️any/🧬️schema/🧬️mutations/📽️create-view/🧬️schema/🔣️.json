@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-view/schema.json",
+  "title": "CreateView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "view"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createView"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "View id",
+          "de": "Ansichts-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "view": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/View",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "View",
+          "de": "Ansicht"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

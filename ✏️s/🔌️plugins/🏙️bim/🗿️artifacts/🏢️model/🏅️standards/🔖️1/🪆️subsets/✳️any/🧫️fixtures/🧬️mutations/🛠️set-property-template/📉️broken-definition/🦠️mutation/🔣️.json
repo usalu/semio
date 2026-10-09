@@ -1,0 +1,14 @@
+{
+  "mutation": "setPropertyTemplate",
+  "id": "pt-door",
+  "properties": [
+    {
+      "name": "Width",
+      "kind": "Length",
+      "required": false,
+      "allowed": [],
+      "minimum": 3,
+      "maximum": 1
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "$id":"https://semio.tech/s/draw/svg/write",
+ "title":"Owned Drawing SVG Writer",
+ "description":"The writer owns the authoritative resolved scene, emits one scalar/segment/stop/hierarchy entry or fixed byte page per turn, retains original image read leases and encoder children through publication, and closes actual owners under caller grants.",
+ "type":"object","required":["viewBox","maxOutputBytes","maxWork"],"additionalProperties":false,
+ "properties":{"viewBox":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"number"}},"maxOutputBytes":{"type":"integer","minimum":64,"maximum":67108864},"maxWork":{"type":"integer","minimum":1,"maximum":1000000000}},
+ "definitions":{"fixtures":{"type":"array","minItems":1,"items":{"type":"object","required":["source","styles","viewBox","maxOutputBytes","maxWork","expected","channelTolerance"],"additionalProperties":false,"properties":{"source":{"type":"string"},"styles":{"type":"string"},"viewBox":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"number"}},"maxOutputBytes":{"type":"integer","minimum":64,"maximum":67108864},"maxWork":{"type":"integer","minimum":1,"maximum":1000000000},"expected":{"type":"array","minItems":8,"maxItems":8,"items":{"type":"integer","minimum":0,"maximum":255}},"channelTolerance":{"type":"integer","minimum":0,"maximum":2}}}}}
+}

@@ -1,0 +1,218 @@
+{
+  "cases": [
+    {
+      "name": "color 0 depth 1",
+      "input": {
+        "payload": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACAQAAAAC1D1u3AAAAD0lEQVR4AQEEAPv/AEAAwAGEAQGIxRNmAAAAAElFTkSuQmCC",
+        "name": "Artwork.png"
+      },
+      "expected": {
+        "width": 3,
+        "height": 2,
+        "samples": [
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      }
+    },
+    {
+      "name": "color 0 depth 2",
+      "input": {
+        "payload": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACAgAAAADyryFnAAAAD0lEQVR4AQEEAPv/ADAA8AGEASH+4lsDAAAAAElFTkSuQmCC",
+        "name": "Artwork.png"
+      },
+      "expected": {
+        "width": 3,
+        "height": 2,
+        "samples": [
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      }
+    },
+    {
+      "name": "color 0 depth 4",
+      "input": {
+        "payload": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACBAAAAAB979THAAAAEUlEQVR4AQEGAPn/AA8AAP8AAk8BD7xIU2UAAAAASUVORK5CYII=",
+        "name": "Artwork.png"
+      },
+      "expected": {
+        "width": 3,
+        "height": 2,
+        "samples": [
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      }
+    },
+    {
+      "name": "color 0 depth 8",
+      "input": {
+        "payload": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAAAAAC4HznGAAAAE0lEQVR4AQEIAPf/AAD/AAD//wAK/QL+/DelTQAAAABJRU5ErkJggg==",
+        "name": "Artwork.png"
+      },
+      "expected": {
+        "width": 3,
+        "height": 2,
+        "samples": [
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      }
+    }
+  ],
+  "refused": [
+    {
+      "payload": "data:image/jpeg;base64,AAAA"
+    },
+    {
+      "payload": "data:image/png;base64,not-base64!!"
+    },
+    {
+      "payload": "not a data URL"
+    }
+  ],
+  "grants": [
+    1,
+    7,
+    4096
+  ],
+  "accept": "image/png,.png",
+  "action": "importImage"
+}

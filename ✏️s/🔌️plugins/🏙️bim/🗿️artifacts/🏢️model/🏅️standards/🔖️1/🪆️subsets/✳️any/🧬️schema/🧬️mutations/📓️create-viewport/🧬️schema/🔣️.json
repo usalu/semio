@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-viewport/schema.json",
+  "title": "CreateViewport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "viewport"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createViewport"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Viewport id",
+          "de": "Ansichtsfenster-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "viewport": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Viewport",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Viewport",
+          "de": "Ansichtsfenster"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

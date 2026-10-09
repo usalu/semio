@@ -284,6 +284,10 @@ pub struct PastePlacement {
     pub position: Option<[f64; 3]>,
 }
 
+#[path="📋️clipboard/🦀️.rs"]
+mod clipboard_envelope;
+pub use clipboard_envelope::{CLIPBOARD_TEXT_MAX_BYTES,CLIPBOARD_METADATA_MAX_WIRE_BYTES,CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES,CLIPBOARD_PASTE_MAX_WIRE_BYTES};
+
 /// 📋️ A copied document fragment: `dsl_text` is the human-readable/`text/plain`-fallback encoding
 /// (printed via the source app's own `ArtifactDsl` grammar over a fragment-shaped projection),
 /// `pack_bytes` is the lossless binary lane for same-app/compatible paste. `media_type` is the
@@ -292,6 +296,7 @@ pub struct PastePlacement {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ClipboardFragment {
     pub schema: String,
     pub media_type: MediaType,
@@ -1648,6 +1653,7 @@ pub struct UndoGroup {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum UiDirtyScope {
     #[default]
     Full,

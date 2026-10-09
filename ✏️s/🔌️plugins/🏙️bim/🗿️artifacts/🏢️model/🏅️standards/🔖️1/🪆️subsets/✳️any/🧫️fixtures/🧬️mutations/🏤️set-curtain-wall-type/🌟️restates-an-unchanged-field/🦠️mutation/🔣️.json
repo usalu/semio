@@ -1,0 +1,10 @@
+{
+  "mutation": "setCurtainWallType",
+  "id": "cwt-1",
+  "name": "Facade 1.5 x 1.5",
+  "panel": {
+    "Solid": {
+      "material": "m-wood"
+    }
+  }
+}

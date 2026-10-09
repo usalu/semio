@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/remove-run-log/schema.json",
+  "title": "RemoveRunLog",
+  "propertyNames": {
+    "enum": [
+      "operation",
+      "count"
+    ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "count"
+  ],
+  "properties": {
+    "operation": {
+      "const": "removeRunLog"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Lines",
+          "de": "Zeilen"
+        },
+        "group": "log",
+        "order": 10
+      }
+    }
+  }
+}

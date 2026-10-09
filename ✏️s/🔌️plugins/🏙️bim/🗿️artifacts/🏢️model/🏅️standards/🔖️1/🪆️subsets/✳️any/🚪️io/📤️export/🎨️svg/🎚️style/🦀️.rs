@@ -1,8 +1,9 @@
-//! 🎚️ The pen of a plan drawing: one stroke class per line style (heavy cut, medium projection, dashed hidden, fine annotation), poché fills and the text sizes, all in paper millimetres.
-//! Classes carry the meaning, the style sheet carries the look, so a CAD or a browser restyles the plan without touching the geometry.
+//! 🎚️ The pen of a view drawing (plan, ceiling plan, section, elevation): one stroke class per line style (heavy cut, medium projection, dashed hidden, fine annotation), poché fills and the text sizes, all in paper millimetres.
+//! Classes carry the meaning, the style sheet carries the look, so a CAD or a browser restyles the drawing without touching the geometry.
 //! 📎 https://www.w3.org/TR/SVG11/styling.html
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
+use crate::ViewKind;
 
 /// 🖊️ The class of a line style.
 pub fn style_class(style: PlanStyle) -> &'static str {
@@ -11,6 +12,18 @@ pub fn style_class(style: PlanStyle) -> &'static str {
         PlanStyle::Projection => "projection",
         PlanStyle::Hidden => "hidden",
         PlanStyle::Annotation => "annotation",
+    }
+}
+
+/// 🖼️ The class of a view kind.
+pub fn view_class(kind: ViewKind) -> &'static str {
+    match kind {
+        ViewKind::Plan => "plan",
+        ViewKind::CeilingPlan => "ceiling-plan",
+        ViewKind::Section => "section",
+        ViewKind::Elevation => "elevation",
+        ViewKind::Orthographic => "orthographic",
+        ViewKind::Perspective => "perspective",
     }
 }
 
@@ -51,13 +64,38 @@ pub fn kind_class(kind: PlanKind) -> &'static str {
         PlanKind::StairCutLine => "stair-cut-line",
         PlanKind::StairArrow => "stair-arrow",
         PlanKind::StairLanding => "stair-landing",
+        PlanKind::RampOutline => "ramp-outline",
+        PlanKind::RampLanding => "ramp-landing",
+        PlanKind::RampArrow => "ramp-arrow",
+        PlanKind::RampTag => "ramp-tag",
         PlanKind::RailingPath => "railing-path",
         PlanKind::SpaceOutline => "space-outline",
         PlanKind::SpaceTag => "space-tag",
         PlanKind::GridLine => "grid-line",
         PlanKind::GridBubble => "grid-bubble",
         PlanKind::GridLabel => "grid-label",
+        PlanKind::DimensionLine => "dimension-line",
+        PlanKind::DimensionExtension => "dimension-extension",
+        PlanKind::DimensionMark => "dimension-mark",
+        PlanKind::DimensionText => "dimension-text",
+        PlanKind::TagText => "tag-text",
+        PlanKind::NoteText => "note-text",
+        PlanKind::LeaderLine => "leader-line",
+        PlanKind::LeaderMark => "leader-mark",
+        PlanKind::LeaderText => "leader-text",
+        PlanKind::SectionCut => "section-cut",
+        PlanKind::Silhouette => "silhouette",
+        PlanKind::Edge => "edge",
+        PlanKind::Datum => "datum",
+        PlanKind::DatumLabel => "datum-label",
+        PlanKind::CeilingEdge => "ceiling-edge",
+        PlanKind::CeilingHole => "ceiling-hole",
     }
+}
+
+/// 🪧️ Whether a primitive belongs to the annotation layer: a dimension, tag, text note or leader.
+pub fn annotated(kind: PlanKind) -> bool {
+    kind.is_notation()
 }
 
 /// 📏️ Stroke widths in paper millimetres (ISO 128 line groups 0.5, 0.25, 0.18 and 0.13).

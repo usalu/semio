@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "preservedOwners"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "preservedOwners": {
+      "const": [
+        "command",
+        "snapshot",
+        "config",
+        "history",
+        "interactionState",
+        "interactionHover",
+        "context",
+        "operation",
+        "completion",
+        "work"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "maximumRawBytes",
+          "maximumWorkItems",
+          "expectedRefusal",
+          "expectedRawCapacity"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "maximumRawBytes": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "const": "usize-max"
+              }
+            ]
+          },
+          "maximumWorkItems": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedRefusal": {
+            "enum": [
+              null,
+              "capacity-is-zero",
+              "raw-capacity-rejected"
+            ]
+          },
+          "expectedRawCapacity": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "trimExtendWall",
+  "id": "w-arc",
+  "end": "End",
+  "target": "w-cut"
+}

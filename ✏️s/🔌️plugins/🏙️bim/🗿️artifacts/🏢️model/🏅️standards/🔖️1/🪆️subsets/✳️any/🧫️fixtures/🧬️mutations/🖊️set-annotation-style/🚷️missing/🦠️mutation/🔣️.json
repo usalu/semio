@@ -1,0 +1,5 @@
+{
+  "mutation": "setAnnotationStyle",
+  "id": "as-ghost",
+  "precision": 1
+}

@@ -1,0 +1,9 @@
+[
+  {"name":"empty selection","ids":[],"expected":[]},
+  {"name":"nested canonical IDs","ids":["text","rect"],"expected":["rect","text"]},
+  {"name":"tree row ID","ids":["drawing-play-layers.shape.rect"],"expected":["rect"]},
+  {"name":"deduplicated identity","ids":["rect","drawing-play-layers.shape.rect","rect"],"expected":["rect"]},
+  {"name":"missing-only refusal","ids":["missing"],"expected":null},
+  {"name":"atomic mixed refusal","ids":["rect","missing"],"expected":null},
+  {"name":"wrong row kind refusal","ids":["drawing-play-layers.text.rect"],"expected":null}
+]

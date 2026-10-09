@@ -1,0 +1,39 @@
+{
+  "mutation": "createFamilySolid",
+  "id": "s-rail",
+  "solid": {
+    "family": "fam-table",
+    "name": "Rail",
+    "shape": {
+      "Sweep": {
+        "profile": {
+          "Rectangle": {
+            "width": "40 mm",
+            "depth": "40 mm"
+          }
+        },
+        "path": [
+          {
+            "x": "0 m",
+            "y": "0 m"
+          },
+          {
+            "x": "width",
+            "y": "0 m"
+          },
+          {
+            "x": "width",
+            "y": "depth"
+          }
+        ]
+      }
+    },
+    "material": "\"m-brick\"",
+    "visible": "true",
+    "offset": {
+      "x": "0 m",
+      "y": "0 m",
+      "z": "0 m"
+    }
+  }
+}

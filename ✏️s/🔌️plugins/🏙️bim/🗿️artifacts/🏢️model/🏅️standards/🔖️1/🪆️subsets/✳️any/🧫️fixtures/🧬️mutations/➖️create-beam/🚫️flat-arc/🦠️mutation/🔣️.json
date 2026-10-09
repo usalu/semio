@@ -1,0 +1,24 @@
+{
+  "mutation": "createBeam",
+  "id": "b-b",
+  "beam": {
+    "storey": "st-ground",
+    "beam_type": "bt-30x50",
+    "axis": {
+      "Arc": {
+        "start": {
+          "x": 0,
+          "y": 3
+        },
+        "end": {
+          "x": 4,
+          "y": 3
+        },
+        "bulge": 0
+      }
+    },
+    "top_offset": -0.2,
+    "phase": "New",
+    "name": "Flat"
+  }
+}

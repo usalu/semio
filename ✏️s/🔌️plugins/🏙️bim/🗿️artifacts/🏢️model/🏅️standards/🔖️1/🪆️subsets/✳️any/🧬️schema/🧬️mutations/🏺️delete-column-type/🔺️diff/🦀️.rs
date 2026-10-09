@@ -1,7 +1,8 @@
-//! 🔺️ Diff constructor for `DeleteColumnType`: one deleted column type entry; refused while columns still use it.
+//! 🔺️ Diff constructor for `DeleteColumnType`: one deleted column type entry together with the properties and classifications keyed by the type; refused while columns still use it.
 
+use super::super::cascade;
 use super::DeleteColumnType;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::{Entry, KeyedDelta, ModelDiff, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteColumnType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
@@ -11,5 +12,7 @@ pub fn diff(payload: &DeleteColumnType, base: &ModelSnapshot) -> MutationOutcome
     if base.columns.values().any(|row| row.column_type == payload.id) {
         return MutationOutcome::refuse(OutcomeCode::TargetReferenced, format!("Column type \"{}\" is still used by columns.", payload.id), [payload.id.clone()]);
     }
-    MutationOutcome::new(ModelDiff::column_types(payload.id.clone(), Entry::Deleted))
+    let mut removal = cascade::data_diff(base, &payload.id);
+    removal.column_types = Some(KeyedDelta::one(payload.id.clone(), Entry::Deleted));
+    MutationOutcome::new(removal)
 }

@@ -1,0 +1,336 @@
+{
+  "placements": [
+    {
+      "name": "offset",
+      "position": null,
+      "expected": [
+        46,
+        56
+      ]
+    },
+    {
+      "name": "in-place",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        30,
+        40
+      ]
+    },
+    {
+      "name": "position",
+      "position": [
+        100,
+        -10,
+        0
+      ],
+      "expected": [
+        130,
+        30
+      ]
+    }
+  ],
+  "identityCases": [
+    {
+      "name": "cross-root Boolean",
+      "roots": [
+        "a",
+        "b",
+        "result"
+      ],
+      "selected": [
+        "result"
+      ],
+      "references": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "name": "group selection removes redundant descendants",
+      "roots": [
+        "parent"
+      ],
+      "selected": [
+        "parent"
+      ],
+      "references": []
+    }
+  ],
+  "asset": {
+    "width": 1,
+    "height": 1,
+    "samples": [
+      [
+        13,
+        27,
+        89,
+        255
+      ]
+    ]
+  },
+  "booleanPlacements": [
+    {
+      "name": "parent-world-displacement",
+      "sourceParent": [
+        2,
+        0,
+        0,
+        1,
+        100,
+        0
+      ],
+      "sourceLocal": [
+        1,
+        0,
+        0,
+        1,
+        7,
+        0
+      ],
+      "worldDisplacement": [
+        1,
+        0,
+        0,
+        1,
+        14,
+        0
+      ],
+      "destination": [
+        3,
+        0,
+        0,
+        1,
+        -31,
+        0
+      ],
+      "offset": [
+        0,
+        0
+      ],
+      "expectedLocal": [
+        1,
+        0,
+        0,
+        1,
+        4.666666666666667,
+        0
+      ]
+    }
+  ],
+  "codecCases": [
+    {
+      "name": "long-reference",
+      "identityBytes": 4096,
+      "accepted": true
+    },
+    {
+      "name": "deep-layer-tree",
+      "depth": 33,
+      "accepted": false
+    },
+    {
+      "name": "cancel-partial-hydration",
+      "steps": 32,
+      "exposedMutations": 0
+    }
+  ],
+  "dependencyCases": [
+    {
+      "name": "acyclic Boolean graph",
+      "nodes": [
+        {
+          "id": "a",
+          "kind": "shape",
+          "edges": []
+        },
+        {
+          "id": "b",
+          "kind": "shape",
+          "edges": []
+        },
+        {
+          "id": "result",
+          "kind": "boolean",
+          "edges": [
+            "a",
+            "b"
+          ]
+        }
+      ],
+      "roots": [
+        "a",
+        "b",
+        "result"
+      ],
+      "selected": [
+        "result"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "self reference",
+      "nodes": [
+        {
+          "id": "result",
+          "kind": "boolean",
+          "edges": [
+            "result"
+          ]
+        }
+      ],
+      "roots": [
+        "result"
+      ],
+      "selected": [
+        "result"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "two Boolean cycle",
+      "nodes": [
+        {
+          "id": "a",
+          "kind": "boolean",
+          "edges": [
+            "b"
+          ]
+        },
+        {
+          "id": "b",
+          "kind": "boolean",
+          "edges": [
+            "a"
+          ]
+        }
+      ],
+      "roots": [
+        "a",
+        "b"
+      ],
+      "selected": [
+        "a"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "missing Boolean operand",
+      "nodes": [
+        {
+          "id": "result",
+          "kind": "boolean",
+          "edges": [
+            "missing"
+          ]
+        }
+      ],
+      "roots": [
+        "result"
+      ],
+      "selected": [
+        "result"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "Boolean refers to physical ancestor",
+      "nodes": [
+        {
+          "id": "group",
+          "kind": "group",
+          "edges": [
+            "result"
+          ]
+        },
+        {
+          "id": "result",
+          "kind": "boolean",
+          "edges": [
+            "group"
+          ]
+        }
+      ],
+      "roots": [
+        "group"
+      ],
+      "selected": [
+        "group"
+      ],
+      "accepted": false
+    }
+  ],
+  "envelopeCases": [
+    {
+      "name": "control scalar worst escaping",
+      "scalar": "\u0000",
+      "bodyBytes": 1048576,
+      "escapedBytesPerScalar": 6
+    },
+    {
+      "name": "quote scalar",
+      "scalar": "\"",
+      "bodyBytes": 1048576,
+      "escapedBytesPerScalar": 2
+    },
+    {
+      "name": "new line scalar",
+      "scalar": "\n",
+      "bodyBytes": 1048576,
+      "escapedBytesPerScalar": 2
+    },
+    {
+      "name": "UTF8 scalar",
+      "scalar": "α",
+      "bodyBytes": 1048576,
+      "escapedBytesPerScalar": 2
+    }
+  ],
+  "metadataCases": [
+    {
+      "operation": "insert",
+      "key": "α",
+      "added": true,
+      "live": [
+        "α"
+      ]
+    },
+    {
+      "operation": "insert",
+      "key": "α",
+      "added": false,
+      "live": [
+        "α"
+      ]
+    },
+    {
+      "operation": "insert",
+      "key": "b",
+      "added": true,
+      "live": [
+        "b",
+        "α"
+      ]
+    },
+    {
+      "operation": "remove",
+      "key": "α",
+      "added": false,
+      "live": [
+        "b"
+      ]
+    },
+    {
+      "operation": "insert",
+      "key": "α",
+      "added": true,
+      "live": [
+        "b",
+        "α"
+      ]
+    }
+  ]
+}

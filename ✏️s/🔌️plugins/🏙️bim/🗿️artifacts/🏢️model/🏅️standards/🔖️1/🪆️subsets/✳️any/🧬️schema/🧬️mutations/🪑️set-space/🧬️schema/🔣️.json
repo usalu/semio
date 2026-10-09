@@ -79,6 +79,118 @@
         "group": "value",
         "order": 50
       }
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Zone (empty = none)",
+          "de": "Zone (leer = keine)"
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "floor_finish": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Floor finish (empty = none)",
+          "de": "Bodenbelag (leer = keiner)"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "wall_finish": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Wall finish (empty = none)",
+          "de": "Wandbelag (leer = keiner)"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "value",
+        "order": 80
+      }
+    },
+    "ceiling_finish": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Ceiling finish (empty = none)",
+          "de": "Deckenbelag (leer = keiner)"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "value",
+        "order": 90
+      }
     }
   }
 }

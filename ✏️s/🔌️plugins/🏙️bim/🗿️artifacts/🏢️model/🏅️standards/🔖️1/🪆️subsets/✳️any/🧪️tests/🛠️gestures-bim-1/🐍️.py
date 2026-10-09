@@ -4,7 +4,7 @@
 The subject (Rust, `semio-s-artifact-bim-model`) turns pointer events into model mutations. The numbers behind those mutations are plain
 plane geometry: the bulge of the arc through three clicks, the arc length of the foot of a pointer on a wall axis and the side it is on,
 the rectangle of two opposite corners, a ring made counter-clockwise, the centre offset of an opening kept inside its host, the storey
-height a dragged top line sets and the turn between two directions. This file recomputes each of them from the SAME committed cases with
+height a dragged top line sets and the turn between two directions, the point a typed line names (keyboard entry: absolute, relative, polar, bare length) and the point the arrow-key cursor stands on after a run of fine and coarse steps. This file recomputes each of them from the SAME committed cases with
 libraries that have never seen this repository (`numpy` for the circumcircle and angles, `shapely` 2 / GEOS for projection, boxes,
 orientation and areas) and either writes the expectations (`write`) or audits the committed ones (`check`). The Rust subject replays the
 cases through its tools and compares against the same JSON, so subject and oracle meet on one fixture.
@@ -20,6 +20,7 @@ Standalone use (no test host needed):
 
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -90,6 +91,43 @@ def rotation(pivot, reference, target):
     return (b - a + math.pi) % (2 * math.pi) - math.pi
 
 
+def typed_point(entry, anchor, toward):
+    """⌨️ The point a typed line names: `x, y` absolute, `@dx, dy` and `length<angle` from the anchor (the origin without one), a bare length towards `toward` (+X without one); numpy does the trigonometry."""
+    origin = numpy.array(anchor if anchor is not None else [0.0, 0.0], dtype=float)
+    text = entry.strip()
+    relative = text.startswith("@")
+    body = text[1:].strip() if relative else text
+    if "<" in body:
+        length, degrees = (float(part.strip().rstrip("°").rstrip("m")) for part in body.split("<", 1))
+        radians = numpy.radians(degrees)
+        point = origin + length * numpy.array([numpy.cos(radians), numpy.sin(radians)])
+    else:
+        parts = re.split(r"[,;]", body) if re.search(r"[,;]", body) else body.split()
+        if len(parts) == 2:
+            offset = numpy.array([float(part) for part in parts])
+            point = origin + offset if relative else offset
+        else:
+            length = float(body.rstrip("m"))
+            direction = numpy.array(toward, dtype=float) - origin if toward is not None else numpy.array([1.0, 0.0])
+            if numpy.linalg.norm(direction) <= 1e-6:
+                direction = numpy.array([1.0, 0.0])
+            point = origin + length * direction / numpy.linalg.norm(direction)
+    return [float(round(value, 9)) + 0.0 for value in point]
+
+
+CURSOR_STEPS = {"left": (-1.0, 0.0), "right": (1.0, 0.0), "up": (0.0, 1.0), "down": (0.0, -1.0)}
+"""⌨️ The arrow keys of the keyboard cursor as unit directions: a fine step is 0.1 m, a `_far` step 1 m."""
+
+
+def cursor_point(start, steps):
+    """⌨️ Where the keyboard cursor stands after the arrow keys `steps` from `start`: numpy sums the steps (0.1 m, or 1 m for `<direction>_far`) onto the start."""
+    point = numpy.array(start, dtype=float)
+    for step in steps:
+        name, _, far = step.partition("_")
+        point = point + (1.0 if far == "far" else 0.1) * numpy.array(CURSOR_STEPS[name])
+    return [float(round(value, 9)) + 0.0 for value in point]
+
+
 def expectations(cases):
     """🧮️ The committed cases with every expectation recomputed."""
     out = dict(cases)
@@ -102,6 +140,8 @@ def expectations(cases):
     out["windows"] = [{**c, "offset": window_offset(c["length"], c["width"], c["foot"])} for c in cases["windows"]]
     out["heights"] = [{**c, "height": storey_height(c["elevation"], c["pointer"])} for c in cases["heights"]]
     out["rotations"] = [{**c, "angle": rotation(c["pivot"], c["reference"], c["target"])} for c in cases["rotations"]]
+    out["typed"] = [{**c, "point": typed_point(c["entry"], c.get("anchor"), c.get("toward"))} for c in cases["typed"]]
+    out["cursor"] = [{**c, "point": cursor_point(c["start"], c["steps"])} for c in cases["cursor"]]
     return out
 
 

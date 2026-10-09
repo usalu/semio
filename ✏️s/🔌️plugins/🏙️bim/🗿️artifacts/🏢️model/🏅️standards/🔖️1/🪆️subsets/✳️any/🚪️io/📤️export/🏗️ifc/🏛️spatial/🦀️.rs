@@ -1,7 +1,7 @@
 //! 🏛️ The spatial structure: `IfcProject` with units and context, `IfcSite` with its compound-angle position, `IfcBuilding`, `IfcBuildingStorey`
 //! and the `IfcRelAggregates` chain between them.
 
-use super::writer::{derived, en, int, list, opt_text, real, refs, rf, typed, unset, V};
+use super::writer::{en, int, list, opt_text, real, refs, rf, typed, unset, V};
 use super::{BuildingRef, Export, Quantity, StoreyRef};
 
 /// 🧭️ `IfcCompoundPlaneAngleMeasure` of an angle in degrees: sign on every component, millionths of a second last.
@@ -13,16 +13,10 @@ pub fn compound_angle(degrees: f64) -> V {
     list(vec![int(sign * whole), int(sign * minutes), int(sign * (rest / 1_000_000)), int(sign * (rest % 1_000_000))])
 }
 
-fn units(x: &mut Export<'_>) -> u64 {
-    let rows = [("LENGTHUNIT", "METRE"), ("AREAUNIT", "SQUARE_METRE"), ("VOLUMEUNIT", "CUBIC_METRE"), ("PLANEANGLEUNIT", "RADIAN")];
-    let ids: Vec<u64> = rows.iter().map(|(unit, name)| x.ifc.add("IFCSIUNIT", vec![derived(), en(unit), unset(), en(name)])).collect();
-    x.ifc.add("IFCUNITASSIGNMENT", vec![refs(&ids)])
-}
-
 /// 🏛️ Writes project, sites, buildings and storeys.
 pub fn emit(x: &mut Export<'_>) {
     let model = x.model;
-    let units = units(x);
+    let units = x.ifc.units();
     let phases = model.project.phase_names.join(";");
     let project = x.ifc.rooted("IFCPROJECT", "project", &model.project.name, &model.project.description, vec![unset(), unset(), opt_text(&phases), refs(&[x.ifc.context]), rf(units)]);
     x.links.elements.insert(":project".into(), project);

@@ -9,6 +9,10 @@ fn demo() -> ModelSnapshot {
     parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses")
 }
 
+fn inferred(snapshot: &ModelSnapshot) -> ModelInference {
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, snapshot, Clone::clone)
+}
+
 fn picker(config: &config::BimViewerPlanWindowConfig, locale: Locale) -> serde_json::Value {
     let labels = bim_viewer_labels(&ViewModel::new(locale, Terminology::Native));
     let rows = serde_json::to_value(measures(&demo(), config, labels, viewer_action)).expect("measures serialise");
@@ -26,10 +30,13 @@ fn the_window_is_a_canvas2d_surface_with_stable_ids() {
 
 #[test]
 fn an_empty_model_and_every_storey_of_the_demo_render() {
-    assert!(render(&ModelSnapshot::default(), &config::BimViewerPlanWindowConfig::default(), &[]).is_ok());
+    let empty = ModelSnapshot::default();
+    assert!(render(&empty, &inferred(&empty), &config::BimViewerPlanWindowConfig::default(), &[]).is_ok());
+    let model = demo();
+    let inference = inferred(&model);
     for storey in ["", "st-ground", "st-first", "gone"] {
         let config = config::BimViewerPlanWindowConfig { storey: storey.into(), ..config::BimViewerPlanWindowConfig::default() };
-        assert!(render(&demo(), &config, &[]).is_ok(), "storey {storey:?}");
+        assert!(render(&model, &inference, &config, &[]).is_ok(), "storey {storey:?}");
     }
 }
 

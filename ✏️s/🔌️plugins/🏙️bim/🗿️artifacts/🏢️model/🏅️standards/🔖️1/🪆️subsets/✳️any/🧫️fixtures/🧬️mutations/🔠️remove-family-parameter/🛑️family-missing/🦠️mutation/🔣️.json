@@ -1,0 +1,5 @@
+{
+  "mutation": "removeFamilyParameter",
+  "family": "fam-ghost",
+  "name": "width"
+}

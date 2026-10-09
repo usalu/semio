@@ -228,7 +228,7 @@ impl ArtifactEditor for StepCc2Editor {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -244,7 +244,7 @@ impl ArtifactEditor for StepCc2Editor {
             STEP_CC2_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
             Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, stepCc2Editor_retained_reduce, stepCc2Editor_retained_extent)),
-        )?;
+        );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

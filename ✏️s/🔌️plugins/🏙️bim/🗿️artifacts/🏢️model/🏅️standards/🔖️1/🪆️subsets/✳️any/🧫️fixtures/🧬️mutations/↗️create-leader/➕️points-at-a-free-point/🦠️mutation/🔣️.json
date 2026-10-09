@@ -1,0 +1,21 @@
+{
+  "mutation": "createLeader",
+  "id": "lead-2",
+  "leader": {
+    "storey": "st-ground",
+    "anchor": {
+      "Point": {
+        "point": {
+          "x": 4,
+          "y": 3
+        }
+      }
+    },
+    "offset": {
+      "x": 1,
+      "y": 1
+    },
+    "text": "Shaft",
+    "style": "as-plan"
+  }
+}

@@ -17,7 +17,7 @@
       "license": "BSD-3-Clause",
       "testOnly": true,
       "homepage": "https://shapely.readthedocs.io",
-      "rationale": "Shapely 2 over GEOS is the reference planar geometry library. A wall axis becomes a real LineString (an arc is sampled into 4096 chords) and shapely, not this repository, measures the join-trimmed footprint polygons, the face lengths and the join invariants of the committed wall-layout table: every straight corner is re-derived from GEOS offset_curve carriers, joined footprints must not overlap, a cross overlaps by exactly its committed area, a two-wall node covers the area of LineString.buffer(join_style=mitre) and a butt equals its band minus the body of the wall it butts against. The same oracle proves the parametric law as a metamorphic property. Storey elevations are a running sum that no third-party engine owns, so they are pinned by math.fsum against the subject's f64 sum, by the parametric law, and by the kernel z-extents of the sibling ifcopenshell case. The solids case re-derives the volume and bounds of every planar column, beam, slab, roof, stair and railing from the authored snapshot alone with Polygon.area, affinity, mitred buffer, convex_hull, LineString.interpolate and a numpy linear program audited by shapely.ops.polylabel. The floor plan (poche, column and mullion areas and outline lengths on real polygons) and the diagnostics (clash overlap areas by polygon intersection, missing ids, level arithmetic) are audited the same way.",
+      "rationale": "Shapely 2 over GEOS is the reference planar geometry library. A wall axis becomes a real LineString (an arc is sampled into 4096 chords) and shapely, not this repository, measures the join-trimmed footprint polygons, the face lengths and the join invariants of the committed wall-layout table: every straight corner is re-derived from GEOS offset_curve carriers, joined footprints must not overlap, a cross overlaps by exactly its committed area, a two-wall node covers the area of LineString.buffer(join_style=mitre) and a butt equals its band minus the body of the wall it butts against. The same oracle proves the parametric law as a metamorphic property. Storey elevations are a running sum that no third-party engine owns, so they are pinned by math.fsum against the subject's f64 sum, by the parametric law, and by the kernel z-extents of the sibling ifcopenshell case. The solids case re-derives the volume and bounds of every planar column, beam, slab, roof, stair and railing from the authored snapshot alone with Polygon.area, affinity, mitred buffer, convex_hull, LineString.interpolate and a numpy linear program audited by shapely.ops.polylabel. The floor plan (poche, column and mullion areas and outline lengths on real polygons) and the diagnostics (clash overlap areas by polygon intersection, missing ids, level arithmetic) are audited the same way. The views (`view-linework`) are audited the same way: the plane of a section is a LineString whose intersection with the footprint polygons of walls and rotated columns gives the section cut areas, the slab of a view is a polygon intersection, the projection outline of an elevation or section is the unary_union of the extents of the connected pieces along the plane, and the datum lines are clipped to the crop box. The annotations (dimensions, tags, notes, leaders) are audited with offset_curve wall faces, interpolate opening centres and the GEOS distance of two parallel faces, plus the metamorphic laws that lengthening a wall lengthens its end-to-end dimension by the same distance and that moving a column leaves its tag text unchanged.",
       "kind": "third-party-library",
       "engine": {
         "family": "geos",
@@ -146,6 +146,46 @@
       },
       "productionReachable": false,
       "networkDuringExecution": false
+    },
+    {
+      "id": "bim-1-jsonpatch-diff",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "jsonpatch",
+      "version": "1.33",
+      "packages": [
+        {
+          "package": "deepdiff",
+          "version": "9.1.0",
+          "license": "MIT",
+          "role": "structurally unrelated second differ, corroborating whether the document moved at all",
+          "homepage": "https://zepworks.com/deepdiff/current/"
+        },
+        {
+          "package": "jsonschema",
+          "version": "4.26.0",
+          "license": "MIT",
+          "role": "draft-07 validation of every committed mutation payload against its own leaf schema, and rejection of an undeclared member",
+          "homepage": "https://python-jsonschema.readthedocs.io/"
+        }
+      ],
+      "capabilities": [
+        "bim-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "engine": {
+        "family": "jsonpatch-python",
+        "implementation": "python-json-patch RFC 6902 implementation",
+        "version": "1.33"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://python-json-patch.readthedocs.io/",
+      "rationale": "jsonpatch answers the DIFF, corroborated by deepdiff and jsonschema, and never applies a mutation itself. For every committed quintet (before, mutation, after, typed diff, outcome) it derives an RFC 6902 patch from (before, after) with make_patch, applies it to reproduce the after-snapshot exactly, and holds the typed ModelDiff to it: the records the operations reach are exactly the records the diff declares, classified Created, Deleted or Patched, a Patched entry carries exactly the changed fields at their new values (property sets via the assigned patch), a rejected or no-op row yields no operation. The inverse patch restores the before-snapshot and patch plus inverse sum to the identity. deepdiff, a structurally unrelated algorithm, must agree with jsonpatch about whether the document moved at all. jsonschema validates the payload against the leaf schema and must reject the same payload with an undeclared member. WHAT IT DOES NOT ADJUDICATE: whether a change was the right one, only that the committed diff, payload and snapshots describe each other."
     }
   ],
   "noOracleDecisions": [],
@@ -604,6 +644,100 @@
           ]
         },
         {
+          "mutationId": "set-element-phase",
+          "sourceMutationDirectoryName": "🕰️set-element-phase",
+          "mutationDirectoryName": "🕰️set-element-phase",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "demolishes-a-wall",
+              "directoryName": "✅️demolishes-a-wall"
+            },
+            {
+              "id": "phases-a-slab",
+              "directoryName": "⬜️phases-a-slab"
+            },
+            {
+              "id": "carries-no-phase",
+              "directoryName": "🌍️carries-no-phase"
+            },
+            {
+              "id": "keeps-a-demolished-wall-existing",
+              "directoryName": "🏚️keeps-a-demolished-wall-existing"
+            },
+            {
+              "id": "phases-a-room",
+              "directoryName": "🛋️phases-a-room"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧲️unchanged"
+            },
+            {
+              "id": "opening-takes-the-phase-of-its-host",
+              "directoryName": "🪟️opening-takes-the-phase-of-its-host"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-element-storey",
+          "sourceMutationDirectoryName": "🎢️set-element-storey",
+          "mutationDirectoryName": "🎢️set-element-storey",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "moves-a-wall-and-its-openings-follow",
+              "directoryName": "✅️moves-a-wall-and-its-openings-follow"
+            },
+            {
+              "id": "moves-a-slab",
+              "directoryName": "⬜️moves-a-slab"
+            },
+            {
+              "id": "not-storey-placed",
+              "directoryName": "🌍️not-storey-placed"
+            },
+            {
+              "id": "other-building",
+              "directoryName": "🏘️other-building"
+            },
+            {
+              "id": "moves-a-column",
+              "directoryName": "🏛️moves-a-column"
+            },
+            {
+              "id": "top-no-longer-above-the-base",
+              "directoryName": "🔝️top-no-longer-above-the-base"
+            },
+            {
+              "id": "opening-would-break",
+              "directoryName": "🚪️opening-would-break"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "🚫️storey-missing"
+            },
+            {
+              "id": "moves-a-room",
+              "directoryName": "🛋️moves-a-room"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧲️unchanged"
+            },
+            {
+              "id": "opening-follows-its-host",
+              "directoryName": "🪟️opening-follows-its-host"
+            }
+          ]
+        },
+        {
           "mutationId": "set-storey-level",
           "sourceMutationDirectoryName": "🔢️set-storey-level",
           "mutationDirectoryName": "🔢️set-storey-level",
@@ -638,6 +772,10 @@
             {
               "id": "cascades-everything-on-it",
               "directoryName": "🏗️cascades-everything-on-it"
+            },
+            {
+              "id": "cascades-the-schedules",
+              "directoryName": "📋️cascades-the-schedules"
             },
             {
               "id": "constrains-another-wall",
@@ -1349,8 +1487,16 @@
               "directoryName": "🚫️used-by-a-layer"
             },
             {
+              "id": "used-by-a-space-finish",
+              "directoryName": "🛋️used-by-a-space-finish"
+            },
+            {
               "id": "used-by-a-railing",
               "directoryName": "🛤️used-by-a-railing"
+            },
+            {
+              "id": "used-by-a-ramp",
+              "directoryName": "🧭️used-by-a-ramp"
             }
           ]
         },
@@ -1926,6 +2072,30 @@
             {
               "id": "rail-profile-degenerate",
               "directoryName": "🧲️rail-profile-degenerate"
+            },
+            {
+              "id": "adds-a-railing-hosted-by-a-ramp",
+              "directoryName": "🧳️adds-a-railing-hosted-by-a-ramp"
+            },
+            {
+              "id": "adds-a-railing-hosted-by-a-stair",
+              "directoryName": "🧴️adds-a-railing-hosted-by-a-stair"
+            },
+            {
+              "id": "host-missing",
+              "directoryName": "🧶️host-missing"
+            },
+            {
+              "id": "hosted-railing-with-a-path",
+              "directoryName": "🧷️hosted-railing-with-a-path"
+            },
+            {
+              "id": "negative-host-inset",
+              "directoryName": "🧸️negative-host-inset"
+            },
+            {
+              "id": "slab-edge-missing",
+              "directoryName": "🧺️slab-edge-missing"
             }
           ]
         },
@@ -2000,6 +2170,195 @@
             {
               "id": "material-missing",
               "directoryName": "🧱️material-missing"
+            },
+            {
+              "id": "hosts-on-a-stair",
+              "directoryName": "🧲️hosts-on-a-stair"
+            },
+            {
+              "id": "hosts-on-a-ramp",
+              "directoryName": "🧳️hosts-on-a-ramp"
+            },
+            {
+              "id": "hosts-on-a-slab-edge",
+              "directoryName": "🧴️hosts-on-a-slab-edge"
+            },
+            {
+              "id": "releases-the-host",
+              "directoryName": "🧶️releases-the-host"
+            },
+            {
+              "id": "moves-to-another-host",
+              "directoryName": "🧷️moves-to-another-host"
+            },
+            {
+              "id": "host-without-clearing-the-path",
+              "directoryName": "🧸️host-without-clearing-the-path"
+            },
+            {
+              "id": "releasing-without-a-path",
+              "directoryName": "🧺️releasing-without-a-path"
+            },
+            {
+              "id": "host-missing",
+              "directoryName": "🧻️host-missing"
+            },
+            {
+              "id": "host-is-no-stair-ramp-or-slab",
+              "directoryName": "🧼️host-is-no-stair-ramp-or-slab"
+            },
+            {
+              "id": "slab-edge-missing",
+              "directoryName": "🪐️slab-edge-missing"
+            },
+            {
+              "id": "slab-edge-curved",
+              "directoryName": "🪒️slab-edge-curved"
+            },
+            {
+              "id": "stair-host-with-an-edge-index",
+              "directoryName": "🪓️stair-host-with-an-edge-index"
+            },
+            {
+              "id": "negative-host-inset",
+              "directoryName": "🪔️negative-host-inset"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-ramp",
+          "sourceMutationDirectoryName": "🛝️create-ramp",
+          "mutationDirectoryName": "🛝️create-ramp",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-a-straight-ramp",
+              "directoryName": "✅️adds-a-straight-ramp"
+            },
+            {
+              "id": "adds-a-curved-ramp-to-the-first-storey",
+              "directoryName": "🌀️adds-a-curved-ramp-to-the-first-storey"
+            },
+            {
+              "id": "non-positive-thickness",
+              "directoryName": "💥️non-positive-thickness"
+            },
+            {
+              "id": "non-positive-slope-limit",
+              "directoryName": "📉️non-positive-slope-limit"
+            },
+            {
+              "id": "path-too-short",
+              "directoryName": "📏️path-too-short"
+            },
+            {
+              "id": "adds-a-bent-ramp-with-railings",
+              "directoryName": "📐️adds-a-bent-ramp-with-railings"
+            },
+            {
+              "id": "top-storey-missing",
+              "directoryName": "🔴️top-storey-missing"
+            },
+            {
+              "id": "negative-landing",
+              "directoryName": "🚧️negative-landing"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "non-positive-width",
+              "directoryName": "🛑️non-positive-width"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "🧱️material-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-ramp",
+          "sourceMutationDirectoryName": "🛹️set-ramp",
+          "mutationDirectoryName": "🛹️set-ramp",
+          "scenarios": [
+            {
+              "id": "steepens-beyond-the-limit",
+              "directoryName": "⛰️steepens-beyond-the-limit"
+            },
+            {
+              "id": "reshapes",
+              "directoryName": "✅️reshapes"
+            },
+            {
+              "id": "renames-only",
+              "directoryName": "🏷️renames-only"
+            },
+            {
+              "id": "nothing-to-change",
+              "directoryName": "💤️nothing-to-change"
+            },
+            {
+              "id": "non-positive-slope-limit",
+              "directoryName": "📉️non-positive-slope-limit"
+            },
+            {
+              "id": "path-too-short",
+              "directoryName": "📏️path-too-short"
+            },
+            {
+              "id": "top-storey-missing",
+              "directoryName": "🔴️top-storey-missing"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "non-positive-width",
+              "directoryName": "🛑️non-positive-width"
+            },
+            {
+              "id": "carries-railings-on-both-sides",
+              "directoryName": "🛤️carries-railings-on-both-sides"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "🧱️material-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-ramp",
+          "sourceMutationDirectoryName": "🛼️delete-ramp",
+          "mutationDirectoryName": "🛼️delete-ramp",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "takes-its-hosted-railing-with-it",
+              "directoryName": "🛤️takes-its-hosted-railing-with-it"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
             }
           ]
         },
@@ -2015,6 +2374,14 @@
             {
               "id": "adds-a-bounded-space",
               "directoryName": "✅️adds-a-bounded-space"
+            },
+            {
+              "id": "adds-a-finished-space",
+              "directoryName": "🎨️adds-a-finished-space"
+            },
+            {
+              "id": "zone-missing",
+              "directoryName": "🏘️zone-missing"
             },
             {
               "id": "outline-degenerate",
@@ -2039,6 +2406,10 @@
             {
               "id": "id-taken-by-another-kind",
               "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "finish-material-missing",
+              "directoryName": "🧱️finish-material-missing"
             }
           ]
         },
@@ -2075,12 +2446,24 @@
               "directoryName": "✅️renames-and-retypes"
             },
             {
+              "id": "finishes-the-room",
+              "directoryName": "🎨️finishes-the-room"
+            },
+            {
+              "id": "assigns-a-zone",
+              "directoryName": "🏘️assigns-a-zone"
+            },
+            {
               "id": "nothing-to-change",
               "directoryName": "💤️nothing-to-change"
             },
             {
               "id": "outline-degenerate",
               "directoryName": "💥️outline-degenerate"
+            },
+            {
+              "id": "zone-already-set",
+              "directoryName": "📌️zone-already-set"
             },
             {
               "id": "redraws-the-boundary",
@@ -2091,12 +2474,202 @@
               "directoryName": "🔢️renumbers"
             },
             {
+              "id": "zone-missing",
+              "directoryName": "🗺️zone-missing"
+            },
+            {
               "id": "number-taken",
               "directoryName": "🚫️number-taken"
             },
             {
+              "id": "clears-the-zone",
+              "directoryName": "🚮️clears-the-zone"
+            },
+            {
+              "id": "moves-to-another-zone",
+              "directoryName": "🚶️moves-to-another-zone"
+            },
+            {
               "id": "restates-an-unchanged-field",
               "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "finish-material-missing",
+              "directoryName": "🧱️finish-material-missing"
+            },
+            {
+              "id": "clears-a-finish",
+              "directoryName": "🧼️clears-a-finish"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-zone",
+          "sourceMutationDirectoryName": "🗾️create-zone",
+          "mutationDirectoryName": "🗾️create-zone",
+          "scenarios": [
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "negative-density",
+              "directoryName": "📉️negative-density"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-zone",
+          "sourceMutationDirectoryName": "🪄️set-zone",
+          "mutationDirectoryName": "🪄️set-zone",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "renames-and-recategorises",
+              "directoryName": "✅️renames-and-recategorises"
+            },
+            {
+              "id": "sets-the-density",
+              "directoryName": "👥️sets-the-density"
+            },
+            {
+              "id": "nothing-to-change",
+              "directoryName": "💤️nothing-to-change"
+            },
+            {
+              "id": "negative-density",
+              "directoryName": "📉️negative-density"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-zone",
+          "sourceMutationDirectoryName": "🧯️delete-zone",
+          "mutationDirectoryName": "🧯️delete-zone",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "clears-the-memberships",
+              "directoryName": "✅️clears-the-memberships"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🗂️removes-its-data"
+            },
+            {
+              "id": "counted-by-an-area-scheme",
+              "directoryName": "🗃️counted-by-an-area-scheme"
+            },
+            {
+              "id": "empty-zone",
+              "directoryName": "🛖️empty-zone"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-area-scheme",
+          "sourceMutationDirectoryName": "🗃️create-area-scheme",
+          "mutationDirectoryName": "🗃️create-area-scheme",
+          "scenarios": [
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "adds-a-restricted-scheme",
+              "directoryName": "🎯️adds-a-restricted-scheme"
+            },
+            {
+              "id": "zone-missing",
+              "directoryName": "🏘️zone-missing"
+            },
+            {
+              "id": "blank-usage",
+              "directoryName": "📝️blank-usage"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-area-scheme",
+          "sourceMutationDirectoryName": "🗳️set-area-scheme",
+          "mutationDirectoryName": "🗳️set-area-scheme",
+          "scenarios": [
+            {
+              "id": "counts-everything",
+              "directoryName": "♾️counts-everything"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "retargets-the-rule",
+              "directoryName": "✅️retargets-the-rule"
+            },
+            {
+              "id": "zone-missing",
+              "directoryName": "🏘️zone-missing"
+            },
+            {
+              "id": "nothing-to-change",
+              "directoryName": "💤️nothing-to-change"
+            },
+            {
+              "id": "changes-the-measure",
+              "directoryName": "📐️changes-the-measure"
+            },
+            {
+              "id": "blank-usage",
+              "directoryName": "📝️blank-usage"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-area-scheme",
+          "sourceMutationDirectoryName": "🧻️delete-area-scheme",
+          "mutationDirectoryName": "🧻️delete-area-scheme",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🗂️removes-its-data"
             }
           ]
         },
@@ -2167,6 +2740,10 @@
             {
               "id": "removes-its-data",
               "directoryName": "🧭️removes-its-data"
+            },
+            {
+              "id": "takes-its-hosted-railing-with-it",
+              "directoryName": "🧮️takes-its-hosted-railing-with-it"
             }
           ]
         },
@@ -2245,6 +2822,744 @@
             {
               "id": "slope-too-steep",
               "directoryName": "🛑️slope-too-steep"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-ceiling-type",
+          "sourceMutationDirectoryName": "🎑️create-ceiling-type",
+          "mutationDirectoryName": "🎑️create-ceiling-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "empty-layers",
+              "directoryName": "❌️empty-layers"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "thin-layer",
+              "directoryName": "🛑️thin-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-ceiling-type",
+          "sourceMutationDirectoryName": "🎏️delete-ceiling-type",
+          "mutationDirectoryName": "🎏️delete-ceiling-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "used-by-ceilings",
+              "directoryName": "🚫️used-by-ceilings"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-ceiling-type",
+          "sourceMutationDirectoryName": "🎐️set-ceiling-type",
+          "mutationDirectoryName": "🎐️set-ceiling-type",
+          "scenarios": [
+            {
+              "id": "empty-layers",
+              "directoryName": "⛔️empty-layers"
+            },
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "both-fields",
+              "directoryName": "✨️both-fields"
+            },
+            {
+              "id": "thin-layer",
+              "directoryName": "❌️thin-layer"
+            },
+            {
+              "id": "restacks",
+              "directoryName": "➕️restacks"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "👍️restates-an-unchanged-field"
+            },
+            {
+              "id": "empty-patch",
+              "directoryName": "🚫️empty-patch"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "🛑️material-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-ceiling",
+          "sourceMutationDirectoryName": "🏞️create-ceiling",
+          "mutationDirectoryName": "🏞️create-ceiling",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-a-ceiling-with-a-hole",
+              "directoryName": "✅️adds-a-ceiling-with-a-hole"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "❌️type-missing"
+            },
+            {
+              "id": "adds-a-sloped-curved-ceiling",
+              "directoryName": "➕️adds-a-sloped-curved-ceiling"
+            },
+            {
+              "id": "clockwise",
+              "directoryName": "📛️clockwise"
+            },
+            {
+              "id": "self-intersecting",
+              "directoryName": "🙅️self-intersecting"
+            },
+            {
+              "id": "hole-outside",
+              "directoryName": "🚧️hole-outside"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "zero-area",
+              "directoryName": "🚷️zero-area"
+            },
+            {
+              "id": "too-few-vertices",
+              "directoryName": "🛑️too-few-vertices"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-dimension",
+          "sourceMutationDirectoryName": "↔️create-dimension",
+          "mutationDirectoryName": "↔️create-dimension",
+          "scenarios": [
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "⛔️id-taken-by-another-kind"
+            },
+            {
+              "id": "dimensions-a-wall",
+              "directoryName": "✅️dimensions-a-wall"
+            },
+            {
+              "id": "thickness-between-faces",
+              "directoryName": "✨️thickness-between-faces"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "❌️storey-missing"
+            },
+            {
+              "id": "chains-an-opening-centre",
+              "directoryName": "➕️chains-an-opening-centre"
+            },
+            {
+              "id": "locks-a-free-span",
+              "directoryName": "👍️locks-a-free-span"
+            },
+            {
+              "id": "lock-not-positive",
+              "directoryName": "📛️lock-not-positive"
+            },
+            {
+              "id": "one-anchor",
+              "directoryName": "🙅️one-anchor"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "anchor-missing",
+              "directoryName": "🚷️anchor-missing"
+            },
+            {
+              "id": "style-missing",
+              "directoryName": "🛑️style-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-dimension",
+          "sourceMutationDirectoryName": "📎️delete-dimension",
+          "mutationDirectoryName": "📎️delete-dimension",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-dimension",
+          "sourceMutationDirectoryName": "📌️set-dimension",
+          "mutationDirectoryName": "📌️set-dimension",
+          "scenarios": [
+            {
+              "id": "names-no-field",
+              "directoryName": "⛔️names-no-field"
+            },
+            {
+              "id": "moves-the-dimension-line",
+              "directoryName": "✅️moves-the-dimension-line"
+            },
+            {
+              "id": "locks-the-value",
+              "directoryName": "✨️locks-the-value"
+            },
+            {
+              "id": "style-missing",
+              "directoryName": "❌️style-missing"
+            },
+            {
+              "id": "re-anchors",
+              "directoryName": "➕️re-anchors"
+            },
+            {
+              "id": "removes-the-lock",
+              "directoryName": "👍️removes-the-lock"
+            },
+            {
+              "id": "missing",
+              "directoryName": "📛️missing"
+            },
+            {
+              "id": "lock-not-positive",
+              "directoryName": "🙅️lock-not-positive"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "one-anchor",
+              "directoryName": "🚷️one-anchor"
+            },
+            {
+              "id": "anchor-missing",
+              "directoryName": "🛑️anchor-missing"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧲️restates-an-unchanged-field"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-tag",
+          "sourceMutationDirectoryName": "🔖️create-tag",
+          "mutationDirectoryName": "🔖️create-tag",
+          "scenarios": [
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "⛔️id-taken-by-another-kind"
+            },
+            {
+              "id": "tags-a-wall",
+              "directoryName": "✅️tags-a-wall"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "❌️storey-missing"
+            },
+            {
+              "id": "tags-a-window-size",
+              "directoryName": "➕️tags-a-window-size"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "style-missing",
+              "directoryName": "🚷️style-missing"
+            },
+            {
+              "id": "element-missing",
+              "directoryName": "🛑️element-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-tag",
+          "sourceMutationDirectoryName": "🎫️delete-tag",
+          "mutationDirectoryName": "🎫️delete-tag",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-tag",
+          "sourceMutationDirectoryName": "🏴️set-tag",
+          "mutationDirectoryName": "🏴️set-tag",
+          "scenarios": [
+            {
+              "id": "names-no-field",
+              "directoryName": "⛔️names-no-field"
+            },
+            {
+              "id": "reads-the-type",
+              "directoryName": "✅️reads-the-type"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "✨️restates-an-unchanged-field"
+            },
+            {
+              "id": "element-missing",
+              "directoryName": "❌️element-missing"
+            },
+            {
+              "id": "retargets-and-moves",
+              "directoryName": "➕️retargets-and-moves"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "style-missing",
+              "directoryName": "🛑️style-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-text-note",
+          "sourceMutationDirectoryName": "🗒️create-text-note",
+          "mutationDirectoryName": "🗒️create-text-note",
+          "scenarios": [
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "⛔️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "❌️storey-missing"
+            },
+            {
+              "id": "adds-rotated",
+              "directoryName": "➕️adds-rotated"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "blank",
+              "directoryName": "🚷️blank"
+            },
+            {
+              "id": "style-missing",
+              "directoryName": "🛑️style-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-text-note",
+          "sourceMutationDirectoryName": "📃️delete-text-note",
+          "mutationDirectoryName": "📃️delete-text-note",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-text-note",
+          "sourceMutationDirectoryName": "📝️set-text-note",
+          "mutationDirectoryName": "📝️set-text-note",
+          "scenarios": [
+            {
+              "id": "names-no-field",
+              "directoryName": "⛔️names-no-field"
+            },
+            {
+              "id": "rewrites",
+              "directoryName": "✅️rewrites"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "✨️restates-an-unchanged-field"
+            },
+            {
+              "id": "blank",
+              "directoryName": "❌️blank"
+            },
+            {
+              "id": "moves-and-turns",
+              "directoryName": "➕️moves-and-turns"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "style-missing",
+              "directoryName": "🛑️style-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-leader",
+          "sourceMutationDirectoryName": "↗️create-leader",
+          "mutationDirectoryName": "↗️create-leader",
+          "scenarios": [
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "⛔️id-taken-by-another-kind"
+            },
+            {
+              "id": "points-at-a-wall-face",
+              "directoryName": "✅️points-at-a-wall-face"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "❌️storey-missing"
+            },
+            {
+              "id": "points-at-a-free-point",
+              "directoryName": "➕️points-at-a-free-point"
+            },
+            {
+              "id": "blank",
+              "directoryName": "🙅️blank"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "style-missing",
+              "directoryName": "🚷️style-missing"
+            },
+            {
+              "id": "anchor-missing",
+              "directoryName": "🛑️anchor-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-leader",
+          "sourceMutationDirectoryName": "↪️delete-leader",
+          "mutationDirectoryName": "↪️delete-leader",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-leader",
+          "sourceMutationDirectoryName": "⤴️set-leader",
+          "mutationDirectoryName": "⤴️set-leader",
+          "scenarios": [
+            {
+              "id": "names-no-field",
+              "directoryName": "⛔️names-no-field"
+            },
+            {
+              "id": "rewrites",
+              "directoryName": "✅️rewrites"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "✨️restates-an-unchanged-field"
+            },
+            {
+              "id": "anchor-missing",
+              "directoryName": "❌️anchor-missing"
+            },
+            {
+              "id": "re-anchors",
+              "directoryName": "➕️re-anchors"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "blank",
+              "directoryName": "🛑️blank"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-annotation-style",
+          "sourceMutationDirectoryName": "🎨️create-annotation-style",
+          "mutationDirectoryName": "🎨️create-annotation-style",
+          "scenarios": [
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "⛔️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "blank-name",
+              "directoryName": "❌️blank-name"
+            },
+            {
+              "id": "adds-a-millimetre-style",
+              "directoryName": "➕️adds-a-millimetre-style"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "too-many-decimals",
+              "directoryName": "🚷️too-many-decimals"
+            },
+            {
+              "id": "text-height-not-positive",
+              "directoryName": "🛑️text-height-not-positive"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-annotation-style",
+          "sourceMutationDirectoryName": "🧺️delete-annotation-style",
+          "mutationDirectoryName": "🧺️delete-annotation-style",
+          "scenarios": [
+            {
+              "id": "used-by-tags",
+              "directoryName": "⛔️used-by-tags"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "used-by-text-notes",
+              "directoryName": "❌️used-by-text-notes"
+            },
+            {
+              "id": "used-by-dimensions",
+              "directoryName": "🚫️used-by-dimensions"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "used-by-leaders",
+              "directoryName": "🛑️used-by-leaders"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-annotation-style",
+          "sourceMutationDirectoryName": "🖊️set-annotation-style",
+          "mutationDirectoryName": "🖊️set-annotation-style",
+          "scenarios": [
+            {
+              "id": "names-no-field",
+              "directoryName": "⛔️names-no-field"
+            },
+            {
+              "id": "scales-the-text",
+              "directoryName": "✅️scales-the-text"
+            },
+            {
+              "id": "renames",
+              "directoryName": "✨️renames"
+            },
+            {
+              "id": "text-height-not-positive",
+              "directoryName": "❌️text-height-not-positive"
+            },
+            {
+              "id": "prints-centimetres",
+              "directoryName": "➕️prints-centimetres"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "👍️restates-an-unchanged-field"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "too-many-decimals",
+              "directoryName": "🛑️too-many-decimals"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-ceiling",
+          "sourceMutationDirectoryName": "🌆️delete-ceiling",
+          "mutationDirectoryName": "🌆️delete-ceiling",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "➕️removes-its-data"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-ceiling-boundary",
+          "sourceMutationDirectoryName": "🌇️set-ceiling-boundary",
+          "mutationDirectoryName": "🌇️set-ceiling-boundary",
+          "scenarios": [
+            {
+              "id": "hole-outside",
+              "directoryName": "⛔️hole-outside"
+            },
+            {
+              "id": "reshapes",
+              "directoryName": "✅️reshapes"
+            },
+            {
+              "id": "overlapping-holes",
+              "directoryName": "❌️overlapping-holes"
+            },
+            {
+              "id": "drops-the-hole",
+              "directoryName": "➕️drops-the-hole"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "self-intersecting",
+              "directoryName": "🛑️self-intersecting"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-ceiling",
+          "sourceMutationDirectoryName": "🌄️set-ceiling",
+          "mutationDirectoryName": "🌄️set-ceiling",
+          "scenarios": [
+            {
+              "id": "names-no-field",
+              "directoryName": "⛔️names-no-field"
+            },
+            {
+              "id": "retypes-and-drops",
+              "directoryName": "✅️retypes-and-drops"
+            },
+            {
+              "id": "clears-the-slope",
+              "directoryName": "✨️clears-the-slope"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "❌️type-missing"
+            },
+            {
+              "id": "slopes",
+              "directoryName": "➕️slopes"
+            },
+            {
+              "id": "renames",
+              "directoryName": "👍️renames"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "slope-too-steep",
+              "directoryName": "🛑️slope-too-steep"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧲️restates-an-unchanged-field"
             }
           ]
         },
@@ -2631,6 +3946,10 @@
             {
               "id": "removes-its-data",
               "directoryName": "🧭️removes-its-data"
+            },
+            {
+              "id": "takes-its-hosted-railing-with-it",
+              "directoryName": "🧮️takes-its-hosted-railing-with-it"
             }
           ]
         },
@@ -2713,6 +4032,10 @@
             {
               "id": "zero-vector",
               "directoryName": "🛑️zero-vector"
+            },
+            {
+              "id": "moves-a-ramp",
+              "directoryName": "🧭️moves-a-ramp"
             }
           ]
         },
@@ -2748,6 +4071,10 @@
             {
               "id": "zero-angle",
               "directoryName": "🛑️zero-angle"
+            },
+            {
+              "id": "turns-a-ramp",
+              "directoryName": "🧭️turns-a-ramp"
             }
           ]
         },
@@ -2931,6 +4258,715 @@
               "directoryName": "🚫️not-classified"
             }
           ]
+        },
+        {
+          "mutationId": "create-schedule",
+          "sourceMutationDirectoryName": "📊️create-schedule",
+          "mutationDirectoryName": "📊️create-schedule",
+          "scenarios": [
+            {
+              "id": "repeated-column",
+              "directoryName": "♻️repeated-column"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "🏢️storey-missing"
+            },
+            {
+              "id": "blank-name",
+              "directoryName": "📛️blank-name"
+            },
+            {
+              "id": "filter-without-a-value",
+              "directoryName": "🔎️filter-without-a-value"
+            },
+            {
+              "id": "no-columns",
+              "directoryName": "🕳️no-columns"
+            },
+            {
+              "id": "adds-a-scoped-door-schedule",
+              "directoryName": "🚪️adds-a-scoped-door-schedule"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds-a-material-take-off",
+              "directoryName": "🧱️adds-a-material-take-off"
+            },
+            {
+              "id": "field-not-offered",
+              "directoryName": "🧲️field-not-offered"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-schedule",
+          "sourceMutationDirectoryName": "📈️set-schedule",
+          "mutationDirectoryName": "📈️set-schedule",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "🏘️storey-missing"
+            },
+            {
+              "id": "scopes-the-storeys-and-phases",
+              "directoryName": "🏢️scopes-the-storeys-and-phases"
+            },
+            {
+              "id": "nothing-to-change",
+              "directoryName": "💤️nothing-to-change"
+            },
+            {
+              "id": "replaces-the-columns",
+              "directoryName": "📐️replaces-the-columns"
+            },
+            {
+              "id": "blank-name",
+              "directoryName": "📛️blank-name"
+            },
+            {
+              "id": "sorts-and-filters",
+              "directoryName": "🔎️sorts-and-filters"
+            },
+            {
+              "id": "no-columns",
+              "directoryName": "🕳️no-columns"
+            },
+            {
+              "id": "groups-and-collapses",
+              "directoryName": "🗂️groups-and-collapses"
+            },
+            {
+              "id": "changes-the-category",
+              "directoryName": "🚪️changes-the-category"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "category-drops-a-field",
+              "directoryName": "🧲️category-drops-a-field"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-schedule",
+          "sourceMutationDirectoryName": "📉️delete-schedule",
+          "mutationDirectoryName": "📉️delete-schedule",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-view",
+          "sourceMutationDirectoryName": "📽️create-view",
+          "mutationDirectoryName": "📽️create-view",
+          "scenarios": [
+            {
+              "id": "adds-a-plan",
+              "directoryName": "✅️adds-a-plan"
+            },
+            {
+              "id": "cut-height-on-a-section",
+              "directoryName": "🧞️cut-height-on-a-section"
+            },
+            {
+              "id": "empty-crop",
+              "directoryName": "🧟️empty-crop"
+            },
+            {
+              "id": "scale-zero",
+              "directoryName": "🧠️scale-zero"
+            },
+            {
+              "id": "unordered-hidden",
+              "directoryName": "🧡️unordered-hidden"
+            },
+            {
+              "id": "depth-zero",
+              "directoryName": "🧢️depth-zero"
+            },
+            {
+              "id": "name-taken",
+              "directoryName": "🧣️name-taken"
+            },
+            {
+              "id": "blank-name",
+              "directoryName": "🧤️blank-name"
+            },
+            {
+              "id": "camera-without-camera",
+              "directoryName": "🧥️camera-without-camera"
+            },
+            {
+              "id": "plane-without-length",
+              "directoryName": "🧦️plane-without-length"
+            },
+            {
+              "id": "section-without-plane",
+              "directoryName": "🧧️section-without-plane"
+            },
+            {
+              "id": "plan-without-storey",
+              "directoryName": "🧨️plan-without-storey"
+            },
+            {
+              "id": "storey-of-another-building",
+              "directoryName": "🧩️storey-of-another-building"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "🧭️storey-missing"
+            },
+            {
+              "id": "building-missing",
+              "directoryName": "🧮️building-missing"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧯️id-taken-by-another-kind"
+            },
+            {
+              "id": "duplicate-id",
+              "directoryName": "🧰️duplicate-id"
+            },
+            {
+              "id": "adds-a-configured-plan",
+              "directoryName": "🧱️adds-a-configured-plan"
+            },
+            {
+              "id": "adds-a-ceiling-plan",
+              "directoryName": "🧲️adds-a-ceiling-plan"
+            },
+            {
+              "id": "adds-a-camera",
+              "directoryName": "🧳️adds-a-camera"
+            },
+            {
+              "id": "adds-an-elevation",
+              "directoryName": "🧴️adds-an-elevation"
+            },
+            {
+              "id": "adds-a-section",
+              "directoryName": "🧵️adds-a-section"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-view",
+          "sourceMutationDirectoryName": "🔭️set-view",
+          "mutationDirectoryName": "🔭️set-view",
+          "scenarios": [
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "empty-crop",
+              "directoryName": "🧚️empty-crop"
+            },
+            {
+              "id": "duplicate-hidden",
+              "directoryName": "🧛️duplicate-hidden"
+            },
+            {
+              "id": "scale-too-large",
+              "directoryName": "🧜️scale-too-large"
+            },
+            {
+              "id": "depth-zero",
+              "directoryName": "🧝️depth-zero"
+            },
+            {
+              "id": "storey-of-another-building",
+              "directoryName": "🧞️storey-of-another-building"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "🧟️storey-missing"
+            },
+            {
+              "id": "storey-on-a-section",
+              "directoryName": "🧠️storey-on-a-section"
+            },
+            {
+              "id": "camera-on-a-section",
+              "directoryName": "🧡️camera-on-a-section"
+            },
+            {
+              "id": "plane-on-a-plan",
+              "directoryName": "🧢️plane-on-a-plan"
+            },
+            {
+              "id": "name-taken",
+              "directoryName": "🧣️name-taken"
+            },
+            {
+              "id": "empty-patch",
+              "directoryName": "🧤️empty-patch"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧥️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🧦️missing"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧧️restates-an-unchanged-field"
+            },
+            {
+              "id": "orbits",
+              "directoryName": "🧨️orbits"
+            },
+            {
+              "id": "rescales",
+              "directoryName": "🧩️rescales"
+            },
+            {
+              "id": "clears-the-phase",
+              "directoryName": "🧭️clears-the-phase"
+            },
+            {
+              "id": "filters-by-phase",
+              "directoryName": "🧮️filters-by-phase"
+            },
+            {
+              "id": "hides-categories",
+              "directoryName": "🧯️hides-categories"
+            },
+            {
+              "id": "clears-the-crop",
+              "directoryName": "🧰️clears-the-crop"
+            },
+            {
+              "id": "crops",
+              "directoryName": "🧱️crops"
+            },
+            {
+              "id": "moves-the-plane",
+              "directoryName": "🧲️moves-the-plane"
+            },
+            {
+              "id": "clears-the-cut",
+              "directoryName": "🧳️clears-the-cut"
+            },
+            {
+              "id": "cuts-lower",
+              "directoryName": "🧴️cuts-lower"
+            },
+            {
+              "id": "retargets-the-plan",
+              "directoryName": "🧵️retargets-the-plan"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-view",
+          "sourceMutationDirectoryName": "📺️delete-view",
+          "mutationDirectoryName": "📺️delete-view",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧲️removes-its-data"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🧵️missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-wall-end-join",
+          "sourceMutationDirectoryName": "🧷️set-wall-end-join",
+          "mutationDirectoryName": "🧷️set-wall-end-join",
+          "scenarios": [
+            {
+              "id": "butts-the-start",
+              "directoryName": "✅️butts-the-start"
+            },
+            {
+              "id": "miters-the-end",
+              "directoryName": "🌀️miters-the-end"
+            },
+            {
+              "id": "frees-the-end",
+              "directoryName": "🌟️frees-the-end"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "back-to-automatic",
+              "directoryName": "🚛️back-to-automatic"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧲️unchanged"
+            }
+          ]
+        },
+        {
+          "mutationId": "copy-elements",
+          "sourceMutationDirectoryName": "👯️copy-elements",
+          "mutationDirectoryName": "👯️copy-elements",
+          "scenarios": [
+            {
+              "id": "empty-selection",
+              "directoryName": "⛔️empty-selection"
+            },
+            {
+              "id": "copies-a-wall-with-its-openings",
+              "directoryName": "✅️copies-a-wall-with-its-openings"
+            },
+            {
+              "id": "copies-every-placed-kind",
+              "directoryName": "🚛️copies-every-placed-kind"
+            },
+            {
+              "id": "opening-alone",
+              "directoryName": "🚧️opening-alone"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            },
+            {
+              "id": "blank-prefix",
+              "directoryName": "🛑️blank-prefix"
+            },
+            {
+              "id": "minted-id-taken",
+              "directoryName": "🧩️minted-id-taken"
+            },
+            {
+              "id": "copies-in-place",
+              "directoryName": "🧲️copies-in-place"
+            },
+            {
+              "id": "storey-has-no-placement",
+              "directoryName": "🪝️storey-has-no-placement"
+            }
+          ]
+        },
+        {
+          "mutationId": "mirror-elements",
+          "sourceMutationDirectoryName": "🔀️mirror-elements",
+          "mutationDirectoryName": "🔀️mirror-elements",
+          "scenarios": [
+            {
+              "id": "empty-selection",
+              "directoryName": "⛔️empty-selection"
+            },
+            {
+              "id": "mirrors-walls-and-their-openings",
+              "directoryName": "✅️mirrors-walls-and-their-openings"
+            },
+            {
+              "id": "mirrors-an-arc-wall-and-a-curtain-wall",
+              "directoryName": "🌀️mirrors-an-arc-wall-and-a-curtain-wall"
+            },
+            {
+              "id": "mirrors-a-turning-stair",
+              "directoryName": "🌟️mirrors-a-turning-stair"
+            },
+            {
+              "id": "mirrors-as-copies",
+              "directoryName": "🔗️mirrors-as-copies"
+            },
+            {
+              "id": "mirrors-every-placed-kind",
+              "directoryName": "🚛️mirrors-every-placed-kind"
+            },
+            {
+              "id": "fixed-hand-stair",
+              "directoryName": "🚧️fixed-hand-stair"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            },
+            {
+              "id": "line-without-length",
+              "directoryName": "🛑️line-without-length"
+            },
+            {
+              "id": "already-symmetric",
+              "directoryName": "🧲️already-symmetric"
+            }
+          ]
+        },
+        {
+          "mutationId": "array-elements",
+          "sourceMutationDirectoryName": "💠️array-elements",
+          "mutationDirectoryName": "💠️array-elements",
+          "scenarios": [
+            {
+              "id": "spacing-without-length",
+              "directoryName": "⛔️spacing-without-length"
+            },
+            {
+              "id": "arrays-a-column-in-a-row",
+              "directoryName": "✅️arrays-a-column-in-a-row"
+            },
+            {
+              "id": "arrays-a-column-around-a-centre",
+              "directoryName": "🌀️arrays-a-column-around-a-centre"
+            },
+            {
+              "id": "arrays-a-wall-with-its-openings",
+              "directoryName": "🔗️arrays-a-wall-with-its-openings"
+            },
+            {
+              "id": "too-many-copies",
+              "directoryName": "🚧️too-many-copies"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            },
+            {
+              "id": "no-copies",
+              "directoryName": "🛑️no-copies"
+            },
+            {
+              "id": "minted-id-taken",
+              "directoryName": "🧩️minted-id-taken"
+            }
+          ]
+        },
+        {
+          "mutationId": "align-elements",
+          "sourceMutationDirectoryName": "📋️align-elements",
+          "mutationDirectoryName": "📋️align-elements",
+          "scenarios": [
+            {
+              "id": "empty-selection",
+              "directoryName": "⛔️empty-selection"
+            },
+            {
+              "id": "aligns-walls-to-a-line",
+              "directoryName": "✅️aligns-walls-to-a-line"
+            },
+            {
+              "id": "aligns-an-arc-by-its-extremes",
+              "directoryName": "🌀️aligns-an-arc-by-its-extremes"
+            },
+            {
+              "id": "aligns-centres",
+              "directoryName": "🌟️aligns-centres"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            },
+            {
+              "id": "already-aligned",
+              "directoryName": "🧲️already-aligned"
+            },
+            {
+              "id": "openings-follow-their-host",
+              "directoryName": "🪝️openings-follow-their-host"
+            }
+          ]
+        },
+        {
+          "mutationId": "offset-wall",
+          "sourceMutationDirectoryName": "🧶️offset-wall",
+          "mutationDirectoryName": "🧶️offset-wall",
+          "scenarios": [
+            {
+              "id": "offsets-to-the-left",
+              "directoryName": "✅️offsets-to-the-left"
+            },
+            {
+              "id": "offsets-an-arc",
+              "directoryName": "🌀️offsets-an-arc"
+            },
+            {
+              "id": "offsets-to-the-right",
+              "directoryName": "🌟️offsets-to-the-right"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "arc-collapses",
+              "directoryName": "🚧️arc-collapses"
+            },
+            {
+              "id": "zero-distance",
+              "directoryName": "🛑️zero-distance"
+            },
+            {
+              "id": "new-id-taken",
+              "directoryName": "🧩️new-id-taken"
+            }
+          ]
+        },
+        {
+          "mutationId": "trim-extend-wall",
+          "sourceMutationDirectoryName": "🔪️trim-extend-wall",
+          "mutationDirectoryName": "🔪️trim-extend-wall",
+          "scenarios": [
+            {
+              "id": "opening-no-longer-fits",
+              "directoryName": "⛔️opening-no-longer-fits"
+            },
+            {
+              "id": "trims-to-the-target",
+              "directoryName": "✅️trims-to-the-target"
+            },
+            {
+              "id": "extends-an-arc",
+              "directoryName": "🌀️extends-an-arc"
+            },
+            {
+              "id": "extends-to-the-target",
+              "directoryName": "🌟️extends-to-the-target"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "never-meets",
+              "directoryName": "🚧️never-meets"
+            },
+            {
+              "id": "target-missing",
+              "directoryName": "🚫️target-missing"
+            },
+            {
+              "id": "behind-the-other-end",
+              "directoryName": "🛑️behind-the-other-end"
+            },
+            {
+              "id": "its-own-target",
+              "directoryName": "🧩️its-own-target"
+            },
+            {
+              "id": "already-there",
+              "directoryName": "🧲️already-there"
+            },
+            {
+              "id": "keeps-openings-in-place",
+              "directoryName": "🪝️keeps-openings-in-place"
+            }
+          ]
+        },
+        {
+          "mutationId": "split-slab",
+          "sourceMutationDirectoryName": "🍰️split-slab",
+          "mutationDirectoryName": "🍰️split-slab",
+          "scenarios": [
+            {
+              "id": "cuts-more-than-twice",
+              "directoryName": "⛔️cuts-more-than-twice"
+            },
+            {
+              "id": "splits-a-rectangle",
+              "directoryName": "✅️splits-a-rectangle"
+            },
+            {
+              "id": "splits-an-arc-outline",
+              "directoryName": "🌀️splits-an-arc-outline"
+            },
+            {
+              "id": "splits-through-two-corners",
+              "directoryName": "🌟️splits-through-two-corners"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "crosses-a-hole",
+              "directoryName": "🚧️crosses-a-hole"
+            },
+            {
+              "id": "misses-the-slab",
+              "directoryName": "🚫️misses-the-slab"
+            },
+            {
+              "id": "line-without-length",
+              "directoryName": "🛑️line-without-length"
+            },
+            {
+              "id": "new-id-taken",
+              "directoryName": "🧩️new-id-taken"
+            },
+            {
+              "id": "sends-a-hole-with-its-piece",
+              "directoryName": "🧱️sends-a-hole-with-its-piece"
+            }
+          ]
+        },
+        {
+          "mutationId": "split-beam",
+          "sourceMutationDirectoryName": "🥖️split-beam",
+          "mutationDirectoryName": "🥖️split-beam",
+          "scenarios": [
+            {
+              "id": "beyond-the-end",
+              "directoryName": "⛔️beyond-the-end"
+            },
+            {
+              "id": "splits-a-beam",
+              "directoryName": "✅️splits-a-beam"
+            },
+            {
+              "id": "splits-a-slanted-beam",
+              "directoryName": "🌟️splits-a-slanted-beam"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "at-the-start",
+              "directoryName": "🚫️at-the-start"
+            },
+            {
+              "id": "new-id-taken",
+              "directoryName": "🧩️new-id-taken"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -2951,6 +4987,8 @@
         "rename-storey",
         "set-storey-height",
         "set-storey-cut-height",
+        "set-element-phase",
+        "set-element-storey",
         "set-storey-level",
         "delete-storey",
         "create-wall",
@@ -2995,13 +5033,44 @@
         "create-railing",
         "delete-railing",
         "set-railing",
+        "create-ramp",
+        "set-ramp",
+        "delete-ramp",
         "create-space",
         "delete-space",
         "set-space",
+        "create-zone",
+        "set-zone",
+        "delete-zone",
+        "create-area-scheme",
+        "set-area-scheme",
+        "delete-area-scheme",
         "create-slab",
         "delete-slab",
         "set-slab-boundary",
         "set-slab",
+        "create-ceiling-type",
+        "delete-ceiling-type",
+        "set-ceiling-type",
+        "create-ceiling",
+        "create-dimension",
+        "delete-dimension",
+        "set-dimension",
+        "create-tag",
+        "delete-tag",
+        "set-tag",
+        "create-text-note",
+        "delete-text-note",
+        "set-text-note",
+        "create-leader",
+        "delete-leader",
+        "set-leader",
+        "create-annotation-style",
+        "delete-annotation-style",
+        "set-annotation-style",
+        "delete-ceiling",
+        "set-ceiling-boundary",
+        "set-ceiling",
         "create-roof",
         "delete-roof",
         "set-roof-footprint",
@@ -3021,7 +5090,22 @@
         "set-element-property",
         "remove-element-property",
         "set-element-classification",
-        "remove-element-classification"
+        "remove-element-classification",
+        "create-schedule",
+        "set-schedule",
+        "delete-schedule",
+        "create-view",
+        "set-view",
+        "delete-view",
+        "set-wall-end-join",
+        "copy-elements",
+        "mirror-elements",
+        "array-elements",
+        "align-elements",
+        "offset-wall",
+        "trim-extend-wall",
+        "split-slab",
+        "split-beam"
       ]
     }
   ],
@@ -3366,6 +5450,46 @@
             "operation": "set-storey-cut-height",
             "bridgeVersion": 1,
             "variant": "SetStoreyCutHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-element-phase",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-element-phase",
+            "bridgeVersion": 1,
+            "variant": "SetElementPhase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-element-storey",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-element-storey",
+            "bridgeVersion": 1,
+            "variant": "SetElementStorey"
           },
           "oracleRequirements": [
             {
@@ -4255,6 +6379,66 @@
           ]
         },
         {
+          "id": "create-ramp",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-ramp",
+            "bridgeVersion": 1,
+            "variant": "CreateRamp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-ramp",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-ramp",
+            "bridgeVersion": 1,
+            "variant": "SetRamp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-ramp",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-ramp",
+            "bridgeVersion": 1,
+            "variant": "DeleteRamp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
           "id": "create-space",
           "capability": "bim-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -4306,6 +6490,126 @@
             "operation": "set-space",
             "bridgeVersion": 1,
             "variant": "SetSpace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-zone",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-zone",
+            "bridgeVersion": 1,
+            "variant": "CreateZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-zone",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-zone",
+            "bridgeVersion": 1,
+            "variant": "SetZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-zone",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-zone",
+            "bridgeVersion": 1,
+            "variant": "DeleteZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-area-scheme",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-area-scheme",
+            "bridgeVersion": 1,
+            "variant": "CreateAreaScheme"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-area-scheme",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-area-scheme",
+            "bridgeVersion": 1,
+            "variant": "SetAreaScheme"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-area-scheme",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-area-scheme",
+            "bridgeVersion": 1,
+            "variant": "DeleteAreaScheme"
           },
           "oracleRequirements": [
             {
@@ -4386,6 +6690,446 @@
             "operation": "set-slab",
             "bridgeVersion": 1,
             "variant": "SetSlab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-ceiling-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-ceiling-type",
+            "bridgeVersion": 1,
+            "variant": "CreateCeilingType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-ceiling-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-ceiling-type",
+            "bridgeVersion": 1,
+            "variant": "DeleteCeilingType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-ceiling-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-ceiling-type",
+            "bridgeVersion": 1,
+            "variant": "SetCeilingType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-ceiling",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-ceiling",
+            "bridgeVersion": 1,
+            "variant": "CreateCeiling"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-dimension",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-dimension",
+            "bridgeVersion": 1,
+            "variant": "CreateDimension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-dimension",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-dimension",
+            "bridgeVersion": 1,
+            "variant": "DeleteDimension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-dimension",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-dimension",
+            "bridgeVersion": 1,
+            "variant": "SetDimension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-tag",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-tag",
+            "bridgeVersion": 1,
+            "variant": "CreateTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-tag",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-tag",
+            "bridgeVersion": 1,
+            "variant": "DeleteTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-tag",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-tag",
+            "bridgeVersion": 1,
+            "variant": "SetTag"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-text-note",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-text-note",
+            "bridgeVersion": 1,
+            "variant": "CreateTextNote"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-text-note",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-text-note",
+            "bridgeVersion": 1,
+            "variant": "DeleteTextNote"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-text-note",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-text-note",
+            "bridgeVersion": 1,
+            "variant": "SetTextNote"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-leader",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-leader",
+            "bridgeVersion": 1,
+            "variant": "CreateLeader"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-leader",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-leader",
+            "bridgeVersion": 1,
+            "variant": "DeleteLeader"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-leader",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-leader",
+            "bridgeVersion": 1,
+            "variant": "SetLeader"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-annotation-style",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-annotation-style",
+            "bridgeVersion": 1,
+            "variant": "CreateAnnotationStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-annotation-style",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-annotation-style",
+            "bridgeVersion": 1,
+            "variant": "DeleteAnnotationStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-annotation-style",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-annotation-style",
+            "bridgeVersion": 1,
+            "variant": "SetAnnotationStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-ceiling",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-ceiling",
+            "bridgeVersion": 1,
+            "variant": "DeleteCeiling"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-ceiling-boundary",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-ceiling-boundary",
+            "bridgeVersion": 1,
+            "variant": "SetCeilingBoundary"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-ceiling",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-ceiling",
+            "bridgeVersion": 1,
+            "variant": "SetCeiling"
           },
           "oracleRequirements": [
             {
@@ -4786,6 +7530,306 @@
             "operation": "remove-element-classification",
             "bridgeVersion": 1,
             "variant": "RemoveElementClassification"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-schedule",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-schedule",
+            "bridgeVersion": 1,
+            "variant": "CreateSchedule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-schedule",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-schedule",
+            "bridgeVersion": 1,
+            "variant": "SetSchedule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-schedule",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-schedule",
+            "bridgeVersion": 1,
+            "variant": "DeleteSchedule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-view",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-view",
+            "bridgeVersion": 1,
+            "variant": "CreateView"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-view",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-view",
+            "bridgeVersion": 1,
+            "variant": "SetView"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-view",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-view",
+            "bridgeVersion": 1,
+            "variant": "DeleteView"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-wall-end-join",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-wall-end-join",
+            "bridgeVersion": 1,
+            "variant": "SetWallEndJoin"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "copy-elements",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "copy-elements",
+            "bridgeVersion": 1,
+            "variant": "CopyElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "mirror-elements",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "mirror-elements",
+            "bridgeVersion": 1,
+            "variant": "MirrorElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "array-elements",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "array-elements",
+            "bridgeVersion": 1,
+            "variant": "ArrayElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "align-elements",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "align-elements",
+            "bridgeVersion": 1,
+            "variant": "AlignElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "offset-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "offset-wall",
+            "bridgeVersion": 1,
+            "variant": "OffsetWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "trim-extend-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "trim-extend-wall",
+            "bridgeVersion": 1,
+            "variant": "TrimExtendWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "split-slab",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "split-slab",
+            "bridgeVersion": 1,
+            "variant": "SplitSlab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "split-beam",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "split-beam",
+            "bridgeVersion": 1,
+            "variant": "SplitBeam"
           },
           "oracleRequirements": [
             {

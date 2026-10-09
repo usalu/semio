@@ -173,9 +173,10 @@ fn draw_curtain(sheet: &mut Sheet, cx: &Context<'_>, id: &str, curtain: &Curtain
     let axis = seg(&curtain.axis);
     sheet.segment(id, PlanKind::CurtainAxis, outline_style(cutting), &axis);
     if cutting == Cutting::Cut {
-        let (width, depth) = extents_of(&curtain.mullion);
-        for k in 0..=layout.u_panels.min(10_000) {
-            let s = f64::from(k) * layout.panel_width;
+        let Some(kind) = cx.snapshot.curtain_wall_types.get(&curtain.curtain_wall_type) else { return };
+        let last = layout.u_edges.len().saturating_sub(1);
+        for (k, s) in layout.u_edges.iter().copied().enumerate().take(10_001) {
+            let (width, depth) = extents_of(if k == 0 || k == last { &kind.border_mullion } else { &kind.interior_mullion });
             let (centre, tangent) = (axis.point_at_length(s), axis.tangent_at_length(s));
             let (half, normal) = (Point::new(tangent.x * width / 2.0, tangent.y * width / 2.0), Point::new(-tangent.y * depth / 2.0, tangent.x * depth / 2.0));
             let corner = |a: f64, b: f64| Corner::corner(centre.x + a * half.x + b * normal.x, centre.y + a * half.y + b * normal.y);

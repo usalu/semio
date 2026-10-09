@@ -856,7 +856,7 @@ impl ArtifactEditor for BitmapEditor {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
                 command: *request.command,
                 snapshot: request.snapshot,
@@ -872,7 +872,7 @@ impl ArtifactEditor for BitmapEditor {
             BITMAP_RETAINED_RAW_BYTES,
             BITMAP_RETAINED_WORK_ITEMS,
             Box::new(BitmapCommandWork { tool_id, consumed: false }),
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

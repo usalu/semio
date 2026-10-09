@@ -1,0 +1,6 @@
+{
+  "mutation": "setCurtainWall",
+  "id": "cw-1",
+  "name": "South facade",
+  "base_offset": 0
+}

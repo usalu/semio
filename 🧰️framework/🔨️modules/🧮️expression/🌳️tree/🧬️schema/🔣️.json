@@ -1,0 +1,639 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/expression/tree.json",
+ "title": "Expr",
+ "description": "The closed typed expression tree of semio-framework-expression; literals are non-negative, lengths in the unit they were authored in.",
+ "definitions": {
+  "LengthUnit": {
+   "enum": [
+    "mm",
+    "cm",
+    "m",
+    "km",
+    "in",
+    "ft"
+   ]
+  },
+  "AngleUnit": {
+   "enum": [
+    "deg",
+    "rad"
+   ]
+  },
+  "AreaUnit": {
+   "enum": [
+    "mm2",
+    "cm2",
+    "m2"
+   ]
+  },
+  "VolumeUnit": {
+   "enum": [
+    "mm3",
+    "cm3",
+    "m3",
+    "l"
+   ]
+  },
+  "UnaryOperator": {
+   "enum": [
+    "negate",
+    "not"
+   ]
+  },
+  "BinaryOperator": {
+   "enum": [
+    "add",
+    "subtract",
+    "multiply",
+    "divide",
+    "power",
+    "min",
+    "max"
+   ]
+  },
+  "CompareOperator": {
+   "enum": [
+    "equal",
+    "not-equal",
+    "less",
+    "less-equal",
+    "greater",
+    "greater-equal"
+   ]
+  },
+  "Function": {
+   "enum": [
+    "sqrt",
+    "abs",
+    "round",
+    "floor",
+    "ceil",
+    "sin",
+    "cos",
+    "tan",
+    "atan2"
+   ]
+  },
+  "Number": {
+   "type": "object",
+   "required": [
+    "op",
+    "value"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "number"
+    },
+    "value": {
+     "type": "number",
+     "minimum": 0
+    }
+   }
+  },
+  "Length": {
+   "type": "object",
+   "required": [
+    "op",
+    "value",
+    "unit"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "length"
+    },
+    "value": {
+     "type": "number",
+     "minimum": 0
+    },
+    "unit": {
+     "$ref": "#/definitions/LengthUnit"
+    }
+   }
+  },
+  "Angle": {
+   "type": "object",
+   "required": [
+    "op",
+    "value",
+    "unit"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "angle"
+    },
+    "value": {
+     "type": "number",
+     "minimum": 0
+    },
+    "unit": {
+     "$ref": "#/definitions/AngleUnit"
+    }
+   }
+  },
+  "Area": {
+   "type": "object",
+   "required": [
+    "op",
+    "value",
+    "unit"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "area"
+    },
+    "value": {
+     "type": "number",
+     "minimum": 0
+    },
+    "unit": {
+     "$ref": "#/definitions/AreaUnit"
+    }
+   }
+  },
+  "Volume": {
+   "type": "object",
+   "required": [
+    "op",
+    "value",
+    "unit"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "volume"
+    },
+    "value": {
+     "type": "number",
+     "minimum": 0
+    },
+    "unit": {
+     "$ref": "#/definitions/VolumeUnit"
+    }
+   }
+  },
+  "Bool": {
+   "type": "object",
+   "required": [
+    "op",
+    "value"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "bool"
+    },
+    "value": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Text": {
+   "type": "object",
+   "required": [
+    "op",
+    "value"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "text"
+    },
+    "value": {
+     "type": "string"
+    }
+   }
+  },
+  "Param": {
+   "type": "object",
+   "required": [
+    "op",
+    "name"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "param"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "Unary": {
+   "type": "object",
+   "required": [
+    "op",
+    "operator",
+    "operand"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "unary"
+    },
+    "operator": {
+     "$ref": "#/definitions/UnaryOperator"
+    },
+    "operand": {
+     "$ref": "#/definitions/Expr"
+    }
+   }
+  },
+  "Binary": {
+   "type": "object",
+   "required": [
+    "op",
+    "operator",
+    "left",
+    "right"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "binary"
+    },
+    "operator": {
+     "$ref": "#/definitions/BinaryOperator"
+    },
+    "left": {
+     "$ref": "#/definitions/Expr"
+    },
+    "right": {
+     "$ref": "#/definitions/Expr"
+    }
+   }
+  },
+  "Compare": {
+   "type": "object",
+   "required": [
+    "op",
+    "operator",
+    "left",
+    "right"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "compare"
+    },
+    "operator": {
+     "$ref": "#/definitions/CompareOperator"
+    },
+    "left": {
+     "$ref": "#/definitions/Expr"
+    },
+    "right": {
+     "$ref": "#/definitions/Expr"
+    }
+   }
+  },
+  "And": {
+   "type": "object",
+   "required": [
+    "op",
+    "left",
+    "right"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "and"
+    },
+    "left": {
+     "$ref": "#/definitions/Expr"
+    },
+    "right": {
+     "$ref": "#/definitions/Expr"
+    }
+   }
+  },
+  "Or": {
+   "type": "object",
+   "required": [
+    "op",
+    "left",
+    "right"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "or"
+    },
+    "left": {
+     "$ref": "#/definitions/Expr"
+    },
+    "right": {
+     "$ref": "#/definitions/Expr"
+    }
+   }
+  },
+  "If": {
+   "type": "object",
+   "required": [
+    "op",
+    "condition",
+    "then",
+    "otherwise"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "if"
+    },
+    "condition": {
+     "$ref": "#/definitions/Expr"
+    },
+    "then": {
+     "$ref": "#/definitions/Expr"
+    },
+    "otherwise": {
+     "$ref": "#/definitions/Expr"
+    }
+   }
+  },
+  "Call": {
+   "type": "object",
+   "required": [
+    "op",
+    "function",
+    "arguments"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "op": {
+     "const": "call"
+    },
+    "function": {
+     "$ref": "#/definitions/Function"
+    },
+    "arguments": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Expr"
+     }
+    }
+   }
+  },
+  "Expr": {
+   "type": "object",
+   "required": [
+    "op"
+   ],
+   "properties": {
+    "op": {
+     "enum": [
+      "number",
+      "length",
+      "angle",
+      "area",
+      "volume",
+      "bool",
+      "text",
+      "param",
+      "unary",
+      "binary",
+      "compare",
+      "and",
+      "or",
+      "if",
+      "call"
+     ]
+    }
+   },
+   "allOf": [
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "number"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Number"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "length"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Length"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "angle"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Angle"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "area"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Area"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "volume"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Volume"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "bool"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Bool"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "text"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Text"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "param"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Param"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "unary"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Unary"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "binary"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Binary"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "compare"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Compare"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "and"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/And"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "or"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Or"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "if"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/If"
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "op": {
+        "const": "call"
+       }
+      },
+      "required": [
+       "op"
+      ]
+     },
+     "then": {
+      "$ref": "#/definitions/Call"
+     }
+    }
+   ]
+  }
+ },
+ "$ref": "#/definitions/Expr"
+}

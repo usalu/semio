@@ -55,10 +55,12 @@ pub fn encode_model_projection_json(snapshot: &ModelSnapshot) -> String {
     semio_framework_pack_json::to_json_string(snapshot)
 }
 
-/// 💡️ The canonical JSON of one inferred table the inference oracles compare, by slug: `storey-levels`, `wall-layout`, `opening-frames`, `stair-runs`, `spaces`, `quantities` (the closed-form kinds), `plan-metrics`, `diagnostics`, or a derived table such as `wall-solids` (base, top and volume of every straight wall) and `frame-solids`.
+/// 💡️ The canonical JSON of one inferred table the inference oracles compare, by slug: `storey-levels`, `wall-layout`, `opening-frames`, `stair-runs`, `spaces`, `quantities` (the closed-form kinds), `plan-metrics`, `view-metrics`, `diagnostics`, or a derived table such as `wall-solids` (base, top and volume of every straight wall) and `frame-solids`.
 pub fn encode_inference_projection_json(snapshot: &ModelSnapshot, slug: &str) -> Option<String> {
-    use protocol::Inference;
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(snapshot).ok()?;
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, snapshot, |inferred| projection_of(snapshot, slug, inferred)).ok().flatten()
+}
+
+fn projection_of(snapshot: &ModelSnapshot, slug: &str, inferred: &crate::ModelInference) -> Option<String> {
     match slug {
         "storey-levels" => Some(semio_framework_pack_json::to_json_string(&inferred.storey_levels)),
         "wall-layout" => Some(semio_framework_pack_json::to_json_string(&inferred.wall_layout)),
@@ -68,7 +70,15 @@ pub fn encode_inference_projection_json(snapshot: &ModelSnapshot, slug: &str) ->
         "quantities" => Some(crate::standards::v1::subsets::any::io::text::inferences::quantities::table_json(snapshot, &inferred.quantities)),
         "frame-solids" => Some(crate::standards::v1::subsets::any::io::text::inferences::element_solids::planar_projection_json(snapshot, &inferred.element_solids)),
         "plan-metrics" => Some(crate::standards::v1::subsets::any::io::text::inferences::plan_linework::metrics_json(&inferred.plan_linework)),
+        "view-metrics" => Some(crate::standards::v1::subsets::any::io::text::inferences::view_linework::metrics_json(&inferred.view_linework)),
         "diagnostics" => Some(crate::standards::v1::subsets::any::io::text::inferences::diagnostics::table_json(&inferred.diagnostics)),
+        "ramp-runs" => Some(crate::standards::v1::subsets::any::io::text::inferences::ramp_runs::table_json(&inferred.ramp_runs)),
+        "families" => Some(crate::standards::v1::subsets::any::schema::inferences::families::metrics::table_json(&inferred.families)),
+        "annotations" => Some(crate::standards::v1::subsets::any::schema::inferences::annotation_layout::metrics_json(&inferred.annotations)),
+        "finishes" => Some(crate::standards::v1::subsets::any::schema::inferences::finishes::table_json(&inferred.quantities)),
+        "schedules" => Some(crate::standards::v1::subsets::any::io::text::inferences::schedules::table_json(&inferred.schedules)),
+        "phase-visibility" => Some(crate::standards::v1::subsets::any::schema::inferences::phase_visibility::table_json(&inferred.phase_visibility)),
+        "zones" => Some(crate::standards::v1::subsets::any::schema::inferences::zones::table_json(&inferred.zone_totals, &inferred.scheme_totals)),
         "wall-solids" => {
             let rows: Vec<String> = snapshot.walls.iter().filter(|(_, wall)| matches!(wall.axis, crate::Axis::Line { .. })).filter_map(|(id, _)| inferred.wall_layout.get(id).map(|layout| format!("{}:{{\"base_z\":{},\"top_z\":{},\"volume\":{}}}", semio_framework_pack_json::to_json_string(id), layout.base_z, layout.top_z, layout.volume))).collect();
             Some(format!("{{{}}}", rows.join(",")))

@@ -1,0 +1,6 @@
+{
+  "mutation": "setAnnotationStyle",
+  "id": "as-plan",
+  "precision": 2,
+  "unit": "Metre"
+}

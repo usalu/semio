@@ -1,0 +1,450 @@
+{
+  "elements": {
+    "w-south": {
+      "kind": "Wall",
+      "storey": "st-first",
+      "phase": "New",
+      "type_id": "wt-300",
+      "count": 1,
+      "length": 8.0,
+      "width": 0.3,
+      "height": 2.8,
+      "perimeter": 16.6,
+      "gross_side_area": 22.4,
+      "opening_area": 2.88,
+      "net_side_area": 19.52,
+      "gross_area": 2.4,
+      "net_area": 2.4,
+      "surface_area": 0.0,
+      "gross_volume": 6.72,
+      "net_volume": 5.856,
+      "mass": 10540.8,
+      "risers": 0,
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "area": 2.4,
+          "volume": 5.856,
+          "mass": 10540.8
+        }
+      ],
+      "finishes": []
+    },
+    "w-east": {
+      "kind": "Wall",
+      "storey": "st-ground",
+      "phase": "New",
+      "type_id": "wt-300",
+      "count": 1,
+      "length": 6.0,
+      "width": 0.3,
+      "height": 2.4,
+      "perimeter": 12.600000000000001,
+      "gross_side_area": 14.399999999999999,
+      "opening_area": 0.0,
+      "net_side_area": 14.399999999999999,
+      "gross_area": 1.8000000000000114,
+      "net_area": 1.8000000000000114,
+      "surface_area": 0.0,
+      "gross_volume": 4.320000000000027,
+      "net_volume": 4.32000000000001,
+      "mass": 7776.000000000018,
+      "risers": 0,
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "area": 1.8000000000000043,
+          "volume": 4.32000000000001,
+          "mass": 7776.000000000018
+        }
+      ],
+      "finishes": []
+    },
+    "sl-1": {
+      "kind": "Slab",
+      "storey": "st-ground",
+      "phase": "New",
+      "type_id": "stt-22",
+      "count": 1,
+      "length": 0.0,
+      "width": 0.22,
+      "height": 0.0,
+      "perimeter": 28.0,
+      "gross_side_area": 0.0,
+      "opening_area": 0.0,
+      "net_side_area": 0.0,
+      "gross_area": 48.0,
+      "net_area": 48.0,
+      "surface_area": 48.0,
+      "gross_volume": 10.56,
+      "net_volume": 10.56,
+      "mass": 19008.0,
+      "risers": 0,
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.22,
+          "area": 48.0,
+          "volume": 10.56,
+          "mass": 19008.0
+        }
+      ],
+      "finishes": []
+    },
+    "c-1": {
+      "kind": "Column",
+      "storey": "st-ground",
+      "phase": "New",
+      "type_id": "ct-1",
+      "count": 1,
+      "length": 3.0,
+      "width": 0.0,
+      "height": 3.0,
+      "perimeter": 1.2,
+      "gross_side_area": 0.0,
+      "opening_area": 0.0,
+      "net_side_area": 0.0,
+      "gross_area": 0.09,
+      "net_area": 0.09,
+      "surface_area": 0.0,
+      "gross_volume": 0.27,
+      "net_volume": 0.27,
+      "mass": 486.00000000000006,
+      "risers": 0,
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.0,
+          "area": 0.09,
+          "volume": 0.27,
+          "mass": 486.00000000000006
+        }
+      ],
+      "finishes": []
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "kinds": {
+        "column": {
+          "count": 1,
+          "length": 3.0,
+          "area": 0.09,
+          "volume": 0.27,
+          "mass": 486.00000000000006
+        },
+        "slab": {
+          "count": 1,
+          "length": 0.0,
+          "area": 48.0,
+          "volume": 10.56,
+          "mass": 19008.0
+        },
+        "wall": {
+          "count": 1,
+          "length": 6.0,
+          "area": 14.399999999999999,
+          "volume": 4.32000000000001,
+          "mass": 7776.000000000018
+        }
+      },
+      "types": {
+        "column:ct-1": {
+          "count": 1,
+          "length": 3.0,
+          "area": 0.09,
+          "volume": 0.27,
+          "mass": 486.00000000000006
+        },
+        "slab:stt-22": {
+          "count": 1,
+          "length": 0.0,
+          "area": 48.0,
+          "volume": 10.56,
+          "mass": 19008.0
+        },
+        "wall:wt-300": {
+          "count": 1,
+          "length": 6.0,
+          "area": 14.399999999999999,
+          "volume": 4.32000000000001,
+          "mass": 7776.000000000018
+        }
+      },
+      "materials": {
+        "m-brick": {
+          "count": 3,
+          "length": 0.0,
+          "area": 49.89000000000001,
+          "volume": 15.15000000000001,
+          "mass": 27270.00000000002
+        }
+      },
+      "finishes": {},
+      "phases": {
+        "new": {
+          "count": 3,
+          "length": 9.0,
+          "area": 62.49,
+          "volume": 15.15000000000001,
+          "mass": 27270.00000000002
+        }
+      },
+      "phase_kinds": {
+        "new:column": {
+          "count": 1,
+          "length": 3.0,
+          "area": 0.09,
+          "volume": 0.27,
+          "mass": 486.00000000000006
+        },
+        "new:slab": {
+          "count": 1,
+          "length": 0.0,
+          "area": 48.0,
+          "volume": 10.56,
+          "mass": 19008.0
+        },
+        "new:wall": {
+          "count": 1,
+          "length": 6.0,
+          "area": 14.399999999999999,
+          "volume": 4.32000000000001,
+          "mass": 7776.000000000018
+        }
+      }
+    },
+    "st-first": {
+      "kinds": {
+        "wall": {
+          "count": 1,
+          "length": 8.0,
+          "area": 19.52,
+          "volume": 5.856,
+          "mass": 10540.8
+        }
+      },
+      "types": {
+        "wall:wt-300": {
+          "count": 1,
+          "length": 8.0,
+          "area": 19.52,
+          "volume": 5.856,
+          "mass": 10540.8
+        }
+      },
+      "materials": {
+        "m-brick": {
+          "count": 1,
+          "length": 0.0,
+          "area": 2.4,
+          "volume": 5.856,
+          "mass": 10540.8
+        }
+      },
+      "finishes": {},
+      "phases": {
+        "new": {
+          "count": 1,
+          "length": 8.0,
+          "area": 19.52,
+          "volume": 5.856,
+          "mass": 10540.8
+        }
+      },
+      "phase_kinds": {
+        "new:wall": {
+          "count": 1,
+          "length": 8.0,
+          "area": 19.52,
+          "volume": 5.856,
+          "mass": 10540.8
+        }
+      }
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "kinds": {
+        "column": {
+          "count": 1,
+          "length": 3.0,
+          "area": 0.09,
+          "volume": 0.27,
+          "mass": 486.00000000000006
+        },
+        "slab": {
+          "count": 1,
+          "length": 0.0,
+          "area": 48.0,
+          "volume": 10.56,
+          "mass": 19008.0
+        },
+        "wall": {
+          "count": 2,
+          "length": 14.0,
+          "area": 33.92,
+          "volume": 10.176000000000009,
+          "mass": 18316.800000000017
+        }
+      },
+      "types": {
+        "column:ct-1": {
+          "count": 1,
+          "length": 3.0,
+          "area": 0.09,
+          "volume": 0.27,
+          "mass": 486.00000000000006
+        },
+        "slab:stt-22": {
+          "count": 1,
+          "length": 0.0,
+          "area": 48.0,
+          "volume": 10.56,
+          "mass": 19008.0
+        },
+        "wall:wt-300": {
+          "count": 2,
+          "length": 14.0,
+          "area": 33.92,
+          "volume": 10.176000000000009,
+          "mass": 18316.800000000017
+        }
+      },
+      "materials": {
+        "m-brick": {
+          "count": 4,
+          "length": 0.0,
+          "area": 52.290000000000006,
+          "volume": 21.006000000000007,
+          "mass": 37810.80000000002
+        }
+      },
+      "finishes": {},
+      "phases": {
+        "new": {
+          "count": 4,
+          "length": 17.0,
+          "area": 82.01,
+          "volume": 21.006000000000007,
+          "mass": 37810.80000000002
+        }
+      },
+      "phase_kinds": {
+        "new:column": {
+          "count": 1,
+          "length": 3.0,
+          "area": 0.09,
+          "volume": 0.27,
+          "mass": 486.00000000000006
+        },
+        "new:slab": {
+          "count": 1,
+          "length": 0.0,
+          "area": 48.0,
+          "volume": 10.56,
+          "mass": 19008.0
+        },
+        "new:wall": {
+          "count": 2,
+          "length": 14.0,
+          "area": 33.92,
+          "volume": 10.176000000000009,
+          "mass": 18316.800000000017
+        }
+      }
+    }
+  },
+  "project": {
+    "kinds": {
+      "column": {
+        "count": 1,
+        "length": 3.0,
+        "area": 0.09,
+        "volume": 0.27,
+        "mass": 486.00000000000006
+      },
+      "slab": {
+        "count": 1,
+        "length": 0.0,
+        "area": 48.0,
+        "volume": 10.56,
+        "mass": 19008.0
+      },
+      "wall": {
+        "count": 2,
+        "length": 14.0,
+        "area": 33.92,
+        "volume": 10.176000000000009,
+        "mass": 18316.800000000017
+      }
+    },
+    "types": {
+      "column:ct-1": {
+        "count": 1,
+        "length": 3.0,
+        "area": 0.09,
+        "volume": 0.27,
+        "mass": 486.00000000000006
+      },
+      "slab:stt-22": {
+        "count": 1,
+        "length": 0.0,
+        "area": 48.0,
+        "volume": 10.56,
+        "mass": 19008.0
+      },
+      "wall:wt-300": {
+        "count": 2,
+        "length": 14.0,
+        "area": 33.92,
+        "volume": 10.176000000000009,
+        "mass": 18316.800000000017
+      }
+    },
+    "materials": {
+      "m-brick": {
+        "count": 4,
+        "length": 0.0,
+        "area": 52.290000000000006,
+        "volume": 21.006000000000007,
+        "mass": 37810.80000000002
+      }
+    },
+    "finishes": {},
+    "phases": {
+      "new": {
+        "count": 4,
+        "length": 17.0,
+        "area": 82.01,
+        "volume": 21.006000000000007,
+        "mass": 37810.80000000002
+      }
+    },
+    "phase_kinds": {
+      "new:column": {
+        "count": 1,
+        "length": 3.0,
+        "area": 0.09,
+        "volume": 0.27,
+        "mass": 486.00000000000006
+      },
+      "new:slab": {
+        "count": 1,
+        "length": 0.0,
+        "area": 48.0,
+        "volume": 10.56,
+        "mass": 19008.0
+      },
+      "new:wall": {
+        "count": 2,
+        "length": 14.0,
+        "area": 33.92,
+        "volume": 10.176000000000009,
+        "mass": 18316.800000000017
+      }
+    }
+  }
+}

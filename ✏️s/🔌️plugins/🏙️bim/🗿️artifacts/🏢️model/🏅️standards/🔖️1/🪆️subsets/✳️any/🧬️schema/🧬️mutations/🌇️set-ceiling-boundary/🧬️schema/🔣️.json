@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-ceiling-boundary/schema.json",
+  "title": "SetCeilingBoundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "boundary",
+    "holes"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setCeilingBoundary"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ceiling",
+          "de": "Unterdecke"
+        },
+        "ref": {
+          "kind": "ceiling"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "boundary": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Boundary",
+          "de": "Umriss"
+        },
+        "group": "outline",
+        "order": 20
+      }
+    },
+    "holes": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Holes",
+          "de": "Öffnungen"
+        },
+        "group": "outline",
+        "order": 30
+      }
+    }
+  }
+}

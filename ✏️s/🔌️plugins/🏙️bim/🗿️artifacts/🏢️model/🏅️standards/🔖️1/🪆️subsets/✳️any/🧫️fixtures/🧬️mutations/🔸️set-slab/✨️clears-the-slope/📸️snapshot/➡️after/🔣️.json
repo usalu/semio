@@ -165,6 +165,7 @@
           }
         ]
       ],
+      "phase": "New",
       "name": "Ground slab",
       "offset": 0.0,
       "slab_type": "stt-22",

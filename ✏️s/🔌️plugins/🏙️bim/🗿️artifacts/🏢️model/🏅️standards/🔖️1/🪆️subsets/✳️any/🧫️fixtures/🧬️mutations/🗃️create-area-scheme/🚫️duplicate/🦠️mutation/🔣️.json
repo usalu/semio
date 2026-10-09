@@ -1,0 +1,10 @@
+{
+  "mutation": "createAreaScheme",
+  "id": "as-nsa",
+  "area_scheme": {
+    "name": "Other",
+    "measure": "Net",
+    "usages": [],
+    "zones": []
+  }
+}

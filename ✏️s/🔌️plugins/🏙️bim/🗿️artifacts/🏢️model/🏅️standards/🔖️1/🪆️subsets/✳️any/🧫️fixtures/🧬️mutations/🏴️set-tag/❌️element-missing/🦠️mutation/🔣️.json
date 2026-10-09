@@ -1,0 +1,5 @@
+{
+  "mutation": "setTag",
+  "id": "tag-south",
+  "element": "w-ghost"
+}

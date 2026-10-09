@@ -1,0 +1,11 @@
+{
+  "mutation": "createSheetRevision",
+  "id": "rev-9",
+  "sheet_revision": {
+    "sheet": "sh-1",
+    "number": "C",
+    "date": "2026-10-09",
+    "description": "Stair rotated",
+    "author": "UG"
+  }
+}

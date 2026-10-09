@@ -70,7 +70,7 @@ pub struct PixelProgress {
     pub done: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum PixelEditError {
     Invalid(&'static str),
     Incomplete,

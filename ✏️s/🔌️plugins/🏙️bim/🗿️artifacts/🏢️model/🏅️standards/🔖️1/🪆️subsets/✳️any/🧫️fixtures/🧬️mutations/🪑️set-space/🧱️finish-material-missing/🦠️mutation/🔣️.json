@@ -1,0 +1,7 @@
+{
+  "mutation": "setSpace",
+  "id": "sp-1",
+  "ceiling_finish": {
+    "value": "m-gold"
+  }
+}

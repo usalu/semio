@@ -9,6 +9,11 @@
     "family:os-kernel"
   ],
   "targets": {
+    "test-returned-read-custody": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {"cwd": "{projectRoot}", "command": "bun ./📜️script.ts test-returned-read-custody"}
+    },
     "test-member-group-publication-source": {
       "executor": "nx:run-commands",
       "cache": false,

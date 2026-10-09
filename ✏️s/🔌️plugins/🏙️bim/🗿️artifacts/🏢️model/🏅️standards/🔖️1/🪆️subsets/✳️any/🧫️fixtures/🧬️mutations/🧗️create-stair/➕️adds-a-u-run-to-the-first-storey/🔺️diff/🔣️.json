@@ -13,6 +13,7 @@
       "min_tread": 0.27,
       "name": "Main stair",
       "nosing": 0.0,
+      "phase": "New",
       "riser": "Closed",
       "start": {
         "x": 1.0,

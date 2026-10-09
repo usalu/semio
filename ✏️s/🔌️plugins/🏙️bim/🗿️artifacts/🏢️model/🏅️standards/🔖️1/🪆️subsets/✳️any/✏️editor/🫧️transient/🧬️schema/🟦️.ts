@@ -14,15 +14,17 @@ const list = <T,>(value: unknown, at: string, item: (entry: unknown, at: string)
 export interface BimWindowTransient {
   engagementInput: string;
   pointerGeneration: number;
+  preview: string;
 }
 /** 🧬️ The one `set` mutation of BimWindowTransient: every field. */
 export type BimWindowTransientMutation = { kind: "set" } & BimWindowTransient;
 /** 🚪️ Parses one exact BimWindowTransient. */
 export function parseBimWindowTransient(value: unknown): BimWindowTransient {
-  const row = exact(value, "$", ["engagementInput", "pointerGeneration"]);
+  const row = exact(value, "$", ["engagementInput", "pointerGeneration", "preview"]);
   return {
     engagementInput: text(row.engagementInput, "$.engagementInput"),
     pointerGeneration: count(row.pointerGeneration, "$.pointerGeneration"),
+    preview: text(row.preview, "$.preview"),
   };
 }
 /** 🔁️ Applies one exact BimWindowTransient mutation. */

@@ -33,7 +33,7 @@ pub use crate::os_spr::causal::{
 pub use crate::os_spr::causal::transition::{
     HistoryFoldControl, HistoryFoldJob, HistoryFoldJobStep, fold_history_for_controlled, decode_history_transition_controlled, decode_history_envelope_controlled, copy_history_text, copy_history_text_parts, copy_history_bytes, history_envelope_id_controlled,
     decode_history_transition, encode_history_transition, fold_history, fold_history_for, history_transition_envelope, history_transition_from_envelope, history_transition_id, is_history_transition, trunk_alternative_id, ViewerHead, HistoryShape, HistoryTransitionKind, FoldAlternative, FoldChange, FoldCheckpoint, FoldEdit, HistoryFold, HistoryTransition,
-    TransitionAuthor, TransitionCheckpoint, TransitionPin, EffectiveSupersession, InputReplacement, SupersededInput, TransitionSupersede, HISTORY_TRANSITION_SCHEMA, SUPERSEDE_PAYLOAD_MAX_BYTES, SUPERSEDE_SCOPE_MAX_BYTES,
+    TransitionAuthor, TransitionCheckpoint, TransitionPin, EffectiveSupersession, InputReplacement, HistoryInputDrafts, SupersededInput, TransitionSupersede, HISTORY_TRANSITION_SCHEMA, SUPERSEDE_PAYLOAD_MAX_BYTES, SUPERSEDE_SCOPE_MAX_BYTES,
 };
 pub use crate::os_spr::channel::{
     admit_guest_channel_version, CHANNEL_MISMATCH_CODE, decode_app_frame, decode_document_archive_bytes, encode_app_command, encode_app_frame, encode_document_archive_bytes, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildHeadPackEntry, ChildPackEntry, DecodedAppCommandOwner, DocumentArchiveArtifactRef,

@@ -76,7 +76,7 @@ async fn a_window_follows_the_axis_of_a_rotated_host() {
 #[semio_framework_async_macros::async_test]
 async fn a_filler_is_centred_in_the_thickness_of_its_host_and_lifts_with_it() {
     let (mut snapshot, _) = solids("straight-openings");
-    snapshot.openings.insert("o-win-ext".into(), Opening { host: "w-exterior".into(), kind: OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.5, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, name: String::new() });
+    snapshot.openings.insert("o-win-ext".into(), Opening { host: "w-exterior".into(), kind: OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.5, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() });
     let solids = compute_element_solids(&snapshot);
     let (low, high) = (solids["o-win-ext"].bounds.min.y, solids["o-win-ext"].bounds.max.y);
     assert!(close(low, 0.15 - 0.06) && close(high, 0.15 + 0.06), "the Exterior wall extends to the left, so the frame sits at +0.15: {low} {high}");

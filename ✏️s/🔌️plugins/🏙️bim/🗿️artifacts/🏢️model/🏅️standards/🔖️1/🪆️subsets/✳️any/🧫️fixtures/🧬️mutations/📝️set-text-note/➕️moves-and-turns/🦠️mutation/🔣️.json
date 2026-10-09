@@ -1,0 +1,9 @@
+{
+  "mutation": "setTextNote",
+  "id": "note-1",
+  "position": {
+    "x": 5,
+    "y": 1
+  },
+  "rotation": 0.5
+}

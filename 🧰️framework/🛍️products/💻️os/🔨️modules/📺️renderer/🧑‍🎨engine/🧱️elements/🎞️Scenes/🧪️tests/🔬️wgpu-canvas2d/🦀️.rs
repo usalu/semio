@@ -624,7 +624,7 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
     assert!(!triangles(fill).iter().any(|(_, triangle)| covers(triangle, [30.0, 30.0])), "nothing of the frame paints outside it");
     assert!(!triangles(stroke).is_empty(), "the frame's stroke reaches the vector paint");
     let paper_layer = triangles(paper).iter().map(|(index, _)| *index).max().expect("the paper paints");
-    let glyph_layer = draw.layers.iter().position(|layer| layer.ui_instances.iter().any(|instance| instance.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH)).expect("the text run paints glyphs");
+    let glyph_layer = draw.layers.iter().position(|layer| layer.ui_instances.iter().any(|instance| instance.params[2] == ui_wgpu::wgpu::draw_types::KIND_AFFINE_GLYPH)).expect("the text run paints affine glyphs");
     assert!(glyph_layer > paper_layer, "the text run's glyphs follow the paper in a later draw layer ({glyph_layer} > {paper_layer})");
     assert!(draw.layers.iter().filter(|layer| !layer.vector_vertices.is_empty() || !layer.ui_instances.is_empty()).all(|layer| layer.scissor.is_some()), "every painted layer sits under the canvas scissor");
 }

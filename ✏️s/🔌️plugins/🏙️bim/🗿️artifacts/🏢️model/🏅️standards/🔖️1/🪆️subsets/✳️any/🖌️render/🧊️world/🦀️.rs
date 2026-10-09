@@ -38,8 +38,11 @@ pub fn family_color(family: SolidFamily) -> [f32; 4] {
         SolidFamily::Door => [0.55, 0.38, 0.24, 1.0],
         SolidFamily::Column | SolidFamily::Beam => [0.6, 0.6, 0.62, 1.0],
         SolidFamily::Slab => [0.72, 0.72, 0.7, 1.0],
+        SolidFamily::Ceiling => [0.9, 0.9, 0.88, 1.0],
+        SolidFamily::WallSweep => [0.88, 0.86, 0.8, 1.0],
         SolidFamily::Roof => [0.62, 0.3, 0.26, 1.0],
         SolidFamily::Stair | SolidFamily::Railing => [0.5, 0.5, 0.52, 1.0],
+        SolidFamily::Ramp => [0.66, 0.66, 0.64, 1.0],
     }
 }
 

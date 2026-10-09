@@ -134,6 +134,7 @@
         }
       ],
       "holes": [],
+      "phase": "New",
       "name": "Terrace",
       "offset": -0.1,
       "slab_type": "stt-22",

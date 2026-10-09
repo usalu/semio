@@ -12,7 +12,7 @@ extern crate semio_framework_value_derive as value_derive;
 use {semio_framework_artifact_reference::Dialect, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId, semio_framework_plugin::ArtifactKindSpec, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability};
 
 pub use crate::standards::v1::subsets::any::schema::diff::patches::*;
-pub use crate::standards::v1::subsets::any::schema::diff::{Assigned, Entry, KeyedDelta, ModelDiff, Patch, PropertySetPatch};
+pub use crate::standards::v1::subsets::any::schema::diff::{Assigned, ClassificationSetPatch, Entry, KeyedDelta, ModelDiff, Patch, PropertySetPatch};
 pub use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 pub use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::*;
@@ -171,6 +171,12 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
+                        pub mod ramp_runs {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛝️ramp-runs/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod spaces {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏠️spaces/🦀️.rs"]
                             mod component;
@@ -183,6 +189,42 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
+                        pub mod phase_visibility {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎭️phase-visibility/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod finishes {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎨️finishes/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod zones {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏘️zones/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod effective_properties {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏷️effective-properties/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod schedules {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📋️schedules/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod families {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧬️families/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod bodies {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️bodies/🦀️.rs"]
                             mod component;
@@ -191,6 +233,24 @@ pub mod standards {
                         #[path = "."]
                         pub mod plan_linework {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗺️plan-linework/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod view_linework {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🖼️view-linework/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod sheet_layout {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📄️sheet-layout/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod annotation_layout {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪧️annotation-layout/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
@@ -248,6 +308,12 @@ pub mod standards {
                                 pub use component::*;
                             }
                             #[path = "."]
+                            pub mod ceilings {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🔲️ceilings/🦀️.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                            #[path = "."]
                             pub mod roofs {
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🏠️roofs/🦀️.rs"]
                                 mod component;
@@ -262,6 +328,24 @@ pub mod standards {
                             #[path = "."]
                             pub mod railings {
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🛤️railings/🦀️.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                            #[path = "."]
+                            pub mod ramps {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🛝️ramps/🦀️.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                            #[path = "."]
+                            pub mod wall_sweeps {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🧷️wall-sweeps/🦀️.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
+                            #[path = "."]
+                            pub mod rail_hosts {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🪝️rail-hosts/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
                             }
@@ -465,6 +549,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-storey/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-storey/🧪️tests/📋️cascades-the-schedules/🦀️.rs"]
+                            mod tests_cascades_the_schedules;
                         }
                         #[path = "."]
                         pub mod create_wall {
@@ -487,6 +574,21 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️create-wall/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
                             mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️create-wall/🧪️tests/🧮️adds-a-wall-under-the-roof/🦀️.rs"]
+                            mod tests_adds_a_wall_under_the_roof;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️create-wall/🧪️tests/🧯️adds-a-wall-standing-on-a-slab/🦀️.rs"]
+                            mod tests_adds_a_wall_standing_on_a_slab;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️create-wall/🧪️tests/🧰️roof-missing/🦀️.rs"]
+                            mod tests_roof_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️create-wall/🧪️tests/🧲️base-slab-missing/🦀️.rs"]
+                            mod tests_base_slab_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️create-wall/🧪️tests/🧳️base-slab-in-another-building/🦀️.rs"]
+                            mod tests_base_slab_in_another_building;
                         }
                         #[path = "."]
                         pub mod delete_wall {
@@ -509,6 +611,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥️delete-wall/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥️delete-wall/🧪️tests/🧭️cascades-its-sweeps/🦀️.rs"]
+                            mod tests_cascades_its_sweeps;
                         }
                         #[path = "."]
                         pub mod set_wall_top {
@@ -528,6 +633,24 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔝️set-wall-top/🧪️tests/🚫️storey-missing/🦀️.rs"]
                             mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔝️set-wall-top/🧪️tests/🧭️attaches-to-a-roof/🦀️.rs"]
+                            mod tests_attaches_to_a_roof;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔝️set-wall-top/🧪️tests/🧮️attaches-to-a-slab/🦀️.rs"]
+                            mod tests_attaches_to_a_slab;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔝️set-wall-top/🧪️tests/🧯️roof-missing/🦀️.rs"]
+                            mod tests_roof_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔝️set-wall-top/🧪️tests/🧰️ceiling-missing/🦀️.rs"]
+                            mod tests_ceiling_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔝️set-wall-top/🧪️tests/🧳️frees-an-attached-top/🦀️.rs"]
+                            mod tests_frees_an_attached_top;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔝️set-wall-top/🧪️tests/🧴️roof-in-another-building/🦀️.rs"]
+                            mod tests_roof_in_another_building;
                         }
                         #[path = "."]
                         pub mod create_railing {
@@ -574,6 +697,24 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️create-railing/🧪️tests/🧲️rail-profile-degenerate/🦀️.rs"]
                             mod tests_rail_profile_degenerate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️create-railing/🧪️tests/🧳️adds-a-railing-hosted-by-a-ramp/🦀️.rs"]
+                            mod tests_adds_a_railing_hosted_by_a_ramp;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️create-railing/🧪️tests/🧴️adds-a-railing-hosted-by-a-stair/🦀️.rs"]
+                            mod tests_adds_a_railing_hosted_by_a_stair;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️create-railing/🧪️tests/🧶️host-missing/🦀️.rs"]
+                            mod tests_host_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️create-railing/🧪️tests/🧷️hosted-railing-with-a-path/🦀️.rs"]
+                            mod tests_hosted_railing_with_a_path;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️create-railing/🧪️tests/🧸️negative-host-inset/🦀️.rs"]
+                            mod tests_negative_host_inset;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️create-railing/🧪️tests/🧺️slab-edge-missing/🦀️.rs"]
+                            mod tests_slab_edge_missing;
                         }
                         #[path = "."]
                         pub mod delete_railing {
@@ -639,6 +780,45 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧰️post-profile-degenerate/🦀️.rs"]
                             mod tests_post_profile_degenerate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧲️hosts-on-a-stair/🦀️.rs"]
+                            mod tests_hosts_on_a_stair;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧳️hosts-on-a-ramp/🦀️.rs"]
+                            mod tests_hosts_on_a_ramp;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧴️hosts-on-a-slab-edge/🦀️.rs"]
+                            mod tests_hosts_on_a_slab_edge;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧶️releases-the-host/🦀️.rs"]
+                            mod tests_releases_the_host;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧷️moves-to-another-host/🦀️.rs"]
+                            mod tests_moves_to_another_host;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧸️host-without-clearing-the-path/🦀️.rs"]
+                            mod tests_host_without_clearing_the_path;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧺️releasing-without-a-path/🦀️.rs"]
+                            mod tests_releasing_without_a_path;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧻️host-missing/🦀️.rs"]
+                            mod tests_host_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🧼️host-is-no-stair-ramp-or-slab/🦀️.rs"]
+                            mod tests_host_is_no_stair_ramp_or_slab;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🪐️slab-edge-missing/🦀️.rs"]
+                            mod tests_slab_edge_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🪒️slab-edge-curved/🦀️.rs"]
+                            mod tests_slab_edge_curved;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🪓️stair-host-with-an-edge-index/🦀️.rs"]
+                            mod tests_stair_host_with_an_edge_index;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️set-railing/🧪️tests/🪔️negative-host-inset/🦀️.rs"]
+                            mod tests_negative_host_inset;
                         }
                         #[path = "."]
                         pub mod create_space {
@@ -673,6 +853,15 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️create-space/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
                             mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️create-space/🧪️tests/🎨️adds-a-finished-space/🦀️.rs"]
+                            mod tests_adds_a_finished_space;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️create-space/🧪️tests/🏘️zone-missing/🦀️.rs"]
+                            mod tests_zone_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️create-space/🧪️tests/🧱️finish-material-missing/🦀️.rs"]
+                            mod tests_finish_material_missing;
                         }
                         #[path = "."]
                         pub mod delete_space {
@@ -726,6 +915,30 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/🧭️restates-an-unchanged-field/🦀️.rs"]
                             mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/🏘️assigns-a-zone/🦀️.rs"]
+                            mod tests_assigns_a_zone;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/🚶️moves-to-another-zone/🦀️.rs"]
+                            mod tests_moves_to_another_zone;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/🚮️clears-the-zone/🦀️.rs"]
+                            mod tests_clears_the_zone;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/🎨️finishes-the-room/🦀️.rs"]
+                            mod tests_finishes_the_room;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/🧼️clears-a-finish/🦀️.rs"]
+                            mod tests_clears_a_finish;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/📌️zone-already-set/🦀️.rs"]
+                            mod tests_zone_already_set;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/🗺️zone-missing/🦀️.rs"]
+                            mod tests_zone_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️set-space/🧪️tests/🧱️finish-material-missing/🦀️.rs"]
+                            mod tests_finish_material_missing;
                         }
                         #[path = "."]
                         pub mod create_column {
@@ -769,6 +982,12 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-column/🧪️tests/🧮️id-taken-by-another-kind/🦀️.rs"]
                             mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-column/🧪️tests/✅️adds-a-leaning-column/🦀️.rs"]
+                            mod tests_adds_a_leaning_column;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-column/🧪️tests/🚫️tilt-too-steep/🦀️.rs"]
+                            mod tests_tilt_too_steep;
                         }
                         #[path = "."]
                         pub mod delete_column {
@@ -859,6 +1078,15 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️create-beam/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
                             mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️create-beam/🧪️tests/✅️adds-an-arc-beam/🦀️.rs"]
+                            mod tests_adds_an_arc_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️create-beam/🧪️tests/➕️adds-an-inclined-beam/🦀️.rs"]
+                            mod tests_adds_an_inclined_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️create-beam/🧪️tests/🚫️flat-arc/🦀️.rs"]
+                            mod tests_flat_arc;
                         }
                         #[path = "."]
                         pub mod delete_beam {
@@ -878,37 +1106,6 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-beam/🧪️tests/🧭️removes-its-data/🦀️.rs"]
                             mod tests_removes_its_data;
-                        }
-                        #[path = "."]
-                        pub mod set_beam {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🦠️mutation/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/✅️retypes-and-stretches/🦀️.rs"]
-                            mod tests_retypes_and_stretches;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/✨️lowers-the-beam/🦀️.rs"]
-                            mod tests_lowers_the_beam;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/⚖️keeps-equal-fields-out-of-the-diff/🦀️.rs"]
-                            mod tests_keeps_equal_fields_out_of_the_diff;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/⛔️missing/🦀️.rs"]
-                            mod tests_missing;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/🧲️type-missing/🦀️.rs"]
-                            mod tests_type_missing;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/🛑️zero-length/🦀️.rs"]
-                            mod tests_zero_length;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/⚠️nothing-to-change/🦀️.rs"]
-                            mod tests_nothing_to_change;
                         }
                         #[path = "."]
                         pub mod create_slab {
@@ -971,6 +1168,15 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-slab/🧪️tests/🧭️removes-its-data/🦀️.rs"]
                             mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-slab/🧪️tests/🧮️takes-its-hosted-railing-with-it/🦀️.rs"]
+                            mod tests_takes_its_hosted_railing_with_it;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-slab/🧪️tests/🧯️attached-by-the-top-of-a-wall/🦀️.rs"]
+                            mod tests_attached_by_the_top_of_a_wall;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-slab/🧪️tests/🧰️attached-by-the-base-of-a-wall/🦀️.rs"]
+                            mod tests_attached_by_the_base_of_a_wall;
                         }
                         #[path = "."]
                         pub mod set_slab_boundary {
@@ -1101,6 +1307,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏘️delete-roof/🧪️tests/🧭️removes-its-data/🦀️.rs"]
                             mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏘️delete-roof/🧪️tests/🧮️attached-by-a-wall/🦀️.rs"]
+                            mod tests_attached_by_a_wall;
                         }
                         #[path = "."]
                         pub mod set_roof_footprint {
@@ -1210,6 +1419,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏺️delete-column-type/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏺️delete-column-type/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
                         }
                         #[path = "."]
                         pub mod set_column_type {
@@ -1294,6 +1506,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️delete-beam-type/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️delete-beam-type/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
                         }
                         #[path = "."]
                         pub mod set_beam_type {
@@ -1384,6 +1599,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️delete-window-type/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️delete-window-type/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
                         }
                         #[path = "."]
                         pub mod set_window_type {
@@ -1474,6 +1692,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️delete-door-type/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️delete-door-type/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
                         }
                         #[path = "."]
                         pub mod set_door_type {
@@ -1558,6 +1779,12 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🛋️used-by-a-space-finish/🦀️.rs"]
+                            mod tests_used_by_a_space_finish;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🧭️used-by-a-ramp/🦀️.rs"]
+                            mod tests_used_by_a_ramp;
                         }
                         #[path = "."]
                         pub mod set_material {
@@ -1642,6 +1869,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️delete-wall-type/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️delete-wall-type/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
                         }
                         #[path = "."]
                         pub mod set_wall_type {
@@ -1726,6 +1956,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟥️delete-slab-type/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟥️delete-slab-type/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
                         }
                         #[path = "."]
                         pub mod set_slab_type {
@@ -1810,6 +2043,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛺️delete-roof-type/🧪️tests/⛔️missing/🦀️.rs"]
                             mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛺️delete-roof-type/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
                         }
                         #[path = "."]
                         pub mod set_roof_type {
@@ -1893,6 +2129,15 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️create-opening/🧪️tests/🧮️adds-a-window-with-a-raised-sill/🦀️.rs"]
                             mod tests_adds_a_window_with_a_raised_sill;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️create-opening/🧪️tests/🧯️adds-a-window-with-a-reveal/🦀️.rs"]
+                            mod tests_adds_a_window_with_a_reveal;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️create-opening/🧪️tests/🧰️negative-reveal-depth/🦀️.rs"]
+                            mod tests_negative_reveal_depth;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️create-opening/🧪️tests/🧲️reveal-material-missing/🦀️.rs"]
+                            mod tests_reveal_material_missing;
                         }
                         #[path = "."]
                         pub mod delete_opening {
@@ -1989,6 +2234,18 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️set-opening/🧪️tests/🧮️restores-the-type-sill/🦀️.rs"]
                             mod tests_restores_the_type_sill;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️set-opening/🧪️tests/🧯️sets-a-reveal/🦀️.rs"]
+                            mod tests_sets_a_reveal;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️set-opening/🧪️tests/🧰️clears-the-reveal/🦀️.rs"]
+                            mod tests_clears_the_reveal;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️set-opening/🧪️tests/🧲️negative-reveal-depth/🦀️.rs"]
+                            mod tests_negative_reveal_depth;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️set-opening/🧪️tests/🧳️reveal-material-missing/🦀️.rs"]
+                            mod tests_reveal_material_missing;
                         }
                         #[path = "."]
                         pub mod create_stair {
@@ -2063,6 +2320,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨️delete-stair/🧪️tests/🧭️removes-its-data/🦀️.rs"]
                             mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨️delete-stair/🧪️tests/🧮️takes-its-hosted-railing-with-it/🦀️.rs"]
+                            mod tests_takes_its_hosted_railing_with_it;
                         }
                         #[path = "."]
                         pub mod set_stair {
@@ -2469,43 +2729,12 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦈️split-wall/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
                             mod tests_id_taken_by_another_kind;
-                        }
-                        #[path = "."]
-                        pub mod create_curtain_wall {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🦠️mutation/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/✅️adds-a-facade/🦀️.rs"]
-                            mod tests_adds_a_facade;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦈️split-wall/🧪️tests/🧮️repeats-the-sweeps-on-the-new-wall/🦀️.rs"]
+                            mod tests_repeats_the_sweeps_on_the_new_wall;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🌀️adds-a-curved-facade/🦀️.rs"]
-                            mod tests_adds_a_curved_facade;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🚫️duplicate/🦀️.rs"]
-                            mod tests_duplicate;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/⛔️storey-missing/🦀️.rs"]
-                            mod tests_storey_missing;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/💥️zero-length/🦀️.rs"]
-                            mod tests_zero_length;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/📏️spacing-non-positive/🦀️.rs"]
-                            mod tests_spacing_non_positive;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🧪️material-missing/🦀️.rs"]
-                            mod tests_material_missing;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🔗️follows-by-inference/🦀️.rs"]
-                            mod tests_follows_by_inference;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
-                            mod tests_id_taken_by_another_kind;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦈️split-wall/🧪️tests/🧯️sweep-copy-id-taken/🦀️.rs"]
+                            mod tests_sweep_copy_id_taken;
                         }
                         #[path = "."]
                         pub mod delete_curtain_wall {
@@ -2531,43 +2760,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦖️delete-curtain-wall/🧪️tests/🧮️removes-its-data/🦀️.rs"]
                             mod tests_removes_its_data;
-                        }
-                        #[path = "."]
-                        pub mod set_curtain_wall {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🦠️mutation/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/✅️re-grids-the-facade/🦀️.rs"]
-                            mod tests_re_grids_the_facade;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🌀️curves-the-facade/🦀️.rs"]
-                            mod tests_curves_the_facade;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🎨️swaps-materials-and-renames/🦀️.rs"]
-                            mod tests_swaps_materials_and_renames;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🧲️unchanged/🦀️.rs"]
-                            mod tests_unchanged;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🚫️spacing-non-positive/🦀️.rs"]
-                            mod tests_spacing_non_positive;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/⛔️material-missing/🦀️.rs"]
-                            mod tests_material_missing;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🕳️missing/🦀️.rs"]
-                            mod tests_missing;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🔗️follows-by-inference/🦀️.rs"]
-                            mod tests_follows_by_inference;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🧭️restates-an-unchanged-field/🦀️.rs"]
-                            mod tests_restates_an_unchanged_field;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦖️delete-curtain-wall/🧪️tests/✅️cascades-its-overrides/🦀️.rs"]
+                            mod tests_cascades_its_overrides;
                         }
                         #[path = "."]
                         pub mod move_elements {
@@ -2596,6 +2791,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-elements/🧪️tests/🚧️storey-has-no-placement/🦀️.rs"]
                             mod tests_storey_has_no_placement;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-elements/🧪️tests/🧭️moves-a-ramp/🦀️.rs"]
+                            mod tests_moves_a_ramp;
                         }
                         #[path = "."]
                         pub mod rotate_elements {
@@ -2627,6 +2825,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎡️rotate-elements/🧪️tests/🚧️storey-has-no-placement/🦀️.rs"]
                             mod tests_storey_has_no_placement;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎡️rotate-elements/🧪️tests/🧭️turns-a-ramp/🦀️.rs"]
+                            mod tests_turns_a_ramp;
                         }
                         #[path = "."]
                         pub mod place_elements {
@@ -2680,6 +2881,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣️delete-elements/🧪️tests/🚧️pinned-storey/🦀️.rs"]
                             mod tests_pinned_storey;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣️delete-elements/🧪️tests/🧭️removes-a-wall-with-its-sweeps/🦀️.rs"]
+                            mod tests_removes_a_wall_with_its_sweeps;
                         }
                         #[path = "."]
                         pub mod rename_element {
@@ -2730,6 +2934,12 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️set-element-property/🧪️tests/🧭️blank-property/🦀️.rs"]
                             mod tests_blank_property;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️set-element-property/🧪️tests/🗂️sets-a-type-property/🦀️.rs"]
+                            mod tests_sets_a_type_property;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️set-element-property/🧪️tests/🏷️type-property-replaced/🦀️.rs"]
+                            mod tests_type_property_replaced;
                         }
                         #[path = "."]
                         pub mod remove_element_property {
@@ -2752,6 +2962,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️remove-element-property/🧪️tests/⛔️unknown-element/🦀️.rs"]
                             mod tests_unknown_element;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️remove-element-property/🧪️tests/🗂️removes-a-type-property/🦀️.rs"]
+                            mod tests_removes_a_type_property;
                         }
                         #[path = "."]
                         pub mod set_element_classification {
@@ -2777,6 +2990,18 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️set-element-classification/🧪️tests/🛑️same-classification/🦀️.rs"]
                             mod tests_same_classification;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️set-element-classification/🧪️tests/🧩️adds-another-system/🦀️.rs"]
+                            mod tests_adds_another_system;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️set-element-classification/🧪️tests/🏷️classifies-a-type/🦀️.rs"]
+                            mod tests_classifies_a_type;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️set-element-classification/🧪️tests/📝️code-outside-the-table/🦀️.rs"]
+                            mod tests_code_outside_the_table;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️set-element-classification/🧪️tests/⛔️unknown-system/🦀️.rs"]
+                            mod tests_unknown_system;
                         }
                         #[path = "."]
                         pub mod remove_element_classification {
@@ -2796,6 +3021,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️remove-element-classification/🧪️tests/⛔️unknown-element/🦀️.rs"]
                             mod tests_unknown_element;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️remove-element-classification/🧪️tests/🔢️removes-one-of-two/🦀️.rs"]
+                            mod tests_removes_one_of_two;
                         }
                         #[path = "."]
                         pub mod set_storey_cut_height {
@@ -2824,6 +3052,3074 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎬️set-storey-cut-height/🧪️tests/🟢️already-default/🦀️.rs"]
                             mod tests_already_default;
+                        }
+                        #[path = "."]
+                        pub mod create_ceiling_type {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎑️create-ceiling-type/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎑️create-ceiling-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎑️create-ceiling-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎑️create-ceiling-type/🧪️tests/✅️adds/🦀️.rs"]
+                            mod tests_adds;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎑️create-ceiling-type/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎑️create-ceiling-type/🧪️tests/⛔️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎑️create-ceiling-type/🧪️tests/❌️empty-layers/🦀️.rs"]
+                            mod tests_empty_layers;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎑️create-ceiling-type/🧪️tests/🛑️thin-layer/🦀️.rs"]
+                            mod tests_thin_layer;
+                        }
+                        #[path = "."]
+                        pub mod delete_ceiling_type {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎏️delete-ceiling-type/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎏️delete-ceiling-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎏️delete-ceiling-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎏️delete-ceiling-type/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎏️delete-ceiling-type/🧪️tests/🚫️used-by-ceilings/🦀️.rs"]
+                            mod tests_used_by_ceilings;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎏️delete-ceiling-type/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎏️delete-ceiling-type/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                        }
+                        #[path = "."]
+                        pub mod set_ceiling_type {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/✅️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/➕️restacks/🦀️.rs"]
+                            mod tests_restacks;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/✨️both-fields/🦀️.rs"]
+                            mod tests_both_fields;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/👍️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/🚫️empty-patch/🦀️.rs"]
+                            mod tests_empty_patch;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/⛔️empty-layers/🦀️.rs"]
+                            mod tests_empty_layers;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/❌️thin-layer/🦀️.rs"]
+                            mod tests_thin_layer;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/🛑️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️set-ceiling-type/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_ceiling {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/✅️adds-a-ceiling-with-a-hole/🦀️.rs"]
+                            mod tests_adds_a_ceiling_with_a_hole;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/➕️adds-a-sloped-curved-ceiling/🦀️.rs"]
+                            mod tests_adds_a_sloped_curved_ceiling;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/⛔️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/❌️type-missing/🦀️.rs"]
+                            mod tests_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/🛑️too-few-vertices/🦀️.rs"]
+                            mod tests_too_few_vertices;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/🚷️zero-area/🦀️.rs"]
+                            mod tests_zero_area;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/🙅️self-intersecting/🦀️.rs"]
+                            mod tests_self_intersecting;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/📛️clockwise/🦀️.rs"]
+                            mod tests_clockwise;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️create-ceiling/🧪️tests/🚧️hole-outside/🦀️.rs"]
+                            mod tests_hole_outside;
+                        }
+                        #[path = "."]
+                        pub mod delete_ceiling {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-ceiling/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-ceiling/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-ceiling/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-ceiling/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-ceiling/🧪️tests/➕️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-ceiling/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-ceiling/🧪️tests/🧭️attached-by-a-wall/🦀️.rs"]
+                            mod tests_attached_by_a_wall;
+                        }
+                        #[path = "."]
+                        pub mod set_ceiling_boundary {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🧪️tests/✅️reshapes/🦀️.rs"]
+                            mod tests_reshapes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🧪️tests/➕️drops-the-hole/🦀️.rs"]
+                            mod tests_drops_the_hole;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🧪️tests/⛔️hole-outside/🦀️.rs"]
+                            mod tests_hole_outside;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🧪️tests/❌️overlapping-holes/🦀️.rs"]
+                            mod tests_overlapping_holes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🧪️tests/🛑️self-intersecting/🦀️.rs"]
+                            mod tests_self_intersecting;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️set-ceiling-boundary/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_ceiling {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/✅️retypes-and-drops/🦀️.rs"]
+                            mod tests_retypes_and_drops;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/➕️slopes/🦀️.rs"]
+                            mod tests_slopes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/✨️clears-the-slope/🦀️.rs"]
+                            mod tests_clears_the_slope;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/👍️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/🧲️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/❌️type-missing/🦀️.rs"]
+                            mod tests_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/🛑️slope-too-steep/🦀️.rs"]
+                            mod tests_slope_too_steep;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️set-ceiling/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_ramp {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/✅️adds-a-straight-ramp/🦀️.rs"]
+                            mod tests_adds_a_straight_ramp;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/📐️adds-a-bent-ramp-with-railings/🦀️.rs"]
+                            mod tests_adds_a_bent_ramp_with_railings;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/🌀️adds-a-curved-ramp-to-the-first-storey/🦀️.rs"]
+                            mod tests_adds_a_curved_ramp_to_the_first_storey;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/⛔️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/🧱️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/🔴️top-storey-missing/🦀️.rs"]
+                            mod tests_top_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/📏️path-too-short/🦀️.rs"]
+                            mod tests_path_too_short;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/🛑️non-positive-width/🦀️.rs"]
+                            mod tests_non_positive_width;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/💥️non-positive-thickness/🦀️.rs"]
+                            mod tests_non_positive_thickness;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/📉️non-positive-slope-limit/🦀️.rs"]
+                            mod tests_non_positive_slope_limit;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛝️create-ramp/🧪️tests/🚧️negative-landing/🦀️.rs"]
+                            mod tests_negative_landing;
+                        }
+                        #[path = "."]
+                        pub mod set_ramp {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/✅️reshapes/🦀️.rs"]
+                            mod tests_reshapes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/🏷️renames-only/🦀️.rs"]
+                            mod tests_renames_only;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/🛤️carries-railings-on-both-sides/🦀️.rs"]
+                            mod tests_carries_railings_on_both_sides;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/⛰️steepens-beyond-the-limit/🦀️.rs"]
+                            mod tests_steepens_beyond_the_limit;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/🧭️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/💤️nothing-to-change/🦀️.rs"]
+                            mod tests_nothing_to_change;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/📏️path-too-short/🦀️.rs"]
+                            mod tests_path_too_short;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/🛑️non-positive-width/🦀️.rs"]
+                            mod tests_non_positive_width;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/📉️non-positive-slope-limit/🦀️.rs"]
+                            mod tests_non_positive_slope_limit;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/🧱️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛹️set-ramp/🧪️tests/🔴️top-storey-missing/🦀️.rs"]
+                            mod tests_top_storey_missing;
+                        }
+                        #[path = "."]
+                        pub mod delete_ramp {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛼️delete-ramp/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛼️delete-ramp/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛼️delete-ramp/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛼️delete-ramp/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛼️delete-ramp/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛼️delete-ramp/🧪️tests/🧭️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛼️delete-ramp/🧪️tests/🛤️takes-its-hosted-railing-with-it/🦀️.rs"]
+                            mod tests_takes_its_hosted_railing_with_it;
+                        }
+                        #[path = "."]
+                        pub mod create_view {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/✅️adds-a-plan/🦀️.rs"]
+                            mod tests_adds_a_plan;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧲️adds-a-ceiling-plan/🦀️.rs"]
+                            mod tests_adds_a_ceiling_plan;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧵️adds-a-section/🦀️.rs"]
+                            mod tests_adds_a_section;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧴️adds-an-elevation/🦀️.rs"]
+                            mod tests_adds_an_elevation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧳️adds-a-camera/🦀️.rs"]
+                            mod tests_adds_a_camera;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧱️adds-a-configured-plan/🦀️.rs"]
+                            mod tests_adds_a_configured_plan;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧰️duplicate-id/🦀️.rs"]
+                            mod tests_duplicate_id;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧯️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧮️building-missing/🦀️.rs"]
+                            mod tests_building_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧭️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧩️storey-of-another-building/🦀️.rs"]
+                            mod tests_storey_of_another_building;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧨️plan-without-storey/🦀️.rs"]
+                            mod tests_plan_without_storey;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧧️section-without-plane/🦀️.rs"]
+                            mod tests_section_without_plane;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧦️plane-without-length/🦀️.rs"]
+                            mod tests_plane_without_length;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧥️camera-without-camera/🦀️.rs"]
+                            mod tests_camera_without_camera;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧤️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧣️name-taken/🦀️.rs"]
+                            mod tests_name_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧢️depth-zero/🦀️.rs"]
+                            mod tests_depth_zero;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧡️unordered-hidden/🦀️.rs"]
+                            mod tests_unordered_hidden;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧠️scale-zero/🦀️.rs"]
+                            mod tests_scale_zero;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧟️empty-crop/🦀️.rs"]
+                            mod tests_empty_crop;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📽️create-view/🧪️tests/🧞️cut-height-on-a-section/🦀️.rs"]
+                            mod tests_cut_height_on_a_section;
+                        }
+                        #[path = "."]
+                        pub mod set_view {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/✅️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧲️moves-the-plane/🦀️.rs"]
+                            mod tests_moves_the_plane;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧵️retargets-the-plan/🦀️.rs"]
+                            mod tests_retargets_the_plan;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧴️cuts-lower/🦀️.rs"]
+                            mod tests_cuts_lower;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧳️clears-the-cut/🦀️.rs"]
+                            mod tests_clears_the_cut;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧱️crops/🦀️.rs"]
+                            mod tests_crops;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧰️clears-the-crop/🦀️.rs"]
+                            mod tests_clears_the_crop;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧯️hides-categories/🦀️.rs"]
+                            mod tests_hides_categories;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧮️filters-by-phase/🦀️.rs"]
+                            mod tests_filters_by_phase;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧭️clears-the-phase/🦀️.rs"]
+                            mod tests_clears_the_phase;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧩️rescales/🦀️.rs"]
+                            mod tests_rescales;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧨️orbits/🦀️.rs"]
+                            mod tests_orbits;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧧️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧦️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧥️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧤️empty-patch/🦀️.rs"]
+                            mod tests_empty_patch;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧣️name-taken/🦀️.rs"]
+                            mod tests_name_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧢️plane-on-a-plan/🦀️.rs"]
+                            mod tests_plane_on_a_plan;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧡️camera-on-a-section/🦀️.rs"]
+                            mod tests_camera_on_a_section;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧠️storey-on-a-section/🦀️.rs"]
+                            mod tests_storey_on_a_section;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧟️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧞️storey-of-another-building/🦀️.rs"]
+                            mod tests_storey_of_another_building;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧝️depth-zero/🦀️.rs"]
+                            mod tests_depth_zero;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧜️scale-too-large/🦀️.rs"]
+                            mod tests_scale_too_large;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧛️duplicate-hidden/🦀️.rs"]
+                            mod tests_duplicate_hidden;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️set-view/🧪️tests/🧚️empty-crop/🦀️.rs"]
+                            mod tests_empty_crop;
+                        }
+                        #[path = "."]
+                        pub mod delete_view {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📺️delete-view/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📺️delete-view/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📺️delete-view/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📺️delete-view/🧪️tests/🧕️cascades-its-viewports/🦀️.rs"]
+                            mod tests_cascades_its_viewports;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📺️delete-view/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📺️delete-view/🧪️tests/🧲️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📺️delete-view/🧪️tests/🧵️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_annotation_style {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🧪️tests/✅️adds/🦀️.rs"]
+                            mod tests_adds;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🧪️tests/➕️adds-a-millimetre-style/🦀️.rs"]
+                            mod tests_adds_a_millimetre_style;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🧪️tests/❌️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🧪️tests/🛑️text-height-not-positive/🦀️.rs"]
+                            mod tests_text_height_not_positive;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️create-annotation-style/🧪️tests/🚷️too-many-decimals/🦀️.rs"]
+                            mod tests_too_many_decimals;
+                        }
+                        #[path = "."]
+                        pub mod delete_annotation_style {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/🧪️tests/🚫️used-by-dimensions/🦀️.rs"]
+                            mod tests_used_by_dimensions;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/🧪️tests/⛔️used-by-tags/🦀️.rs"]
+                            mod tests_used_by_tags;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/🧪️tests/❌️used-by-text-notes/🦀️.rs"]
+                            mod tests_used_by_text_notes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/🧪️tests/🛑️used-by-leaders/🦀️.rs"]
+                            mod tests_used_by_leaders;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-annotation-style/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_annotation_style {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/✅️scales-the-text/🦀️.rs"]
+                            mod tests_scales_the_text;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/➕️prints-centimetres/🦀️.rs"]
+                            mod tests_prints_centimetres;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/✨️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/👍️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/❌️text-height-not-positive/🦀️.rs"]
+                            mod tests_text_height_not_positive;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/🛑️too-many-decimals/🦀️.rs"]
+                            mod tests_too_many_decimals;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️set-annotation-style/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_dimension {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/✅️dimensions-a-wall/🦀️.rs"]
+                            mod tests_dimensions_a_wall;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/➕️chains-an-opening-centre/🦀️.rs"]
+                            mod tests_chains_an_opening_centre;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/✨️thickness-between-faces/🦀️.rs"]
+                            mod tests_thickness_between_faces;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/👍️locks-a-free-span/🦀️.rs"]
+                            mod tests_locks_a_free_span;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/❌️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/🛑️style-missing/🦀️.rs"]
+                            mod tests_style_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/🚷️anchor-missing/🦀️.rs"]
+                            mod tests_anchor_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/🙅️one-anchor/🦀️.rs"]
+                            mod tests_one_anchor;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️create-dimension/🧪️tests/📛️lock-not-positive/🦀️.rs"]
+                            mod tests_lock_not_positive;
+                        }
+                        #[path = "."]
+                        pub mod delete_dimension {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎️delete-dimension/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎️delete-dimension/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎️delete-dimension/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎️delete-dimension/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎️delete-dimension/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_dimension {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/✅️moves-the-dimension-line/🦀️.rs"]
+                            mod tests_moves_the_dimension_line;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/➕️re-anchors/🦀️.rs"]
+                            mod tests_re_anchors;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/✨️locks-the-value/🦀️.rs"]
+                            mod tests_locks_the_value;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/👍️removes-the-lock/🦀️.rs"]
+                            mod tests_removes_the_lock;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/🧲️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/❌️style-missing/🦀️.rs"]
+                            mod tests_style_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/🛑️anchor-missing/🦀️.rs"]
+                            mod tests_anchor_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/🚷️one-anchor/🦀️.rs"]
+                            mod tests_one_anchor;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/🙅️lock-not-positive/🦀️.rs"]
+                            mod tests_lock_not_positive;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-dimension/🧪️tests/📛️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_tag {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🧪️tests/✅️tags-a-wall/🦀️.rs"]
+                            mod tests_tags_a_wall;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🧪️tests/➕️tags-a-window-size/🦀️.rs"]
+                            mod tests_tags_a_window_size;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🧪️tests/❌️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🧪️tests/🛑️element-missing/🦀️.rs"]
+                            mod tests_element_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️create-tag/🧪️tests/🚷️style-missing/🦀️.rs"]
+                            mod tests_style_missing;
+                        }
+                        #[path = "."]
+                        pub mod delete_tag {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫️delete-tag/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫️delete-tag/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫️delete-tag/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫️delete-tag/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫️delete-tag/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_tag {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🧪️tests/✅️reads-the-type/🦀️.rs"]
+                            mod tests_reads_the_type;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🧪️tests/➕️retargets-and-moves/🦀️.rs"]
+                            mod tests_retargets_and_moves;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🧪️tests/✨️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🧪️tests/❌️element-missing/🦀️.rs"]
+                            mod tests_element_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🧪️tests/🛑️style-missing/🦀️.rs"]
+                            mod tests_style_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏴️set-tag/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_text_note {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🧪️tests/✅️adds/🦀️.rs"]
+                            mod tests_adds;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🧪️tests/➕️adds-rotated/🦀️.rs"]
+                            mod tests_adds_rotated;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🧪️tests/❌️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🧪️tests/🛑️style-missing/🦀️.rs"]
+                            mod tests_style_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️create-text-note/🧪️tests/🚷️blank/🦀️.rs"]
+                            mod tests_blank;
+                        }
+                        #[path = "."]
+                        pub mod delete_text_note {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️delete-text-note/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️delete-text-note/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️delete-text-note/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️delete-text-note/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️delete-text-note/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_text_note {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🧪️tests/✅️rewrites/🦀️.rs"]
+                            mod tests_rewrites;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🧪️tests/➕️moves-and-turns/🦀️.rs"]
+                            mod tests_moves_and_turns;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🧪️tests/✨️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🧪️tests/❌️blank/🦀️.rs"]
+                            mod tests_blank;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🧪️tests/🛑️style-missing/🦀️.rs"]
+                            mod tests_style_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️set-text-note/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_leader {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🧪️tests/✅️points-at-a-wall-face/🦀️.rs"]
+                            mod tests_points_at_a_wall_face;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🧪️tests/➕️points-at-a-free-point/🦀️.rs"]
+                            mod tests_points_at_a_free_point;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🧪️tests/❌️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🧪️tests/🛑️anchor-missing/🦀️.rs"]
+                            mod tests_anchor_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🧪️tests/🚷️style-missing/🦀️.rs"]
+                            mod tests_style_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️create-leader/🧪️tests/🙅️blank/🦀️.rs"]
+                            mod tests_blank;
+                        }
+                        #[path = "."]
+                        pub mod delete_leader {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↪️delete-leader/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↪️delete-leader/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↪️delete-leader/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↪️delete-leader/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↪️delete-leader/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_leader {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🧪️tests/✅️rewrites/🦀️.rs"]
+                            mod tests_rewrites;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🧪️tests/➕️re-anchors/🦀️.rs"]
+                            mod tests_re_anchors;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🧪️tests/✨️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🧪️tests/❌️anchor-missing/🦀️.rs"]
+                            mod tests_anchor_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🧪️tests/🛑️blank/🦀️.rs"]
+                            mod tests_blank;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️set-leader/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_zone {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾️create-zone/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾️create-zone/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾️create-zone/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾️create-zone/🧪️tests/✅️adds/🦀️.rs"]
+                            mod tests_adds;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾️create-zone/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾️create-zone/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗾️create-zone/🧪️tests/📉️negative-density/🦀️.rs"]
+                            mod tests_negative_density;
+                        }
+                        #[path = "."]
+                        pub mod set_zone {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/🧪️tests/✅️renames-and-recategorises/🦀️.rs"]
+                            mod tests_renames_and_recategorises;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/🧪️tests/👥️sets-the-density/🦀️.rs"]
+                            mod tests_sets_the_density;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/🧪️tests/🧭️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/🧪️tests/💤️nothing-to-change/🦀️.rs"]
+                            mod tests_nothing_to_change;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪄️set-zone/🧪️tests/📉️negative-density/🦀️.rs"]
+                            mod tests_negative_density;
+                        }
+                        #[path = "."]
+                        pub mod delete_zone {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-zone/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-zone/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-zone/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-zone/🧪️tests/✅️clears-the-memberships/🦀️.rs"]
+                            mod tests_clears_the_memberships;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-zone/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-zone/🧪️tests/🛖️empty-zone/🦀️.rs"]
+                            mod tests_empty_zone;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-zone/🧪️tests/🗃️counted-by-an-area-scheme/🦀️.rs"]
+                            mod tests_counted_by_an_area_scheme;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯️delete-zone/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_area_scheme {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/🧪️tests/✅️adds/🦀️.rs"]
+                            mod tests_adds;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/🧪️tests/🎯️adds-a-restricted-scheme/🦀️.rs"]
+                            mod tests_adds_a_restricted_scheme;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/🧪️tests/🏘️zone-missing/🦀️.rs"]
+                            mod tests_zone_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️create-area-scheme/🧪️tests/📝️blank-usage/🦀️.rs"]
+                            mod tests_blank_usage;
+                        }
+                        #[path = "."]
+                        pub mod set_area_scheme {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🧪️tests/✅️retargets-the-rule/🦀️.rs"]
+                            mod tests_retargets_the_rule;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🧪️tests/📐️changes-the-measure/🦀️.rs"]
+                            mod tests_changes_the_measure;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🧪️tests/♾️counts-everything/🦀️.rs"]
+                            mod tests_counts_everything;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🧪️tests/🧭️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🧪️tests/💤️nothing-to-change/🦀️.rs"]
+                            mod tests_nothing_to_change;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🧪️tests/🏘️zone-missing/🦀️.rs"]
+                            mod tests_zone_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️set-area-scheme/🧪️tests/📝️blank-usage/🦀️.rs"]
+                            mod tests_blank_usage;
+                        }
+                        #[path = "."]
+                        pub mod delete_area_scheme {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️delete-area-scheme/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️delete-area-scheme/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️delete-area-scheme/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️delete-area-scheme/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️delete-area-scheme/🧪️tests/🗂️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️delete-area-scheme/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_schedule {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/✅️adds/🦀️.rs"]
+                            mod tests_adds;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/🚪️adds-a-scoped-door-schedule/🦀️.rs"]
+                            mod tests_adds_a_scoped_door_schedule;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/🧱️adds-a-material-take-off/🦀️.rs"]
+                            mod tests_adds_a_material_take_off;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/🧭️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/📛️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/🕳️no-columns/🦀️.rs"]
+                            mod tests_no_columns;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/🧲️field-not-offered/🦀️.rs"]
+                            mod tests_field_not_offered;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/♻️repeated-column/🦀️.rs"]
+                            mod tests_repeated_column;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/🔎️filter-without-a-value/🦀️.rs"]
+                            mod tests_filter_without_a_value;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️create-schedule/🧪️tests/🏢️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_schedule {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/✅️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/📐️replaces-the-columns/🦀️.rs"]
+                            mod tests_replaces_the_columns;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/🔎️sorts-and-filters/🦀️.rs"]
+                            mod tests_sorts_and_filters;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/🗂️groups-and-collapses/🦀️.rs"]
+                            mod tests_groups_and_collapses;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/🏢️scopes-the-storeys-and-phases/🦀️.rs"]
+                            mod tests_scopes_the_storeys_and_phases;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/🚪️changes-the-category/🦀️.rs"]
+                            mod tests_changes_the_category;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/🧭️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/💤️nothing-to-change/🦀️.rs"]
+                            mod tests_nothing_to_change;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/🧲️category-drops-a-field/🦀️.rs"]
+                            mod tests_category_drops_a_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/🕳️no-columns/🦀️.rs"]
+                            mod tests_no_columns;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/📛️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️set-schedule/🧪️tests/🏘️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                        }
+                        #[path = "."]
+                        pub mod delete_schedule {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-schedule/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-schedule/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-schedule/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-schedule/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-schedule/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_element_storey {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/✅️moves-a-wall-and-its-openings-follow/🦀️.rs"]
+                            mod tests_moves_a_wall_and_its_openings_follow;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🏛️moves-a-column/🦀️.rs"]
+                            mod tests_moves_a_column;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🛋️moves-a-room/🦀️.rs"]
+                            mod tests_moves_a_room;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/⬜️moves-a-slab/🦀️.rs"]
+                            mod tests_moves_a_slab;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🚪️opening-would-break/🦀️.rs"]
+                            mod tests_opening_would_break;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🔝️top-no-longer-above-the-base/🦀️.rs"]
+                            mod tests_top_no_longer_above_the_base;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🧲️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🚫️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🏘️other-building/🦀️.rs"]
+                            mod tests_other_building;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🪟️opening-follows-its-host/🦀️.rs"]
+                            mod tests_opening_follows_its_host;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/🌍️not-storey-placed/🦀️.rs"]
+                            mod tests_not_storey_placed;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎢️set-element-storey/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+
+                        #[path = "."]
+                        pub mod set_element_phase {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🧪️tests/✅️demolishes-a-wall/🦀️.rs"]
+                            mod tests_demolishes_a_wall;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🧪️tests/🏚️keeps-a-demolished-wall-existing/🦀️.rs"]
+                            mod tests_keeps_a_demolished_wall_existing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🧪️tests/🛋️phases-a-room/🦀️.rs"]
+                            mod tests_phases_a_room;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🧪️tests/⬜️phases-a-slab/🦀️.rs"]
+                            mod tests_phases_a_slab;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🧪️tests/🧲️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🧪️tests/🪟️opening-takes-the-phase-of-its-host/🦀️.rs"]
+                            mod tests_opening_takes_the_phase_of_its_host;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🧪️tests/🌍️carries-no-phase/🦀️.rs"]
+                            mod tests_carries_no_phase;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️set-element-phase/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod modify {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧙️modify/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_wall_end_join {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/🧪️tests/✅️butts-the-start/🦀️.rs"]
+                            mod tests_butts_the_start;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/🧪️tests/🌀️miters-the-end/🦀️.rs"]
+                            mod tests_miters_the_end;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/🧪️tests/🌟️frees-the-end/🦀️.rs"]
+                            mod tests_frees_the_end;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/🧪️tests/🚛️back-to-automatic/🦀️.rs"]
+                            mod tests_back_to_automatic;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/🧪️tests/🧲️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️set-wall-end-join/🧪️tests/🕳️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod copy_elements {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/✅️copies-a-wall-with-its-openings/🦀️.rs"]
+                            mod tests_copies_a_wall_with_its_openings;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/🚛️copies-every-placed-kind/🦀️.rs"]
+                            mod tests_copies_every_placed_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/🧲️copies-in-place/🦀️.rs"]
+                            mod tests_copies_in_place;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/⛔️empty-selection/🦀️.rs"]
+                            mod tests_empty_selection;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/🚫️unknown-id/🦀️.rs"]
+                            mod tests_unknown_id;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/🚧️opening-alone/🦀️.rs"]
+                            mod tests_opening_alone;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/🪝️storey-has-no-placement/🦀️.rs"]
+                            mod tests_storey_has_no_placement;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/🛑️blank-prefix/🦀️.rs"]
+                            mod tests_blank_prefix;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/🧩️minted-id-taken/🦀️.rs"]
+                            mod tests_minted_id_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️copy-elements/🧪️tests/🧭️copies-a-wall-with-its-sweeps/🦀️.rs"]
+                            mod tests_copies_a_wall_with_its_sweeps;
+                        }
+                        #[path = "."]
+                        pub mod mirror_elements {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/✅️mirrors-walls-and-their-openings/🦀️.rs"]
+                            mod tests_mirrors_walls_and_their_openings;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/🌀️mirrors-an-arc-wall-and-a-curtain-wall/🦀️.rs"]
+                            mod tests_mirrors_an_arc_wall_and_a_curtain_wall;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/🚛️mirrors-every-placed-kind/🦀️.rs"]
+                            mod tests_mirrors_every_placed_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/🌟️mirrors-a-turning-stair/🦀️.rs"]
+                            mod tests_mirrors_a_turning_stair;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/🔗️mirrors-as-copies/🦀️.rs"]
+                            mod tests_mirrors_as_copies;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/🚧️fixed-hand-stair/🦀️.rs"]
+                            mod tests_fixed_hand_stair;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/🛑️line-without-length/🦀️.rs"]
+                            mod tests_line_without_length;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/⛔️empty-selection/🦀️.rs"]
+                            mod tests_empty_selection;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/🚫️unknown-id/🦀️.rs"]
+                            mod tests_unknown_id;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️mirror-elements/🧪️tests/🧲️already-symmetric/🦀️.rs"]
+                            mod tests_already_symmetric;
+                        }
+                        #[path = "."]
+                        pub mod array_elements {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🧪️tests/✅️arrays-a-column-in-a-row/🦀️.rs"]
+                            mod tests_arrays_a_column_in_a_row;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🧪️tests/🌀️arrays-a-column-around-a-centre/🦀️.rs"]
+                            mod tests_arrays_a_column_around_a_centre;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🧪️tests/🔗️arrays-a-wall-with-its-openings/🦀️.rs"]
+                            mod tests_arrays_a_wall_with_its_openings;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🧪️tests/🛑️no-copies/🦀️.rs"]
+                            mod tests_no_copies;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🧪️tests/⛔️spacing-without-length/🦀️.rs"]
+                            mod tests_spacing_without_length;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🧪️tests/🚧️too-many-copies/🦀️.rs"]
+                            mod tests_too_many_copies;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🧪️tests/🚫️unknown-id/🦀️.rs"]
+                            mod tests_unknown_id;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️array-elements/🧪️tests/🧩️minted-id-taken/🦀️.rs"]
+                            mod tests_minted_id_taken;
+                        }
+                        #[path = "."]
+                        pub mod align_elements {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🧪️tests/✅️aligns-walls-to-a-line/🦀️.rs"]
+                            mod tests_aligns_walls_to_a_line;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🧪️tests/🌟️aligns-centres/🦀️.rs"]
+                            mod tests_aligns_centres;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🧪️tests/🌀️aligns-an-arc-by-its-extremes/🦀️.rs"]
+                            mod tests_aligns_an_arc_by_its_extremes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🧪️tests/🧲️already-aligned/🦀️.rs"]
+                            mod tests_already_aligned;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🧪️tests/🪝️openings-follow-their-host/🦀️.rs"]
+                            mod tests_openings_follow_their_host;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🧪️tests/⛔️empty-selection/🦀️.rs"]
+                            mod tests_empty_selection;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️align-elements/🧪️tests/🚫️unknown-id/🦀️.rs"]
+                            mod tests_unknown_id;
+                        }
+                        #[path = "."]
+                        pub mod offset_wall {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🧪️tests/✅️offsets-to-the-left/🦀️.rs"]
+                            mod tests_offsets_to_the_left;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🧪️tests/🌟️offsets-to-the-right/🦀️.rs"]
+                            mod tests_offsets_to_the_right;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🧪️tests/🌀️offsets-an-arc/🦀️.rs"]
+                            mod tests_offsets_an_arc;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🧪️tests/🚧️arc-collapses/🦀️.rs"]
+                            mod tests_arc_collapses;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🧪️tests/🛑️zero-distance/🦀️.rs"]
+                            mod tests_zero_distance;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🧪️tests/🧩️new-id-taken/🦀️.rs"]
+                            mod tests_new_id_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶️offset-wall/🧪️tests/🕳️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod trim_extend_wall {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/✅️trims-to-the-target/🦀️.rs"]
+                            mod tests_trims_to_the_target;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🌟️extends-to-the-target/🦀️.rs"]
+                            mod tests_extends_to_the_target;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🪝️keeps-openings-in-place/🦀️.rs"]
+                            mod tests_keeps_openings_in_place;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🌀️extends-an-arc/🦀️.rs"]
+                            mod tests_extends_an_arc;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🚧️never-meets/🦀️.rs"]
+                            mod tests_never_meets;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🛑️behind-the-other-end/🦀️.rs"]
+                            mod tests_behind_the_other_end;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🧲️already-there/🦀️.rs"]
+                            mod tests_already_there;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/⛔️opening-no-longer-fits/🦀️.rs"]
+                            mod tests_opening_no_longer_fits;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🧩️its-own-target/🦀️.rs"]
+                            mod tests_its_own_target;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🚫️target-missing/🦀️.rs"]
+                            mod tests_target_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪️trim-extend-wall/🧪️tests/🕳️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod split_slab {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/✅️splits-a-rectangle/🦀️.rs"]
+                            mod tests_splits_a_rectangle;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/🧱️sends-a-hole-with-its-piece/🦀️.rs"]
+                            mod tests_sends_a_hole_with_its_piece;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/🌀️splits-an-arc-outline/🦀️.rs"]
+                            mod tests_splits_an_arc_outline;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/🌟️splits-through-two-corners/🦀️.rs"]
+                            mod tests_splits_through_two_corners;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/🚫️misses-the-slab/🦀️.rs"]
+                            mod tests_misses_the_slab;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/🚧️crosses-a-hole/🦀️.rs"]
+                            mod tests_crosses_a_hole;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/⛔️cuts-more-than-twice/🦀️.rs"]
+                            mod tests_cuts_more_than_twice;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/🛑️line-without-length/🦀️.rs"]
+                            mod tests_line_without_length;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/🧩️new-id-taken/🦀️.rs"]
+                            mod tests_new_id_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍰️split-slab/🧪️tests/🕳️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod split_beam {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🧪️tests/✅️splits-a-beam/🦀️.rs"]
+                            mod tests_splits_a_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🧪️tests/🌟️splits-a-slanted-beam/🦀️.rs"]
+                            mod tests_splits_a_slanted_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🧪️tests/🚫️at-the-start/🦀️.rs"]
+                            mod tests_at_the_start;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🧪️tests/⛔️beyond-the-end/🦀️.rs"]
+                            mod tests_beyond_the_end;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🧪️tests/🧩️new-id-taken/🦀️.rs"]
+                            mod tests_new_id_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🧪️tests/🕳️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🧪️tests/✅️splits-an-arc-beam/🦀️.rs"]
+                            mod tests_splits_an_arc_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥖️split-beam/🧪️tests/➕️splits-an-inclined-beam/🦀️.rs"]
+                            mod tests_splits_an_inclined_beam;
+                        }
+                        #[path = "."]
+                        pub mod create_sheet {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/✅️adds-a-sheet/🦀️.rs"]
+                            mod tests_adds_a_sheet;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧲️adds-a-portrait-a1/🦀️.rs"]
+                            mod tests_adds_a_portrait_a1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧵️adds-a-custom-paper/🦀️.rs"]
+                            mod tests_adds_a_custom_paper;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧴️adds-a-filled-title-block/🦀️.rs"]
+                            mod tests_adds_a_filled_title_block;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧳️duplicate-id/🦀️.rs"]
+                            mod tests_duplicate_id;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧱️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧰️number-taken/🦀️.rs"]
+                            mod tests_number_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧯️blank-number/🦀️.rs"]
+                            mod tests_blank_number;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧮️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧭️custom-paper-too-small/🦀️.rs"]
+                            mod tests_custom_paper_too_small;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧩️custom-paper-too-large/🦀️.rs"]
+                            mod tests_custom_paper_too_large;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️create-sheet/🧪️tests/🧨️date-unreadable/🦀️.rs"]
+                            mod tests_date_unreadable;
+                        }
+                        #[path = "."]
+                        pub mod set_sheet {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/✅️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧲️renumbers/🦀️.rs"]
+                            mod tests_renumbers;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧵️resizes-the-paper/🦀️.rs"]
+                            mod tests_resizes_the_paper;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧴️turns-the-sheet/🦀️.rs"]
+                            mod tests_turns_the_sheet;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧳️cuts-a-custom-paper/🦀️.rs"]
+                            mod tests_cuts_a_custom_paper;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧱️fills-the-title-block/🦀️.rs"]
+                            mod tests_fills_the_title_block;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧰️marks-the-revision-and-scale/🦀️.rs"]
+                            mod tests_marks_the_revision_and_scale;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧯️clears-the-title-block/🦀️.rs"]
+                            mod tests_clears_the_title_block;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧮️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧭️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧩️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧨️empty-patch/🦀️.rs"]
+                            mod tests_empty_patch;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧧️number-taken/🦀️.rs"]
+                            mod tests_number_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧦️blank-number/🦀️.rs"]
+                            mod tests_blank_number;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧥️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧤️custom-paper-too-small/🦀️.rs"]
+                            mod tests_custom_paper_too_small;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️set-sheet/🧪️tests/🧣️date-unreadable/🦀️.rs"]
+                            mod tests_date_unreadable;
+                        }
+                        #[path = "."]
+                        pub mod delete_sheet {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️delete-sheet/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️delete-sheet/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️delete-sheet/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️delete-sheet/🧪️tests/✅️cascades-viewports-and-revisions/🦀️.rs"]
+                            mod tests_cascades_viewports_and_revisions;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️delete-sheet/🧪️tests/🧲️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️delete-sheet/🧪️tests/🧵️removes-an-empty-sheet/🦀️.rs"]
+                            mod tests_removes_an_empty_sheet;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️delete-sheet/🧪️tests/🧴️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_viewport {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/✅️places-a-plan/🦀️.rs"]
+                            mod tests_places_a_plan;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧲️places-a-cropped-section/🦀️.rs"]
+                            mod tests_places_a_cropped_section;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧵️places-the-same-view-twice/🦀️.rs"]
+                            mod tests_places_the_same_view_twice;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧴️places-at-the-largest-scale/🦀️.rs"]
+                            mod tests_places_at_the_largest_scale;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧳️duplicate-id/🦀️.rs"]
+                            mod tests_duplicate_id;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧱️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧰️sheet-missing/🦀️.rs"]
+                            mod tests_sheet_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧯️view-missing/🦀️.rs"]
+                            mod tests_view_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧮️camera-view/🦀️.rs"]
+                            mod tests_camera_view;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧭️scale-zero/🦀️.rs"]
+                            mod tests_scale_zero;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧩️scale-too-large/🦀️.rs"]
+                            mod tests_scale_too_large;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧨️empty-crop/🦀️.rs"]
+                            mod tests_empty_crop;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📓️create-viewport/🧪️tests/🧧️blank-label/🦀️.rs"]
+                            mod tests_blank_label;
+                        }
+                        #[path = "."]
+                        pub mod set_viewport {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/✅️moves/🦀️.rs"]
+                            mod tests_moves;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧲️rescales/🦀️.rs"]
+                            mod tests_rescales;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧵️shows-another-view/🦀️.rs"]
+                            mod tests_shows_another_view;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧴️moves-to-another-sheet/🦀️.rs"]
+                            mod tests_moves_to_another_sheet;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧳️crops/🦀️.rs"]
+                            mod tests_crops;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧱️clears-the-crop/🦀️.rs"]
+                            mod tests_clears_the_crop;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧰️labels/🦀️.rs"]
+                            mod tests_labels;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧯️clears-the-label/🦀️.rs"]
+                            mod tests_clears_the_label;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧮️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧭️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧩️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧨️empty-patch/🦀️.rs"]
+                            mod tests_empty_patch;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧧️sheet-missing/🦀️.rs"]
+                            mod tests_sheet_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧦️view-missing/🦀️.rs"]
+                            mod tests_view_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧥️camera-view/🦀️.rs"]
+                            mod tests_camera_view;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧤️scale-zero/🦀️.rs"]
+                            mod tests_scale_zero;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧣️scale-too-large/🦀️.rs"]
+                            mod tests_scale_too_large;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧢️empty-crop/🦀️.rs"]
+                            mod tests_empty_crop;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📔️set-viewport/🧪️tests/🧡️blank-label/🦀️.rs"]
+                            mod tests_blank_label;
+                        }
+                        #[path = "."]
+                        pub mod delete_viewport {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-viewport/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-viewport/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-viewport/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-viewport/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-viewport/🧪️tests/🧲️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-viewport/🧪️tests/🧵️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_sheet_revision {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/✅️adds-a-revision/🦀️.rs"]
+                            mod tests_adds_a_revision;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧲️adds-the-next-mark/🦀️.rs"]
+                            mod tests_adds_the_next_mark;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧵️adds-an-undated-revision/🦀️.rs"]
+                            mod tests_adds_an_undated_revision;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧴️duplicate-id/🦀️.rs"]
+                            mod tests_duplicate_id;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧳️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧱️sheet-missing/🦀️.rs"]
+                            mod tests_sheet_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧰️mark-taken/🦀️.rs"]
+                            mod tests_mark_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧯️blank-mark/🦀️.rs"]
+                            mod tests_blank_mark;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧮️date-unreadable/🦀️.rs"]
+                            mod tests_date_unreadable;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️create-sheet-revision/🧪️tests/🧭️blank-description/🦀️.rs"]
+                            mod tests_blank_description;
+                        }
+                        #[path = "."]
+                        pub mod set_sheet_revision {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/✅️redates/🦀️.rs"]
+                            mod tests_redates;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧲️describes/🦀️.rs"]
+                            mod tests_describes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧵️re-marks/🦀️.rs"]
+                            mod tests_re_marks;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧴️signs/🦀️.rs"]
+                            mod tests_signs;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧳️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧱️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧰️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧯️empty-patch/🦀️.rs"]
+                            mod tests_empty_patch;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧮️mark-taken/🦀️.rs"]
+                            mod tests_mark_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧭️blank-mark/🦀️.rs"]
+                            mod tests_blank_mark;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧩️date-unreadable/🦀️.rs"]
+                            mod tests_date_unreadable;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️set-sheet-revision/🧪️tests/🧨️blank-description/🦀️.rs"]
+                            mod tests_blank_description;
+                        }
+                        #[path = "."]
+                        pub mod delete_sheet_revision {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📘️delete-sheet-revision/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📘️delete-sheet-revision/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📘️delete-sheet-revision/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📘️delete-sheet-revision/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📘️delete-sheet-revision/🧪️tests/🧲️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_beam_axis {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🧪️tests/✅️curves-the-beam/🦀️.rs"]
+                            mod tests_curves_the_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🧪️tests/➕️straightens-the-arc/🦀️.rs"]
+                            mod tests_straightens_the_arc;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🧪️tests/✨️moves-the-beam/🦀️.rs"]
+                            mod tests_moves_the_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🧪️tests/👍️keeps-the-inclination/🦀️.rs"]
+                            mod tests_keeps_the_inclination;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🧪️tests/🚫️zero-length/🦀️.rs"]
+                            mod tests_zero_length;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🧪️tests/⛔️flat-arc/🦀️.rs"]
+                            mod tests_flat_arc;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🧪️tests/❌️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️set-beam-axis/🧪️tests/🛑️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_column_tilt {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/✅️leans-the-column/🦀️.rs"]
+                            mod tests_leans_the_column;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/➕️re-aims-the-lean/🦀️.rs"]
+                            mod tests_re_aims_the_lean;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/✨️straightens-the-column/🦀️.rs"]
+                            mod tests_straightens_the_column;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/🚫️angle-zero/🦀️.rs"]
+                            mod tests_angle_zero;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/⛔️too-steep/🦀️.rs"]
+                            mod tests_too_steep;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/❌️negative-angle/🦀️.rs"]
+                            mod tests_negative_angle;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/🛑️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/🚷️already-plumb/🦀️.rs"]
+                            mod tests_already_plumb;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗽️set-column-tilt/🧪️tests/🙅️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_curtain_wall_type {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/✅️adds-a-uniform-grid/🦀️.rs"]
+                            mod tests_adds_a_uniform_grid;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/➕️adds-explicit-lines-and-a-solid-panel/🦀️.rs"]
+                            mod tests_adds_explicit_lines_and_a_solid_panel;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/✨️adds-a-door-default/🦀️.rs"]
+                            mod tests_adds_a_door_default;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/❌️spacing-non-positive/🦀️.rs"]
+                            mod tests_spacing_non_positive;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/🛑️lines-not-ascending/🦀️.rs"]
+                            mod tests_lines_not_ascending;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/🚷️mullion-flat/🦀️.rs"]
+                            mod tests_mullion_flat;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/🙅️door-type-missing/🦀️.rs"]
+                            mod tests_door_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏟️create-curtain-wall-type/🧪️tests/📛️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_curtain_wall_type {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/✅️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/➕️regrids/🦀️.rs"]
+                            mod tests_regrids;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/✨️swaps-the-mullions/🦀️.rs"]
+                            mod tests_swaps_the_mullions;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/👍️changes-the-default-panel/🦀️.rs"]
+                            mod tests_changes_the_default_panel;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/🧲️swaps-the-materials/🦀️.rs"]
+                            mod tests_swaps_the_materials;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/🌟️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/🚫️empty-patch/🦀️.rs"]
+                            mod tests_empty_patch;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/⛔️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/❌️spacing-non-positive/🦀️.rs"]
+                            mod tests_spacing_non_positive;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/🛑️lines-not-ascending/🦀️.rs"]
+                            mod tests_lines_not_ascending;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/🚷️window-type-missing/🦀️.rs"]
+                            mod tests_window_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/🙅️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏤️set-curtain-wall-type/🧪️tests/📛️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod delete_curtain_wall_type {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏥️delete-curtain-wall-type/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏥️delete-curtain-wall-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏥️delete-curtain-wall-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏥️delete-curtain-wall-type/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏥️delete-curtain-wall-type/🧪️tests/🚫️used-by-curtain-walls/🦀️.rs"]
+                            mod tests_used_by_curtain_walls;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏥️delete-curtain-wall-type/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_curtain_wall_type_of {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️set-curtain-wall-type-of/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️set-curtain-wall-type-of/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️set-curtain-wall-type-of/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️set-curtain-wall-type-of/🧪️tests/✅️retypes-the-facade/🦀️.rs"]
+                            mod tests_retypes_the_facade;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️set-curtain-wall-type-of/🧪️tests/➕️keeps-the-overrides/🦀️.rs"]
+                            mod tests_keeps_the_overrides;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️set-curtain-wall-type-of/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️set-curtain-wall-type-of/🧪️tests/⛔️type-missing/🦀️.rs"]
+                            mod tests_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️set-curtain-wall-type-of/🧪️tests/❌️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_curtain_wall_grid {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/✅️sets-explicit-lines/🦀️.rs"]
+                            mod tests_sets_explicit_lines;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/➕️sets-a-uniform-spacing/🦀️.rs"]
+                            mod tests_sets_a_uniform_spacing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/✨️sets-both-directions/🦀️.rs"]
+                            mod tests_sets_both_directions;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/👍️adds-a-line/🦀️.rs"]
+                            mod tests_adds_a_line;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/🧲️removes-a-line/🦀️.rs"]
+                            mod tests_removes_a_line;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/🌟️clears-the-override/🦀️.rs"]
+                            mod tests_clears_the_override;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/💪️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/❌️already-following-the-type/🦀️.rs"]
+                            mod tests_already_following_the_type;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/🛑️lines-not-ascending/🦀️.rs"]
+                            mod tests_lines_not_ascending;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/🚷️line-at-the-start/🦀️.rs"]
+                            mod tests_line_at_the_start;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/🙅️spacing-non-positive/🦀️.rs"]
+                            mod tests_spacing_non_positive;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏧️set-curtain-wall-grid/🧪️tests/📛️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_curtain_panel_override {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/✅️adds-a-door/🦀️.rs"]
+                            mod tests_adds_a_door;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/➕️adds-a-window/🦀️.rs"]
+                            mod tests_adds_a_window;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/✨️adds-a-solid-panel/🦀️.rs"]
+                            mod tests_adds_a_solid_panel;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/👍️adds-an-empty-cell/🦀️.rs"]
+                            mod tests_adds_an_empty_cell;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/❌️cell-taken/🦀️.rs"]
+                            mod tests_cell_taken;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/🛑️curtain-wall-missing/🦀️.rs"]
+                            mod tests_curtain_wall_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/🚷️door-type-missing/🦀️.rs"]
+                            mod tests_door_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/🙅️window-type-missing/🦀️.rs"]
+                            mod tests_window_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️create-curtain-panel-override/🧪️tests/📛️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_curtain_panel_override {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🧪️tests/✅️swaps-the-panel/🦀️.rs"]
+                            mod tests_swaps_the_panel;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🧪️tests/➕️empties-the-cell/🦀️.rs"]
+                            mod tests_empties_the_cell;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🧪️tests/✨️another-door-type/🦀️.rs"]
+                            mod tests_another_door_type;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🧪️tests/⛔️door-type-missing/🦀️.rs"]
+                            mod tests_door_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🧪️tests/❌️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏩️set-curtain-panel-override/🧪️tests/🛑️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod delete_curtain_panel_override {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏪️delete-curtain-panel-override/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏪️delete-curtain-panel-override/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏪️delete-curtain-panel-override/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏪️delete-curtain-panel-override/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏪️delete-curtain-panel-override/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_beam {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/✅️retypes-and-lowers/🦀️.rs"]
+                            mod tests_retypes_and_lowers;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/➕️inclines-the-beam/🦀️.rs"]
+                            mod tests_inclines_the_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/✨️levels-the-beam/🦀️.rs"]
+                            mod tests_levels_the_beam;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/👍️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/🧲️keeps-equal-fields-out-of-the-diff/🦀️.rs"]
+                            mod tests_keeps_equal_fields_out_of_the_diff;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/🚫️nothing-to-change/🦀️.rs"]
+                            mod tests_nothing_to_change;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/❌️already-level/🦀️.rs"]
+                            mod tests_already_level;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/🛑️type-missing/🦀️.rs"]
+                            mod tests_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-beam/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_curtain_wall {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/✅️moves-the-facade/🦀️.rs"]
+                            mod tests_moves_the_facade;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/➕️curves-the-facade/🦀️.rs"]
+                            mod tests_curves_the_facade;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/✨️constrains-the-top/🦀️.rs"]
+                            mod tests_constrains_the_top;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/👍️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🧲️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/❌️zero-length/🦀️.rs"]
+                            mod tests_zero_length;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🛑️top-storey-missing/🦀️.rs"]
+                            mod tests_top_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️set-curtain-wall/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_curtain_wall {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/✅️adds-a-facade/🦀️.rs"]
+                            mod tests_adds_a_facade;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/➕️adds-a-curved-facade/🦀️.rs"]
+                            mod tests_adds_a_curved_facade;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/✨️adds-a-facade-with-its-own-grid/🦀️.rs"]
+                            mod tests_adds_a_facade_with_its_own_grid;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/❌️storey-missing/🦀️.rs"]
+                            mod tests_storey_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🛑️type-missing/🦀️.rs"]
+                            mod tests_type_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🚷️zero-length/🦀️.rs"]
+                            mod tests_zero_length;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/🙅️lines-not-ascending/🦀️.rs"]
+                            mod tests_lines_not_ascending;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️create-curtain-wall/🧪️tests/📛️spacing-non-positive/🦀️.rs"]
+                            mod tests_spacing_non_positive;
+                        }
+                        #[path = "."]
+                        pub mod create_property_template {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/✅️adds/🦀️.rs"]
+                            mod tests_adds;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/🚫️adds-the-first-template/🦀️.rs"]
+                            mod tests_adds_the_first_template;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/⛔️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/🛑️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/🧭️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/💤️name-already-defined/🦀️.rs"]
+                            mod tests_name_already_defined;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/📝️kind-listed-twice/🦀️.rs"]
+                            mod tests_kind_listed_twice;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/🎯️property-defined-twice/🦀️.rs"]
+                            mod tests_property_defined_twice;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/📉️default-breaks-the-range/🦀️.rs"]
+                            mod tests_default_breaks_the_range;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/🗂️default-of-another-kind/🦀️.rs"]
+                            mod tests_default_of_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️create-property-template/🧪️tests/📌️range-on-text/🦀️.rs"]
+                            mod tests_range_on_text;
+                        }
+                        #[path = "."]
+                        pub mod set_property_template {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/✅️renames-and-retargets/🦀️.rs"]
+                            mod tests_renames_and_retargets;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/🚫️replaces-the-definitions/🦀️.rs"]
+                            mod tests_replaces_the_definitions;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/⛔️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/🛑️nothing-to-change/🦀️.rs"]
+                            mod tests_nothing_to_change;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/🧭️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/💤️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/📝️name-already-defined/🦀️.rs"]
+                            mod tests_name_already_defined;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/🎯️kind-listed-twice/🦀️.rs"]
+                            mod tests_kind_listed_twice;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️set-property-template/🧪️tests/📉️broken-definition/🦀️.rs"]
+                            mod tests_broken_definition;
+                        }
+                        #[path = "."]
+                        pub mod delete_property_template {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️delete-property-template/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️delete-property-template/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️delete-property-template/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️delete-property-template/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️delete-property-template/🧪️tests/🚫️removes-the-last-template/🦀️.rs"]
+                            mod tests_removes_the_last_template;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️delete-property-template/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_classification_system {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/✅️adds/🦀️.rs"]
+                            mod tests_adds;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/🚫️adds-the-first-system/🦀️.rs"]
+                            mod tests_adds_the_first_system;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/⛔️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/🛑️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/🧭️reserved-id/🦀️.rs"]
+                            mod tests_reserved_id;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/💤️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/📝️blank-code/🦀️.rs"]
+                            mod tests_blank_code;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/🎯️code-used-twice/🦀️.rs"]
+                            mod tests_code_used_twice;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/📉️parent-missing/🦀️.rs"]
+                            mod tests_parent_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️create-classification-system/🧪️tests/🗂️parents-form-a-cycle/🦀️.rs"]
+                            mod tests_parents_form_a_cycle;
+                        }
+                        #[path = "."]
+                        pub mod set_classification_system {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/✅️renames-and-reeditions/🦀️.rs"]
+                            mod tests_renames_and_reeditions;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/🚫️replaces-the-entries/🦀️.rs"]
+                            mod tests_replaces_the_entries;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/⛔️sets-the-source/🦀️.rs"]
+                            mod tests_sets_the_source;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/🛑️clears-the-source/🦀️.rs"]
+                            mod tests_clears_the_source;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/🧭️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/💤️nothing-to-change/🦀️.rs"]
+                            mod tests_nothing_to_change;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/📝️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/🎯️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖️set-classification-system/🧪️tests/📉️parent-missing/🦀️.rs"]
+                            mod tests_parent_missing;
+                        }
+                        #[path = "."]
+                        pub mod delete_classification_system {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-classification-system/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-classification-system/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-classification-system/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-classification-system/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-classification-system/🧪️tests/🚫️removes-its-classifications/🦀️.rs"]
+                            mod tests_removes_its_classifications;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕️delete-classification-system/🧪️tests/⛔️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_family {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-family/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-family/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-family/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-family/🧪️tests/✅️creates-a-table-family/🦀️.rs"]
+                            mod tests_creates_a_table_family;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-family/🧪️tests/➕️creates-a-profile-family/🦀️.rs"]
+                            mod tests_creates_a_profile_family;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-family/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-family/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-family/🧪️tests/❌️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                        }
+                        #[path = "."]
+                        pub mod delete_family {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪅️delete-family/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪅️delete-family/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪅️delete-family/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪅️delete-family/🧪️tests/✅️removes-with-its-parts/🦀️.rs"]
+                            mod tests_removes_with_its_parts;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪅️delete-family/🧪️tests/➕️removes-an-empty-family/🦀️.rs"]
+                            mod tests_removes_an_empty_family;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪅️delete-family/🧪️tests/🚫️used-by-a-column-type/🦀️.rs"]
+                            mod tests_used_by_a_column_type;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪅️delete-family/🧪️tests/⛔️used-by-a-beam-type/🦀️.rs"]
+                            mod tests_used_by_a_beam_type;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪅️delete-family/🧪️tests/❌️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_family {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🧪️tests/✅️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🧪️tests/➕️changes-the-category/🦀️.rs"]
+                            mod tests_changes_the_category;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🧪️tests/✨️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🧪️tests/❌️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🧪️tests/🛑️leaves-profile-while-used/🦀️.rs"]
+                            mod tests_leaves_profile_while_used;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪆️set-family/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_family_parameter {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/✅️adds-a-parameter/🦀️.rs"]
+                            mod tests_adds_a_parameter;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/➕️adds-a-dependent-parameter/🦀️.rs"]
+                            mod tests_adds_a_dependent_parameter;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/✨️changes-a-formula/🦀️.rs"]
+                            mod tests_changes_a_formula;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/👍️changes-the-kind/🦀️.rs"]
+                            mod tests_changes_the_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/🧲️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/❌️family-missing/🦀️.rs"]
+                            mod tests_family_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/🛑️bad-name/🦀️.rs"]
+                            mod tests_bad_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/🚷️formula-does-not-parse/🦀️.rs"]
+                            mod tests_formula_does_not_parse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/🙅️unknown-parameter/🦀️.rs"]
+                            mod tests_unknown_parameter;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/📛️closes-a-circle/🦀️.rs"]
+                            mod tests_closes_a_circle;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/🚧️new-needs-a-kind/🦀️.rs"]
+                            mod tests_new_needs_a_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/🧯️new-needs-a-formula/🦀️.rs"]
+                            mod tests_new_needs_a_formula;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡️set-family-parameter/🧪️tests/❗️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                        }
+                        #[path = "."]
+                        pub mod remove_family_parameter {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔠️remove-family-parameter/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔠️remove-family-parameter/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔠️remove-family-parameter/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔠️remove-family-parameter/🧪️tests/✅️removes-an-unused-parameter/🦀️.rs"]
+                            mod tests_removes_an_unused_parameter;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔠️remove-family-parameter/🧪️tests/🚫️used-by-a-formula/🦀️.rs"]
+                            mod tests_used_by_a_formula;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔠️remove-family-parameter/🧪️tests/⛔️used-by-a-solid/🦀️.rs"]
+                            mod tests_used_by_a_solid;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔠️remove-family-parameter/🧪️tests/❌️missing/🦀️.rs"]
+                            mod tests_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔠️remove-family-parameter/🧪️tests/🛑️family-missing/🦀️.rs"]
+                            mod tests_family_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_family_solid {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/✅️extrudes-a-profile/🦀️.rs"]
+                            mod tests_extrudes_a_profile;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/➕️places-a-cuboid/🦀️.rs"]
+                            mod tests_places_a_cuboid;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/✨️sweeps-a-rail/🦀️.rs"]
+                            mod tests_sweeps_a_rail;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/👍️revolves-a-foot/🦀️.rs"]
+                            mod tests_revolves_a_foot;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/❌️family-missing/🦀️.rs"]
+                            mod tests_family_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/🛑️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/🚷️formula-does-not-parse/🦀️.rs"]
+                            mod tests_formula_does_not_parse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/🙅️unknown-parameter/🦀️.rs"]
+                            mod tests_unknown_parameter;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️create-family-solid/🧪️tests/📛️polygon-too-small/🦀️.rs"]
+                            mod tests_polygon_too_small;
+                        }
+                        #[path = "."]
+                        pub mod delete_family_solid {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔹️delete-family-solid/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔹️delete-family-solid/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔹️delete-family-solid/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔹️delete-family-solid/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔹️delete-family-solid/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_family_solid {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/✅️hides-the-solid/🦀️.rs"]
+                            mod tests_hides_the_solid;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/➕️reshapes/🦀️.rs"]
+                            mod tests_reshapes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/✨️moves/🦀️.rs"]
+                            mod tests_moves;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/👍️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/❌️formula-does-not-parse/🦀️.rs"]
+                            mod tests_formula_does_not_parse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/🛑️unknown-parameter/🦀️.rs"]
+                            mod tests_unknown_parameter;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/🚷️polygon-too-small/🦀️.rs"]
+                            mod tests_polygon_too_small;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/🙅️blank-name/🦀️.rs"]
+                            mod tests_blank_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️set-family-solid/🧪️tests/📛️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod create_wall_sweep {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/✅️adds-a-baseboard/🦀️.rs"]
+                            mod tests_adds_a_baseboard;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/➕️adds-an-embedded-rail/🦀️.rs"]
+                            mod tests_adds_an_embedded_rail;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/🚫️duplicate/🦀️.rs"]
+                            mod tests_duplicate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/⛔️id-taken-by-another-kind/🦀️.rs"]
+                            mod tests_id_taken_by_another_kind;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/❌️host-missing/🦀️.rs"]
+                            mod tests_host_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/🛑️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/🚷️profile-degenerate/🦀️.rs"]
+                            mod tests_profile_degenerate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/🙅️negative-height/🦀️.rs"]
+                            mod tests_negative_height;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛️create-wall-sweep/🧪️tests/📛️inset-swallows-the-profile/🦀️.rs"]
+                            mod tests_inset_swallows_the_profile;
+                        }
+                        #[path = "."]
+                        pub mod set_wall_sweep {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/✅️lifts-and-resizes/🦀️.rs"]
+                            mod tests_lifts_and_resizes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/➕️moves-to-the-other-face/🦀️.rs"]
+                            mod tests_moves_to_the_other_face;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/✨️rehosts/🦀️.rs"]
+                            mod tests_rehosts;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/👍️renames/🦀️.rs"]
+                            mod tests_renames;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/🧲️restates-an-unchanged-field/🦀️.rs"]
+                            mod tests_restates_an_unchanged_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/⛔️names-no-field/🦀️.rs"]
+                            mod tests_names_no_field;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/❌️host-missing/🦀️.rs"]
+                            mod tests_host_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/🛑️material-missing/🦀️.rs"]
+                            mod tests_material_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/🚷️profile-degenerate/🦀️.rs"]
+                            mod tests_profile_degenerate;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/🙅️negative-height/🦀️.rs"]
+                            mod tests_negative_height;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/📛️inset-swallows-the-profile/🦀️.rs"]
+                            mod tests_inset_swallows_the_profile;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠️set-wall-sweep/🧪️tests/🚧️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod delete_wall_sweep {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡️delete-wall-sweep/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡️delete-wall-sweep/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡️delete-wall-sweep/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡️delete-wall-sweep/🧪️tests/✅️removes/🦀️.rs"]
+                            mod tests_removes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡️delete-wall-sweep/🧪️tests/➕️removes-its-data/🦀️.rs"]
+                            mod tests_removes_its_data;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡️delete-wall-sweep/🧪️tests/🚫️missing/🦀️.rs"]
+                            mod tests_missing;
+                        }
+                        #[path = "."]
+                        pub mod set_wall_base_slab {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🦠️mutation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🧪️tests/✅️attaches/🦀️.rs"]
+                            mod tests_attaches;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🧪️tests/➕️frees-the-base/🦀️.rs"]
+                            mod tests_frees_the_base;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🧪️tests/🚫️unchanged/🦀️.rs"]
+                            mod tests_unchanged;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🧪️tests/⛔️already-free/🦀️.rs"]
+                            mod tests_already_free;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🧪️tests/❌️slab-missing/🦀️.rs"]
+                            mod tests_slab_missing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🧪️tests/🛑️slab-in-another-building/🦀️.rs"]
+                            mod tests_slab_in_another_building;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️set-wall-base-slab/🧪️tests/🚷️missing/🦀️.rs"]
+                            mod tests_missing;
                         }
                         //#endregion 🔖️Leaves
                     }
@@ -2909,12 +6205,6 @@ pub mod editor {
             pub use component::*;
         }
         #[path = "."]
-        pub mod inference {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🔮️inference/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
         pub mod utilities {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🦀️.rs"]
             mod component;
@@ -2959,6 +6249,12 @@ pub mod editor {
                     pub use component::*;
                 }
                 #[path = "."]
+                pub mod create_view {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️create-view/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
                 pub mod delete_selection {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
                     mod component;
@@ -2979,6 +6275,30 @@ pub mod editor {
                 #[path = "."]
                 pub mod set_view {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪟️set-view/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod edit_schedule {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️edit-schedule/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod export_schedule_csv {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📊️export-schedule-csv/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod analyse_model {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️analyse-model/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod export_model {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-model/🦀️.rs"]
                     mod component;
                     pub use component::*;
                 }
@@ -3042,6 +6362,102 @@ pub mod editor {
                     mod component;
                     pub use component::*;
                 }
+                #[path = "."]
+                pub mod flip_walls {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔃️flip-walls/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod move_storey {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️move-storey/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod split_wall {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️split-wall/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod set_property {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧾️set-property/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod remove_property {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️remove-property/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod select_findings {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️select-findings/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod set_classification {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️set-classification/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod remove_classification {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗄️remove-classification/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod apply_template {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️apply-template/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod edit_template {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️edit-template/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod edit_classification {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️edit-classification/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod search_classification {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️search-classification/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod cursor_keys {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️cursor-keys/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod place_elements {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📍️place-elements/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod engagement_input {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌨️engagement-input/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod engagement_submit {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📨️engagement-submit/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
         }
         #[path = "."]
         pub mod modes {
@@ -3076,6 +6492,12 @@ pub mod editor {
                             mod component;
                             pub use component::*;
                         }
+                        #[path = "."]
+                        pub mod sheet {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📄️sheet/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
                 }
             }
         }
@@ -3096,6 +6518,18 @@ pub mod editor {
                 #[path = "."]
                 pub mod library {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️library/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod classification {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️classification/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod diagnostics {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🚨️diagnostics/🦀️.rs"]
                     mod component;
                     pub use component::*;
                 }

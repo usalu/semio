@@ -16,6 +16,11 @@ impl<F> Sink<'_,F>{
     fn string<E:From<ValueError>>(&mut self,text:&str,control:&mut NativeEncodeControl<'_>)->Result<(),E>
     where F:FnMut(&[u8],&mut NativeEncodeControl<'_>)->Result<(),E>{
         self.raw("\"",control)?;
+        self.string_body(text,control)?;
+        self.raw("\"",control)
+    }
+    fn string_body<E:From<ValueError>>(&mut self,text:&str,control:&mut NativeEncodeControl<'_>)->Result<(),E>
+    where F:FnMut(&[u8],&mut NativeEncodeControl<'_>)->Result<(),E>{
         control.scoped_stage(|control|{
             control.begin_stage(text.len())?;
             for character in text.chars(){
@@ -27,8 +32,7 @@ impl<F> Sink<'_,F>{
                 control.advance(character.len_utf8())?;
             }
             Ok::<_,E>(())
-        })?;
-        self.raw("\"",control)
+        })
     }
     fn node<S:JsonWriteSource,E:From<ValueError>>(&mut self,source:&S,path:&mut[usize;MAX_DEPTH as usize],depth:usize,maximum_depth:usize,control:&mut NativeEncodeControl<'_>)->Result<(),E>
     where F:FnMut(&[u8],&mut NativeEncodeControl<'_>)->Result<(),E>{
@@ -41,6 +45,11 @@ impl<F> Sink<'_,F>{
                 JsonWriteNode::Bool(value)=>self.raw(if value{"true"}else{"false"},control),
                 JsonWriteNode::Number(value)=>{let mut scalar=ScalarText::new();match value{semio_framework_value::Number::UInt(value)=>write!(scalar,"{value}"),semio_framework_value::Number::Int(value)=>write!(scalar,"{value}"),semio_framework_value::Number::Float(value)=>write_float_to(value,&mut scalar)}.map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed JSON number exceeds fixed scalar cell"))?;self.raw(scalar.text(),control)},
                 JsonWriteNode::String(value)=>self.string(value,control),
+                JsonWriteNode::NativeString(value)=>{
+                    self.raw("\"",control)?;
+                    for index in 0..value.text_chunk_count(){let text=value.text_chunk(index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed JSON native text chunk absent"))?;self.string_body(text,control)?;}
+                    self.raw("\"",control)
+                },
                 JsonWriteNode::Array(length)|JsonWriteNode::Object(length)=>{
                     if length as u64>self.maximum_items{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"borrowed JSON collection exceeds caller item policy").into());}
                     self.raw(if object{"{"}else{"["},control)?;

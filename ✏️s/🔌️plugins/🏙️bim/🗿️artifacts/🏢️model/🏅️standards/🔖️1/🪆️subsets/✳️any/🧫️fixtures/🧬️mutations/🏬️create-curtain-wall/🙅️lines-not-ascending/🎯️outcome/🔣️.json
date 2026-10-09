@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "curtain_wall",
+    "u_grid",
+    "positions"
+  ]
+}

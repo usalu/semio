@@ -9,7 +9,7 @@
     "ids"
   ],
   "x-semio-inverse-rows": {
-    "bounded": 65536
+    "bounded": 8191
   },
   "properties": {
     "mutation": {

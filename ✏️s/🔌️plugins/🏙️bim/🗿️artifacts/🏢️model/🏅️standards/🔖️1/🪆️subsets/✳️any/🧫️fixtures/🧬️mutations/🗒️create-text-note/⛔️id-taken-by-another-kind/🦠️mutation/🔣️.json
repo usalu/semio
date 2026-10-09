@@ -1,0 +1,14 @@
+{
+  "mutation": "createTextNote",
+  "id": "w-south",
+  "text_note": {
+    "storey": "st-ground",
+    "position": {
+      "x": 2,
+      "y": 2
+    },
+    "text": "Verify on site",
+    "rotation": 0,
+    "style": "as-plan"
+  }
+}

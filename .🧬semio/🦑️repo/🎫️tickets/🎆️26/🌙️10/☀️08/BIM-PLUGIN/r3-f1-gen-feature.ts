@@ -28,6 +28,7 @@ const doc = `      """
       {"kind": "<id>", "params": <params>, "before": "${before}"}
       """`;
 const feature = `@capability-bim-1-mutate
+@oracle-bim-1-jsonpatch-diff
 @comparison-ordered-json-v1
 @mutations-bim-1-any
 Feature: Apply every typed BIM mutation to its own committed model and undo it with its own concrete inverse
@@ -72,6 +73,7 @@ ${table}
   @mode-round-trip
   Scenario: Decode and re-encode the real committed demo DSL artifact
     Given the plugin's own committed DSL artifact asset://${em(0x1f3ac)}demo/${em(0x1f5e3)}.dsl.semio
+    And the committed JSON document of the same demo asset://${em(0x1f3ac)}demo/${em(0x1f4f8)}snapshot.json
     When it is parsed with parse_dsl and printed back with print_dsl
     Then the printed bytes are identical to the committed bytes and reparsing preserves the projection
       """

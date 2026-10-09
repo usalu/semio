@@ -1,0 +1,14 @@
+{
+  "mutation": "createAnnotationStyle",
+  "id": "as-new",
+  "annotation_style": {
+    "name": " ",
+    "text_height": 0.25,
+    "terminator": "Tick",
+    "unit": "Metre",
+    "precision": 2,
+    "mark_size": 0.15,
+    "gap": 0.1,
+    "overshoot": 0.2
+  }
+}

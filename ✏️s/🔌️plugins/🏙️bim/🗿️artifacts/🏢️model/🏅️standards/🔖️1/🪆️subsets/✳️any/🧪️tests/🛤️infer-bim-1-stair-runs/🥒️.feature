@@ -5,7 +5,8 @@ Feature: Infer the run of every stair from the storey levels and audit its fligh
   `s.bim.model@1` stores a stair's start, direction, width, flight kind (straight, L-turn, U-turn, spiral), top constraint
   and the comfort limits `max_riser` and `min_tread`. `🪜️stair-runs` derives the rise from the storey levels, the equal
   riser height from the riser limit (the fewest risers within it), the tread from Blondel's rule `2R + T` and the minimum
-  tread, the flights with their riser ranges and walking lines, the landings, the winder of a spiral, the run length and the
+  tread, the flights with their riser ranges and walking lines, the landings (as deep as the stair authors them with
+  `landing_depth`, which also sets where the second flight of a turn starts), the winder of a spiral, the run length and the
   code flags. The oracle is `🐍️.py` in this directory. It is a second, independently written implementation of those rules
   on exactly rounded sums, and `shapely` 2 audits the geometry: every flight is a flat-capped strip around its walking
   line, every landing a rotated box; the walking lines must measure the run length, the strips must be disjoint, a landing

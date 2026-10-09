@@ -1,0 +1,10 @@
+{
+  "classification_systems": {
+    "cs-din": {
+      "entry": "Patched",
+      "source": {
+        "value": "https://www.din.de"
+      }
+    }
+  }
+}

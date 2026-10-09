@@ -1,0 +1,5 @@
+{
+  "mutation": "setCeilingType",
+  "id": "ct-gone",
+  "name": "Ghost"
+}

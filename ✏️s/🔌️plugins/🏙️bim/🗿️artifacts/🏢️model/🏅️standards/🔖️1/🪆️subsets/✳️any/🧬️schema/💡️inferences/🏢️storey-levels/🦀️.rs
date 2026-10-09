@@ -77,12 +77,13 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
 //#endregion 🔖️Stacking
 
 //#region 🔖️Vertical
-/// 🔝️ The z of a top constraint, the one resolver of the model: `Unconnected` adds its height to the base, `StoreyTop` the offset to the own storey top, `Storey` the offset to the elevation of the target storey (the own storey when it is missing).
+/// 🔝️ The z of a top constraint, the one resolver of the model: `Unconnected` adds its height to the base, `StoreyTop` the offset to the own storey top, `Storey` the offset to the elevation of the target storey (the own storey when it is missing); an attached top (`Roof`, `Slab`, `Ceiling`) is the reference height of the flat model, the own storey top plus the offset: the wall layout replaces it by the surface of the target (`wall-layout/attach`).
 pub fn top_of(top: &TopConstraint, base_z: f64, own: &StoreyLevel, target: Option<&StoreyLevel>) -> f64 {
     match top {
         TopConstraint::Unconnected { height } => base_z + height,
         TopConstraint::StoreyTop { offset } => own.top_elevation + offset,
         TopConstraint::Storey { offset, .. } => target.unwrap_or(own).elevation + offset,
+        TopConstraint::Roof { offset, .. } | TopConstraint::Slab { offset, .. } | TopConstraint::Ceiling { offset, .. } => own.top_elevation + offset,
     }
 }
 
@@ -115,6 +116,7 @@ pub fn target_of<'a>(top: &TopConstraint, levels: &'a BTreeMap<String, StoreyLev
 
 //#region 🔖️Projection
 /// 🪜️ The levels of every storey (the `Storey` nodes of the model graph).
+#[cfg(test)]
 pub fn compute_storey_levels(snapshot: &ModelSnapshot) -> BTreeMap<String, StoreyLevel> {
     std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::LEVELS }>(snapshot).storey_levels)
 }

@@ -451,7 +451,7 @@ pub trait DurableOwnedGroupJournalCommitV1: Send {
     fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<super::SnapshotRetirementStep, semio_framework_value::ValueError>;
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -934,24 +934,24 @@ where
     Ok(())
 }
 
-fn retire_unstaged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, outcome: DurableStoreBoundOutcomeV1<P, Mutation>) -> Result<(), DurableOwnedGroupDecisionError>
+fn retire_unstaged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, slot: &mut Option<DurableStoreBoundOutcomeV1<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
+    if slot.is_none() || !grant.permits_one() || grant.maximum_capacity_bytes < size_of::<StagedRootRetirement<P, Mutation>>() { return Err(DurableOwnedGroupDecisionError::InvalidFrontier); }
     let mutation_factory = (*store.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     let snapshot_factory = (*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let mut reservation = store.displaced_retirements.reserve_owner_slots(6).map_err(|_| DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
+    let mut reservation = store.displaced_retirements.reserve_owner_slots(1).map_err(|_| DurableOwnedGroupDecisionError::InvalidFrontier)?;
+    let DurableStoreBoundOutcomeV1 { prepared, .. } = slot.take().expect("validated unstaged outcome");
     let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock: _, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, seal } = prepared;
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreDecodedEditRetirement::new(*edit, mutation_factory)));
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(post_snapshot));
-    if let Some(actor) = local_actor {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(actor)));
-    }
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(applied_edit_id)));
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(tail_edit_id)));
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, seal.authority.retire());
+    let mut retirement = Box::new(StagedRootRetirement::new(snapshot_factory));
+    retirement.edit = Some(super::ArtifactStoreDecodedEditRetirement::new(*edit, mutation_factory));
+    retirement.snapshots[0] = Some(post_snapshot);
+    retirement.external_strings = [local_actor, Some(applied_edit_id)];
+    retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(tail_edit_id));
+    retirement.authority = Some(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(seal.authority));
+    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement);
     store.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)
 }
 
@@ -1367,18 +1367,18 @@ where
     failure: Option<DurableOwnedThreeStoreMapAssemblyFailureV1>,
 }
 
-fn close_assembly_publication<P: Send + Sync + 'static, Mutation>(publication: &mut Option<super::ArtifactStoreBatchPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
+fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'static>(publication: &mut Option<super::ArtifactStoreBatchPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
+    use semio_framework_value::retained_clone::{RetainedCloneStep, admit_retained_clone_close};
     let Some(owner) = publication.as_mut() else { return Ok(true) };
-    owner.begin_close();
-    match owner.close_step(super::ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into_message()))? {
-        super::SnapshotRetirementStep::Complete => {
-            if !owner.terminal_is_empty() {
-                return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-            }
+    let grant = grant.retained_grant();
+    let codec = |error: semio_framework_value::ValueError| DurableOwnedGroupDecisionError::Codec(error.into_message());
+    let step = owner.close_step(grant).map_err(codec)?;
+    match admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "durable group publication").map_err(codec)? {
+        RetainedCloneStep::Complete(_) => {
             drop(publication.take());
             Ok(true)
         }
-        super::SnapshotRetirementStep::Pending { .. } | super::SnapshotRetirementStep::Blocked => Ok(false),
+        RetainedCloneStep::Progress(_) => Ok(false),
     }
 }
 
@@ -1991,7 +1991,7 @@ where
                     self.phase = DurableOwnedThreeStoreCommitPhaseV1::PublishingParentLease;
                 } else {
                     let decision_bytes = self.decision_pack.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.len();
-                    if grant.maximum_bytes < decision_bytes {
+                    if grant.maximum_copy_bytes < decision_bytes {
                         return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
                     }
                     let decision_pack = self.decision_pack.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
@@ -2005,7 +2005,7 @@ where
                     journal.cancel();
                     self.cancel_forwarded = true;
                 }
-                match journal.advance(super::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: grant.maximum_bytes }).map_err(DurableOwnedGroupDecisionError::Codec)? {
+                match journal.advance(super::ArtifactStoreOneItemGrant { maximum_items: 1, ..grant }).map_err(DurableOwnedGroupDecisionError::Codec)? {
                     DurableOwnedGroupJournalAdvanceV1::Pending => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(self.phase)),
                     DurableOwnedGroupJournalAdvanceV1::Absent => {
                         self.begin_abort()?;
@@ -2079,24 +2079,24 @@ where
                 return Ok(DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(self.receipt.clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?));
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingValue => {
-                if let Some(outcome) = self.value.take() {
-                    retire_unstaged_store_member(value_store, outcome)?;
+                if self.value.is_some() {
+                    retire_unstaged_store_member(value_store, &mut self.value, grant)?;
                 } else {
                     abort_staged_store_member(value_store, &self.visibility()?)?;
                 }
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AbortingDrawing;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingDrawing => {
-                if let Some(outcome) = self.drawing.take() {
-                    retire_unstaged_store_member(drawing_store, outcome)?;
+                if self.drawing.is_some() {
+                    retire_unstaged_store_member(drawing_store, &mut self.drawing, grant)?;
                 } else {
                     abort_staged_store_member(drawing_store, &self.visibility()?)?;
                 }
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AbortingParent;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingParent => {
-                if let Some(outcome) = self.parent.take() {
-                    retire_unstaged_store_member(parent_store, outcome)?;
+                if self.parent.is_some() {
+                    retire_unstaged_store_member(parent_store, &mut self.parent, grant)?;
                 } else {
                     abort_staged_store_member(parent_store, &self.visibility()?)?;
                 }
@@ -2105,15 +2105,12 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::ClosingJournal => {
                 if let Some(journal) = self.journal.as_mut() {
-                    match journal.close_step(super::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: grant.maximum_bytes }).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into_message()))? {
-                        super::SnapshotRetirementStep::Complete => {
-                            if !journal.terminal_is_empty() {
-                                return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-                            }
-                            drop(self.journal.take());
-                        }
-                        super::SnapshotRetirementStep::Blocked => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked),
-                        super::SnapshotRetirementStep::Pending { .. } => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(self.phase)),
+                    let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant.retained_grant() };
+                    let step = journal.close_step(child).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into_message()))?;
+                    match semio_framework_value::retained_clone::admit_retained_clone_close(child, step, journal.terminal_is_empty(), "durable group journal").map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into_message()))? {
+                        semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => drop(self.journal.take()),
+                        semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == Default::default() => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked),
+                        semio_framework_value::retained_clone::RetainedCloneStep::Progress(_) => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(self.phase)),
                     }
                 }
                 self.decision = None;

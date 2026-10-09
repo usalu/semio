@@ -1,0 +1,9 @@
+{
+  "mutation": "setWallTop",
+  "id": "w-east",
+  "top": {
+    "Unconnected": {
+      "height": 2.4
+    }
+  }
+}

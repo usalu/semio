@@ -1,0 +1,8 @@
+[
+ {"name":"Authored Latin Glyphs","font":"🚀️anta/🏛️latin/📖️regular","text":"Hello AV To","size":24,"origin":[0,0],"lineHeight":1.2,"kerning":true,"expectedLines":1},
+ {"name":"German Composite Glyphs","font":"🚀️anta/🏛️latin/📖️regular","text":"Grüße ÄÖÜ äöü ß","size":24,"origin":[4,7],"lineHeight":1.2,"kerning":true,"expectedLines":1},
+ {"name":"Multiline Unicode Baselines","font":"🚀️anta/🏛️latin/📖️regular","text":"ÄV\r\nöß\rTo\n","size":18,"origin":[-3,5],"lineHeight":1.2,"kerning":true,"expectedLines":4},
+ {"name":"Empty Text Owner","font":"🚀️anta/🏛️latin/📖️regular","text":"","size":12,"origin":[0,0],"lineHeight":1.2,"kerning":true,"expectedLines":1},
+ {"name":"Whitespace Metrics","font":"⌨️share-tech-mono/🏛️latin/📖️regular","text":" A  B ","size":17,"origin":[0,0],"lineHeight":1.2,"kerning":true,"expectedLines":1},
+ {"name":"Extended Unicode Glyphs","font":"🚀️anta/➕️latin-ext/📖️regular","text":"ĀČĎĒĢŁŐŠŽ","size":20,"origin":[0,0],"lineHeight":1.2,"kerning":true,"expectedLines":1}
+]

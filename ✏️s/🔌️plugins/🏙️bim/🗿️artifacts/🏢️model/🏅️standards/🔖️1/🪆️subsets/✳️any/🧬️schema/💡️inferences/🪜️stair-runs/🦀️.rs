@@ -136,10 +136,10 @@ fn layout(stair: &Stair, count: u32, riser_height: f64, tread: f64, base_z: f64)
             let first = ((fraction * f64::from(count)).round().clamp(1.0, f64::from(count - 1))) as u32;
             let sign = if *turn == Turn::Left { 1.0 } else { -1.0 };
             let foot = along(start, direction, f64::from(first - 1) * tread);
-            let centre = along(foot, direction, width / 2.0);
+            let (depth, centre) = (stair.landing_depth, along(foot, direction, stair.landing_depth / 2.0));
             let turned = direction + sign * FRAC_PI_2;
-            let second_start = along(centre, turned, width / 2.0);
-            let landing = StairLanding { after_flight: 0, z: base_z + f64::from(first) * riser_height, centre, direction, width, depth: width };
+            let second_start = along(along(foot, direction, depth - width / 2.0), turned, width / 2.0);
+            let landing = StairLanding { after_flight: 0, z: base_z + f64::from(first) * riser_height, centre, direction, width, depth };
             (vec![flight(1, first, start, direction, tread, riser_height, base_z), flight(first + 1, count - first, second_start, turned, tread, riser_height, base_z)], vec![landing])
         }
         StairFlight::UTurn { gap } if count >= 2 => {
@@ -147,8 +147,8 @@ fn layout(stair: &Stair, count: u32, riser_height: f64, tread: f64, base_z: f64)
             let first = count.div_ceil(2);
             let foot = along(start, direction, f64::from(first - 1) * tread);
             let second_start = aside(foot, direction, width + gap);
-            let centre = aside(along(foot, direction, width / 2.0), direction, (width + gap) / 2.0);
-            let landing = StairLanding { after_flight: 0, z: base_z + f64::from(first) * riser_height, centre, direction, width: 2.0 * width + gap, depth: width };
+            let centre = aside(along(foot, direction, stair.landing_depth / 2.0), direction, (width + gap) / 2.0);
+            let landing = StairLanding { after_flight: 0, z: base_z + f64::from(first) * riser_height, centre, direction, width: 2.0 * width + gap, depth: stair.landing_depth };
             (vec![flight(1, first, start, direction, tread, riser_height, base_z), flight(first + 1, count - first, second_start, direction + PI, tread, riser_height, base_z)], vec![landing])
         }
         StairFlight::Spiral { radius, sweep } => {
@@ -210,6 +210,7 @@ pub fn dependency(stair: &Stair) -> semio_framework_value::DslValue {
 
 
 /// 🪜️ The run of every stair (the `StairRun` nodes of the model graph).
+#[cfg(test)]
 pub fn compute_stair_runs(snapshot: &ModelSnapshot) -> BTreeMap<String, StairRun> {
     std::mem::take(&mut super::super::model_graph::infer_selected::<{ super::super::model_graph::kinds::RUNS }>(snapshot).stair_runs)
 }

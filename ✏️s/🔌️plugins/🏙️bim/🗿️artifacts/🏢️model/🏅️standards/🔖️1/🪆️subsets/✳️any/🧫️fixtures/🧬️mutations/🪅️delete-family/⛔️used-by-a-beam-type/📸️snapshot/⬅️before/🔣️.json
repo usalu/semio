@@ -1,0 +1,242 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {
+    "bt-hea": {
+      "name": "HEA beam",
+      "profile": {
+        "Family": {
+          "family": "fam-hea"
+        }
+      },
+      "material": "m-brick"
+    }
+  },
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {},
+  "families": {
+    "fam-table": {
+      "name": "Table",
+      "category": "Furniture"
+    },
+    "fam-hea": {
+      "name": "HEA 200",
+      "category": "Profile"
+    }
+  },
+  "family_parameters": {
+    "fam-table.width": {
+      "family": "fam-table",
+      "name": "width",
+      "kind": "Length",
+      "value": "1.6 m"
+    },
+    "fam-table.depth": {
+      "family": "fam-table",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.8 m"
+    },
+    "fam-table.double": {
+      "family": "fam-table",
+      "name": "double",
+      "kind": "Length",
+      "value": "2 * width"
+    },
+    "fam-hea.h": {
+      "family": "fam-hea",
+      "name": "h",
+      "kind": "Length",
+      "value": "190 mm"
+    },
+    "fam-hea.b": {
+      "family": "fam-hea",
+      "name": "b",
+      "kind": "Length",
+      "value": "200 mm"
+    }
+  },
+  "family_solids": {
+    "s-top": {
+      "family": "fam-table",
+      "name": "Top",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0.7 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "40 mm"
+        }
+      },
+      "material": "\"m-brick\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-hea": {
+      "family": "fam-hea",
+      "name": "HEA",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "IShape": {
+              "width": "b",
+              "depth": "h",
+              "web": "6.5 mm",
+              "flange": "10 mm"
+            }
+          },
+          "base": "0 m",
+          "height": "1 m"
+        }
+      },
+      "material": "\"m-brick\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    }
+  }
+}

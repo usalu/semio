@@ -1,0 +1,56 @@
+{
+  "c-bare": null,
+  "c-curved": {
+    "gross_area": 22.28318530718,
+    "net_area": 21.497787143782,
+    "surface_area": 21.497787143782,
+    "perimeter": 21.424777960769,
+    "width": 0.0625,
+    "gross_volume": 1.392699081699,
+    "net_volume": 1.343611696486,
+    "mass": 247.224552153495,
+    "top_z": 5.55,
+    "bottom_z": 5.4875,
+    "underside_z": 5.4875
+  },
+  "c-diagonal-slope": {
+    "gross_area": 12.0,
+    "net_area": 12.0,
+    "surface_area": 12.060251020805,
+    "perimeter": 14.0,
+    "width": 0.02,
+    "gross_volume": 0.24,
+    "net_volume": 0.24,
+    "mass": 192.0,
+    "top_z": 5.6,
+    "bottom_z": 5.11865353111,
+    "underside_z": 5.568466338278
+  },
+  "c-holed": {
+    "gross_area": 24.0,
+    "net_area": 23.0,
+    "surface_area": 23.0,
+    "perimeter": 24.0,
+    "width": 0.0625,
+    "gross_volume": 1.5,
+    "net_volume": 1.4375,
+    "mass": 264.5,
+    "top_z": 2.7,
+    "bottom_z": 2.6375,
+    "underside_z": 2.6375
+  },
+  "c-sloped": {
+    "gross_area": 20.0,
+    "net_area": 20.0,
+    "surface_area": 20.025026068169,
+    "perimeter": 18.0,
+    "width": 0.02,
+    "gross_volume": 0.4,
+    "net_volume": 0.4,
+    "mass": 320.0,
+    "top_z": 2.9,
+    "bottom_z": 2.629791458122,
+    "underside_z": 2.873744786453
+  },
+  "c-unknown-type": null
+}

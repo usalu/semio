@@ -5,6 +5,7 @@ use super::*;
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) enum DrawingRetirementOwner {
     Snapshot(DrawingSnapshot),
+    Asset(DrawingImageAsset),
     Mutation(DrawingMutation),
     Layer(DrawingLayerNode),
     Fill(FillStyle),

@@ -1,0 +1,23 @@
+{
+  "mutation": "createView",
+  "id": "v-south",
+  "view": {
+    "building": "bldg-1",
+    "name": "South",
+    "kind": "Elevation",
+    "depth": 40,
+    "hidden": [],
+    "scale": 100,
+    "detail": "Medium",
+    "plane": {
+      "start": {
+        "x": 8,
+        "y": -3
+      },
+      "end": {
+        "x": 0,
+        "y": -3
+      }
+    }
+  }
+}

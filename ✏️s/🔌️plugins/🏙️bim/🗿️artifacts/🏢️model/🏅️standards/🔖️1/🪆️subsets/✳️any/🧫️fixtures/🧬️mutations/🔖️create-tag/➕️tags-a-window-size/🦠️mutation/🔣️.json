@@ -1,0 +1,14 @@
+{
+  "mutation": "createTag",
+  "id": "tag-win",
+  "tag": {
+    "storey": "st-ground",
+    "element": "o-win",
+    "category": "Size",
+    "offset": {
+      "x": 0,
+      "y": 0.6
+    },
+    "style": "as-plan"
+  }
+}

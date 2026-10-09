@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.app.bim.model.sheet_window_config;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
+message BimSheetWindowConfig {
+  string sheet = 1;
+  bool framed = 2;
+  semio.framework.ui.viewport.Viewport2d viewport = 3;
+}

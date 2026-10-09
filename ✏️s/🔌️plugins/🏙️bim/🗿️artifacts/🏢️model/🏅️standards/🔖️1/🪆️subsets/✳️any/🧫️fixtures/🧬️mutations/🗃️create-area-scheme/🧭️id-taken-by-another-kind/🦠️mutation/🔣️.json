@@ -1,0 +1,10 @@
+{
+  "mutation": "createAreaScheme",
+  "id": "z-day",
+  "area_scheme": {
+    "name": "Other",
+    "measure": "Net",
+    "usages": [],
+    "zones": []
+  }
+}

@@ -39,6 +39,7 @@ class Heap<T> {
  pop():T|undefined {const first=this.values[0],last=this.values.pop();if(last===undefined||!this.values.length)return first;let at=0;while(at*2+1<this.values.length){let child=at*2+1;if(child+1<this.values.length&&this.compare(this.values[child+1]!,this.values[child]!)<0)child++;if(this.compare(last,this.values[child]!)<=0)break;this.values[at]=this.values[child]!;at=child;}this.values[at]=last;return first;}
 }
 /** ⏱️ Prepare, intersect, classify and emit a stable region snapshot under explicit work grants. */
+const retainedAdmission=Symbol("retained Boolean admission");
 export class BooleanJob {
  private phase:BooleanProgress["phase"]="preparing";private work=0;private cancelled=false;private transferred=false;private failure:unknown=null;private prepared=0;private vertices=0;private parameters=0;private pairs=0;
  private operand=0;private contour=0;private at=0;private entering=true;private first:Vec2|null=null;private previous:Vec2|null=null;private bounds:Box=[Infinity,Infinity,-Infinity,-Infinity];private rules:BooleanOperand["fillRule"][]=[];private source:Edge[]=[];
@@ -49,8 +50,11 @@ export class BooleanJob {
  private splitRing:number[]|null=null;private ringSplitAt=0;private ringSplitStop=0;private ringSplitCopy=true;
  private compactAt=0;private compactVertex=0;private compactMode:"scan"|"measure"="scan";private compactPoints:Vec2[]=[];private area=0;private lower=0;private upper=0;private rings:Ring[]=[];
  private ringHeap=new Heap<{key:[number,number,number,number];ring:number}>((a,b)=>a.key[0]-b.key[0]||a.key[1]-b.key[1]||a.key[2]-b.key[2]||a.key[3]-b.key[3]);private emitting:number|null=null;private emitAt=0;private output:PathSegment[]=[];
- constructor(private input:BooleanInput) {
-  if(!["union","difference","intersection","xor"].includes(input.operation)||!Array.isArray(input.operands)||!input.operands.length||input.operands.length>1024||!Number.isFinite(input.epsilon)||input.epsilon<1e-12||input.epsilon>16||!integer(input.maxEdges,262144)||!integer(input.maxParameters,1048576)||!integer(input.maxAtomicEdges,262144)||!integer(input.maxSegments,327680)||!integer(input.maxWork,1000000000))bad("Invalid boolean contract");this.input={...input};
+ /** 📥️ Refused contracts keep their actual input under retained admission. */
+ static admit(input:BooleanInput):BooleanJob{return new BooleanJob(input,retainedAdmission);}
+ constructor(private input:BooleanInput,admission?:typeof retainedAdmission) {
+  try{
+  if(!["union","difference","intersection","xor"].includes(input.operation)||!Array.isArray(input.operands)||!input.operands.length||input.operands.length>1024||!Number.isFinite(input.epsilon)||input.epsilon<1e-12||input.epsilon>16||!integer(input.maxEdges,262144)||!integer(input.maxParameters,1048576)||!integer(input.maxAtomicEdges,262144)||!integer(input.maxSegments,327680)||!integer(input.maxWork,1000000000))bad("Invalid boolean contract");this.input={...input};}catch(error){if(admission!==retainedAdmission)throw error;this.failure=error;}
  }
  private addEdge(a:Vec2,b:Vec2):void {
   if(length(a,b)===0)return;if(this.source.length>=this.input.maxEdges)bad("Boolean exceeds edge budget");if(this.parameters+2>this.input.maxParameters)bad("Boolean exceeds parameter budget");
@@ -190,10 +194,10 @@ export class BooleanJob {
   });
   return{job,operands,output};
  }
- cancel():void {this.cancelled=true;if(this.transferred)return;this.input={...this.input,operands:[]};this.source=[];this.tree=[];this.query=[];this.level=[];this.nextLevel=[];this.indexHeap=new Heap((a,b)=>a.key-b.key||a.edge-b.edge);this.splitHeap=new Heap((a,b)=>a-b);this.splitValues=null;this.nodes=[];this.grid.clear();this.atomic=[];this.atomicIds.clear();this.boundary=[];this.outgoing.clear();this.raw=[];this.ring=[];this.positions.clear();this.splitRing=null;this.compactPoints=[];this.rings=[];this.ringHeap=new Heap(()=>0);this.emitting=null;this.output=[];this.leftWinding=[];this.rightWinding=[];}
+ cancel():void{this.cancelled=true;}
 }
 /** 🕰️ Yield between grants and recheck aborts after complete observers before publication. */
 export async function booleanRegions(input:BooleanInput,options:BooleanOptions={}):Promise<PathSegment[]> {
  const job=new BooleanJob(input),check=()=>{if(options.signal?.aborted){job.cancel();throw new DOMException("Boolean cancelled","AbortError");}};
- try{check();for(;;){const progress=job.advance(options.workBudget??4096);check();options.onProgress?.(progress);check();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}
+ try{check();for(;;){const progress=job.advance(options.workBudget??4096);check();options.onProgress?.(progress);check();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const close=job.intoRetirement().job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
 }

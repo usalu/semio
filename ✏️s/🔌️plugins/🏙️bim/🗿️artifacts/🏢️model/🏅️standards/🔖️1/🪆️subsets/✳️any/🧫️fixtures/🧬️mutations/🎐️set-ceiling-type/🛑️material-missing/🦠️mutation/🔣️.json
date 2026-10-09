@@ -1,0 +1,11 @@
+{
+  "mutation": "setCeilingType",
+  "id": "ct-board",
+  "layers": [
+    {
+      "material": "m-ghost",
+      "thickness": 0.02,
+      "function": "Structure"
+    }
+  ]
+}

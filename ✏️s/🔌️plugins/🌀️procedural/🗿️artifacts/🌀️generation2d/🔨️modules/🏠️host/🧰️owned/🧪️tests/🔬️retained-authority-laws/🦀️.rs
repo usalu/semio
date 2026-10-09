@@ -113,10 +113,6 @@ impl store::ArtifactEnvelopeFieldDecoder<Generation2dSnapshot, Generation2dMutat
         Err(Self::diagnostic("generation2d-retained-pack.outer-record-not-readable"))
     }
 
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_byte_demand())
-    }
-
     fn maximum_close_byte_demand(&self) -> usize {
         self.maximum_close_byte_demand
     }
@@ -125,17 +121,34 @@ impl store::ArtifactEnvelopeFieldDecoder<Generation2dSnapshot, Generation2dMutat
         self.maximum_retained_close_bytes
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        let Some(authority) = self.authority.as_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        let step = authority.close_step(maximum_items, maximum_bytes)?;
-        if step != store::SnapshotRetirementStep::Complete {
-            return Ok(step);
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_copy_byte_demand())
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_capacity_byte_demand(maximum_copy_bytes))
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_release_byte_demand())
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_depth_demand().map(|depth| depth + 1))
+    }
+
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        let Some(authority) = self.authority.as_mut() else { return Ok(store::RetainedCloneStep::Complete(Default::default())) };
+        if authority.terminal_is_empty() {
+            drop(self.authority.take());
+            return Ok(store::RetainedCloneStep::Complete(Default::default()));
         }
-        if !authority.terminal_is_empty() {
+        let child = store::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+        let step = authority.close_step(child)?;
+        if matches!(step, store::RetainedCloneStep::Complete(_)) && !authority.terminal_is_empty() {
             return Err(Self::diagnostic("generation2d-retained-pack.outer-vcs-false-terminal"));
         }
-        drop(self.authority.take());
-        Ok(store::SnapshotRetirementStep::Complete)
+        Ok(store::RetainedCloneStep::Progress(step.progress()))
     }
 
     fn terminal_is_empty(&self) -> bool {

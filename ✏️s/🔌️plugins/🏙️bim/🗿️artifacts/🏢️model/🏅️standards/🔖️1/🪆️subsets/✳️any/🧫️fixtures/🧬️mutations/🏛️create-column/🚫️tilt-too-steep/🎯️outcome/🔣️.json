@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "column",
+    "tilt",
+    "angle"
+  ]
+}

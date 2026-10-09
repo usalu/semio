@@ -132,7 +132,17 @@ impl Transform {
     }
 }
 
-fn ghost(ctx: &ToolContext<'_>, ids: &[String], map: &dyn Fn(P) -> P) -> Vec<Mark> {
+/// 👻️ The plan outlines of `ids` with every point mapped by `map`, drawn as ghosts: what a tool shows of the elements it would move, copy or mirror.
+pub fn ghost(ctx: &ToolContext<'_>, ids: &[String], map: &dyn Fn(P) -> P) -> Vec<Mark> {
+    traced(ctx, ids, map, Style::Ghost)
+}
+
+/// 🔦️ The plan outlines of `ids` where they stand, drawn as the selection: what a tool shows of the elements it will act on before the first click.
+pub fn outline(ctx: &ToolContext<'_>, ids: &[String]) -> Vec<Mark> {
+    traced(ctx, ids, &|p| p, Style::Selection)
+}
+
+fn traced(ctx: &ToolContext<'_>, ids: &[String], map: &dyn Fn(P) -> P, style: Style) -> Vec<Mark> {
     let Some(linework) = ctx.storey().and_then(|storey| ctx.inference.plan_linework.get(storey)) else { return Vec::new() };
     let path = |vertices: &[PlanVertex], closed: bool| -> Vec<P> {
         let edges = if closed { vertices.len() } else { vertices.len().saturating_sub(1) };
@@ -143,12 +153,16 @@ fn ghost(ctx: &ToolContext<'_>, ids: &[String], map: &dyn Fn(P) -> P) -> Vec<Mar
         }
         points
     };
-    let regions = linework.regions.iter().filter(|region| ids.contains(&region.element)).map(|region| Mark::path(&path(&region.outer, true), true, Style::Ghost));
-    let lines = linework.polylines.iter().filter(|line| ids.contains(&line.element)).map(|line| Mark::path(&path(&line.vertices, line.closed), line.closed, Style::Ghost));
+    let regions = linework.regions.iter().filter(|region| ids.contains(&region.element)).map(|region| Mark::path(&path(&region.outer, true), true, style));
+    let lines = linework.polylines.iter().filter(|line| ids.contains(&line.element)).map(|line| Mark::path(&path(&line.vertices, line.closed), line.closed, style));
     regions.chain(lines).collect()
 }
 
 impl Tool for Transform {
+    fn anchor(&self) -> Option<P> {
+        self.base
+    }
+
     fn event(&mut self, ctx: &mut ToolContext<'_>, event: &ToolEvent) -> Step {
         match event {
             ToolEvent::Down(pointer) => self.down(ctx, pointer),

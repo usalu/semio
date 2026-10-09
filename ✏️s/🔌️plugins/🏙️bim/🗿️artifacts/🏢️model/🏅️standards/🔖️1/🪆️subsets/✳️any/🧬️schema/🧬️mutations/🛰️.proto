@@ -290,12 +290,7 @@ message SetCurtainWall {
   optional Axis axis = 2;
   optional double base_offset = 3;
   optional TopConstraint top = 4;
-  optional double u_spacing = 5;
-  optional double v_spacing = 6;
-  optional Profile mullion = 7;
-  optional string panel_material = 8;
-  optional string mullion_material = 9;
-  optional string name = 10;
+  optional string name = 5;
 }
 
 message CreateColumn {
@@ -329,10 +324,9 @@ message DeleteBeam {
 message SetBeam {
   string id = 1;
   optional string beam_type = 2;
-  optional Point2 start = 3;
-  optional Point2 end = 4;
-  optional double top_offset = 5;
-  optional string name = 6;
+  optional double top_offset = 3;
+  optional map<string, google.protobuf.Value> end_top_offset = 4;
+  optional string name = 5;
 }
 
 message CreateSlab {
@@ -403,6 +397,8 @@ message SetOpening {
   optional bool flip_hand = 6;
   optional bool flip_facing = 7;
   optional string name = 8;
+  optional map<string, google.protobuf.Value> reveal_depth = 9;
+  optional map<string, google.protobuf.Value> reveal_material = 10;
 }
 
 message CreateStair {
@@ -449,9 +445,10 @@ message SetRailing {
   optional Profile post_profile = 6;
   optional Baluster baluster = 7;
   optional Infill infill = 8;
-  optional string material = 9;
-  optional double base_offset = 10;
-  optional string name = 11;
+  optional RailingHost host = 9;
+  optional string material = 10;
+  optional double base_offset = 11;
+  optional string name = 12;
 }
 
 message CreateSpace {
@@ -469,6 +466,10 @@ message SetSpace {
   optional string name = 3;
   optional SpaceBoundary boundary = 4;
   optional string usage = 5;
+  optional map<string, google.protobuf.Value> zone = 6;
+  optional map<string, google.protobuf.Value> floor_finish = 7;
+  optional map<string, google.protobuf.Value> wall_finish = 8;
+  optional map<string, google.protobuf.Value> ceiling_finish = 9;
 }
 
 message MoveElements {
@@ -506,15 +507,536 @@ message RemoveElementProperty {
 
 message SetElementClassification {
   string id = 1;
-  Classification classification = 2;
+  string system = 2;
+  string code = 3;
 }
 
 message RemoveElementClassification {
   string id = 1;
+  string system = 2;
 }
 
 message PlaceElements {
   map<string, google.protobuf.Value> placements = 1;
+}
+
+message SetElementStorey {
+  string id = 1;
+  string storey = 2;
+}
+
+message SetElementPhase {
+  string id = 1;
+  Phase phase = 2;
+}
+
+message SetWallEndJoin {
+  string id = 1;
+  string end = 2;
+  optional EndJoin join = 3;
+}
+
+message CopyElements {
+  repeated string ids = 1;
+  Point2 vector = 2;
+  string prefix = 3;
+}
+
+message MirrorElements {
+  repeated string ids = 1;
+  Point2 line_start = 2;
+  Point2 line_end = 3;
+  optional string prefix = 4;
+}
+
+message ArrayElements {
+  repeated string ids = 1;
+  string prefix = 2;
+  map<string, google.protobuf.Value> pattern = 3;
+}
+
+message AlignElements {
+  repeated string ids = 1;
+  string axis = 2;
+  string edge = 3;
+  double target = 4;
+}
+
+message OffsetWall {
+  string id = 1;
+  string new_id = 2;
+  double distance = 3;
+}
+
+message TrimExtendWall {
+  string id = 1;
+  string end = 2;
+  string target = 3;
+}
+
+message SplitSlab {
+  string id = 1;
+  string new_id = 2;
+  Point2 line_start = 3;
+  Point2 line_end = 4;
+}
+
+message SplitBeam {
+  string id = 1;
+  double t = 2;
+  string new_id = 3;
+}
+
+message CreateCeilingType {
+  string id = 1;
+  CeilingType ceiling_type = 2;
+}
+
+message DeleteCeilingType {
+  string id = 1;
+}
+
+message SetCeilingType {
+  string id = 1;
+  optional string name = 2;
+  repeated Layer layers = 3;
+}
+
+message CreateCeiling {
+  string id = 1;
+  Ceiling ceiling = 2;
+}
+
+message DeleteCeiling {
+  string id = 1;
+}
+
+message SetCeilingBoundary {
+  string id = 1;
+  repeated Vertex boundary = 2;
+  repeated repeated Vertex holes = 3;
+}
+
+message SetCeiling {
+  string id = 1;
+  optional string ceiling_type = 2;
+  optional double offset = 3;
+  optional Slope slope = 4;
+  optional string name = 5;
+}
+
+message CreateZone {
+  string id = 1;
+  Zone zone = 2;
+}
+
+message SetZone {
+  string id = 1;
+  string name = 2;
+  string category = 3;
+  double occupancy_density = 4;
+}
+
+message DeleteZone {
+  string id = 1;
+}
+
+message CreateAreaScheme {
+  string id = 1;
+  AreaScheme area_scheme = 2;
+}
+
+message SetAreaScheme {
+  string id = 1;
+  string name = 2;
+  AreaMeasure measure = 3;
+  repeated string usages = 4;
+  repeated string zones = 5;
+}
+
+message DeleteAreaScheme {
+  string id = 1;
+}
+
+message CreateWallSweep {
+  string id = 1;
+  WallSweep wall_sweep = 2;
+}
+
+message SetWallSweep {
+  string id = 1;
+  optional string host = 2;
+  optional WallSide side = 3;
+  optional Profile profile = 4;
+  optional double height = 5;
+  optional double inset = 6;
+  optional string material = 7;
+  optional string name = 8;
+}
+
+message DeleteWallSweep {
+  string id = 1;
+}
+
+message SetWallBaseSlab {
+  string id = 1;
+  optional string slab = 2;
+}
+
+message CreateRamp {
+  string id = 1;
+  Ramp ramp = 2;
+}
+
+message SetRamp {
+  string id = 1;
+  repeated Vertex path = 2;
+  double width = 3;
+  double landing_start = 4;
+  double landing_end = 5;
+  double landing_turn = 6;
+  double max_slope = 7;
+  double thickness = 8;
+  string material = 9;
+  double base_offset = 10;
+  TopConstraint top = 11;
+  bool railing_left = 12;
+  bool railing_right = 13;
+  string name = 14;
+}
+
+message DeleteRamp {
+  string id = 1;
+}
+
+message CreateDimension {
+  string id = 1;
+  Dimension dimension = 2;
+}
+
+message DeleteDimension {
+  string id = 1;
+}
+
+message SetDimension {
+  string id = 1;
+  repeated AnnotationAnchor anchors = 2;
+  optional double angle = 3;
+  optional double offset = 4;
+  optional string style = 5;
+  optional map<string, google.protobuf.Value> lock = 6;
+  optional string name = 7;
+}
+
+message CreateTag {
+  string id = 1;
+  Tag tag = 2;
+}
+
+message DeleteTag {
+  string id = 1;
+}
+
+message SetTag {
+  string id = 1;
+  optional string element = 2;
+  optional TagCategory category = 3;
+  optional Point2 offset = 4;
+  optional string style = 5;
+}
+
+message CreateTextNote {
+  string id = 1;
+  TextNote text_note = 2;
+}
+
+message DeleteTextNote {
+  string id = 1;
+}
+
+message SetTextNote {
+  string id = 1;
+  optional Point2 position = 2;
+  optional string text = 3;
+  optional double rotation = 4;
+  optional string style = 5;
+}
+
+message CreateLeader {
+  string id = 1;
+  Leader leader = 2;
+}
+
+message DeleteLeader {
+  string id = 1;
+}
+
+message SetLeader {
+  string id = 1;
+  optional AnnotationAnchor anchor = 2;
+  optional Point2 offset = 3;
+  optional string text = 4;
+  optional string style = 5;
+}
+
+message CreateAnnotationStyle {
+  string id = 1;
+  AnnotationStyle annotation_style = 2;
+}
+
+message DeleteAnnotationStyle {
+  string id = 1;
+}
+
+message SetAnnotationStyle {
+  string id = 1;
+  optional string name = 2;
+  optional double text_height = 3;
+  optional Terminator terminator = 4;
+  optional DimensionUnit unit = 5;
+  optional int32 precision = 6;
+  optional double mark_size = 7;
+  optional double gap = 8;
+  optional double overshoot = 9;
+}
+
+message CreateView {
+  string id = 1;
+  View view = 2;
+}
+
+message SetView {
+  string id = 1;
+  optional string name = 2;
+  optional string storey = 3;
+  optional ViewPlane plane = 4;
+  optional ViewCamera camera = 5;
+  optional map<string, google.protobuf.Value> cut_height = 6;
+  optional double depth = 7;
+  optional ViewCrop crop = 8;
+  repeated ViewCategory hidden = 9;
+  optional Phase phase = 10;
+  optional int32 scale = 11;
+  optional DetailLevel detail = 12;
+}
+
+message DeleteView {
+  string id = 1;
+}
+
+message CreateSchedule {
+  string id = 1;
+  Schedule schedule = 2;
+}
+
+message SetSchedule {
+  string id = 1;
+  optional string name = 2;
+  optional ScheduleCategory category = 3;
+  repeated ScheduleColumn columns = 4;
+  repeated ScheduleSort sort = 5;
+  repeated ScheduleFilter filter = 6;
+  repeated ScheduleGroup group = 7;
+  optional bool itemize = 8;
+  repeated string storeys = 9;
+  repeated Phase phases = 10;
+}
+
+message DeleteSchedule {
+  string id = 1;
+}
+
+message CreateSheet {
+  string id = 1;
+  Sheet sheet = 2;
+}
+
+message SetSheet {
+  string id = 1;
+  optional string number = 2;
+  optional string name = 3;
+  optional Paper paper = 4;
+  optional Orientation orientation = 5;
+  optional string project = 6;
+  optional string drawn_by = 7;
+  optional string checked_by = 8;
+  optional string date = 9;
+  optional string revision = 10;
+  optional string scale_label = 11;
+}
+
+message DeleteSheet {
+  string id = 1;
+}
+
+message CreateViewport {
+  string id = 1;
+  Viewport viewport = 2;
+}
+
+message SetViewport {
+  string id = 1;
+  optional string sheet = 2;
+  optional string view = 3;
+  optional Point2 position = 4;
+  optional int32 scale = 5;
+  optional ViewCrop crop = 6;
+  optional map<string, google.protobuf.Value> label = 7;
+}
+
+message DeleteViewport {
+  string id = 1;
+}
+
+message CreateSheetRevision {
+  string id = 1;
+  SheetRevision sheet_revision = 2;
+}
+
+message SetSheetRevision {
+  string id = 1;
+  optional string number = 2;
+  optional string date = 3;
+  optional string description = 4;
+  optional string author = 5;
+}
+
+message DeleteSheetRevision {
+  string id = 1;
+}
+
+message CreatePropertyTemplate {
+  string id = 1;
+  PropertyTemplate template = 2;
+}
+
+message SetPropertyTemplate {
+  string id = 1;
+  optional string name = 2;
+  repeated TemplateTarget applies_to = 3;
+  repeated PropertyDef properties = 4;
+}
+
+message DeletePropertyTemplate {
+  string id = 1;
+}
+
+message CreateClassificationSystem {
+  string id = 1;
+  ClassificationSystem system = 2;
+}
+
+message SetClassificationSystem {
+  string id = 1;
+  optional string name = 2;
+  optional string edition = 3;
+  optional map<string, google.protobuf.Value> source = 4;
+  repeated ClassificationItem entries = 5;
+}
+
+message DeleteClassificationSystem {
+  string id = 1;
+}
+
+message SetBeamAxis {
+  string id = 1;
+  Axis axis = 2;
+}
+
+message SetColumnTilt {
+  string id = 1;
+  optional Slope tilt = 2;
+}
+
+message CreateCurtainWallType {
+  string id = 1;
+  CurtainWallType curtain_wall_type = 2;
+}
+
+message SetCurtainWallType {
+  string id = 1;
+  optional string name = 2;
+  optional CurtainGrid u_grid = 3;
+  optional CurtainGrid v_grid = 4;
+  optional Profile interior_mullion = 5;
+  optional Profile border_mullion = 6;
+  optional CurtainPanel panel = 7;
+  optional string panel_material = 8;
+  optional string mullion_material = 9;
+}
+
+message DeleteCurtainWallType {
+  string id = 1;
+}
+
+message SetCurtainWallTypeOf {
+  string id = 1;
+  string curtain_wall_type = 2;
+}
+
+message SetCurtainWallGrid {
+  string id = 1;
+  optional CurtainGrid u_grid = 2;
+  optional CurtainGrid v_grid = 3;
+}
+
+message CreateCurtainPanelOverride {
+  string id = 1;
+  CurtainPanelOverride curtain_panel_override = 2;
+}
+
+message SetCurtainPanelOverride {
+  string id = 1;
+  CurtainPanel panel = 2;
+}
+
+message DeleteCurtainPanelOverride {
+  string id = 1;
+}
+
+message CreateFamily {
+  string id = 1;
+  Family family = 2;
+}
+
+message DeleteFamily {
+  string id = 1;
+}
+
+message SetFamily {
+  string id = 1;
+  optional string name = 2;
+  optional FamilyCategory category = 3;
+}
+
+message SetFamilyParameter {
+  string family = 1;
+  string name = 2;
+  optional ParameterKind kind = 3;
+  optional string value = 4;
+}
+
+message RemoveFamilyParameter {
+  string family = 1;
+  string name = 2;
+}
+
+message CreateFamilySolid {
+  string id = 1;
+  FamilySolid solid = 2;
+}
+
+message DeleteFamilySolid {
+  string id = 1;
+}
+
+message SetFamilySolid {
+  string id = 1;
+  optional string name = 2;
+  optional SolidShape shape = 3;
+  optional string material = 4;
+  optional string visible = 5;
+  optional ExprPoint3 offset = 6;
 }
 
 message ModelMutation {
@@ -607,5 +1129,90 @@ message ModelMutation {
     SetElementClassification set_element_classification = 907;
     RemoveElementClassification remove_element_classification = 908;
     PlaceElements place_elements = 909;
+    SetElementStorey set_element_storey = 4001;
+    SetElementPhase set_element_phase = 4002;
+    SetWallEndJoin set_wall_end_join = 5001;
+    CopyElements copy_elements = 5002;
+    MirrorElements mirror_elements = 5003;
+    ArrayElements array_elements = 5004;
+    AlignElements align_elements = 5005;
+    OffsetWall offset_wall = 5006;
+    TrimExtendWall trim_extend_wall = 5007;
+    SplitSlab split_slab = 5008;
+    SplitBeam split_beam = 5009;
+    CreateCeilingType create_ceiling_type = 6001;
+    DeleteCeilingType delete_ceiling_type = 6002;
+    SetCeilingType set_ceiling_type = 6003;
+    CreateCeiling create_ceiling = 6004;
+    DeleteCeiling delete_ceiling = 6005;
+    SetCeilingBoundary set_ceiling_boundary = 6006;
+    SetCeiling set_ceiling = 6007;
+    CreateZone create_zone = 7001;
+    SetZone set_zone = 7002;
+    DeleteZone delete_zone = 7003;
+    CreateAreaScheme create_area_scheme = 7004;
+    SetAreaScheme set_area_scheme = 7005;
+    DeleteAreaScheme delete_area_scheme = 7006;
+    CreateWallSweep create_wall_sweep = 8001;
+    SetWallSweep set_wall_sweep = 8002;
+    DeleteWallSweep delete_wall_sweep = 8003;
+    SetWallBaseSlab set_wall_base_slab = 8004;
+    CreateRamp create_ramp = 9001;
+    SetRamp set_ramp = 9002;
+    DeleteRamp delete_ramp = 9003;
+    CreateDimension create_dimension = 11001;
+    DeleteDimension delete_dimension = 11002;
+    SetDimension set_dimension = 11003;
+    CreateTag create_tag = 11004;
+    DeleteTag delete_tag = 11005;
+    SetTag set_tag = 11006;
+    CreateTextNote create_text_note = 11007;
+    DeleteTextNote delete_text_note = 11008;
+    SetTextNote set_text_note = 11009;
+    CreateLeader create_leader = 11010;
+    DeleteLeader delete_leader = 11011;
+    SetLeader set_leader = 11012;
+    CreateAnnotationStyle create_annotation_style = 11013;
+    DeleteAnnotationStyle delete_annotation_style = 11014;
+    SetAnnotationStyle set_annotation_style = 11015;
+    CreateView create_view = 12001;
+    SetView set_view = 12002;
+    DeleteView delete_view = 12003;
+    CreateSchedule create_schedule = 13001;
+    SetSchedule set_schedule = 13002;
+    DeleteSchedule delete_schedule = 13003;
+    CreateSheet create_sheet = 14001;
+    SetSheet set_sheet = 14002;
+    DeleteSheet delete_sheet = 14003;
+    CreateViewport create_viewport = 14004;
+    SetViewport set_viewport = 14005;
+    DeleteViewport delete_viewport = 14006;
+    CreateSheetRevision create_sheet_revision = 14007;
+    SetSheetRevision set_sheet_revision = 14008;
+    DeleteSheetRevision delete_sheet_revision = 14009;
+    CreatePropertyTemplate create_property_template = 18001;
+    SetPropertyTemplate set_property_template = 18002;
+    DeletePropertyTemplate delete_property_template = 18003;
+    CreateClassificationSystem create_classification_system = 18004;
+    SetClassificationSystem set_classification_system = 18005;
+    DeleteClassificationSystem delete_classification_system = 18006;
+    SetBeamAxis set_beam_axis = 19001;
+    SetColumnTilt set_column_tilt = 19002;
+    CreateCurtainWallType create_curtain_wall_type = 19003;
+    SetCurtainWallType set_curtain_wall_type = 19004;
+    DeleteCurtainWallType delete_curtain_wall_type = 19005;
+    SetCurtainWallTypeOf set_curtain_wall_type_of = 19006;
+    SetCurtainWallGrid set_curtain_wall_grid = 19007;
+    CreateCurtainPanelOverride create_curtain_panel_override = 19008;
+    SetCurtainPanelOverride set_curtain_panel_override = 19009;
+    DeleteCurtainPanelOverride delete_curtain_panel_override = 19010;
+    CreateFamily create_family = 23001;
+    DeleteFamily delete_family = 23002;
+    SetFamily set_family = 23003;
+    SetFamilyParameter set_family_parameter = 23004;
+    RemoveFamilyParameter remove_family_parameter = 23005;
+    CreateFamilySolid create_family_solid = 23006;
+    DeleteFamilySolid delete_family_solid = 23007;
+    SetFamilySolid set_family_solid = 23008;
   }
 }

@@ -1,0 +1,40 @@
+/** 📤️ Exports the authoritative immutable document scene through yielded raster and PNG owners. */
+import type {DrawingArtifact} from "../../../🧬️schema/🟦️.ts";
+import {DocumentRasterJob,type DocumentSceneLimits,type DocumentAlgorithmLimits,type DocumentRasterProgress} from "../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts";
+import {PngEncodeJob,type PngEncodeProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
+export type DrawingPngOptions={width?:number|null;height?:number|null;transparent?:boolean|null};
+export type DrawingPngLimits={maxPixels:number;maxSourceBytes:number;maxWork:number;maxEncodedBytes:number};
+export const DRAWING_PNG_LIMITS:DrawingPngLimits={maxPixels:67108864,maxSourceBytes:268439552,maxWork:1e9,maxEncodedBytes:67108864};
+export type DrawingPngProgress={phase:"raster"|"background"|"encode"|"closing"|"complete";raster:DocumentRasterProgress|null;encoding:PngEncodeProgress|null;work:number;done:boolean};
+const abort=():never=>{throw new DOMException("Drawing PNG export cancelled","AbortError");};
+/** 🧾️ Every dimension, pixel and output limit is checked before a private candidate is admitted. */
+export function drawingPngExtent(document:DrawingArtifact,options:DrawingPngOptions={},limits:DrawingPngLimits=DRAWING_PNG_LIMITS):{width:number;height:number;scale:[number,number]}{
+ const worldWidth=document.artboard?binary64Value(document.artboard.width):1024,worldHeight=document.artboard?binary64Value(document.artboard.height):1024;
+ if(![worldWidth,worldHeight].every(n=>Number.isFinite(n)&&n>0&&n<=1e9))throw RangeError("Invalid PNG artboard extent");
+ const width=options.width??Math.ceil(worldWidth),height=options.height??Math.ceil(worldHeight);
+ if(![width,height].every(n=>Number.isSafeInteger(n)&&n>0&&n<=16384)||width*height>limits.maxPixels||![limits.maxPixels,limits.maxSourceBytes,limits.maxWork,limits.maxEncodedBytes].every(Number.isSafeInteger)||limits.maxPixels<1||limits.maxPixels>67108864||limits.maxSourceBytes<1||limits.maxSourceBytes>268439552||limits.maxWork<1||limits.maxWork>1e9||limits.maxEncodedBytes<8||limits.maxEncodedBytes>67108864||options.transparent!=null&&typeof options.transparent!=="boolean")throw RangeError("Invalid PNG export contract");
+ return{width,height,scale:[width/worldWidth,height/worldHeight]};
+}
+/** 🖼️ Retains the true scene producer, background pixels and encoder until complete publication or close. */
+export class DrawingPngExportJob{
+ private retiredChildren:WorkRetirement[]=[];private raster:DocumentRasterJob|null;private encoder:PngEncodeJob|null=null;private image:PixelImage|null=null;private output:Uint8Array|null=null;private closing:WorkRetirement|null=null;private phase:DrawingPngProgress["phase"]="raster";private rasterProgress:DocumentRasterProgress|null=null;private encodingProgress:PngEncodeProgress|null=null;private pixel=0;private work=0;private failure:unknown=null;private aborted=false;private transferred=false;
+ constructor(document:DrawingArtifact,scene:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits,private options:DrawingPngOptions={},private limits:DrawingPngLimits=DRAWING_PNG_LIMITS){const extent=drawingPngExtent(document,options,limits);this.options={...options};this.limits={...limits};this.raster=new DocumentRasterJob(document,{...scene,maxSourceBytes:Math.min(scene.maxSourceBytes,limits.maxSourceBytes)},{width:extent.width,height:extent.height,origin:[0,0],tolerance:.01,maxPixels:limits.maxPixels,maxSourceBytes:limits.maxSourceBytes},{...algorithms,maxWork:Math.min(algorithms.maxWork,limits.maxWork)});this.raster.setPixelScale(...extent.scale);}
+ private step():void{
+  if(this.closing){this.retiredChildren.push(this.closing);this.closing=null;if(this.phase==="closing")this.phase="complete";return;}
+  if(this.phase==="raster"){this.rasterProgress=this.raster!.advance(1);if(this.rasterProgress.done){const moved=this.raster!.intoRetirement();this.closing=moved.job;this.image=moved.output!;this.raster=null;this.phase="background";}return;}
+  if(this.phase==="background"){if(this.options.transparent===false&&this.pixel<this.image!.pixels.length){const p=this.image!.pixels,at=this.pixel,alpha=p[at+3]!;for(let c=0;c<3;c++)p[at+c]=Math.round(p[at+c]!*alpha/255+255-alpha);p[at+3]=255;this.pixel+=4;return;}this.encoder=new PngEncodeJob(this.image!,this.limits.maxEncodedBytes);this.image=null;this.phase="encode";return;}
+  if(this.phase==="encode"){this.encodingProgress=this.encoder!.advance(1);if(this.encodingProgress.done){const moved=this.encoder!.intoRetirement();this.output=moved.output!;this.closing=moved.job;this.encoder=null;this.phase="closing";}return;}
+ }
+ advance(grant:number):DrawingPngProgress{if(!Number.isSafeInteger(grant)||grant<1)throw RangeError("Invalid PNG export work grant");if(this.aborted)abort();if(this.failure)throw this.failure;try{for(let at=0;at<grant&&this.phase!=="complete";at++){if(this.work>=this.limits.maxWork)throw RangeError("PNG export work limit exceeded");this.step();this.work++;}}catch(error){this.failure=error;throw error;}return{phase:this.phase,raster:this.rasterProgress,encoding:this.encodingProgress,work:this.work,done:this.phase==="complete"};}
+ result():Uint8Array{if(this.aborted)abort();if(this.failure)throw this.failure;if(this.phase!=="complete")throw Error("PNG export incomplete");return this.output!;}
+ cancel():void{this.aborted=true;}
+ /** 🧹️ Publication and cancellation transfer the genuine children and unpublished output to retained close. */
+ intoRetirement():{job:WorkRetirement;output:Uint8Array|null}{if(this.transferred)throw Error("PNG export ownership already transferred");this.transferred=true;const children=this.retiredChildren;this.retiredChildren=[];const images:PixelImage[]=[];if(this.closing)children.push(this.closing);this.closing=null;if(this.raster){const moved=this.raster.intoRetirement();children.push(moved.job);if(moved.output)images.push(moved.output);this.raster=null;}let bytes:Uint8Array|null=null;if(this.encoder){const moved=this.encoder.intoRetirement();children.push(moved.job);bytes=moved.output;this.encoder=null;}if(this.image)images.push(this.image);this.image=null;const output=this.phase==="complete"&&!this.failure&&!this.aborted?this.output:null;if(!output&&this.output)bytes=this.output;this.output=null;this.aborted=true;let slot=0;return{output,job:new UnitRetirement(()=>{if(slot===0){const child=children.at(-1);if(child){if(child.advance(1).done)children.pop();return false;}}else if(slot===1){if(images.pop())return false;}else bytes=null;return ++slot===3;})};}
+}
+/** ⏳️ Observers may abort at every grant and immediately before completed-byte publication. */
+export async function exportDrawingPng(document:DrawingArtifact,scene:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits,options:DrawingPngOptions={},control:{signal?:AbortSignal;workBudget?:number;onProgress?:(progress:DrawingPngProgress)=>void;limits?:DrawingPngLimits}={}):Promise<Uint8Array>{
+ const check=()=>{if(control.signal?.aborted)abort();};check();const job=new DrawingPngExportJob(document,scene,algorithms,options,control.limits);let close:WorkRetirement|null=null,transferred=false;try{for(;;){check();const progress=job.advance(control.workBudget??4096);control.onProgress?.(progress);check();if(progress.done){const moved=job.intoRetirement();transferred=true;close=moved.job;while(!close.advance(4096).done){await new Promise<void>(resolve=>setTimeout(resolve,0));check();}close=null;check();return moved.output!;}await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();if(!transferred)close=job.intoRetirement().job;while(close&&!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));throw error;}
+}

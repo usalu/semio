@@ -1,0 +1,9 @@
+{
+  "mutation": "setPropertyTemplate",
+  "id": "pt-wall",
+  "name": "Pset_WallStandard",
+  "applies_to": [
+    "Wall",
+    "CurtainWall"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "setSchedule",
+  "id": "sch-walls",
+  "name": "Walls",
+  "itemize": false
+}

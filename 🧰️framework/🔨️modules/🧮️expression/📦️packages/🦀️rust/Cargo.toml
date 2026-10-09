@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../.."
+name = "semio-framework-expression"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+autotests = false
+description = "Domain-neutral typed expressions: a closed dimensional AST (numbers, lengths, angles, areas, volumes, booleans, text, named parameters), kind inference with errors as values, a deterministic evaluator, cycle-safe evaluation of named parameter sets, and a Pratt text syntax with spans and a round-trip stable printer. Zero dependencies; Python `ast` and `networkx` reproduce the committed fixtures as the differential oracle."
+
+[package.metadata.semio]
+role = "framework"
+id = "expression"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_expression"
+path = "🦀️.rs"
+
+[[test]]
+name = "expression_conformance"
+path = "../../🧪️tests/📜️conformance/🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+# 🧪️ Language-agnostic fixtures (`🧫️fixtures/*/🔣️.json`) are parsed by tests only.
+serde_json = { workspace = true, features = ["float_roundtrip"] }

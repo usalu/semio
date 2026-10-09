@@ -1,0 +1,5 @@
+type BimSheetWindowConfig {
+  sheet: String!
+  framed: Boolean!
+  viewport: Viewport2d!
+}

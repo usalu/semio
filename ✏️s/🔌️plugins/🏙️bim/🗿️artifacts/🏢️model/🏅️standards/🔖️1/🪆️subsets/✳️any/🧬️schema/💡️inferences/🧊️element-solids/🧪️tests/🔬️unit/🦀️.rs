@@ -122,11 +122,13 @@ fn grid_of_walls(count: usize) -> ModelSnapshot {
             base_offset: 0.0,
             top: TopConstraint::StoreyTop { offset: 0.0 },
             phase: crate::Phase::New,
+            start_join: None,
+            end_join: None,
             name: String::new(),
         };
         snapshot.walls.insert(format!("w-{index:04}"), wall);
         if index % 4 == 0 {
-            let opening = crate::Opening { host: format!("w-{index:04}"), kind: crate::OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.0, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, name: String::new() };
+            let opening = crate::Opening { host: format!("w-{index:04}"), kind: crate::OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.0, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() };
             snapshot.openings.insert(format!("o-{index:04}"), opening);
         }
     }

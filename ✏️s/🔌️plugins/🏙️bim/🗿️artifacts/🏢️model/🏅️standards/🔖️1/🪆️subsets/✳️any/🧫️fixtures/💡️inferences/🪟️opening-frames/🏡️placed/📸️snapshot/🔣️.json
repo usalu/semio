@@ -16,9 +16,9 @@
         "g": 0.35,
         "b": 0.25
       },
-      "density": 1800.0,
+      "density": 1800,
       "conductivity": 0.8,
-      "specific_heat": 900.0
+      "specific_heat": 900
     },
     "m-frame": {
       "name": "Oak",
@@ -28,9 +28,9 @@
         "g": 0.45,
         "b": 0.25
       },
-      "density": 700.0,
+      "density": 700,
       "conductivity": 0.15,
-      "specific_heat": 1600.0
+      "specific_heat": 1600
     }
   },
   "wall_types": {
@@ -94,13 +94,43 @@
       "material": "m-frame"
     }
   },
+  "curtain_wall_types": {
+    "cwt-1": {
+      "name": "Curtain wall 1.5 x 1",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.12
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.12
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-frame",
+      "mullion_material": "m-frame"
+    }
+  },
   "sites": {
     "site-1": {
       "name": "Plot",
-      "latitude": 47.0,
-      "longitude": 8.0,
-      "elevation": 100.0,
-      "true_north": 0.0,
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
       "boundary": []
     }
   },
@@ -109,8 +139,8 @@
       "site": "site-1",
       "name": "House",
       "origin": {
-        "x": 10.0,
-        "y": 5.0
+        "x": 10,
+        "y": 5
       },
       "rotation": 0.5,
       "elevation": 2.5
@@ -121,7 +151,7 @@
       "building": "bldg-1",
       "name": "Ground",
       "level": 0,
-      "height": 3.0
+      "height": 3
     },
     "st-first": {
       "building": "bldg-1",
@@ -137,20 +167,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           },
           "end": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -162,12 +192,12 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 8.0,
-            "y": 0.0
+            "x": 8,
+            "y": 0
           },
           "end": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           }
         }
       },
@@ -187,18 +217,18 @@
       "axis": {
         "Arc": {
           "start": {
-            "x": 8.0,
-            "y": 6.0
+            "x": 8,
+            "y": 6
           },
           "end": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           },
           "bulge": 0.5
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
           "offset": -0.2
@@ -213,20 +243,20 @@
       "axis": {
         "Line": {
           "start": {
-            "x": 0.0,
-            "y": 6.0
+            "x": 0,
+            "y": 6
           },
           "end": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 0,
+            "y": 0
           }
         }
       },
       "location": "Center",
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
       "phase": "New",
@@ -236,34 +266,26 @@
   "curtain_walls": {
     "cw-1": {
       "storey": "st-ground",
+      "curtain_wall_type": "cwt-1",
       "axis": {
         "Line": {
           "start": {
-            "x": 0.0,
-            "y": 10.0
+            "x": 0,
+            "y": 10
           },
           "end": {
-            "x": 6.0,
-            "y": 10.0
+            "x": 6,
+            "y": 10
           }
         }
       },
-      "base_offset": 0.0,
+      "base_offset": 0,
       "top": {
         "StoreyTop": {
-          "offset": 0.0
+          "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.0,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.12
-        }
-      },
-      "panel_material": "m-frame",
-      "mullion_material": "m-frame",
+      "phase": "New",
       "name": "Glass Front"
     }
   },
@@ -275,7 +297,7 @@
           "door_type": "dr-double"
         }
       },
-      "offset": 3.0,
+      "offset": 3,
       "flip_hand": true,
       "flip_facing": false,
       "name": "East Double Door"
@@ -287,7 +309,7 @@
           "door_type": "dr-single"
         }
       },
-      "offset": 7.0,
+      "offset": 7,
       "flip_hand": false,
       "flip_facing": false,
       "name": "South Door"
@@ -308,11 +330,11 @@
       "host": "cw-1",
       "kind": {
         "Void": {
-          "width": 2.0,
-          "height": 2.0
+          "width": 2,
+          "height": 2
         }
       },
-      "offset": 3.0,
+      "offset": 3,
       "flip_hand": false,
       "flip_facing": false,
       "name": "Curtain Void"
@@ -321,11 +343,11 @@
       "host": "w-first",
       "kind": {
         "Void": {
-          "width": 1.0,
-          "height": 1.0
+          "width": 1,
+          "height": 1
         }
       },
-      "offset": 3.0,
+      "offset": 3,
       "sill_override": 0.5,
       "flip_hand": false,
       "flip_facing": false,
@@ -338,7 +360,7 @@
           "window_type": "wnd-120"
         }
       },
-      "offset": 4.0,
+      "offset": 4,
       "flip_hand": false,
       "flip_facing": false,
       "name": "Arc Window"
@@ -350,7 +372,7 @@
           "window_type": "wnd-120"
         }
       },
-      "offset": 2.0,
+      "offset": 2,
       "flip_hand": false,
       "flip_facing": false,
       "name": "South Window"
@@ -364,8 +386,8 @@
       },
       "offset": 5.5,
       "sill_override": 1.1,
-      "width": 2.0,
-      "height": 1.0,
+      "width": 2,
+      "height": 1,
       "flip_hand": false,
       "flip_facing": true,
       "name": "South Wide Window"

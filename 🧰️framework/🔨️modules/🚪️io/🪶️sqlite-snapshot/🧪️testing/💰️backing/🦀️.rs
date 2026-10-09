@@ -206,7 +206,7 @@ pub fn verify_snapshot_failure_backing<T: ArtifactSqliteSnapshot>(snapshot: &T, 
                     Err(error) => error,
                     Ok(value) => { drop(value); panic!("physical ceiling must refuse"); }
                 };
-                let result = (error.kind, error.message.capacity());
+                let result = (error.kind, match &error.message { std::borrow::Cow::Owned(message) => message.capacity(), std::borrow::Cow::Borrowed(_) => 0 });
                 drop(error);
                 result
             });
@@ -230,7 +230,7 @@ pub fn verify_snapshot_failure_backing<T: ArtifactSqliteSnapshot>(snapshot: &T, 
                     Err(error) => error,
                     Ok(value) => { drop(value); panic!("real producer cancellation must refuse"); }
                 };
-                let result = (error.kind, error.message.capacity());
+                let result = (error.kind, match &error.message { std::borrow::Cow::Owned(message) => message.capacity(), std::borrow::Cow::Borrowed(_) => 0 });
                 drop(error);
                 result
             });

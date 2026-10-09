@@ -25,7 +25,7 @@ export interface OpeningCut {
   z_max: number;
 }
 
-export type OpeningIssue = "HostMissing" | "TypeMissing" | "NonPositiveSize" | "OutsideHostExtent" | "BelowHostBase" | "AboveHostTop" | "OverlapsSibling";
+export type OpeningIssue = "HostMissing" | "TypeMissing" | "NonPositiveSize" | "HostDegenerate" | "OutsideHostExtent" | "BelowHostBase" | "AboveHostTop" | "OutsideTrimmedExtent" | "OverlapsSibling";
 
 export type PlanRole = "Leaf" | "Swing" | "Glazing";
 

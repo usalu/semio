@@ -1,0 +1,18 @@
+{
+  "mutation": "createOpening",
+  "id": "o-1",
+  "opening": {
+    "host": "w-south",
+    "kind": {
+      "Window": {
+        "window_type": "win-1"
+      }
+    },
+    "offset": 4,
+    "flip_hand": false,
+    "flip_facing": false,
+    "name": "Window",
+    "reveal_depth": 0.1,
+    "reveal_material": "m-paint"
+  }
+}

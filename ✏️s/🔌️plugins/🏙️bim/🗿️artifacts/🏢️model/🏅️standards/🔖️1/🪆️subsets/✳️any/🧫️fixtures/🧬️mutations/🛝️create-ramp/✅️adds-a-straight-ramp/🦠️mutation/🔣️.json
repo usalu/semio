@@ -1,0 +1,39 @@
+{
+  "mutation": "createRamp",
+  "id": "rp-1",
+  "ramp": {
+    "storey": "st-ground",
+    "path": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 10,
+          "y": 0
+        },
+        "bulge": 0
+      }
+    ],
+    "width": 1.2,
+    "landing_start": 1.5,
+    "landing_end": 1.5,
+    "landing_turn": 1.5,
+    "max_slope": 0.0833333333333333,
+    "thickness": 0.2,
+    "material": "m-concrete",
+    "base_offset": 0,
+    "top": {
+      "Unconnected": {
+        "height": 0.5
+      }
+    },
+    "railing_left": false,
+    "railing_right": false,
+    "name": "Entrance Ramp"
+  }
+}

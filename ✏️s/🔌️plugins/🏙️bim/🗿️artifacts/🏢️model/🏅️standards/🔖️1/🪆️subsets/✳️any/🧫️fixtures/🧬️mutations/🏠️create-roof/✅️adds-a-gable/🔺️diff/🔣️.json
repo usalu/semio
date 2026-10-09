@@ -35,6 +35,7 @@
       ],
       "name": "Main roof",
       "overhang": 0.4,
+      "phase": "New",
       "roof_type": "rt-tiles",
       "shape": {
         "Gable": {

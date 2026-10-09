@@ -38,7 +38,7 @@ pub type Vec2 = [f64; 2];
 // declared on both codecs here because `large_arc` MUST render as `largeArc`: it is the
 // plugin-facing wire name (this crate's `Cargo.toml` marks `ToValue`/`FromValue` as exactly that)
 // and `◻️2d/🟦️.ts:48`'s `PathSegment` mirror reads `segment.largeArc`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]

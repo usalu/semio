@@ -374,7 +374,7 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
         (admission, input)
     };
     let payload = |completion, revision| {
-        ArtifactRetainedCommandPayload::<App>::try_new(
+        ArtifactRetainedCommandPayload::<App>::new(
             ArtifactRetainedCommandInputs {
                 command: Editor::command_from_action("set-node", Some(&arguments)).unwrap(),
                 snapshot: snapshot.clone(),
@@ -398,7 +398,6 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
             Editor::NATIVE_MAXIMUM_WORK_ITEMS,
             Editor::native_edit_work("set-node"),
         )
-        .unwrap()
     };
     let retire = |payload: &mut semio_framework_job::RetainedJobPayload| {
         while !payload.terminal_is_empty() {

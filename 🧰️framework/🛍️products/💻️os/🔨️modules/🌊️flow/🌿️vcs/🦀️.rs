@@ -4,7 +4,8 @@ use neural_engine as neural;
 
 use neural::{Neuron, Synapse};
 use crate::retained::{FlowOwner, FlowRetirement};
-use protocol::value::ordered::{Grant as LayoutGrant, UpdateCursor as LayoutUpdate};
+use protocol::value::ordered::{RetirementStep as LayoutRetirementStep, UpdateCursor as LayoutUpdate};
+use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 use semio_framework_artifact_flow_flow::*;
 use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
@@ -837,7 +838,9 @@ impl FlowRetainedVcs {
         operation.stage = if rolling_back { stage } else { FlowVcsStage::Closing };
         if let Some(update) = operation.layout_update.as_mut() {
             update.begin_close();
-            update.close_step(LayoutGrant { maximum_items: 1, maximum_bytes: grant.bytes });
+            let demand = update.next_close_byte_demand().map_err(|_| FlowVcsFault::ClosePending)?;
+            let step = update.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.bytes, maximum_capacity_bytes: 0, maximum_release_bytes: grant.bytes.max(demand), maximum_depth: update.next_close_depth_demand() });
+            if matches!(step, LayoutRetirementStep::Failure(_)) { return Err(FlowVcsFault::ClosePending); }
             if update.terminal_is_empty() { operation.layout_update = None; }
             return Ok(false);
         }
@@ -1490,7 +1493,8 @@ fn flow_vcs_step_shift(host_snapshot: &mut FlowHostSnapshot, operation: &mut Flo
 
 fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation, grant: FlowVcsGrant) -> Result<(), FlowVcsFault> {
     if let Some(update) = operation.layout_update.as_mut() {
-        update.advance(LayoutGrant { maximum_items: 1, maximum_bytes: grant.bytes });
+        let capacity = update.next_capacity_byte_demand().map_err(|_| FlowVcsFault::Limit)?;
+        update.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.bytes, maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }).map_err(|error| if matches!(error.kind, semio_framework_value::ValueRefusalKind::DepthLimit) { FlowVcsFault::Depth } else { FlowVcsFault::Limit })?;
         if let Some(layout) = update.take_result() {
             let previous = std::mem::replace(&mut document.host_snapshot_mut().layout, layout);
             operation.action = Some(FlowVcsAction::LayoutRoot(previous));

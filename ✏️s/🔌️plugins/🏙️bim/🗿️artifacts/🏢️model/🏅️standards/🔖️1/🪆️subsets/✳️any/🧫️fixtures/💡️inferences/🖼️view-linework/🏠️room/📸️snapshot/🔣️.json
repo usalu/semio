@@ -1,0 +1,464 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "View room",
+    "description": "Walls and columns on two storeys, seen by sections and elevations",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {
+    "ct-40-60": {
+      "name": "Column 40x60",
+      "profile": {
+        "Rectangle": {
+          "width": 0.4,
+          "depth": 0.6
+        }
+      },
+      "material": "m-brick"
+    }
+  },
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w0": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall 0"
+    },
+    "w1": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 4
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall 1"
+    },
+    "w2": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 4
+          },
+          "end": {
+            "x": 0,
+            "y": 4
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall 2"
+    },
+    "w3": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 4
+          },
+          "end": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall 3"
+    },
+    "w4": {
+      "storey": "st-first",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 1,
+            "y": 3.5
+          },
+          "end": {
+            "x": 5,
+            "y": 3.5
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "Existing",
+      "name": "Parapet"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {
+    "col-a": {
+      "storey": "st-ground",
+      "column_type": "ct-40-60",
+      "position": {
+        "x": 3,
+        "y": 2
+      },
+      "rotation": 0.5,
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Column A"
+    },
+    "col-b": {
+      "storey": "st-first",
+      "column_type": "ct-40-60",
+      "position": {
+        "x": 1.5,
+        "y": 1.5
+      },
+      "rotation": 0,
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Column B"
+    }
+  },
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {},
+  "views": {
+    "v-plan-ground": {
+      "building": "bldg-1",
+      "name": "Plan Ground",
+      "kind": "Plan",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "storey": "st-ground"
+    },
+    "v-3d": {
+      "building": "bldg-1",
+      "name": "3D view",
+      "kind": "Perspective",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "camera": {
+        "target": {
+          "x": 3,
+          "y": 2
+        },
+        "target_height": 3,
+        "azimuth": 0.78,
+        "pitch": 0.5,
+        "distance": 20
+      }
+    },
+    "v-south": {
+      "building": "bldg-1",
+      "name": "South",
+      "kind": "Elevation",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2,
+          "y": -2
+        },
+        "end": {
+          "x": 8,
+          "y": -2
+        }
+      }
+    },
+    "v-south-shallow": {
+      "building": "bldg-1",
+      "name": "South shallow",
+      "kind": "Elevation",
+      "depth": 2.2,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2,
+          "y": -2
+        },
+        "end": {
+          "x": 8,
+          "y": -2
+        }
+      }
+    },
+    "v-oblique": {
+      "building": "bldg-1",
+      "name": "Oblique",
+      "kind": "Elevation",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -3,
+          "y": 6
+        },
+        "end": {
+          "x": 4,
+          "y": -3
+        }
+      }
+    },
+    "v-section-a": {
+      "building": "bldg-1",
+      "name": "Section A",
+      "kind": "Section",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -1,
+          "y": 1.5
+        },
+        "end": {
+          "x": 7,
+          "y": 1.5
+        }
+      }
+    },
+    "v-section-diagonal": {
+      "building": "bldg-1",
+      "name": "Section diagonal",
+      "kind": "Section",
+      "depth": 3,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -1,
+          "y": -1
+        },
+        "end": {
+          "x": 7,
+          "y": 5
+        }
+      }
+    },
+    "v-section-crop": {
+      "building": "bldg-1",
+      "name": "Section cropped",
+      "kind": "Section",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -1,
+          "y": 1.5
+        },
+        "end": {
+          "x": 7,
+          "y": 1.5
+        }
+      },
+      "crop": {
+        "min": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "max": {
+          "x": 5,
+          "y": 4.2
+        }
+      }
+    },
+    "v-section-columns": {
+      "building": "bldg-1",
+      "name": "Section without walls",
+      "kind": "Section",
+      "depth": 100,
+      "hidden": [
+        "Walls"
+      ],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -1,
+          "y": 2
+        },
+        "end": {
+          "x": 7,
+          "y": 2
+        }
+      }
+    },
+    "v-south-new": {
+      "building": "bldg-1",
+      "name": "South new",
+      "kind": "Elevation",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium",
+      "plane": {
+        "start": {
+          "x": -2,
+          "y": -2
+        },
+        "end": {
+          "x": 8,
+          "y": -2
+        }
+      },
+      "phase": "New"
+    }
+  },
+  "annotation_styles": {},
+  "dimensions": {},
+  "tags": {},
+  "text_notes": {},
+  "leaders": {}
+}

@@ -6,7 +6,7 @@
 //! interiors form an X join, which trims nothing. The functions are pure geometry over bands and never read the snapshot.
 
 use super::{JoinEnd, JoinKind, WallJoin};
-use crate::Point2;
+use crate::{EndJoin, Point2};
 use semio_framework_geometry::bulge::{bulge_from_sweep, intersect, nearest_intersection, BulgeSeg, Extent};
 use semio_framework_geometry::triangulation::triangulate;
 use semio_framework_geometry::vector::{angle_between, cross};
@@ -61,12 +61,14 @@ impl Side {
     }
 }
 
-/// 🧱️ A wall in plan: its axis and the distances from the axis to its left and right face.
+/// 🧱️ A wall in plan: its axis, the distances from the axis to its left and right face and the authored join preference of each end (absent leaves the join to the geometry).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Band {
     pub axis: BulgeSeg,
     pub left: f64,
     pub right: f64,
+    pub start_join: Option<EndJoin>,
+    pub end_join: Option<EndJoin>,
 }
 
 /// ✂️ Where the left and right face of a band end after the joins at one of its tips. `cut` is the face of the wall it butts against: the end edge of the footprint follows it (an arc when that face is curved), otherwise the end edge is straight.
@@ -122,6 +124,14 @@ impl Band {
         }
     }
 
+    /// 🔗️ The authored join preference of one end.
+    pub fn preference(&self, tip: Tip) -> Option<EndJoin> {
+        match tip {
+            Tip::Start => self.start_join,
+            Tip::End => self.end_join,
+        }
+    }
+
     /// 📍️ The axis point at a tip.
     pub fn tip(&self, tip: Tip) -> Point {
         match tip {
@@ -150,9 +160,20 @@ impl Band {
 //#endregion 🔖️Band
 
 //#region 🔖️Contacts
+fn free_end(band: &Band, end: Tip) -> bool {
+    band.preference(end) == Some(EndJoin::None)
+}
+
 fn contact(bands: &BTreeMap<String, Band>, id: &str, tip: Tip) -> Contact {
+    if free_end(&bands[id], tip) {
+        return Contact::Free;
+    }
     let point = bands[id].tip(tip);
-    let node: Vec<(String, Tip)> = bands.iter().filter(|(other, _)| other.as_str() != id).flat_map(|(other, band)| Tip::BOTH.into_iter().filter(move |end| (band.tip(*end) - point).hypot() <= JOIN_TOLERANCE).map(move |end| (other.clone(), end))).collect();
+    let node: Vec<(String, Tip)> = bands
+        .iter()
+        .filter(|(other, _)| other.as_str() != id)
+        .flat_map(|(other, band)| Tip::BOTH.into_iter().filter(move |end| !free_end(band, *end) && (band.tip(*end) - point).hypot() <= JOIN_TOLERANCE).map(move |end| (other.clone(), end)))
+        .collect();
     if !node.is_empty() {
         return Contact::Node(node);
     }
@@ -161,26 +182,27 @@ fn contact(bands: &BTreeMap<String, Band>, id: &str, tip: Tip) -> Contact {
         .filter(|(other, _)| other.as_str() != id)
         .find_map(|(other, band)| {
             let closest = band.axis.closest(point);
-            (closest.distance <= JOIN_TOLERANCE).then(|| Contact::Butt { through: other.clone(), hit: closest.point, tangent: band.axis.tangent_at(closest.t) })
+            let at_free_end = Tip::BOTH.into_iter().any(|end| free_end(band, end) && (band.tip(end) - point).hypot() <= JOIN_TOLERANCE);
+            (closest.distance <= JOIN_TOLERANCE && !at_free_end).then(|| Contact::Butt { through: other.clone(), hit: closest.point, tangent: band.axis.tangent_at(closest.t) })
         })
         .unwrap_or(Contact::Free)
 }
 
-fn miter(ours: &Band, ours_side: Side, theirs: &Band, theirs_side: Side, node: Point) -> Option<Point> {
+fn miter(ours: &Band, ours_side: Side, theirs: &Band, theirs_side: Side, node: Point, limit: f64) -> Option<Point> {
     let (a, b) = (ours.face(ours_side)?, theirs.face(theirs_side)?);
     let point = nearest_intersection(&a, &b, Extent::Unbounded, node)?;
-    ((point - node).hypot() <= MITER_LIMIT * ours.thickness().max(theirs.thickness()) + JOIN_TOLERANCE).then_some(point)
+    ((point - node).hypot() <= limit * ours.thickness().max(theirs.thickness()) + JOIN_TOLERANCE).then_some(point)
 }
 
-fn node_trim(bands: &BTreeMap<String, Band>, id: &str, tip: Tip, members: &[(String, Tip)]) -> Trim {
+fn node_trim(bands: &BTreeMap<String, Band>, id: &str, tip: Tip, members: &[(String, Tip)], limit: f64) -> Trim {
     let (me, node) = (&bands[id], bands[id].tip(tip));
     let mut ring: Vec<(f64, &str, Tip)> = members.iter().map(|(other, end)| (other.as_str(), *end)).chain(std::iter::once((id, tip))).map(|(other, end)| (bands[other].outward(end).y.atan2(bands[other].outward(end).x), other, end)).collect();
     ring.sort_by(|a, b| a.0.total_cmp(&b.0).then_with(|| a.1.cmp(b.1)).then_with(|| a.2.cmp(&b.2)));
     let (count, index) = (ring.len(), ring.iter().position(|(_, other, end)| *other == id && *end == tip).unwrap_or(0));
     let (ccw, cw) = (&ring[(index + 1) % count], &ring[(index + count - 1) % count]);
     let ours_ccw = Side::counter_clockwise_of(tip);
-    let at_ccw = miter(me, ours_ccw, &bands[ccw.1], Side::counter_clockwise_of(ccw.2).other(), node);
-    let at_cw = miter(me, ours_ccw.other(), &bands[cw.1], Side::counter_clockwise_of(cw.2), node);
+    let at_ccw = miter(me, ours_ccw, &bands[ccw.1], Side::counter_clockwise_of(ccw.2).other(), node, limit);
+    let at_cw = miter(me, ours_ccw.other(), &bands[cw.1], Side::counter_clockwise_of(cw.2), node, limit);
     let (left, right) = if tip == Tip::Start { (at_ccw, at_cw) } else { (at_cw, at_ccw) };
     let square = me.square(tip);
     Trim { left: left.unwrap_or(square.left), right: right.unwrap_or(square.right), cut: None }
@@ -203,6 +225,62 @@ fn butt_trim(bands: &BTreeMap<String, Band>, id: &str, tip: Tip, through: &str, 
         (Some(left), Some(right)) => Trim { left, right, cut: near },
         (left, right) => Trim { left: left.unwrap_or(square.left), right: right.unwrap_or(square.right), cut: None },
     }
+}
+
+/// ✂️ Where the faces of the through wall of a node end when walls that butt into it end at the same node: each face runs on until the
+/// far face of the butting wall that reaches farthest, so the through wall covers the corner; a face that meets no far face within the
+/// miter limit stays square.
+fn extension(bands: &BTreeMap<String, Band>, id: &str, tip: Tip, butts: &[(String, Tip)]) -> Trim {
+    let (me, node) = (&bands[id], bands[id].tip(tip));
+    let square = me.square(tip);
+    let back = -me.outward(tip);
+    let reach = |side: Side, base: Point| {
+        let Some(face) = me.face(side) else { return base };
+        butts
+            .iter()
+            .flat_map(|(other, _)| [Side::Left, Side::Right].into_iter().filter_map(|far| bands[other].face(far)))
+            .filter_map(|far| nearest_intersection(&face, &far, Extent::Unbounded, node))
+            .filter(|point| (*point - node).hypot() <= MITER_LIMIT * me.thickness() + JOIN_TOLERANCE && (*point - base).dot(back) > JOIN_TOLERANCE)
+            .max_by(|a, b| (*a - base).dot(back).total_cmp(&(*b - base).dot(back)))
+            .unwrap_or(base)
+    };
+    Trim { left: reach(Side::Left, square.left), right: reach(Side::Right, square.right), cut: None }
+}
+
+/// 🔗️ What one end does at a node of two or more ends: the trim of its faces and the links it records.
+struct Node {
+    trim: Trim,
+    links: Vec<(String, Tip, JoinKind)>,
+}
+
+/// 🔗️ The role of the end `tip` of wall `id` at a node with the other `members`. With no butting end the ends are mitered around the node
+/// (without the miter limit when any of them asks for a miter). Otherwise the end with the lowest id among the ends that do not butt runs
+/// through (every end butts when none is left): the butting ends are cut by its near face, it is mitered with the other through ends or,
+/// when it stands alone, extended over the corner.
+fn plan_node(bands: &BTreeMap<String, Band>, id: &str, tip: Tip, members: &[(String, Tip)]) -> Node {
+    let me = (id.to_string(), tip);
+    let all: Vec<(String, Tip)> = members.iter().cloned().chain(std::iter::once(me.clone())).collect();
+    let prefers = |end: &(String, Tip), join: EndJoin| bands[&end.0].preference(end.1) == Some(join);
+    let limit = if all.iter().any(|end| prefers(end, EndJoin::Miter)) { f64::INFINITY } else { MITER_LIMIT };
+    let miters = |ring: &[(String, Tip)]| ring.iter().map(|(other, end)| (other.clone(), *end, JoinKind::Miter)).collect::<Vec<_>>();
+    let (butts, rest): (Vec<_>, Vec<_>) = all.iter().cloned().partition(|end| prefers(end, EndJoin::Butt));
+    if butts.is_empty() {
+        return Node { trim: node_trim(bands, id, tip, members, limit), links: miters(members) };
+    }
+    let through = rest.iter().min().or_else(|| butts.iter().min()).cloned().unwrap_or_else(|| me.clone());
+    if through != me && butts.contains(&me) {
+        let tangent = bands[&through.0].axis.tangent_at(if through.1 == Tip::Start { 0.0 } else { 1.0 });
+        let trim = butt_trim(bands, id, tip, &through.0, bands[&through.0].tip(through.1), tangent);
+        return Node { trim, links: vec![(through.0, through.1, JoinKind::Butt)] };
+    }
+    let ring: Vec<(String, Tip)> = rest.iter().filter(|end| **end != me).cloned().collect();
+    if through != me {
+        return Node { trim: node_trim(bands, id, tip, &ring, limit), links: miters(&ring) };
+    }
+    let butting: Vec<(String, Tip)> = butts.iter().filter(|end| **end != me).cloned().collect();
+    let trim = if ring.is_empty() { extension(bands, id, tip, &butting) } else { node_trim(bands, id, tip, &ring, limit) };
+    let links = miters(&ring).into_iter().chain(butting.iter().map(|(other, end)| (other.clone(), *end, JoinKind::Through))).collect();
+    Node { trim, links }
 }
 
 fn crossings(a: &Band, b: &Band) -> Vec<Point> {
@@ -269,11 +347,12 @@ pub fn join(bands: &BTreeMap<String, Band>, id: &str) -> Option<Joined> {
         match contact(bands, id, tip) {
             Contact::Free => me.square(tip),
             Contact::Node(members) => {
-                for (other, end) in &members {
-                    joins.push(WallJoin { kind: JoinKind::Miter, end: tip.join_end(), other: other.clone(), other_end: end.join_end(), point: mark(point), overlap_area: 0.0 });
-                    neighbours.insert(other.clone());
+                let node = plan_node(bands, id, tip, &members);
+                for (other, end, kind) in node.links {
+                    joins.push(WallJoin { kind, end: tip.join_end(), other: other.clone(), other_end: end.join_end(), point: mark(point), overlap_area: 0.0 });
                 }
-                node_trim(bands, id, tip, &members)
+                neighbours.extend(members.into_iter().map(|(other, _)| other));
+                node.trim
             }
             Contact::Butt { through, hit, tangent } => {
                 joins.push(WallJoin { kind: JoinKind::Butt, end: tip.join_end(), other: through.clone(), other_end: JoinEnd::Along, point: mark(hit), overlap_area: 0.0 });
