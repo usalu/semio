@@ -99,3 +99,24 @@ Fixes:
 ## Offen
 
 - German VO re-synthesis (`generate_audio.py` per Teil) is needed before the next muxed deliverable: new/changed clauses have no measured timings yet (hold budgets fall back to word-rate estimates; clause keys unchanged where text was only toned down).
+
+## Reopened 2026-10-09 — remaining review gaps
+
+Repo MCP still unavailable. Same ticket, because the review was only partly in the picture.
+
+- Teil 1: the cooling coil counts 32 → 18 °C while the air moves through it.
+- Teil 2: `n` counts the people drawn (3 at the formula, 50 in the hall). Heavy lines (biological heater, toaster, light-bulb simile) are gone.
+- Teil 3: the clock lands on 17 Uhr, später Nachmittag, with 21 Uhr Abend dim beside it. ΔΘ counts from the thermometer falling 30 → 20 °C. Live °C and r.F. readouts are typeset.
+- Teil 4: `F_F` is the drawn glass area over the rough opening (0,49). `F_V` counts 1,00 → 0,15. `g_tot` counts 0 → 0,50 → 0,60 as transmission then secondary heat appear. The south curve’s own peak is `I_S,max`. The solar-load beat draws frame, slats and glass and counts each factor. The Argon / Low-E catalogue line is gone. The axis unit is typeset.
+- Teil 5: the coil counts 30 → 18 °C. Δθ counts `25 − 18 = 7 K`. Supply and room temperatures are typeset. The “thermodynamic product” line is plain.
+- Teil 6: the opening no longer spends the load on open windows. An open window is a heat-loss path (`Q̇_L`); the reserve is supply/exhaust with recovery. η counts from the supply air falling 32 → 27 °C. The sorption drawback shows the germs mutate and the harmful ones remain. Temperature badges are typeset.
+
+Low-quality full film (silent): `tutorial/energy/demand/Cooling/rendered/Full_Cooling_Demand_480p15.mp4` — 854×480, 29:02.
+
+## Reopened 2026-10-10 — wipe renders + HQ full film
+
+Dev: delete every rendered Cooling video, then render the full series again at highest quality.
+
+- Deleted 3 915 mp4s under `tutorial/energy/demand/Cooling/` (section `media/`, shared `media/`, `rendered/`). Log: `checks/deleted_renders.txt`.
+- Force HQ: `full_cooling_video.py -q h --force --no-play` → log `checks/full_cooling_qh_force.log`.
+- Delivered: `tutorial/energy/demand/Cooling/rendered/Full_Cooling_Demand_1080p60.mp4` — 1920×1080 @ 60 fps, silent, ~28:50 (intro + Teile 1–6). Same path for `Full_Cooling_Demand_NoAudio_1080p60.mp4`.

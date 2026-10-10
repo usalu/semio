@@ -1,0 +1,139 @@
+        N = self.NARRATION
+        col_w, col_h = 4.3, 4.6
+        pivot = np.array([0.0, -0.25, 0.0])
+
+        def place(*mobs):
+            for m in mobs:
+                m.scale(0.85, about_point=pivot).shift(UP * 0.35)
+
+        def path(*pts):
+            return smooth_path([np.array([x, y, 0.0]) for x, y in pts])
+
+        def legend(lines, color, scale, at):
+            return Paragraph(*lines, font_size=LABEL_FONT_SIZE, color=color, alignment="center").scale(scale).move_to(at)
+
+        def panel(px, color, fill, main, sub, stats):
+            card = RoundedRectangle(width=col_w, height=col_h, corner_radius=0.15, color=color, fill_color=fill,
+                                    fill_opacity=0.85).move_to([px, -0.25, 0])
+            hdr = VGroup(Text(main, font_size=LABEL_FONT_SIZE, color=color),
+                         Text(sub, font_size=LABEL_FONT_SIZE, color=GREY_A)).arrange(DOWN, buff=0.05)
+            hdr.move_to(card.get_top() + DOWN * 0.45)
+            box = VGroup(*stats).arrange(DOWN, buff=0.04).move_to(card.get_bottom() + UP * 0.4)
+            room = room_section(np.array([px + 0.35, -0.85, 0.0]), w=2.3, h=1.4, wall=0.13, slab=0.13, window=(0.3, 0.75))
+            for part in room["shell"]:
+                part.set_stroke(PASTEL_WHITE).set_fill(PASTEL_WHITE, opacity=0.14)
+            room["glass"].set_stroke(PASTEL_CYAN).set_fill(PASTEL_CYAN, opacity=0.15)
+            person = person_glyph([px + 1.15, room["y_f"] + 0.3, 0], color=PASTEL_ORANGE, scale=0.9)
+            return card, hdr, box, room, person
+
+        # Panel 1 — Fensterlüftung
+        p1 = -4.4
+        card1, hdr1, box1_stat, room1, person1 = panel(
+            p1, PASTEL_RED, "#1a1215", "Fensterlüftung", "Freie Lüftung ohne WRG",
+            [math_label(r"\eta_{\mathrm{WRG}} = 0\,\%", size=LABEL_FONT_SIZE, color=PASTEL_RED),
+             Text("Lüftungsverlust 100 %", font_size=LABEL_FONT_SIZE, color=PASTEL_RED)])
+        x_l, y_f, y_c, lo, hi = room1["x_l"], room1["y_f"], room1["y_c"], room1["win_lo"], room1["win_hi"]
+        win1 = window_glyph(room1["glass_x"], lo, hi, depth=0.4, color=PASTEL_CYAN)
+        in1 = [path((x_l - 1.05, lo - 0.05), (x_l - 0.4, lo + 0.08), (x_l + 0.3, lo + 0.06), (x_l + 0.8, y_f + 0.15),
+                    (p1 + 0.7, y_f + 0.2), (p1 + 0.85, y_f + 0.6))]
+        out1 = [path((p1 + 0.95, y_c - 0.35), (p1 + 0.4, y_c - 0.15), (x_l + 0.45, hi - 0.06), (x_l - 0.35, hi - 0.04),
+                     (x_l - 1.0, hi + 0.35))]
+        lbl_in1 = legend(["Kaltluft", "(−5°C)"], PASTEL_BLUE, 0.75, [p1 - 1.4, -1.55, 0])
+        lbl_out1 = legend(["Warmluft", "(+21 °C)"], PASTEL_ORANGE, 0.75, [p1 - 1.3, 0.45, 0])
+        col1 = VGroup(card1, hdr1, room1["shell"], win1["group"], person1, lbl_in1, lbl_out1, box1_stat)
+
+        # Panel 2 — Zentrale WRG
+        p2 = 0.0
+        card2, hdr2, box2_stat, room2, person2 = panel(
+            p2, PASTEL_BLUE, "#101825", "Zentrale WRG", "Zentrales Lüftungsgerät",
+            [math_label(r"\eta_{\mathrm{WRG}} = 85 \ldots 95\,\%", size=LABEL_FONT_SIZE, color=PASTEL_GREEN),
+             Text("Lüftungsverlust ≈ 10 %", font_size=LABEL_FONT_SIZE, color=PASTEL_GREEN)])
+        y_c2 = room2["y_c"]
+        mvhr_box = RoundedRectangle(width=1.5, height=0.5, corner_radius=0.05, color=PASTEL_WHITE, fill_color="#2C3E50",
+                                    fill_opacity=0.95, stroke_width=2).move_to([p2 + 0.15, 0.6, 0])
+        lbl_mvhr = Text("WRG\nZentral", font_size=LABEL_FONT_SIZE, color=PASTEL_YELLOW).scale(0.65)
+        lbl_mvhr.move_to(mvhr_box.get_center() + LEFT * 0.33)
+        fan2 = _fan(mvhr_box.get_center() + RIGHT * 0.42, PASTEL_WHITE, radius=0.15)
+        x_s, x_e = p2 - 0.35, p2 + 0.6
+        ducts2 = VGroup(*[Line([x + dx, mvhr_box.get_bottom()[1], 0], [x + dx, y_c2, 0], color=PASTEL_WHITE, stroke_width=1.4,
+                               stroke_opacity=0.7) for x in (x_s, x_e) for dx in (-0.09, 0.09)])
+        fresh2 = [path((p2 - 1.95, 1.0), (p2 - 1.0, 0.95), (mvhr_box.get_left()[0] + 0.05, 0.62))]
+        fort2 = [path((mvhr_box.get_right()[0] - 0.05, 0.62), (p2 + 1.5, 0.95), (p2 + 1.95, 1.05))]
+        sup2 = [path((x_s, 0.45), (x_s, -0.3), (p2 - 0.6, -0.85), (p2 - 0.45, -1.3))]
+        ext2 = [path((p2 + 0.45, -1.25), (x_e, -0.6), (x_e, 0.45))]
+        lbl_supply = legend(["Vorgewärmte", "Zuluft (+18°C)"], PASTEL_GREEN, 0.7, [p2 - 1.45, -0.75, 0])
+        col2 = VGroup(card2, hdr2, room2["shell"], room2["glass"], person2, ducts2, mvhr_box, lbl_mvhr, fan2, lbl_supply,
+                      box2_stat)
+
+        # Panel 3 — Dezentrale WRG
+        p3 = 4.4
+        card3, hdr3, box3_stat, room3, person3 = panel(
+            p3, PASTEL_GREEN, "#102018", "Dezentrale WRG", "Pendellüfter mit Keramik",
+            [math_label(r"\eta_{\mathrm{WRG}} = 70 \ldots 90\,\%", size=LABEL_FONT_SIZE, color=PASTEL_GREEN),
+             Text("Lüftungsverlust ≈ 15 … 30 %", font_size=LABEL_FONT_SIZE, color=PASTEL_GREEN)])
+        x_l3, gx3 = room3["x_l"], room3["glass_x"]
+        y_u = 0.5 * (room3["win_hi"] + room3["y_c"])
+        core = Rectangle(width=0.37, height=0.22, color=PASTEL_YELLOW, stroke_width=1.5, fill_color=PASTEL_ORANGE,
+                         fill_opacity=0.9).move_to([gx3, y_u, 0])
+        fan3 = _fan([x_l3 + 0.24, y_u, 0], PASTEL_WHITE, radius=0.11)
+        ab3 = [path((p3 + 0.6, -0.95), (x_l3 + 0.45, y_u - 0.05), (gx3, y_u), (p3 - 1.4, y_u + 0.2), (p3 - 1.9, 0.12))]
+        zu3 = [path((p3 - 1.9, -0.02), (p3 - 1.4, y_u - 0.12), (gx3, y_u), (x_l3 + 0.45, y_u - 0.1), (p3 + 0.6, -1.0))]
+        lbl_cyc1 = legend(["70s Abluft", "(Speichern)"], PASTEL_ORANGE, 0.65, [p3 - 1.35, 0.45, 0])
+        lbl_cyc2 = legend(["70s Zuluft", "(+17°C)"], PASTEL_GREEN, 0.65, [p3 - 1.35, -0.75, 0])
+        col3 = VGroup(card3, hdr3, room3["shell"], room3["glass"], person3, core, fan3, lbl_cyc1, lbl_cyc2, box3_stat)
+
+        paths = VGroup(*in1, *out1, *fresh2, *fort2, *sup2, *ext2, *ab3, *zu3)
+        place(VGroup(col1, col2, col3), paths)
+        guides1 = VGroup(flow_guides(in1, PASTEL_BLUE, opacity=0.2), flow_guides(out1, PASTEL_ORANGE, opacity=0.2))
+        guides2 = VGroup(flow_guides(fresh2, PASTEL_BLUE, opacity=0.2), flow_guides(fort2, GREY_B, opacity=0.2),
+                         flow_guides(sup2, PASTEL_GREEN, opacity=0.2), flow_guides(ext2, PASTEL_ORANGE, opacity=0.2))
+        guides3 = VGroup(flow_guides(ab3, PASTEL_ORANGE, opacity=0.2, tips=False))
+        active = []
+        pendulum = {"out": True}
+
+        def window_air(rt):
+            return [_streams([(in1, PASTEL_BLUE, PASTEL_ORANGE), (out1, PASTEL_ORANGE)], rt, speed=0.5, waves=4)]
+
+        def central_air(rt):
+            return [_streams([(fresh2, PASTEL_BLUE), (fort2, GREY_B), (sup2, PASTEL_GREEN), (ext2, PASTEL_ORANGE)], rt,
+                             speed=0.55, waves=3), *_spin([fan2], rt)]
+
+        def pendulum_air(rt):
+            n = max(1, int(round(rt / 2.2)))
+            flows, turns = [], []
+            for _ in range(n):
+                out = pendulum["out"]
+                flow = _streams([(ab3, PASTEL_ORANGE)] if out else [(zu3, PASTEL_BLUE, PASTEL_GREEN)], rt / n,
+                                speed=0.55, waves=4)
+                flow.run_time = rt / n
+                turn = _spin([fan3], rt / n, sign=-1.0 if out else 1.0)[0]
+                turn.run_time = rt / n
+                flows.append(flow)
+                turns.append(turn)
+                pendulum["out"] = not out
+            return [Succession(*flows), Succession(*turns)]
+
+        def systems(rt):
+            return [a for fn in active for a in fn(rt)]
+
+        self.play(FadeIn(col1), run_time=1.0)
+        self.play(open_window(win1, run_time=0.8), FadeIn(guides1), run_time=0.8)
+        active.append(window_air)
+        self.play(*systems(1.0), run_time=1.0)
+        hold_for(self, N, "window", used=2.8, during=systems)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "central"))
+        self.play(FadeIn(col2), FadeIn(guides2), *systems(1.3), run_time=1.3)
+        active.append(central_air)
+        hold_for(self, N, "central", during=systems)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "decentral"))
+        self.play(FadeIn(col3), FadeIn(guides3), *systems(1.3), run_time=1.3)
+        active.append(pendulum_air)
+        hold_for(self, N, "decentral", during=systems)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "outro"))
+        hold_for(self, N, "outro", during=systems)
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)

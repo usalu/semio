@@ -18,7 +18,10 @@ from manim_fonts import (
 )
 from manim_visuals import (
     P_DEEP_DARK, PASTEL_WHITE, PASTEL_CYAN, PASTEL_TEAL, PASTEL_ORANGE, PASTEL_YELLOW, PASTEL_RED, PASTEL_BLUE, PASTEL_GREEN,
+    PASTEL_PURPLE,
     fit_band, watt_anchor, radiation_ray,
+    smooth_path, flow_guides, flow_animation, ripples, pulse_flashes,
+    person_glyph, radiator, moon_glyph, window_glyph,
     meter, set_meter, chip, cross_mark, dim_arrow,
     highlight_param, math_label, math_panel, de_num, place_math,
     caption_bar, swap_caption, hold_for, subtitle_text,
@@ -34,24 +37,30 @@ TITLE_DE = "Modul 1: Die Grundlagen der Bauphysik"
 
 #region The through-line: one exterior wall between a heated room and a winter night
 # Conduction, convection and radiation are three ways the *same* heat leaves the
-# same room. Beats 1–5 redraw this one section — radiator and occupant in the
-# room, a plastered brick wall, a snowy night outside — and only change the
-# mechanism drawn on it. Coordinates are design units; ``_stage(scale=…)``
+# same room. Beats 1–5 redraw this one section — the Physical Fundamentals room
+# slabs, radiator and occupant, a plastered brick wall, a snowy night outside —
+# and only change the mechanism drawn on it. The occupant stands between the
+# side wall and the radiator so the radiator's rays and the room-air loop never
+# cross the figure. Coordinates are design units; ``_stage(scale=…)``
 # shrinks the whole section about ``STAGE_PIVOT`` when a beat needs the
 # formula band, and ``stage["p"]`` / ``stage["fit"]`` map later drawings onto it.
 THETA_I, THETA_E = 20, 0
 FLOOR_Y, CEIL_Y = -1.25, 1.75
 SLAB = 0.22
+SIDE_WALL = 0.2
 ROOM_X0, WALL_X0, WALL_X1, OUT_X1 = -6.3, -0.7, 0.7, 6.3
 PLASTER = 0.10
 LABEL_Y = -1.70
 STAGE_PIVOT = np.array([0.0, 2.0, 0.0])
-RADIATOR = (-5.65, -1.05, -4.75, -0.30)
-OCCUPANT_X = -2.9
+RADIATOR_X, RADIATOR_SCALE = -4.6, 1.1
+RADIATOR = (RADIATOR_X - 0.51, FLOOR_Y, RADIATOR_X + 0.51, FLOOR_Y + 0.63)
+RAD_EMIT = (RADIATOR[2] + 0.04, FLOOR_Y + 0.35)
+OCCUPANT_X, OCCUPANT_SCALE = -5.72, 2.2
 BRICK_FILL = "#2A2E35"
 MORTAR = "#A9B0BA"
-SLAB_GREY = "#5B6068"
 HOT = PASTEL_RED
+SHELL_STYLE = dict(color=PASTEL_WHITE, stroke_width=2, fill_color=PASTEL_WHITE, fill_opacity=0.14)
+STARS = ((2.1, 1.62), (3.0, 1.08), (3.9, 1.68), (4.4, 0.25), (5.9, 0.62), (2.6, 0.12), (5.2, -0.15), (6.0, 1.62))
 
 
 def _box(x0, y0, x1, y1, **style):
@@ -93,52 +102,44 @@ def _brick_wall():
 
 
 def _radiator():
-    """♨️ Panel radiator on the floor, fins and feet."""
-    x0, y0, x1, y1 = RADIATOR
-    body = _box(x0, y0, x1, y1, stroke_color=PASTEL_RED, stroke_width=2.2, fill_color=PASTEL_RED, fill_opacity=0.30)
-    fins = VGroup(*[
-        Line(np.array([x, y0 + 0.06, 0.0]), np.array([x, y1 - 0.06, 0.0]), color=PASTEL_RED, stroke_width=1.4)
-        for x in np.arange(x0 + 0.13, x1 - 0.05, 0.13)
-    ])
-    feet = VGroup(*[
-        Line(np.array([x, y0, 0.0]), np.array([x, FLOOR_Y, 0.0]), color=PASTEL_RED, stroke_width=2.2)
-        for x in (x0 + 0.12, x1 - 0.12)
-    ])
-    return VGroup(body, fins, feet)
+    """♨️ Physical Fundamentals panel radiator standing on the floor slab."""
+    rad = radiator(ORIGIN, PASTEL_RED).scale(RADIATOR_SCALE)
+    return rad.move_to(np.array([RADIATOR_X, FLOOR_Y + rad.height / 2, 0.0]))
 
 
-def _occupant(x=OCCUPANT_X, color=PASTEL_ORANGE, scale=2.6):
-    """🧍 Occupant — the same minimal head-and-body glyph as the other tutorial scenes, standing on the floor."""
-    head = Circle(radius=0.11, color=color, stroke_width=2.2)
-    body = RoundedRectangle(width=0.30, height=0.40, corner_radius=0.09, color=color, stroke_width=2.2)
-    body.next_to(head, DOWN, buff=0.04)
-    person = VGroup(head, body).scale(scale)
-    person.move_to(np.array([x, FLOOR_Y + person.height / 2 + 0.02, 0.0]))
-    return person
+def _occupant(x=OCCUPANT_X, color=PASTEL_ORANGE, scale=OCCUPANT_SCALE):
+    """🧍 Physical Fundamentals occupant standing on the floor."""
+    person = person_glyph(ORIGIN, color=color, scale=scale)
+    return person.move_to(np.array([x, FLOOR_Y + person.height / 2, 0.0]))
 
 
 def _night_sky():
-    """🌙 Crescent moon and a few stars over the snow."""
-    moon = VGroup(
-        Circle(radius=0.28, stroke_width=0, fill_color="#F2E8C9", fill_opacity=1.0).move_to(np.array([5.25, 1.35, 0.0])),
-        Circle(radius=0.25, stroke_width=0, fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(np.array([5.37, 1.45, 0.0])),
-    )
+    """🌙 Physical Fundamentals crescent and a few stars over the snow."""
+    moon = moon_glyph(np.array([5.25, 1.35, 0.0]), color="#F2E8C9")
     stars = VGroup(*[
-        Dot(np.array([x, y, 0.0]), radius=0.025, color=PASTEL_WHITE, fill_opacity=0.8)
-        for x, y in ((2.1, 1.6), (3.0, 1.2), (3.9, 1.7), (4.5, 0.9), (5.9, 0.7), (2.6, 0.4), (4.9, 0.2), (6.0, 1.6))
+        Dot(np.array([x, y, 0.0]), radius=0.025, color=PASTEL_WHITE, fill_opacity=0.8) for x, y in STARS
     ])
     return VGroup(moon, stars)
+
+
+def _ground():
+    """❄️ Ground outside — the Physical Fundamentals ground line with hatches."""
+    line = Line(np.array([WALL_X1, FLOOR_Y, 0.0]), np.array([OUT_X1, FLOOR_Y, 0.0]), color=PASTEL_TEAL, stroke_width=2.2)
+    hatches = VGroup(*[
+        Line(q, q + np.array([-0.07, -0.1, 0.0]), color=PASTEL_TEAL, stroke_width=1.1)
+        for q in [line.point_from_proportion(u) for u in np.linspace(0.04, 0.96, 15)]
+    ])
+    return VGroup(line, hatches)
 
 
 def _stage(*, scale: float = 1.0):
     """🏠 Heated room | brick exterior wall | winter night — the section Beats 1–5 share."""
     room = _box(ROOM_X0, FLOOR_Y, WALL_X0, CEIL_Y, stroke_width=0, fill_opacity=0.0)
     night = _box(WALL_X1, FLOOR_Y, OUT_X1, CEIL_Y + SLAB, stroke_width=0, fill_opacity=0.0)
-    floor = _box(ROOM_X0, FLOOR_Y - SLAB, WALL_X0, FLOOR_Y, stroke_color="#8A8F98", stroke_width=1.4,
-                 fill_color=SLAB_GREY, fill_opacity=0.9)
-    ceiling = _box(ROOM_X0, CEIL_Y, WALL_X0, CEIL_Y + SLAB, stroke_color="#8A8F98", stroke_width=1.4,
-                   fill_color=SLAB_GREY, fill_opacity=0.9)
-    snow = _box(WALL_X1, FLOOR_Y - SLAB, OUT_X1, FLOOR_Y, stroke_width=0, fill_color="#DCE6F2", fill_opacity=0.85)
+    floor = _box(ROOM_X0 - SIDE_WALL, FLOOR_Y - SLAB, WALL_X0, FLOOR_Y, **SHELL_STYLE)
+    ceiling = _box(ROOM_X0 - SIDE_WALL, CEIL_Y, WALL_X0, CEIL_Y + SLAB, **SHELL_STYLE)
+    side = _box(ROOM_X0 - SIDE_WALL, FLOOR_Y, ROOM_X0, CEIL_Y, **SHELL_STYLE)
+    snow = _ground()
     wall = _brick_wall()
     radiator = _radiator()
     occupant = _occupant()
@@ -150,7 +151,7 @@ def _stage(*, scale: float = 1.0):
     te.move_to(np.array([(WALL_X1 + OUT_X1) / 2, LABEL_Y, 0.0]))
     dth = place_math(_dtheta_label(THETA_I - THETA_E), np.array([0.0, ti.get_bottom()[1], 0.0]), "center")
 
-    shell = VGroup(room, night, floor, ceiling, snow)
+    shell = VGroup(room, night, floor, ceiling, side, snow)
     group = VGroup(shell, wall["group"], radiator, occupant, sky, ti, te, dth)
     group.scale(scale, about_point=STAGE_PIVOT)
 
@@ -174,15 +175,21 @@ def _show_stage(scene, stage, *, labels=True, run_time: float = 1.4):
     extra = [FadeIn(stage["ti"]), FadeIn(stage["te"])] if labels else []
     scene.play(FadeIn(stage["furniture"]), *extra, run_time=0.8)
     return run_time + 0.8
+
+
+def _warmth(stage, run_time: float):
+    """♨️ The heated radiator — long-wave ripples rising off its top while a clause is read."""
+    top = stage["radiator"].get_top()
+    w = stage["radiator"].width
+    centers = [top + RIGHT * dx * w + UP * 0.03 for dx in (-0.28, 0.0, 0.28)]
+    return [ripples(centers, r_max=0.42 * stage["s"], color=HOT, cycles=max(1.0, run_time / 1.3))]
 #endregion
 
 
 #region Particles with a colour along the path
 def _path(points):
     """〰️ Smooth track through design points."""
-    path = TipableVMobject()
-    path.set_points_smoothly([np.array([x, y, 0.0]) for x, y in points])
-    return path
+    return smooth_path([(x, y, 0.0) for x, y in points])
 
 
 def _knots_color(knots):
@@ -205,38 +212,32 @@ def _chord_t(points, index):
     return float(np.sum(seg[:index]) / np.sum(seg))
 
 
-def _stream(scene, streams, *, run_time: float, n: int = 10, radius: float = 0.06, cycles: float = 2.0, extra=None):
-    """💨 Streak particles along paths, coloured by ``color_fn(t)``; ``closed`` loops never fade at the seam."""
-    parts, meta = VGroup(), []
-    for path, color_fn, closed in streams:
-        for w in range(n):
-            dot = Ellipse(width=radius * 2.8, height=radius * 1.15, stroke_width=0, fill_opacity=0.0)
-            dot.move_to(path.point_from_proportion(0.0))
-            parts.add(dot)
-            meta.append((path, color_fn, closed, w / n))
+def _loop_flow(path, color_fn, *, cycles: float, n: int = 12, radius: float = 0.06):
+    """🔁 ``flow_animation`` particles on a closed loop — coloured by ``color_fn(t)``, no fade at the seam."""
+    parts = VGroup(*[Ellipse(width=radius * 2.8, height=radius * 1.15, stroke_width=0, fill_opacity=0.0)
+                     for _ in range(n)])
 
     def update(group, alpha):
-        for dot, (path, color_fn, closed, offset) in zip(group, meta):
-            t = (alpha * cycles + offset) % 1.0
-            pos = path.point_from_proportion(t)
-            ahead = path.point_from_proportion(min(1.0, t + 0.01) if not closed else (t + 0.01) % 1.0)
+        for k, dot in enumerate(group):
+            t = (alpha * cycles + k / n) % 1.0
+            pos, ahead = path.point_from_proportion(t), path.point_from_proportion((t + 0.01) % 1.0)
             dot.move_to(pos)
             dot.set_angle(float(np.arctan2(ahead[1] - pos[1], ahead[0] - pos[0])))
-            fade = 1.0 if closed else min(1.0, t / 0.08, (1.0 - t) / 0.10)
-            dot.set_fill(color_fn(t), opacity=0.92 * max(0.0, fade))
+            dot.set_fill(color_fn(t), opacity=0.92)
 
-    scene.add(parts)
-    scene.play(UpdateFromAlphaFunc(parts, update), *(extra or []), run_time=run_time, rate_func=linear)
-    scene.remove(parts)
+    return UpdateFromAlphaFunc(parts, update, remover=True, rate_func=linear)
 #endregion
 
 
 #region Mechanism drawings on the section
+RISE_PTS = [(RADIATOR_X, -0.48), (RADIATOR_X, 0.55), (RADIATOR_X + 0.25, 1.27), (RADIATOR_X + 0.9, 1.50),
+            (-2.5, 1.52)]
+RETURN_PTS = [(-1.65, -1.08), (-3.2, -1.08), (-3.75, -1.0), (-3.95, -0.72), (-4.25, -0.5), (RADIATOR_X, -0.48)]
+
+
 def _loop_points():
     """🔁 Room air loop: rise at the radiator, ceiling run, sink at the cold wall, return on the floor."""
-    return [(-5.2, -0.25), (-5.2, 0.55), (-4.95, 1.27), (-4.3, 1.50), (-2.5, 1.52), (-1.45, 1.47),
-            (-1.02, 1.12), (-0.96, 0.40), (-0.96, -0.45), (-1.08, -0.92), (-1.65, -1.08), (-3.5, -1.08),
-            (-4.6, -1.06), (-5.02, -0.92), (-5.2, -0.60), (-5.2, -0.25)]
+    return [*RISE_PTS, (-1.45, 1.47), (-1.02, 1.12), (-0.96, 0.40), (-0.96, -0.45), (-1.08, -0.92), *RETURN_PTS]
 
 
 def _loop(stage):
@@ -245,7 +246,7 @@ def _loop(stage):
     path = stage["fit"](_path(pts))
     color = _knots_color([
         (0.0, HOT), (_chord_t(pts, 5), PASTEL_ORANGE), (_chord_t(pts, 9), PASTEL_BLUE),
-        (_chord_t(pts, 13), PASTEL_BLUE), (1.0, HOT),
+        (_chord_t(pts, 12), PASTEL_BLUE), (1.0, HOT),
     ])
     return path, color
 
@@ -255,20 +256,14 @@ def _wind(stage):
     lanes = []
     for k, off in enumerate((0.0, 0.24, 0.48)):
         pts = [(6.1, -0.95 + 0.35 * k), (3.0, -0.95 + 0.35 * k), (1.5 + off, -0.65 + 0.25 * k),
-               (0.98 + off, 0.05), (0.98 + off, 0.85), (1.6 + off, 1.45), (2.7 + off, 1.80)]
+               (0.98 + off, 0.05), (0.98 + off, 0.85), (1.45 + off, 1.35), (2.35 + off, 1.62)]
         lanes.append(stage["fit"](_path(pts)))
-    color = _knots_color([(0.0, PASTEL_BLUE), (0.45, PASTEL_BLUE), (0.75, "#C9A3E8"), (1.0, "#C9A3E8")])
-    return lanes, color
+    return lanes
 
 
-def _surface_arrows(stage, x0, x1, ys, color):
-    """➡️ Short heat hand-over arrows into or out of a wall surface."""
-    p = stage["p"]
-    return VGroup(*[
-        Arrow(p(x0, y), p(x1, y), buff=0, color=color, stroke_width=3,
-              max_tip_length_to_length_ratio=0.45, tip_length=0.12)
-        for y in ys
-    ])
+def _through(stage, ys=(-0.45, 0.25, 0.95)):
+    """🧱 Conduction lanes across the masonry, inner face to outer face."""
+    return [stage["fit"](_path([(WALL_X0 + 0.15, y), (WALL_X1 - 0.15, y)])) for y in ys]
 
 
 def _ir_rays(stage, pairs):
@@ -277,12 +272,28 @@ def _ir_rays(stage, pairs):
     return VGroup(*[radiation_ray(p(*a), p(*b), color=PASTEL_YELLOW, stroke_width=2.2) for a, b in pairs])
 
 
-def _ray_pulses(rays, *, width: float = 6.0):
-    """✨ One travelling flash per ray — the packet moving from emitter to absorber."""
-    return [ShowPassingFlash(r.copy().set_stroke(color=PASTEL_YELLOW, width=width), time_width=0.35) for r in rays]
+def _ir_paths(stage, pairs):
+    """🛤️ Ray endpoints on the stage — the tracks ``pulse_flashes`` runs along."""
+    return [[stage["p"](*a), stage["p"](*b)] for a, b in pairs]
 
 
-INNER_RAYS = [((-4.75, -0.65), (WALL_X0 - 0.02, y)) for y in (-0.90, -0.15, 0.60, 1.35)]
+def _ir_glow(stage, pairs, run_time: float, *, pulses: bool = True):
+    """✨ Long-wave emission: ripples off every emitting surface, bright packets running along the rays."""
+    p, cycles = stage["p"], max(1.0, run_time / 1.3)
+    anims = []
+    if any(a[0] < 0 for a, _b in pairs):
+        anims.append(ripples([p(RAD_EMIT[0], y) for y in (FLOOR_Y + 0.2, FLOOR_Y + 0.48)], r_max=0.5 * stage["s"],
+                             color=HOT, cycles=cycles, facing=0.0))
+    if any(a[0] > 0 for a, _b in pairs):
+        anims.append(ripples([p(WALL_X1 + 0.03, y) for y in (-0.45, 0.45, 1.35)], r_max=0.45 * stage["s"],
+                             color=PASTEL_BLUE, cycles=cycles, facing=0.0))
+    if pulses:
+        anims.append(pulse_flashes(_ir_paths(stage, pairs), PASTEL_YELLOW, repeats=max(1, int(run_time / 1.3)),
+                                   width=6.0))
+    return anims
+
+
+INNER_RAYS = [(RAD_EMIT, (WALL_X0 - 0.02, y)) for y in (-0.90, -0.15, 0.60, 1.35)]
 OUTER_RAYS = [((WALL_X1 + 0.02, y), (WALL_X1 + 2.02, y + 0.80)) for y in (-0.75, -0.15, 0.45, 1.05)]
 #endregion
 
@@ -291,6 +302,16 @@ OUTER_RAYS = [((WALL_X1 + 0.02, y), (WALL_X1 + 2.02, y + 0.80)) for y in (-0.75,
 def _tint_wall(stage, opacity: float = 0.22):
     """🌡️ Animation that colours the masonry warm inside ➜ cold outside — the gradient conduction runs down."""
     return stage["wall"]["tint"].animate.set_fill(opacity=opacity)
+
+
+def _dim(mobs, opacity: float):
+    """🌫️ Dim strokes, and only fills that are already visible — curved guides never fill in."""
+    target = mobs.copy()
+    for m in target.get_family():
+        m.set_stroke(opacity=min(opacity, m.get_stroke_opacity()))
+        if m.get_fill_opacity() > 0:
+            m.set_fill(opacity=min(opacity, m.get_fill_opacity()))
+    return Transform(mobs, target)
 #endregion
 
 
@@ -445,45 +466,49 @@ class Beat1_DreiWegeDerWaerme(Scene):
             np.array([stage["wall"]["outline"].get_center()[0], stage["ti"].get_bottom()[1], 0.0]),
             size=BODY_FONT_SIZE, color=PASTEL_YELLOW, edge="center",
         )
-        heat_lanes = [stage["fit"](_path([(-4.6, y), (6.0, y)])) for y in (-0.75, -0.15, 0.45, 1.05)]
-        heat_color = _knots_color([(0.0, HOT), (0.48, PASTEL_ORANGE), (0.56, "#B98CC7"), (1.0, PASTEL_BLUE)])
-        reverse = _flow_arrow(p(3.0, 0.25), p(-3.0, 0.25), PASTEL_BLUE)
+        heat_lanes = [stage["fit"](_path([(-3.75, y), (4.6, y)])) for y in (-0.85, -0.3, 0.8, 1.35)]
+        heat_guides = flow_guides(heat_lanes, HOT, opacity=0.18)
+        reverse = _flow_arrow(p(2.8, 0.25), p(-2.4, 0.25), PASTEL_BLUE)
         no_mark = VGroup(
             Circle(radius=0.37, color=PASTEL_RED, stroke_width=5),
             Line(UP * 0.26 + LEFT * 0.26, DOWN * 0.26 + RIGHT * 0.26, color=PASTEL_RED, stroke_width=5),
         ).move_to(p(0.0, 0.25))
         routes = _route_strip()
 
+        def heat(rt):
+            return [flow_animation([(heat_lanes, HOT, PASTEL_BLUE)], waves=4, radius=0.07, cycles=rt / 2.6),
+                    *_warmth(stage, rt)]
+
         hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "setup"))
-        used = _show_stage(self, stage)
-        hold_for(self, self.NARRATION, "setup", used=used + 0.35)
+        _show_stage(self, stage)
+        hold_for(self, self.NARRATION, "setup", during=lambda rt: _warmth(stage, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "driver"))
         self.add(dth_live)
-        self.play(dt.animate.set_value(THETA_I - THETA_E), run_time=0.8)
-        self.play(Indicate(dth_live, color=PASTEL_YELLOW, scale_factor=1.2), run_time=0.9)
-        hold_for(self, self.NARRATION, "driver", used=0.8 + 0.9 + 0.35)
+        self.play(dt.animate.set_value(THETA_I - THETA_E), *_warmth(stage, 0.8), run_time=0.8)
+        self.play(Indicate(dth_live, color=PASTEL_YELLOW, scale_factor=1.2), *_warmth(stage, 0.9), run_time=0.9)
+        hold_for(self, self.NARRATION, "driver", during=lambda rt: _warmth(stage, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "direction"))
-        _stream(self, [(lane, heat_color, False) for lane in heat_lanes], run_time=3.2, n=7, radius=0.07,
-                cycles=1.6, extra=[_tint_wall(stage)])
-        _stream(self, [(lane, heat_color, False) for lane in heat_lanes], run_time=2.4, n=7, radius=0.07,
-                cycles=1.2, extra=[ReplacementTransform(stage["ti"], ti_cool),
-                                   ReplacementTransform(stage["te"], te_warm),
-                                   dt.animate.set_value(18)])
-        hold_for(self, self.NARRATION, "direction", used=3.2 + 2.4 + 0.35)
+        self.play(Create(heat_guides), *_warmth(stage, 0.6), run_time=0.6)
+        self.play(*heat(3.2), _tint_wall(stage), run_time=3.2)
+        self.play(*heat(2.4), ReplacementTransform(stage["ti"], ti_cool), ReplacementTransform(stage["te"], te_warm),
+                  dt.animate.set_value(18), run_time=2.4)
+        hold_for(self, self.NARRATION, "direction", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "never"))
-        self.play(GrowArrow(reverse), run_time=0.8)
-        self.play(Create(no_mark), reverse.animate.set_stroke(color=PASTEL_WHITE, opacity=0.22), run_time=0.7)
-        hold_for(self, self.NARRATION, "never", used=0.8 + 0.7 + 0.35)
+        self.play(GrowArrow(reverse), *heat(0.8), run_time=0.8)
+        self.play(Create(no_mark), reverse.animate.set_stroke(color=PASTEL_WHITE, opacity=0.22), *heat(0.7),
+                  run_time=0.7)
+        hold_for(self, self.NARRATION, "never", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "three"))
-        self.play(FadeOut(reverse), FadeOut(no_mark), run_time=0.5)
-        self.play(LaggedStart(*[FadeIn(c, shift=UP * 0.14) for c in routes], lag_ratio=0.22), run_time=1.4)
-        hold_for(self, self.NARRATION, "three", used=0.5 + 1.4 + 0.35)
+        self.play(FadeOut(reverse), FadeOut(no_mark), *heat(0.5), run_time=0.5)
+        self.play(LaggedStart(*[FadeIn(c, shift=UP * 0.14) for c in routes], lag_ratio=0.22), *heat(1.4),
+                  run_time=1.4)
+        hold_for(self, self.NARRATION, "three", during=heat)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -587,8 +612,14 @@ class Beat2_Waermeleitung(Scene):
         lens = _lens(stage)
         lat = _lattice(lens)
         marker = DashedVMobject(Circle(radius=0.32, color="#D5D9DE", stroke_width=3).move_to(lens["c"]), num_dashes=16)
-        energy = _flow_arrow(p(-1.25, 2.12), p(1.25, 2.12), PASTEL_RED, width=5)
+        lane = _path([(-1.25, 2.12), (1.25, 2.12)])
+        energy = flow_guides([lane], HOT, opacity=0.45, width=3.0)
         energy_tag = Text("Energie", font_size=LABEL_FONT_SIZE, color=PASTEL_RED).next_to(energy, LEFT, buff=0.2)
+        lane_k = _path([(-0.55, 0.25), (0.55, 0.25)])
+        energy_k = flow_guides([lane_k], HOT, opacity=0.45, width=3.0)
+
+        def flow(rt, track=lane):
+            return [flow_animation([([track], HOT, PASTEL_BLUE)], waves=3, radius=0.07, cycles=rt / 1.4)]
 
         clock = ValueTracker(0.0)
         clock.add_updater(lambda m, dt: m.increment_value(dt))
@@ -618,10 +649,10 @@ class Beat2_Waermeleitung(Scene):
         watch_lead = Line(watch_tag.get_right() + RIGHT * 0.08, watch_ring.get_left(), color=PASTEL_GREEN,
                           stroke_width=1.4, stroke_opacity=0.7)
 
-        hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3)
-
-        used = _show_stage(self, stage, run_time=1.2)
-        self.play(FadeIn(routes), Create(marker), run_time=0.8)
+        _show_stage(self, stage, run_time=1.2)
+        self.play(FadeIn(routes), Create(marker), *_warmth(stage, 0.8), run_time=0.8)
+        hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3 + 2.0 + 0.8,
+                 during=lambda rt: _warmth(stage, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lattice"))
         self.add(clock)
@@ -629,29 +660,25 @@ class Beat2_Waermeleitung(Scene):
                   FadeIn(lens["handle"]), run_time=1.0)
         lat["group"].add_updater(jiggle)
         self.play(FadeIn(lat["group"]), run_time=0.8)
-        hold_for(self, self.NARRATION, "lattice", used=used + 0.8 + 1.0 + 0.8 + 0.35)
+        hold_for(self, self.NARRATION, "lattice")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "relay"))
-        self.play(GrowArrow(energy), FadeIn(energy_tag), run_time=0.6)
-        self.play(front.animate.set_value(1.35), _tint_wall(stage),
-                  ShowPassingFlash(energy.copy().set_stroke(color=PASTEL_YELLOW, width=9), time_width=0.4),
-                  run_time=4.0, rate_func=linear)
-        hold_for(self, self.NARRATION, "relay", used=0.6 + 4.0 + 0.35)
+        self.play(Create(energy), FadeIn(energy_tag), run_time=0.6)
+        self.play(front.animate.set_value(1.35), _tint_wall(stage), *flow(4.0), run_time=4.0, rate_func=linear)
+        hold_for(self, self.NARRATION, "relay", during=flow)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "stayput"))
-        self.play(Create(watch_ring), FadeIn(watch_tag), Create(watch_lead), run_time=0.8)
-        self.wait(2.0)
-        hold_for(self, self.NARRATION, "stayput", used=0.8 + 2.0 + 0.35)
+        self.play(Create(watch_ring), FadeIn(watch_tag), Create(watch_lead), *flow(0.8), run_time=0.8)
+        hold_for(self, self.NARRATION, "stayput", during=flow)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         lat["group"].clear_updaters()
-        token = _q_token("k", PASTEL_RED).move_to(lens["c"])
-        self.play(FadeOut(watch_ring), FadeOut(watch_tag), FadeOut(watch_lead),
-                  ReplacementTransform(lat["group"], token), run_time=1.2)
-        self.play(FadeOut(lens["group"]), token.animate.move_to(p(0.0, 0.25)),
-                  Transform(energy, _flow_arrow(p(-0.55, -0.35), p(0.55, -0.35), PASTEL_RED, width=5)),
-                  FadeOut(energy_tag), run_time=1.0)
-        hold_for(self, self.NARRATION, "symbol", used=1.2 + 1.0 + 0.35)
+        token = _q_token("k", PASTEL_RED).move_to(p(-1.5, 0.25))
+        self.play(FadeOut(watch_ring), FadeOut(watch_tag), FadeOut(watch_lead), FadeOut(energy_tag),
+                  FadeOut(lens["group"]), ReplacementTransform(lat["group"], token),
+                  ReplacementTransform(energy, energy_k), run_time=1.4)
+        self.play(*flow(0.8, lane_k), run_time=0.8)
+        hold_for(self, self.NARRATION, "symbol", during=lambda rt: flow(rt, lane_k))
 
         clock.clear_updaters()
         self.play(FadeOut(caption), run_time=0.3)
@@ -664,27 +691,27 @@ WIN_LO, WIN_HI = 0.05, 1.35
 
 
 def _window_opening(stage):
-    """🪟 Window opening cut through the masonry: sill, lintel and the glass pane in the wall plane."""
+    """🪟 Opening cut through the masonry with a Physical Fundamentals casement at the inner face, swinging into the room."""
     p = stage["p"]
     cut = Polygon(p(WALL_X0, WIN_LO), p(WALL_X1, WIN_LO), p(WALL_X1, WIN_HI), p(WALL_X0, WIN_HI),
                   stroke_width=0, fill_color=P_DEEP_DARK, fill_opacity=1.0)
     frame = VGroup(*[Line(p(WALL_X0, y), p(WALL_X1, y), color=PASTEL_WHITE, stroke_width=2.4) for y in (WIN_LO, WIN_HI)])
-    pane = Rectangle(width=0.07 * stage["s"], height=(WIN_HI - WIN_LO) * stage["s"], stroke_color=PASTEL_CYAN,
-                     stroke_width=1.5, fill_color=PASTEL_CYAN, fill_opacity=0.35).move_to(p(0.0, (WIN_LO + WIN_HI) / 2))
-    return {"cut": cut, "frame": frame, "pane": pane, "group": VGroup(cut, frame, pane)}
+    win = window_glyph(p(WALL_X0 + 0.3, 0)[0], p(0, WIN_LO)[1], p(0, WIN_HI)[1], depth=0.7 * stage["s"], color=PASTEL_CYAN)
+    return {"cut": cut, "frame": frame, "window": win, "group": VGroup(cut, frame, win["group"])}
+
+
+def _open_inward(window, *, run_time: float = 1.0):
+    """🚪 ``open_window`` mirrored — the sash turns about its hinge into a room that lies left of the wall."""
+    return Rotate(window["sash"], angle=PI / 2, axis=UP, about_point=window["hinge"], run_time=run_time)
 
 
 def _window_flows(stage):
-    """🌬️ Warm room air out through the top of the opening, cold outdoor air in through the bottom."""
-    warm_pts = [(-5.2, -0.25), (-5.2, 0.55), (-4.95, 1.27), (-4.3, 1.50), (-2.5, 1.52), (-1.3, 1.30),
-                (-0.6, 1.05), (0.6, 1.0), (1.4, 1.2), (2.6, 1.65)]
-    cold_pts = [(3.6, 0.05), (2.0, 0.22), (0.6, 0.30), (-0.6, 0.30), (-1.1, 0.0), (-1.25, -0.6),
-                (-1.6, -1.05), (-3.5, -1.08), (-4.6, -1.06), (-5.02, -0.92), (-5.2, -0.6), (-5.2, -0.25)]
-    warm = stage["fit"](_path(warm_pts))
-    cold = stage["fit"](_path(cold_pts))
-    warm_color = _knots_color([(0.0, HOT), (_chord_t(warm_pts, 6), PASTEL_ORANGE), (1.0, "#C9A3E8")])
-    cold_color = _knots_color([(0.0, PASTEL_BLUE), (_chord_t(cold_pts, 9), PASTEL_BLUE), (1.0, HOT)])
-    return (warm, warm_color), (cold, cold_color)
+    """🌬️ Rising air at the radiator, warm room air out through the top of the opening, cold air in at the sill."""
+    rise = stage["fit"](_path([*RISE_PTS, (-1.2, 1.4)]))
+    warm = stage["fit"](_path([*RISE_PTS, (-1.3, 1.30), (-0.6, 1.05), (0.6, 1.0), (1.4, 1.2), (2.6, 1.65)]))
+    cold = stage["fit"](_path([(3.6, 0.05), (2.0, 0.22), (0.6, 0.30), (-0.6, 0.30), (-1.1, 0.0), (-1.25, -0.6),
+                               *RETURN_PTS]))
+    return rise, warm, cold
 
 
 class Beat3_Konvektion(Scene):
@@ -722,46 +749,50 @@ class Beat3_Konvektion(Scene):
         p = stage["p"]
         routes = _route_strip(active=1)
         window = _window_opening(stage)
-        (warm, warm_color), (cold, cold_color) = _window_flows(stage)
-        warm_guide = warm.copy().set_stroke(color=HOT, width=2.0, opacity=0.30).set_fill(opacity=0)
-        cold_guide = cold.copy().set_stroke(color=PASTEL_BLUE, width=2.0, opacity=0.30).set_fill(opacity=0)
-        glow = stage["radiator"][0].copy().set_fill(PASTEL_RED, opacity=0.65)
-        warm_tag = Text("warm, leicht", font_size=LABEL_FONT_SIZE, color=HOT).move_to(p(-4.0, 0.55))
+        rise, warm, cold = _window_flows(stage)
+        rise_guide = flow_guides([rise], HOT, opacity=0.25)
+        warm_guide = flow_guides([warm], HOT, opacity=0.25)
+        cold_guide = flow_guides([cold], PASTEL_BLUE, opacity=0.25)
+        glow = stage["radiator"][0].copy().set_fill(PASTEL_RED, opacity=0.55)
+        warm_tag = Text("warm, leicht", font_size=LABEL_FONT_SIZE, color=HOT).move_to(p(-3.0, 0.55))
         cold_tag = Text("kalt, schwer", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(p(2.6, 0.6))
         open_tag = Text("Fenster geöffnet", font_size=LABEL_FONT_SIZE, color=PASTEL_CYAN).move_to(p(2.3, -0.75))
         ti_cool = Text("innen 17 °C", font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE).move_to(stage["ti"])
+        streams = {"rise": (rise, HOT, PASTEL_ORANGE), "warm": (warm, HOT, PASTEL_PURPLE),
+                   "cold": (cold, PASTEL_BLUE, HOT)}
 
-        def flow(streams, seconds, extra=None):
-            _stream(self, streams, run_time=seconds, n=12, radius=0.07, cycles=seconds / 6.0, extra=extra)
+        def air(*keys):
+            def during(rt):
+                return [flow_animation([([streams[k][0]], *streams[k][1:]) for k in keys], waves=10, radius=0.07,
+                                       cycles=rt / 6.0)]
+            return during
 
-        hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3)
-
-        used = _show_stage(self, stage, run_time=1.2)
-        self.play(FadeIn(window["group"]), FadeIn(routes), run_time=0.6)
+        _show_stage(self, stage, run_time=1.2)
+        self.play(FadeIn(window["group"]), FadeIn(routes), *_warmth(stage, 0.6), run_time=0.6)
+        hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3 + 2.0 + 0.6,
+                 during=lambda rt: _warmth(stage, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "heater"))
-        self.play(FadeIn(glow), FadeIn(warm_tag), run_time=0.6)
-        rise = stage["fit"](_path([(-5.2, -0.25), (-5.2, 0.55), (-4.95, 1.27), (-4.3, 1.50), (-2.5, 1.52), (-1.2, 1.4)]))
-        flow([(rise, _knots_color([(0.0, HOT), (1.0, PASTEL_ORANGE)]), False)], 4.0)
-        hold_for(self, self.NARRATION, "heater", used=used + 0.6 + 0.6 + 4.0 + 0.35)
+        self.play(FadeIn(glow), FadeIn(warm_tag), Create(rise_guide), run_time=0.6)
+        self.play(*air("rise")(4.0), run_time=4.0)
+        hold_for(self, self.NARRATION, "heater", during=air("rise"))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "window"))
-        self.play(FadeOut(window["pane"]), FadeIn(open_tag), run_time=1.0)
-        self.play(Create(warm_guide), run_time=0.6)
-        flow([(warm, warm_color, False)], 4.5)
-        hold_for(self, self.NARRATION, "window", used=1.0 + 0.6 + 4.5 + 0.35)
+        self.play(_open_inward(window["window"]), FadeIn(open_tag), *air("rise")(1.0), run_time=1.0)
+        self.play(ReplacementTransform(rise_guide, warm_guide), *air("rise")(0.6), run_time=0.6)
+        self.play(*air("warm")(4.5), run_time=4.5)
+        hold_for(self, self.NARRATION, "window", during=air("warm"))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cold"))
-        self.play(Create(cold_guide), FadeIn(cold_tag), run_time=0.6)
-        flow([(warm, warm_color, False), (cold, cold_color, False)], 6.0,
-             extra=[FadeTransform(stage["ti"], ti_cool)])
-        hold_for(self, self.NARRATION, "cold", used=0.6 + 6.0 + 0.35)
+        self.play(Create(cold_guide), FadeIn(cold_tag), *air("warm")(0.6), run_time=0.6)
+        self.play(*air("warm", "cold")(6.0), FadeTransform(stage["ti"], ti_cool), run_time=6.0)
+        hold_for(self, self.NARRATION, "cold", during=air("warm", "cold"))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         token = _q_token("c", PASTEL_CYAN).move_to(p(-3.0, 0.95))
         self.play(ReplacementTransform(VGroup(warm_guide, cold_guide), token),
-                  FadeOut(warm_tag), FadeOut(cold_tag), FadeOut(glow), run_time=1.2)
-        hold_for(self, self.NARRATION, "symbol", used=1.2 + 0.35)
+                  FadeOut(warm_tag), FadeOut(cold_tag), FadeOut(glow), *air("warm", "cold")(1.2), run_time=1.2)
+        hold_for(self, self.NARRATION, "symbol", during=air("warm", "cold"))
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -770,7 +801,7 @@ class Beat3_Konvektion(Scene):
 
 #region Beat4 – Radiation: surface to surface, with or without air
 def _room_air(stage, n: int = 30, seed: int = 9):
-    """💨 Scattered air particles in the room, kept clear of the radiator and the occupant."""
+    """💨 Free air particles drifting in the room, kept clear of the radiator, the occupant and the rays' labels."""
     rng = np.random.default_rng(seed)
     x0, y0, x1, y1 = RADIATOR
     pts = []
@@ -778,10 +809,24 @@ def _room_air(stage, n: int = 30, seed: int = 9):
         x, y = float(rng.uniform(ROOM_X0 + 0.2, WALL_X0 - 0.15)), float(rng.uniform(FLOOR_Y + 0.15, CEIL_Y - 0.15))
         if x0 - 0.15 < x < x1 + 0.15 and y < y1 + 0.15:
             continue
-        if abs(x - OCCUPANT_X) < 0.5 and y < 0.65:
+        if abs(x - OCCUPANT_X) < 0.5 and y < 0.45:
+            continue
+        if abs(x - (-3.0)) < 1.05 and abs(y - 0.95) < 0.4:
             continue
         pts.append((x, y))
-    return VGroup(*[Dot(stage["p"](x, y), radius=0.035, color="#9AA4B1", fill_opacity=0.85) for x, y in pts])
+    dots = VGroup(*[Dot(stage["p"](x, y), radius=0.035, color="#9AA4B1", fill_opacity=0.85) for x, y in pts])
+    homes = [d.get_center() for d in dots]
+    phases = rng.uniform(0, TAU, size=(n, 2))
+    clock = ValueTracker(0.0)
+    clock.add_updater(lambda m, dt: m.increment_value(dt))
+
+    def drift(group):
+        t = clock.get_value()
+        for d, h, (a, b) in zip(group, homes, phases):
+            d.move_to(h + 0.07 * np.array([np.sin(2.3 * t + a), np.cos(1.9 * t + b), 0.0]))
+
+    dots.add_updater(drift)
+    return dots, clock
 
 
 class Beat4_Strahlung(Scene):
@@ -818,47 +863,54 @@ class Beat4_Strahlung(Scene):
         stage = _stage()
         p = stage["p"]
         routes = _route_strip(active=2)
-        air = _room_air(stage)
-        air_tag = Text("Raumluft", font_size=LABEL_FONT_SIZE, color="#9AA4B1").move_to(p(-3.0, 1.18))
+        air, air_clock = _room_air(stage)
+        air_tag = Text("Raumluft", font_size=LABEL_FONT_SIZE, color="#9AA4B1").move_to(p(-3.0, 0.95))
         inner = _ir_rays(stage, INNER_RAYS)
         outer = _ir_rays(stage, OUTER_RAYS)
         sky_tag = Text("kalter Nachthimmel", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(p(4.5, 0.55))
         loop, _ = _loop(stage)
         loop_guide = DashedVMobject(loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.5), num_dashes=46)
-        no_air = Text("ohne Luft keine Konvektion", font_size=LABEL_FONT_SIZE, color=PASTEL_RED).move_to(air_tag)
+        no_air = Text("ohne Luft\nkeine Konvektion", font_size=LABEL_FONT_SIZE, color=PASTEL_RED,
+                      line_spacing=0.8).move_to(air_tag)
         no_mark = cross_mark(PASTEL_RED, size=0.16).move_to(p(-2.45, 1.52))
+        both = INNER_RAYS + OUTER_RAYS
 
-        hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3)
+        def glow(rt, pairs=both, pulses=True):
+            return _ir_glow(stage, pairs, rt, pulses=pulses)
 
-        used = _show_stage(self, stage, run_time=1.2)
+        self.add(air_clock)
+        _show_stage(self, stage, run_time=1.2)
         self.play(FadeIn(routes), FadeIn(air), FadeIn(air_tag), run_time=0.8)
+        hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3 + 2.0 + 0.8,
+                 during=lambda rt: glow(rt, INNER_RAYS, False))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "waves"))
-        self.play(LaggedStart(*[Create(r) for r in inner], lag_ratio=0.15), run_time=1.2)
-        self.play(*_ray_pulses(inner), _tint_wall(stage, 0.14), run_time=1.3)
-        self.play(LaggedStart(*[Create(r) for r in outer], lag_ratio=0.15), FadeIn(sky_tag), run_time=1.2)
-        self.play(*_ray_pulses(inner), *_ray_pulses(outer), run_time=1.3)
-        hold_for(self, self.NARRATION, "waves", used=used + 0.8 + 1.2 + 1.3 + 1.2 + 1.3 + 0.35)
+        self.play(LaggedStart(*[Create(r) for r in inner], lag_ratio=0.15), *glow(1.2, INNER_RAYS, False), run_time=1.2)
+        self.play(*glow(1.3, INNER_RAYS), _tint_wall(stage, 0.14), run_time=1.3)
+        self.play(LaggedStart(*[Create(r) for r in outer], lag_ratio=0.15), FadeIn(sky_tag), *glow(1.2, INNER_RAYS),
+                  run_time=1.2)
+        self.play(*glow(1.3), run_time=1.3)
+        hold_for(self, self.NARRATION, "waves", during=glow)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vacuum"))
-        self.play(Create(loop_guide), run_time=0.8)
+        self.play(Create(loop_guide), *glow(0.8, pulses=False), run_time=0.8)
+        air.clear_updaters()
         self.play(LaggedStart(*[FadeOut(d, scale=0.3) for d in air], lag_ratio=0.03),
-                  ReplacementTransform(air_tag, no_air),
-                  run_time=1.6)
-        self.play(Create(no_mark), loop_guide.animate.set_stroke(opacity=0.15), run_time=0.6)
-        hold_for(self, self.NARRATION, "vacuum", used=0.8 + 1.6 + 0.6 + 0.35)
+                  ReplacementTransform(air_tag, no_air), *glow(1.6, pulses=False), run_time=1.6)
+        self.play(Create(no_mark), loop_guide.animate.set_stroke(opacity=0.15), *glow(0.6, pulses=False), run_time=0.6)
+        hold_for(self, self.NARRATION, "vacuum", during=lambda rt: glow(rt, pulses=False))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "still"))
-        self.play(*_ray_pulses(inner), *_ray_pulses(outer), run_time=1.3)
-        self.play(*_ray_pulses(inner), *_ray_pulses(outer), run_time=1.3)
-        hold_for(self, self.NARRATION, "still", used=2.6 + 0.35)
+        self.play(*glow(2.6), run_time=2.6)
+        hold_for(self, self.NARRATION, "still", during=glow)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         token = _q_token("r", PASTEL_YELLOW).move_to(p(-3.0, 0.95))
         self.play(ReplacementTransform(VGroup(inner, outer), token),
                   FadeOut(loop_guide), FadeOut(no_mark), FadeOut(no_air), FadeOut(sky_tag),
-                  run_time=1.2)
-        hold_for(self, self.NARRATION, "symbol", used=1.2 + 0.35)
+                  *glow(1.2, pulses=False), run_time=1.2)
+        hold_for(self, self.NARRATION, "symbol", during=lambda rt: glow(rt, pulses=False))
+        air_clock.clear_updaters()
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -915,12 +967,18 @@ class Beat5_Zusammenfassung(Scene):
         )
         loop, loop_color = _loop(stage)
         loop_guide = loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.35).set_fill(opacity=0)
-        lanes, wind_color = _wind(stage)
-        wind_guides = VGroup(*[l.copy().set_stroke(color=PASTEL_CYAN, width=1.8, opacity=0.30).set_fill(opacity=0)
-                               for l in lanes])
+        lanes = _wind(stage)
+        wind_guides = flow_guides(lanes, PASTEL_CYAN, opacity=0.28, width=1.8)
         inner = _ir_rays(stage, INNER_RAYS)
         outer = _ir_rays(stage, OUTER_RAYS)
-        through = _flow_arrow(p(-0.55, 0.25), p(0.55, 0.25), PASTEL_RED, width=6)
+        wall_lanes = _through(stage)
+        through = flow_guides(wall_lanes, HOT, opacity=0.5, width=2.6)
+
+        def heat(rt):
+            return [_loop_flow(loop, loop_color, cycles=rt / 7.0, n=14),
+                    flow_animation([(lanes, PASTEL_BLUE, PASTEL_PURPLE)], waves=6, radius=0.06, cycles=rt / 4.0),
+                    flow_animation([(wall_lanes, HOT, PASTEL_BLUE)], waves=2, radius=0.06, cycles=rt / 1.6),
+                    *_ir_glow(stage, INNER_RAYS + OUTER_RAYS, rt)]
 
         eq, eq_box, items = math_panel([
             ("ci", r"\dot{Q}_{\mathrm{c,i}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("ri", r"\dot{Q}_{\mathrm{r,i}}", PASTEL_YELLOW),
@@ -947,20 +1005,23 @@ class Beat5_Zusammenfassung(Scene):
         )
         iso = _din_ref("DIN EN ISO 6946")
 
-        hold_for(self, self.NARRATION, "recap", used=BEAT_SUBTITLE_FADE + 0.3)
+        prof_path = [p(x, _profile_y(t)) for x, t in prof_pts]
 
-        used = _show_stage(self, stage, run_time=1.2)
-        self.play(FadeIn(zone_tags, shift=DOWN * 0.1), run_time=0.6)
+        def passing(rt):
+            return [pulse_flashes([prof_path], HOT, repeats=max(1, int(rt / 1.8)), width=6.0)]
+
+        _show_stage(self, stage, run_time=1.2)
+        self.play(FadeIn(zone_tags, shift=DOWN * 0.1), *_warmth(stage, 0.6), run_time=0.6)
+        hold_for(self, self.NARRATION, "recap", used=BEAT_SUBTITLE_FADE + 0.3 + 2.0 + 0.6,
+                 during=lambda rt: _warmth(stage, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sum"))
         self.play(Create(loop_guide), LaggedStart(*[Create(r) for r in inner], lag_ratio=0.15), run_time=1.0)
-        self.play(GrowArrow(through), _tint_wall(stage), run_time=0.8)
+        self.play(Create(through), _tint_wall(stage), run_time=0.8)
         self.play(Create(wind_guides), LaggedStart(*[Create(r) for r in outer], lag_ratio=0.15), run_time=1.0)
-        _stream(self, [(loop, loop_color, True)] + [(l, wind_color, False) for l in lanes],
-                run_time=3.0, n=10, radius=0.06, cycles=0.8,
-                extra=[*_ray_pulses(inner), *_ray_pulses(outer)])
-        self.play(FadeIn(eq), Create(eq_box), run_time=1.0)
-        hold_for(self, self.NARRATION, "sum", used=used + 0.6 + 1.0 + 0.8 + 1.0 + 3.0 + 1.0 + 0.35)
+        self.play(*heat(3.0), run_time=3.0)
+        self.play(FadeIn(eq), Create(eq_box), *heat(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "sum", during=heat)
 
         for key, keys, visual, color in (
             ("k", ("k",), through, PASTEL_RED),
@@ -968,25 +1029,24 @@ class Beat5_Zusammenfassung(Scene):
             ("r", ("ri", "re"), VGroup(inner, outer), PASTEL_YELLOW),
         ):
             rings = VGroup(*[highlight_param(items, k, color=color) for k in keys])
-            self.play(Create(rings), Indicate(visual, color=color, scale_factor=1.04), run_time=0.7)
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.7 + 0.35)
-            self.play(FadeOut(rings), run_time=0.25)
+            self.play(Create(rings), Indicate(visual, color=color, scale_factor=1.04), *heat(0.7), run_time=0.7)
+            hold_for(self, self.NARRATION, key, during=heat)
+            self.play(FadeOut(rings), *heat(0.25), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "profile"))
-        self.play(*[m.animate.set_stroke(opacity=0.15) for m in (loop_guide, wind_guides, inner, outer)],
-                  through.animate.set_opacity(0.15), VGroup(stage["radiator"], stage["occupant"]).animate.set_opacity(0.3),
-                  run_time=0.6)
+        self.play(_dim(VGroup(loop_guide, wind_guides, inner, outer, through), 0.1),
+                  _dim(VGroup(stage["radiator"], stage["occupant"]), 0.3), run_time=0.6)
         self.play(Create(profile), run_time=1.6)
         self.play(LaggedStart(*[AnimationGroup(FadeIn(d, scale=0.5), FadeIn(t)) for d, t in zip(prof_dots, prof_tags)],
                               lag_ratio=0.35), run_time=1.6)
-        hold_for(self, self.NARRATION, "profile", used=0.6 + 1.6 + 1.6 + 0.35)
+        hold_for(self, self.NARRATION, "profile", during=passing)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "standard"))
-        self.play(FadeIn(iso), run_time=0.5)
+        self.play(FadeIn(iso), *passing(0.5), run_time=0.5)
         self.play(Indicate(iso, color=PASTEL_TEAL, scale_factor=1.25), run_time=0.5)
-        self.play(Indicate(eq, color=PASTEL_TEAL, scale_factor=1.06), run_time=0.9)
-        hold_for(self, self.NARRATION, "standard", used=1.0 + 0.9 + 0.35)
+        self.play(Indicate(eq, color=PASTEL_TEAL, scale_factor=1.06), *passing(0.9), run_time=0.9)
+        hold_for(self, self.NARRATION, "standard", during=passing)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -1230,6 +1290,13 @@ class Beat7_Waermedurchlasswiderstand(Scene):
             r"R_{\mathrm{ges}} = R_{1} + R_{2} + R_{3} + \ldots",
             np.array([x0, -1.10, 0.0]), size=BODY_FONT_SIZE, color=PASTEL_TEAL, edge="left",
         )
+        heat_lanes = [_path([(x0 - 1.2, y), (x0 + 2 * B7_D0 / B7_UNIT_M + 1.0, y)]) for y in (0.78, 1.05, 1.32)]
+
+        def heat(rt):
+            q = B7_D0 / B7_LAM_KS / r_val()
+            lanes = heat_lanes if q > 0.3 else heat_lanes[1:2]
+            return [flow_animation([(lanes, HOT, PASTEL_BLUE)], waves=max(1, round(4 * q)), radius=0.06,
+                                   cycles=rt / 2.8 * max(q, 0.35))]
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -1240,47 +1307,47 @@ class Beat7_Waermedurchlasswiderstand(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gradient"))
         self.play(Create(grad), run_time=1.0)
         self.play(
-            *[FadeIn(g[k]) for g in (r_gauge, q_gauge) for k in ("track", "label")],
+            *[FadeIn(g[k]) for g in (r_gauge, q_gauge) for k in ("track", "label")], *heat(0.5),
             run_time=0.5,
         )
         self.add(r_gauge["fill"], q_gauge["fill"])
-        self.play(g_on.animate.set_value(1.0), run_time=0.8)
-        hold_for(self, self.NARRATION, "gradient", used=1.0 + 0.5 + 0.8 + 0.35)
+        self.play(g_on.animate.set_value(1.0), *heat(0.8), run_time=0.8)
+        hold_for(self, self.NARRATION, "gradient", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.add(d_live)
-        self.play(Create(d_brace), d_on.animate.set_value(1.0), run_time=0.9)
-        self.play(FadeIn(eq), Create(eq_box), run_time=1.0)
+        self.play(Create(d_brace), d_on.animate.set_value(1.0), *heat(0.9), run_time=0.9)
+        self.play(FadeIn(eq), Create(eq_box), *heat(1.0), run_time=1.0)
         self.add(r_live)
-        self.play(r_on.animate.set_value(1.0), run_time=1.0)
-        hold_for(self, self.NARRATION, "formula", used=0.9 + 1.0 + 1.0 + 0.35)
+        self.play(r_on.animate.set_value(1.0), *heat(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "formula", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "d"))
         ring_d = highlight_param(parts, "d", color=PASTEL_CYAN)
-        self.play(Create(ring_d), run_time=0.4)
-        self.play(d_m.animate.set_value(2 * B7_D0), run_time=1.8)
-        hold_for(self, self.NARRATION, "d", used=0.4 + 1.8 + 0.35)
-        self.play(FadeOut(ring_d), run_time=0.25)
+        self.play(Create(ring_d), *heat(0.4), run_time=0.4)
+        self.play(d_m.animate.set_value(2 * B7_D0), *heat(1.8), run_time=1.8)
+        hold_for(self, self.NARRATION, "d", during=heat)
+        self.play(FadeOut(ring_d), *heat(0.25), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lam"))
         ring_l = highlight_param(parts, "lam", color=PASTEL_ORANGE)
-        self.play(Create(ring_l), run_time=0.4)
+        self.play(Create(ring_l), *heat(0.4), run_time=0.4)
         self.play(
             ReplacementTransform(mat, ins_tag),
-            lam.animate.set_value(B7_LAM_INS), ins.animate.set_value(1.0),
+            lam.animate.set_value(B7_LAM_INS), ins.animate.set_value(1.0), *heat(1.9),
             run_time=1.9,
         )
         self.play(
             Indicate(grad, color=PASTEL_YELLOW, scale_factor=1.0),
-            Indicate(q_gauge["track"], color=PASTEL_RED, scale_factor=1.05),
+            Indicate(q_gauge["track"], color=PASTEL_RED, scale_factor=1.05), *heat(0.7),
             run_time=0.7,
         )
-        hold_for(self, self.NARRATION, "lam", used=0.4 + 1.9 + 0.7 + 0.35)
-        self.play(FadeOut(ring_l), run_time=0.25)
+        hold_for(self, self.NARRATION, "lam", during=heat)
+        self.play(FadeOut(ring_l), *heat(0.25), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sum"))
-        self.play(FadeIn(sum_note, shift=UP * 0.12), run_time=1.0)
-        hold_for(self, self.NARRATION, "sum", used=1.0 + 0.35)
+        self.play(FadeIn(sum_note, shift=UP * 0.12), *heat(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "sum", during=heat)
 
         for mob in (layer, cold_face, grad, te, r_gauge["fill"], q_gauge["fill"]):
             mob.clear_updaters()
@@ -1383,16 +1450,16 @@ class Beat8_UWert(Scene):
             r_live = _live(r_src, np.array([cx, -0.22, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_TEAL, edge="center")
             u_live = _live(u_src, np.array([cx, -0.82, 0.0]), size=BODY_FONT_SIZE, color=tag_color, edge="center")
             right = stack.get_right()[0] + 0.06
-            leak = always_redraw(lambda: VGroup(*[
-                _flow_arrow(
-                    np.array([right, 1.05 + dy, 0.0]),
-                    np.array([right + max(0.02, B8_LEAK_MAX * u_now() / U_1960), 1.05 + dy, 0.0]),
-                    tag_color, width=3,
-                )
-                for dy in (-0.62, -0.21, 0.20, 0.61)
-            ]))
-            return {"stack": stack, "label": label, "on": on, "u_on": u_on,
-                    "r_live": r_live, "u_live": u_live, "leak": leak, "card": VGroup(stack, label)}
+            share = 1.0 / sum(terms) / U_1960
+            lanes = [_path([(right, 1.05 + dy), (right + B8_LEAK_MAX, 1.05 + dy)]) for dy in (-0.62, -0.21, 0.20, 0.61)]
+            lanes = lanes if share > 0.5 else lanes[1:3]
+
+            def leak(rt):
+                return [flow_animation([(lanes, tag_color, PASTEL_BLUE)], waves=max(1, round(4 * share)), radius=0.06,
+                                       cycles=rt / 1.4 * max(share, 0.4))]
+
+            return {"stack": stack, "label": label, "on": on, "u_on": u_on, "r_live": r_live, "u_live": u_live,
+                    "guides": flow_guides(lanes, tag_color, opacity=0.3), "leak": leak, "card": VGroup(stack, label)}
 
         U_1960 = 1.0 / sum(_wall_terms(WALL_1960))
         old = _card(-3.45, WALL_1960, "Altbau 1960 — ungedämmt", PASTEL_RED)
@@ -1416,13 +1483,16 @@ class Beat8_UWert(Scene):
             (None, r"\;[\mathrm{W/(m^{2}K)}]", PASTEL_TEAL),
         ], color=PASTEL_ORANGE)
 
-        def count_layers(card, step):
+        def count_layers(card, step, during=lambda rt: []):
             for col, tracker in zip(card["stack"], card["on"]):
                 self.play(
                     Indicate(col, color=PASTEL_YELLOW, scale_factor=1.0),
-                    tracker.animate.set_value(1.0),
+                    tracker.animate.set_value(1.0), *during(step),
                     run_time=step,
                 )
+
+        def both(rt):
+            return [*old["leak"](rt), *new["leak"](rt)]
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -1443,22 +1513,23 @@ class Beat8_UWert(Scene):
         hold_for(self, self.NARRATION, "flip", used=1.3 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "old"))
-        self.add(old["u_live"], old["leak"])
-        self.play(old["u_on"].animate.set_value(1.0), run_time=1.8)
-        hold_for(self, self.NARRATION, "old", used=1.8 + 0.35)
+        self.add(old["u_live"])
+        self.play(old["u_on"].animate.set_value(1.0), Create(old["guides"]), run_time=1.8)
+        hold_for(self, self.NARRATION, "old", during=old["leak"])
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "new"))
-        self.play(FadeIn(new["card"]), run_time=0.8)
+        self.play(FadeIn(new["card"]), *old["leak"](0.8), run_time=0.8)
         self.add(new["r_live"])
-        count_layers(new, 0.35)
-        self.add(new["u_live"], new["leak"])
-        self.play(new["u_on"].animate.set_value(1.0), run_time=1.2)
-        hold_for(self, self.NARRATION, "new", used=0.8 + 6 * 0.35 + 1.2 + 0.35)
+        count_layers(new, 0.35, old["leak"])
+        self.add(new["u_live"])
+        self.play(new["u_on"].animate.set_value(1.0), Create(new["guides"]), *old["leak"](1.2), run_time=1.2)
+        hold_for(self, self.NARRATION, "new", during=both)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "meaning"))
         ring = highlight_param(u_items, "u", color=PASTEL_ORANGE)
-        self.play(Create(ring), Indicate(new["u_live"], color=PASTEL_CYAN, scale_factor=1.12), run_time=1.0)
-        hold_for(self, self.NARRATION, "meaning", used=1.0 + 0.35)
+        self.play(Create(ring), Indicate(new["u_live"], color=PASTEL_CYAN, scale_factor=1.12), *both(1.0),
+                  run_time=1.0)
+        hold_for(self, self.NARRATION, "meaning", during=both)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)

@@ -280,8 +280,8 @@ class Beat1_WinterGains(Scene):
 class Beat2_SummerOverheat(Scene):
     NARRATION = [
         ("intro",
-         "In summer the same gains become a problem — the building overheats like a greenhouse.",
-         "Im Sommer werden dieselben Gewinne zum Problem — das Gebäude überhitzt wie ein Treibhaus."),
+         "In summer the same gains become a problem — the building overheats.",
+         "Im Sommer werden dieselben Gewinne zum Problem — das Gebäude überhitzt."),
         ("excess",
          "Solar gains turn excessive under a harsh red sun, and internal gains keep stacking heat inside.",
          "Solare Gewinne werden übermäßig, und interne Gewinne stapeln weiter Wärme im Inneren."),
@@ -354,6 +354,9 @@ class Beat3_CoolingSystem(Scene):
         ("vent",
          "An air-handling unit extracts the warm room air, cools outdoor air at its cooling coil and supplies it back to the room.",
          "Ein Lüftungsgerät saugt die warme Raumluft als Abluft ab, kühlt Außenluft am Kühlregister und bläst sie als Zuluft ein."),
+        ("coil",
+         "At the coil the outdoor air falls from thirty-two to eighteen degrees. That drop is the heat the unit removes.",
+         "Am Kühlregister fällt die Außenluft von 32 auf 18 Grad.\nGenau diese Differenz nimmt das Gerät auf."),
         ("cool_down",
          "As heat leaves, the interior cools and the thermometer settles near twenty-one degrees again.",
          "Wenn Wärme abfließt, kühlt der Innenraum — das Thermometer sinkt wieder Richtung einundzwanzig Grad."),
@@ -395,8 +398,26 @@ class Beat3_CoolingSystem(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vent"))
         self.play(FadeIn(ahu["unit"]), Create(supply_guides), Create(extract_guides),
                   FadeIn(ahu["labels"]), FadeIn(ahu["unit_label"]), run_time=1.6)
-        self.play(*running(3.2), run_time=3.2)
+        self.play(*running(2.2), run_time=2.2)
         hold_for(self, self.NARRATION, "vent", during=running)
+
+        # 🌡️ The coil is the machine: outdoor air arrives at 32 °C and leaves at 18 °C.
+        coil = ahu["unit"][-1]
+        coil_temp = ValueTracker(32.0)
+        coil_read = math_readout(
+            lambda: rf"{de_num(coil_temp.get_value())}\,\mathrm{{°C}}",
+            lambda: coil.get_center() + LEFT * 1.45,
+            size=BODY_FONT_SIZE, color=P_WHITE, edge="right",
+        )
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "coil"))
+        self.add(coil_read)
+        self.play(
+            coil.animate.set_color(P_BLUE).set_stroke(width=3.2),
+            coil_temp.animate.set_value(18),
+            *running(2.4),
+            run_time=2.4,
+        )
+        hold_for(self, self.NARRATION, "coil", during=running)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cool_down"))
         self.play(*running(4.0), house["air"].animate.set_fill(P_CYAN, opacity=0.06), temp.animate.set_value(21),

@@ -1,0 +1,13 @@
+Rendered Beat1_DreiWegeDerWaerme
+[LAYOUT] Beat2_Waermeleitung t=48.9s play: line through 'Q' @(-0.08,0.21) × Line@(0.00,0.09)
+[LAYOUT] Beat2_Waermeleitung t=48.9s play: line through 'k' @(0.15,0.11) × Line@(0.00,0.09)
+Rendered Beat2_Waermeleitung
+Rendered Beat3_Konvektion
+Rendered Beat4_Strahlung
+[LAYOUT] Beat5_Zusammenfassung t=45.7s play: line through '16,3°C' @(-1.50,0.97) × Line@(-2.35,0.58)
+[LAYOUT] Beat5_Zusammenfassung t=45.7s play: line through '1,1°C' @(1.50,-0.14) × TipableVMobject@(3.04,0.65)
+[LAYOUT] Beat5_Zusammenfassung t=45.7s play: line through '1,1°C' @(1.50,-0.14) × Line@(1.48,-0.02)
+[LAYOUT] Beat5_Zusammenfassung t=45.7s play: line through '0°C' @(3.01,-0.30) × TipableVMobject@(3.15,0.80)
+Rendered Beat5_Zusammenfassung
+Rendered Beat6_VonWegenZuZahlen
+Rendered Beat7_Waermedurchlasswiderstand

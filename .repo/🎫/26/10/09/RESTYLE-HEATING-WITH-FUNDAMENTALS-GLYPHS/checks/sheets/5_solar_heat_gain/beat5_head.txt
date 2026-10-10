@@ -1,0 +1,25 @@
+class Beat5_Verschattung(Scene):
+    """⛱️ Vertical section: unshaded beam, a Raffstore that reflects it, the residue — F_sh on a 0…1 scale."""
+
+    NARRATION = [
+        ("intro",
+         "A vertical section through window and facade.",
+         "Ein Vertikalschnitt durch Fenster und Fassade."),
+        ("unshaded",
+         "Without shading the full radiation reaches the glass and the room: F-sh is 1.",
+         "Ohne Verschattung trifft die volle Strahlung Glas und Raum: F-sh ist 1."),
+        ("raffstore",
+         "An external Raffstore drops in front. Its slats catch the radiation and send it back outside.",
+         "Ein außenliegender Raffstore senkt sich davor. Seine Lamellen fangen die Strahlung ab und werfen sie zurück."),
+        ("reduced",
+         "Only a small residue gets through — F-sh falls to about 0.15.",
+         "Nur ein Restanteil kommt durch — F-sh sinkt auf etwa 0,15."),
+        ("winter",
+         "In winter the blind stays up; the roof overhang shades the low sun only a little — F-sh about 0.8.",
+         "Im Winter bleibt der Raffstore oben. Der Dachüberstand verschattet die flache Sonne nur wenig — F-sh rund 0,8."),
+        ("fsh",
+         "F-sh is the last factor of the solar equation.",
+         "F-sh ist der letzte Faktor der solaren Gleichung."),
+    ]
+
+    def construct(self):

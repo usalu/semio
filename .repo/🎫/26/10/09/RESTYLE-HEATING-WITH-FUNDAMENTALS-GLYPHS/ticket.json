@@ -1,0 +1,25 @@
+{
+  "id": "2026/10/09/RESTYLE-HEATING-WITH-FUNDAMENTALS-GLYPHS",
+  "title": "Restyle Heating Video with Physical Fundamentals Glyphs",
+  "slug": "RESTYLE-HEATING-WITH-FUNDAMENTALS-GLYPHS",
+  "emoji": "🔥",
+  "status": "closed",
+  "description": "Replace the object drawings and animated effects of the Heating video (house, person, lamp, radiator, sun, sun radiation, heat/energy flow, rooms, windows, thermometer, clock) with the Physical Fundamentals vocabulary from tutorial/manim_visuals.py, keeping the Heating pastel palette. Content (narration, formulas, numbers) stays unchanged. Every scene verified: no overlaps (layout guard + screenshot sheets), animations synced with their subtitle clause. Deliver the full video at 1080p60.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "dates": {"due": "2026-10-09", "started": "2026-10-09", "completed": "2026-10-10"},
+  "client": "claude-code",
+  "llm": "opus-4-7",
+  "summary": "All six Heating parts (Modul 1-5 plus the final calculation) now draw with the Physical Fundamentals glyphs: house_section/room_section, person_glyph/seated_person_glyph, lamp_glyph, radiator, sun_glyph/moon_glyph, straight parallel sun_rays with shine/pulse_flashes, ripples for long-wave heat, flow_animation particles for air/energy flow, thermometer_glyph, clock_glyph, energy_tank. hold_for(during=...) keeps heat, light and air moving while each subtitle is read. Done by six parallel agents (one per part), each independently verified with LAYOUT_CHECK=1 silent plus contact sheets, then re-reviewed by the lead across every beat/scene (two overlap fixes found and corrected during lead review: a particle-flow-through-label issue in Modul 2 Beat3, and a pre-existing readout-column overlap in AnlagenVerluste). full_heating_video.py given the same staleness fix as Cooling. Full video rendered at 1080p60 (35:12) to tutorial/energy/demand/Heating/rendered/Full_Heating_Demand_1080p60.mp4 and spot-checked across its full length.",
+  "files": {
+    "created": [],
+    "updated": [
+      "tutorial/energy/demand/Heating/1_introduction/scene_1.py",
+      "tutorial/energy/demand/Heating/2_conduction/scene_2.py",
+      "tutorial/energy/demand/Heating/3_convection/scene_3.py",
+      "tutorial/energy/demand/Heating/4_internal_heat_gain/scene_4.py",
+      "tutorial/energy/demand/Heating/5_solar_heat_gain/scene_5.py",
+      "tutorial/energy/demand/Heating/final_calculation/merged_scenes.py",
+      "tutorial/energy/demand/Heating/full_heating_video.py"
+    ]
+  }
+}

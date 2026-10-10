@@ -1,0 +1,51 @@
+        N = self.NARRATION
+        hs = house_section(np.array([0.95, -0.2, 0.0]), scale=1.15)
+        bl, br, tl = hs["bottom_left"], hs["bottom_right"], hs["top_left"]
+        x_r, t = br[0], 0.1
+        air = Polygon(bl + RIGHT * t + UP * 0.02, br + LEFT * t + UP * 0.02, hs["top_right"] + LEFT * t + DOWN * 0.06,
+                      hs["roof_peak"] + DOWN * 0.16, tl + RIGHT * t + DOWN * 0.06,
+                      stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.0).set_z_index(-1)
+        y_mid = hs["level_1"].get_center()[1]
+        intake, exhaust = [], []
+        for win, (yf, yc) in zip(hs["windows"], ((bl[1], y_mid), (y_mid, tl[1]))):
+            x_w, sill, lintel = win["x"], win["sill"], win["lintel"]
+            for dy in (0.0, 0.11):
+                intake.append(smooth_path([np.array([x, y + dy, 0.0]) for x, y in (
+                    (x_w - 1.5, sill - 0.08), (x_w - 0.5, sill + 0.08), (x_w + 0.35, sill + 0.02),
+                    (x_w + 1.1, yf + 0.2), (x_r - 0.9, yf + 0.18), (x_r - 0.3, yf + 0.6))]))
+                exhaust.append(smooth_path([np.array([x, y - dy, 0.0]) for x, y in (
+                    (x_r - 0.3, yf + 0.75), (x_r - 0.55, yc - 0.18), (x_w + 1.4, yc - 0.15),
+                    (x_w + 0.4, lintel - 0.06), (x_w - 0.4, lintel - 0.06), (x_w - 1.0, lintel + 0.28))]))
+        guides = VGroup(flow_guides(intake[::2], PASTEL_BLUE, opacity=0.22),
+                        flow_guides(exhaust[::2], PASTEL_ORANGE, opacity=0.22))
+
+        def breeze(rt, waves=3):
+            return [_streams([(intake, PASTEL_BLUE, PASTEL_ORANGE), (exhaust, PASTEL_ORANGE)], rt, speed=0.45, waves=waves)]
+
+        txt_innen = Text("Innen", font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE)
+        txt_warm = Text("Warm", font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE)
+        label_inside = VGroup(txt_innen, txt_warm).arrange(DOWN, buff=0.12)
+        label_inside.move_to([0.5 * (bl[0] + x_r) + 0.25, 0.5 * (bl[1] + y_mid), 0])
+        txt_aussen = Text("Außen", font_size=BODY_FONT_SIZE, color=PASTEL_BLUE)
+        txt_kalt = Text("Kalt", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE)
+        label_outside = VGroup(txt_aussen, txt_kalt).arrange(DOWN, buff=0.12).move_to([-4.3, y_mid, 0])
+
+        self.play(Create(hs["group"]), run_time=1.5)
+        self.add(air)
+        self.play(*[open_window(w) for w in hs["windows"]], FadeIn(guides), run_time=0.9)
+        self.play(*breeze(1.2), run_time=1.2)
+        hold_for(self, N, "intro", used=1.5 + 0.9 + 1.2, during=breeze)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "zones"))
+        self.play(FadeIn(label_inside), FadeIn(label_outside), air.animate.set_fill(PASTEL_ORANGE, opacity=0.12),
+                  *breeze(1.0), run_time=1.0)
+        hold_for(self, N, "zones", during=breeze)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "flow"))
+        self.play(*[ShowPassingFlash(g.copy().set_stroke(width=4, opacity=0.9), time_width=0.4) for g in guides[0]],
+                  *[ShowPassingFlash(g.copy().set_stroke(width=4, opacity=0.9), time_width=0.4) for g in guides[1]],
+                  *breeze(1.2, 5), run_time=1.2)
+        hold_for(self, N, "flow", during=lambda rt: breeze(rt, 5))
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)

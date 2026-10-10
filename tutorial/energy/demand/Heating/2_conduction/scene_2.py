@@ -33,7 +33,8 @@ from manim_visuals import (
     PASTEL_PURPLE,
     PASTEL_WHITE, PASTEL_CYAN, PASTEL_TEAL, PASTEL_ORANGE, PASTEL_YELLOW, PASTEL_RED, PASTEL_BLUE, PASTEL_GREEN,
     math_label, math_readout, math_panel, de_num, highlight_param,
-    animate_flows, dim_arrow,
+    dim_arrow, flow_animation, flow_guides, ripples,
+    house_section, window_glyph, radiator, person_glyph, thermometer_glyph,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language,
 )
@@ -209,31 +210,23 @@ def _slab(origin, side: float, depth, color: str = INSULATION):
 
 
 def _toaster(color: str = PASTEL_ORANGE, fill: float = 0.0):
-    """🍞 Toaster whose body is filled to ``fill`` — 0,7 means seventy percent of one toaster's watts."""
-    body = RoundedRectangle(width=1.15, height=0.74, corner_radius=0.13, color=color, stroke_width=2.6)
-    level = Rectangle(width=1.03, height=max(0.01, 0.62 * fill), stroke_width=0, fill_color=color, fill_opacity=0.55)
+    """🍞 Line-art toaster whose body is filled to ``fill`` — 0,7 means seventy percent of one toaster's watts."""
+    body = RoundedRectangle(width=1.15, height=0.74, corner_radius=0.13, color=color, stroke_width=1.8)
+    level = Rectangle(width=1.03, height=max(0.01, 0.62 * fill), stroke_width=0, fill_color=color, fill_opacity=0.4)
     level.move_to(body.get_bottom() + UP * (0.06 + level.height / 2))
-    slots = VGroup(*[Line(LEFT * 0.17, RIGHT * 0.17, color=color, stroke_width=3.2).move_to(body.get_top() + DOWN * 0.13 + RIGHT * dx)
+    slots = VGroup(*[Line(LEFT * 0.17, RIGHT * 0.17, color=color, stroke_width=2.2).move_to(body.get_top() + DOWN * 0.13 + RIGHT * dx)
                      for dx in (-0.24, 0.24)])
-    lever = Line(body.get_right() + UP * 0.12, body.get_right() + UP * 0.12 + RIGHT * 0.14, color=color, stroke_width=3)
-    feet = VGroup(*[Line(body.get_bottom() + RIGHT * dx, body.get_bottom() + RIGHT * dx + DOWN * 0.07, color=color, stroke_width=3)
+    lever = Line(body.get_right() + UP * 0.12, body.get_right() + UP * 0.12 + RIGHT * 0.14, color=color, stroke_width=1.8)
+    feet = VGroup(*[Line(body.get_bottom() + RIGHT * dx, body.get_bottom() + RIGHT * dx + DOWN * 0.07, color=color, stroke_width=1.8)
                     for dx in (-0.4, 0.4)])
     return VGroup(level, body, slots, lever, feet)
 
 
-def _person(color: str = PASTEL_RED, scale: float = 1.0):
-    """🧍 Occupant glyph — same as Heating Modul 1 and Physikalische Grundlagen."""
-    head = Circle(radius=0.11, color=color, stroke_width=2.2)
-    body = RoundedRectangle(width=0.30, height=0.40, corner_radius=0.09, color=color, stroke_width=2.2)
-    body.next_to(head, DOWN, buff=0.04)
-    return VGroup(head, body).scale(scale)
-
-
 def _tealight(color: str = PASTEL_ORANGE):
-    """🕯️ Tealight — aluminium cup, wick and flame."""
-    cup = RoundedRectangle(width=0.56, height=0.2, corner_radius=0.05, color=PASTEL_WHITE, stroke_width=2.2)
-    wick = Line(cup.get_top(), cup.get_top() + UP * 0.08, color=PASTEL_WHITE, stroke_width=2)
-    flame = Ellipse(width=0.16, height=0.34, color=color, stroke_width=1.5, fill_color=PASTEL_YELLOW, fill_opacity=0.85)
+    """🕯️ Line-art tealight — aluminium cup, wick and flame."""
+    cup = RoundedRectangle(width=0.56, height=0.2, corner_radius=0.05, color=PASTEL_WHITE, stroke_width=1.6)
+    wick = Line(cup.get_top(), cup.get_top() + UP * 0.08, color=PASTEL_WHITE, stroke_width=1.4)
+    flame = Ellipse(width=0.16, height=0.34, color=color, stroke_width=1.4, fill_color=PASTEL_YELLOW, fill_opacity=0.7)
     flame.next_to(wick, UP, buff=0.0)
     return VGroup(cup, wick, flame)
 
@@ -243,8 +236,53 @@ def _devices(kind: str, count: int, fill: float = 1.0):
     if kind == "toaster":
         return VGroup(_toaster(PASTEL_ORANGE, fill)).scale(1.15)
     if kind == "person":
-        return VGroup(*[_person(PASTEL_RED, 2.2) for _ in range(count)]).arrange(RIGHT, buff=0.3)
+        return VGroup(*[person_glyph(ORIGIN, PASTEL_RED, 2.0) for _ in range(count)]).arrange(RIGHT, buff=0.3)
     return VGroup(*[_tealight(PASTEL_ORANGE) for _ in range(count)]).arrange(RIGHT, buff=0.3).scale(1.25)
+
+
+def _emitters(kind: str, row) -> list:
+    """🎯 Points a device row gives its heat off from — toaster slots, a person's chest, tealight flames."""
+    if kind == "toaster":
+        return [slot.get_center() + UP * 0.06 for slot in row[0][2]]
+    if kind == "person":
+        return [p.get_center() + UP * p.height * 0.18 for p in row]
+    return [t[2].get_top() for t in row]
+
+
+def _envelope_house(center, scale: float, col: dict) -> dict:
+    """🏠 Physical Fundamentals section house with a front door in the right wall, each envelope element in its colour."""
+    h = house_section(center, scale)
+    br, tr, t = h["bottom_right"], h["top_right"], 0.08 * scale
+    door_top = br[1] + 0.62 * scale
+    h["wall_right"].put_start_and_end_on(np.array([br[0], door_top, 0.0]), tr)
+    h["walls"][5][3].put_start_and_end_on(np.array([br[0] - t, door_top, 0.0]), tr + LEFT * t)
+    door = window_glyph(br[0], br[1], door_top, depth=0.5 * scale, color=col["Haustür"])
+    door["sash"].remove(door["sash"][1])
+    for w in h["windows"]:
+        w["sash"].set_color(col["Fenster"])
+    h["roof"].set_stroke(col["Dach"])
+    VGroup(*h["walls"][:4], h["walls"][5]).set_stroke(col["Außenwand"])
+    floor = VGroup(h["floor"], h["group"][1]).set_stroke(col["Boden"])
+    parts = {"Dach": h["roof"], "Außenwand": VGroup(*h["walls"][:4], h["walls"][5]),
+             "Fenster": VGroup(*[w["sash"] for w in h["windows"]]), "Haustür": door["sash"], "Boden": floor}
+    return {**h, "door": door, "door_top": door_top, "parts": parts, "group": VGroup(h["group"], door["group"])}
+#endregion
+
+
+#region Heat motion
+def _cycles(rt: float, period: float, waves: int) -> float:
+    """🔂 Whole particle spacings per play, so back-to-back flow plays hand over without a jump."""
+    return round(rt * waves / period) / waves
+
+
+def _heat_flow(streams, rt: float, *, period: float = 2.0, waves: int = 4, radius: float = 0.07):
+    """🔥 Conducted heat as particles drifting warm → cold along tracks, one crossing every ``period`` seconds."""
+    return flow_animation(streams, waves=waves, radius=radius, cycles=_cycles(rt, period, waves))
+
+
+def _warmth(centers, rt: float, *, r_max: float = 0.4, color=PASTEL_ORANGE, facing=None, period: float = 1.4):
+    """♨️ Long-wave heat ripples off warm points with a steady ring spacing across plays."""
+    return ripples(centers, r_max=r_max, rings=2, color=color, facing=facing, cycles=_cycles(rt, period, 2))
 #endregion
 #endregion
 
@@ -291,17 +329,25 @@ class Beat1_MakroUndMikro(Scene):
                                   np.array([1.25, 1.55, 0.0]), color=PASTEL_WHITE, edge="center")
         wall_note = body_text("Zwei Ziegel im selben Mauerwerk", font_size=LABEL_FONT_SIZE, color=PASTEL_TEAL)
         wall_note.move_to(DOWN * 1.3)
+        therms = []
+        for x, trk, color in ((-3.2, t_left, PASTEL_RED), (3.2, t_right, PASTEL_BLUE)):
+            th = thermometer_glyph(np.array([x, -0.7, 0.0]), height=1.75, color=color, level=trk.get_value() / 40.0)
+            th["level"].add_updater(lambda m, trk=trk: m.set_value(trk.get_value() / 40.0))
+            therms.append(th)
 
         self.play(
             FadeIn(left_block, shift=RIGHT * 0.3),
             FadeIn(right_block, shift=LEFT * 0.3),
             FadeIn(left_read), FadeIn(right_read), FadeIn(wall_note),
+            *[FadeIn(th["group"]) for th in therms],
             run_time=1.2,
         )
+        self.add(*[th["level"] for th in therms], *[th["column"] for th in therms])
         heat_paths = _flow_lines([((-2.2, y, 0.0), (2.2, y, 0.0)) for y in np.linspace(-0.6, 0.9, 4)])
-        animate_flows(self, [(heat_paths, PASTEL_YELLOW, PASTEL_WHITE)], run_time=5.0, waves=4, cycles=2.4, radius=0.09,
-                      extra=[t_left.animate.set_value(20.0), t_right.animate.set_value(20.0)])
-        hold_for(self, self.NARRATION, "macro", used=1.2 + 5.0 + 0.35)
+        hold_for(self, self.NARRATION, "macro", used=1.2 + 0.35, during=lambda rt: [
+            _heat_flow([(heat_paths, PASTEL_YELLOW, PASTEL_WHITE)], rt, period=2.0, waves=4, radius=0.09),
+            t_left.animate.set_value(20.0), t_right.animate.set_value(20.0),
+        ])
 
         left_block[0].clear_updaters()
         right_block[0].clear_updaters()
@@ -311,19 +357,27 @@ class Beat1_MakroUndMikro(Scene):
         merged_outline = Rectangle(
             width=5.0, height=2.2, stroke_color=PASTEL_WHITE, stroke_width=2, fill_opacity=0,
         ).move_to(UP * 0.15)
+        exchange = [_flow_lines([((-2.2, y, 0.0), (2.2, y, 0.0)) for y in (-0.45, 0.55)]),
+                    _flow_lines([((2.2, y, 0.0), (-2.2, y, 0.0)) for y in (0.05, 0.95)])]
+
+        def balanced(rt):
+            return [_heat_flow([(p, PASTEL_WHITE) for p in exchange], rt, period=2.6, waves=2, radius=0.07)]
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "equilibrium"))
         self.play(
             left_block[0].animate.set_stroke(width=0),
             right_block[0].animate.set_stroke(width=0),
             FadeIn(merged_outline),
             ReplacementTransform(VGroup(left_read, right_read), eq_label),
+            *balanced(1.5),
             run_time=1.5,
         )
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "equilibrium"))
-        hold_for(self, self.NARRATION, "equilibrium", used=1.5 + 0.35)
+        hold_for(self, self.NARRATION, "equilibrium", during=balanced)
 
         micro_sub = beat_subtitle("Mikroskopisches Gitter & Wärmebarriere", title)
         self.play(
             FadeOut(left_block), FadeOut(right_block), FadeOut(eq_label), FadeOut(merged_outline), FadeOut(wall_note),
+            *[FadeOut(VGroup(th["group"], th["column"])) for th in therms],
             ReplacementTransform(subtitle, micro_sub),
             run_time=1.0,
         )
@@ -368,9 +422,9 @@ class Beat1_MakroUndMikro(Scene):
 
             dot.add_updater(make_updater(dot))
 
-        self.play(FadeIn(dots_group), run_time=1.0)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "micro"))
-        hold_for(self, self.NARRATION, "micro", used=1.0 + 0.35)
+        self.play(FadeIn(dots_group), run_time=1.0)
+        hold_for(self, self.NARRATION, "micro")
 
         barrier_rect = Rectangle(
             width=0.45, height=num_rows * dy + 0.25,
@@ -385,9 +439,8 @@ class Beat1_MakroUndMikro(Scene):
         ins_text = Text("Dämmschicht (DIN 4108)", font_size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
         ins_text.next_to(barrier_rect, UP, buff=0.12)
         insulation_barrier = VGroup(barrier_rect, air_gaps, ins_text)
-        self.play(Create(insulation_barrier), run_time=1.1)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "insulation"))
-        hold_for(self, self.NARRATION, "insulation", used=1.1 + 0.35)
+        self.play(Create(insulation_barrier), run_time=1.1)
 
         sweep_x = ValueTracker(start_x - 0.5)
         sweep_line = Line(
@@ -409,9 +462,10 @@ class Beat1_MakroUndMikro(Scene):
         self.play(sweep_x.animate.set_value(insulation_x - 0.22), run_time=3.6, rate_func=linear)
         self.remove_updater(heat_propagation_updater)
         sweep_line.clear_updaters()
+        hold_for(self, self.NARRATION, "insulation")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "blocked"))
-        hold_for(self, self.NARRATION, "blocked", used=3.6 + 0.35)
+        hold_for(self, self.NARRATION, "blocked")
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -462,11 +516,17 @@ class Beat2_RWert(Scene):
 
         rect = Rectangle(
             width=w0, height=1.9, color=PASTEL_YELLOW,
-            fill_color=INSULATION, fill_opacity=0.85,
+            fill_color=INSULATION, fill_opacity=0.4,
         ).move_to(slab_c)
-        rect_label = body_text("Dämmung", font_size=BODY_FONT_SIZE, color=PASTEL_WHITE).move_to(rect.get_center())
+        rect_label = body_text("Dämmung", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(rect.get_center())
         lam_label = math_label(r"\lambda = 0{,}035\,\mathrm{W/(m\,K)}", color=PASTEL_CYAN)
         lam_label.next_to(rect, LEFT, buff=0.35)
+
+        def slab_heat(rt):
+            x0, x1, yc = rect.get_left()[0] + 0.06, rect.get_right()[0] - 0.06, rect.get_center()[1]
+            paths = _flow_lines([((x0, yc + dy, 0.0), (x1, yc + dy, 0.0)) for dy in (-0.72, -0.4, 0.4, 0.72)])
+            return [_heat_flow([(paths, PASTEL_RED, PASTEL_BLUE)], rt, period=1.8 * rect.width / w0, waves=3, radius=0.075)]
+
         self.play(ReplacementTransform(grid_dots, rect), FadeIn(rect_label), FadeIn(lam_label), run_time=1.6)
 
         panel = math_panel([
@@ -476,9 +536,9 @@ class Beat2_RWert(Scene):
         ])
         row, box, items = panel
         frac = items["frac"][0]
-        self.play(FadeIn(row), Create(box), run_time=1.0)
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
-        hold_for(self, N, "formula", used=2.6 + 0.35)
+        self.play(FadeIn(row), Create(box), *slab_heat(1.0), run_time=1.0)
+        hold_for(self, N, "formula", during=slab_heat)
 
         meas = ValueTracker(0.0)
         y_dim = rect.get_bottom()[1] - 0.25
@@ -496,21 +556,20 @@ class Beat2_RWert(Scene):
             np.array([left_x, rect.get_top()[1] + 0.42, 0.0]), color=PASTEL_YELLOW, edge="left")
         ring_d = highlight_param({"d": frac[0]}, "d", color=PASTEL_ORANGE)
         self.add(d_span, d_read, r_read)
-        self.play(meas.animate.set_value(w0), Create(ring_d), run_time=1.6)
         caption = swap_caption(self, caption, subtitle_text(N, "d"))
-        hold_for(self, N, "d", used=1.6 + 0.35)
-        self.play(FadeOut(ring_d), run_time=0.2)
+        self.play(meas.animate.set_value(w0), Create(ring_d), *slab_heat(1.6), run_time=1.6)
+        hold_for(self, N, "d", during=slab_heat)
 
         ring_l = highlight_param({"lam": frac[2]}, "lam", color=PASTEL_CYAN)
-        self.play(Create(ring_l), Indicate(lam_label, color=PASTEL_CYAN), run_time=0.8)
         caption = swap_caption(self, caption, subtitle_text(N, "lam"))
-        hold_for(self, N, "lam", used=0.8 + 0.35)
-        self.play(FadeOut(ring_l), run_time=0.2)
+        self.play(FadeOut(ring_d), Create(ring_l), Indicate(lam_label, color=PASTEL_CYAN), *slab_heat(0.8), run_time=0.8)
+        hold_for(self, N, "lam", during=slab_heat)
 
         width = ValueTracker(w0)
         rect.add_updater(lambda m: m.stretch_to_fit_width(width.get_value()).align_to(np.array([left_x, 0.0, 0.0]), LEFT))
         rect_label.add_updater(lambda t: t.move_to(rect.get_center()))
-        self.play(width.animate.set_value(2 * w0), meas.animate.set_value(2 * w0), run_time=3.2, rate_func=smooth)
+        caption = swap_caption(self, caption, subtitle_text(N, "stretch"))
+        self.play(FadeOut(ring_l), width.animate.set_value(2 * w0), meas.animate.set_value(2 * w0), run_time=3.2, rate_func=smooth)
         rect.clear_updaters()
         rect_label.clear_updaters()
         r_read.clear_updaters()
@@ -518,9 +577,8 @@ class Beat2_RWert(Scene):
         highlight_box = SurroundingRectangle(r_read, color=PASTEL_YELLOW, buff=0.08)
         double_text = math_label(r"2 \times d \;\Rightarrow\; 2 \times R", color=PASTEL_GREEN)
         double_text.next_to(rect, RIGHT, buff=0.35)
-        self.play(Create(highlight_box), FadeIn(double_text), run_time=1.0)
-        caption = swap_caption(self, caption, subtitle_text(N, "stretch"))
-        hold_for(self, N, "stretch", used=4.2 + 0.35)
+        self.play(Create(highlight_box), FadeIn(double_text), *slab_heat(1.0), run_time=1.0)
+        hold_for(self, N, "stretch", during=slab_heat)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -574,11 +632,11 @@ class Beat3_UWertUndGradient(Scene):
             ("frac", rf"\frac{{1}}{{\textcolor{{{PASTEL_TEAL}}}{{R}}}}", PASTEL_WHITE),
             (None, r"\;[\mathrm{W/(m^{2}\,K)}]", PASTEL_WHITE),
         ])
+        caption = swap_caption(self, caption, subtitle_text(N, "u_formula"))
         _fly_into(self, p_u, {"frac": r_lbl}, run_time=1.0)
         ring = highlight_param(p_u[2], "u", color=PASTEL_ORANGE)
         self.play(FadeOut(r_lbl), Create(ring), run_time=0.6)
-        caption = swap_caption(self, caption, subtitle_text(N, "u_formula"))
-        hold_for(self, N, "u_formula", used=1.6 + 0.35)
+        hold_for(self, N, "u_formula")
         self.play(FadeOut(ring), run_time=0.2)
         #endregion
 
@@ -601,23 +659,27 @@ class Beat3_UWertUndGradient(Scene):
         self.play(Create(tile), run_time=0.9)
         self.play(LaggedStart(*[GrowFromCenter(m) for m in dims], lag_ratio=0.12), run_time=0.9)
         self.play(TransformFromCopy(p_u[2]["u"], u_tile), run_time=0.9)
-        starts = [o + RIGHT * side * fx + UP * side * fy for fx in (0.25, 0.75) for fy in (0.3, 0.7)]
-        tile_paths = _flow_lines([(p - depth * 0.7, p + depth * 1.7) for p in starts])
+        starts = [o + RIGHT * side * fx + UP * side * fy for fx, fy in ((0.6, 0.1), (0.85, 0.3), (0.12, 0.66), (0.32, 0.86))]
+        tile_paths = _flow_lines([(p - depth * 0.3, p + depth * 1.0) for p in starts])
+
+        def tile_heat(rt):
+            return [_heat_flow([(tile_paths, PASTEL_RED, PASTEL_BLUE)], rt, period=2.0, waves=3, radius=0.09)]
+
         caption = swap_caption(self, caption, subtitle_text(N, "tile"))
-        animate_flows(self, [(tile_paths, PASTEL_RED, PASTEL_BLUE)], run_time=3.0, waves=3, cycles=1.5, radius=0.09)
-        hold_for(self, N, "tile")
+        hold_for(self, N, "tile", during=tile_heat)
 
         caption = swap_caption(self, caption, subtitle_text(N, "thick"))
         d_copy = d_lbl.copy()
-        self.play(Indicate(d_dim, color=PASTEL_ORANGE), d_copy.animate.move_to(u_tile).scale(0.6), run_time=1.2)
-        self.play(FadeOut(d_copy), Indicate(u_tile, color=PASTEL_ORANGE, scale_factor=1.3), run_time=0.6)
-        hold_for(self, N, "thick")
+        self.play(Indicate(d_dim, color=PASTEL_ORANGE), d_copy.animate.move_to(u_tile).scale(0.6).set_opacity(0), *tile_heat(1.2), run_time=1.2)
+        self.remove(d_copy)
+        self.play(Indicate(u_tile, color=PASTEL_ORANGE, scale_factor=1.3), *tile_heat(0.6), run_time=0.6)
+        hold_for(self, N, "thick", during=tile_heat)
         #endregion
 
         #region Many square metres make the area A
         cols = 5
         cell = 0.6
-        g_center = np.array([-0.4, 0.42, 0.0])
+        g_center = np.array([-0.4, 0.85, 0.0])
         g_origin = g_center + LEFT * cell * cols / 2 + DOWN * cell * cols / 2
         tiles = VGroup()
         for r in range(cols):
@@ -629,7 +691,7 @@ class Beat3_UWertUndGradient(Scene):
         gx0, gx1 = g_origin[0], g_origin[0] + cell * cols
         gy0, gy1 = g_origin[1], g_origin[1] + cell * cols
         gw_dim = dim_arrow((gx0, gy0 - 0.22, 0.0), (gx1, gy0 - 0.22, 0.0), color=PASTEL_WHITE)
-        gw_lbl = math_label(rf"{cols}\,\mathrm{{m}}", np.array([(gx0 + gx1) / 2, gy0 - 0.6, 0.0]), size=LABEL_FONT_SIZE)
+        gw_lbl = math_label(rf"{cols}\,\mathrm{{m}}", np.array([(gx0 + gx1) / 2, gy0 - 0.52, 0.0]), size=LABEL_FONT_SIZE)
         gh_dim = dim_arrow((gx0 - 0.22, gy0, 0.0), (gx0 - 0.22, gy1, 0.0), color=PASTEL_WHITE)
         gh_lbl = math_label(rf"{cols}\,\mathrm{{m}}", np.array([gx0 - 0.38, (gy0 + gy1) / 2 - 0.07, 0.0]),
                             size=LABEL_FONT_SIZE, edge="right")
@@ -687,6 +749,12 @@ class Beat3_UWertUndGradient(Scene):
                                  color=PASTEL_BLUE, edge="center")
         dt_lbl = always_redraw(lambda: math_label(r"\Delta\theta", size=FORMULA_FONT_SIZE, color=PASTEL_YELLOW).move_to(
             np.array([span_x + 0.45, (axes.c2p(0, 20)[1] + axes.c2p(0, t_out.get_value())[1]) / 2, 0.0])))
+        band_paths = _flow_lines([(axes.c2p(0.55, y), axes.c2p(2.1, y)) for y in (-17.5, -21.5)])
+
+        def band_heat(rt):
+            drive = max(0.2, (20.0 - t_out.get_value()) / 25.0)
+            return [_heat_flow([(band_paths, PASTEL_RED, PASTEL_BLUE)], rt, period=2.4 / drive, waves=3, radius=0.075)]
+
         self.play(Create(axes), FadeIn(wall_band), FadeIn(x_labels), FadeIn(t_in_lbl), run_time=1.0)
         self.add(prof, t_out_lbl, dt_span, dt_lbl)
         caption = swap_caption(self, caption, subtitle_text(N, "profile"))
@@ -698,13 +766,13 @@ class Beat3_UWertUndGradient(Scene):
             (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
         ])
         _fly_into(self, p_q, {"dt": dt_lbl.copy().clear_updaters()}, run_time=1.0)
-        hold_for(self, N, "profile")
+        hold_for(self, N, "profile", during=band_heat)
 
         caption = swap_caption(self, caption, subtitle_text(N, "steeper"))
-        self.play(t_out.animate.set_value(-15.0), run_time=1.5)
+        self.play(t_out.animate.set_value(-15.0), *band_heat(1.5), run_time=1.5)
         ring = highlight_param(p_q[2], "dt", color=PASTEL_YELLOW)
-        self.play(Create(ring), run_time=0.4)
-        hold_for(self, N, "steeper")
+        self.play(Create(ring), *band_heat(0.4), run_time=0.4)
+        hold_for(self, N, "steeper", during=band_heat)
         #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
@@ -747,13 +815,14 @@ class Beat4_WattVergleich(Scene):
         refs = [("toaster", 1000.0, r"\text{Toaster} \approx 1\,000\,\mathrm{W}", PASTEL_ORANGE),
                 ("person", 100.0, r"\text{Mensch in Ruhe} \approx 100\,\mathrm{W}", PASTEL_RED),
                 ("tealight", 30.0, r"\text{Teelicht} \approx 30\,\mathrm{W}", PASTEL_ORANGE)]
-        intro = VGroup()
+        intro, intro_heat = VGroup(), []
         for x, (kind, _w, tex, color) in zip(xs, refs):
             glyph = _devices(kind, 1).move_to(np.array([x, 0.7, 0.0]))
             label = math_label(tex, np.array([x, -0.35, 0.0]), color=color)
             intro.add(VGroup(glyph, label))
+            intro_heat += _emitters(kind, glyph)
         self.play(LaggedStart(*[FadeIn(g, shift=UP * 0.2) for g in intro], lag_ratio=0.25), run_time=1.4)
-        hold_for(self, N, "intro", used=1.4 + 0.3)
+        hold_for(self, N, "intro", used=1.4 + 0.3, during=lambda rt: [_warmth(intro_heat, rt, r_max=0.4)])
 
         #region Three walls drawn to scale
         scale = 3.0
@@ -767,7 +836,7 @@ class Beat4_WattVergleich(Scene):
             rects = VGroup()
             for _n, d, _l, color in layers:
                 rect = Rectangle(width=d * scale, height=wall_h, stroke_color=PASTEL_WHITE, stroke_width=1.2,
-                                 fill_color=color, fill_opacity=0.8)
+                                 fill_color=color, fill_opacity=0.45)
                 rect.move_to(np.array([cursor + d * scale / 2, y0 + wall_h / 2, 0.0]))
                 rects.add(rect)
                 cursor += d * scale
@@ -835,9 +904,12 @@ class Beat4_WattVergleich(Scene):
             ys = np.linspace(y0 + 0.12, y0 + wall_h - 0.12, n_paths) if n_paths > 1 else [y0 + wall_h / 2]
             paths = _flow_lines([((d["left"] - 0.55, y, 0.0), (d["right"] + 0.55, y, 0.0)) for y in ys])
             streams.append((paths, PASTEL_RED, PASTEL_BLUE))
-        animate_flows(self, streams, run_time=3.6, waves=3, cycles=1.8, radius=0.085,
-                      extra=[t.animate.set_value(d["q"]) for t, d in zip(q_trk, data)])
-        hold_for(self, N, "q")
+
+        def wall_heat(rt):
+            return [_heat_flow(streams, rt, period=2.0, waves=3, radius=0.085)]
+
+        self.play(*wall_heat(3.6), *[t.animate.set_value(d["q"]) for t, d in zip(q_trk, data)], run_time=3.6)
+        hold_for(self, N, "q", during=wall_heat)
         #endregion
 
         #region Same watts as everyday devices
@@ -846,17 +918,23 @@ class Beat4_WattVergleich(Scene):
             read.clear_updaters()
         kinds = [("toaster", 1000.0, "Toaster", PASTEL_ORANGE), ("person", 100.0, "Mensch in Ruhe", PASTEL_RED),
                  ("tealight", 30.0, "Teelicht", PASTEL_ORANGE)]
-        devices, hints = VGroup(), VGroup()
+        devices, hints, device_heat = VGroup(), VGroup(), []
         for d, (kind, watts, name, color) in zip(data, kinds):
             ratio = d["q"] / watts
             glyph = _devices(kind, max(1, int(round(ratio))), fill=min(1.0, ratio)).move_to(np.array([d["x"], y0 + wall_h / 2, 0.0]))
             devices.add(glyph)
+            device_heat += _emitters(kind, glyph)
             hints.add(math_label(rf"\approx {de_num(ratio, 1)} \times \text{{{name}}}\;({de_num(watts)}\,\mathrm{{W}})",
                                  np.array([d["x"], -0.45, 0.0]), size=LABEL_FONT_SIZE, color=color))
+
+        def device_warmth(rt):
+            return [_warmth(device_heat, rt, r_max=0.32)]
+
         self.play(*[ReplacementTransform(sec, dev) for sec, dev in zip(sections, devices)],
-                  *[FadeOut(r) for r in r_reads], *[TransformFromCopy(q, h) for q, h in zip(q_reads, hints)], run_time=1.4)
-        self.play(*[Indicate(h, color=PASTEL_YELLOW) for h in hints], run_time=0.8)
-        hold_for(self, N, "compare")
+                  *[FadeOut(r) for r in r_reads], run_time=1.4)
+        self.play(*[FadeIn(h, shift=UP * 0.1) for h in hints], *device_warmth(0.6), run_time=0.6)
+        self.play(*[Indicate(h, color=PASTEL_YELLOW) for h in hints], *device_warmth(0.8), run_time=0.8)
+        hold_for(self, N, "compare", during=device_warmth)
         #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
@@ -896,65 +974,44 @@ class Beat5_Gebaeudehuelle(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         #region House section, coloured by element
-        hc = np.array([-4.9, -0.05, 0.0])
-        w_width, w_height = 3.0, 1.7
-        bl = hc + LEFT * (w_width / 2) + DOWN * (w_height / 2)
-        br = hc + RIGHT * (w_width / 2) + DOWN * (w_height / 2)
-        tl = hc + LEFT * (w_width / 2) + UP * (w_height / 2)
-        tr = hc + RIGHT * (w_width / 2) + UP * (w_height / 2)
-        roof_peak = hc + UP * (w_height / 2 + 0.85)
         col = {name: color for name, _a, _u, _t, color in ENVELOPE}
-        win_lo, win_hi = hc[1] + 0.12, hc[1] + 0.62
-        door_hi = bl[1] + 0.75
+        hs = _envelope_house(np.array([-4.75, 0.1, 0.0]), 0.75, col)
+        house = hs["parts"]
+        bl, br, tl, tr, roof_peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
+        eave_l, eave_r = hs["roof"][0].get_start(), hs["roof"][0].get_end()
+        heater = radiator(np.array([br[0] - 0.55, bl[1] + 0.24, 0.0]), PASTEL_RED).scale(0.55)
 
-        roof = VGroup(Line(tl, roof_peak), Line(roof_peak, tr)).set_stroke(col["Dach"], width=3.5)
-        walls = VGroup(
-            Line(bl, np.array([bl[0], win_lo, 0.0])), Line(np.array([bl[0], win_hi, 0.0]), tl),
-            Line(np.array([br[0], door_hi, 0.0]), np.array([br[0], win_lo, 0.0])), Line(np.array([br[0], win_hi, 0.0]), tr),
-        ).set_stroke(col["Außenwand"], width=3.5)
-        windows = VGroup(*[
-            Rectangle(width=0.14, height=win_hi - win_lo, color=col["Fenster"], stroke_width=2.5,
-                      fill_color=col["Fenster"], fill_opacity=0.35).move_to(np.array([x, (win_lo + win_hi) / 2, 0.0]))
-            for x in (bl[0], br[0])
-        ])
-        door = Rectangle(width=0.14, height=door_hi - bl[1], color=col["Haustür"], stroke_width=2.5,
-                         fill_color=col["Haustür"], fill_opacity=0.35).move_to(np.array([br[0], (bl[1] + door_hi) / 2, 0.0]))
-        floor_line = Line(bl + LEFT * 0.5, br + RIGHT * 0.5, color=col["Boden"], stroke_width=3.5)
-        storey = DashedLine(np.array([bl[0], hc[1], 0.0]), np.array([br[0], hc[1], 0.0]), color=PASTEL_WHITE,
-                            stroke_width=1.5, stroke_opacity=0.5)
-        house = {"Dach": roof, "Außenwand": walls, "Fenster": windows, "Haustür": door, "Boden": floor_line}
-
-        phi_max = max(a * u * dt for _n, a, u, dt, _c in ENVELOPE)
-
-        def loss_arrow(start, direction, phi: float, color):
-            width = 2.5 + 9.0 * phi / phi_max
-            start = np.array(start, dtype=float)
-            return Arrow(start, start + np.array(direction, dtype=float) * 0.6, buff=0, color=color, stroke_width=width,
-                         max_stroke_width_to_length_ratio=40, max_tip_length_to_length_ratio=0.45,
-                         tip_length=0.12 + 0.012 * width)
+        def room_warmth(rt):
+            return [_warmth([heater.get_top() + UP * 0.04], rt, r_max=0.38, color=PASTEL_RED)]
 
         def roof_normal(a, b):
             u = (b - a) / np.linalg.norm(b - a)
             nrm = np.array([-u[1], u[0], 0.0])
             return nrm if nrm[1] > 0 else -nrm
 
-        y_wall_lo, y_wall_hi = (bl[1] + win_lo) / 2, (win_hi + tl[1]) / 2
-        y_win = (win_lo + win_hi) / 2
+        y_level = bl[1] + hs["w_height"] / 2
         anchors = {
-            "Dach": [((tl + roof_peak) / 2, roof_normal(tl, roof_peak)), ((roof_peak + tr) / 2, roof_normal(roof_peak, tr))],
-            "Außenwand": [((bl[0], y_wall_hi, 0.0), LEFT), ((br[0], y_wall_hi, 0.0), RIGHT), ((bl[0], y_wall_lo, 0.0), LEFT)],
-            "Fenster": [((bl[0] - 0.07, y_win, 0.0), LEFT), ((br[0] + 0.07, y_win, 0.0), RIGHT)],
-            "Haustür": [((br[0] + 0.07, (bl[1] + door_hi) / 2, 0.0), RIGHT)],
-            "Boden": [((hc[0], bl[1], 0.0), DOWN)],
+            "Dach": [((eave_l + roof_peak) / 2, roof_normal(eave_l, roof_peak)), ((roof_peak + eave_r) / 2, roof_normal(roof_peak, eave_r))],
+            "Außenwand": [((bl[0], y_level, 0.0), LEFT), ((br[0], (y_level + tr[1]) / 2, 0.0), RIGHT),
+                          ((br[0], (hs["door_top"] + y_level) / 2, 0.0), RIGHT)],
+            "Fenster": [(w["center"], LEFT) for w in hs["windows"]],
+            "Haustür": [((br[0], (bl[1] + hs["door_top"]) / 2, 0.0), RIGHT)],
+            "Boden": [((bl[0] + br[0]) / 2 * RIGHT + bl[1] * UP + DOWN * 0.1, DOWN)],
         }
-        loss_arrows = {
-            name: VGroup(*[loss_arrow(p, d, a * u * dt / len(anchors[name]), color) for p, d in anchors[name]])
-            for name, a, u, dt, color in ENVELOPE
-        }
+        loss_paths, loss_guides, loss_waves = {}, {}, {}
+        for name, a, u, dt, color in ENVELOPE:
+            phi = a * u * dt / len(anchors[name])
+            loss_paths[name] = _flow_lines([(np.array(p) - np.array(d) * 0.08, np.array(p) + np.array(d) * 0.62) for p, d in anchors[name]])
+            loss_guides[name] = flow_guides(loss_paths[name], color, opacity=0.35, width=1.2 + 3.0 * phi / 334.0)
+            loss_waves[name] = max(1, round(5 * phi / 334.0))
+        leaking = []
 
-        self.play(Create(floor_line), Create(walls), Create(roof), FadeIn(storey), run_time=1.4)
-        self.play(Create(windows), Create(door), run_time=0.8)
-        hold_for(self, N, "intro", used=2.2 + 0.3)
+        def losses(rt):
+            return [_heat_flow([(loss_paths[n], col[n])], rt, period=1.4, waves=loss_waves[n], radius=0.065) for n in leaking]
+
+        self.play(Create(hs["group"]), run_time=1.6)
+        self.play(FadeIn(heater), *room_warmth(0.6), run_time=0.6)
+        hold_for(self, N, "intro", used=2.2 + 0.3, during=room_warmth)
         #endregion
 
         #region Formula
@@ -965,8 +1022,8 @@ class Beat5_Gebaeudehuelle(Scene):
         ], buff=0.13)
         row, box, items = panel
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
-        self.play(FadeIn(row), Create(box), run_time=1.0)
-        hold_for(self, N, "formula")
+        self.play(FadeIn(row), Create(box), *room_warmth(1.0), run_time=1.0)
+        hold_for(self, N, "formula", during=room_warmth)
         #endregion
 
         #region Element table
@@ -1007,26 +1064,31 @@ class Beat5_Gebaeudehuelle(Scene):
             rows.append((label, reads))
             bars.append(bar)
 
+        def heat(rt):
+            return room_warmth(rt) + losses(rt)
+
         def element_step(i: int, run_time: float = 2.0):
             name, *_rest, color = ENVELOPE[i]
             label, reads = rows[i]
-            self.play(FadeIn(label), house[name].animate.set_stroke(width=6.5), run_time=0.3)
+            glow = house[name].copy().set_stroke(width=4.5)
+            self.play(FadeIn(label), FadeIn(glow), *heat(0.3), run_time=0.3)
             self.add(reads, bars[i])
-            self.play(LaggedStart(*[GrowArrow(arr) for arr in loss_arrows[name]], lag_ratio=0.15),
-                      fracs[i].animate.set_value(1.0), run_time=run_time)
-            self.play(house[name].animate.set_stroke(width=3.5 if name in ("Dach", "Außenwand", "Boden") else 2.5), run_time=0.2)
+            leaking.append(name)
+            self.play(LaggedStart(*[Create(g) for g in loss_guides[name]], lag_ratio=0.15),
+                      fracs[i].animate.set_value(1.0), *heat(run_time), run_time=run_time)
+            self.play(FadeOut(glow), *heat(0.3), run_time=0.3)
 
         caption = swap_caption(self, caption, subtitle_text(N, "paths"))
         for i in range(4):
             element_step(i)
-        hold_for(self, N, "paths")
+        hold_for(self, N, "paths", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(N, "ground"))
         ring = highlight_param(items, "dt", color=PASTEL_BLUE)
-        self.play(Create(ring), run_time=0.3)
+        self.play(Create(ring), *heat(0.3), run_time=0.3)
         element_step(4)
-        hold_for(self, N, "ground")
-        self.play(FadeOut(ring), run_time=0.2)
+        hold_for(self, N, "ground", during=heat)
+        self.play(FadeOut(ring), *heat(0.3), run_time=0.3)
         #endregion
 
         #region Stack into the total
@@ -1051,15 +1113,13 @@ class Beat5_Gebaeudehuelle(Scene):
                      .move_to(np.array([stack_x, cursor + h / 2, 0.0])))
             cursor += h
         stack_lbl = math_label(r"\Phi_{\mathrm{T}}", np.array([stack_x, cursor + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
-        self.play(Create(sum_rule), FadeIn(sum_label), FadeIn(sum_a), run_time=0.5)
+        self.play(Create(sum_rule), FadeIn(sum_label), FadeIn(sum_a), *heat(0.5), run_time=0.5)
         self.add(sum_phi)
-        self.play(*[ShowPassingFlash(arr.copy().set_color(PASTEL_WHITE), time_width=0.5)
-                    for group in loss_arrows.values() for arr in group],
-                  LaggedStart(*[TransformFromCopy(b, s) for b, s in zip(bars, segs)], lag_ratio=0.3),
-                  total.animate.set_value(PHI_T), run_time=2.6)
+        self.play(LaggedStart(*[TransformFromCopy(b, s) for b, s in zip(bars, segs)], lag_ratio=0.3),
+                  total.animate.set_value(PHI_T), *heat(2.6), run_time=2.6)
         sum_phi.clear_updaters()
-        self.play(FadeIn(stack_lbl), Indicate(sum_phi, color=PASTEL_YELLOW), run_time=0.6)
-        hold_for(self, N, "outro")
+        self.play(FadeIn(stack_lbl), Indicate(sum_phi, color=PASTEL_YELLOW), *heat(0.6), run_time=0.6)
+        hold_for(self, N, "outro", during=heat)
         #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
@@ -1133,16 +1193,25 @@ class Beat6_Waermebruecken(Scene):
         offsets = {"e": 0.0, "a": D / 2, "i": D}
         colors = {"e": PASTEL_BLUE, "a": PASTEL_YELLOW, "i": PASTEL_RED}
         lines = {k: paper(v, colors[k]) for k, v in offsets.items()}
-        self.play(corner.animate.set_fill(opacity=0.22), ReplacementTransform(corner.copy(), lines["a"]), run_time=1.4)
-        hold_for(self, N, "paper", used=1.2 + 0.6 + 1.4 + 0.3)
+        legs = np.linspace(D + 0.4, L - 0.35, 4)
+        corner_paths = _flow_lines([(O + RIGHT * x + UP * (D + 0.14), O + RIGHT * x + UP * 0.03) for x in legs] +
+                                   [(O + UP * y + RIGHT * (D + 0.14), O + UP * y + RIGHT * 0.03) for y in legs])
+
+        def corner_heat(rt):
+            return [_heat_flow([(corner_paths, PASTEL_ORANGE, PASTEL_BLUE)], rt, period=1.6, waves=2, radius=0.065)]
+
+        self.play(corner.animate.set_fill(opacity=0.22), ReplacementTransform(corner.copy(), lines["a"]), *corner_heat(1.4),
+                  run_time=1.4)
+        hold_for(self, N, "paper", used=1.2 + 0.6 + 1.4 + 0.3, during=corner_heat)
 
         caption = swap_caption(self, caption, subtitle_text(N, "choice"))
         tags = VGroup(*[
             body_text(text, font_size=LABEL_FONT_SIZE, color=colors[k]).move_to(O + RIGHT * (L + 0.15) + UP * offsets[k], aligned_edge=LEFT)
             for k, text in (("e", "außen"), ("a", "Mitte"), ("i", "innen"))
         ])
-        self.play(TransformFromCopy(lines["a"], lines["e"]), TransformFromCopy(lines["a"], lines["i"]), FadeIn(tags), run_time=1.2)
-        hold_for(self, N, "choice")
+        self.play(TransformFromCopy(lines["a"], lines["e"]), TransformFromCopy(lines["a"], lines["i"]), FadeIn(tags),
+                  *corner_heat(1.2), run_time=1.2)
+        hold_for(self, N, "choice", during=corner_heat)
         #endregion
 
         #region Counted lengths against the real corner loss
@@ -1185,43 +1254,44 @@ class Beat6_Waermebruecken(Scene):
                    [tags[i].animate.set_opacity(1.0 if k == keep else 0.35) for i, k in enumerate(("e", "a", "i"))]
 
         real_x = x_bar + k_bar * real
-        real_line = DashedLine(np.array([real_x, 1.7, 0.0]), np.array([real_x, -0.15, 0.0]), color=PASTEL_GREEN, stroke_width=2.5)
+        real_line = VGroup(*[DashedLine(np.array([real_x, a, 0.0]), np.array([real_x, b, 0.0]), color=PASTEL_GREEN, stroke_width=2.5)
+                             for a, b in ((1.7, y_rows["i"] + 0.2), (y_rows["i"] - 0.2, -0.15))])
         real_lbl = math_label(rf"\text{{tatsächlich}}\;{de_num(real, 2)}\,\mathrm{{W/K}}", np.array([real_x + 0.4, -0.45, 0.0]),
                               size=LABEL_FONT_SIZE, color=PASTEL_GREEN, edge="center")
 
         caption = swap_caption(self, caption, subtitle_text(N, "outer"))
-        self.play(FadeOut(VGroup(u_tag)), *fade_lines("e"), FadeIn(heads), run_time=0.6)
+        self.play(FadeOut(VGroup(u_tag)), *fade_lines("e"), FadeIn(heads), *corner_heat(0.6), run_time=0.6)
         st_e = strips("e")
-        twice = math_label(r"2\times", O + RIGHT * D / 2 + UP * (D / 2 - 0.07), size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
+        twice = math_label(r"2\times", O + RIGHT * D / 4 + UP * (D / 4 - 0.05), size=LABEL_FONT_SIZE - 4, color=PASTEL_WHITE)
         name_e, parts_e = row_parts("e")
-        self.play(FadeIn(st_e), FadeIn(name_e), run_time=0.6)
+        self.play(FadeIn(st_e), FadeIn(name_e), *corner_heat(0.6), run_time=0.6)
         self.add(parts_e)
-        self.play(grow["e"].animate.set_value(1.0), FadeIn(twice), run_time=1.4)
-        self.play(Create(real_line), FadeIn(real_lbl), run_time=0.8)
+        self.play(grow["e"].animate.set_value(1.0), FadeIn(twice), *corner_heat(1.4), run_time=1.4)
+        self.play(Create(real_line), FadeIn(real_lbl), *corner_heat(0.8), run_time=0.8)
         psi_e = math_label(rf"\Psi_{{\mathrm{{e}}}} = {de_num(real - hu['e'], 2)}\,\mathrm{{W/K}} \,/\, {de_num(CORNER_H)}\,\mathrm{{m}}"
                            rf" = {de_num(psi['e'], 3)}\,\mathrm{{W/(m\,K)}}", np.array([x_name, -0.95, 0.0]),
                            size=LABEL_FONT_SIZE, color=colors["e"], edge="left")
         cut_e = Arrow(np.array([x_bar + k_bar * hu["e"], y_rows["e"] + 0.3, 0.0]), np.array([real_x, y_rows["e"] + 0.3, 0.0]),
                       buff=0, color=PASTEL_RED, stroke_width=5, max_tip_length_to_length_ratio=0.6, tip_length=0.16)
-        self.play(GrowArrow(cut_e), FadeIn(psi_e, shift=RIGHT * 0.1), run_time=0.8)
-        hold_for(self, N, "outer")
+        self.play(GrowArrow(cut_e), FadeIn(psi_e, shift=RIGHT * 0.1), *corner_heat(0.8), run_time=0.8)
+        hold_for(self, N, "outer", during=corner_heat)
 
         caption = swap_caption(self, caption, subtitle_text(N, "inner"))
         st_i = strips("i")
         gap = DashedVMobject(Square(side_length=D, color=PASTEL_WHITE, stroke_width=2).move_to(O + RIGHT * D / 2 + UP * D / 2), num_dashes=16)
         name_a, parts_a = row_parts("a")
         name_i, parts_i = row_parts("i")
-        self.play(FadeOut(st_e), FadeOut(twice), *fade_lines("i"), run_time=0.5)
-        self.play(FadeIn(st_i), Create(gap), FadeIn(name_a), FadeIn(name_i), run_time=0.6)
+        self.play(FadeOut(st_e), FadeOut(twice), *fade_lines("i"), *corner_heat(0.5), run_time=0.5)
+        self.play(FadeIn(st_i), Create(gap), FadeIn(name_a), FadeIn(name_i), *corner_heat(0.6), run_time=0.6)
         self.add(parts_a, parts_i)
-        self.play(grow["a"].animate.set_value(1.0), grow["i"].animate.set_value(1.0), run_time=1.4)
+        self.play(grow["a"].animate.set_value(1.0), grow["i"].animate.set_value(1.0), *corner_heat(1.4), run_time=1.4)
         add_i = Arrow(np.array([x_bar + k_bar * hu["i"], y_rows["i"] - 0.3, 0.0]), np.array([real_x, y_rows["i"] - 0.3, 0.0]),
                       buff=0, color=PASTEL_GREEN, stroke_width=5, max_tip_length_to_length_ratio=0.6, tip_length=0.16)
         psi_i = math_label(rf"\Psi_{{\mathrm{{i}}}} = +{de_num(real - hu['i'], 2)}\,\mathrm{{W/K}} \,/\, {de_num(CORNER_H)}\,\mathrm{{m}}"
                            rf" = +{de_num(psi['i'], 3)}\,\mathrm{{W/(m\,K)}}", np.array([x_name, -1.4, 0.0]),
                            size=LABEL_FONT_SIZE, color=colors["i"], edge="left")
-        self.play(GrowArrow(add_i), FadeIn(psi_i, shift=RIGHT * 0.1), run_time=0.8)
-        hold_for(self, N, "inner")
+        self.play(GrowArrow(add_i), FadeIn(psi_i, shift=RIGHT * 0.1), *corner_heat(0.8), run_time=0.8)
+        hold_for(self, N, "inner", during=corner_heat)
         #endregion
 
         #region Difference read off the drawing
@@ -1233,8 +1303,8 @@ class Beat6_Waermebruecken(Scene):
         ext_b = _span(O + LEFT * 0.22, O + LEFT * 0.22 + UP * D, color=PASTEL_ORANGE)
         ext_lbl = math_label(r"2\,d", O + LEFT * 0.45 + UP * (D / 2 - 0.07), size=LABEL_FONT_SIZE, color=PASTEL_ORANGE, edge="right")
         self.play(FadeOut(st_i), FadeOut(gap), *[l.animate.set_stroke(opacity=1.0) for l in lines.values()],
-                  *[t.animate.set_opacity(1.0) for t in tags], run_time=0.5)
-        self.play(GrowFromCenter(ext_a), GrowFromCenter(ext_b), FadeIn(ext_lbl), run_time=0.8)
+                  *[t.animate.set_opacity(1.0) for t in tags], *corner_heat(0.5), run_time=0.5)
+        self.play(GrowFromCenter(ext_a), GrowFromCenter(ext_b), FadeIn(ext_lbl), *corner_heat(0.8), run_time=0.8)
         p_diff = math_panel([
             ("psi", r"\Psi_{\mathrm{i}} - \Psi_{\mathrm{e}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_WHITE),
             (None, r"\cdot", PASTEL_WHITE), ("d", r"2\,d", PASTEL_ORANGE), (None, "=", PASTEL_WHITE),
@@ -1242,7 +1312,7 @@ class Beat6_Waermebruecken(Scene):
             (None, rf"{de_num(U_INSULATED * 2 * CORNER_D, 2)}\,\mathrm{{W/(m\,K)}}", PASTEL_YELLOW),
         ])
         _fly_into(self, p_diff, {"d": ext_lbl}, run_time=1.2)
-        hold_for(self, N, "diff")
+        hold_for(self, N, "diff", during=corner_heat)
         #endregion
 
         #region Material bridge: balcony slab
@@ -1252,9 +1322,9 @@ class Beat6_Waermebruecken(Scene):
                       real_line, real_lbl, cut_e, add_i, psi_e, psi_i)
         self.play(FadeOut(plan), FadeOut(p_diff[0]), FadeOut(p_diff[1]), run_time=0.6)
         wx0, wx1, wy0, wy1 = -4.6, -3.4, -1.3, 1.9
-        brick = Rectangle(width=0.75, height=wy1 - wy0, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=BRICK, fill_opacity=0.75)
+        brick = Rectangle(width=0.75, height=wy1 - wy0, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=BRICK, fill_opacity=0.45)
         brick.move_to(np.array([wx0 + 0.375, (wy0 + wy1) / 2, 0.0]))
-        ins = Rectangle(width=0.45, height=wy1 - wy0, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=INSULATION, fill_opacity=0.75)
+        ins = Rectangle(width=0.45, height=wy1 - wy0, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=INSULATION, fill_opacity=0.45)
         ins.move_to(np.array([wx1 - 0.225, (wy0 + wy1) / 2, 0.0]))
         slab = Rectangle(width=4.6, height=0.28, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color="#9AA3AD", fill_opacity=0.9)
         slab.move_to(np.array([-4.1, 0.35, 0.0]))
@@ -1277,11 +1347,18 @@ class Beat6_Waermebruecken(Scene):
         chi_read = math_readout(lambda: rf"\Psi \cdot l = {de_num(BALCONY_PSI, 1)}\,\mathrm{{W/(m\,K)}} \cdot "
                                         rf"{de_num(l_trk.get_value(), 1)}\,\mathrm{{m}} = {de_num(BALCONY_PSI * l_trk.get_value(), 1)}\,\mathrm{{W/K}}",
                                 np.array([bx0, -0.6, 0.0]), color=PASTEL_YELLOW, edge="left")
-        self.play(FadeIn(strip_lbl), run_time=0.3)
+        slab_top = slab.get_top()[1]
+        bridge_spots = [np.array([x, slab_top + 0.02, 0.0]) for x in (-2.95, -2.2)]
+
+        def bridge_heat(rt):
+            return [_heat_flow([(slab_paths, PASTEL_ORANGE, PASTEL_BLUE), (wall_paths, PASTEL_ORANGE, PASTEL_BLUE)], rt,
+                               period=1.9, waves=4, radius=0.065),
+                    _warmth(bridge_spots, rt, r_max=0.38, color=PASTEL_ORANGE)]
+
+        self.play(FadeIn(strip_lbl), *bridge_heat(0.3), run_time=0.3)
         self.add(strip, l_span, l_read, chi_read)
-        animate_flows(self, [(slab_paths, PASTEL_RED, PASTEL_BLUE), (wall_paths, PASTEL_RED, PASTEL_BLUE)], run_time=3.0, waves=4, cycles=1.6,
-                      extra=[l_trk.animate.set_value(BALCONY_L)])
-        hold_for(self, N, "balcony")
+        self.play(l_trk.animate.set_value(BALCONY_L), *bridge_heat(3.0), run_time=3.0)
+        hold_for(self, N, "balcony", during=bridge_heat)
         #endregion
 
         #region Detailed versus flat-rate method

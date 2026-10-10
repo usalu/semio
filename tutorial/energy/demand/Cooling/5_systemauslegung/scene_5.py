@@ -20,7 +20,7 @@ from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     convection_stream, symbol_token, watt_anchor,
     equation_row, formula_panel, highlight_param,
-    math_label, math_row, math_panel,
+    math_label, math_row, math_panel, math_readout, de_num,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
     room_section, smooth_path, flow_guides, flow_animation, ripples,
@@ -257,7 +257,20 @@ class Beat1_MechanicalVentilation(Scene):
             FadeIn(zuluft), FadeIn(abluft), *heat(1.4),
             run_time=1.4,
         )
-        self.play(Create(guides), *air_flow(2.4), run_time=2.4)
+        coil_temp = ValueTracker(30.0)
+        coil_read = math_readout(
+            lambda: rf"{de_num(coil_temp.get_value())}\,\mathrm{{°C}}",
+            lambda: unit.get_left() + LEFT * 0.85,
+            size=LABEL_FONT_SIZE, color=P_WHITE, edge="right",
+        )
+        self.add(coil_read)
+        self.play(
+            Create(guides),
+            coil.animate.set_fill(P_BLUE, opacity=0.35),
+            coil_temp.animate.set_value(18),
+            *air_flow(2.4),
+            run_time=2.4,
+        )
         hold_for(self, self.NARRATION, "flow", during=air_flow)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "question"))
@@ -272,8 +285,8 @@ class Beat1_MechanicalVentilation(Scene):
 class Beat2_VolumeFlowEquation(Scene):
     NARRATION = [
         ("intro",
-         "The convective cooling capacity of that airflow is defined by a fundamental thermodynamic product.",
-         "Die konvektive Kühlleistung der Zuluft folgt einem thermodynamischen Produkt."),
+         "The cooling capacity of that airflow is density times heat capacity times the temperature lift times the volume flow.",
+         "Die Kühlleistung der Zuluft ist Dichte mal Wärmekapazität mal Temperaturhub mal Volumenstrom."),
         ("formula",
          "Q-dot V equals air density times specific heat capacity times the temperature difference between cool supply air and the warm room, times q v R—the required room airflow volume.",
          "Q Punkt V ist gleich Rho a mal c p a mal Delta Theta mal q v R."),
@@ -308,8 +321,8 @@ class Beat2_VolumeFlowEquation(Scene):
         supply = _vent_unit(np.array([room_c[0] - 1.2, built["y_c"] - 0.13, 0.0]), color=P_CYAN, width=1.1, height=0.26)
 
         t_supply = VGroup(
-            math_label(r"θ_{Zu}", size=LABEL_FONT_SIZE, color=P_CYAN),
-            Text("18 °C", font_size=BODY_FONT_SIZE, color=P_CYAN),
+            math_label(r"\theta_{Zu}", size=LABEL_FONT_SIZE, color=P_CYAN),
+            math_label(r"18\,\mathrm{°C}", size=BODY_FONT_SIZE, color=P_CYAN),
         ).arrange(DOWN, buff=0.06)
         t_supply = VGroup(
             SurroundingRectangle(t_supply, color=P_CYAN, corner_radius=0.1, buff=0.12, stroke_width=1.8),
@@ -317,22 +330,30 @@ class Beat2_VolumeFlowEquation(Scene):
         ).next_to(room, DOWN, buff=0.15).shift(LEFT * 1.0)
 
         t_room = VGroup(
-            math_label(r"θ_{Raum}", size=LABEL_FONT_SIZE, color=P_ORANGE),
-            Text("25 °C", font_size=BODY_FONT_SIZE, color=P_ORANGE),
+            math_label(r"\theta_{Raum}", size=LABEL_FONT_SIZE, color=P_ORANGE),
+            math_label(r"25\,\mathrm{°C}", size=BODY_FONT_SIZE, color=P_ORANGE),
         ).arrange(DOWN, buff=0.06)
         t_room = VGroup(
             SurroundingRectangle(t_room, color=P_ORANGE, corner_radius=0.1, buff=0.12, stroke_width=1.8),
             t_room,
         ).next_to(room, DOWN, buff=0.15).shift(RIGHT * 1.0)
 
-        delta_card = VGroup(
+        delta_line = math_label(r"25-18=7\,\mathrm{K}", size=BODY_FONT_SIZE, color=P_BLUE)
+        delta_line.set_opacity(0)
+        delta_body = VGroup(
             Text("Temperaturhub", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-            math_label(r"Δθ = 7\,\mathrm{K}", size=BODY_FONT_SIZE, color=P_BLUE),
+            delta_line,
         ).arrange(DOWN, buff=0.06)
         delta_card = VGroup(
-            SurroundingRectangle(delta_card, color=P_BLUE, corner_radius=0.1, buff=0.12, stroke_width=1.8),
-            delta_card,
+            SurroundingRectangle(delta_body, color=P_BLUE, corner_radius=0.1, buff=0.12, stroke_width=1.8),
+            delta_body,
         ).next_to(room, UP, buff=0.20).set_x(room_c[0])
+        delta_tr = ValueTracker(0.0)
+        delta_read = math_readout(
+            lambda: rf"25-18={de_num(delta_tr.get_value())}\,\mathrm{{K}}",
+            lambda: delta_line.get_center(),
+            size=BODY_FONT_SIZE, color=P_BLUE, edge="center",
+        )
 
         temp_arrow = Arrow(
             t_supply.get_right() + RIGHT * 0.08, t_room.get_left() + LEFT * 0.08,
@@ -397,7 +418,11 @@ class Beat2_VolumeFlowEquation(Scene):
 
         self.play(Create(room), FadeIn(supply), run_time=1.5)
         self.play(FadeIn(t_supply), FadeIn(t_room), *cool_air(1.0), run_time=1.0)
-        self.play(FadeIn(temp_arrow), FadeIn(delta_card), *cool_air(1.6), run_time=1.6)
+        self.add(delta_read)
+        self.play(
+            FadeIn(temp_arrow), FadeIn(delta_card), delta_tr.animate.set_value(7),
+            *cool_air(1.6), run_time=1.6,
+        )
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 1.0 + 1.6, during=cool_air)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))

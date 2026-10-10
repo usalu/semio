@@ -196,14 +196,14 @@ class Beat1_OfficeRoom(Scene):
 class Beat2_HumanFactor(Scene):
     NARRATION = [
         ("intro",
-         "Think of a human body as a biological heater sitting at a desk.",
-         "Stellen Sie sich den menschlichen Körper als biologischen Heizkörper am Schreibtisch vor."),
+         "A person at a desk is a heat source in the room.",
+         "Eine Person am Schreibtisch ist eine Wärmequelle im Raum."),
         ("modes",
          "Heat leaves as radiation, convection, and respiration — both sensible and latent.",
          "Wärme geht als Strahlung, Konvektion und Atmung ab — fühlbar und latent."),
         ("anchor",
-         "A single seated adult emits about one hundred watts — like a bright light bulb.",
-         "Eine sitzende Person gibt etwa einhundert Watt ab — wie eine helle Glühbirne."),
+         "A single seated adult emits about one hundred watts.",
+         "Eine sitzende Person gibt etwa einhundert Watt ab."),
         ("activities",
          "How much heat the body emits depends on activity — it rises from sleeping to desk work, walking and high-performance sport.",
          "Wie viel Wärme der Körper abgibt, hängt von der Aktivität ab — sie steigt vom Schlafen über Büroarbeit und Gehen bis zum Hochleistungssport."),
@@ -220,8 +220,8 @@ class Beat2_HumanFactor(Scene):
          "q-dot p is roughly one hundred watts per person at desk work.",
          "q-Punkt p liegt bei etwa einhundert Watt pro Person bei Büroarbeit."),
         ("scale",
-         "Pack fifty students into a lecture hall and you run a five-thousand-watt heater continuously.",
-         "Fünfzig Studierende im Hörsaal bedeuten dauerhaft fünftausend Watt — wie fünf Toaster."),
+         "Fifty people times one hundred watts is five thousand watts, continuously.",
+         "Fünfzig Personen mal einhundert Watt sind dauerhaft fünftausend Watt."),
     ]
 
     def construct(self):
@@ -412,23 +412,51 @@ class Beat2_HumanFactor(Scene):
         self.play(FadeIn(row), Create(box), run_time=1.2)
         hold_for(self, self.NARRATION, "formula", used=1.2 + 0.35)
 
+        n_people = VGroup(*[
+            person_glyph(np.array([-2.4 + i * 1.15, -0.2, 0.0]), color=P_ORANGE, scale=1.25)
+            for i in range(3)
+        ])
+        n_tr = ValueTracker(0.0)
+        n_read = math_readout(
+            lambda: rf"n = {de_num(n_tr.get_value())}",
+            np.array([1.7, -0.2, 0.0]),
+            size=BODY_FONT_SIZE, color=P_CYAN, edge="left",
+        )
+        qp_fly = None
+
         for key, color in (("n", P_CYAN), ("qp", P_ORANGE)):
             ring = highlight_param(items, key, color=color)
-            anims = [Create(ring)]
-            if key == "qp":
+            if key == "n":
+                # 👥 n is the count of the people just drawn.
+                self.add(n_read)
+                self.play(Create(ring), run_time=0.35)
+                self.play(
+                    LaggedStart(*[FadeIn(p) for p in n_people], lag_ratio=0.25),
+                    n_tr.animate.set_value(len(n_people)),
+                    run_time=1.3,
+                )
+                used_n = 0.35 + 1.3
+            else:
                 # 💡 q̇_p is the ringed Büroarbeit point on the scale — fly its
                 # 100 W value into the formula slot.
                 qp_fly = static_reads[1].copy()
-                anims.append(qp_fly.animate.next_to(box, UP, buff=0.14).set_x(items["qp"].get_center()[0]))
-            self.play(*anims, run_time=0.6)
+                self.play(
+                    Create(ring),
+                    qp_fly.animate.next_to(box, UP, buff=0.14).set_x(items["qp"].get_center()[0]),
+                    run_time=0.6,
+                )
+                used_n = 0.6
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.6 + 0.35)
+            hold_for(self, self.NARRATION, key, used=used_n + 0.35)
             fades = [FadeOut(ring)]
-            if key == "qp":
+            if qp_fly is not None and key == "qp":
                 fades.append(FadeOut(qp_fly))
             self.play(*fades, run_time=0.25)
 
-        self.play(FadeOut(scale_assembly), FadeOut(row), FadeOut(box), run_time=0.7)
+        self.play(
+            FadeOut(scale_assembly), FadeOut(row), FadeOut(box), FadeOut(n_people), FadeOut(n_read),
+            run_time=0.7,
+        )
 
         single = person_glyph(DOWN * 0.05, color=P_ORANGE, scale=1.8)
         single_label = Text("Einzelperson (100 W)", font_size=BODY_FONT_SIZE, color=P_ORANGE)
@@ -455,11 +483,19 @@ class Beat2_HumanFactor(Scene):
                 icon = person_glyph(ORIGIN, color=P_ORANGE, scale=0.5)
                 grid_icons.add(icon.move_to([x_pos, y_pos + 0.03 + icon.height / 2, 0]))
 
+        n_hall = ValueTracker(0.0)
+        n_hall_read = math_readout(
+            lambda: rf"n = {de_num(n_hall.get_value())}",
+            np.array([-6.2, 0.85, 0.0]),
+            size=LABEL_FONT_SIZE, color=P_CYAN, edge="left",
+        )
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "scale"))
         self.play(FadeOut(single_label), Create(hall_outline), Create(tier_lines), run_time=0.8)
+        self.add(n_hall_read)
         self.play(
             ReplacementTransform(single, grid_icons[0]),
             LaggedStart(*[TransformFromCopy(grid_icons[0], icon) for icon in grid_icons[1:]], lag_ratio=0.03),
+            n_hall.animate.set_value(len(grid_icons)),
             run_time=2.0,
         )
         hall_anchor = watt_anchor(5000, compare="toaster", title="Gesamtwärme", row=True)

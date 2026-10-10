@@ -281,6 +281,26 @@ def _find_section_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Pa
     return _find_named_mp4(media_dir, scene_name, quality_flag)
 
 
+_SHARED_SOURCES: tuple[Path, ...] = (
+    Path(__file__).resolve(),
+    _TUTORIAL_ROOT / "manim_visuals.py",
+    _TUTORIAL_ROOT / "manim_fonts.py",
+)
+
+
+def _section_sources(scene_cls: type[Scene]) -> list[Path]:
+    """📚 Files a section clip is built from: its beat modules, their VO timings and the shared helpers."""
+    modules = {Path(sys.modules[beat.__module__].__file__).resolve() for beat in scene_cls.section_beats}
+    files = [p for m in modules for p in (m, m.parent / "vo_timing.json")]
+    return [p for p in (*files, *_SHARED_SOURCES) if p.is_file()]
+
+
+def _is_current(clip: Path, sources: list[Path]) -> bool:
+    """⏱️ A clip is reusable only when it is newer than every source it was rendered from."""
+    built = clip.stat().st_mtime
+    return all(src.stat().st_mtime <= built for src in sources)
+
+
 def _ffmpeg_concat(clips: list[Path], output: Path, list_path: Path) -> None:
     """🎞️ Concatenate mp4 clips with stream copy (safe paths, no Manim URI bug)."""
     lines = []
@@ -328,8 +348,8 @@ def compose_full_heating_video(
             )
         print(f"\n=== Reusing intro {SERIES_INTRO_SCENE} → {intro_existing.name} ===")
         clips.append(intro_existing)
-    elif intro_existing is not None and not force:
-        print(f"\n=== Skipping intro {SERIES_INTRO_SCENE} (already rendered) ===")
+    elif intro_existing is not None and _is_current(intro_existing, [_INTRO_SCRIPT, *_SHARED_SOURCES[1:]]):
+        print(f"\n=== Skipping intro {SERIES_INTRO_SCENE} (up to date) ===")
         clips.append(intro_existing)
     else:
         print(f"\n=== Rendering intro {SERIES_INTRO_SCENE} ===")
@@ -363,8 +383,8 @@ def compose_full_heating_video(
             clips.append(existing)
             continue
 
-        if existing is not None and not force:
-            print(f"\n=== Skipping {name} (already rendered) ===")
+        if existing is not None and _is_current(existing, _section_sources(scene_cls)):
+            print(f"\n=== Skipping {name} (up to date) ===")
             clips.append(existing)
             continue
 

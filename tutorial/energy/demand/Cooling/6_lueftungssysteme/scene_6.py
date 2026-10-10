@@ -23,7 +23,7 @@ from manim_visuals import (
     smooth_path, flow_guides,
     meter, bind_meter, chip, cross_mark, dim_chip, dim_arrow,
     equation_row, formula_panel, highlight_param,
-    math_label, math_panel,
+    math_label, math_panel, math_readout, de_num,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
     house_section, person_glyph, sun_glyph, moon_glyph, ripples, flow_animation, droplets,
@@ -85,9 +85,21 @@ def _person(pos, color=P_ORANGE, scale=1.0):
 
 def _badge(title, value, color=P_TEAL):
     """🏷️ Compact callout card for design levers / comfort states."""
+    import re
+
+    temp = re.match(r"^(\d+)\s*°C(?:\s*·\s*(.+))?$", value)
+    if temp:
+        value_mob = math_label(rf"{temp.group(1)}\,\mathrm{{°C}}", size=BODY_FONT_SIZE, color=P_WHITE)
+        if temp.group(2):
+            value_mob = VGroup(
+                value_mob,
+                Text(temp.group(2), font_size=LABEL_FONT_SIZE, color=P_WHITE),
+            ).arrange(RIGHT, buff=0.1)
+    else:
+        value_mob = Text(value, font_size=BODY_FONT_SIZE, color=P_WHITE)
     body = VGroup(
         Text(title, font_size=LABEL_FONT_SIZE, color=color),
-        Text(value, font_size=BODY_FONT_SIZE, color=P_WHITE),
+        value_mob,
     ).arrange(DOWN, buff=0.06)
     box = SurroundingRectangle(body, color=color, corner_radius=0.1, buff=0.12, stroke_width=1.8)
     return VGroup(box, body)
@@ -139,11 +151,11 @@ class Beat1_PassivhausIdee(Scene):
          "Start from the cooling load. A heavily insulated, airtight envelope with external shading removes the largest share before any air is moved at all.",
          "Start bei der Kühllast: eine gedämmte, dichte Hülle mit\naußenliegendem Sonnenschutz nimmt den größten Anteil weg."),
         ("natural",
-         "Adjustable natural ventilation then carries away much of what is left — but only while the outdoor air is cooler than the room.",
-         "Einstellbare natürliche Lüftung trägt viel vom Rest ab —\nsolange die Außenluft kühler ist als der Raum."),
+         "The air path cannot be an open window. Without heat recovery the ventilation heat loss is far too high, so a Passivhaus gives that path up.",
+         "Der Luftweg darf kein offenes Fenster sein: ohne Rückgewinnung\nsind die Lüftungswärmeverluste viel zu hoch."),
         ("reserve",
-         "Only the small remainder is a job for mechanical ventilation or cooling. That order is what this chapter follows.",
-         "Nur der kleine Rest ist Aufgabe der Mechanik —\ndieser Reihenfolge folgt dieses Kapitel."),
+         "What remains is supply and exhaust with heat recovery, and only a small cooling reserve. That is the order this chapter follows.",
+         "Was bleibt, ist Zu- und Abluft mit Wärmerückgewinnung —\nund nur eine kleine Kühlreserve."),
     ]
 
     def construct(self):
@@ -184,11 +196,6 @@ class Beat1_PassivhausIdee(Scene):
         load = ValueTracker(1.0)
         bind_meter(load_bar, load)
 
-        share_full = Text("100 %", font_size=BODY_FONT_SIZE, color=P_RED)
-        share_full.next_to(load_bar["track"], RIGHT, buff=0.28)
-        share_mid = Text("55 %", font_size=BODY_FONT_SIZE, color=P_YELLOW).move_to(share_full)
-        share_low = Text("20 %", font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to(share_full)
-
         def _step(idx, name, share, color):
             chip = Circle(radius=0.17, color=color, stroke_width=2, fill_color=color, fill_opacity=1.0)
             num = Text(idx, font_size=LABEL_FONT_SIZE, color=P_DEEP_DARK).move_to(chip.get_center())
@@ -199,15 +206,15 @@ class Beat1_PassivhausIdee(Scene):
             ).arrange(RIGHT, buff=0.20)
 
         steps = VGroup(
-            _step("1", "Hülle + Sonnenschutz", "− 45 %", P_TEAL),
-            _step("2", "Natürliche Lüftung", "− 35 %", P_CYAN),
-            _step("3", "RLT als Reserve", "20 %", P_ORANGE),
+            _step("1", "Hülle + Sonnenschutz", "Last sinkt", P_TEAL),
+            _step("2", "offenes Fenster", "Verlust zu hoch", P_RED),
+            _step("3", "Zu-/Abluft mit WRG", "Reserve", P_ORANGE),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.34)
         steps.move_to(np.array([2.55, -0.30, 0.0]))
 
         self.play(Create(hs["group"]), run_time=1.5)
         self.play(FadeIn(person), *heat(0.8), run_time=0.8)
-        self.play(FadeIn(load_bar["group"]), FadeIn(share_full), *heat(1.0), run_time=1.0)
+        self.play(FadeIn(load_bar["group"]), *heat(1.0), run_time=1.0)
         hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 0.8 + 1.0,
                  during=heat)
 
@@ -215,7 +222,6 @@ class Beat1_PassivhausIdee(Scene):
         self.play(Create(envelope), Create(louvre), *heat(1.2), run_time=1.2)
         self.play(
             load.animate.set_value(0.55),
-            ReplacementTransform(share_full, share_mid),
             load_bar["fill"].animate.set_fill(P_YELLOW),
             FadeIn(steps[0], shift=RIGHT * 0.2), *heat(1.7, 0.32),
             run_time=1.7,
@@ -224,34 +230,32 @@ class Beat1_PassivhausIdee(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "natural"))
 
-        def _through(w, inward):
+        def _through(w):
             x, y = w["x"], w["center"][1]
-            band = 0.06 if inward else -0.06
-            pts = [(x - 0.95, y - band - 0.1), (x - 0.2, y - band), (x + 0.5, y - band), (x + 1.25, y - band * 2.5)]
-            return smooth_path([np.array([px, py, 0.0]) for px, py in (pts if inward else pts[::-1])])
+            pts = [(x + 1.15, y - 0.12), (x + 0.35, y - 0.04), (x - 0.35, y + 0.02), (x - 1.15, y + 0.16)]
+            return smooth_path([np.array([px, py, 0.0]) for px, py in pts])
 
-        breeze_in = VGroup(*[_through(w, True) for w in (lo_win, up_win)])
-        breeze_out = VGroup(*[_through(w, False) for w in (lo_win, up_win)])
+        loss_paths = VGroup(*[_through(w) for w in (lo_win, up_win)])
+        loss_guides = flow_guides(loss_paths, P_RED)
 
-        def breeze(rt):
-            return [_streams([(breeze_in, P_CYAN), (breeze_out, P_ORANGE)], rt), *heat(rt, 0.22)]
+        def loss(rt):
+            return [_streams([(loss_paths, P_RED, P_ORANGE)], rt, speed=1.05), *heat(rt, 0.28)]
 
-        self.play(FadeIn(steps[1], shift=RIGHT * 0.2),
-                  Create(flow_guides(breeze_in, P_CYAN)), Create(flow_guides(breeze_out, P_ORANGE)), run_time=0.9)
-        self.play(
-            load.animate.set_value(0.20),
-            ReplacementTransform(share_mid, share_low),
-            load_bar["fill"].animate.set_fill(P_ORANGE), *breeze(2.4),
-            run_time=2.4,
-        )
-        hold_for(self, self.NARRATION, "natural", during=breeze)
+        self.play(FadeIn(steps[1], shift=RIGHT * 0.2), Create(loss_guides), run_time=0.8)
+        self.play(*loss(1.8), run_time=1.8)
+        crosses = VGroup(*[cross_mark(size=0.18).move_to(w["center"]) for w in (lo_win, up_win)])
+        self.play(FadeIn(crosses), loss_guides.animate.set_stroke(opacity=0.12), run_time=0.6)
+        hold_for(self, self.NARRATION, "natural", during=lambda rt: heat(rt, 0.22))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "reserve"))
-        load_bar["fill"].clear_updaters()
-        rest_ring = SurroundingRectangle(load_bar["fill"], color=P_ORANGE, buff=0.06, stroke_width=3, corner_radius=0.05)
-        self.play(FadeIn(steps[2], shift=RIGHT * 0.2), Create(rest_ring), *breeze(1.0), run_time=1.0)
-        self.play(Indicate(steps[2], color=P_ORANGE), *breeze(1.0), run_time=1.0)
-        hold_for(self, self.NARRATION, "reserve", during=breeze)
+        self.play(
+            load.animate.set_value(0.25),
+            load_bar["fill"].animate.set_fill(P_ORANGE),
+            FadeIn(steps[2], shift=RIGHT * 0.2), *heat(1.4, 0.18),
+            run_time=1.4,
+        )
+        self.play(Indicate(steps[2], color=P_ORANGE), *heat(1.0, 0.16), run_time=1.0)
+        hold_for(self, self.NARRATION, "reserve", during=lambda rt: heat(rt, 0.16))
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion
@@ -1410,8 +1414,8 @@ class Beat8_Waermerueckgewinnung(Scene):
          "Five kelvin gained out of six available: about eighty percent of the free cooling, taken before the chiller is asked for anything.",
          "Fünf von sechs möglichen Kelvin — rund achtzig Prozent,\nbevor die Kältemaschine überhaupt gefragt wird."),
         ("passivhaus",
-         "This is why natural ventilation and the Passivhaus concept contradict each other: recovery needs both streams inside the unit — an open window recovers nothing, so window ventilation must be given up as the main air path.",
-         "Darum widersprechen sich natürliche Lüftung und Passivhaus: ein offenes\nFenster gewinnt nichts zurück — die Fensterlüftung entfällt als Hauptweg."),
+         "Natural ventilation and the Passivhaus contradict each other. An open window recovers nothing, so the ventilation heat loss is far too high and window ventilation has to be given up as the main air path.",
+         "Natürliche Lüftung und Passivhaus widersprechen sich: ohne Rückgewinnung\nsind die Lüftungswärmeverluste viel zu hoch — das Fenster entfällt."),
     ]
 
     def construct(self):
@@ -1464,7 +1468,7 @@ class Beat8_Waermerueckgewinnung(Scene):
         transfer_tag.move_to(np.array([2.85, 0.60, 0.0]))
 
         aul = _badge("Außenluft", "32 °C", P_RED).move_to(np.array([-6.00, y_sup + 0.05, 0.0]))
-        zul = _badge("Zuluft", "27 °C", P_CYAN).move_to(np.array([6.00, y_sup + 0.05, 0.0]))
+        zul = _badge("Zuluft", "32 °C", P_CYAN).move_to(np.array([6.00, y_sup + 0.05, 0.0]))
         abl = _badge("Abluft", "26 °C", P_TEAL).move_to(np.array([6.00, y_exh - 0.05, 0.0]))
         fol = _badge("Fortluft", "31 °C", P_ORANGE).move_to(np.array([-6.00, y_exh - 0.05, 0.0]))
 
@@ -1505,11 +1509,24 @@ class Beat8_Waermerueckgewinnung(Scene):
         self.play(FadeIn(fol), *exchanger(0.6), run_time=0.6)
         hold_for(self, self.NARRATION, "exhaust", during=exchanger)
 
+        zul_tr = ValueTracker(32.0)
+        eta_read = math_readout(
+            lambda: rf"\eta = {de_num((32.0 - zul_tr.get_value()) / 6.0, 2)}",
+            np.array([0.0, 2.02, 0.0]),
+            size=BODY_FONT_SIZE, color=P_YELLOW, edge="center",
+        )
+        zul_cool = _badge("Zuluft", "27 °C", P_CYAN).move_to(zul)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "transfer"))
+        self.add(eta_read)
         self.play(
             LaggedStart(*[GrowArrow(a) for a in transfer], lag_ratio=0.25),
-            FadeIn(transfer_tag), *exchanger(1.2), run_time=1.2,
+            FadeIn(transfer_tag),
+            ReplacementTransform(zul, zul_cool),
+            zul_tr.animate.set_value(27),
+            *exchanger(1.6),
+            run_time=1.6,
         )
+        zul = zul_cool
         self.play(
             LaggedStart(*[Indicate(a, color=P_YELLOW, scale_factor=1.15) for a in transfer], lag_ratio=0.3),
             *exchanger(2.2), run_time=2.2,
@@ -1517,7 +1534,7 @@ class Beat8_Waermerueckgewinnung(Scene):
         hold_for(self, self.NARRATION, "transfer", during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        self.play(FadeOut(core_note), FadeIn(eq), Create(eq_box), *exchanger(1.2), run_time=1.2)
+        self.play(FadeOut(core_note), FadeOut(eta_read), FadeIn(eq), Create(eq_box), *exchanger(1.2), run_time=1.2)
         ring_num = highlight_param(items, "num", color=P_CYAN)
         self.play(Create(ring_num), Indicate(zul, color=P_CYAN), *exchanger(0.8), run_time=0.8)
         hold_for(self, self.NARRATION, "formula", during=exchanger)
@@ -1539,9 +1556,16 @@ class Beat8_Waermerueckgewinnung(Scene):
         win_eta.next_to(open_win, RIGHT, buff=0.3)
         ph_line = Text(
             "Passivhaus ⇒ Zu-/Abluft mit WRG — Fensterlüftung entfällt als Hauptweg",
-            font_size=BODY_FONT_SIZE, color=P_ORANGE,
+            font_size=LABEL_FONT_SIZE, color=P_ORANGE,
         ).move_to(np.array([0.3, -2.12, 0.0]))
-        self.play(FadeIn(open_win), Create(win_cross), FadeIn(win_eta), *exchanger(0.9), run_time=0.9)
+        loss = Arrow(
+            open_win.get_center(), open_win.get_center() + LEFT * 1.15 + UP * 0.35,
+            buff=0, color=P_RED, stroke_width=4, max_tip_length_to_length_ratio=0.18,
+        )
+        loss_tag = math_label(r"\dot{Q}_{L}", size=LABEL_FONT_SIZE, color=P_RED)
+        loss_tag.next_to(loss, UP, buff=0.06)
+        self.play(FadeIn(open_win), Create(win_cross), FadeIn(win_eta), GrowArrow(loss), FadeIn(loss_tag),
+                  *exchanger(0.9), run_time=0.9)
         self.play(FadeIn(ph_line, shift=UP * 0.1), *exchanger(0.8), run_time=0.8)
         hold_for(self, self.NARRATION, "passivhaus", during=exchanger)
         self.play(FadeOut(caption), run_time=0.3)
@@ -1574,8 +1598,8 @@ class Beat9_SorptionsKuehlung(Scene):
          "Solar heat regenerates the wheel: it drives the stored moisture out into the exhaust air, so the sun itself powers the cycle.",
          "Solarwärme regeneriert das Rad: sie treibt die gespeicherte\nFeuchte in die Fortluft aus — die Sonne treibt den Kreislauf."),
         ("nachteil",
-         "The drawback is microbial: harsh temperature and humidity swings stress the germs inside the unit, and that selection pressure favours the resistant ones.",
-         "Der Nachteil ist mikrobiell: krasse Temperatur- und Feuchte-\nwechsel setzen Keime unter Druck — es überleben bevorzugt die resistenten."),
+         "The drawback is microbial. Harsh swings of temperature and humidity put the germs under pressure. They mutate, and the harmful ones are the ones that survive.",
+         "Der Nachteil: krasse Temperatur- und Feuchtewechsel setzen Keime unter Druck.\nSie mutieren — es überleben bevorzugt die schädlichen."),
     ]
 
     def construct(self):
@@ -1748,20 +1772,25 @@ class Beat9_SorptionsKuehlung(Scene):
         normal = VGroup(*[
             _microbe([-3.3 + i * 0.55, strip_y - 0.08], P_TEAL) for i in range(4)
         ])
-        tough = VGroup(_microbe([-1.0, strip_y - 0.08], P_RED), _microbe([-0.45, strip_y - 0.08], P_RED))
+        survivors = (normal[2], normal[3])
         cycle_tag = math_label(r"ΔT\!\uparrow\;\;Δx\!\uparrow", at=np.array([-4.75, strip_y - 0.08, 0.0]),
                                size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
-        verdict = Text("Selektionsdruck:\nresistente Keime überleben",
+        verdict = Text("Mutation:\ndie Schädlichen überleben",
                        font_size=LABEL_FONT_SIZE, color=P_RED, line_spacing=0.8)
         verdict.move_to(np.array([2.9, strip_y, 0.0]))
         self.play(FadeOut(VGroup(sun, solar_tag, solar_duct)), *dec(0.4), run_time=0.4)
-        self.play(FadeIn(panel), FadeIn(normal), FadeIn(tough), FadeIn(cycle_tag), *dec(0.9), run_time=0.9)
+        self.play(FadeIn(panel), FadeIn(normal), FadeIn(cycle_tag), *dec(0.9), run_time=0.9)
         for flash in (P_RED, P_CYAN):
             self.play(panel.animate.set_stroke(color=flash), *dec(0.35), run_time=0.35)
         self.play(
-            LaggedStart(*[FadeOut(m, scale=0.4) for m in normal], lag_ratio=0.15),
-            *[m[0].animate.set_fill(opacity=0.6) for m in tough], *dec(1.3),
-            run_time=1.3,
+            *[m.animate.scale(1.2).set_color(P_RED) for m in normal],
+            *dec(1.0),
+            run_time=1.0,
+        )
+        self.play(
+            LaggedStart(*[FadeOut(m, scale=0.4) for m in normal[:2]], lag_ratio=0.15),
+            *[m[0].animate.set_fill(opacity=0.65) for m in survivors], *dec(1.0),
+            run_time=1.0,
         )
         clones = VGroup(_microbe([0.1, strip_y - 0.08], P_RED), _microbe([0.65, strip_y - 0.08], P_RED))
         self.play(FadeIn(clones, scale=0.5), FadeIn(verdict), *dec(1.0), run_time=1.0)

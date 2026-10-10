@@ -18,7 +18,7 @@ from manim_fonts import (
 )
 from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
-    highlight_param, math_label, math_panel,
+    highlight_param, math_label, math_panel, math_readout, de_num,
     house_section, sun_glyph, radiation_ray, ripples, pulse_flashes, clock_glyph, thermometer_glyph,
     droplets, open_window, smooth_path, flow_guides, flow_animation,
     caption_bar, swap_caption, hold_for, subtitle_text,
@@ -316,6 +316,14 @@ class Beat2_TimeLag(Scene):
             run_time=3.0,
             rate_func=linear,
         )
+        # 🕔 Five hours from noon lands at 17:00 — late afternoon, not evening.
+        peak_tag = VGroup(
+            Text("17 Uhr", font_size=BODY_FONT_SIZE, color=P_ORANGE),
+            Text("später Nachmittag", font_size=LABEL_FONT_SIZE, color=P_ORANGE),
+        ).arrange(DOWN, buff=0.06).next_to(clock_group, DOWN, buff=0.14)
+        late_tag = Text("21 Uhr Abend", font_size=LABEL_FONT_SIZE, color=P_TEAL)
+        late_tag.set_opacity(0.38).next_to(peak_tag, DOWN, buff=0.08)
+        self.play(FadeIn(peak_tag), FadeIn(late_tag), run_time=0.5)
         hold_for(self, self.NARRATION, "clock", during=lambda rt: stored_heat(rt, r_max=0.5))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "peak"))
@@ -536,11 +544,14 @@ class Beat4_SensibleVsLatent(Scene):
         therm["level"].set_value(0.12 + 0.86 * temp_tracker.get_value() / 1.7)
         column = therm["column"]
         column.add_updater(lambda m: therm["level"].set_value(0.12 + 0.86 * temp_tracker.get_value() / 1.7))
-        temp_label = always_redraw(lambda: Text(
-            f"{int(20 + temp_tracker.get_value() * (10 / 1.7))}°C",
-            font_size=BODY_FONT_SIZE,
-            color=P_ORANGE,
-        ).move_to(np.array([lx + 1.05, mid_y - 0.7 + temp_tracker.get_value(), 0])))
+        def _room_c():
+            return 20 + temp_tracker.get_value() * (10 / 1.7)
+
+        temp_label = math_readout(
+            lambda: rf"{de_num(_room_c())}\,\mathrm{{°C}}",
+            lambda: np.array([lx + 1.05, mid_y - 0.7 + temp_tracker.get_value(), 0.0]),
+            size=BODY_FONT_SIZE, color=P_ORANGE, edge="left",
+        )
 
         sens_row, sens_box, sens_items = math_panel([
             ("qs", r"\dot{Q}_{sens}", P_RED), (None, "=", P_WHITE),
@@ -570,13 +581,17 @@ class Beat4_SensibleVsLatent(Scene):
         )
         hold_for(self, self.NARRATION, "sens_eq", used=1.4 + 1.4 + 0.35)
 
-        delta_theta = Text("ΔΘ", font_size=FORMULA_FONT_SIZE, color=P_RED)
-        delta_theta.next_to(tube, LEFT, buff=0.35)
+        delta_read = math_readout(
+            lambda: rf"\Delta Θ = {de_num(30 - _room_c())}\,\mathrm{{K}}",
+            lambda: tube.get_left() + LEFT * 0.2,
+            size=LABEL_FONT_SIZE, color=P_RED, edge="right",
+        )
         ring_dth = highlight_param(sens_items, "dth", color=P_RED)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "delta_theta"))
-        self.play(FadeIn(delta_theta), Create(ring_dth), run_time=0.6)
-        self.play(temp_tracker.animate.set_value(0.25), run_time=2.4)
+        self.add(delta_read)
+        self.play(Create(ring_dth), run_time=0.6)
+        self.play(temp_tracker.animate.set_value(0.0), run_time=2.4)
         hold_for(self, self.NARRATION, "delta_theta", used=0.6 + 2.4 + 0.35)
         self.play(FadeOut(ring_dth), run_time=0.25)
 
@@ -601,11 +616,11 @@ class Beat4_SensibleVsLatent(Scene):
             fill_opacity=0.75,
             stroke_width=0,
         ).move_to(np.array([rx, mid_y - 0.95 + (moist_tracker.get_value() * 1.7) / 2, 0])))
-        rh_label = always_redraw(lambda: Text(
-            f"{int(30 + moist_tracker.get_value() * 60)}% r.F.",
-            font_size=BODY_FONT_SIZE,
-            color=P_CYAN,
-        ).move_to(np.array([rx + 1.25, mid_y - 0.95 + moist_tracker.get_value() * 1.7, 0])))
+        rh_label = math_readout(
+            lambda: rf"{de_num(30 + moist_tracker.get_value() * 60)}\%\,\text{{r.F.}}",
+            lambda: np.array([rx + 1.25, mid_y - 0.95 + moist_tracker.get_value() * 1.7, 0.0]),
+            size=BODY_FONT_SIZE, color=P_CYAN, edge="left",
+        )
 
         lat_row, lat_box, lat_items = math_panel([
             ("ql", r"\dot{Q}_{lat}", P_BLUE), (None, "=", P_WHITE),
