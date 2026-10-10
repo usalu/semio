@@ -1,0 +1,12 @@
+# Current Canonical Command and Source Renewals
+
+Normal `bun nx run workspace:schema-fixture-boundary` terminated exit 1 after scanning 4,826 modules and 3,760 scopes, with five fresh flags, 46 shared and zero unshared. Root retired two UI wrappers plus adjacent ingress; Native retired IO receiving; Pub retired Flow publication invocation and Plugin seed operation. No later global zero-flag result is assumed.
+
+Original UI readers then produced 4 pass / 1 fail / 36 expectations. The failure is the preserved defining clipboard input API law; canonical grant validation and wrapper absence checks passed. Root did not invent a production clipboard DTO from the old trial schema. Original Job loan reader passed 1 test / 10 expectations with SQLite and JSON Patch; original Job descriptor passed 1 / 47; Flow four original readers passed 4 / 85. Wallet original reader passed 1 / 6 after a genuine schema-absence RED.
+
+Normal lock refresh attempt 2 refused a genuine changed Flow publication directory before installation. Attempt 3 refused a changed consumed Value Rust package manifest; the before bytes were not captured, so its semantic delta is unproved. Normal workspace ownership ran the original complete 31 tests / 349 expectations successfully, then refused changed Trace directory state during fresh all-six inspection. Native input vocabulary emitted original debug witnesses; its stderr counters were not retained, so no count is invented. Normal deps-js-contract terminated exit 0 (10 seconds) with actual Bun/Node/pinned runtime witnesses; a subsequent shared Watcher edit means this is a qualified command result, not a current whole-tree guarantee. Normal all-six frozen install and lock refresh remain unfinished.
+
+Actual strict TypeScript check over three Source roots and 280 files first found seven errors, including six owned. After precise watcher environment and genuine ChildProcess witness fixes, renewal terminated Nx exit 0 with zero own/all errors and zero Source-root hash drift. This is Source typing proof, separate from Kernel, registry, and mounted runtime execution. No ticket closure or goal completion is claimed.
+
+
+Next normal lock4 and boundary23 terminated exit1 before intended work: exact native receiver rejected generic original Nx capability. No install/fresh scan occurred. Read [Cargo Current](📓️root-cargo-boundary-current.md) and [Native Policy Placement](📓️native-policy-placement.md).

@@ -1,0 +1,30 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🌳️tree/🦀️.rs",
+      "sha256": "61fb57666ad944012bbc2947382f0158a2fedad158ef49a80a82a2ea0a79472d",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+      "sha256": "b905f25ba5239257695ac71ac121fbdfb7c68b410eacb6c0226bf32fae062603",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs",
+      "sha256": "85ee010ec0a8b987cb16c2f396175a8d956d67216583cad8ce4a3f64c2bb0bec",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "5f7f23a177a2f413f7f7e4daa89362c68a43e1050a616e6b7bd565770bf0d59c",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "434e2d2f6bfcadca65e0135a454766d936c61f6a866e75fe47e848ac2ae4caa1",
+      "authored": false
+    }
+  ],
+  "executed": false
+}

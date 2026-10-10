@@ -4,12 +4,10 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_value::DslValue;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Generation3dDiff
 /// 🧬️ Sparse delta of the generation3d artifact: keyed widget, synapse, layout and generation rows plus owned scalar fields.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.procedural.generation3d")]
 pub struct Generation3dDiff {
     #[state(artifact)]
@@ -35,12 +33,11 @@ pub struct Generation3dDiff {
 
 protocol::list_delta! {
     /// 🧩 Positional rows of the widget list: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
-    pub Generation3dWidgetsDelta { removal: Generation3dWidgetRemoval, insertion: Generation3dWidgetInsertion, relocation: Generation3dWidgetRelocation, modification: Generation3dWidgetModification, row: Widget, patch: Generation3dWidgetPatch, list: Vec<Widget>, key: String = by Generation3dWidgetKeys, values_only }
+    pub Generation3dWidgetsDelta { removal: Generation3dWidgetRemoval, insertion: Generation3dWidgetInsertion, relocation: Generation3dWidgetRelocation, modification: Generation3dWidgetModification, row: Widget, patch: Generation3dWidgetPatch, list: Vec<Widget>, key: String = by Generation3dWidgetKeys, native }
 }
 
 /// 🩹 How one widget changes: replaced wholesale, or only the numeric fields of an input slider.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Generation3dWidgetPatch {
     Replace { widget: Widget },
     Slider { value: f64, min: f64, max: f64, step: f64 },
@@ -48,20 +45,18 @@ pub enum Generation3dWidgetPatch {
 
 protocol::list_delta! {
     /// 🧩 Positional rows of the synapse list: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
-    pub Generation3dSynapsesDelta { removal: Generation3dSynapseRemoval, insertion: Generation3dSynapseInsertion, relocation: Generation3dSynapseRelocation, modification: Generation3dSynapseModification, row: SynapseSpec, patch: Generation3dSynapsePatch, list: Vec<SynapseSpec>, key: String = by Generation3dSynapseKeys, values_only }
+    pub Generation3dSynapsesDelta { removal: Generation3dSynapseRemoval, insertion: Generation3dSynapseInsertion, relocation: Generation3dSynapseRelocation, modification: Generation3dSynapseModification, row: SynapseSpec, patch: Generation3dSynapsePatch, list: Vec<SynapseSpec>, key: String = by Generation3dSynapseKeys, native }
 }
 
 /// 📍️ One widget position row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dLayoutRow {
     pub id: String,
     pub layout: WidgetLayout,
 }
 
 /// 🧩 Id-keyed rows of the widget positions.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Generation3dLayoutDelta {
     pub added: Vec<Generation3dLayoutRow>,
     pub removed: Vec<String>,
@@ -70,28 +65,25 @@ pub struct Generation3dLayoutDelta {
 
 protocol::list_delta! {
     /// 🧩 Positional rows of the generation roster: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
-    pub Generation3dGenerationsDelta { removal: Generation3dGenerationRemoval, insertion: Generation3dGenerationInsertion, relocation: Generation3dGenerationRelocation, modification: Generation3dGenerationModification, row: FormGeneration, patch: Generation3dGenerationPatch, list: Vec<FormGeneration>, key: String = by Generation3dGenerationKeys, values_only }
+    pub Generation3dGenerationsDelta { removal: Generation3dGenerationRemoval, insertion: Generation3dGenerationInsertion, relocation: Generation3dGenerationRelocation, modification: Generation3dGenerationModification, row: FormGeneration, patch: Generation3dGenerationPatch, list: Vec<FormGeneration>, key: String = by Generation3dGenerationKeys, native }
 }
 
 /// 🩹 Owned-field patch of one generation: its name and keyed answer rows.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Generation3dGenerationPatch {
     pub name: Option<String>,
     pub values: Option<Generation3dValuesDelta>,
 }
 
 /// 🧾️ One answer row of a generation.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dValueRow {
     pub question_id: String,
     pub value: DslValue,
 }
 
 /// 🧩 Question-keyed rows of the answers of one generation.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Generation3dValuesDelta {
     pub added: Vec<Generation3dValueRow>,
     pub removed: Vec<String>,
@@ -99,22 +91,19 @@ pub struct Generation3dValuesDelta {
 }
 
 /// 👆️ A present change of the selected generation; the inner `None` clears the selection.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dSelectionChange {
     pub id: Option<String>,
 }
 
 /// 📝️ A present change of the generate preview text; the inner `None` clears it.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dPreviewChange {
     pub text: Option<String>,
 }
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Generation3dStringList {
     pub values: Vec<String>,
 }
@@ -216,8 +205,7 @@ impl protocol::list_delta::KeyOf<FormGeneration> for Generation3dGenerationKeys 
 }
 
 /// 🩹 A synapse is patched by replacing it wholesale; the wire form is the synapse itself.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(transparent)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dSynapsePatch(pub SynapseSpec);
 
 impl protocol::list_delta::RowPatch<SynapseSpec> for Generation3dSynapsePatch {

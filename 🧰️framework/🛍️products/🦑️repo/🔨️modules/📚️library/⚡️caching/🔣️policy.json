@@ -532,21 +532,12 @@
       "unusedAgeMs": 604800000
     }
   },
-  "exampleCollections": {
-    "names": [
-      "🧫️fixtures",
-      "🧫️examples",
-      "🧪️fixtures",
-      "🧪️examples"
-    ],
-    "moduleMember": "🔨️modules",
-    "manifestBasenames": [
-      "📋️project.json",
-      "project.json",
-      "package.json",
-      "Cargo.toml",
-      "bun.lock",
-      "*.patch"
-    ]
-  }
+  "manifestBasenames": [
+    "📋️project.json",
+    "project.json",
+    "package.json",
+    "Cargo.toml",
+    "bun.lock",
+    "*.patch"
+  ]
 }

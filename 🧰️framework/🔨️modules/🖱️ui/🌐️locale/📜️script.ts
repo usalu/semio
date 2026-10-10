@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -22,5 +23,5 @@ class CheckScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("check", CheckScript));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("check", CheckScript), { invocation: original }));
 

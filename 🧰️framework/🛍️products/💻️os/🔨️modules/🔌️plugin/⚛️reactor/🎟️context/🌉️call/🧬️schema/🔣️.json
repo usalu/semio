@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Guest Call",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "operation",
+    "generation",
+    "epochs",
+    "calls",
+    "guestPhase",
+    "admissionGrant",
+    "bodyGrant",
+    "receiptSpent",
+    "failureSpent",
+    "failureKeepsInput",
+    "emptyAdmissionInput",
+    "sameRoot",
+    "samePayloadAuthority",
+    "sameExternalRecipient",
+    "bindingYields",
+    "bindingRemovalYields",
+    "guestEntry",
+    "entryOriginalAuthority"
+  ],
+  "properties": {
+    "contract": {
+      "const": "actor.original-guest-call/v1"
+    },
+    "operation": {
+      "const": 71
+    },
+    "generation": {
+      "const": 3
+    },
+    "epochs": {
+      "const": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ]
+    },
+    "calls": {
+      "const": [
+        "admit",
+        "admit",
+        "admit",
+        "admit",
+        "admit",
+        "dispatch"
+      ]
+    },
+    "guestPhase": {
+      "const": [
+        "pending",
+        "pending",
+        "pending",
+        "pending",
+        "ready",
+        "dispatched"
+      ]
+    },
+    "admissionGrant": {
+      "const": [
+        1,
+        0,
+        512,
+        512,
+        8
+      ]
+    },
+    "bodyGrant": {
+      "const": [
+        1,
+        7,
+        512,
+        512,
+        8
+      ]
+    },
+    "receiptSpent": {
+      "const": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          64,
+          0
+        ],
+        [
+          1,
+          0,
+          128,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          7,
+          0,
+          0
+        ]
+      ]
+    },
+    "failureSpent": {
+      "const": [
+        1,
+        7,
+        0,
+        0
+      ]
+    },
+    "failureKeepsInput": {
+      "const": true
+    },
+    "emptyAdmissionInput": {
+      "const": true
+    },
+    "sameRoot": {
+      "const": true
+    },
+    "samePayloadAuthority": {
+      "const": true
+    },
+    "sameExternalRecipient": {
+      "const": true
+    },
+    "bindingYields": {
+      "const": true
+    },
+    "bindingRemovalYields": {
+      "const": true
+    },
+    "guestEntry": {
+      "const": {
+        "emptyAdmission": true,
+        "originalInputRequired": true,
+        "failedSpentReturned": [
+          1,
+          7,
+          0,
+          0
+        ],
+        "semanticFaultRetained": true,
+        "paidCloseRequired": true,
+        "noDynamicFailureEncoding": true
+      }
+    },
+    "entryOriginalAuthority": {
+      "const": [
+        2048,
+        4096,
+        65536,
+        65536,
+        16
+      ]
+    }
+  }
+}

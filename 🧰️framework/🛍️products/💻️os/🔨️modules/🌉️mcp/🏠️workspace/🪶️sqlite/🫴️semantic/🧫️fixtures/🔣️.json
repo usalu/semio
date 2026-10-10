@@ -1,0 +1,10 @@
+{
+ "format":1,"owner":"os.mcp.probe.semantic","custody":"originalRecipient","publication":"moveOriginal","ordinal":"explicitPosition",
+ "nativeMaximumBytes":16777216,"maximumCloseTurns":65536,"maximumCancellationCheckpoints":4096,"stringUnit":"λ🙂","stringRepetitions":16384,"stringBytes":98304,
+ "bodyGrant":{"maximumItems":65536,"maximumCopyBytes":1048576,"maximumCapacityBytes":4194304,"maximumReleaseBytes":4194304,"maximumDepth":128},
+ "closeGrant":{"maximumItems":4096,"maximumCopyBytes":1048576,"maximumCapacityBytes":4194304,"maximumReleaseBytes":4194304,"maximumDepth":256},
+ "deniedCloseGrant":{"maximumItems":0,"maximumCopyBytes":0,"maximumCapacityBytes":0,"maximumReleaseBytes":0,"maximumDepth":0},
+ "refusals":[{"axis":"work","value":0,"kind":"workLimit"},{"axis":"copy","value":0,"kind":"ownershipLimit"},{"axis":"capacity","value":0,"kind":"ownershipLimit"},{"axis":"release","value":0,"kind":"ownershipLimit"},{"axis":"depth","value":1,"kind":"depthLimit"}],
+ "invalidNumberWords":["+1","01","1.","1e","1e9999","1 true","NaN","Infinity"],
+ "cancellation":"everyOriginalCheckpoint","zeroAllocation":"refuseBeforeBirth","cumulative":"preserveAcceptedProducerReceipts"
+}

@@ -1,9 +1,0 @@
-{
-  "mutation": "admitLocalDocument",
-  "documentId": "studio-alpha",
-  "schema": "s.space",
-  "name": "Alpha Studio",
-  "storage": "folder",
-  "target": "/Users/ada/semio-data/os/local-documents/studio-alpha",
-  "admittedAtMs": 1790590000000
-}

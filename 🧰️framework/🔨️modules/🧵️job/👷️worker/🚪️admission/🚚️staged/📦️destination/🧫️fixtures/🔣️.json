@@ -1,0 +1,54 @@
+{
+  "contract": "framework.job.destination-initialization.v1",
+  "grant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "pageSlots": 256,
+  "layouts": [
+    {
+      "pointerBytes": 4,
+      "sourceWords": 2,
+      "lengthWords": 1,
+      "cursorBytes": 0,
+      "slotBytes": 12,
+      "slotSteps": [
+        256
+      ],
+      "stepCopies": [
+        0
+      ]
+    },
+    {
+      "pointerBytes": 8,
+      "sourceWords": 2,
+      "lengthWords": 1,
+      "cursorBytes": 0,
+      "slotBytes": 24,
+      "slotSteps": [
+        256
+      ],
+      "stepCopies": [
+        0
+      ]
+    }
+  ],
+  "abandonment": {
+    "originalPageBytes": 16384,
+    "pageIdentityPreserved": true,
+    "releaseTurns": 1,
+    "dropAllocations": 0,
+    "coldPageDrop": false
+  },
+  "headerEffects": {
+    "presenceBytes": 0,
+    "operationBytes": 0,
+    "generationBytes": 0,
+    "copiedBytes": 0
+  },
+  "finalPresenceBytes": 0,
+  "closeStageBytes": 0
+}

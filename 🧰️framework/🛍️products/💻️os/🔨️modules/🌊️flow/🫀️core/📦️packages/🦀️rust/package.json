@@ -7,8 +7,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "../../🕸️bindings/flow_core.js",
-    "./pkg/flow_core.js": "../../🕸️bindings/flow_core.js"
+    ".": "./🟦️.ts"
   },
   "scripts": {
     "preview:browser-package": "bun nx run semio-framework-os-flow-core:preview-generated",

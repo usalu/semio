@@ -1,0 +1,1 @@
+{"grant":{"items":1,"copy":2,"capacity":65536,"release":65536,"depth":8},"identity":{"operation":9,"generation":3},"pages":[[1,0],[1,8,104],[195],[169,240,159],[152,128,0]],"expectedHex":"0100010868c3a9f09f988000","values":["hé😀\u0000"],"metadataCopy":0}

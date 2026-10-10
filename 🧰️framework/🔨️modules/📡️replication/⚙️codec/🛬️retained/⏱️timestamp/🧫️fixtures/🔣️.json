@@ -1,0 +1,1 @@
+{"values":[{"epochMs":0,"expected":"1970-01-01T00:00:00Z"},{"epochMs":-1,"expected":"1969-12-31T23:59:59.999Z"},{"epochMs":951782400123,"expected":"2000-02-29T00:00:00.123Z"},{"epochMs":253402300799999,"expected":"9999-12-31T23:59:59.999Z"}],"grant":{"items":1,"copyBytes":2,"capacityBytes":65536,"releaseBytes":65536,"depth":8},"metadataCopyBytes":0}

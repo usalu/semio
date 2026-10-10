@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "action": "updated",
+      "beforeSha256": "e038914ca1f1f33864aa2029b46f04098665060524ea43062599f2c68d2128bf",
+      "afterSha256": "96c26d74052d681f36e2012e13ff3960f95396ff2b350e3f033b76d818c7f413",
+      "exclusive": false,
+      "scope": "Use original installed Nx run-many complete command builder/withOverrides, retaining targets/exclusion/explicit flags"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

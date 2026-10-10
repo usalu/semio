@@ -1,0 +1,33 @@
+{
+  "ownership": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧬️schema/🔣️.json",
+      "sha256": "f6268ed9e047ed2394513a5d1c04f5e644c6396c22a8a7376e83cc65e228eca7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+      "sha256": "cccd4fcda26655c43967e06471a765afa795f3fd28ebde35e03ad867a6a383f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🟦️.ts",
+      "sha256": "8f58298d6baa1d0615428eff593863c228070f0eedbd9207a1d2ddfd8fffb4de"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🦀️.rs",
+      "sha256": "83947333ab36321c74f8972de969a02cb31824234c51b1bbf00032737437651c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs",
+      "sha256": "ad77a9de201f74585dde43dd481d232445130c17fed080e09ef7e905acbdfc62"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/package.json",
+      "sha256": "163eba8b096d44babdebacbc3488d5f7317a2f2c5e0e579748ddf3a47e6224fd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "c7e74f817bc86f1ad0761de0efa25f3489cfd34673413af569a07c19a5f4493c"
+    }
+  ]
+}

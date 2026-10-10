@@ -1,0 +1,44 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️schema/🔣️.json",
+    "action": "create",
+    "beforeSha256": null,
+    "afterSha256": "6dc41ba0fcebb76f3f67f718b8be2d34afdf6ad261d1ee5cde977ed64cf5093f",
+    "qualification": "Genuine schema-first lower workspace ownership policy, closed production collection/module vocabulary, not a schema for testing examples"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+    "action": "create",
+    "beforeSha256": null,
+    "afterSha256": "abc18179a0ae9292731d9cfd7a32271284e69da7feec17232a4c1ad42cd5c43d",
+    "qualification": "Single lower production ownership authority consumed by Bun and Nx; contains no testing examples"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
+    "action": "update",
+    "beforeSha256": "a2ec937477b67e217dc1d09d2165943f6b0ed4b624aaef8a36ec80d8452fc91e",
+    "afterSha256": "0cb449d5a6974bfb8c693725477d56500d2a450e47ac26870d8571eb2ac7cbc2",
+    "qualification": "Cache authority retains only Nx manifest vocabulary; lower workspace authority owns collection names/module exception, with no legacy embedded policy"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+    "action": "update",
+    "beforeSha256": "81d9edfdc70f071e6215b922b652e75286616ac5f8b429bb7f8fae6d629ee360",
+    "afterSha256": "e66850d0292f6744a63bb45ef7d72c5b62159b5f67db47302958ef396d28070f",
+    "qualification": "Remove duplicated collection ownership from cache policy; manifest basename recipe remains cache-owned"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+    "action": "update",
+    "beforeSha256": "baf20df1e55d3013a7a340e8838ae8b02af36cff56d310316f1b3691f283a127",
+    "afterSha256": "715f2d906b03e842b8e5ff66fbbf4811e1e31de26810e2db6b8c5e005be3e3f1",
+    "qualification": "Original physical Nx inference and input policy consume shared lower genuine workspace ownership authority"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+    "action": "update",
+    "beforeSha256": "590caa7f0b6c49c19d7bbcb2224c9ca6d6f6c6aaa8cc80db3e85f35672eef2f0",
+    "afterSha256": "6d488f2111a04e42bc84d1d0fd447b37493faa79deda33187cec3af4aa442d94",
+    "qualification": "Canonical Nx bootstrap shares lower production workspace collection authority while retaining actual manifest recipe and physical custody guards"
+  }
+]

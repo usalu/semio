@@ -1,0 +1,139 @@
+{
+  "schema": "sqlite.receiving.borrowed-schema/v1",
+  "grant": {
+    "maximumItems": 100000,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 16
+  },
+  "authoredSql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'alpha;beta');",
+  "table": "retained_value",
+  "cases": [
+    {
+      "id": "original-literal-semicolon",
+      "sql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'alpha;beta');",
+      "accepted": true,
+      "oracleAccepted": true
+    },
+    {
+      "id": "changed-literal",
+      "sql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'Alpha;beta');",
+      "accepted": false,
+      "oracleAccepted": false
+    },
+    {
+      "id": "changed-name",
+      "sql": "CREATE TABLE different_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'alpha;beta');",
+      "accepted": false,
+      "oracleAccepted": false
+    },
+    {
+      "id": "malformed-keyword-boundary",
+      "sql": "CREATE TABLEretained retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'alpha;beta');",
+      "accepted": false,
+      "oracleAccepted": false
+    },
+    {
+      "id": "unterminated-literal",
+      "sql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'alpha;beta);",
+      "accepted": false,
+      "oracleAccepted": false
+    },
+    {
+      "id": "escaped-quoted-identifier",
+      "table": "retained\"value",
+      "authoredSql": "CREATE TABLE \"retained\"\"value\" (id INTEGER PRIMARY KEY, value TEXT NOT NULL);",
+      "sql": "CREATE TABLE \"retained\"\"value\" (id INTEGER PRIMARY KEY, value TEXT NOT NULL);",
+      "accepted": true,
+      "oracleAccepted": true
+    },
+    {
+      "id": "unicode-identifier",
+      "table": "retenué",
+      "authoredSql": "CREATE TABLE retenué (id INTEGER PRIMARY KEY, value TEXT NOT NULL);",
+      "sql": "CREATE TABLE retenué (id INTEGER PRIMARY KEY, value TEXT NOT NULL);",
+      "accepted": true,
+      "oracleAccepted": true
+    },
+    {
+      "id": "bracket-identifier",
+      "table": "retained_value",
+      "authoredSql": "CREATE TABLE [retained_value] (id INTEGER PRIMARY KEY, value TEXT NOT NULL);",
+      "sql": "CREATE TABLE [retained_value] (id INTEGER PRIMARY KEY, value TEXT NOT NULL);",
+      "accepted": true,
+      "oracleAccepted": true
+    },
+    {
+      "id": "authored-comments",
+      "table": "retained_value",
+      "authoredSql": "CREATE /* original */ TABLE retained_value (id INTEGER PRIMARY KEY, -- column\n value TEXT NOT NULL);",
+      "sql": "CREATE /* original */ TABLE retained_value (id INTEGER PRIMARY KEY, -- column\n value TEXT NOT NULL);",
+      "accepted": true,
+      "oracleAccepted": true
+    },
+    {
+      "id": "original-double-quoted-default",
+      "table": "retained_value",
+      "authoredSql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT \"alpha;beta\");",
+      "sql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT \"alpha;beta\");",
+      "accepted": true,
+      "oracleAccepted": true
+    },
+    {
+      "id": "changed-double-quoted-default",
+      "table": "retained_value",
+      "authoredSql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT \"alpha;beta\");",
+      "sql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT \"Alpha;beta\");",
+      "accepted": false,
+      "oracleAccepted": false
+    },
+    {
+      "id": "sqlite-master-without-terminal-delimiter",
+      "sql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'alpha;beta')",
+      "accepted": true,
+      "oracleAccepted": true
+    },
+    {
+      "id": "authored-without-terminal-delimiter",
+      "authoredSql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'alpha;beta')",
+      "sql": "CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value TEXT NOT NULL DEFAULT 'alpha;beta');",
+      "accepted": true,
+      "oracleAccepted": true
+    }
+  ],
+  "extentRow": [
+    1,
+    "alpha;beta"
+  ],
+  "extentCases": [
+    {
+      "id": "original-extent",
+      "maximumRows": 1,
+      "maximumColumns": 2,
+      "maximumValueBytes": 18,
+      "accepted": true
+    },
+    {
+      "id": "refused-row-census",
+      "maximumRows": 0,
+      "maximumColumns": 2,
+      "maximumValueBytes": 18,
+      "accepted": false
+    },
+    {
+      "id": "refused-column-census",
+      "maximumRows": 1,
+      "maximumColumns": 1,
+      "maximumValueBytes": 18,
+      "accepted": false
+    },
+    {
+      "id": "refused-value-extent",
+      "maximumRows": 1,
+      "maximumColumns": 2,
+      "maximumValueBytes": 17,
+      "accepted": false
+    }
+  ]
+}

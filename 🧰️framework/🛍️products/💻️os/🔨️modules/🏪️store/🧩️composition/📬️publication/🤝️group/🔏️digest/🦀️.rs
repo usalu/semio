@@ -1,6 +1,6 @@
 //! 🔏️ Original aggregate edits retain their native typed canonical seal and independent frame custody.
 use super::*;
-use crate::os_spr::command::ArtifactCanonicalEditSealCursor;
+use protocol::io::text::canonical::ArtifactCanonicalEditSealCursor;
 use semio_framework_value::{RetirementDemand,ValueRefusalKind,retirement::RetireOwned};
 
 /// 🧵️ The exact original typed sealer crosses only this bounded owning interface.

@@ -27,7 +27,6 @@ use inputs::resolve_inputs;
 use protocol::{ComputeStep, InferenceFault, InferencePending, InferenceStep, InferredField};
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, SynapseSpec, Widget};
 use semio_framework_value::{DslValue, ToValue};
-use semio_framework_value_derive::{FromValue, ToValue};
 use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
@@ -100,8 +99,7 @@ fn plan_of(host: &FlowHostSnapshot) -> Vec<InferenceStep<String>> {
 
 //#region 🔖️Dependency
 /// 🔌️ One wire into a widget, as far as its evaluation reads it.
-#[derive(Clone, Debug, PartialEq, ToValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct GeometryWire {
     pub from: String,
     pub from_port: String,
@@ -109,8 +107,7 @@ pub struct GeometryWire {
 }
 
 /// 🔑️ Everything a widget's evaluation reads besides its parents' values: the widget variant, admitted kind definition, stored literals and incoming wiring.
-#[derive(Clone, Debug, PartialEq, ToValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct GeometryDependency {
     pub variant: String,
     pub kind: String,
@@ -309,8 +306,7 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
 
 //#region 🔖️Record
 /// 🚫️ A fault as the inference record states it.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dFaultRecord {
     pub code: String,
     pub en: String,
@@ -319,8 +315,7 @@ pub struct Generation3dFaultRecord {
 }
 
 /// 📇️ One output of a widget as the inference record states it: the port, the value kind and a one-line detail.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dOutputRecord {
     pub port: String,
     pub kind: String,
@@ -328,8 +323,7 @@ pub struct Generation3dOutputRecord {
 }
 
 /// 📇️ One widget's evaluation as the inference record states it.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dWidgetRecord {
     pub quality: Quality,
     pub fault: Option<Generation3dFaultRecord>,
@@ -337,8 +331,7 @@ pub struct Generation3dWidgetRecord {
 }
 
 /// 📐️ `geometry` — the evaluation of every widget, summarised: quality, fault and the kind and detail of each output.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Generation3dGeometryRecord {
     pub widgets: BTreeMap<String, Generation3dWidgetRecord>,
     pub faulted: u32,

@@ -24,6 +24,7 @@
     "proposedCharge": 7,
     "projectedRetirement": 10,
     "actualRetirement": 3,
-    "refusal": "InvalidValue"
+    "refusal": "InvalidValue",
+    "splitAdditionalCharge": 1
   }
 }

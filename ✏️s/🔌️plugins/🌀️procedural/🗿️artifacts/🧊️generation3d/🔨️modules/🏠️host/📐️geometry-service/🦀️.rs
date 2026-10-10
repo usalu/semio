@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::schema::catalogue::Quality;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::{generation_host_snapshot_for, Generation3dSnapshot};
 use protocol::{DepHash, InferenceError};
-use semio_framework_plugin::{ArtifactDocumentPayload, ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferencePayloadContract, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceCacheMode, WireArtifactInferenceDiagnostic};
+use semio_framework_plugin::{ArtifactDocumentPayload, ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferencePayloadContract, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceCacheMode, WireArtifactInferenceDiagnostic};
 use semio_framework_value::ToValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -166,7 +166,7 @@ fn cache_mode(requested: &WireArtifactInferenceCacheMode) -> CacheMode {
     }
 }
 
-fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let host = context.downcast_ref::<GeometryHost>().ok_or_else(|| ArtifactInferenceExecutionError::new("generation3d.geometry.context", "geometry inference requires its instance's geometry host"))?;
     if request.budgets.work_units == 0 || request.canonical_payload.len() as u64 > request.budgets.allocation_bytes {
         return Err(invalid("geometry inference exceeds its execution budget"));
@@ -214,13 +214,13 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
         .collect();
     let quality = quality_name(weakest(result.widgets.iter().map(|widget| widget.quality)));
     Ok(ArtifactInferenceExecution {
-        canonical_payload: semio_framework_pack_json::to_json_string(&result).into_bytes(),
+        canonical_payload: Some(semio_framework_pack_json::to_json_string(&result).into_bytes()),
         validity: if diagnostics.is_empty() { "valid" } else { "invalid" }.to_string(),
         diagnostics,
         quality,
         complete: step.done,
         actual_cache_mode: request.requested_cache_mode.clone(),
-    })
+    }.into_step(true))
 }
 //#endregion 🔖️Service
 

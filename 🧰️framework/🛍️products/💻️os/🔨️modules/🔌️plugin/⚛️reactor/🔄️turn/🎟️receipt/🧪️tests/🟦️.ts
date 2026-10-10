@@ -1,0 +1,10 @@
+/** 🧾️ Original publication deltas return once to the same Reactor recipient before semantic routing. */
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import {readFileSync} from "node:fs";
+test("original Reactor collects all five publication receipts once before routing the same output",async()=>{
+ const law=await Bun.file(new URL("../🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
+ const db=new Database(":memory:");try{db.run("CREATE TABLE receipt(kind TEXT PRIMARY KEY,items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER,collected INTEGER)");for(const row of law.receipts)db.run("INSERT INTO receipt VALUES(?,?,?,?,?,0)",row.kind,...row.spent);expect(db.query("SELECT sum(items) AS items,sum(copy) AS copy,sum(capacity) AS capacity,sum(release) AS release FROM receipt WHERE collected=0").get()).toEqual(Object.fromEntries(["items","copy","capacity","release"].map((axis,index)=>[axis,law.expected[index]])));db.run("UPDATE receipt SET collected=1 WHERE collected=0");expect(db.query("SELECT count(*) AS n FROM receipt WHERE collected=0").get()).toEqual({n:0});}finally{db.close();}
+ const source=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8"),turn=source;expect(source.includes("collect_original_publication_receipts")).toBe(true);for(const field of ["constructor_receipt","preparation_receipt","history_command_receipt","tool_run_receipt","retirement_receipt"])expect(source.includes(`output.${field}.take()`)).toBe(true);expect(source.includes("cx.consume_retained(progress)")).toBe(true);expect(turn.includes("collect_original_publication_receipts(&mut output,cx)")).toBe(true);expect(turn.indexOf("collect_original_publication_receipts(&mut output,cx)")).toBeLessThan(turn.indexOf("for page in output.typed_operation_results.iter()"));console.log("[DEBUG] Ajv/SQLite all5 original receipt totals5/277/216/128 same recipient once before routing same semantic output");
+});

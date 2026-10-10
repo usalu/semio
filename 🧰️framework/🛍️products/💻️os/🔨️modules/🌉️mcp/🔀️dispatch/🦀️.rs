@@ -122,16 +122,16 @@ pub enum AppCommand {
 /// plugin out of `instance`, because an inference carries no capability id. Every remaining field is
 /// exactly what `semio_framework_plugin_host::ArtifactInferenceRouter::infer`'s own request wire
 /// carries — this port never invents one of its own.
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct InferCommand {
     pub plugin_id: String,
     pub artifact_kind: String,
     pub inference_schema: String,
     pub revision: u64,
-    pub generation: u64,
+    pub turn: semio_framework_actor::RetainedTurnInput,
     pub cancellation_id: String,
     pub work_units: u64,
-    pub retained: semio_framework_value::retained_clone::RetainedCloneGrant,
+    pub maximum_elapsed_milliseconds: u64,
     pub canonical_payload: Vec<u8>,
     /// 🔗️ The artifact this inference is being run ON, and its canonical pair. An inference over an
     /// artifact is not expressible as a hand-typed payload — nobody types 4 096 bitmap cells into a
@@ -294,7 +294,7 @@ pub enum AppFrame {
     /// 💡️ The guest's own inference result, exactly as its `artifact-infer` job returned it:
     /// `payload` is the result wire's `canonicalPayload` bytes and `complete` its `complete` flag.
     /// Never a host-synthesised value — a guest that refuses answers [`AppFrame::Error`] instead.
-    Inferred { inference_schema: String, complete: bool, payload: Vec<u8> },
+    Inferred { inference_schema: String, complete: bool, payload: Option<Vec<u8>> },
     /// 📤️ The guest's own exported media for one OUT port, exactly as `AppFrame::Media` carried it:
     /// `descriptor` is the guest's packed media descriptor, `data` the exported bytes.
     Exported { port: String, descriptor: Vec<u8>, data: Vec<u8> },
@@ -321,7 +321,7 @@ pub struct Fault {
 pub struct InferenceOutcome {
     pub inference_schema: String,
     pub complete: bool,
-    pub payload: Vec<u8>,
+    pub payload: Option<Vec<u8>>,
 }
 
 /// 🔌️ The narrow port `ActionAdapter` drives — this packet's brief §3.1 names this exact shape.
@@ -607,10 +607,10 @@ impl MockInstanceState {
                 AppFrame::TransactionRedone { group_id }
             }
             AppCommand::Infer(command) => {
-                if command.generation != self.generation {
-                    return AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("inference base generation {} no longer matches current generation {}", command.generation, self.generation) });
+                if command.turn.generation != self.generation {
+                    return AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("inference base generation {} no longer matches current generation {}", command.turn.generation, self.generation) });
                 }
-                AppFrame::Inferred { inference_schema: command.inference_schema, complete: true, payload: command.canonical_payload }
+                AppFrame::Inferred { inference_schema: command.inference_schema, complete: true, payload: Some(command.canonical_payload) }
             }
             AppCommand::ExportMedia { port, .. } => AppFrame::Error(Fault { code: "plugin.unavailable".into(), message: format!("the scripted in-memory channel has no guest to read media port `{port}` from — bind a workspace with --folder/--hub") }),
             AppCommand::ReadArtifact => AppFrame::Error(Fault { code: "plugin.unavailable".into(), message: "the scripted in-memory channel has no guest to read a genesis document from — bind a workspace with --folder/--hub".into() }),

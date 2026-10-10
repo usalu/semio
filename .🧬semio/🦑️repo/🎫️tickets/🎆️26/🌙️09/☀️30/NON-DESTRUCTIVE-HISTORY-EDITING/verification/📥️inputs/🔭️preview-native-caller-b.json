@@ -1,0 +1,54 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-job-rs:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_preview_driver_preserves_native_receipts_fault_loan_and_paid_closure)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-job-rs:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_preview_driver_preserves_native_receipts_fault_loan_and_paid_closure)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

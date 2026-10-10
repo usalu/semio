@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
@@ -46,4 +47,4 @@ export class StylingPythonBuildScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(resolve(import.meta.dir, "../../📦️packages/🐍️python")).register("deps", StylingPythonDepsScript).register("build", StylingPythonBuildScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(resolve(import.meta.dir, "../../📦️packages/🐍️python")).register("deps", StylingPythonDepsScript).register("build", StylingPythonBuildScript)).run(process.argv.slice(2), original));

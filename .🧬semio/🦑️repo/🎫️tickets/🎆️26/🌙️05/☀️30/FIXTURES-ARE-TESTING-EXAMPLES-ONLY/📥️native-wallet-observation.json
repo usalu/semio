@@ -1,0 +1,24 @@
+{
+  "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧬️schema/💰️wallet.json",
+  "sha256": "e59f57e3db785b0540da0c3430ac6c221782b2ac9e0457dbd5ef8f8745985ada",
+  "required": [
+    "grant",
+    "spans",
+    "remaining",
+    "originalNativeMaximum",
+    "nativePriorEncode",
+    "nativePriorDecode",
+    "sameWallet",
+    "heapBytes"
+  ],
+  "fixedPredicates": {
+    "sameWallet": true,
+    "heapBytes": 0,
+    "spans": [
+      2,
+      2
+    ]
+  },
+  "boundedSourceReaderCensus": "no exact wallet.json or 💰️wallet reference in Framework TS/Rust; nested-io.ts projects genuine Value Grant only",
+  "classification": "appears exclusive trial witness; independent review requested, no mutation"
+}

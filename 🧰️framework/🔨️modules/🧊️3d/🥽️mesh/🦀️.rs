@@ -12,7 +12,7 @@ use std::collections::HashSet;
 
 #[path = "🛠️modeling/🦀️.rs"]
 mod modeling;
-pub use modeling::{MeshModelingJob, MeshModelingProgress, MeshModelingStep};
+pub use modeling::{MeshModelingJob, MeshModelingProgress, MeshModelingStep, MeshTranslationInput};
 
 #[path = "🔎️quality/🦀️.rs"]
 mod quality;
@@ -1190,7 +1190,7 @@ impl MeshTessellationJob {
         protocol::value::retirement::admit_owned_retirement(self,grant)
     }
     pub fn source(&self) -> &HalfedgeMesh { &self.mesh }
-    pub(super) fn take_source(&mut self)->HalfedgeMesh { std::mem::take(&mut self.mesh) }
+    pub(super) fn take_source(&mut self)->HalfedgeMesh { std::mem::replace(&mut self.mesh,HalfedgeMesh::empty()) }
     pub fn progress(&self) -> MeshModelingProgress { MeshModelingProgress { units_done: self.done, units_total: self.done.saturating_add(self.mesh.face_count().saturating_sub(self.face)), phase: if self.face==self.mesh.face_count() {"tessellate-attributes"} else {"tessellate"} } }
     pub fn cancel(&mut self) { self.cancelled = true; }
     fn halfedge(&self, local: usize) -> u32 { self.hes[if self.mesh.faces[self.face].flipped { self.hes.len() - 1 - local } else { local }] }

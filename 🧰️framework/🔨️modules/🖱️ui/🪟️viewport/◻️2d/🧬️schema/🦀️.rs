@@ -1,7 +1,7 @@
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
 /// 🪟️ Two-dimensional navigation retained by one concrete window instance.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, semio_framework_value::RetireOwned)]
 pub struct Viewport2d {
     pub x: f64,
     pub y: f64,

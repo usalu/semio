@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
@@ -70,7 +72,7 @@ class TestScript extends BundleScript {
     }
     assertRendererOutputOwnership();
     const { rest } = resolveTestLevel(segments, "long");
-    await runRepositoryCargoTests([crateName], this.repoRoot, rest);
+    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation.control, rest);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
@@ -79,18 +81,34 @@ class TestScript extends BundleScript {
 class SocketSnapshotSqliteScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-socket-snapshot-sqlite requires source or native");
-  if(segments[0]==="native"){await runRepositoryCargoTests([crateName],this.repoRoot,["--lib","native_socket_sqlite_snapshot_","--","--nocapture"]);return;}
+  if(segments[0]==="native"){await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation.control, ["--lib","native_socket_sqlite_snapshot_","--","--nocapture"]);return;}
   const file=resolve(this.root,"../../🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts");
   await runRepositoryTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:120000});
   await runRepositoryTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],{cwd:this.repoRoot,budgetMs:120000});
  }
 }
 
+/** 🎟️ Verifies the neutral Host custody and typed renderer receiving contract. */
+class OriginalFrameSourceScript extends BundleScript {
+  private childBudget(): number {
+    const remaining = this.invocation.control.remainingMilliseconds();
+    if (remaining !== null && remaining < 1) throw Error("Original frame Source deadline exhausted");
+    return remaining === null ? 0 : Math.floor(remaining);
+  }
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Expected test-original-frame-source");
+    const { runOwnedCommand } = await import("../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+    const file = resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts");
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", file], this.repoRoot, "wgpu:original-frame:types", this.childBudget(), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, ["test", file], this.repoRoot, "wgpu:original-frame:source", this.childBudget(), { signal: this.invocation.control.signal });
+  }
+}
+
 /** 🦀️ Runs the existing budgeted Cargo tests without invoking browser tests. */
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
-    await runRepositoryCargoTests([crateName], this.repoRoot, rest);
+    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -111,7 +129,7 @@ class NativeTestScript extends BundleScript {
 class WgpuUnitTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
-    await runRepositoryCargoTests([crateName], this.repoRoot, ["--lib", ...rest]);
+    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation.control, ["--lib", ...rest]);
   }
 }
 
@@ -129,16 +147,7 @@ class MediaSlotContractTestScript extends BundleScript {
       "media_slot_identity_registry_requeries_none_and_rejects_retired_or_foreign_replies",
       "media_slot_tokens_survive_ui_generation_but_change_with_document_and_resource_authority",
     ].map((law) => `media_slots::tests::${law}`);
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      env: { ...process.env, RUST_MIN_STACK: "33554432" },
-      nativeEnv: { RUST_MIN_STACK: "134217728" },
-      buildBudgetMs: buildBudgetMs(),
-      listBudgetMs: 60_000,
-      lawBudgetMs: 120_000,
-      groups: [{ package: crateName, target: { kind: "lib" }, laws }],
-      progress(event) { console.log(`media-slot-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
-    });
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: "33554432" }, nativeEnv: { RUST_MIN_STACK: "134217728" }, groups: [{ package: crateName, target: { kind: "lib" }, laws }], progress(event) { console.log(`media-slot-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
     console.log(`media-slot-contract: ${receipts.reduce((count, receipt) => count + receipt.laws.length, 0)} exact native laws passed`);
   }
 }
@@ -270,11 +279,7 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
       throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
     }
     const checks = directoryRetainedHomeBootstrapOracle();
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: repoRoot,
-      artifactDir: resolve(artifactDir),
-      env: { ...process.env, CARGO_BUILD_JOBS: "1" },
-      groups: [{
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: repoRoot, artifactDir: resolve(artifactDir), env: { ...process.env, CARGO_BUILD_JOBS: "1" }, groups: [{
         package: crateName,
         target: { kind: "lib" },
         laws: [
@@ -282,9 +287,7 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
           "shell::command_registry_tests::directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss",
           "shell::command_registry_tests::directory_home_terminal_receipt_rejects_unknown_fields_and_nonreceipt_effects",
         ],
-      }],
-      progress(event) { console.log(`directory-retained-home-bootstrap ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
-    });
+      }], progress(event) { console.log(`directory-retained-home-bootstrap ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
     console.log(`directory-retained-home-bootstrap-native-receipts: ${JSON.stringify(receipts)}`);
     console.log(`directory-retained-home-bootstrap-native-check: sourceChecks=${checks} nativeLaws=3 clean`);
   }
@@ -320,12 +323,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
     const ticketRoot = resolve(repoRoot, ".🧬semio/🦑️repo/🎫️tickets");
     if (!artifactDir || !isAbsolute(artifactDir) || !resolve(artifactDir).startsWith(`${ticketRoot}${sep}`)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
     const checks = normalizedPresenceRowsOracle();
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: repoRoot,
-      artifactDir: resolve(artifactDir),
-      env: { ...process.env, CARGO_BUILD_JOBS: "1" },
-      groups: [{ package: crateName, target: { kind: "lib" }, laws: ["shell::command_registry_tests::presence_rows_require_each_normalized_surface_and_preserve_hub_color"] }],
-    });
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: repoRoot, artifactDir: resolve(artifactDir), env: { ...process.env, CARGO_BUILD_JOBS: "1" }, groups: [{ package: crateName, target: { kind: "lib" }, laws: ["shell::command_registry_tests::presence_rows_require_each_normalized_surface_and_preserve_hub_color"] }] });
     assert.equal(receipts[0]!.assertions, 1);
     console.log(`normalized-presence-rows-native-check: sourceChecks=${checks} nativeLaws=1 clean`);
   }
@@ -361,6 +359,14 @@ class BrowserTestScript extends BundleScript {
     assertRendererOutputOwnership();
     const { rest } = resolveTestLevel(segments, "long");
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
+/** 🧵️ Runs the complete original worker ownership source roster. */
+class WorkerReceivingSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw Error("test-worker-receiving-source takes no filters");
+    await runVitest(this.root, ["🧪️tests/🖌️wgpu-document-owner-move/🟦️.ts"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -473,6 +479,7 @@ const router = new ScriptRouter(import.meta.dir)
   )
   .register("test", TestScript)
   .register("test-socket-snapshot-sqlite",SocketSnapshotSqliteScript)
+  .register("test-original-frame-source", OriginalFrameSourceScript)
   .register("test-native", NativeTestScript)
   .register("test-wgpu-unit", WgpuUnitTestScript)
   .register("test-media-slots", MediaSlotContractTestScript)
@@ -487,6 +494,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("browser-dock-acceptance", BrowserDockAcceptanceScript)
   .register("test-browser", BrowserTestScript)
   .register("test-browser-worker", BrowserWorkerTestScript)
+  .register("test-worker-receiving-source", WorkerReceivingSourceScript)
   .register("test-preview-generated", PreviewGeneratedTestScript)
   .register("check-browser-worker", BrowserWorkerCheckScript)
   .register("check-boot-cache-inputs", BootCacheInputCheckScript)
@@ -496,5 +504,5 @@ const router = new ScriptRouter(import.meta.dir)
   .register("lint", LintScript);
 
 if (import.meta.main) {
-  await router.run(process.argv.slice(2));
+  await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));
 }

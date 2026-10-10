@@ -70,6 +70,10 @@ function step(session: TimeTravelSession, value: Step, scenario: string): TimeTr
 
 /** ⚖️ Checks domain refusals and replays every scenario through the reducer twin; answers the scenario count. */
 export function timeTravelScenarioOracle(repoRoot: string): number {
+  const source = readFileSync(join(repoRoot, PLUGIN_ROOT, "⏪️time-travel/🦀️.rs"), "utf8");
+  assert.equal(source.includes("Fault::from(error.into_message())"), false);
+  assert.equal(source.includes("map_err(ValueError::into_fault)"), true);
+  assert.equal(source.includes("actor != store.local_actor_id().0.as_str()"), true);
   const fixtureRoot = join(repoRoot, PLUGIN_ROOT, "🧫️fixtures/🧫️time-travel");
   const fixture: Fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   assert.throws(() => step(timeTravelSession({ contentRevision: new Uint8Array(32) }), { begin: 0, accept: null }, "hostile"), /exactly one verb/);

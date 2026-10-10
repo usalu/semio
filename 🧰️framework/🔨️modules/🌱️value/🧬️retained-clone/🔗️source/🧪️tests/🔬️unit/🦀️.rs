@@ -141,3 +141,14 @@ fn admitted_source_authority_preserves_original_owners_and_canceled_cursor_custo
         println!("[DEBUG] full admitted source={} work={work} original={} born={born} physically released={released} original pointer and early cancellation custody conserved",row["id"],original.0);
     }}
 }
+
+#[test]
+fn retained_clone_terminal_ticket_quotes_and_funds_the_original_header(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🪜️close-demands/🔣️.json")).unwrap();let law=&law["terminalTicket"];
+ let(mut close,heap)=observe_retirement_allocations(||crate::retained_clone::RetainedCloneClose{retirement:std::mem::ManuallyDrop::new(Some(Box::new(RefusingCopyDemand{owner:None})))});let original=close.retirement.as_ref().unwrap().as_ref()as*const dyn crate::ErasedSnapshotRetirement as*const ();
+ let expected=law["headerWidths"].as_array().unwrap().iter().find(|row|row["wordBytes"].as_u64().unwrap()as usize==size_of::<usize>()).unwrap()["copyBytes"].as_u64().unwrap()as usize;let bytes=heap.0;assert_eq!(heap.1,0);
+ let((copy,capacity,release,depth),heap)=observe_retirement_allocations(||(close.next_copy_byte_demand().unwrap(),close.next_capacity_byte_demand(expected).unwrap(),close.next_release_byte_demand().unwrap(),close.next_depth_demand().unwrap()));assert_eq!(heap,(0,0));assert_eq!(copy,expected);assert_eq!(capacity,law["capacityBytes"].as_u64().unwrap()as usize);assert_eq!(release,bytes);assert_eq!(depth,law["depth"].as_u64().unwrap()as usize);
+ let grant=RetainedCloneGrant{maximum_items:law["items"].as_u64().unwrap()as usize,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
+ for axis in law["refused"].as_array().unwrap(){let axis=axis.as_str().unwrap();let denied=match axis{"items"=>RetainedCloneGrant{maximum_items:0,..grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:copy-1,..grant},"release"=>RetainedCloneGrant{maximum_release_bytes:release-1,..grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..grant},_=>unreachable!()};let(result,heap)=observe_retirement_allocations(||close.step_granted(denied));assert_eq!(heap,(0,0));if axis=="depth"{assert_eq!(result.unwrap_err().kind,crate::ValueRefusalKind::DepthLimit);}else{assert_eq!(result.unwrap().progress(),Default::default());}assert!(!close.is_empty());assert_eq!(close.retirement.as_ref().unwrap().as_ref()as*const dyn crate::ErasedSnapshotRetirement as*const (),original);}
+ let(step,heap)=observe_retirement_allocations(||close.step_granted(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress().copied_bytes,copy);assert_eq!(heap,(0,release));assert_eq!(step.progress().released_bytes,release);assert!(close.is_empty());assert_eq!(observe_retirement_allocations(||drop(close)).1,(0,0));println!("[DEBUG] original terminal ticket header copy={copy} release={release}, all refused currencies preserve original pointer and zero heap; funded terminal drop exact");
+}

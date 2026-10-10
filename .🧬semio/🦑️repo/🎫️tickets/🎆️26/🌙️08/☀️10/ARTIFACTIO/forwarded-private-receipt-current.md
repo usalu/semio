@@ -1,0 +1,3 @@
+# Canonical Private Forwarded Receipt Witness
+
+Draw's original full Ei100 gate actually failed before assertions: threeE0616 at the existing corruption witness attempted to access a private canonical continuation field from the external Ei fixture crate. That field remains private. The exact corruption assertions now live in a new native child module of the canonical allocation owner, where Rust grants legal private access. The original shared black-box observer law keeps all normal receiving/short-observer/port accounting assertions and the external Ei roster remains unchanged. Full Value gains the private integrity law; its actual execution is required. No public mutation backdoor, fake receipt, test filter, or producer behavior change is introduced.

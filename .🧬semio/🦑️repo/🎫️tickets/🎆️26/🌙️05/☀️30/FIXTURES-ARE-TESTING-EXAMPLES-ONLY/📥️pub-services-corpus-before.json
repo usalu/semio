@@ -1,0 +1,17 @@
+{
+  "sourceObservers": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83e\uddea\ufe0ftests/\ud83e\uddee\ufe0fcompute-retained/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "d793a7fb7f322a38095a6176ace17163bfcb13b0f1a6241c7dbf10611de9aafa"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83e\uddec\ufe0fschema/\ud83e\uddee\ufe0fcompute-retained/\ud83d\udd23\ufe0f.json",
+      "sha256": "abd831c5edf9805f715510da7b41a7339ef83c3d280f7855801e93aaf932637f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83e\uddeb\ufe0ffixtures/\ud83e\uddee\ufe0fcompute-retained/\ud83d\udd23\ufe0f.json",
+      "sha256": "2adf1697b76d3b018f785133581860fc0c9ea4e6736b955ab922cd4a4123e9c7"
+    }
+  ],
+  "classification": "exclusive whole fixture authority; genuine grant/progress schemas preserved"
+}

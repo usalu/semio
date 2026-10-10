@@ -17,7 +17,7 @@ use semio_framework_job::{
 };
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::{mem::size_of, sync::Arc};
-use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
 
 //#region 📥️FrameBuildInputs
 /// 📥️ The fixed scalar `Send`-safe slice of `AppRuntime` this job needs.
@@ -60,16 +60,27 @@ impl FrameBuildJob {
 }
 
 impl InteractiveJob for FrameBuildJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if cx.is_cancelled() || self.closing {
+            return JobOutcomeBorrow::admit_cancelled(cx);
         }
-        self.complete = Some(FrameDirectives { wheel_zoom_deadline_cleared: self.wheel_zoom_deadline_cleared });
-        cx.consume_fuel(1);
-        StepOutcome::Complete(CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        if self.complete.is_none() {
+            let grant = cx.retained_grant();
+            let copy_bytes = size_of::<Option<FrameDirectives>>();
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < copy_bytes || grant.maximum_depth == 0 { return Ok(None); }
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..RetainedCloneProgress::default() })?;
+            self.complete = Some(FrameDirectives { wheel_zoom_deadline_cleared: self.wheel_zoom_deadline_cleared });
+            cx.consume_fuel(1);
+            return Ok(None);
+        }
+        JobOutcomeBorrow::admit_complete(cx, None, None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match original.kind() {
+            JobOutcomeKind::Cancelled => original.cancelled(),
+            _ => original.complete(None, None),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -80,14 +91,15 @@ impl InteractiveJob for FrameBuildJob {
         if self.complete.is_none() {
             return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < size_of::<FrameDirectives>() {
+        let copy_bytes = size_of::<FrameDirectives>();
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < copy_bytes {
             return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
         if grant.maximum_depth == 0 {
             return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() };
         }
         self.complete = None;
-        InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<FrameDirectives>(), ..RetainedCloneProgress::default() } }
+        InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..RetainedCloneProgress::default() } }
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -133,6 +145,7 @@ fn batch_params(operation: OperationId, generation: Generation, cancel: CancelTo
 /// cancelled) and re-checked next call rather than submitting a second overlapping one.
 pub(crate) struct FrameBuildHandle {
     retained: RetainedCloneGrant,
+    retained_progress: RetainedCloneProgress,
     session: Option<semio_framework_job::WorkerJobSession<ActiveFrameBuild>>,
     rejected: Option<WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>,
     ticket: Option<semio_framework_job::WorkerJobTicket>,
@@ -172,6 +185,11 @@ struct ActiveFrameBuild {
     cancel: CancelToken,
     preview_sequence: u64,
     phase: ActiveFramePhase,
+    retiring_phase: Option<ActiveFramePhase>,
+    deadline_receipt_received: bool,
+    deadline_outcome_pending: Option<bool>,
+    deadline_acknowledged: bool,
+    deadline_refused_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     overruns: semio_framework_trace::StepOverrunLedger,
     completed: Option<crate::AppFramePresentation>,
     closing: bool,
@@ -179,6 +197,7 @@ struct ActiveFrameBuild {
 
 enum ActiveFrameStep {
     Pending,
+    Fault(semio_framework_value::ValueError),
     Complete(Option<crate::AppFramePresentation>),
 }
 
@@ -201,7 +220,7 @@ fn worker_close_step(step: semio_framework_job::WorkerJobCloseStep, grant: Retai
     }.admit(grant, terminal)
 }
 
-fn retire_active_phase(phase: &mut ActiveFramePhase, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+fn retire_active_phase(phase: &mut ActiveFramePhase, grant: RetainedCloneGrant, witness: &CancelToken) -> InteractiveJobCloseStep {
     let empty = match phase {
         ActiveFramePhase::Deadlines(session) => {
             if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
@@ -221,7 +240,7 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, grant: RetainedCloneGrant) 
             true
         }
         ActiveFramePhase::Prepare(preparation) => {
-            if !preparation.terminal_is_empty() { return crate::frame_child_step(preparation.close_step(grant), grant, preparation.terminal_is_empty()); }
+            if !preparation.terminal_is_empty() { return crate::frame_child_step(preparation.close_step(grant,Some(witness)), grant, preparation.terminal_is_empty()); }
             true
         }
         ActiveFramePhase::Terminal => return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() },
@@ -245,7 +264,7 @@ impl ActiveFrameBuild {
                 ActiveFramePhase::DeadlineAdmissionRejected(rejected)
             }
         };
-        Self { retained, runtime, handle, operation, generation, cancel, preview_sequence: 0, phase, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
+        Self { retained, runtime, handle, operation, generation, cancel, preview_sequence: 0, phase, retiring_phase:None, deadline_receipt_received:false, deadline_outcome_pending:None, deadline_acknowledged:false, deadline_refused_receipt:None, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
     }
 
     fn cancel(&self) {
@@ -253,6 +272,18 @@ impl ActiveFrameBuild {
     }
 
     fn retire_cancelled_phase(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if let Some(phase)=self.retiring_phase.as_mut(){
+            let step=retire_active_phase(phase,grant,&self.cancel);
+            if !matches!(step,InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){return crate::frame_child_step(step,grant,matches!(phase,ActiveFramePhase::Terminal))}
+            if let Some(step)=crate::frame_inline_gate(grant,0){return step}
+            self.retiring_phase=None;
+            return crate::frame_inline_progress(0);
+        }
+        if matches!(self.phase,ActiveFramePhase::Terminal) && (self.deadline_receipt_received || self.deadline_outcome_pending.is_some() || self.deadline_acknowledged || self.deadline_refused_receipt.is_some()){
+            if let Some(step)=crate::frame_inline_gate(grant,0){return step}
+            self.deadline_receipt_received=false;self.deadline_outcome_pending=None;self.deadline_acknowledged=false;self.deadline_refused_receipt=None;
+            return crate::frame_inline_progress(0);
+        }
         let candidate_returned = match &mut self.phase {
             ActiveFramePhase::Build(transaction) => transaction.discard_presented_input_candidate(&self.runtime),
             ActiveFramePhase::Prepare(preparation) => preparation.discard_presented_input_candidate(&self.runtime),
@@ -261,7 +292,7 @@ impl ActiveFrameBuild {
         if !candidate_returned {
             return InteractiveJobCloseStep::Blocked;
         }
-        retire_active_phase(&mut self.phase, grant)
+        retire_active_phase(&mut self.phase, grant, &self.cancel)
     }
 
     /// 🛑️ Terminates the frame for an overrun its own `StepOverrunLedger` attributed to the step —
@@ -310,6 +341,19 @@ impl ActiveFrameBuild {
     ///
     /// 🩺️ A refused preparation is the ONE terminal this build cannot explain by itself.
     fn advance(&mut self, cx: &mut StepContext<'_>) -> ActiveFrameStep {
+        if self.deadline_refused_receipt.is_some(){return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker receipt remains refused"))}
+        if let Some(phase)=self.retiring_phase.as_mut() {
+            let grant=cx.retained_grant();
+            let step=retire_active_phase(phase,grant,&self.cancel);
+            if let Err(error)=cx.consume_retained(step.progress()){return ActiveFrameStep::Fault(error)}
+            if matches!(step,InteractiveJobCloseStep::Complete{..}) {
+                let remaining=cx.retained_grant();
+                if step.progress()!=RetainedCloneProgress::default() || remaining.maximum_items==0 || remaining.maximum_depth==0 { return ActiveFrameStep::Pending; }
+                if let Err(error)=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}){return ActiveFrameStep::Fault(error)}
+                self.retiring_phase=None;
+            }
+            return ActiveFrameStep::Pending;
+        }
         if self.cancel.is_cancelled_now() {
             let grant = cx.retained_grant();
             let step = self.retire_cancelled_phase(grant);
@@ -333,33 +377,43 @@ impl ActiveFrameBuild {
         }
         match &mut self.phase {
             ActiveFramePhase::Deadlines(session) => {
-                let poll = session.step();
-                if !matches!(poll, Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome() {
+                if let Some(complete)=self.deadline_outcome_pending {
+                    if !self.deadline_acknowledged {
+                        let step=session.acknowledge_outcome(cx.retained_grant());
+                        if let Err(error)=cx.consume_retained(step.progress()){return ActiveFrameStep::Fault(error)}
+                        self.deadline_acknowledged=matches!(step,semio_framework_value::RetainedCloneStep::Complete(_));
+                        return ActiveFrameStep::Pending;
+                    }
+                    if !complete {
+                        if session.resume().is_err(){return ActiveFrameStep::Pending}
+                        self.deadline_receipt_received=false;self.deadline_outcome_pending=None;self.deadline_acknowledged=false;
+                        return ActiveFrameStep::Pending;
+                    }
+                    let grant=cx.retained_grant();
+                    if grant.maximum_items==0 || grant.maximum_depth==0 { return ActiveFrameStep::Pending; }
+                    let Some(directives)=session.checked_out_job_mut().and_then(FrameBuildJob::take_directives)else{return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline candidate is absent after paid ACK"))};
+                    if let Err(error)=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}){return ActiveFrameStep::Fault(error)}
+                    session.begin_close();
+                    self.retiring_phase=Some(std::mem::replace(&mut self.phase,ActiveFramePhase::ApplyPending(directives)));
                     return ActiveFrameStep::Pending;
                 }
-                let deadline_verdict = session.callback_verdict().copied();
-                if deadline_verdict.is_some_and(|verdict| self.overruns.admit(&verdict).is_terminal()) {
-                    self.quarantine_overrun("os_renderer.frame.deadlines exceeded its exact clock authority");
+                if !self.deadline_receipt_received {
+                    if !matches!(session.step(cx.retained_grant()),Ok(semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome(){return ActiveFrameStep::Pending}
+                    let remaining=cx.retained_grant();
+                    let expected=RetainedCloneGrant{maximum_items:remaining.maximum_items.min(self.retained.maximum_items),maximum_copy_bytes:remaining.maximum_copy_bytes.min(self.retained.maximum_copy_bytes),maximum_capacity_bytes:remaining.maximum_capacity_bytes.min(self.retained.maximum_capacity_bytes),maximum_release_bytes:remaining.maximum_release_bytes.min(self.retained.maximum_release_bytes),maximum_depth:remaining.maximum_depth.min(self.retained.maximum_depth)};
+                    let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker omitted its checked-out physical receipt"))};
+                    self.deadline_receipt_received=true;
+                    let received=cx.consume_retained(progress);
+                    if issued!=expected || !progress.fits(issued) || received.is_err(){self.deadline_refused_receipt=Some((issued,progress));return ActiveFrameStep::Fault(received.err().unwrap_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker tuple differs from issued authority")))}
                     return ActiveFrameStep::Pending;
                 }
                 match session.checked_out_outcome() {
-                    Some(StepOutcome::Complete(_)) => {
-                        let directives = session.checked_out_job_mut().and_then(FrameBuildJob::take_directives).unwrap_or_default();
-                        session.begin_close();
-                        self.phase = ActiveFramePhase::ApplyPending(directives);
-                        ActiveFrameStep::Pending
-                    }
-                    Some(StepOutcome::Yield) => {
-                        let _ = session.resume();
-                        ActiveFrameStep::Pending
-                    }
-                    Some(StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) | StepOutcome::Cancelled | StepOutcome::Fault(_)) => {
-                        session.begin_close();
-                        self.cancel.cancel_now();
-                        ActiveFrameStep::Pending
-                    }
-                    None => ActiveFrameStep::Pending,
+                    Ok(Some(JobOutcomeView::Complete { .. }))=>self.deadline_outcome_pending=Some(true),
+                    Ok(None|Some(JobOutcomeView::Yield { .. }))=>self.deadline_outcome_pending=Some(false),
+                    Ok(Some(_))=>self.cancel.cancel_now(),
+                    Err(error)=>return ActiveFrameStep::Fault(error),
                 }
+                ActiveFrameStep::Pending
             }
             ActiveFramePhase::DeadlineAdmissionRejected(rejected) => {
                 let grant = cx.retained_grant();
@@ -408,27 +462,18 @@ impl ActiveFrameBuild {
                 }
             }
             ActiveFramePhase::Prepare(preparation) => {
-                let outcome = preparation.drive_step(self.operation, self.generation, self.cancel.clone(), self.retained, &mut self.preview_sequence);
-                let prepare_verdict = preparation.callback_verdict().copied();
-                if prepare_verdict.is_some_and(|verdict| self.overruns.admit(&verdict).is_terminal()) {
-                    self.quarantine_overrun("os_renderer.prepare.worker overran the interactive ceiling");
-                    return ActiveFrameStep::Pending;
-                }
-                match outcome {
-                    StepOutcome::Complete(_) => {
-                        let frame = preparation.take_presentation();
-                        self.phase = ActiveFramePhase::Terminal;
-                        ActiveFrameStep::Complete(frame)
-                    }
-                    StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => ActiveFrameStep::Pending,
-                    StepOutcome::Cancelled | StepOutcome::Fault(_) => {
-                        crate::log_debug_once_per_transition("frame-prepare-refused", true, &format!("os_host frame preparation refused: {}", preparation.fault().unwrap_or("unnamed")));
-                        self.cancel.cancel_now();
-                        ActiveFrameStep::Pending
-                    }
+                match preparation.drive_step(cx) {
+                    Ok(crate::FramePreparationStep::Complete)=>match preparation.take_presentation(cx) {
+                        Ok(Some(frame))=>{self.completed=Some(frame);self.retiring_phase=Some(std::mem::replace(&mut self.phase,ActiveFramePhase::Terminal));ActiveFrameStep::Pending},
+                        Ok(None)=>ActiveFrameStep::Pending,
+                        Err(error)=>ActiveFrameStep::Fault(error),
+                    },
+                    Ok(crate::FramePreparationStep::Pending)=>ActiveFrameStep::Pending,
+                    Ok(crate::FramePreparationStep::Cancelled|crate::FramePreparationStep::Fault)=>{self.cancel.cancel_now();ActiveFrameStep::Pending},
+                    Err(error)=>ActiveFrameStep::Fault(error),
                 }
             }
-            ActiveFramePhase::Terminal => ActiveFrameStep::Complete(None),
+            ActiveFramePhase::Terminal => ActiveFrameStep::Complete(self.completed.take()),
         }
     }
 }
@@ -437,20 +482,23 @@ impl InteractiveJob for ActiveFrameBuild {
     /// ⏱️ One retained Worker turn advances exactly one frame phase and charges that attempt after it
     /// runs, including a terminal attempt. Native resubmits the retained owner through the process
     /// pool; browser wasm reschedules it inside the dedicated frame Worker.
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            self.cancel();
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if matches!(self.phase, ActiveFramePhase::Terminal) && self.retiring_phase.is_none() {
+            return JobOutcomeBorrow::admit_complete(cx, None, None);
         }
+        if cx.is_cancelled() { self.cancel(); }
         match run_frame_owner_turn(cx, |cx| self.advance(cx)) {
-            None | Some(ActiveFrameStep::Pending) => StepOutcome::Yield,
+            None | Some(ActiveFrameStep::Pending) => Ok(None),
+            Some(ActiveFrameStep::Fault(error)) => Err(error),
             Some(ActiveFrameStep::Complete(frame)) => {
                 self.completed = frame;
-                StepOutcome::Complete(CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                })
+                Ok(None)
             }
         }
+    }
+
+    fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        original.complete(None, None)
     }
 
     fn begin_close(&mut self) {
@@ -472,8 +520,28 @@ impl InteractiveJob for ActiveFrameBuild {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.completed.is_none() && matches!(self.phase, ActiveFramePhase::Terminal)
+        self.closing && self.completed.is_none() && self.retiring_phase.is_none() && !self.deadline_receipt_received && self.deadline_outcome_pending.is_none() && !self.deadline_acknowledged && self.deadline_refused_receipt.is_none() && matches!(self.phase, ActiveFramePhase::Terminal)
     }
+}
+
+/// 📬️ Receives one actual issued worker receipt and separately acknowledges its held descriptor.
+fn receive_frame_outcome(owner: &mut semio_framework_job::WorkerJobOutcome<ActiveFrameBuild>, grant: RetainedCloneGrant, recipient: &mut RetainedCloneProgress) -> Result<Option<JobOutcomeKind>, semio_framework_value::ValueError> {
+    if let Some((issued, progress)) = owner.retained_step_receipt() {
+        if !progress.fits(*issued) || !progress.fits(grant) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "frame worker receipt exceeds its original receiving authority").with_retained_progress(*progress)); }
+        let received = recipient.checked_add(*progress)?;
+        let actual = owner.take_retained_step_receipt().expect("original frame receipt was exclusively borrowed");
+        *recipient = received;
+        if actual.1.copied_items != 0 || actual.1.copied_bytes != 0 || actual.1.retained_capacity_bytes != 0 || actual.1.released_bytes != 0 { return Ok(None); }
+    }
+    let kind = owner.outcome_descriptor().map(JobOutcomeDescriptor::kind);
+    if let Some(kind) = kind {
+        if !matches!(kind, JobOutcomeKind::Yield | JobOutcomeKind::Complete) { return Ok(Some(kind)); }
+        let step = owner.acknowledge_outcome(grant);
+        if !step.progress().fits(grant) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "frame acknowledgement exceeds its original receiving authority").with_retained_progress(step.progress())); }
+        *recipient = recipient.checked_add(step.progress())?;
+        return Ok(matches!(step, semio_framework_job::RetainedCloneStep::Complete(_)).then_some(kind));
+    }
+    Ok(None)
 }
 
 fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
@@ -484,6 +552,7 @@ impl FrameBuildHandle {
     pub(crate) fn new(retained: RetainedCloneGrant) -> Self {
         Self {
             retained,
+            retained_progress: Default::default(),
             session: None,
             rejected: None,
             ticket: None,
@@ -527,7 +596,7 @@ impl FrameBuildHandle {
             }
             return None;
         }
-        if let Some(session) = self.session.as_ref() {
+        if let Some(session) = self.session.as_mut() {
             if session.generation() != generation {
                 self.cancel.cancel_now();
                 if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
@@ -545,7 +614,7 @@ impl FrameBuildHandle {
                 let _ = session.register_wake(&waker);
             }
             match session.poll() {
-                semio_framework_job::WorkerJobPoll::Idle => match session.try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive) {
+                semio_framework_job::WorkerJobPoll::Idle => match session.try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive, self.retained) {
                     Ok(ticket) => self.ticket = Some(ticket),
                     Err(semio_framework_job::WorkerJobSubmitFault::Pool(kind)) => {
                         if let Ok(rejected) = session.take_rejected() {
@@ -561,21 +630,21 @@ impl FrameBuildHandle {
                     }
                 },
                 semio_framework_job::WorkerJobPoll::Outcome => {
-                    if let Some(ticket) = self.ticket.take() {
+                    if let Some(ticket) = self.ticket {
                         if let Ok(mut owner) = session.take_outcome(ticket) {
-                            if matches!(owner.outcome(), StepOutcome::Yield) {
-                                let _ = owner.take_outcome();
-                                let _ = owner.resume();
-                            } else {
-                                owner.begin_close();
+                            match receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress) {
+                                Ok(Some(JobOutcomeKind::Yield)) => { if owner.resume().is_ok() { self.ticket = None; } }
+                                Ok(None) => {},
+                                _ => { self.ticket = None; owner.begin_close(); },
                             }
                         }
                     }
                 }
                 semio_framework_job::WorkerJobPoll::Terminal => {
                     if let Ok(mut owner) = session.take_terminal() {
+                        if receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress).ok().flatten() != Some(JobOutcomeKind::Complete) { return None; }
                         let frame_generation = owner.job().generation;
-                        let frame = generation_is_fresh(generation, frame_generation).then(|| owner.job_mut().completed.take()).flatten();
+                        let frame = if generation_is_fresh(generation, frame_generation) { owner.job_mut().ok().and_then(|job| job.completed.take()) } else { None };
                         owner.begin_close();
                         return frame;
                     }
@@ -647,7 +716,7 @@ impl FrameBuildHandle {
             }
             return None;
         }
-        if let Some(session) = self.session.as_ref() {
+        if let Some(session) = self.session.as_mut() {
             if session.generation() != generation {
                 crate::log_debug_once_per_transition("frame-session-generation", true, &format!("[TRACE] frame build superseded: session generation {:?} != requested {generation:?}", session.generation()));
                 self.cancel.cancel_now();
@@ -658,7 +727,7 @@ impl FrameBuildHandle {
                 crate::log_debug_once_per_transition("frame-session-generation", false, "[TRACE] frame build session generation matches the requested one again");
             }
             let poll = match session.poll() {
-                semio_framework_job::WorkerJobPoll::Idle => match session.try_step_on_worker() {
+                semio_framework_job::WorkerJobPoll::Idle => match session.try_step_on_worker(self.retained) {
                     Ok((ticket, poll)) => {
                         self.ticket = Some(ticket);
                         poll
@@ -671,21 +740,21 @@ impl FrameBuildHandle {
             let mut retire_session = false;
             match poll {
                 semio_framework_job::WorkerJobPoll::Outcome => {
-                    if let Some(ticket) = self.ticket.take() {
+                    if let Some(ticket) = self.ticket {
                         if let Ok(mut owner) = session.take_outcome(ticket) {
-                            if matches!(owner.outcome(), StepOutcome::Yield) {
-                                let _ = owner.take_outcome();
-                                let _ = owner.resume();
-                            } else {
-                                owner.begin_close();
+                            match receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress) {
+                                Ok(Some(JobOutcomeKind::Yield)) => { if owner.resume().is_ok() { self.ticket = None; } }
+                                Ok(None) => {},
+                                _ => { self.ticket = None; owner.begin_close(); },
                             }
                         }
                     }
                 }
                 semio_framework_job::WorkerJobPoll::Terminal => {
                     if let Ok(mut owner) = session.take_terminal() {
+                        if receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress).ok().flatten() != Some(JobOutcomeKind::Complete) { return None; }
                         let frame_generation = owner.job().generation;
-                        let frame = generation_is_fresh(generation, frame_generation).then(|| owner.job_mut().completed.take()).flatten();
+                        let frame = if generation_is_fresh(generation, frame_generation) { owner.job_mut().ok().and_then(|job| job.completed.take()) } else { None };
                         owner.begin_close();
                         presentation = frame;
                     }
@@ -724,7 +793,7 @@ impl FrameBuildHandle {
             if rejected.terminal_is_empty() {
                 self.rejected = None;
             }
-        } else if let Some(session) = self.session.as_ref() {
+        } else if let Some(session) = self.session.as_mut() {
             if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                 let _ = session.begin_close();
                 return false;
@@ -755,7 +824,7 @@ impl FrameBuildHandle {
             }
             return false;
         }
-        if let Some(session) = self.session.as_ref() {
+        if let Some(session) = self.session.as_mut() {
             if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                 let _ = session.begin_close();
                 return false;
@@ -791,3 +860,7 @@ impl FrameBuildHandle {
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "📬️outcome/🧪️tests/🦀️.rs"]
+mod original_outcome_tests;

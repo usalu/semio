@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 📜️ `@semio-tech/framework-graph` task router. */
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -24,4 +25,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-manifest-contract", ManifestContractScript)
   .register("lint", LintScript);
 
-if (import.meta.main) await runScriptMain(router, { defaultCommand: "generate" });
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "generate" }) }));

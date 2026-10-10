@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { resolve } from "node:path";
 import { runRepositoryCargoTests } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -18,9 +19,9 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const { rest } = resolveTestLevel(args);
-    await runRepositoryCargoTests(["semio-repo-test-host"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-repo-test-host"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript);
-await runScriptMain(router, { defaultCommand: "check" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));

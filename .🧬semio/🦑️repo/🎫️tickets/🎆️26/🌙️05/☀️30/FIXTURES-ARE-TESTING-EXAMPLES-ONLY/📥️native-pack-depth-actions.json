@@ -1,0 +1,24 @@
+{
+  "removed": {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf92\ufe0fpack/\ud83d\udd24\ufe0fjson/\ud83d\udce5\ufe0fdecode/\ud83d\udec2\ufe0fpolicy/\ud83d\udccf\ufe0fdepth/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+    "sha256": "6d7abfbe22d28b282a5cbb345dab77470ab308458e1d2d62fd156b7b5db3db27",
+    "reason": "whole trial; duplicate Grant delegated actual existing canonical authority"
+  },
+  "consumer": {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf92\ufe0fpack/\ud83d\udd24\ufe0fjson/\ud83d\udce5\ufe0fdecode/\ud83d\udec2\ufe0fpolicy/\ud83d\udccf\ufe0fdepth/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+    "beforeSha256": "52d3ab074a5ec8f26561fafcfcec8abeb006186045d040f47f4b037d807accde",
+    "afterSha256": "1a5b5ef7e101d99b4807ee164aadafe14a86d8d9874464209896a8fc4c4d08d5",
+    "beforeBlock": "  const require=createRequire(import.meta.url),validate=new(require(\"ajv\"))({strict:true,allErrors:true,allowUnionTypes:true}).compile(schema);\n  expect(validate(fixture)).toBe(true);",
+    "afterBlock": "  const require=createRequire(import.meta.url),ajv=new(require(\"ajv\"))({strict:false,allErrors:true});\n  ajv.addSchema(ordered);ajv.addSchema(contract);\n  const validate=ajv.compile({$ref:contract.$id+\"#/$defs/Grant\"});\n  for(const authority of [fixture.normalAuthority,fixture.retirementAuthority,fixture.turn,fixture.closeTurn])expect(validate(authority)).toBe(true);",
+    "oldImport": "import schema from \"../\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json\";",
+    "newImports": "import contract from \"../../../../../../\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83e\uddec\ufe0fcontract/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json\";\nimport ordered from \"../../../../../../\ud83c\udf31\ufe0fvalue/\ud83d\uddc2\ufe0fordered/\u267b\ufe0fretirement/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json\";"
+  },
+  "plainNativeUnchanged": true,
+  "trueRed": {
+    "session": 36090,
+    "exit": 1,
+    "duration": "884ms",
+    "failure": "physical test authority present; expected false received true"
+  },
+  "outputs": "generated/native-pack-depth-red.log"
+}

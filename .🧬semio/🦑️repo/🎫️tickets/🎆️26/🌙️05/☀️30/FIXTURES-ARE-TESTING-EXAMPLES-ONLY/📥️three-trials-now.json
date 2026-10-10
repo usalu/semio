@@ -1,0 +1,71 @@
+{
+  "observedOnly": true,
+  "execution": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧬️schema/🔣️.json",
+      "sha256": "5515cbf5b99d6639685ee8db0cac6c525755fa191aaf9a3a5b6b002f895c9da5",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🟦️.ts",
+      "sha256": "7c452344cc49b31c4064545f7318ce3bdd23ce836f551225bfe1f4f17790d8f6",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧫️fixtures/🔣️.json",
+      "sha256": "e45f8013836f273cd1d0c240414d8651b300db9c302b67698a74b48089d5f71a",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🦀️.rs",
+      "sha256": "81972ae33462a8872c8dc53174f81fcaef6fb08f002e7bccc5f367baf0e0fef4",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🦀️.rs",
+      "sha256": "6f0629286c773b1c9bca9f3fcef68b922f426856fcc27320cb254631889b027b",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧬️schema/🔣️.json",
+      "sha256": "d856dc67bd90b3fb18848696c00d407f43a308aa3f79413790335e9f58863c8c",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🟦️.ts",
+      "sha256": "b7abc53da326f1205a0f3845453159773b77dba506e9c28e4b27c95e55936b89",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧫️fixtures/🔣️.json",
+      "sha256": "f7d875768c86af4178aeb8fd09bcf80ae7435233f3da47df2685a7be8a5ee037",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🦀️.rs",
+      "sha256": "972182ddbefb97f5c15b6824048b676548d70aaefc924c03139a200b17de49e9",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🟦️.ts",
+      "sha256": "83e5f65f4b4c9ff2b0ec295af6f8b6623feaa2c76d3116dba55de8b8402301ee",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧫️fixtures/🔣️.json",
+      "sha256": "93e7c67e7090272bd615bf1dc410512f9739d25b930ef709ceb0eb49a3f8d845",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🦀️.rs",
+      "sha256": "83800d8fdb4132e74fa8ba8c595554e9b73ecf9db82b94ac3e9f22acd02039ec",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs",
+      "sha256": "9018902d4208677129e97b58824451c94b0f1c81ae0e4fd59ae18b95906512e5",
+      "ownership": false
+    }
+  ]
+}

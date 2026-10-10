@@ -15,7 +15,7 @@ fn command(row: &Value) -> FlowCommand {
         "openSpotlight" => FlowCommand::OpenSpotlight(open_spotlight::OpenSpotlight {}),
         "replaceImage" => FlowCommand::ReplaceImage(replace_image::ReplaceImage { id: text(&fields[0]) }),
         "flowEvalTick" => FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: text(&fields[0]), window_kind_id: text(&fields[1]) }),
-        "flowEvalResolve" => FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: text(&fields[0]), node_hash: fields[1]["value"].as_str().unwrap().parse().unwrap(), output_json: text(&fields[2]) }),
+        "flowEvalResolve" => FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: text(&fields[0]), node_hash: fields[1]["value"].as_str().unwrap().parse().unwrap(), output_json: fields.as_array().unwrap().get(2).map(text) }),
         _ => unreachable!(),
     }
 }

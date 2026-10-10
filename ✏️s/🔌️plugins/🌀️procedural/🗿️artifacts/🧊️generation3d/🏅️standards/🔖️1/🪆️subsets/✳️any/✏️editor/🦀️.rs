@@ -990,7 +990,11 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
             let gestures = owner.gumball.revision();
-            let mut emit = owner.with_session_and_gumball(|session, gumball| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session, gumball))??;
+            let mut emit = if matches!(input.command, Generation3dCommand::Reorganize(_)) {
+                reorganize::apply(input.snapshot, _cx)?
+            } else {
+                owner.with_session_and_gumball(|session, gumball| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session, gumball))??
+            };
             if owner.gumball.revision() != gestures {
                 owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
             } else {

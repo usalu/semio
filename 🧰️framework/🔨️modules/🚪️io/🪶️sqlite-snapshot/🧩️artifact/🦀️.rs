@@ -1,5 +1,7 @@
 //! 🧩️ Relational row controls for explicitly authored artifact projections.
 use super::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind};
+#[path="🫴️receiving/🦀️.rs"]
+pub mod receiving;
 
 /// 📏️ Accumulates an owner's explicit native allocation and encoded output upper bounds.
 pub struct NativeEncodingBound<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, bytes: usize, units: usize, semantic:bool }

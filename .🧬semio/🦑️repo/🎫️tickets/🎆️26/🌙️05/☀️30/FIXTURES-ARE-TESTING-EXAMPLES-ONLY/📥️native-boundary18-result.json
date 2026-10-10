@@ -1,0 +1,38 @@
+{
+  "red": {
+    "session": 62653,
+    "Nx": 1,
+    "duration": "2.7s",
+    "actual": "two original absence guards true vs expected false"
+  },
+  "green": {
+    "session": 68427,
+    "Nx": 0,
+    "duration": "5.2s",
+    "passed": 2,
+    "assertions": 34,
+    "extraDepthAssertions": 612,
+    "log": "🗑️generated/native-boundary18-green.log"
+  },
+  "currentEndpoints": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "763f269ce2b6f7b63a26d7a164a900740b3ad904e02dac625c3d21fbd1df9170"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "3f34599bb52c53adc28df760cb474ff5be6494a6bfa836bd2cefed448b5489e5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧬️schema/🔣️.json",
+      "exists": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧬️schema/🔣️.json",
+      "exists": false
+    }
+  ],
+  "qualification": "Own absence + real canonical per-grant Ajv/SQLite/Buffer/JSON Source semantics only; no whole inventory zero/native credit; all4 recorded plain/native inputs physically unchanged."
+}

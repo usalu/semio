@@ -1,3 +1,4 @@
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
@@ -133,12 +134,11 @@ export class InferenceDiscoveryOracleScript extends BundleScript {
 export class InferenceDiscoveryCheckScript extends BundleScript {
   async run(): Promise<void> {
     await new InferenceDiscoveryOracleScript(this.root,this.repoRoot).run();
-    await runRepositoryExactCargoLaws({ cwd:this.repoRoot, artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs:3_600_000, lawBudgetMs:60_000,
-      groups:[
+    await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, lawMilliseconds: 60_000 }, cwd:this.repoRoot, artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, groups:[
         {package:"semio-s-artifact-gis-gismap",target:{kind:"lib"},cargoArgs:["--features","mcp-service"],laws:["inference_mcp::tests::installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_execution"]},
         {package:"semio-hub-gis",target:{kind:"lib"},laws:["surface_tests::gis_component_assembly_declares_exact_package_identity_before_descriptor_emission"]},
         {package:"semio-hub-gis",target:{kind:"test",name:"native_codecs"},cargoArgs:["--no-default-features"],laws:["gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"]}
-      ],progress(event){console.log("GIS discovery "+event.stage+": "+(event.law??event.package));}});
+      ], progress(event){console.log("GIS discovery "+event.stage+": "+(event.law??event.package));} });
     console.log("gis-inference-discovery-check: exact MCP discovery, composition identity, finite controlled work passed");
   }
 }

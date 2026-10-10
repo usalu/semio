@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "role": "literal-defining-pr3-preimages",
+  "authority": "Exact authored identities checked before GUI, before child and after physical child closure; no self-refresh or whole native acceptance",
+  "pins": [
+    {
+      "role": "defining-source",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts",
+      "sha256": "8dc2c06172875c239ce770d00ef2355447ebb65432a453168fc910b39716e1d8",
+      "bytes": 24003
+    },
+    {
+      "role": "reconcile-production-preimage",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs",
+      "sha256": "4c4d10bfc5aba8ed59a5789d1a39b8bdbe820d66343a3770c458ed8193677666",
+      "bytes": 73623
+    },
+    {
+      "role": "defining-neutral-schema-or-vector",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧬️schema/🔣️.json",
+      "sha256": "7ddca28d7b8756e42009863c00bbc7766a8b6499f7e4fe867ad1601ed9e855b5",
+      "bytes": 9481
+    },
+    {
+      "role": "defining-neutral-schema-or-vector",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧬️schema/🧾️context/🔣️.json",
+      "sha256": "a09b49bd8ea9170ec7a940aafe5a380cd26b380deff969506693300ebed506e0",
+      "bytes": 3809
+    },
+    {
+      "role": "defining-neutral-schema-or-vector",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧫️fixtures/🔣️.json",
+      "sha256": "78ba29e56497c8e438baedf3f241f0d06c83411892df146653b4abff317181b4",
+      "bytes": 54405
+    },
+    {
+      "role": "defining-neutral-schema-or-vector",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧫️fixtures/🧾️context/🔣️.json",
+      "sha256": "0853ddae5cf1964506353eb2515abfe749bb8ab43ec6288e2b33270d68fae4fb",
+      "bytes": 11855
+    },
+    {
+      "role": "authored-owning-input",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/mounted-owner-turn-inputs/portable-current.json",
+      "sha256": "520701a79aa0a06ee118421fea45bb397525369130fb4135bc247e197ae98e91",
+      "bytes": 1586
+    },
+    {
+      "role": "authored-owning-input",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/mounted-owner-turn-inputs/portable-parent-invocation.json",
+      "sha256": "657e1358dc2e3f67a3fe76455a76461316cd7a6bcf057daee547a0db52c0abc9",
+      "bytes": 1236
+    },
+    {
+      "role": "authored-owning-input",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/mounted-owner-turn-inputs/portable-source-observation.json",
+      "sha256": "bb260214a7161d18cab6ead27df642106436792bf958661c90db4fc6d24b0a58",
+      "bytes": 314
+    },
+    {
+      "role": "authored-owning-input",
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/mounted-owner-turn-inputs/portable-current-scope.json",
+      "sha256": "f85ada478ba350ac69b5fb8f382b4a80250f1320bf74259d58f490a8bd85a5ea",
+      "bytes": 1518
+    }
+  ]
+}

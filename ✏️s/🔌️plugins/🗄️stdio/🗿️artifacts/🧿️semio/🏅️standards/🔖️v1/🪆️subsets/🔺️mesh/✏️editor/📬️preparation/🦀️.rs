@@ -794,8 +794,8 @@ fn canonical_object<'a, const N: usize>(mut fields: [(&'a str, app_store::Artifa
 }
 
 impl app_store::ArtifactCanonicalJson for SemioMeshMutation {
-    fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, String> {
-        let SemioMeshMutation::MoveVertex(value) = self else { return Err(format!("{PREFIX}-canonical-mutation")) };
+    fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
+        let SemioMeshMutation::MoveVertex(value) = self else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio-semio-mesh-set-vertex-canonical-mutation")) };
         let point = canonical_object([
             ("x", canonical_scalar(app_store::ArtifactCanonicalJsonNode::F64(value.new_point.x))),
             ("y", canonical_scalar(app_store::ArtifactCanonicalJsonNode::F64(value.new_point.y))),

@@ -1,0 +1,23 @@
+{
+  "ownership": false,
+  "executed": false,
+  "selector": "document-root",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/📤️publication.json",
+      "sha256": "13587ebdd14803f1fe27e5bc3770cfc9c53f88fc0074c6b2efee5e43bf745312"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "sha256": "80e8c6b97b1b58557119cbf300a6718d1e641ef2b4cf929bfd7040932e9f4eb8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "925fce4e84ad57bef01a10f0520225cb6f67f142d38ec739fb44d0051168ceca"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+      "sha256": "1f0f2c81a1154a5f96761cde4da5770b6a232a8db1188522c085162eda3f3624"
+    }
+  ]
+}

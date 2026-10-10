@@ -40,7 +40,7 @@ use semio_framework_actor::{ActorId as RuntimeActorId, Envelope, Lane as ActorLa
 use semio_framework_async::{CancelToken, CapabilityTokenId, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeOwner, TraceId};
 #[cfg(test)]
 use semio_framework_job::CommitCandidate;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
+use semio_framework_job::{JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedPayloadBuilder, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
 use semio_framework_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };
@@ -421,13 +421,14 @@ struct DynRouterEffectJob(Option<Box<dyn InteractiveJob + Send>>);
 impl DynRouterEffectJob {
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let Some(original) = self.0.as_ref() else { return Ok(Default::default()); };
-        if original.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of_val(&self.0), release_bytes: std::mem::size_of_val(&**original), depth: 1, ..Default::default() }); }
+        if original.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(&**original), depth: 1, ..Default::default() }); }
         Ok(semio_framework_value::RetirementDemand { copy_bytes: original.next_close_copy_byte_demand()?, capacity_bytes: original.next_close_capacity_byte_demand(body)?, release_bytes: original.next_close_release_byte_demand()?, depth: original.next_close_depth_demand()?.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "router job wrapper depth overflow"))? })
     }
 }
 
 impl InteractiveJob for DynRouterEffectJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome { self.0.as_mut().expect("original router job remains live").step(cx) }
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError> { self.0.as_mut().expect("original router job remains live").step(cx) }
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError> { self.0.as_ref().expect("original router job remains checked out").borrow_outcome(descriptor) }
     fn begin_close(&mut self) { if let Some(original) = self.0.as_mut() { original.begin_close(); } }
     fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
@@ -459,18 +460,18 @@ impl InteractiveJob for DynRouterEffectJob {
     fn terminal_is_empty(&self) -> bool { self.0.is_none() }
 }
 
-fn router_effect_close_demands(writer: &Option<RetainedJobPayloadWriter>, source: &Option<Vec<u8>>) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+fn router_effect_close_demands(writer: &Option<RetainedPayloadBuilder>, source: &Option<Vec<u8>>) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
     use semio_framework_value::RetirementDemand;
     if let Some(writer) = writer.as_ref() {
-        if writer.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<RetainedJobPayloadWriter>>(), depth: 1, ..Default::default() }); }
+        if writer.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }); }
         let mut demand = writer.retirement_demands()?;
         demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "router writer parent depth overflow"))?;
         return Ok(demand);
     }
-    Ok(source.as_ref().map_or(Default::default(), |source| RetirementDemand { copy_bytes: std::mem::size_of::<Option<Vec<u8>>>(), release_bytes: source.capacity(), depth: 1, ..Default::default() }))
+    Ok(source.as_ref().map_or(Default::default(), |source| RetirementDemand { copy_bytes: 0, release_bytes: source.capacity(), depth: 1, ..Default::default() }))
 }
 
-fn close_router_effect_sources(writer: &mut Option<RetainedJobPayloadWriter>, source: &mut Option<Vec<u8>>, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
+fn close_router_effect_sources(writer: &mut Option<RetainedPayloadBuilder>, source: &mut Option<Vec<u8>>, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
     use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetirementTurnError};
     let result = router_effect_close_demands(writer, source).and_then(|demand| semio_framework_value::advance_retirement_turn(demand, grant, |child| {
         if let Some(original) = writer.as_mut() {
@@ -478,7 +479,7 @@ fn close_router_effect_sources(writer: &mut Option<RetainedJobPayloadWriter>, so
                 *writer = None;
                 return Ok((RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }), false));
             }
-            let step = original.close_step(semio_framework_value::RetainedCloneGrant { maximum_depth: child.maximum_depth - 1, ..child })?;
+            let step = original.close_step_granted(semio_framework_value::RetainedCloneGrant { maximum_depth: child.maximum_depth - 1, ..child })?;
             return Ok((RetainedCloneStep::Progress(step.progress()), false));
         }
         if source.is_some() {
@@ -496,37 +497,39 @@ fn close_router_effect_sources(writer: &mut Option<RetainedJobPayloadWriter>, so
 
 struct FaultRouterEffectJob {
     detail: Option<Vec<u8>>,
-    writer: Option<RetainedJobPayloadWriter>,
+    writer: Option<RetainedPayloadBuilder>,
     cursor: usize,
     closing: bool,
 }
 
 impl InteractiveJob for FaultRouterEffectJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if cx.is_cancelled() || self.closing { return JobOutcomeBorrow::admit_cancelled(cx); }
+        if cx.should_yield() { return Ok(None); }
+        if self.writer.is_none() {
+            let grant = cx.retained_grant();
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+            self.writer = Some(RetainedPayloadBuilder::new(JobPayloadStream::Fault));
+            return Ok(None);
         }
-        if cx.should_yield() {
-            return StepOutcome::Yield;
-        }
-        if self.detail.is_none() {
-            self.detail = Some(b"router effect job polled after completion".to_vec());
-            self.cursor = 0;
-        }
-        let writer = self.writer.get_or_insert_with(|| RetainedJobPayloadWriter::new(JobPayloadStream::Fault));
-        let complete = writer.write_slice_page(cx, self.detail.as_deref().expect("router fault detail"), &mut self.cursor).unwrap_or(false);
-        if !complete {
-            return StepOutcome::Yield;
-        }
-        let writer = self.writer.take().expect("router fault writer");
-        StepOutcome::Fault(JobFault { detail: writer.finish().unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::Fault)) })
+        let writer = self.writer.as_mut().unwrap();
+        if !writer.is_initialized() { writer.advance_initialization(cx)?; return Ok(None); }
+        let source = self.detail.as_deref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect original source custody is absent"))?;
+        if self.cursor < source.len() { writer.append_original(cx, source, &mut self.cursor)?; return Ok(None); }
+        if writer.published().is_none() { writer.seal(cx)?; return Ok(None); }
+        let original = writer.published().unwrap();
+        JobOutcomeBorrow::admit_fault(cx, original)
+    }
+
+    fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        if original.kind() == JobOutcomeKind::Cancelled { return original.cancelled(); }
+        let payload = self.writer.as_ref().and_then(RetainedPayloadBuilder::published).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect descriptor requires its same published original"))?;
+        original.fault(payload)
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
-        if let Some(writer) = self.writer.as_mut() {
-            writer.begin_close();
-        }
     }
 
     fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
@@ -547,34 +550,40 @@ impl InteractiveJob for FaultRouterEffectJob {
 #[cfg(test)]
 struct CompleteRouterEffectJob {
     output: Option<Vec<u8>>,
-    writer: Option<RetainedJobPayloadWriter>,
+    writer: Option<RetainedPayloadBuilder>,
     cursor: usize,
     closing: bool,
 }
 
 #[cfg(test)]
 impl InteractiveJob for CompleteRouterEffectJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if cx.is_cancelled() || self.closing { return JobOutcomeBorrow::admit_cancelled(cx); }
+        if cx.should_yield() { return Ok(None); }
+        if self.writer.is_none() {
+            let grant = cx.retained_grant();
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+            self.writer = Some(RetainedPayloadBuilder::new(JobPayloadStream::CommitOutput));
+            return Ok(None);
         }
-        if cx.should_yield() {
-            return StepOutcome::Yield;
-        }
-        let writer = self.writer.get_or_insert_with(|| RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
-        let complete = writer.write_slice_page(cx, self.output.as_deref().unwrap_or_default(), &mut self.cursor).unwrap_or(false);
-        if !complete {
-            return StepOutcome::Yield;
-        }
-        let writer = self.writer.take().expect("router output writer");
-        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: writer.finish().unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::CommitOutput)) })
+        let writer = self.writer.as_mut().unwrap();
+        if !writer.is_initialized() { writer.advance_initialization(cx)?; return Ok(None); }
+        let source = self.output.as_deref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect original source custody is absent"))?;
+        if self.cursor < source.len() { writer.append_original(cx, source, &mut self.cursor)?; return Ok(None); }
+        if writer.published().is_none() { writer.seal(cx)?; return Ok(None); }
+        let original = writer.published().unwrap();
+        JobOutcomeBorrow::admit_complete(cx, None, Some(original))
+    }
+
+    fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        if original.kind() == JobOutcomeKind::Cancelled { return original.cancelled(); }
+        let payload = self.writer.as_ref().and_then(RetainedPayloadBuilder::published).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect descriptor requires its same published original"))?;
+        original.complete(None, Some(payload))
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
-        if let Some(writer) = self.writer.as_mut() {
-            writer.begin_close();
-        }
     }
 
     fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
@@ -619,22 +628,17 @@ pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, r
     if ctx.cancel.is_cancelled().await {
         return RouterEffectJobOutcome::Cancelled;
     }
-    let outcome = match compute.run_job(runtime, scope, ctx, retained, DynRouterEffectJob(Some(handler.create_job(effect)))).await {
-        Ok(outcome) => outcome,
-        Err(ComputeError::DeadlineExceeded) => return RouterEffectJobOutcome::DeadlineExceeded,
-        Err(ComputeError::WorkerLost) => return RouterEffectJobOutcome::WorkerLost,
-    };
-    let result = match &outcome {
-        StepOutcome::Complete(candidate) => copy_router_effect_payload(&candidate.output).map_or_else(RouterEffectJobOutcome::Fault, RouterEffectJobOutcome::Complete),
-        StepOutcome::Cancelled => RouterEffectJobOutcome::Cancelled,
-        StepOutcome::Fault(fault) => match copy_router_effect_payload(&fault.detail) {
-            Ok(detail) => RouterEffectJobOutcome::Fault(String::from_utf8_lossy(&detail).into_owned()),
-            Err(error) => RouterEffectJobOutcome::Fault(error),
-        },
-        StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => RouterEffectJobOutcome::Fault("router effect compute session returned a nonterminal outcome".to_string()),
-    };
-    compute.retain_outcome_for_close(outcome,retained);
-    result
+    let mut result=None;
+    let completion=compute.run_job(runtime,scope,ctx,retained,DynRouterEffectJob(Some(handler.create_job(effect))),|outcome|{
+        result=Some(match outcome{
+            semio_framework_job::JobOutcomeView::Complete{output:Some(output),..}=>copy_router_effect_payload(output).map_or_else(RouterEffectJobOutcome::Fault,RouterEffectJobOutcome::Complete),
+            semio_framework_job::JobOutcomeView::Complete{output:None,..}=>RouterEffectJobOutcome::Complete(Vec::new()),
+            semio_framework_job::JobOutcomeView::Cancelled{..}=>RouterEffectJobOutcome::Cancelled,
+            semio_framework_job::JobOutcomeView::Fault{detail,..}=>match copy_router_effect_payload(detail){Ok(detail)=>RouterEffectJobOutcome::Fault(String::from_utf8_lossy(&detail).into_owned()),Err(error)=>RouterEffectJobOutcome::Fault(error)},
+            _=>RouterEffectJobOutcome::Fault("router effect compute session returned a nonterminal outcome".to_string()),
+        });
+    }).await;
+    match completion{Ok(())=>result.expect("original terminal recipient inspected one borrowed result"),Err(ComputeError::Cancelled)=>RouterEffectJobOutcome::Cancelled,Err(ComputeError::DeadlineExceeded)=>RouterEffectJobOutcome::DeadlineExceeded,Err(ComputeError::WorkerLost)=>RouterEffectJobOutcome::WorkerLost}
 }
 
 /// 🚧️ Default until a real handler is wired (mirrors `UnwiredHttpTransport`'s own honest-gap

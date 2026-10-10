@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:store:decode-fault-original-outcome:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nativeLaw", "diagnostic", "grantSource", "samePayload", "borrowHeapBytes", "parentDepth"],
+  "properties": {
+    "nativeLaw": {"const": "decode_fault_descriptor_borrows_original_payload_until_paid_nested_close"},
+    "diagnostic": {"const": "field.wallet-after-real-turn"},
+    "grantSource": {"const": "store.decode-release-step-wallet"},
+    "samePayload": {"const": true},
+    "borrowHeapBytes": {"const": 0},
+    "parentDepth": {"const": 1}
+  }
+}

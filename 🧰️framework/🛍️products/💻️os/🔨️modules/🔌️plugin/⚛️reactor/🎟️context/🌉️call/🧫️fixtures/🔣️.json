@@ -1,0 +1,114 @@
+{
+  "contract": "actor.original-guest-call/v1",
+  "operation": 71,
+  "generation": 3,
+  "epochs": [
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "calls": [
+    "admit",
+    "admit",
+    "admit",
+    "admit",
+    "admit",
+    "dispatch"
+  ],
+  "guestPhase": [
+    "pending",
+    "pending",
+    "pending",
+    "pending",
+    "ready",
+    "dispatched"
+  ],
+  "admissionGrant": [
+    1,
+    0,
+    512,
+    512,
+    8
+  ],
+  "bodyGrant": [
+    1,
+    7,
+    512,
+    512,
+    8
+  ],
+  "receiptSpent": [
+    [
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      64,
+      0
+    ],
+    [
+      1,
+      0,
+      128,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      7,
+      0,
+      0
+    ]
+  ],
+  "failureSpent": [
+    1,
+    7,
+    0,
+    0
+  ],
+  "failureKeepsInput": true,
+  "emptyAdmissionInput": true,
+  "sameRoot": true,
+  "samePayloadAuthority": true,
+  "sameExternalRecipient": true,
+  "bindingYields": true,
+  "bindingRemovalYields": true,
+  "guestEntry": {
+    "emptyAdmission": true,
+    "originalInputRequired": true,
+    "failedSpentReturned": [
+      1,
+      7,
+      0,
+      0
+    ],
+    "semanticFaultRetained": true,
+    "paidCloseRequired": true,
+    "noDynamicFailureEncoding": true
+  },
+  "entryOriginalAuthority": [
+    2048,
+    4096,
+    65536,
+    65536,
+    16
+  ]
+}

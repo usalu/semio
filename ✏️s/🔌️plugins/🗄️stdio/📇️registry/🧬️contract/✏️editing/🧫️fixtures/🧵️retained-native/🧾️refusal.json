@@ -1,0 +1,71 @@
+{
+  "producerPaths": [
+    "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+  ],
+  "wireCases": [
+    {
+      "kind": "invalidValue",
+      "message": "original preparation 雪 refusal",
+      "retainedProgress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 32
+      }
+    },
+    {
+      "kind": "canceled",
+      "message": "original preparation 雪 refusal",
+      "retainedProgress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 32
+      }
+    },
+    {
+      "kind": "ownershipLimit",
+      "message": "original preparation 雪 refusal",
+      "retainedProgress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 32
+      }
+    },
+    {
+      "kind": "depthLimit",
+      "message": "original preparation 雪 refusal",
+      "retainedProgress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 32
+      }
+    },
+    {
+      "kind": "invariantViolated",
+      "message": "original preparation 雪 refusal",
+      "retainedProgress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 32
+      }
+    }
+  ],
+  "custody": "originalMutationUntilSemanticAcceptance",
+  "positivePolicy": "callerSuppliedIndependentFiveAxes",
+  "closeGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  }
+}

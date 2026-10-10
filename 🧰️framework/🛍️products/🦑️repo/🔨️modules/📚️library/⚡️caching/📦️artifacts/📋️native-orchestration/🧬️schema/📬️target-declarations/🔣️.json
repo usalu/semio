@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 5,
+  "maxItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "target",
+      "expected",
+      "declaredCommand"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "target": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "options"
+        ],
+        "properties": {
+          "options": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "command"
+            ],
+            "properties": {
+              "command": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "const": "owner-command"
+      },
+      "declaredCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "manifest",
+          "workingDirectory",
+          "program",
+          "arguments"
+        ],
+        "properties": {
+          "kind": {
+            "const": "native-owner-command"
+          },
+          "manifest": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\u0000]+$"
+          },
+          "workingDirectory": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\u0000]+$"
+          },
+          "program": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\u0000]+$"
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 65536
+          }
+        }
+      }
+    }
+  }
+}

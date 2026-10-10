@@ -1,0 +1,217 @@
+{
+  "schema": "semio.value.native-turn-authority.v1",
+  "nativeWordBits": [
+    32,
+    64
+  ],
+  "cases": [
+    {
+      "id": "whole-finite-normal",
+      "receiving": false,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": 32,
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": 32,
+        "maximumAfterBytes": 32,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "whole-finite-address-space",
+      "receiving": false,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": "addressSpace",
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": 32,
+        "maximumAfterBytes": 32,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "whole-address-space",
+      "receiving": false,
+      "initialMaximumBytes": "addressSpace",
+      "ownedBytes": 1,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": "addressSpace",
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": "addressSpace",
+        "maximumAfterBytes": "addressSpace",
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "whole-zero-turn",
+      "receiving": false,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": 0,
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": 4,
+        "maximumAfterBytes": 4,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "whole-small-turn",
+      "receiving": false,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": 3,
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": 7,
+        "maximumAfterBytes": 7,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "retained-address-space-refused",
+      "receiving": true,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": "addressSpace",
+      "expected": {
+        "outcome": "limit",
+        "maximumDuringBytes": 32,
+        "maximumAfterBytes": 32,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "retained-unsigned-refused",
+      "receiving": true,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": "unsignedMaximum",
+      "expected": {
+        "outcome": "limit",
+        "maximumDuringBytes": 32,
+        "maximumAfterBytes": 32,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "retained-scoped-address-space",
+      "receiving": true,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": 32,
+      "turnCapacityBytes": "addressSpace",
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": 32,
+        "maximumAfterBytes": 32,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "whole-unbounded-unsigned-ceiling",
+      "receiving": false,
+      "initialMaximumBytes": "unsignedMaximum",
+      "ownedBytes": 1,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": "unsignedMaximum",
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": "addressSpace",
+        "maximumAfterBytes": "addressSpace",
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "retained-scoped-unsigned",
+      "receiving": true,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": 32,
+      "turnCapacityBytes": "unsignedMaximum",
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": 32,
+        "maximumAfterBytes": 32,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "whole-finite-unsigned",
+      "receiving": false,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": "unsignedMaximum",
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": 32,
+        "maximumAfterBytes": 32,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "retained-scoped-zero-turn",
+      "receiving": true,
+      "initialMaximumBytes": 32,
+      "ownedBytes": 4,
+      "scopeMaximumBytes": 32,
+      "turnCapacityBytes": 0,
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": 4,
+        "maximumAfterBytes": 32,
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    },
+    {
+      "id": "whole-native-json-default",
+      "receiving": false,
+      "initialMaximumBytes": "unsignedMaximum",
+      "ownedBytes": 4,
+      "scopeMaximumBytes": null,
+      "turnCapacityBytes": "addressSpace",
+      "expected": {
+        "outcome": "complete",
+        "maximumDuringBytes": "addressSpace",
+        "maximumAfterBytes": "addressSpace",
+        "heapBornBytes": 0,
+        "heapReleasedBytes": 0,
+        "observerCalls": 0
+      }
+    }
+  ]
+}

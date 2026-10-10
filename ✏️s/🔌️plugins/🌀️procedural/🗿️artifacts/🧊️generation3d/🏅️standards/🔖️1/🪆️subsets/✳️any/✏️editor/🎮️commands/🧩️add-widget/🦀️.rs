@@ -86,7 +86,7 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation3dSnapshot>,
     }
     with_host(host_snapshot, |host| {
         let mut editor = GraphEditor::new(host);
-        let id = editor.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).map_err(creation_fault)?;
+        let id = editor.add_widget_json(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).map_err(creation_fault)?;
         let size = editor.size_of(&id).ok_or_else(|| creation_fault("created widget has no rendered node"))?;
         let occupied = editor.occupied(&id);
         let [x, y] = automatic_position(payload.x, payload.y, size, &occupied);

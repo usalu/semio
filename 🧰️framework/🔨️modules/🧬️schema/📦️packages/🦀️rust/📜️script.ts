@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -71,4 +72,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript);
 
-if (import.meta.main) await runScriptMain(router, { defaultCommand: "generate" });
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "generate" }) }));

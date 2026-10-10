@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/📤️publication.json",
+      "action": "removed",
+      "beforeSha256": "13587ebdd14803f1fe27e5bc3770cfc9c53f88fc0074c6b2efee5e43bf745312",
+      "exclusive": false,
+      "scope": "Exclusive whole original OptionString publication trial Schema only"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

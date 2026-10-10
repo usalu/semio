@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { loadDevContribution, resolveDevContributionFile } from "../🧩️contribution/📥️loading/🟦️.ts";
 import { frameworkOsLockedPrefsEnv } from "../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
 import { readFileSync } from "node:fs";
@@ -40,4 +41,4 @@ class BuildScript extends Script {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(import.meta.dir).register("build", BuildScript).register("inputs", InputsScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("build", BuildScript).register("inputs", InputsScript)).run(process.argv.slice(2), original));

@@ -1,0 +1,9 @@
+# Current Pack Container-Depth Trial Retirement
+
+The physical JSON root required test configuration and exactly seven cases with source, expected outcome and refusal position. Its only nested grant definition duplicated the genuine five-axis Value Grant, and a bounded authored-source reference census found no production consumer of its identifier. The real JsonReadPolicy/limits and native operation contracts remain untouched; no test authority was moved or renamed.
+
+Only this whole-trial schema was removed and the original TS import/whole-fixture Ajv compile was replaced with per-value canonical Value Grant admission for the four actual plain authorities. The absence guard is over the original repository path. Original JSON.parse and SQLite recursive json_tree depth/refusal-position checks remain; the independent older read-limit vectors also remain. Original plain input and Rust native test hashes are unchanged, and no held Rust or Publication borrowed Pack codec block was modified.
+
+True original-source RED36090 is Nx1/884ms: expected physical schema absent, received present. After narrow guarded retirement, GREEN86395 is Nx0/1.1s: one actual source law35 assertions plus original depth law612. DEBUG confirms canonical per-grant admission and independent relational JSON tree. Native System/Serde/cancellation tests were not executed in this cut. Local physical absence is established; Root owns the renewed actual generic full inventory, so this report does not claim whole-repository schema or runtime closure.
+
+Fresh schema/consumer preimages are hashes and narrow admission actions in native-pack-depth-before.json and native-pack-depth-actions.json. Current retained result is native-pack-depth-result.json. All paths were checked under256 characters; no checked-in Source file was copied into the ticket.

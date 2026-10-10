@@ -41,23 +41,39 @@ pub const FLOW_MAX_EVENTS_IN_FLIGHT: usize = 64;
 pub const FLOW_MAX_WORK_UNITS: usize = 64;
 pub const FLOW_DEADLINE_MILLISECONDS: u64 = 8;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum FlowFailureCause {
+    Message(String),
+    Value(semio_framework_value::ValueError),
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub struct FlowFailure {
     pub code: AbiErrorCode,
-    pub message: String,
+    pub cause: FlowFailureCause,
     pub retained_progress:semio_framework_value::retained_clone::RetainedCloneProgress,
 }
 
 impl FlowFailure {
     pub fn new(code: AbiErrorCode, message: impl Into<String>) -> Self {
-        Self { code, message: message.into(),retained_progress:Default::default() }
+        Self { code, cause:FlowFailureCause::Message(message.into()),retained_progress:Default::default() }
     }
+    /// 📥️ Moves the complete original refusal across the Flow boundary without copying its prose.
+    pub fn from_value(code:AbiErrorCode,error:semio_framework_value::ValueError)->Self{let retained_progress=error.retained_progress();Self{code,cause:FlowFailureCause::Value(error),retained_progress}}
+    /// 🔤️ Borrows the original cause when preparing its external reply.
+    pub fn message(&self)->&str{match &self.cause{FlowFailureCause::Message(message)=>message,FlowFailureCause::Value(error)=>&error.message}}
     /// 🧾️ Preserves actual retained effects when a native refusal crosses the original Flow boundary.
     pub fn with_retained_progress(mut self,progress:semio_framework_value::retained_clone::RetainedCloneProgress)->Self{self.retained_progress=progress;self}
 
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+impl semio_framework_value::retirement::RetireOwned for FlowFailure {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self.cause{FlowFailureCause::Message(message)=>message.retirement(),FlowFailureCause::Value(error)=>error.retirement()}}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;match &self.cause{FlowFailureCause::Message(message)=>message.retirement_birth_bytes(),FlowFailureCause::Value(error)=>error.retirement_birth_bytes()}}
+    fn controlled_retirement_supported()->bool{true}
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub enum FlowFeatureStep {
     Yield,
     Progress { completed: u64, total: u64 },
@@ -530,8 +546,9 @@ impl<D: FlowDomain> FlowBridge<D> {
                         event = Some((operation.request_id, operation.generation, FLOW_EVENT_OUTPUT, AbiStatus::OK, body.finish(), false));
                     }
                     FlowFeatureStep::Failed(failure) => {
+                        self.retained_progress = failure.retained_progress;
                         event = Some(terminal_event(operation.request_id, operation.generation, handle, AbiStatusCode::Failed, failure.code));
-                        reply = Some(failure_reply(operation.request_id, operation.generation, AbiStatusCode::Failed, failure.code, &failure.message));
+                        reply = Some(failure_reply(operation.request_id, operation.generation, AbiStatusCode::Failed, failure.code, failure.message()));
                         retain = false;
                     }
                     FlowFeatureStep::Complete(output) if output.len() > FLOW_MAX_OUTPUT_BYTES => {

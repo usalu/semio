@@ -64,6 +64,7 @@ pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSna
 /// refresh cadence — 2015 `transient read registry is busy or exhausted` lines in ~3 s, measured on
 /// :6016 (ticket 26/09/18 §5.3).
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FlowEvalTick {
     pub window_id: String,
     pub window_kind_id: String,
@@ -80,7 +81,7 @@ pub struct FlowEvalTick {
 pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Emit<FlowMutation, NoConfigMutation> {
     session.begin_window_tick(window_id);
     let mut host = host_from_snapshot(snapshot, config, session);
-    let more = session.tick(&mut host, None);
+    let more = session.tick_cold(&mut host, None);
     let parked = host.take_pending_extension_evals();
     let servable = may_rearm(&host.host_snapshot);
     let mut dependencies: std::collections::BTreeMap<_, _> = parked.iter().filter(|pending|!session.has_evaluation_progress(pending.node_hash)).map(|pending| (pending.neuron_id.clone(), flow::flow_inference_dependency_json(&host.host_snapshot, &pending.neuron_id))).collect();
@@ -91,17 +92,13 @@ pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig
     // construction, so the whole dependency level crosses to its plugin on this one tick.
     for pending in parked {
         let resume=session.has_evaluation_progress(pending.node_hash);
-        let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
-            ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
-            ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{pending.input_json})),
-            ("dependencyJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{dependencies.remove(&pending.neuron_id).unwrap()})),
-            ("operatorVersion".to_string(), semio_framework_value::DslValue::String(format!("registry:{};geometry:1;policy:1", flow::flow_extension_registry_generation()))),
-            ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
-            ("resume".to_string(),semio_framework_value::DslValue::Bool(resume)),
-            ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
-            ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
-        ]));
-        extension_invocations.push(ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve"));
+        let hash=pending.node_hash;
+        if session.invocation_origin_cold(window_id,hash).is_none(){
+            let dependency_json=dependencies.remove(&pending.neuron_id).expect("initial invocation owns its original dependency source");
+            session.retain_invocation_origin_cold(flow::host::FlowInvocationOriginLease::from_cold(flow::host::FlowInvocationOrigin{window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:hash,input_json:pending.input_json,dependency_json,operator_version:format!("registry:{};geometry:1;policy:1",flow::flow_extension_registry_generation()),outer_node_hash:None}));
+        }
+        let origin=session.invocation_origin_cold(window_id,hash).expect("invocation source is retained before dispatch");
+        extension_invocations.push(ExtensionInvocation::new(origin.extension_id.clone(),"evaluate",origin.request_json_cold(resume),"flowEvalResolve"));
     }
     session.note_window_tick_outcome(window_id, more || !extension_invocations.is_empty());
     let effects = if !extension_invocations.is_empty() {

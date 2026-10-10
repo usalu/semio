@@ -7,6 +7,7 @@ import {readFileSync} from "node:fs";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {cargoPreparationInputV1,cargoPreparationSourceRootV1,cargoPreparationProgramRootV1,type CargoPreparationInputV1,type CargoPreparationResolutionV1} from "./🧾️custody/🟦️.ts";
 import {acquireQueuedResourceLease} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {receiveScriptProcessInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {Script,ScriptRouter} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import {getWorkspaceRoot} from "../../🟦️.ts";
 import {cargoWorkspaceForManifest,prepareCargoOwners,publishCargoWorkspaceMembership,logCargoPreparationDiagnosticV1} from "../🟦️.ts";
@@ -59,5 +60,5 @@ if(import.meta.main){
   if(process.argv.length!==3)throw Error("resolve-program accepts only its owned input stream");
   const edges=JSON.parse(await Bun.stdin.text());if(!Array.isArray(edges)||edges.some(edge=>typeof edge.source!=="string"||typeof edge.specifier!=="string"))throw Error("Invalid program resolution request");
   console.log(JSON.stringify(edges.map(edge=>Bun.resolveSync(edge.specifier,dirname(edge.source)))));
- }else await new ScriptRouter(getWorkspaceRoot()).register("prepare",PreparationScript).register("synchronize",SynchronizeScript).run(process.argv.slice(2));
+ }else await receiveScriptProcessInvocation(process.env,original=>new ScriptRouter(getWorkspaceRoot()).register("prepare",PreparationScript).register("synchronize",SynchronizeScript).run(process.argv.slice(2),original));
 }

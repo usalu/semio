@@ -40,5 +40,32 @@
     "maximumCapacityBytes": 4096,
     "maximumReleaseBytes": 4096,
     "maximumDepth": 4
-  }
+  },
+  "sourceBatches": [
+    {
+      "rows": [
+        "unicode"
+      ],
+      "expected": [
+        "unicode"
+      ]
+    },
+    {
+      "rows": [],
+      "expected": [
+        "unicode"
+      ]
+    },
+    {
+      "rows": [
+        "empty",
+        "unicode"
+      ],
+      "expected": [
+        "unicode",
+        "empty",
+        "unicode"
+      ]
+    }
+  ]
 }

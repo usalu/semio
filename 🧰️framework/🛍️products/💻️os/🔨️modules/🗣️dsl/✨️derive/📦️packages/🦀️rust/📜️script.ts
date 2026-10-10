@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** ✨️ `@semio-tech/dsl-derive-rs` router: `bun ./📜️script.ts test`. */
 import Ajv from "ajv";
@@ -75,7 +76,7 @@ class CheckGeneratedScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -95,4 +96,4 @@ class SourceAuthorityTestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("test", TestScript).register("test-exports", ExportTestScript).register("test-exports-source", ExportSourceTestScript).register("test-source-authority-source", SourceAuthorityTestScript);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { join } from "node:path";
@@ -7,6 +8,7 @@ import { getWorkspaceRoot, runBunx, runVitest } from "../../../🦑️repo/🔨�
 import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import {advanceScriptInvocation,scriptInvocationBudget} from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
 
 /** 🧱️ Replays pure service admission and explicit wire ownership with strict source and independent runtime witnesses. */
@@ -42,6 +44,17 @@ class SceneWireSourceScript extends BundleScript {
     if(segments.length)throw Error("test-scene-wire-source accepts no arguments");
     await runOwnedCommand(process.execPath,["test",join(this.root,"../../🧪️tests/📡️scene-wire/🟦️.ts")],this.repoRoot,"os-scene-wire",TEST_LEVEL_BUDGET_MS.long);
   }
+}
+
+/** 🧮️ Runs every original semantic Pack fixture assertion at its actual OS codec owner. */
+class PackWireMaterializationSourceScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-pack-wire-materialization-source accepts no arguments");
+  if(this.invocation.policy.maximumElapsedMilliseconds<=0)throw Error("Finite Pack wire parent authority required");
+  await advanceScriptInvocation(this.invocation,"os-pack-wire-materialization","running");
+  await runOwnedCommand(process.execPath,["test",join(this.root,"../../🧪️tests/🎒️pack-wire-materialization/🟦️.ts")],this.repoRoot,"os-pack-wire-materialization",scriptInvocationBudget(this.invocation,TEST_LEVEL_BUDGET_MS.fundamental),{signal:this.invocation.control.signal});
+  await advanceScriptInvocation(this.invocation,"os-pack-wire-materialization","complete");
+ }
 }
 
 /** 🏪️ Runs the store's language-neutral history oracles (supersede replay, tool transaction, deferred reprojection, viewer head, supersede law) under `bun:test`. */
@@ -200,7 +213,7 @@ class DocumentOpeningAttemptCheckScript extends BundleScript {
 class MutationVerbVocabularyCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { checkMutationVerbVocabulary } = await import("../../🔨️modules/📡️spr/🎮️command/🧪️tests/🗣️verb-vocabulary/🟦️.ts");
-    await checkMutationVerbVocabulary(this.repoRoot, segments);
+    await checkMutationVerbVocabulary(this.invocation, this.repoRoot, segments);
   }
 }
 
@@ -214,6 +227,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("test-media-transport", MediaTransportTestScript)
   .register("test-scene-wire-source",SceneWireSourceScript)
+  .register("test-pack-wire-materialization-source",PackWireMaterializationSourceScript)
   .register("test-store-oracles", StoreOraclesTestScript)
   .register("test-channel-oracles", ChannelOraclesTestScript)
   .register("typecheck", TypecheckScript)
@@ -226,4 +240,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("document-opening-attempt-check", DocumentOpeningAttemptCheckScript)
 ;
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

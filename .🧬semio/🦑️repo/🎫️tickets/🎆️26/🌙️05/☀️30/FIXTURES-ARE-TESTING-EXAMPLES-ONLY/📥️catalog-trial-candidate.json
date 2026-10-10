@@ -1,0 +1,16 @@
+{
+  "ownership": false,
+  "executed": false,
+  "selector": "#/$defs/ActorDocumentPortFixtureV1",
+  "definitionSha256": "4f8b1c59451aecc9ed5dc92ff59bd4f64b13a1055542e831a73f7d9fb93c422d",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+      "sha256": "646c3a976af7d84a278325ea7ae9217e02eabcb49718faacde2df44c27260b24"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📡️actor-backbone/🟦️.ts",
+      "sha256": "18bcdab536fc8dc2dcebab3b3c20ccac20b469abfa3641742ad0905581c4d9e8"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🎨️ `@semio-tech/framework-renderer-react` task router. */
 import { readFileSync } from "node:fs";
@@ -977,4 +978,4 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("document-opening-scope-check", DocumentOpeningScopeCheckScript)
   .register("view-state-carriage-check", ViewStateCarriageCheckScript);
 
-if (import.meta.main) await runScriptMain(router);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

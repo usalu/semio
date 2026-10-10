@@ -16,6 +16,7 @@ use serde_json::json;
 /// row carries (operator kind, slider label, action, export format) and the world position it lands at. The owner mints
 /// the widget id.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct AddWidget {
     pub kind: String,
     pub neuron_kind: Option<String>,

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -13,8 +14,20 @@ import { CheckAxesScript, GenerateAxesScript, PreviewGeneratedScript } from "../
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "mounted-admission-native") {
+      if (segments.length !== 1) throw Error("Expected test mounted-admission-native");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", "--offline", "-E", "test(original_layout_admission_params_cancel_and_full_error_close_with_system_receipts)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env));
+      return;
+    }
+    if (segments[0] === "mounted-admission") {
+      if (segments.length !== 1) throw Error("Expected test mounted-admission");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
+      return;
+    }
     if (segments[0] === "wgpu-engine") {
-      await new ScriptRouter(this.root, this.repoRoot).register("wgpu-engine", TestWgpuEngineScript).run(segments);
+      await (new ScriptRouter(this.root, this.repoRoot).register("wgpu-engine", TestWgpuEngineScript)).run(segments, this.invocation);
       return;
     }
     if (segments[0] === "worker-retirement") {
@@ -101,7 +114,7 @@ class CheckCommandTypesScript extends BundleScript {
 
 class CheckWgpuEngineScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await new ScriptRouter(this.root, this.repoRoot).register("wasm", CheckWgpuEngineWasmScript).run(segments);
+    await (new ScriptRouter(this.root, this.repoRoot).register("wasm", CheckWgpuEngineWasmScript)).run(segments, this.invocation);
   }
 }
 
@@ -111,7 +124,7 @@ class CheckScript extends BundleScript {
       await new CheckAxesScript(this.root, this.repoRoot).run();
       return;
     }
-    await new ScriptRouter(this.root, this.repoRoot).register("wasm", CheckWasmScript).register("wgpu-engine", CheckWgpuEngineScript).register("commands", CheckCommandTypesScript).run(segments);
+    await (new ScriptRouter(this.root, this.repoRoot).register("wasm", CheckWasmScript).register("wgpu-engine", CheckWgpuEngineScript).register("commands", CheckCommandTypesScript)).run(segments, this.invocation);
   }
 }
 
@@ -120,4 +133,4 @@ export function createUiNativeRouter(root = import.meta.dir, repoRoot?: string):
   return new ScriptRouter(root, repoRoot).register("generate", GenerateAxesScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript);
 }
 
-if (import.meta.main) await runScriptMain(createUiNativeRouter());
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(createUiNativeRouter(), { invocation: original }));

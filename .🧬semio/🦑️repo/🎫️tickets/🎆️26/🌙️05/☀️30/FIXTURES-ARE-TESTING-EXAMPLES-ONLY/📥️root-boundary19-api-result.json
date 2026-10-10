@@ -1,0 +1,41 @@
+{
+  "session": 95956,
+  "naturalExitCode": 1,
+  "modules": 4798,
+  "scopes": 3760,
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🧬️schema/🔣️.json",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/📓️print/🚪️io/🧫️fixtures/🏛️ownership/🧬️schema/🔣️.json",
+      "detail": "🧰️framework/🛍️products/📓️print/🚪️io/🧫️fixtures/🏛️ownership/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+    }
+  ],
+  "sharedCodeTable": 46,
+  "unshared": [],
+  "qualification": "Original complete current inventory API and exact original fixture-boundary filter/order/table, independent private Nx acquisition. Canonical command/native registry/runtime/publication not proved."
+}

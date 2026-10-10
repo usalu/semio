@@ -1,0 +1,85 @@
+{
+  "cases": [
+    {
+      "id": "original-routing-owner",
+      "value": {
+        "version": 1,
+        "owner": "routing-original-receiver",
+        "maximumElapsedMilliseconds": 15000
+      },
+      "accepted": true
+    },
+    {
+      "id": "absent-owner",
+      "value": {
+        "version": 1,
+        "maximumElapsedMilliseconds": 15000
+      },
+      "accepted": false
+    },
+    {
+      "id": "absent-deadline",
+      "value": {
+        "version": 1,
+        "owner": "routing-original-receiver"
+      },
+      "accepted": false
+    },
+    {
+      "id": "original-no-deadline",
+      "value": {
+        "version": 1,
+        "owner": "routing-original-receiver",
+        "maximumElapsedMilliseconds": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "fractional-deadline",
+      "value": {
+        "version": 1,
+        "owner": "routing-original-receiver",
+        "maximumElapsedMilliseconds": 1.5
+      },
+      "accepted": false
+    },
+    {
+      "id": "empty-owner",
+      "value": {
+        "version": 1,
+        "owner": "",
+        "maximumElapsedMilliseconds": 15000
+      },
+      "accepted": false
+    },
+    {
+      "id": "unowned-extension",
+      "value": {
+        "version": 1,
+        "owner": "routing-original-receiver",
+        "maximumElapsedMilliseconds": 15000,
+        "grant": 1
+      },
+      "accepted": false
+    }
+  ],
+  "loadingCases": [
+    {
+      "id": "original-authority-reaches-lazy-loader",
+      "cancelAtLoad": false,
+      "trace": [
+        "load",
+        "run"
+      ],
+      "rejected": false
+    },
+    {
+      "id": "lazy-loader-cancellation-prevents-command-acquisition",
+      "cancelAtLoad": true,
+      "trace": [
+        "load"
+      ],
+      "rejected": true
+    }
+  ]
+}

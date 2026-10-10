@@ -95,7 +95,7 @@ fn mounted_receipt_bytes_cancel_every_original_growth_frontier_without_hidden_re
 struct MountedReceiptJsonString<'a>(&'a str);
 
 impl store::ArtifactCanonicalJson for MountedReceiptJsonString<'_> {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, String> { if path.is_empty() { Ok(store::ArtifactCanonicalJsonNode::String(self.0)) } else { Err("mounted receipt fixture has only its original string root".into()) } }
+    fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> { if path.is_empty() { Ok(store::ArtifactCanonicalJsonNode::String(self.0)) } else { Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "mounted receipt fixture has only its original string root")) } }
 }
 
 #[test]

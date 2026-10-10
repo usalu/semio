@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "original",
+    "steps",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.job.original-descriptor-ack.v1"
+    },
+    "original": {
+      "const": "same-native-descriptor-and-presence-slot"
+    },
+    "steps": {
+      "const": [
+        {
+          "kind": "acknowledge",
+          "copyBytes": 0,
+          "items": 1,
+          "releaseBytes": 0
+        },
+        {
+          "kind": "remove-terminal-in-place",
+          "copyBytes": 0,
+          "items": 1,
+          "releaseBytes": 0
+        }
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "grant",
+          "admitted"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "zero-items",
+              "zero-copy",
+              "zero-depth",
+              "funded"
+            ]
+          },
+          "grant": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

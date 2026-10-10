@@ -193,6 +193,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
                 return Ok(RetainedCloneStep::Progress(progress));
             }
             RetirementStep::Child(child) => { self.cursors.push_reserved(child).map_err(|_| refusal("retirement child lost its admitted frontier slot"))?; (0, 0, true) }
+            RetirementStep::ChildProgress(child,progress)=>{self.step_progress=progress;self.cursors.push_reserved(child).map_err(|_|refusal("original child lost its admitted frontier slot"))?;if !progress.fits(cursor_grant)||progress.copied_items!=1||progress.retained_capacity_bytes!=birth{return Err(refusal("original child receipt differs from its admitted physical transfer"));}return Ok(RetainedCloneStep::Progress(progress));}
             RetirementStep::Advanced => (0, 0, true),
             RetirementStep::Failure(error) => return Err(error),
             RetirementStep::Bytes(bytes) if bytes <= grant.maximum_release_bytes => (0, bytes, true),

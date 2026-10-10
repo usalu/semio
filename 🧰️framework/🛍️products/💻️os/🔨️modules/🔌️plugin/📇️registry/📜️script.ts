@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -64,4 +65,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-playground-default-contract", PlaygroundDefaultContractTestScript)
   .registerLazy("new", async () => (await import("./🌳️surface-scaffold/🟦️.ts")).NewScript)
   .registerLazy("surface-schema", async () => (await import("./🧬️surface-schema/🟦️.ts")).SurfaceSchemaScript);
-if (import.meta.main) await runScriptMain(router, { defaultCommand: "generate" });
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "generate" }) }));

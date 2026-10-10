@@ -300,8 +300,9 @@ impl Drop for FlowWorkingScene {
 impl FlowWorkingScene {
     /// 🚚️ Moves the three owned parts out for a caller that transfers them onward, leaving this
     /// scene's own root empty so its retiring [`Drop`] has nothing left to close.
-    pub fn into_parts(mut self) -> (Vec<Widget>, Vec<SynapseSpec>, flow::OrderedMap<WidgetLayout>) {
-        (std::mem::take(&mut self.widgets), std::mem::take(&mut self.synapses), std::mem::take(&mut self.layout))
+    pub fn into_parts(self) -> (Vec<Widget>, Vec<SynapseSpec>, flow::OrderedMap<WidgetLayout>) {
+        let original=std::mem::ManuallyDrop::new(self);
+        unsafe{(std::ptr::read(&original.widgets),std::ptr::read(&original.synapses),std::ptr::read(&original.layout))}
     }
 }
 

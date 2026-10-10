@@ -1,0 +1,20 @@
+{
+  "name": "🧪️Artifact IO Services Whole Native Receiving",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/os-services-rs:test-long --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"services.compute.original-whole-native\",\"maximumElapsedMilliseconds\":900000}",
+    "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/os-services-rs:test-long\",\"--skip-nx-cache\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/target\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":900000},\"network\":{\"offline\":false}},\"selection\":[\"nx\",\"run\",\"@semio-tech/os-services-rs:test-long\",\"--skip-nx-cache\"]}",
+    "SEMIO_BUILD_BUDGET_MS": "0",
+    "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/🗑️generated/services-native",
+    "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "CARGO_NET_OFFLINE": "false"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.05865995
+  }
+}

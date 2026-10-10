@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/nested-io.ts",
+      "action": "updated",
+      "beforeSha256": "00b2e02f2a6393f89cbf81d928f08870188fa55d707acf498383c5c3e7721a4d",
+      "afterSha256": "77748b7e134d846dabd405ef844715ec806d1f523ed8001e7e3dec13e89393e4",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

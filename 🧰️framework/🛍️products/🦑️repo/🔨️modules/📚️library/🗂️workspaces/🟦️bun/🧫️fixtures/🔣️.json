@@ -111,5 +111,482 @@
       ],
       "productValid": true
     }
-  ]
+  ],
+  "collections": {
+    "cases": [
+      {
+        "path": "framework/🧫️fixtures/direct",
+        "selected": false
+      },
+      {
+        "path": "framework/🔨️modules/🧫️fixtures/domain",
+        "selected": true
+      },
+      {
+        "path": "framework/🔨️modules/🧫️fixtures/nested/🧫️examples/example",
+        "selected": false
+      },
+      {
+        "path": "framework/🧫️examples/direct",
+        "selected": false
+      },
+      {
+        "path": "framework/🔨️modules/🧫️examples/domain",
+        "selected": true
+      },
+      {
+        "path": "framework/🔨️modules/🧫️examples/nested/🧪️fixtures/example",
+        "selected": false
+      },
+      {
+        "path": "framework/🧪️fixtures/direct",
+        "selected": false
+      },
+      {
+        "path": "framework/🔨️modules/🧪️fixtures/domain",
+        "selected": true
+      },
+      {
+        "path": "framework/🔨️modules/🧪️fixtures/nested/🧪️examples/example",
+        "selected": false
+      },
+      {
+        "path": "framework/🧪️examples/direct",
+        "selected": false
+      },
+      {
+        "path": "framework/🔨️modules/🧪️examples/domain",
+        "selected": true
+      },
+      {
+        "path": "framework/🔨️modules/🧪️examples/nested/🧫️fixtures/example",
+        "selected": false
+      },
+      {
+        "path": "framework/📐️owner[1]/🧫️examples/sample",
+        "selected": false
+      },
+      {
+        "path": "framework/🔧️modules/🧪️fixtures/sample",
+        "selected": false
+      },
+      {
+        "path": "framework/📐️owner[1]/🔨️modules/🧪️examples/domain",
+        "selected": true
+      },
+      {
+        "path": "framework/examples/domain",
+        "selected": true
+      },
+      {
+        "path": "framework/Fixture/domain",
+        "selected": true
+      }
+    ],
+    "owners": [
+      {
+        "name": "🧫️fixtures",
+        "selected": false
+      },
+      {
+        "name": "🧫️examples",
+        "selected": false
+      },
+      {
+        "name": "🧪️fixtures",
+        "selected": false
+      },
+      {
+        "name": "🧪️examples",
+        "selected": false
+      },
+      {
+        "name": "examples",
+        "selected": true
+      },
+      {
+        "name": "Fixture",
+        "selected": true
+      }
+    ]
+  },
+  "external": [
+    {
+      "name": "zero-depth original owner",
+      "members": [
+        "../source/**",
+        "local/**"
+      ],
+      "cases": [
+        {
+          "path": "source",
+          "selected": true
+        },
+        {
+          "path": "source/kernel",
+          "selected": true
+        },
+        {
+          "path": "product/local/app",
+          "selected": true
+        }
+      ],
+      "nativeMembers": [
+        "../source",
+        "../source/kernel",
+        "local/app"
+      ]
+    },
+    {
+      "name": "opaque outside source and collections",
+      "members": [
+        "../source/**",
+        "local/**",
+        "!**/node_modules/**",
+        "!**/target/**"
+      ],
+      "cases": [
+        {
+          "path": "source/kernel",
+          "selected": true
+        },
+        {
+          "path": "product/local/app",
+          "selected": true
+        },
+        {
+          "path": "source/node_modules/vendor",
+          "selected": false
+        },
+        {
+          "path": "source/target/generated",
+          "selected": false
+        },
+        {
+          "path": "source/🧫️fixtures/direct",
+          "selected": false
+        },
+        {
+          "path": "source/🔨️modules/🧫️fixtures/domain",
+          "selected": true
+        },
+        {
+          "path": "source/🔨️modules/🧫️fixtures/nested/🧫️examples/example",
+          "selected": false
+        },
+        {
+          "path": "source/🧫️examples/direct",
+          "selected": false
+        },
+        {
+          "path": "source/🔨️modules/🧫️examples/domain",
+          "selected": true
+        },
+        {
+          "path": "source/🔨️modules/🧫️examples/nested/🧪️fixtures/example",
+          "selected": false
+        },
+        {
+          "path": "source/🧪️fixtures/direct",
+          "selected": false
+        },
+        {
+          "path": "source/🔨️modules/🧪️fixtures/domain",
+          "selected": true
+        },
+        {
+          "path": "source/🔨️modules/🧪️fixtures/nested/🧪️examples/example",
+          "selected": false
+        },
+        {
+          "path": "source/🧪️examples/direct",
+          "selected": false
+        },
+        {
+          "path": "source/🔨️modules/🧪️examples/domain",
+          "selected": true
+        },
+        {
+          "path": "source/🔨️modules/🧪️examples/nested/🧫️fixtures/example",
+          "selected": false
+        },
+        {
+          "path": "source/📐️owner[1]/🧫️examples/sample",
+          "selected": false
+        },
+        {
+          "path": "source/🔧️modules/🧪️fixtures/sample",
+          "selected": false
+        },
+        {
+          "path": "source/📐️owner[1]/🔨️modules/🧪️examples/domain",
+          "selected": true
+        },
+        {
+          "path": "source/examples/domain",
+          "selected": true
+        },
+        {
+          "path": "source/Fixture/domain",
+          "selected": true
+        }
+      ],
+      "nativeMembers": [
+        "../source/Fixture/domain",
+        "../source/examples/domain",
+        "../source/kernel",
+        "../source/📐️owner\\[1\\]/🔨️modules/🧪️examples/domain{,}",
+        "../source/🔨️modules/🧪️examples/domain",
+        "../source/🔨️modules/🧪️fixtures/domain",
+        "../source/🔨️modules/🧫️examples/domain",
+        "../source/🔨️modules/🧫️fixtures/domain",
+        "local/app"
+      ]
+    },
+    {
+      "name": "external wildcard component",
+      "members": [
+        "../source*/**",
+        "local/**",
+        "!**/node_modules/**",
+        "!**/target/**"
+      ],
+      "cases": [
+        {
+          "path": "source-a/kernel",
+          "selected": true
+        },
+        {
+          "path": "product/local/app",
+          "selected": true
+        },
+        {
+          "path": "source-a/node_modules/vendor",
+          "selected": false
+        },
+        {
+          "path": "source-a/target/generated",
+          "selected": false
+        },
+        {
+          "path": "source-b/module",
+          "selected": true
+        },
+        {
+          "path": "source-b/node_modules/second-vendor",
+          "selected": false
+        }
+      ],
+      "rootMembers": [
+        "source*/**"
+      ],
+      "nativeMembers": [
+        "../source-a/kernel",
+        "../source-b/module",
+        "local/app"
+      ]
+    },
+    {
+      "name": "external literal bracket component",
+      "members": [
+        "../source[1]/**",
+        "local/**",
+        "!**/node_modules/**",
+        "!**/target/**"
+      ],
+      "cases": [
+        {
+          "path": "source[1]/kernel",
+          "selected": true
+        },
+        {
+          "path": "product/local/app",
+          "selected": true
+        },
+        {
+          "path": "source[1]/node_modules/vendor",
+          "selected": false
+        },
+        {
+          "path": "source[1]/target/generated",
+          "selected": false
+        }
+      ],
+      "nativeMembers": [
+        "../source\\[1\\]/kernel{,}",
+        "local/app"
+      ]
+    },
+    {
+      "name": "external literal brace component",
+      "members": [
+        "../source{1}/**",
+        "local/**",
+        "!**/node_modules/**",
+        "!**/target/**"
+      ],
+      "cases": [
+        {
+          "path": "source{1}/kernel",
+          "selected": true
+        },
+        {
+          "path": "product/local/app",
+          "selected": true
+        },
+        {
+          "path": "source{1}/node_modules/vendor",
+          "selected": false
+        },
+        {
+          "path": "source{1}/target/generated",
+          "selected": false
+        }
+      ],
+      "nativeMembers": [
+        "../source[{]1[}]/kernel{,}",
+        "local/app"
+      ]
+    }
+  ],
+  "isolation": {
+    "parent": {
+      "name": "neutral-test-boundary",
+      "private": true,
+      "workspaces": []
+    },
+    "child": "s",
+    "siblings": [
+      {
+        "path": "unrelated",
+        "package": {
+          "name": "neutral-outside",
+          "version": "1.0.0",
+          "dependencies": {
+            "outside-missing": "workspace:*"
+          }
+        }
+      }
+    ]
+  },
+  "publication": {
+    "members": [
+      "source/**"
+    ],
+    "packages": [
+      {
+        "path": "source/domain",
+        "name": "neutral-published",
+        "selected": true
+      },
+      {
+        "path": "source/🧫️fixtures/ignored",
+        "name": "neutral-unpublished",
+        "selected": false
+      }
+    ],
+    "cases": [
+      {
+        "name": "exact-current-publication",
+        "patterns": [
+          "source/domain"
+        ],
+        "accepted": true
+      },
+      {
+        "name": "wildcard-admits-testing-collections",
+        "patterns": [
+          "source/**"
+        ],
+        "accepted": false
+      },
+      {
+        "name": "unrelated-member",
+        "patterns": [
+          "source/domain",
+          "unused"
+        ],
+        "accepted": false
+      }
+    ],
+    "cancellationAt": 3,
+    "mutationCases": [
+      "addedMember",
+      "replacedMemberDirectory"
+    ]
+  },
+  "projection": {
+    "members": [
+      "**"
+    ],
+    "owners": [
+      "*/package.json"
+    ],
+    "self": ".",
+    "packages": [
+      {
+        "path": "source/one",
+        "name": "neutral-one"
+      },
+      {
+        "path": "product/local/one",
+        "name": "neutral-product-one"
+      }
+    ],
+    "product": {
+      "directory": "product",
+      "members": [
+        "../source/**",
+        "local/**"
+      ]
+    },
+    "additions": [
+      {
+        "path": "source/🧫️fixtures/new",
+        "name": "neutral-example",
+        "selected": false
+      },
+      {
+        "path": "source/two",
+        "name": "neutral-two",
+        "selected": true
+      }
+    ],
+    "expectedBefore": {
+      "package.json": [
+        "product",
+        "product/local/one",
+        "source/one"
+      ],
+      "product/package.json": [
+        "../source/one",
+        "local/one"
+      ]
+    },
+    "expectedAfter": {
+      "package.json": [
+        "product",
+        "product/local/one",
+        "source/one",
+        "source/two"
+      ],
+      "product/package.json": [
+        "../source/one",
+        "../source/two",
+        "local/one"
+      ]
+    },
+    "fence": {
+      "lastManifest": "source/one/package.json",
+      "readOccurrence": 3,
+      "peerDescription": "neutral concurrent Source edit"
+    },
+    "unrelated": {
+      "directory": "source/one",
+      "path": "source/one/notes.json",
+      "value": {
+        "text": "neutral unrelated domain document"
+      }
+    }
+  }
 }

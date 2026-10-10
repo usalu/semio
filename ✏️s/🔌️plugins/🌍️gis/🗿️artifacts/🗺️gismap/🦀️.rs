@@ -184,8 +184,7 @@ pub fn gis_map_inference_service() -> semio_framework_plugin::ArtifactInferenceS
             policy_version: 1,
             payload: None,
         },
-        infer_gis_map,
-    )
+        infer_gis_map,gis_map_inference_demands)
 }
 
 /// 🚦️ Rejects invalid identities, cache modes, and allocation bounds before snapshot decoding.
@@ -230,7 +229,7 @@ impl Drop for InferenceOutputGuard {
 pub fn infer_gis_map_controlled(
     request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,
     checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError>,
-) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
+) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
     use crate::standards::v1::subsets::any::schema::inferences::{bounds::controlled_lon_lat_bounds, GisMapInference};
     let allocation = admit_gis_map_inference_request(request)?;
     checkpoint(0)?;
@@ -254,17 +253,17 @@ pub fn infer_gis_map_controlled(
     }
     checkpoint(work)?;
     Ok(semio_framework_plugin::ArtifactInferenceExecution { retirement_progress: Default::default(),
-        canonical_payload: std::mem::take(&mut canonical_payload.0),
+        canonical_payload: Some(std::mem::take(&mut canonical_payload.0)),
         diagnostics: Vec::new(),
         validity: "valid".into(),
         quality: "exact".into(),
         complete: true,
         actual_cache_mode: request.requested_cache_mode.clone(),
-    })
+    }.into_step(true))
 }
 
 /// 🧠️ Whole-map native entry uses the same controlled fold with its finite request budgets.
-fn infer_gis_map(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
+fn infer_gis_map(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
     infer_gis_map_controlled(request, &mut |_| Ok(()))
 }
 //#endregion 💡️InferenceService
@@ -1017,3 +1016,6 @@ pub mod host {
 #[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
 pub mod owned;
 }
+
+/// ♻️ This synchronous executable retains no callback child between invocations.
+fn gis_map_inference_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}

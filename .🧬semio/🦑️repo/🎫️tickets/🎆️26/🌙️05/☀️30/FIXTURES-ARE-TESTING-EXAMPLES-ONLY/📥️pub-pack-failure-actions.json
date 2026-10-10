@@ -1,0 +1,135 @@
+{
+  "epoch": "2026-10-09T16:43:34.277197+00:00",
+  "preimages": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧬️schema/🔣️.json",
+      "sha256": "660f3ee029fe18e9ea635ac417d009c47242f2490dae15a010e958564d7d3238"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts",
+      "sha256": "6994ad356e1a760b9b6b08a418aa520f0f99ec95e8d80fde0dc418fca31a5b34"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs",
+      "sha256": "bb9f29c938efbff72eebfb5b3371ef72506f740c8e2b9de5e3514cc6fb1a6fbb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs",
+      "sha256": "c25961562278866ef67b9a0c8a4279882bd7b42e322fb04f477d25214d6a7a23"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs",
+      "sha256": "3e00f3d813b6543595604f9ecd06ed5037d02da8f3e63919500fd6e1465459b6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+      "sha256": "b1d67a0a0979c9774cfce992dee00ae778caaae5e88e3f7a0557b24d6bd2f0d8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "sha256": "e0f6a215c401aa316e1a49cd9e7524f613600cf6fc6f92f64ba5b80e05cc2925"
+    }
+  ],
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧬️schema/🔣️.json",
+      "scope": "genuine coupled Pack failure contract references actual Value refusal authority; original request/grant payload rules preserved",
+      "beforeSha256": "660f3ee029fe18e9ea635ac417d009c47242f2490dae15a010e958564d7d3238",
+      "afterSha256": "57406b1d43e1db814238af1370541034e5f520737f3a46dbee10d43fd202a302"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/⚠️failure/🔣️.json",
+      "scope": "plain immutable coupled-refusal output examples and independently fixed full caller policy",
+      "beforeSha256": null,
+      "afterSha256": "aec4478a848935972dc33c401c64f4a8a9133bd328e3b4798672540189580109"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts",
+      "scope": "existing original TS route independent Ajv Value-coupled failure/Buffer/UTF8 oracle plus actual lost-receipt regression",
+      "beforeSha256": "6994ad356e1a760b9b6b08a418aa520f0f99ec95e8d80fde0dc418fca31a5b34",
+      "afterSha256": "6183f0538d887a497811e0539ebffe6f0122d87363c57a19d8d0c320ecec4692"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs",
+      "scope": "actual coupled original Value error receipt captures per-turn structural/comparison and partial page allocation; backing retained, static errors literal",
+      "beforeSha256": "c25961562278866ef67b9a0c8a4279882bd7b42e322fb04f477d25214d6a7a23",
+      "afterSha256": "10b3249636962dda3a68f9c45f6d95daa06470124a8816774644d76eabd32666"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs",
+      "scope": "explicit actual coupled Pack failure export from genuine cursor owner",
+      "beforeSha256": "3e00f3d813b6543595604f9ecd06ed5037d02da8f3e63919500fd6e1465459b6",
+      "afterSha256": "cd4aefa789f40cf26da4b308ac77161a19a1c6480a2e41e98ee977ff72c5834e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+      "scope": "explicit actual coupled Pack failure export from genuine cursor owner",
+      "beforeSha256": "b1d67a0a0979c9774cfce992dee00ae778caaae5e88e3f7a0557b24d6bd2f0d8",
+      "afterSha256": "c5fdf545320726fe584488335a34ecf837461b03f4795287bebf919c752ade8c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "scope": "actual installed Pack caller preserves original coupled reason/prefix; no receipt resynthesis",
+      "beforeSha256": "e0f6a215c401aa316e1a49cd9e7524f613600cf6fc6f92f64ba5b80e05cc2925",
+      "afterSha256": "73b264a86aafd344cfd31815d3af385193dbe7b799879f925d9ea6213cb90d99"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs",
+      "scope": "actual original Pack compare-then-overflow refusal System/pointer/prefix law with independent immutable five-axis policy and paid original symbol closure; other native laws preserved",
+      "beforeSha256": "bb9f29c938efbff72eebfb5b3371ef72506f740c8e2b9de5e3514cc6fb1a6fbb",
+      "afterSha256": "d9ba81bf78f79cb2a0a6bf52c6d744111a71030b78aee9d4d3f171ecc01cd5b9",
+      "qualification": "native law authored UNRUN"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts",
+      "scope": "original cursor/native/installed caller grammar at existing 5s tool policy, stdout discarded",
+      "beforeSha256": "6183f0538d887a497811e0539ebffe6f0122d87363c57a19d8d0c320ecec4692",
+      "afterSha256": "7a1740f766847ccc0313680d39d47f8b800f449ce666e8c1b1c5feafaae7ba7a"
+    }
+  ],
+  "red": {
+    "session": 34987,
+    "NxStatus": 1,
+    "tests": "3pass/1fail/269assertions",
+    "log": "🗑️generated/pub-pack-failure-red.log",
+    "qualification": "original TS through registered private facet; no native/normal host proof"
+  },
+  "green": {
+    "session": 92494,
+    "NxStatus": 0,
+    "tests": "5pass/0fail/278assertions",
+    "taskDuration": "552ms",
+    "log": "🗑️generated/pub-pack-failure-green.log",
+    "qualification": "original TS independent Ajv/Buffer/TextEncoder and original Rust grammar, registered private source facet only; native System law UNRUN; normal host integration unresolved"
+  },
+  "currentObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧬️schema/🔣️.json",
+      "sha256": "57406b1d43e1db814238af1370541034e5f520737f3a46dbee10d43fd202a302"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts",
+      "sha256": "7a1740f766847ccc0313680d39d47f8b800f449ce666e8c1b1c5feafaae7ba7a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs",
+      "sha256": "d9ba81bf78f79cb2a0a6bf52c6d744111a71030b78aee9d4d3f171ecc01cd5b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs",
+      "sha256": "10b3249636962dda3a68f9c45f6d95daa06470124a8816774644d76eabd32666"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs",
+      "sha256": "cd4aefa789f40cf26da4b308ac77161a19a1c6480a2e41e98ee977ff72c5834e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+      "sha256": "c5fdf545320726fe584488335a34ecf837461b03f4795287bebf919c752ade8c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "sha256": "73b264a86aafd344cfd31815d3af385193dbe7b799879f925d9ea6213cb90d99"
+    }
+  ]
+}

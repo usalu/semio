@@ -139,5 +139,31 @@
       "-D",
       "warnings"
     ]
-  }
+  },
+  "coveragePhases": [
+    {
+      "phase": "build",
+      "operation": "nextest-archive",
+      "noRun": false,
+      "noReport": false,
+      "noClean": false,
+      "extractOverwrite": false
+    },
+    {
+      "phase": "assert",
+      "operation": "nextest",
+      "noRun": false,
+      "noReport": true,
+      "noClean": false,
+      "extractOverwrite": true
+    },
+    {
+      "phase": "report",
+      "operation": "report",
+      "noRun": false,
+      "noReport": false,
+      "noClean": false,
+      "extractOverwrite": false
+    }
+  ]
 }

@@ -1,0 +1,7 @@
+# Bounded Current Source Finding
+
+Actionable current whole-trial reader: Flow host/evaluation-source/work/tests/TS imports local Work schema5, source corpus9 and seeds corpus11; line13 compiles all three against complete fixtures and only whole-envelope authority mutants. Preserve JSONPatch output/input expected values14, original-source identity/mutation15, explicit recompute/lease policies16 and genuine component/ordered domain contracts6–7. Retire only exclusive whole admissions; stale schema imports must not remain after physical retirement. Hash/existence cut accompanies report. No writer attribution or actual execution claim.
+
+Bounded production import/include search examined Registry, Dev, canonical Schema exports and Discovery originals, excluding genuine tests/fixtures. No direct production four-collection import/include established. Registry taxonomy-validation fixture reads are explicit RustTaxonomyMountsCheckScript/oracle neutral verification functions, and catalog nativeCatalogSelectionOracleV1 projects packages/profiles/providers against genuine individual domain schema. Dev journey is an explicit testing owner. These are not an established application runtime fixture edge merely because files are outside tests directory.
+
+No full inventory duplicate or partial31601 report read. This bounded search does not prove transitive runtime purity or global fixture absence. Source observations are not authorship.

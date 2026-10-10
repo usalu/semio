@@ -10,7 +10,7 @@ async fn direct_owned_child_dispatch_retains_original_parent_and_children() {
         let mut emit: Emit<TestMutation, TestConfigMutation> = Emit::default();
         if row["parentTouched"].as_bool().unwrap() { emit.artifact_mutations.push(TestMutation::SetLabel(SetLabel { value: row["parentLabel"].as_str().unwrap().into() })); }
         emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot, TestMutation>("slot", "child-1", vec![TestMutation::SetCount(SetCount { value: row["childCount"].as_i64().unwrap() as i32 }), TestMutation::SetLabel(SetLabel { value: row["childLabel"].as_str().unwrap().into() })]));
-        for _ in 0..law["maximumTurns"].as_u64().unwrap() { if matches!(emit.prepare_child_one(law["maximumItems"].as_u64().unwrap() as usize, law["maximumBytes"].as_u64().unwrap() as usize).unwrap(), ChildEmitPreparationStep::Ready) { break; } }
+        for _ in 0..law["maximumTurns"].as_u64().unwrap() { if matches!(emit.prepare_child_one(law["maximumItems"].as_u64().unwrap() as usize, law["maximumBytes"].as_u64().unwrap() as usize).unwrap(), ChildEmitPreparationStep::Ready(_)) { break; } }
         assert_eq!(emit.owned_child_emits.len(), 1);
         let result = app.test_dispatch_emit("compositeEdit", emit, &meta()).await.expect("direct dispatch retains owned publication under a genuine mounted operation");
         assert!(result.output.get("operationId").and_then(DslValue::as_str).is_some(), "direct dispatch returns its actual admitted operation identity");
@@ -30,7 +30,7 @@ async fn direct_owned_child_dispatch_retains_original_output_when_authority_capt
         let mut emit: Emit<TestMutation, TestConfigMutation> = Emit::default();
         emit.artifact_mutations.push(TestMutation::SetLabel(SetLabel { value: row["parentLabel"].as_str().unwrap().into() }));
         emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot, TestMutation>("slot", "child-1", vec![TestMutation::SetCount(SetCount { value: row["childCount"].as_i64().unwrap() as i32 }), TestMutation::SetLabel(SetLabel { value: row["childLabel"].as_str().unwrap().into() })]));
-        for _ in 0..law["maximumTurns"].as_u64().unwrap() { if matches!(emit.prepare_child_one(law["maximumItems"].as_u64().unwrap() as usize, law["maximumBytes"].as_u64().unwrap() as usize).unwrap(), ChildEmitPreparationStep::Ready) { break; } }
+        for _ in 0..law["maximumTurns"].as_u64().unwrap() { if matches!(emit.prepare_child_one(law["maximumItems"].as_u64().unwrap() as usize, law["maximumBytes"].as_u64().unwrap() as usize).unwrap(), ChildEmitPreparationStep::Ready(_)) { break; } }
         let original = emit.owned_child_emits.as_ptr() as usize;
         assert_eq!(emit.owned_child_emits.len(), 1);
         let verb = if refused { "unregisteredOriginalChildVerb" } else { "compositeEdit" };

@@ -4788,7 +4788,9 @@
       "emoji": "🔗️",
       "slugPattern": "^schema-reads$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["discovery"]
+      "parentKindIds": [
+        "discovery"
+      ]
     },
     "discovery": {
       "emoji": "🔍️",
@@ -28705,7 +28707,11 @@
       "**/🧫️fixtures",
       "**/🧫️fixtures/**",
       "**/🧪️fixtures",
-      "**/🧪️fixtures/**"
+      "**/🧪️fixtures/**",
+      "**/🧫️examples",
+      "**/🧫️examples/**",
+      "**/🧪️examples",
+      "**/🧪️examples/**"
     ],
     "fixtureOwnerReason": "A 🧪️/🧫️ tree is a collection of examples and never owns a contract scope. Every contract facet below it is a schema-fixture-defines-schema finding. The contract belongs to its domain owner; inertSchemaData only declares ordinary named parser inputs outside contract facets.",
     "moduleMemberDirName": "🔨️modules",
@@ -29465,6 +29471,12 @@
           "framework-products"
         ]
       }
+    },
+    "publicApi": {
+      "version": 1,
+      "rulePrefix": "no-cross-package-relative-",
+      "sdkPackage": "@semio-tech/framework",
+      "toolingRoles": []
     }
   },
   "areaLayers": {

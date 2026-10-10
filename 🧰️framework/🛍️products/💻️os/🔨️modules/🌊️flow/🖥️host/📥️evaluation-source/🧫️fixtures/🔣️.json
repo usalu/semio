@@ -1,1 +1,262 @@
-{"cases":[{"id":"duplicate-widget-shadowing","widgets":[{"id":"same-原","kind":"outputPreview"},{"id":"same-原","kind":"neuron","neuronKind":"input","params":{"x":7}},{"id":"actual","kind":"neuron","neuronKind":"input","params":{"x":9}}],"synapses":[],"kindInfos":{},"expectedIds":["actual"],"expectedPorts":[],"expectedClusters":{}},{"id":"cycle-filter","widgets":[{"id":"a","kind":"neuron","neuronKind":"input","params":{}},{"id":"b","kind":"neuron","neuronKind":"output","params":{}},{"id":"c","kind":"neuron","neuronKind":"output","params":{}}],"synapses":[{"id":"cycle-a","from":"a","to":"b","fromPort":"","toPort":""},{"id":"cycle-b","from":"b","to":"a","fromPort":"","toPort":""},{"id":"kept","from":"a","to":"c","fromPort":"","toPort":""}],"kindInfos":{},"expectedIds":["a","b","c"],"expectedPorts":[["a","","c",""]],"expectedClusters":{}},{"id":"declared-port-resolution","widgets":[{"id":"source-高","kind":"neuron","neuronKind":"echo","params":{}},{"id":"target-雪","kind":"neuron","neuronKind":"echo","params":{}}],"synapses":[{"id":"same","from":"source-高","to":"target-雪","fromPort":"out","toPort":"in"}],"kindInfos":{"echo":{"inputs":["value"],"outputs":["result"]}},"expectedIds":["source-高","target-雪"],"expectedPorts":[["source-高","result","target-雪","value"]],"expectedClusters":{}},{"id":"original-nested-cluster","widgets":[{"id":"cluster","kind":"cluster","tree":{"neurons":[{"id":"inside-原","kind":"input","params":{"value":"same original nested source"},"tree":{"neurons":[{"id":"deep-雪","kind":"input","params":{"x":9}}],"synapses":[]}}],"synapses":[]}}],"synapses":[],"kindInfos":{},"expectedIds":["cluster"],"expectedPorts":[],"expectedClusters":{"cluster":{"neurons":[{"id":"inside-原","kind":"input","params":{"value":"same original nested source"},"tree":{"neurons":[{"id":"deep-雪","kind":"input","params":{"x":9}}],"synapses":[]}}],"synapses":[]}}}]}
+{
+  "cases": [
+    {
+      "id": "duplicate-widget-shadowing",
+      "widgets": [
+        {
+          "id": "same-原",
+          "kind": "outputPreview"
+        },
+        {
+          "id": "same-原",
+          "kind": "neuron",
+          "neuronKind": "input",
+          "params": {
+            "x": 7
+          }
+        },
+        {
+          "id": "actual",
+          "kind": "neuron",
+          "neuronKind": "input",
+          "params": {
+            "x": 9
+          }
+        }
+      ],
+      "synapses": [],
+      "kindInfos": {},
+      "expectedIds": [
+        "actual"
+      ],
+      "expectedPorts": [],
+      "expectedClusters": {},
+      "minimumCopyBytes": 1,
+      "expectedParams": {
+        "actual": {
+          "x": 9
+        }
+      }
+    },
+    {
+      "id": "cycle-filter",
+      "widgets": [
+        {
+          "id": "a",
+          "kind": "neuron",
+          "neuronKind": "input",
+          "params": {}
+        },
+        {
+          "id": "b",
+          "kind": "neuron",
+          "neuronKind": "output",
+          "params": {}
+        },
+        {
+          "id": "c",
+          "kind": "neuron",
+          "neuronKind": "output",
+          "params": {}
+        }
+      ],
+      "synapses": [
+        {
+          "id": "cycle-a",
+          "from": "a",
+          "to": "b",
+          "fromPort": "",
+          "toPort": ""
+        },
+        {
+          "id": "cycle-b",
+          "from": "b",
+          "to": "a",
+          "fromPort": "",
+          "toPort": ""
+        },
+        {
+          "id": "kept",
+          "from": "a",
+          "to": "c",
+          "fromPort": "",
+          "toPort": ""
+        }
+      ],
+      "kindInfos": {},
+      "expectedIds": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expectedPorts": [
+        [
+          "a",
+          "",
+          "c",
+          ""
+        ]
+      ],
+      "expectedClusters": {},
+      "minimumCopyBytes": 1,
+      "expectedParams": {
+        "a": {},
+        "b": {},
+        "c": {}
+      }
+    },
+    {
+      "id": "declared-port-resolution",
+      "widgets": [
+        {
+          "id": "source-高",
+          "kind": "neuron",
+          "neuronKind": "echo",
+          "params": {}
+        },
+        {
+          "id": "target-雪",
+          "kind": "neuron",
+          "neuronKind": "echo",
+          "params": {}
+        }
+      ],
+      "synapses": [
+        {
+          "id": "same",
+          "from": "source-高",
+          "to": "target-雪",
+          "fromPort": "out",
+          "toPort": "in"
+        }
+      ],
+      "kindInfos": {
+        "echo": {
+          "inputs": [
+            "value"
+          ],
+          "outputs": [
+            "result"
+          ]
+        }
+      },
+      "expectedIds": [
+        "source-高",
+        "target-雪"
+      ],
+      "expectedPorts": [
+        [
+          "source-高",
+          "result",
+          "target-雪",
+          "value"
+        ]
+      ],
+      "expectedClusters": {},
+      "minimumCopyBytes": 1,
+      "expectedParams": {
+        "source-高": {},
+        "target-雪": {}
+      }
+    },
+    {
+      "id": "original-nested-cluster",
+      "widgets": [
+        {
+          "id": "cluster",
+          "kind": "cluster",
+          "tree": {
+            "neurons": [
+              {
+                "id": "inside-原",
+                "kind": "input",
+                "params": {
+                  "value": "same original nested source"
+                },
+                "tree": {
+                  "neurons": [
+                    {
+                      "id": "deep-雪",
+                      "kind": "input",
+                      "params": {
+                        "x": 9
+                      }
+                    }
+                  ],
+                  "synapses": []
+                }
+              }
+            ],
+            "synapses": []
+          }
+        }
+      ],
+      "synapses": [],
+      "kindInfos": {},
+      "expectedIds": [
+        "cluster"
+      ],
+      "expectedPorts": [],
+      "expectedClusters": {
+        "cluster": {
+          "neurons": [
+            {
+              "id": "inside-原",
+              "kind": "input",
+              "params": {
+                "value": "same original nested source"
+              },
+              "tree": {
+                "neurons": [
+                  {
+                    "id": "deep-雪",
+                    "kind": "input",
+                    "params": {
+                      "x": 9
+                    }
+                  }
+                ],
+                "synapses": []
+              }
+            }
+          ],
+          "synapses": []
+        }
+      },
+      "minimumCopyBytes": 1,
+      "expectedParams": {
+        "cluster": {
+          "name": ""
+        }
+      }
+    },
+    {
+      "id": "builtin-slider-source-metadata",
+      "widgets": [
+        {
+          "id": "slider-原",
+          "kind": "inputSlider",
+          "label": "Height 雪",
+          "value": 3.5,
+          "min": 0,
+          "max": 10,
+          "step": 0.5
+        }
+      ],
+      "synapses": [],
+      "kindInfos": {},
+      "expectedIds": [
+        "slider-原"
+      ],
+      "expectedPorts": [],
+      "expectedClusters": {},
+      "minimumCopyBytes": 8,
+      "expectedParams": {
+        "slider-原": {
+          "label": "Height 雪",
+          "value": 3.5
+        }
+      }
+    }
+  ]
+}

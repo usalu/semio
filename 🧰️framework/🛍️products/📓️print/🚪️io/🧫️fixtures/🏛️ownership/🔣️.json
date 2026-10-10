@@ -1,4 +1,37 @@
 {
-  "semanticOwners": ["🧬️schema/📸️snapshot/🦀️.rs", "🧬️schema/🧬️mutations/🦀️.rs", "🧬️schema/📸️snapshot/🟦️.ts"],
-  "ioOwners": ["🚪️io/📝️text/📸️snapshot/🦀️.rs", "🚪️io/📝️text/🧬️mutations/🦀️.rs", "🚪️io/💾️binary/📸️snapshot/🦀️.rs", "🚪️io/💾️binary/🧬️mutations/🦀️.rs", "🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs", "🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"]
+  "format": 1,
+  "pureValidation": {"owner": "🧬️schema/💡️inferences/🦀️.rs", "method": "validate_chart", "forbiddenCall": "to_value"},
+  "transportEntry":{"semanticOwner":"🦀️.rs","owner":"🚪️io/💾️binary/💡️inferences/🦀️.rs","functions":["execute_chart_inference","execute_chart_inference_controlled"]},
+  "validation": [
+    {"chart":{"width":100,"height":80,"layers":[]},"valid":true},
+    {"chart":{"width":100,"height":80,"language":"en","layers":[]},"valid":true},
+    {"chart":{"width":100,"height":80,"language":"de","title":{"en":"Snow 雪","de":"Schnee 雪"},"layers":[]},"valid":true},
+    {"chart":{"width":100,"layers":[]},"valid":false},
+    {"chart":{"width":100,"height":80,"language":"fr","layers":[]},"valid":false},
+    {"chart":{"width":100,"height":80,"layers":[],"unknown":true},"valid":false},
+    {"chart":null,"valid":false}
+  ],
+  "semanticOwners": ["🧬️schema/🧬️mutations/🦀️.rs", "🧬️schema/🔀️diff/🦀️.rs", "🧬️schema/📸️snapshot/🦀️.rs", "🧬️schema/💡️inferences/🦀️.rs"],
+  "ioOwners":["🚪️io/📝️text/🦀️.rs","🚪️io/📝️text/📸️snapshot/🦀️.rs","🚪️io/📝️text/🧬️mutations/🦀️.rs","🚪️io/📝️text/🔺️diff/🦀️.rs","🚪️io/📝️text/💡️inferences/🦀️.rs","🚪️io/💾️binary/🦀️.rs","🚪️io/💾️binary/📸️snapshot/🦀️.rs","🚪️io/💾️binary/🧬️mutations/🦀️.rs","🚪️io/💾️binary/🔺️diff/🦀️.rs","🚪️io/💾️binary/💡️inferences/🦀️.rs","🚪️io/🪶️sqlite/🦀️.rs","🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs","🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts","🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs"],
+  "representationOwners": [
+    {"path": "🚪️io/📝️text/🧬️mutations/🦀️.rs", "types": ["ChangeChartValue"], "record": true},
+    {"path": "🚪️io/📝️text/🔺️diff/🦀️.rs", "types": ["ChartEdit", "ChartDiff"], "record": false},
+    {"path": "🚪️io/📝️text/📸️snapshot/🦀️.rs", "types": ["ChartSnapshot"], "record": true},
+    {"path": "🚪️io/📝️text/💡️inferences/🦀️.rs", "types": ["ChartDiagnostic", "ChartInference"], "record": false}
+  ],
+  "cases": [
+    {"kind": "mutation", "value": {"path": ["title"]}},
+    {"kind": "mutation", "value": {"path": ["title"], "value": null}},
+    {"kind": "mutation", "value": {"path": ["title"], "value": "雪🙂"}},
+    {"kind": "edit", "value": {"path": ["title"], "before": null}},
+    {"kind": "edit", "value": {"path": ["title"], "after": null}},
+    {"kind": "diff", "value": {"edits": [{"path": ["title"], "before": null, "after": "雪🙂"}]}},
+    {"kind": "diff", "value": {"edits": []}}
+  ],
+  "refused": [
+    {"kind": "mutation", "value": {"value": null}},
+    {"kind": "mutation", "value": {"path": ["title"], "unknown": true}},
+    {"kind": "edit", "value": {"after": null}},
+    {"kind": "edit", "value": {"path": ["title"], "unknown": true}}
+  ]
 }

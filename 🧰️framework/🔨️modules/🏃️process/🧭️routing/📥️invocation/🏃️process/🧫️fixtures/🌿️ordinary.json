@@ -1,0 +1,125 @@
+{
+  "envelopes": [
+    {
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "ordinary",
+          "maximumElapsedMilliseconds": 0
+        },
+        "deadlineEpochMilliseconds": null,
+        "capabilities": {
+          "argv": [
+            "native"
+          ]
+        }
+      },
+      "now": 1000,
+      "accepted": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "ordinary",
+          "maximumElapsedMilliseconds": 0
+        },
+        "deadlineEpochMilliseconds": 2000,
+        "capabilities": {}
+      },
+      "now": 1000,
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "finite",
+          "maximumElapsedMilliseconds": 1000
+        },
+        "deadlineEpochMilliseconds": null,
+        "capabilities": {}
+      },
+      "now": 1000,
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "policy": {
+          "version": 1,
+          "owner": "finite",
+          "maximumElapsedMilliseconds": 1000
+        },
+        "deadlineEpochMilliseconds": 2000,
+        "capabilities": {}
+      },
+      "now": 1000,
+      "accepted": true
+    }
+  ],
+  "budgets": [
+    {
+      "parent": 0,
+      "remaining": null,
+      "requested": 0,
+      "accepted": true,
+      "expected": 0
+    },
+    {
+      "parent": 0,
+      "remaining": null,
+      "requested": 15000,
+      "accepted": true,
+      "expected": 15000
+    },
+    {
+      "parent": 15000,
+      "remaining": 14000,
+      "requested": 0,
+      "accepted": true,
+      "expected": 14000
+    },
+    {
+      "parent": 15000,
+      "remaining": 14000,
+      "requested": 5000,
+      "accepted": true,
+      "expected": 5000
+    },
+    {
+      "parent": 15000,
+      "remaining": 0,
+      "requested": 0,
+      "accepted": false
+    },
+    {
+      "parent": 0,
+      "remaining": 14000,
+      "requested": 0,
+      "accepted": false
+    },
+    {
+      "parent": 15000,
+      "remaining": null,
+      "requested": 0,
+      "accepted": false
+    },
+    {
+      "parent": 15000,
+      "remaining": 0.5,
+      "requested": 0,
+      "accepted": false
+    },
+    {
+      "parent": 15000,
+      "remaining": 512.5,
+      "requested": 1000,
+      "accepted": true,
+      "expected": 512
+    }
+  ]
+}

@@ -342,13 +342,13 @@ static OMITTED_EVENTS: AtomicU64 = AtomicU64::new(0);
 static OMITTED_VIOLATIONS: AtomicU64 = AtomicU64::new(0);
 
 /// 📇️ Fixed static backing admits optional site samples without a lazy allocation.
-fn site_registry() -> &'static Mutex<SiteRegistry> {
-    static REGISTRY: Mutex<SiteRegistry> = Mutex::new([const { None }; SITE_CAPACITY]);
+fn site_registry() -> &'static StaticTryGate<SiteRegistry> {
+    static REGISTRY: StaticTryGate<SiteRegistry> = StaticTryGate::new([const { None }; SITE_CAPACITY]);
     &REGISTRY
 }
 
 fn record_site_sample(site: &'static str, elapsed_us: u64) {
-    let Ok(mut registry) = site_registry().try_lock() else {
+    let Some(mut registry) = site_registry().try_lock() else {
         OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed);
         return;
     };
@@ -374,7 +374,7 @@ fn record_site_sample(site: &'static str, elapsed_us: u64) {
 
 /// 📊️ `(p50, p95, p99)` microseconds recorded for `site`, or `None` if nothing has landed there yet.
 pub fn site_percentiles(site: &str) -> Option<(u32, u32, u32)> {
-    let registry = site_registry().lock().unwrap_or_else(PoisonError::into_inner);
+    let registry = site_registry().try_lock()?;
     registry.iter().flatten().find(|(label, _)| *label == site).map(|(_, ring)| (ring.p50(), ring.p95(), ring.p99()))
 }
 
@@ -1062,3 +1062,7 @@ mod watchdog_tail_tests;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="📈️percentile/🔐️gate/🦀️.rs"]
+mod static_telemetry_gate;
+use static_telemetry_gate::StaticTryGate;

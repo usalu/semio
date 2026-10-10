@@ -1550,14 +1550,7 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
     fn tool_id(&self) -> &'static str { "importCadFile" }
     fn workspace_identity(&self) -> u64 { self.borrowed_source().map_or(0, |source| (source.as_ptr() as usize as u64).wrapping_add(source.len() as u64)) }
     fn extent(&self, _: &CadCommand, _: &CadSnapshot, _: &protocol::InteractionState, _: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>) -> Option<usize> { Some(1) }
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 24 { return Err(Fault::from("Cad media pricing checkpoint capacity")); }
-        target[..24].fill(0);
-        target[..8].copy_from_slice(&(self.priced_bytes as u64).to_le_bytes());
-        target[8..16].copy_from_slice(&self.price_checksum.to_le_bytes());
-        target[16] = u8::from(self.pricing_complete);
-        Ok(24)
-    }
+    fn checkpoint_byte(&self,index:usize)->Option<u8>{match index{0..=7=>Some(((self.priced_bytes as u64)>>(index*8))as u8),8..=15=>Some((self.price_checksum>>((index-8)*8))as u8),16=>Some(u8::from(self.pricing_complete)),17..=23=>Some(0),_=>None}}
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 24 || checkpoint[16] > 1 || checkpoint[17..].iter().any(|byte| *byte != 0) { return Err(Fault::from("Cad media pricing checkpoint shape")); }
         let offset = usize::try_from(u64::from_le_bytes(checkpoint[..8].try_into().map_err(|_| Fault::from("Cad media pricing offset"))?)).map_err(|_| Fault::from("Cad media pricing offset authority"))?;

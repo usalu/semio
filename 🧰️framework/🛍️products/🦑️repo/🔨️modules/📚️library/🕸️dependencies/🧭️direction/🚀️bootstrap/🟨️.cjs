@@ -3,7 +3,7 @@ const { builtinModules } = require("node:module");
 const { createHash } = require("node:crypto");
 const { dirname, isAbsolute, join, relative, resolve } = require("node:path");
 const { readBunRepositoryMembership } = require("../../../🗂️workspaces/🟦️bun/🟨️.cjs");
-const { buildDependencyDirectionPolicy } = require("../🏗️construction/🟨️.cjs");
+const { buildDependencyDirectionPolicy, authoredPackageExportAuthority } = require("../🏗️construction/🟨️.cjs");
 const slash = path => path.replaceAll("\\", "/");
 const digest = text => createHash("sha256").update(text).digest("hex");
 function freeze(value) {
@@ -92,8 +92,7 @@ function loadDependencyDirectionPolicy(input, options = {}) {
     const previous = packageNames.get(row.name);
     if (previous !== undefined && previous !== owner) throw Error("Dependency policy package name has distinct owners: "+row.name+" ("+previous+", "+owner+")");
     packageNames.set(row.name,owner);
-    const exports = row.exports && typeof row.exports === "object" && !Array.isArray(row.exports) && Object.keys(row.exports).some(key => key.startsWith(".")) ? Object.keys(row.exports).filter(key => row.exports[key] !== null) : ["."];
-    return { owner, name: row.name, exports, ...(row.semio?.dependencyRole ? { dependencyRole: row.semio.dependencyRole } : {}) };
+    return { owner, name: row.name, ...authoredPackageExportAuthority(owner, row), ...(row.semio?.dependencyRole ? { dependencyRole: row.semio.dependencyRole } : {}) };
   });
   const pluginRoot = join(root, "✏️s/🔌️plugins"), pluginState = state(pluginRoot);
   if (pluginState !== "directory" && pluginState !== "missing") throw Error("Dependency policy plugin owner must be a real directory");

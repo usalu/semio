@@ -27,14 +27,14 @@ fn record_inline<T>(body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{b
 fn admit_turn(body:&NativeSnapshotBodyWallet,demand:semio_framework_value::RetirementDemand)->Result<(),ValueError>{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})}
 
 /// 🫴️ Moves the direct grammar result while retaining cursor and original diagnostic custody.
-pub(super) fn read(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<DslValue,ValueError>{
- type Receiving=(JsonGrammarCursor<DslValue>,Option<DslValue>,Option<JsonError>);
- owner.receive::<Receiving,DslValue>(|slot,native,body|{
-  admit_inline::<Receiving>(body)?;
-  *slot=Some((JsonGrammarCursor::new(JsonMemberPolicy::Reject),None,None));
-  record_inline::<Receiving>(body)?;
+fn read_original<T:semio_framework_value::retirement::RetireOwned>(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>,construct:fn(DslValue)->T)->Result<T,ValueError>{
+ type Receiving<T>=(JsonGrammarCursor<DslValue>,Option<DslValue>,Option<JsonError>,Option<T>);
+ owner.receive::<Receiving<T>,T>(|slot,native,body|{
+  admit_inline::<Receiving<T>>(body)?;
+  *slot=Some((JsonGrammarCursor::new(JsonMemberPolicy::Reject),None,None,None));
+  record_inline::<Receiving<T>>(body)?;
   loop{
-   let(cursor,output,refusal)=slot.as_mut().unwrap();
+   let(cursor,output,refusal,typed)=slot.as_mut().unwrap();
    let demand=match cursor.normal_step_demands(text){Ok(demand)=>demand,Err(JsonError::Native(error))=>return Err(error),Err(error)=>{let kind=error.kind();*refusal=Some(error);return Err(ValueError::literal(kind,"Probe JSON source was refused"))}};
    admit_turn(body,demand)?;
    let grant=body.remaining_grant();
@@ -44,12 +44,22 @@ pub(super) fn read(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Resul
    body.record_progress(performed)?;
    if outcome?{
     validate_with(output.as_ref().unwrap(),&mut |depth|{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_depth:depth,..Default::default()})?;native.checkpoint()?;body.record_progress(RetainedCloneProgress{copied_items:1,..Default::default()})})?;
-    return Ok(output.take().unwrap())
+    admit_inline::<T>(body)?;
+    native.checkpoint()?;
+    *typed=Some(construct(output.take().unwrap()));
+    record_inline::<T>(body)?;
+    return Ok(typed.take().unwrap())
    }
    if performed==RetainedCloneProgress::default(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe JSON parser has no funded frontier"))}
   }
  })
 }
+
+/// 🌱️ Publishes the original value through the same retained receiving lifecycle.
+pub(super) fn read(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<DslValue,ValueError>{read_original(text,owner,std::convert::identity)}
+
+/// 🧩️ Constructs only this domain's allocation-free snapshot wrapper inside original receiving custody.
+pub(super) fn receive_snapshot(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<super::ProbeSnapshot,ValueError>{read_original(text,owner,super::ProbeSnapshot)}
 
 /// 🪶️ Borrows the unchanged tree and publishes the original canonical String backing.
 pub(super) fn write(value:&DslValue,maximum_bytes:usize,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<String,ValueError>{

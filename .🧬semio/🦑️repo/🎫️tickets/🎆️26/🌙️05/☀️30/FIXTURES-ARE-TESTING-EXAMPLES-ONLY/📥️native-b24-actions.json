@@ -1,0 +1,48 @@
+{
+  "actions": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧬️schema/🔣️.json",
+      "before": "7ec1c2ab0ebd7dacc5e33b02ffde55309a4b526cda1dcc3d5658aaaee27126d5",
+      "after": null,
+      "action": "remove exclusive whole-trial schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/👥️presence/🧬️schema/🔣️.json",
+      "before": "5a96b2cf58ac6de2b8bbbff96e3363adba38f8fb5468fc1b8ef429a95fae3ed0",
+      "after": null,
+      "action": "remove exclusive whole-trial schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🔗️causal/🧮️backbone/🧬️schema/🔣️.json",
+      "before": "385c9cc1541e06e8a572ce5e7ffda1d054d67fd366849d8feef16af99431f01c",
+      "after": null,
+      "action": "remove exclusive whole-trial schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🏛️ownership/🟦️.ts",
+      "before": "8384f41f6ee735d53db891cd7ef5032300a6224ce50f898db4ea57710ce7c41f",
+      "after": "dd8ec2cb9116cf272ab639708beb159a275bc62cba2b4310ab27349806fb7d78",
+      "action": "remove only two whole-corpus schema/Ajv/firstparty admissions; retain every original byte oracle"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📜️script.ts",
+      "before": "255410e6a162fead84d052ebea544999b6d0ca291b49dc753cd211589aa285b5",
+      "after": "d8c59057fab254dca16a2faee561694fc0aa8d10b8ca3fac2960df245ac25845",
+      "action": "remove only whole-trial Ajv admission and its duplicate/enlarged fixture shape assertions; canonical Grant+BinarySnapshot and SQLite retained"
+    }
+  ],
+  "untouchedPlainObservations": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "e68834c3bfece5be31c3a02b0df5c44e2455d8268b8203c9b90c7c3c1e285132"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json",
+      "sha256": "1cba4b169f05df719b9638900cf041b4bfc3b670fc3fd280f480d928febd77e2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json",
+      "sha256": "c5e6281a6bc25c7ab712b1ddcb29668649d2950528c325258b0405772d0b4ef9"
+    }
+  ]
+}

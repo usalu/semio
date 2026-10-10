@@ -457,11 +457,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// tagged. A continuous control (`gesture`, `commit`, `abort`): a host abort drops the window's press with zero trace and
     /// never reaches the app, a frozen press is dropped and refused, every other press runs the verb tagged. Windows that left
     /// the roster retire their presses and commit their runs first.
-    pub(super) async fn admit_tool_dispatch(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> ToolDispatch {
+    pub(super) async fn admit_tool_dispatch(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToolDispatch {
         let text = |key: &str| args.and_then(|args| args.get(key)).and_then(DslValue::as_str);
         let window = meta.view_state.as_ref().and_then(|view| view.window_id.clone()).unwrap_or_default();
         if let Some(phase) = TypingPhase::parse(text(TYPING_BUFFER_ARG), text(TYPING_COMMIT_ARG)) {
-            if let Err(fault) = Box::pin(self.retire_tool_windows(meta)).await {
+            if let Err(fault) = Box::pin(self.retire_tool_windows(meta, identity)).await {
                 return ToolDispatch::Settled(Err(fault));
             }
             let clock = self.tool_machines.clock();
@@ -474,7 +474,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 }
             };
             let published = match step {
-                Ok(step) => Box::pin(self.publish_typing_commits(vec![step], meta)).await,
+                Ok(step) => Box::pin(self.publish_typing_commits(vec![step], meta, identity)).await,
                 Err(refusal) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("typing run of window {window:?} refused its commit"))),
             };
             return ToolDispatch::Settled(match (published, fault) {
@@ -485,7 +485,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let Some(phase) = ScrubPhase::parse(text(SCRUB_GESTURE_ARG), args.and_then(|args| args.get(SCRUB_COMMIT_ARG)).and_then(DslValue::as_bool), text(SCRUB_ABORT_ARG)) else {
             return ToolDispatch::Plain;
         };
-        if let Err(fault) = Box::pin(self.retire_tool_windows(meta)).await {
+        if let Err(fault) = Box::pin(self.retire_tool_windows(meta, identity)).await {
             return ToolDispatch::Settled(Err(fault));
         }
         let (reason, fault) = match &phase {
@@ -508,7 +508,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// another verb (`otherVerb`) — so the verb, an undo or a history edit sees the typed text, and the history lists the run
     /// before the verb. A typing delivery of its own and a view verb (a caret report, a hover, a scroll) leave the runs open:
     /// a host ends its run on a caret jump with its own commit signal.
-    pub(super) async fn commit_typing_before(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<(), Fault> {
+    pub(super) async fn commit_typing_before(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         if self.tool_machines.typing.is_empty() {
             return Ok(());
         }
@@ -520,17 +520,17 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             steps.extend(self.tool_machines.typing.commit_all(TypingCommit::OtherVerb, clock));
         }
         let steps = steps.into_iter().map(|(window, step)| step.map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("typing run of window {window:?} refused its commit")))).collect::<Result<Vec<_>, _>>()?;
-        Box::pin(self.publish_typing_commits(steps, meta)).await
+        Box::pin(self.publish_typing_commits(steps, meta, identity)).await
     }
 
     /// 💾️ Publishes every committed run as ONE document edit stamped with its `TransactionRef` (no
     /// description: the history row is labelled from the run's net leaves), through the verb that typed it.
-    async fn publish_typing_commits(&mut self, steps: Vec<ToolStep<A::Mutation>>, meta: &ActionMeta) -> Result<(), Fault> {
+    async fn publish_typing_commits(&mut self, steps: Vec<ToolStep<A::Mutation>>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let mut published = false;
         for step in steps {
             if let ToolStep::Committed(transaction, mutations) = step {
                 let verb = transaction.tool.rsplit_once('#').map_or(transaction.tool.as_str(), |(_, verb)| verb).to_string();
-                Box::pin(self.dispatch_emit(&verb, Emit::commit_transaction(transaction, mutations), meta)).await?;
+                Box::pin(self.dispatch_emit(&verb, Emit::commit_transaction(transaction, mutations), meta, identity)).await?;
                 published = true;
             }
         }
@@ -542,7 +542,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🪦️ `retired`: the press of every window the dispatching view's roster no longer lists leaves zero trace; its typing
     /// run commits like a blur.
-    async fn retire_tool_windows(&mut self, meta: &ActionMeta) -> Result<(), Fault> {
+    async fn retire_tool_windows(&mut self, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         let Some(view) = meta.view_state.as_ref().filter(|view| !view.window_instances.is_empty()) else { return Ok(()) };
         let keep = |window: &str| window.is_empty() || view.window_instances.iter().any(|instance| instance.id == window);
         let retired = !self.tool_machines.presses.retain_windows(keep).is_empty();
@@ -551,7 +551,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if retired {
             self.follow_tool_machines(true);
         }
-        Box::pin(self.publish_typing_commits(committed, meta)).await
+        Box::pin(self.publish_typing_commits(committed, meta, identity)).await
     }
 
     /// 🧊️ `frozen`: a history edit opens, so every open press and every run still open leaves zero trace (a run normally

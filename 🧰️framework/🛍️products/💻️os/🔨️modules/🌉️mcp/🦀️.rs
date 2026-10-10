@@ -788,11 +788,11 @@ const HUB_OPEN_RETRY_STEP_MS: u64 = 500;
 /// `PluginUnavailable: authenticated hub descriptor index is refreshing; retry after authority
 /// refresh`, exit 1, before `initialize`). A non-retryable error — a bad credential, a space the
 /// principal is not a member of, a version boundary — is returned on its first occurrence untouched.
-fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal) -> Result<HeadlessWorkspace, GatewayError> {
+fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<HeadlessWorkspace, GatewayError> {
     let scopes: Vec<String> = principal.scopes.iter().map(|scope| scope.0.clone()).collect();
     let mut attempts_made = 0;
     loop {
-        match HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential.clone(), principal.id.clone(), scopes.clone()) {
+        match HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential.clone(), principal.id.clone(), scopes.clone(), host_driver_policy) {
             Ok(workspace) => return Ok(workspace),
             Err(error) => match hub_open_retry_backoff_ms(&error, attempts_made) {
                 Some(backoff_ms) => {
@@ -849,12 +849,12 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
 /// 🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
 /// inside the workspace; publishing the binding there is what keeps a `shell` session from having
 /// two document owners (`📓️lb1…` §7.3 step 1).
-fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime) -> Result<(McpServer, String), GatewayError> {
+fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<(McpServer, String), GatewayError> {
     let origin_label;
     let workspace = if let Some(folder) = folder {
         origin_label = format!("folder {folder}");
         let catalog = std::sync::Arc::new(build_catalog());
-        std::sync::Arc::new(HeadlessWorkspace::open_folder(std::path::PathBuf::from(folder), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
+        std::sync::Arc::new(HeadlessWorkspace::open_folder(std::path::PathBuf::from(folder), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog, host_driver_policy)?)
     } else if let Some(hub) = hub {
         origin_label = format!("hub {}/{}", hub.base_url, hub.space_id);
         let mut adopted: Option<(String, String)> = None;
@@ -880,7 +880,7 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
             principal.id = agent_principal_id;
             principal.label = agent_label;
         }
-        std::sync::Arc::new(open_hub_workspace_with_retry(hub, credential, &principal)?)
+        std::sync::Arc::new(open_hub_workspace_with_retry(hub, credential, &principal, host_driver_policy)?)
     } else {
         let principal_id = principal.id.clone();
         return Ok((build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)), runtime), principal_id));
@@ -900,8 +900,9 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
 /// ⚙️ Options `🏗️bootstrap/🦀️.rs`'s `stdio` subcommand parses off argv (`semio-os-mcp stdio [--folder <dir>]
 /// [--hub <url> --space <id>] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all]
 /// [--no-bridge]`).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StdioOptions {
+    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
     pub folder: Option<String>,
     pub hub: Option<HubOptions>,
     pub principal: Option<String>,
@@ -1026,7 +1027,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let elicitation: ElicitationSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     let listener = start_stdio_bridge(&options, &bridge_slot);
     let runtime = GatewayRuntime { bridge: listener.as_ref().map(|_| bridge_slot.clone()), elicitation: Some(elicitation.clone()), auto_approve: options.auto_approve, channel_binding: None };
-    let (server, principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
+    let (server, principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy)?;
     let scope = options.hub.as_ref().map_or(crate::rendezvous::BridgeOfferScope::Local, |hub| crate::rendezvous::BridgeOfferScope::Hub { hub_origin: hub.base_url.clone(), space_id: hub.space_id.clone() });
     let attachment = listener.and_then(|listener| publish_stdio_bridge_offer(listener, principal_id, scope));
     let features = server.client_features();
@@ -1048,6 +1049,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
 /// by the protected process-entry credential and never by argv, URL, environment, or disk state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HttpOptions {
+    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
     pub port: u16,
     pub bind: String,
     pub folder: Option<String>,
@@ -1071,7 +1073,7 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "http agent", &options.scopes, None);
     let bridge_slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     let runtime = GatewayRuntime { bridge: Some(bridge_slot.clone()), elicitation: None, auto_approve: options.auto_approve, channel_binding: None };
-    let (server, _principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
+    let (server, _principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy)?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
     let credential = semio_framework_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
         .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "HTTP mode requires a protected process-entry MCP credential"))?;

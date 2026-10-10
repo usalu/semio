@@ -1,16 +1,19 @@
 //! 🪶️ Explicit TXT entities and controlled external UTF-8 carriers.
 use crate::standards::v_utf_8::subsets::any::schema::snapshot::{LineEnding, TxtSnapshot};
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, Reconstruction, ordered_row_refs}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}, ArtifactSqliteSnapshot};
-use semio_framework_value::{native_decoding::{NativeDecodeControl, NativeDecodeProgress}, native_encoding::{NativeEncodeControl, NativeEncodeProgress}};
+use semio_framework_value::{native_decoding::{NativeDecodeControl, NativeDecodeProgress},NativeEncodeControl};
+#[path="🛫️encoding/🦀️.rs"]
+mod original_encoding;
 
-fn native_length(snapshot: &TxtSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<usize, ValueError> {
+fn native_length(snapshot: &TxtSnapshot, control: &mut SqliteSnapshotControl<'_>,mut native:Option<&mut NativeEncodeControl<'_>>) -> Result<usize, ValueError> {
+    if let Some(native)=native.as_deref_mut(){native.checkpoint()?;}
     control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, snapshot.lines.len())?;
-    control.check_rows(snapshot.lines.len().checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "text entity count overflow"))?)?;
-    let separators = snapshot.lines.len().saturating_sub(1).checked_add(usize::from(snapshot.trailing_newline)).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "text separator count overflow"))?;
-    let mut bytes = separators.checked_mul(snapshot.line_ending.as_str().len()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "text body length overflow"))?;
+    control.check_rows(snapshot.lines.len().checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "text entity count overflow"))?)?;
+    let separators = snapshot.lines.len().saturating_sub(1).checked_add(usize::from(snapshot.trailing_newline)).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "text separator count overflow"))?;
+    let mut bytes = separators.checked_mul(snapshot.line_ending.as_str().len()).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "text body length overflow"))?;
     for (ordinal, line) in snapshot.lines.iter().enumerate() {
-        bytes = bytes.checked_add(line.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "text body length overflow"))?;
-        if ordinal % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::EncodeNative, ordinal, snapshot.lines.len())?; }
+        bytes = bytes.checked_add(line.len()).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "text body length overflow"))?;
+        if ordinal % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::EncodeNative, ordinal, snapshot.lines.len())?;if let Some(native)=native.as_deref_mut(){native.checkpoint()?;} }
     }
     Ok(bytes)
 }
@@ -82,69 +85,27 @@ impl ArtifactSqliteSnapshot for TxtSnapshot {
         })()
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        let limits = control.limits();
-        control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 0)?;
-        let size = match payload { store::io_schema::IoPayload::Binary(bytes) => bytes.len(), store::io_schema::IoPayload::Text(text) => text.len() };
-        if size > limits.max_file_bytes { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native text input exceeds file byte limit")); }
-        let mut progress = |event: NativeDecodeProgress| control.checkpoint(SqliteSnapshotPhase::DecodeNative, event.completed, event.total).is_ok();
-        let mut native = NativeDecodeControl::new(limits.max_value_bytes, &mut progress);
-        let body = match payload {
-            store::io_schema::IoPayload::Binary(bytes) => {
-                let bytes = store::semio_format::unwrap_binary_controlled(bytes, "stdio.txt", store::semio_format::Component::Pack, 1, &mut native).map_err(store::semio_format::SemioError::into_value_error)?;
-                native.borrow_text(bytes)?
-            }
-            store::io_schema::IoPayload::Text(text) => text.as_str(),
-        };
-        native.begin_stage(body.len())?;
-        let mut ending = LineEnding::Lf;
-        let mut previous = 0u8;
-        for chunk in body.as_bytes().chunks(65536) {
-            for &byte in chunk { if previous == b'\r' && byte == b'\n' { ending = LineEnding::CrLf; } previous = byte; }
-            native.advance(chunk.len())?;
-        }
-        let sep = ending.as_str();
-        let trailing_newline = !body.is_empty() && body.ends_with(sep);
-        let content = if trailing_newline { &body[..body.len() - sep.len()] } else { body };
-        let count = if body.is_empty() { 0 } else { count_lines(content, ending, &mut native)? };
-        if count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"text entity count overflow"))? > limits.max_rows { return Err(ValueError::new(ValueRefusalKind::WorkLimit,"native text exceeds row limit")); }
-        let mut lines = native.allocate_vec::<String>(count)?;
-        let schema = native.copy_text(crate::STDIO_TXT_DOCUMENT_SCHEMA)?;
-        if !body.is_empty() {
-            for line in content.split(sep) { lines.push(native.copy_text(line)?); }
-        }
-        native.checkpoint()?;
-        Ok(Self { schema, lines, trailing_newline, line_ending: ending })
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{
+        let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
+        let size=match payload{store::io_schema::IoPayload::Binary(bytes)=>bytes.len(),store::io_schema::IoPayload::Text(text)=>text.len()};
+        if size>limits.max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native text input exceeds file byte limit"))}
+        let mut progress=|event:NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total).is_ok();
+        native_owner.scoped_native(limits.max_value_bytes,&mut progress,|owner|match payload{
+            store::io_schema::IoPayload::Binary(bytes)=>Self::receive_pack_rows(bytes,owner,Some(limits.max_rows)),
+            store::io_schema::IoPayload::Text(text)=>Self::receive_text(text,owner,Some(limits.max_rows)),
+        })
     }
 
     fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
-        let body_size = native_length(self, control)?;
-        let limits = control.limits();
-        let prefix = match encoding { SnapshotEncoding::Binary => store::semio_format::declared_envelope_prefix_len("stdio.txt", store::semio_format::Component::Pack, 1)?, SnapshotEncoding::Text => 0 };
-        if body_size.checked_add(prefix).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"text file size overflow"))? > limits.max_file_bytes { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native text output exceeds file byte limit")); }
-        let mut progress = |event: NativeEncodeProgress| control.checkpoint(SqliteSnapshotPhase::EncodeNative, event.completed, event.total).is_ok();
-        let mut native = NativeEncodeControl::new(limits.max_value_bytes, &mut progress);
-        native.begin_stage(body_size)?;
-        let mut body = native.allocate_vec::<u8>(body_size)?;
-        let sep = self.line_ending.as_str().as_bytes();
-        for (ordinal, line) in self.lines.iter().enumerate() {
-            if ordinal != 0 { body.extend_from_slice(sep); native.advance(sep.len())?; }
-            for chunk in line.as_bytes().chunks(65536) { body.extend_from_slice(chunk); native.advance(chunk.len())?; }
-        }
-        if self.trailing_newline { body.extend_from_slice(sep); native.advance(sep.len())?; }
-        native.checkpoint()?;
-        match encoding {
-            SnapshotEncoding::Binary => Ok(store::io_schema::IoPayload::Binary(store::semio_format::wrap_binary_controlled("stdio.txt", store::semio_format::Component::Pack, 1, &body, &mut native)?)),
-            SnapshotEncoding::Text => Ok(store::io_schema::IoPayload::Text(String::from_utf8(body).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"invalid native text output"))?)),
-        }
+        original_encoding::encode(self,encoding,control,native_owner)
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        let size = native_length(self, control)?;
+        let size = native_length(self, control,None)?;
         let prefix = match encoding { SnapshotEncoding::Binary => store::semio_format::declared_envelope_prefix_len("stdio.txt", store::semio_format::Component::Pack, 1)?, SnapshotEncoding::Text => 0 };
         let physical = size.checked_add(prefix).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"text file size overflow"))?;
         if physical > control.limits().max_file_bytes { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native text output exceeds file byte limit")); }
-        control.check_value_bytes(if encoding == SnapshotEncoding::Binary { size.checked_add(physical).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native text ownership overflow"))? } else { size })
+        control.check_value_bytes(physical)
     }
 
     fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
@@ -160,4 +121,3 @@ impl ArtifactSqliteSnapshot for TxtSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

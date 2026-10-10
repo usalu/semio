@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "fields",
+    "sharedLeases",
+    "originalHeadersCopyBytes",
+    "decoderRootSameArc",
+    "instanceFaultOriginalSource",
+    "completeStateAbsent",
+    "completeOutputAbsent",
+    "copies",
+    "terminalDropBytes",
+    "jobFields",
+    "completionRefusalFields"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.flow.host-effect-retirement.v1"
+    },
+    "fields": {
+      "const": [
+        "command",
+        "snapshot",
+        "config",
+        "history",
+        "children",
+        "instance_owner",
+        "completion"
+      ]
+    },
+    "sharedLeases": {
+      "const": [
+        "snapshot",
+        "config",
+        "history",
+        "children"
+      ]
+    },
+    "originalHeadersCopyBytes": {
+      "const": 0
+    },
+    "decoderRootSameArc": {
+      "const": true
+    },
+    "instanceFaultOriginalSource": {
+      "const": true
+    },
+    "completeStateAbsent": {
+      "const": true
+    },
+    "completeOutputAbsent": {
+      "const": true
+    },
+    "copies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "jobFields": {
+      "const": [
+        "payload",
+        "payload_close",
+        "decoder_close",
+        "completion_refusal",
+        "input",
+        "decoder",
+        "page",
+        "byte",
+        "validated",
+        "completed",
+        "closing"
+      ]
+    },
+    "completionRefusalFields": {
+      "const": [
+        "emit",
+        "ephemeral",
+        "fault"
+      ]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Fixed Actor Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "extent",
+    "fields",
+    "semantic",
+    "failureHex",
+    "maximumScalar",
+    "allocationBytes",
+    "copiedPayloadBytes",
+    "callerInputPreserved"
+  ],
+  "properties": {
+    "contract": {
+      "const": "actor.original-fixed-receipt/v1"
+    },
+    "extent": {
+      "const": 104
+    },
+    "fields": {
+      "const": [
+        71,
+        3,
+        24,
+        1,
+        7,
+        512,
+        512,
+        8,
+        1,
+        7,
+        0,
+        0
+      ]
+    },
+    "semantic": {
+      "const": true
+    },
+    "failureHex": {
+      "const": "5341433103000000470000000000000003000000000000001800000000000000010000000000000007000000000000000002000000000000000200000000000008000000000000000100000000000000070000000000000000000000000000000000000000000000"
+    },
+    "maximumScalar": {
+      "const": "18446744073709551615"
+    },
+    "allocationBytes": {
+      "const": 0
+    },
+    "copiedPayloadBytes": {
+      "const": 0
+    },
+    "callerInputPreserved": {
+      "const": true
+    }
+  }
+}

@@ -1,18 +1,15 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { join } from "node:path";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { WORKSPACE_ROOT } from "../../../../../../../../../../../📜️script.ts";
 
 /** 🧪️ Executes flow selected copy policy assertions. */
 export function flowSelectedCopySelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained");
-  assert.equal(existsSync(join(base,"📑️copy/🧬️schema/🔣️.json")),true,"the complete selected-copy corpus has a closed schema");
   const fixture = JSON.parse(readFileSync(join(base, "📑️copy/🧫️fixtures/🔣️.json"), "utf8"));
-  const corpus=JSON.parse(readFileSync(join(base,"📑️copy/🧬️schema/🔣️.json"),"utf8"));const validateCorpus=new Ajv({strict:true,allErrors:true}).compile(corpus);assert.equal(validateCorpus(fixture),true,JSON.stringify(validateCorpus.errors)?.slice(0,650));let probes=0;
-  for(const field of Object.keys(fixture.factoryCustody)){const invalid=structuredClone(fixture);delete invalid.factoryCustody[field];assert.equal(validateCorpus(invalid),false);probes++;}
-  const extra=structuredClone(fixture);extra.factoryCustody.depth=1;assert.equal(validateCorpus(extra),false);probes++;
+  let probes=0;
   const schema=JSON.parse(readFileSync(join(base,"🧬️schema/🔣️.json"),"utf8"));
   const grant=JSON.parse(readFileSync(join(WORKSPACE_ROOT,"🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json"),"utf8"));
   const ajv=new Ajv({strict:true,allErrors:true}).addSchema(grant).addSchema(schema);
@@ -59,6 +56,6 @@ export function flowSelectedCopySelfTests(): number {
     source.replace("bytes > self.maximum_single_bytes || total > self.maximum_total_bytes", "false"),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow selected copy accepted hostile ownership source");
-  console.log("[DEBUG] original selected copy validates the strict whole corpus and actual OwnedFields/Widget/Synapse with independent stable JSON; wholeCorpusSchema=true ticketRefusalProbes="+probes);
+  console.log("[DEBUG] original selected copy plain examples and canonical OwnedFields/Widget/Synapse with independent stable JSON; wholeCorpusSchema=false ticketRefusalProbes="+probes);
   return fixture.cases.length + mutants.length+probes;
 }

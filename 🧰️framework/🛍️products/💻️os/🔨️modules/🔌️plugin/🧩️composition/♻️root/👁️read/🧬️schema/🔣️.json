@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "fields",
+    "metadata",
+    "originalHeadersCopyBytes",
+    "readReturnCopyBytes",
+    "readReturnDepth",
+    "requiresOriginalReadRegistry",
+    "requiresMemberRegistryForWholeMemberTerminal",
+    "copies",
+    "terminalDropBytes",
+    "mereBorrowerAliasProof"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.plugin.child-content-read-retirement.v1"
+    },
+    "fields": {
+      "const": [
+        "view",
+        "pending",
+        "returned",
+        "metadata"
+      ]
+    },
+    "metadata": {
+      "const": [
+        "owner",
+        "slot",
+        "child_id",
+        "artifact_id",
+        "dialect",
+        "revision"
+      ]
+    },
+    "originalHeadersCopyBytes": {
+      "const": 0
+    },
+    "readReturnCopyBytes": {
+      "const": 0
+    },
+    "readReturnDepth": {
+      "const": 2
+    },
+    "requiresOriginalReadRegistry": {
+      "const": true
+    },
+    "requiresMemberRegistryForWholeMemberTerminal": {
+      "const": true
+    },
+    "copies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "mereBorrowerAliasProof": {
+      "const": false
+    }
+  }
+}

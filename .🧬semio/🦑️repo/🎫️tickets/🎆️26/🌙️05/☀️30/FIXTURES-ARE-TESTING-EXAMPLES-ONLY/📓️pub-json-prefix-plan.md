@@ -1,0 +1,5 @@
+# Original Canonical JSON Defining Repair
+
+Root authorized the real defining CanonicalJSON cursor, callback refusal and supplied-depth/receipt repair. Native has no active claims on those blocks and preserves reader/body named laws. The current indexed callbacks return owned String errors, while the real wire parent needs canonical Value refusal/prefix receipt and depth below the fixed inline64 ceiling. The production failure schema and plain independent JSON/depth rows are authored before implementation. No corpus schema, compatibility callback, cold snapshot or policy enlargement is introduced.
+
+The exact current direct callback/coupled-error consumers are being inventoried before narrow changes. Existing typed tree owner already uses ValueError and full grants; its genuine API remains the authority, not a new string conversion. The scalar byte producer currently converts I/O errors into String; its actual literal error/progress producer must be corrected rather than hidden by a caller adapter. Source before hashes contain no checked-in source bodies. Native/System and original collector proofs remain required after the defining cut settles.

@@ -1,0 +1,30 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 8
+  },
+  "messages": [
+    {
+      "wireHex": "0200066e6f7469636503e6bca20203666f6f02c3a9018101",
+      "level": 2,
+      "code": "notice",
+      "message": "漢",
+      "target": [
+        "foo",
+        "é"
+      ],
+      "opIndex": 129
+    },
+    {
+      "wireHex": "00000178000000",
+      "level": 0,
+      "code": "x",
+      "message": "",
+      "target": [],
+      "opIndex": null
+    }
+  ]
+}

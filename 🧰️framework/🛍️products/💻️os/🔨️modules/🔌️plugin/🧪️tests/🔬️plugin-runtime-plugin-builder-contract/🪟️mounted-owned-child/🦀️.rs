@@ -19,7 +19,7 @@ fn mounted_owned_child_original_preparation_preserves_actual_operation_schema() 
         let after = emit.child_preparations.front().and_then(ChildEmitPreparation::accepted_prefix).map_or(before, |prefix| prefix.op_schema.0.len());
         assert!(after.saturating_sub(before) <= 64);
         assert!(heap.requested_bytes <= 262144 && heap.released_bytes <= 262144);
-        if matches!(step, ChildEmitPreparationStep::Ready) { break; }
+        if matches!(step, ChildEmitPreparationStep::Ready(_)) { break; }
     }
     assert_eq!(emit.owned_child_emits.len(), 1);
     assert!(emit.child_emits.is_empty());
@@ -45,7 +45,7 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         for index in 0..count {
             emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot, TestMutation>("slot", format!("child-{}", index + 1), vec![TestMutation::SetCount(SetCount { value: row["childCounts"][index].as_i64().unwrap() as i32 }), TestMutation::SetLabel(SetLabel { value: row["childLabel"].as_str().unwrap().into() })]));
         }
-        for _ in 0..100000 { if matches!(emit.prepare_child_one(1, 262144).unwrap(), ChildEmitPreparationStep::Ready) { break; } }
+        for _ in 0..100000 { if matches!(emit.prepare_child_one(1, 262144).unwrap(), ChildEmitPreparationStep::Ready(_)) { break; } }
         assert_eq!(emit.owned_child_emits.len(), count);
         assert!(emit.child_emits.is_empty());
         let (mutations, inverse_group, operation) = crate::app::test_mounted_original_owned_publication(&mut app, emit, meta(), row["parentTouched"].as_bool().unwrap(), |app| (0..count).map(|index| {
@@ -76,4 +76,10 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         drop(inverse_group);
         drain_and_close_composed_fixture(&mut app);
     }
+}
+
+#[test]
+fn original_pending_child_group_close_preserves_all_sources_and_full_grants(){
+ let original:serde_json::Value=serde_json::from_str(include_str!("../../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let policy=original["native"]["grant"].as_array().unwrap();let grant=RetainedCloneGrant{maximum_items:policy[0].as_u64().unwrap()as usize,maximum_copy_bytes:policy[1].as_u64().unwrap()as usize,maximum_capacity_bytes:policy[2].as_u64().unwrap()as usize,maximum_release_bytes:policy[3].as_u64().unwrap()as usize,maximum_depth:policy[4].as_u64().unwrap()as usize};
+ for count in[0,1,17]{crate::app::test_original_pending_child_group_closure::<TestApp>(||{(0..count).map(|_|TestMutation::SetLabel(SetLabel{value:"original 雪".repeat(8192)})).collect()},grant);}
 }

@@ -4,6 +4,7 @@
   "title": "GeometryInferenceRequest",
   "type": "object",
   "required": [
+    "neuronId",
     "operatorId",
     "inputJson",
     "retained"
@@ -76,9 +77,49 @@
           "minimum": 0
         }
       }
+    },
+    "neuronId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "roundUnits": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "externalResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "neuronId",
+        "extensionId",
+        "operatorId",
+        "nodeHash",
+        "outputJson"
+      ],
+      "properties": {
+        "neuronId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "extensionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operatorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outputJson": {
+          "type": "string"
+        },
+        "nodeHash": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   },
-  "additionalProperties": true,
+  "additionalProperties": false,
   "description": "Canonical initial or replacement operator input and source/wiring/version dependencies. Compact resumes reuse the same parked owner and do not resend source payloads. Output handles are transient instance resources.",
   "x-semio-reads": [
     "operatorId",

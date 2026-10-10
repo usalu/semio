@@ -1,0 +1,11 @@
+{
+  "schema": "semio.artifact.presence-sealed-peer-read/v1",
+  "input": "Original Installed Peer Root and Snapshot Retirement Factory",
+  "output": "One Consuming Sealed Peer Read",
+  "authority": ["Independent Items", "Independent Copy Bytes", "Independent Capacity Bytes", "Independent Release Bytes", "Independent Depth"],
+  "capture": "Admit the Inline Root and Factory Pair Before Cloning Their Original Aliases",
+  "refusal": "Preserve the Exact Root and Factory Pointers Without Physical Allocation or Release",
+  "transfer": "Move the Same Original Pair into the Existing Base-Alias Retirement Cursor",
+  "uncontrolledDrop": false,
+  "replacementFactory": false
+}

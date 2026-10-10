@@ -19,6 +19,14 @@
         "command": "bun ./📜️script.ts test-native"
       }
     },
+    "test-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-source"
+      }
+    },
     "test-text-error-portable": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "framework.job.destination-initialization.v1",
+  "title": "Original Job Destination Initialization Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "pageSlots",
+    "originalPageBytes",
+    "headerEffects",
+    "finalPresenceBytes",
+    "closeStageBytes"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.job.destination-initialization.v1"
+    },
+    "pageSlots": {
+      "const": 256
+    },
+    "originalPageBytes": {
+      "const": 16384
+    },
+    "headerEffects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "presenceBytes",
+        "operationBytes",
+        "generationBytes",
+        "copiedBytes"
+      ],
+      "properties": {
+        "presenceBytes": {
+          "const": 0
+        },
+        "operationBytes": {
+          "const": 0
+        },
+        "generationBytes": {
+          "const": 0
+        },
+        "copiedBytes": {
+          "const": 0
+        }
+      }
+    },
+    "finalPresenceBytes": {
+      "const": 0
+    },
+    "closeStageBytes": {
+      "const": 0
+    }
+  }
+}

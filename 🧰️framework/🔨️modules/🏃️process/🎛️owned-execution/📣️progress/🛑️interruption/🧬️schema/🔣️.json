@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "callerCeilingMilliseconds",
+    "progressIntervalMilliseconds",
+    "childMilliseconds",
+    "publicationMilliseconds",
+    "interruptionMilliseconds",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "callerCeilingMilliseconds": {
+      "const": 15000
+    },
+    "progressIntervalMilliseconds": {
+      "const": 10000
+    },
+    "childMilliseconds": {
+      "const": 10100
+    },
+    "publicationMilliseconds": {
+      "const": 2000
+    },
+    "interruptionMilliseconds": {
+      "const": 11000
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "interruption",
+          "terminal",
+          "publishedBeforeTerminal",
+          "childClosedBeforeTerminal"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "interruption": {
+            "enum": [
+              "cancelled",
+              "deadline"
+            ]
+          },
+          "terminal": {
+            "const": "rejected"
+          },
+          "publishedBeforeTerminal": {
+            "const": false
+          },
+          "childClosedBeforeTerminal": {
+            "const": true
+          }
+        }
+      }
+    }
+  }
+}

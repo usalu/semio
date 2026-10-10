@@ -19,6 +19,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 /// operation rows published by the shared NodeGraph renderer (design §13.3): every row names its entities by id, and no
 /// row carries a whole fixture.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum FlowNodeGraphEditOp {
     #[dsl(key = "delete")]
     Delete { node_ids: Vec<String>, synapse_ids: Vec<String> },
@@ -161,6 +162,7 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
 //#endregion 🔖️SharedDispatch
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct NodeGraphEdit {
     #[dsl(statements)]
     pub operations: Vec<FlowNodeGraphEditOp>,

@@ -1168,3 +1168,6 @@ semio_framework_plugin::derive_artifact_facets!(
 
 #[path="📐️geometry/🦀️.rs"]
 pub mod geometry;
+
+#[path = "📝️text/🔣️value/🦀️.rs"]
+mod value_codec;

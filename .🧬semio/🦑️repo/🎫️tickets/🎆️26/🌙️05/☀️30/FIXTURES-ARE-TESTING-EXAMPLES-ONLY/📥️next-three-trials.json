@@ -1,0 +1,50 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧬️schema/🔣️.json",
+      "sha256": "2c21198397cc5b14a63f840ba4c0fec67c708d0260ee19afed44940cd77c6a74",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧫️fixtures/🔣️.json",
+      "sha256": "423f420db5e56655a773f0018edcf99ab3c69d5fc16c07dea19b72ff33f6e6bc",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+      "sha256": "2c1c71ef6658863bc1b2cacbd6ce6688712957a205198d121ea9b2b856fec1bd",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": "35e2afb3d7659626292a71c4dd2fad7585380843ea003100d9c781543e21388c",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧫️fixtures/🔣️.json",
+      "sha256": "bbbaf47bd57cb0677197a6a45556fdd2a0de89a608d7350ac48f8a00de773d62",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🟦️.ts",
+      "sha256": "191922054754498defb6dfccb5d14e812b6ad5736812a279554989d4b8ed3d45",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🔑️node-key/🧬️schema/🔣️.json",
+      "sha256": "24e0c7ce7822d947a398c3f3cc0a22e1a2bbb5c2db7b8542bbf57f6688a6fda5",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🔑️node-key/🧫️fixtures/🔣️.json",
+      "sha256": "7eec0ca321789e03426f12c461da54847868006e5cdbec1a762c1bad4a051910",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "sha256": "9b42d6bc83987b31ac2e212870ddce2e1490711c0eb25a30e351ee50feea2824",
+      "authored": false
+    }
+  ],
+  "executed": false
+}

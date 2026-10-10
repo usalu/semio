@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-09T22:40:35.132915+00:00",
+  "classification": "Closed root schema/policy/cases trial, no named produced DTO defs. Original u32/four borrowed strings are actual Rust inputs; fixed grant maps to genuine RetainedCloneGrant; preserve SQLite/Buffer/TextEncoder/native identity/cancel/System laws.",
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🟦️.ts",
+      "sha256": "48dcb218506d4e9ee19965ee4a75d856cb8fb163092ded8b462f46978ef8668e",
+      "bytes": 2104,
+      "role": "before observer; no Source copy"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🧬️schema/🔣️.json",
+      "sha256": "b4b67edafdabad19cfabb4ab3dd7a9100eef7803759cf05405190f4559743030",
+      "bytes": 1478,
+      "role": "before observer; no Source copy"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "802563024935cb2e739ec0471ca8ecf95aa7c94b512f72e37433d157e377b707",
+      "bytes": 8760,
+      "role": "before observer; no Source copy"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🦀️.rs",
+      "sha256": "24fb8d57af7212ff1793920bdaf4ab9f9e22aec25a26fad9f6fe156dada51fe7",
+      "bytes": 5533,
+      "role": "before observer; no Source copy"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🦀️.rs",
+      "sha256": "7e21478c24c5f51950a3654ac0dac42a7b811b10f12e4f741a0a65b4e175d8a5",
+      "bytes": 4988,
+      "role": "before observer; no Source copy"
+    }
+  ],
+  "guardAction": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🟦️.ts",
+    "beforeSha256": "48dcb218506d4e9ee19965ee4a75d856cb8fb163092ded8b462f46978ef8668e",
+    "afterSha256": "663e209a30dfffbff2fe5b4f9d90fe3e4dac48d5ee0b5f756eaa921fd66a044f",
+    "blocks": [
+      "existsSync import",
+      "physical original authority absence at first original law"
+    ]
+  }
+}

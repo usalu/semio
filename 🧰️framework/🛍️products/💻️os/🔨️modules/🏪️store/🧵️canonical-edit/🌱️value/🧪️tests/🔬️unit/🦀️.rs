@@ -1,6 +1,7 @@
 use super::super::super::{ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ArtifactCanonicalJsonCursor};
 use super::{ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep};
 use crate::DslValue;
+use semio_framework_value::RetainedCloneGrant;
 use std::sync::Arc;
 
 fn limits() -> ArtifactCanonicalValueLimits {
@@ -219,7 +220,7 @@ fn shared_value_canonical_json_matches_neutral_vectors_and_serde_json_at_each_ch
             let mut actual = Vec::new();
             for _ in 0..100_000 {
                 let mut chunk = [0; ARTIFACT_CANONICAL_JSON_CHUNK_BYTES];
-                let written = cursor.encode_chunk(&accepted, &mut chunk[..chunk_size]).unwrap();
+                let written = cursor.encode_chunk_admitted(&accepted, &mut chunk[..chunk_size],RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).unwrap().written_bytes;
                 assert!(written <= chunk_size);
                 actual.extend_from_slice(&chunk[..written]);
                 if cursor.is_complete() {

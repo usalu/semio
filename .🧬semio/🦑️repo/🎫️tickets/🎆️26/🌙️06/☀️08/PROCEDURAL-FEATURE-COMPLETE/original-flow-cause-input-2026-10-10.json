@@ -1,0 +1,35 @@
+{
+  "scope": "Portable4cases62checks; no native/wholeBridge qualification",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs",
+      "sha256": "090030726d2ceee6dc98c1d5d949b2356277e0dc4a51e77af4d53cbd9a5271e9",
+      "bytes": 37325
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🦀️.rs",
+      "sha256": "7fba4d691748069550d87b1619ad1c74469aaea9176da016f24ab1e012f887c5",
+      "bytes": 3870
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs",
+      "sha256": "a711c922302df3bf304e4763a340c5d633710e5d40f75b0a9581e6b0c3c6589f",
+      "bytes": 274365
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+      "sha256": "e11565ebeae9dfd07a3b5102661a4d8539877ae9bed42fade88cfd2d97e7dc77",
+      "bytes": 5026
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
+      "sha256": "4ffd217575bbb158cd6c530e8aac632f91e22a9141a4d0e8ac014e64dc774fc7",
+      "bytes": 2312
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/🎟️retained-receipt/🔣️.json",
+      "sha256": "4c56cc325bda3a04c96b291ab1305dbd6266b4c6d2498bbcb3452002eeee840f",
+      "bytes": 1686
+    }
+  ]
+}

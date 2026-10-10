@@ -1,0 +1,15 @@
+{
+  "limits": {
+    "bytes": 1048576,
+    "allocationBytes": 16777216,
+    "depth": 16,
+    "items": 65536
+  },
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 262144,
+    "releaseBytes": 262144,
+    "depth": 64
+  }
+}

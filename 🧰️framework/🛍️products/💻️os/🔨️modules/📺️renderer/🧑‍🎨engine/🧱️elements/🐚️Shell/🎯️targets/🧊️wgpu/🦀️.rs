@@ -962,7 +962,7 @@ pub struct ShellDocumentOpening {
     plugin_id: String,
     app_id: String,
     document: Option<ShellDocumentOpenTarget>,
-    pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, String>>>,
+    pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, crate::program_bridge::ProgramFault>>>,
     prepared: Option<ShellPreparedDocumentOpen>,
     /// 🛑️ The token the detached hub resolution's requests check; cancelling the open cancels it.
     cancel: Option<CancelToken>,
@@ -972,7 +972,7 @@ pub struct ShellDocumentOpening {
 
 impl ShellDocumentOpening {
     /// 🚪️ An open whose first detached step is `pending`, in `phase`.
-    fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, String>>>) -> Self {
+    fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, crate::program_bridge::ProgramFault>>>) -> Self {
         Self { label, phase, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app_id, document, pending, prepared: None, cancel: None, resolve_step: std::sync::Arc::default() }
     }
 
@@ -1762,6 +1762,8 @@ struct ShellChromeBuildState {
     transient_notice: Option<ShellTransientNotice>,
     /// 📣️ The structured guest refusal behind the dispatch-fault string the funnel classifies next — see [`RefusedGuestFault`].
     refused_guest_fault: Option<RefusedGuestFault>,
+    #[cfg(not(target_arch = "wasm32"))]
+    refused_frame_fault: Option<semio_framework_actor::pack::PackError>,
     /// 🌉️ MCP agent bridge consumer (presence + parked approvals), packet W1j.
     agent: crate::agent_bridge::AgentBridgeState,
     /// ✅️ The approvals modal's own open/dismiss state, alongside `agent.pending_approvals`.
@@ -1867,10 +1869,10 @@ impl<T: 'static> ShellDetached<T> {
 /// before the document's actor exists, so every mutation the guest authors names the document and its
 /// baseline is the hub's (a door artifact's genesis, a checked-in document's check-in). A document bound to
 /// no hub keeps the guest's own document.
-async fn seed_hub_document(plugin: ProgramBridgeEntry, instance_id: u32, seed: Option<ShellHubDocumentSeed>) -> Result<Option<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1>, String> {
+async fn seed_hub_document(plugin: ProgramBridgeEntry, instance_id: u32, seed: Option<ShellHubDocumentSeed>) -> Result<Option<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1>, crate::program_bridge::ProgramFault> {
     let Some(seed) = seed else { return Ok(None) };
     let pair = seed.client.document_canonical_checkpoint_pair(&seed.ctx, &seed.scope, &seed.checkpoint).await.map_err(|error| format!("canonical checkpoint pair: {error}"))?;
-    plugin.load_app_document_pack(instance_id, &pair.pack_bytes, &pair.spr_bytes).await.map_err(|error| format!("canonical checkpoint pair load: {error}"))?;
+    plugin.load_app_document_pack(instance_id, &pair.pack_bytes, &pair.spr_bytes).await?;
     Ok(Some(pair))
 }
 /// 🧾️ The reserved sections one owed refresh reads besides its guest bodies: the app catalogue (only on
@@ -1888,11 +1890,11 @@ struct ShellRefreshSections {
 /// the refresh no longer wants is handed back by its document's own `Drop`.
 struct ShellRenderedRefresh {
     instance_id: u32,
-    surfaces: HashMap<String, (Result<UiDocumentLease, String>, Vec<semio_framework::kernel::Effect>)>,
-    catalogue: Option<Result<UiDocumentLease, String>>,
-    engagements: Option<Result<UiDocumentLease, String>>,
-    measures: Option<Result<UiDocumentLease, String>>,
-    tools: Option<Result<UiDocumentLease, String>>,
+    surfaces: HashMap<String, (Result<UiDocumentLease, crate::program_bridge::ProgramFault>, Vec<semio_framework::kernel::Effect>)>,
+    catalogue: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>,
+    engagements: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>,
+    measures: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>,
+    tools: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>,
 }
 
 impl ShellRenderedRefresh {
@@ -2318,7 +2320,7 @@ type ShellDirectoryPageResult = (u64, Result<CanonicalDirectoryEventPageV1, Dire
 #[cfg(not(target_arch = "wasm32"))]
 enum ShellDirectoryHomePublicationOutcome {
     Published(DirectoryEventPageAckV1),
-    Rejected(String),
+    Rejected(crate::program_bridge::ProgramFault),
     Terminal(String),
 }
 
@@ -2484,6 +2486,7 @@ enum ShellIoCompletion {
     Actions(Vec<ActionDescriptor>),
     Import(PickedImport),
     MediaFrames { controller_id: String, frames: Vec<ActionDescriptor> },
+    Program(Result<(), crate::program_bridge::ProgramFault>),
     Finished,
 }
 
@@ -3198,6 +3201,8 @@ pub struct ShellPluginFault {
     pub plugin_id: String,
     pub app_id: String,
     pub detail: String,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub frame: Option<semio_framework_actor::pack::PackError>,
 }
 
 /// 🧯 One SURFACE whose `render_with_document` failed, kept as data for exactly the reason
@@ -5248,19 +5253,19 @@ impl ShellState {
     /// 🎬️ Installs one canonical engagements section and retires its transport lease before the
     /// shell republishes Actions/Search bodies. A malformed payload reports a fault and preserves
     /// the last valid snapshot.
-    fn install_window_engagements_section(&mut self, document: UiDocumentLease, faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+    fn install_window_engagements_section(&mut self, document: UiDocumentLease, faults: &mut Vec<(String, String, crate::program_bridge::ProgramFault)>) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Engagements.body_key();
         let engagements = crate::program_bridge::window_engagements_from_section(&document);
         self.retire_one_surface_document(Some(document))?;
         match engagements {
             Ok(engagements) => self.window_engagements = engagements,
-            Err(error) => faults.push((body_key.to_string(), body_key.to_string(), error)),
+            Err(error) => faults.push((body_key.to_string(), body_key.to_string(), error.into())),
         }
         Ok(())
     }
 
     /// 🎬️ Reads the canonical reserved engagements surface on either ProgramBridge backend.
-    async fn refresh_window_engagements(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, String>>, faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+    async fn refresh_window_engagements(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>, faults: &mut Vec<(String, String, crate::program_bridge::ProgramFault)>) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Engagements.body_key();
         let section = match read_ahead {
             Some(section) => section,
@@ -5268,7 +5273,7 @@ impl ShellState {
         };
         match section {
             Ok(document) => self.install_window_engagements_section(document, faults)?,
-            Err(error) => faults.push((body_key.to_string(), body_key.to_string(), error)),
+            Err(error) => faults.push((body_key.to_string(), body_key.to_string(), error.into())),
         }
         Ok(())
     }
@@ -5281,9 +5286,9 @@ impl ShellState {
         program: &ProgramBridgeEntry,
         instance_id: u32,
         view_state: &ViewModel,
-        read_ahead: Option<Result<UiDocumentLease, String>>,
+        read_ahead: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>,
         windows: &[String],
-        faults: &mut Vec<(String, String, String)>,
+        faults: &mut Vec<(String, String, crate::program_bridge::ProgramFault)>,
     ) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Measures.body_key();
         let section = match read_ahead {
@@ -5292,14 +5297,14 @@ impl ShellState {
         };
         let measures = match section {
             Ok(document) => {
-                let measures = crate::program_bridge::window_measures_from_section(&document);
+                let measures = crate::program_bridge::window_measures_from_section(&document).map_err(crate::program_bridge::ProgramFault::from);
                 self.retire_one_surface_document(Some(document))?;
                 measures
             }
             Err(error) => Err(error),
         };
         let measures = measures.unwrap_or_else(|error| {
-            faults.push((body_key.to_string(), body_key.to_string(), error));
+            faults.push((body_key.to_string(), body_key.to_string(), error.into()));
             HashMap::new()
         });
         let stale: Vec<String> = self.window_measures_documents.keys().filter(|window_id| !windows.contains(window_id)).cloned().collect();
@@ -5315,7 +5320,7 @@ impl ShellState {
                     self.window_measures_documents.insert(window_id, document);
                 }
                 Ok(None) => {}
-                Err(error) => faults.push((surface, body_key.to_string(), error)),
+                Err(error) => faults.push((surface, body_key.to_string(), error.into())),
             }
         }
         Ok(())
@@ -5325,7 +5330,7 @@ impl ShellState {
     /// [`ShellState::tool_measures`] — the wgpu twin of React's `toolMeasuresByToolId` ref, which its
     /// `buildToolTabs` `resolveTree` reads fresh at render time. A read failure reports a surface
     /// fault and leaves the previous roster rather than blanking every armed tool's options.
-    async fn refresh_tool_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, String>>, faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+    async fn refresh_tool_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>, faults: &mut Vec<(String, String, crate::program_bridge::ProgramFault)>) -> Result<(), String> {
         let body_key = semio_framework::UiRefreshSection::Tools.body_key();
         let section = match read_ahead {
             Some(section) => section,
@@ -5333,7 +5338,7 @@ impl ShellState {
         };
         let measures = match section {
             Ok(document) => {
-                let measures = crate::program_bridge::tool_measures_from_section(&document);
+                let measures = crate::program_bridge::tool_measures_from_section(&document).map_err(crate::program_bridge::ProgramFault::from);
                 self.retire_one_surface_document(Some(document))?;
                 measures
             }
@@ -5341,7 +5346,7 @@ impl ShellState {
         };
         match measures {
             Ok(measures) => self.tool_measures = measures,
-            Err(error) => faults.push((body_key.to_string(), body_key.to_string(), error)),
+            Err(error) => faults.push((body_key.to_string(), body_key.to_string(), error.into())),
         }
         Ok(())
     }
@@ -7008,6 +7013,10 @@ impl ShellState {
                     }
                     changed |= self.begin_media_frames_transfer(controller_id, frames);
                 }
+                Ok(ShellIoCompletion::Program(result)) => {
+                    if let Err(refusal) = result { self.note_refused_open(refusal); changed = true; }
+                    if let Some(pending) = self.shell_io_pending.pop_front() { if let Some(task) = pending.task { task.cancel(); } }
+                }
                 Ok(ShellIoCompletion::Finished) | Err(std::sync::mpsc::TryRecvError::Disconnected) => {
                     if let Some(pending) = self.shell_io_pending.pop_front() {
                         if let Some(task) = pending.task {
@@ -7628,13 +7637,21 @@ impl ShellState {
     /// left no trace at all, which is why a blank body read as "nothing happened". `debug_log` is
     /// this type's ONE trace sink for exactly that reason; no diagnostic in this file may use
     /// `eprintln!` except `debug_log`'s own native arm.
-    fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, detail: String) {
+    fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, refusal: crate::program_bridge::ProgramFault) {
+        #[cfg(not(target_arch = "wasm32"))]
+        let frame = refusal.frame;
+        #[cfg(not(target_arch = "wasm32"))]
+        let detail = if frame.is_some() { LocalizedLabel::native("The input could not be delivered.", "Die Eingabe konnte nicht zugestellt werden.").resolve(self.active_terminology(), self.active_locale()).to_string() } else { refusal.text };
+        #[cfg(target_arch = "wasm32")]
+        let detail = refusal.text;
         Self::debug_log(&format!("[TRACE] wgpu-shell surface fault surface={surface_id} body={body_key} detail={detail}"));
         if let Some(existing) = self.surface_faults.iter_mut().find(|fault| fault.surface_id == surface_id) {
             existing.body_key = body_key.to_string();
             existing.detail = detail;
+            #[cfg(not(target_arch = "wasm32"))]
+            { existing.frame = frame; }
         } else {
-            self.surface_faults.push(ShellSurfaceFault { surface_id: surface_id.to_string(), body_key: body_key.to_string(), detail });
+            self.surface_faults.push(ShellSurfaceFault { surface_id: surface_id.to_string(), body_key: body_key.to_string(), detail, #[cfg(not(target_arch = "wasm32"))] frame });
         }
         self.error = self.fault_status();
     }
@@ -7650,7 +7667,7 @@ impl ShellState {
             return;
         }
         let body_key = self.document_body_key(surface_id).unwrap_or_else(|| surface_id.to_string());
-        self.record_surface_fault(surface_id, &body_key, "retained document ingress reached its terminal fault".to_string());
+        self.record_surface_fault(surface_id, &body_key, "retained document ingress reached its terminal fault".into());
     }
 
     /// 🪟️ One retained body finished a paint: its paint fault (if any) clears, and its windowed tree containers are measured and
@@ -8365,7 +8382,7 @@ impl ShellState {
 
     fn discard_window_topology_journal(&mut self, publication: &WindowTopologyPublication) {
         if publication.journal_token.is_some_and(|token| self.take_window_topology_action(token).is_none()) {
-            self.record_surface_fault(&publication.window_id, &publication.body_key, "window topology journal owner was absent".to_string());
+            self.record_surface_fault(&publication.window_id, &publication.body_key, "window topology journal owner was absent".into());
         }
     }
 
@@ -8387,9 +8404,9 @@ impl ShellState {
                                 self.deferred_actions.push(action);
                                 self.window_topology_journal_dispatch_owed = true;
                             }
-                            Err(error) => self.record_surface_fault(&publication.window_id, &publication.body_key, format!("window topology journal decode refused: {error:?}")),
+                            Err(error) => self.record_surface_fault(&publication.window_id, &publication.body_key, format!("window topology journal decode refused: {error:?}").into()),
                         },
-                        None => self.record_surface_fault(&publication.window_id, &publication.body_key, "window topology journal owner was absent".to_string()),
+                        None => self.record_surface_fault(&publication.window_id, &publication.body_key, "window topology journal owner was absent".into()),
                     }
                 }
                 continue;
@@ -8404,7 +8421,7 @@ impl ShellState {
                 continue;
             }
             self.discard_window_topology_journal(&publication);
-            self.record_surface_fault(&publication.window_id, &publication.body_key, format!("initial window body publication refused after {} attempts; topology journal retired without dispatch", WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS));
+            self.record_surface_fault(&publication.window_id, &publication.body_key, format!("initial window body publication refused after {} attempts; topology journal retired without dispatch", WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS).into());
         }
         self.window_topology_refresh_owed = !self.window_topology_publications.is_empty();
         if self.window_topology_refresh_owed {
@@ -8510,7 +8527,7 @@ impl ShellState {
         latency.set_work_items(live_windows.len());
         let measure_windows: Vec<String> = live_windows.iter().map(|(window_id, _)| window_id.clone()).collect();
         let mut refresh_effects = Vec::new();
-        let mut faults: Vec<(String, String, String)> = Vec::new();
+        let mut faults: Vec<(String, String, crate::program_bridge::ProgramFault)> = Vec::new();
         let mut rendered = 0usize;
         let mut visited: Vec<String> = Vec::new();
         {
@@ -8541,7 +8558,7 @@ impl ShellState {
                     Ok(document) => {
                         self.window_ui.insert(window_id.clone(), document);
                     }
-                    Err(error) => faults.push((window_id.clone(), kind.body_key.clone(), error)),
+                    Err(error) => faults.push((window_id.clone(), kind.body_key.clone(), error.into())),
                 }
                 let elapsed = (Self::instant_now_ms() - render_started).max(0.0);
                 Self::declare_boot_subphase(&format!("shell-boot:render:{window_id}"), "leave", elapsed);
@@ -8550,7 +8567,7 @@ impl ShellState {
         }
         let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
         if let Err(error) = self.refresh_app_document_identity(&program, session.instance_id).await {
-            faults.push(("document-identity".into(), "document-identity".into(), error));
+            faults.push(("document-identity".into(), "document-identity".into(), error.into()));
         }
         let panel_view = view_state.for_panel();
         let panel_leaves: Vec<(String, String)> = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().filter_map(|tab| tab.body_key.as_deref().map(|body_key| (tab.id().to_string(), body_key.to_string()))).collect();
@@ -8564,7 +8581,7 @@ impl ShellState {
                     self.retire_one_surface_document(previous)?;
                 }
                 Ok(None) => {}
-                Err(error) => faults.push((tab_id.clone(), tab_id.clone(), error)),
+                Err(error) => faults.push((tab_id.clone(), tab_id.clone(), error.into())),
             }
         }
         for (tab_id, body_key) in panel_leaves {
@@ -8593,7 +8610,7 @@ impl ShellState {
                         self.chrome_tour_reveal_panel_tab(&session, &tab_id);
                     }
                 }
-                Err(error) => faults.push((tab_id.clone(), body_key.clone(), error)),
+                Err(error) => faults.push((tab_id.clone(), body_key.clone(), error.into())),
             }
             let elapsed = (Self::instant_now_ms() - render_started).max(0.0);
             Self::declare_boot_subphase(&format!("shell-boot:render:{tab_id}"), "leave", elapsed);
@@ -8632,7 +8649,7 @@ impl ShellState {
                         let spawned_app = spawn_plugin.manifest.apps.iter().find(|app| app.id == spawned.app_id).cloned();
                         if let Some(app) = spawned_app {
                             if let Err(error) = self.refresh_app_document_identity(&spawn_plugin, spawned.instance_id).await {
-                                faults.push((spawned.id.clone(), "document-identity".into(), error));
+                                faults.push((spawned.id.clone(), "document-identity".into(), error.into()));
                             }
                             let body_key = app.window_kinds.first().body_key.clone();
                             let fresh_view = ViewModel {
@@ -8663,7 +8680,7 @@ impl ShellState {
                                     self.spawned_ui = Some(document);
                                     self.spawned_session = Some(ActiveSession { plugin_id: spawned.plugin_id.clone(), instance_id: spawned.instance_id, app, view_state });
                                 }
-                                Err(error) => faults.push((spawned.id.clone(), body_key.clone(), error)),
+                                Err(error) => faults.push((spawned.id.clone(), body_key.clone(), error.into())),
                             }
                         }
                     }
@@ -8689,7 +8706,7 @@ impl ShellState {
     /// ⚠️ `visited`, not `clear()`: a scoped pass re-renders only what its `UiDirtyScope` named, and
     /// clearing the whole set would silently dismiss the fault card of every surface it never looked
     /// at — a broken body that repairs itself the moment an unrelated window settles.
-    fn settle_surface_faults(&mut self, faults: Vec<(String, String, String)>, visited: &[String]) {
+    fn settle_surface_faults(&mut self, faults: Vec<(String, String, crate::program_bridge::ProgramFault)>, visited: &[String]) {
         self.surface_faults.retain(|fault| !visited.contains(&fault.surface_id));
         for (surface_id, body_key, detail) in faults {
             self.record_surface_fault(&surface_id, &body_key, detail);
@@ -8712,7 +8729,7 @@ impl ShellState {
     /// `submit_turn`, which wedged `boot_shell` itself and took every later pointer event with it
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md`). "Once
     /// per app instance" is what the first line of this doc promises; the failure path now keeps it.
-    async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, String>>) {
+    async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>) {
         let body_key = semio_framework::UiRefreshSection::Catalogue.body_key();
         let fetched = match read_ahead {
             Some(fetched) => fetched,
@@ -8725,7 +8742,8 @@ impl ShellState {
         let document = match fetched {
             Ok(document) => document,
             Err(error) => {
-                Self::debug_log(&format!("[TRACE] wgpu shell app catalogue fetch failed: {error}"));
+                let detail = self.note_refused_open(error);
+                Self::debug_log(&format!("[TRACE] wgpu shell app catalogue fetch failed: {detail}"));
                 return;
             }
         };
@@ -9154,10 +9172,11 @@ impl ShellState {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
                             let instance_id = session.instance_id;
+                            #[cfg(not(target_arch = "wasm32"))]
+                            self.submit_shell_io_future(async move { ShellIoCompletion::Program(plugin.load_app_document_pack(instance_id, &pack, &spr).await) });
+                            #[cfg(target_arch = "wasm32")]
                             crate::spawn_app_task(async move {
-                                if let Err(error) = plugin.load_app_document_pack(instance_id, &pack, &spr).await {
-                                    Self::debug_log(&format!("[TRACE] wgpu shell loadDocument effect failed: {error}"));
-                                }
+                                if let Err(error) = plugin.load_app_document_pack(instance_id, &pack, &spr).await { Self::debug_log(&format!("[TRACE] wgpu shell loadDocument effect failed: {error}")); }
                             });
                         }
                     }
@@ -10732,7 +10751,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         self.conflicts_seeded = true;
         match plugin.read_conflicts(instance_id).await {
             Ok(conflicts) => self.open_conflicts = Self::conflict_rows(&conflicts),
-            Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell read_conflicts failed: {error}")),
+            Err(error) => { let detail = self.note_refused_open(error); Self::debug_log(&format!("[TRACE] wgpu shell read_conflicts failed: {detail}")); },
         }
     }
 
@@ -10745,7 +10764,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if let Some((plugin, instance_id)) = self.session.as_ref().and_then(|session| self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().map(|plugin| (plugin, session.instance_id))) {
                 match plugin.resolve_conflict(instance_id, conflict_id, accept).await {
                     Ok(conflicts) => self.open_conflicts = Self::conflict_rows(&conflicts),
-                    Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell resolve_conflict failed: {error}")),
+                    Err(error) => { let detail = self.note_refused_open(error); Self::debug_log(&format!("[TRACE] wgpu shell resolve_conflict failed: {detail}")); },
                 }
             }
         }
@@ -10845,6 +10864,7 @@ impl ShellState {
         } else {
             Ok(Vec::new())
         };
+        let retirement = retirement.map_err(|refusal| self.note_refused_open(refusal));
         if let (Some(owner), Ok(effects)) = (owner.as_ref(), retirement.as_ref()) {
             if self.active_sync_owner().as_ref().is_some_and(|active| shell_sync_owner_matches(active, owner)) {
                 if let Some(channel) = self.sync_channel.as_ref() {
@@ -10964,7 +10984,7 @@ impl ShellState {
                                 changed = true;
                                 document_changed = true;
                             }
-                            Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell apply_mutations failed: {error}")),
+                            Err(error) => { let detail = self.note_refused_open(error); Self::debug_log(&format!("[TRACE] wgpu shell apply_mutations failed: {detail}")); },
                         }
                     }
                 }
@@ -10984,7 +11004,7 @@ impl ShellState {
                                 changed = true;
                                 document_changed = true;
                             }
-                            Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell load_app_document_archive failed: {error}")),
+                            Err(error) => { let detail = self.note_refused_open(error); Self::debug_log(&format!("[TRACE] wgpu shell load_app_document_archive failed: {detail}")); },
                         }
                     }
                 }
@@ -11046,7 +11066,7 @@ impl ShellState {
                             }
                         }
                         Ok(_) => {}
-                        Err(error) => self.sync_terminal_fault = Some(error),
+                        Err(error) => self.sync_terminal_fault = Some(self.note_refused_open(error)),
                     }
                 }
                 ArtifactEvent::Preview { .. } => {
@@ -11215,7 +11235,7 @@ impl ShellState {
                 self.observe_history_reprojection(patch.reprojection.as_ref());
                 self.history_current_checkpoint_id = patch.current_checkpoint_id;
             }
-            Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell read_history failed: {error}")),
+            Err(error) => { let detail = self.note_refused_open(error); Self::debug_log(&format!("[TRACE] wgpu shell read_history failed: {detail}")); },
         }
         true
     }
@@ -11382,7 +11402,7 @@ impl ShellState {
             let command_json = semio_framework_pack_json::to_json_string(&invocation);
             match program.handle_command(session.instance_id, &command_json, &session.view_state).await {
                 Ok(result) => self.queue_host_effects(&session.app.controller_id, result.requested_effects),
-                Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact (live session) failed: {error}")),
+                Err(error) => { let detail = self.note_refused_open(error); Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact (live session) failed: {detail}")); },
             }
             return;
         }
@@ -11421,8 +11441,9 @@ impl ShellState {
         let binding_effects = match program.bind_document_backbone(instance_id, binding_generation, &actor_uri).await {
             Ok(effects) => effects,
             Err(error) => {
-                let _ = program.retire_document_backbone(instance_id, binding_generation, &actor_uri).await;
-                Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact document-backbone bind failed: {error}"));
+                let detail = self.note_refused_open(error);
+                if let Err(refusal) = program.retire_document_backbone(instance_id, binding_generation, &actor_uri).await { self.note_refused_open(refusal); }
+                Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact document-backbone bind failed: {detail}"));
                 let _ = channels.cmd_tx.send(ArtifactActorMsg::Detach);
                 self.document_host.close_key(&channels.document_key);
                 program.destroy_app(instance_id);
@@ -11445,10 +11466,11 @@ impl ShellState {
                 Ok(remaining) => self.queue_host_effects(&app.controller_id, remaining),
                 Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact document-backbone egress failed: {error}")),
             },
-            Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact dispatch failed: {error}")),
+            Err(error) => { let detail = self.note_refused_open(error); Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact dispatch failed: {detail}")); },
         }
         if let Err(error) = program.retire_document_backbone(instance_id, binding_generation, &actor_uri).await {
-            Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact document-backbone retirement failed: {error}"));
+            let detail = self.note_refused_open(error);
+            Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact document-backbone retirement failed: {detail}"));
         }
         let _ = channels.cmd_tx.send(ArtifactActorMsg::Detach);
         self.document_host.close_key(&channels.document_key);
@@ -11645,7 +11667,7 @@ impl ShellState {
     /// one seed of every shell).
     async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>, backbone_uri: Option<String>) -> Result<(), String> {
         let prepared = self.prepare_document_open(document_id, schema, bindings, surface, backbone_uri, None).await?;
-        let pair = seed_hub_document(prepared.plugin.clone(), prepared.session.instance_id, prepared.seed.clone()).await?;
+        let pair = seed_hub_document(prepared.plugin.clone(), prepared.session.instance_id, prepared.seed.clone()).await.map_err(|refusal| self.note_refused_open(refusal))?;
         self.install_document_seed(&prepared, pair)?;
         self.finish_document_open(prepared).await?;
         self.refresh_ui(UiDirtyScope::Full).await
@@ -11702,10 +11724,11 @@ impl ShellState {
         let binding_effects = match plugin.bind_document_backbone(session.instance_id, binding_generation, &actor_uri).await {
             Ok(effects) => effects,
             Err(error) => {
-                let _ = plugin.retire_document_backbone(session.instance_id, binding_generation, &actor_uri).await;
+                let detail = self.note_refused_open(error);
+                if let Err(refusal) = plugin.retire_document_backbone(session.instance_id, binding_generation, &actor_uri).await { self.note_refused_open(refusal); }
                 let _ = channels.cmd_tx.send(ArtifactActorMsg::Detach);
                 self.document_host.close_key(&channels.document_key);
-                return Err(format!("plugin document-backbone bind: {error}"));
+                return Err(detail);
             }
         };
         let cmd_tx = channels.cmd_tx.clone();
@@ -13657,7 +13680,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 let (terminology, locale) = (self.active_terminology(), self.active_locale());
                 let label = app.label.resolve(terminology, locale).to_string();
                 let app_id = app.id.clone();
-                let pending = ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated).map_err(|refusal| program_fault_text(&refusal, terminology, locale)) });
+                let pending = ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated) });
                 self.document_opening = Some(ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Instantiating, plugin_id, app.id, document, Some(pending)));
             }
             _ => {
@@ -13690,7 +13713,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let seed_cancel = prepared.seed.as_ref().map(|seed| seed.ctx.cancel.clone());
         let pending = ShellDetached::spawn({
             let (plugin, instance_id, seed) = (prepared.plugin.clone(), prepared.session.instance_id, prepared.seed.clone());
-            async move { seed_hub_document(plugin, instance_id, seed).await.map(ShellDocumentOpenAnswer::Seeded) }
+            async move { seed_hub_document(plugin, instance_id, seed).await.map(ShellDocumentOpenAnswer::Seeded).map_err(crate::program_bridge::ProgramFault::from) }
         });
         let mut opening = opening.unwrap_or_else(|| ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Seeding, session.plugin_id.clone(), session.app.id.clone(), None, None));
         opening.phase = ShellDocumentOpenPhase::Seeding;
@@ -13735,7 +13758,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let lease = client.document_execution_target_lease(&ctx, &intent).await.map_err(|error| format!("document execution target: {error}"))?;
             let plugin_id = lease.package.plugin_id.clone();
             if expected_plugin.as_ref().is_some_and(|expected| *expected != plugin_id) {
-                return Err(format!("the hub opens this document with {plugin_id}, not {}", expected_plugin.unwrap_or_default()));
+                return Err(crate::program_bridge::ProgramFault::from(format!("the hub opens this document with {plugin_id}, not {}", expected_plugin.unwrap_or_default())));
             }
             let local_sha = local_shas.into_iter().find(|(local, _)| *local == plugin_id).and_then(|(_, sha)| sha);
             let resolved = client
@@ -13747,7 +13770,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 Some(files) => Some(crate::program_bridge::load_resolved_program(&plugin_id, &files.component, &files.descriptor, &resolved.lease.component.sha256).await?),
                 None => None,
             };
-            Ok(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program, checkpoint: resolved.lease.checkpoint.clone() })
+            Ok::<ShellDocumentOpenAnswer, crate::program_bridge::ProgramFault>(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program, checkpoint: resolved.lease.checkpoint.clone() })
         });
         let mut opening = ShellDocumentOpening::new(
             label,
@@ -13796,7 +13819,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
         let app_id = app.id.clone();
         let (terminology, locale) = (self.active_terminology(), self.active_locale());
-        opening.pending = Some(ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated).map_err(|refusal| program_fault_text(&refusal, terminology, locale)) }));
+        opening.pending = Some(ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated) }));
         opening.phase = ShellDocumentOpenPhase::Instantiating;
         self.document_opening = Some(opening);
     }
@@ -13883,7 +13906,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             Err(error) => {
                 self.document_opening = Some(opening);
-                self.fail_document_opening(error);
+                let detail = self.note_refused_open(error);
+                self.fail_document_opening(detail);
             }
         }
         true
@@ -13927,7 +13951,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Some(Ok(pair)) => {
                 let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == owner.plugin_id).cloned() else { return false };
                 if let Err(error) = plugin.load_app_document_pack(owner.instance_id, &pair.pack_bytes, &pair.spr_bytes).await {
-                    Self::debug_log(&format!("[TRACE] wgpu shell rebootstrap reseed load failed: {error}"));
+                    let detail = self.note_refused_open(error);
+                    Self::debug_log(&format!("[TRACE] wgpu shell rebootstrap reseed load failed: {detail}"));
                     reseed.pending = None;
                     reseed.retry_at_ms = chrome_now_ms() + SYNC_RESEED_RETRY_MS;
                     self.sync_reseed = Some(reseed);
@@ -13987,10 +14012,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             arguments: BTreeMap::from([("eventsJson".into(), semio_framework_value::DslValue::String(events_json))]),
         };
         let action_json = semio_framework_pack_json::to_json_string(&invocation);
-        let pool = crate::renderer_worker_pool();
         let instance_id = session.instance_id;
-        let _ = ShellPoolFuture::spawn(pool, Lane::Io, async move {
-            let _ = program.handle_action(instance_id, &action_json, &live_view_state).await;
+        self.submit_shell_io_future(async move {
+            ShellIoCompletion::Program(program.handle_action(instance_id, &action_json, &live_view_state).await.map(|_| ()))
         });
     }
 
@@ -14060,7 +14084,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let pool = crate::renderer_worker_pool();
         let task = ShellPoolFuture::spawn(pool, Lane::Io, async move {
             let outcome = match program.handle_action(instance_id, &action_json, &view_state).await {
-                Err(error) => ShellDirectoryHomePublicationOutcome::Rejected(error.text),
+                Err(error) => ShellDirectoryHomePublicationOutcome::Rejected(error),
                 Ok(result) => match terminal_directory_home_ack(&result, epoch) {
                     Ok(actual) if actual == expected_for_task => ShellDirectoryHomePublicationOutcome::Published(actual),
                     Ok(_) => ShellDirectoryHomePublicationOutcome::Terminal("retained Home directory acknowledgement does not match the pending page".into()),
@@ -14284,6 +14308,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
 
         if let Some((epoch, instance_id, expected, outcome)) = self.poll_directory_home_publication() {
+            if let ShellDirectoryHomePublicationOutcome::Rejected(refusal) = &outcome {
+                if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; }
+            }
             let current = self.directory_home.as_ref().is_some_and(|home| !home.closed && home.bootstrap.bootstrap_epoch() == epoch && home.instance_id == instance_id);
             if current {
                 match outcome {
@@ -14308,8 +14335,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         }
                     }
                     ShellDirectoryHomePublicationOutcome::Rejected(error) => {
+                        let frame_refusal = error.frame.is_some();
+                        let rebootstrap = error.text.contains("directory-event-page-rebootstrap-required");
+                        let detail = self.note_refused_open(error);
                         if let Some(home) = self.directory_home.as_mut() {
-                            if error.contains("directory-event-page-rebootstrap-required") {
+                            if frame_refusal {
+                                home.close();
+                                self.error = Some(detail);
+                            } else if rebootstrap {
                                 let _ = home.begin_epoch(0);
                             } else if home.retry(crate::renderer_worker_pool().now_ms(), &expected.receipt_sha256).is_err() {
                                 home.close();
@@ -14548,7 +14581,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let Some(previous) = self.session.clone() else {
             return Ok(());
         };
-        let instance_id = program.create_app(&app.id).await.map_err(|refusal| program_fault_text(&refusal, self.active_terminology(), self.active_locale()))?;
+        let instance_id = program.create_app(&app.id).await.map_err(|refusal| self.note_refused_open(refusal))?;
         Self::debug_log(&format!("[TRACE] shell session switch {}", serde_json::json!({ "step": "create", "plugin": program.plugin_id, "from": previous.app.id, "to": app.id, "instance": instance_id })));
         self.retire_documents_outside(&[], true)?;
         self.retire_documents_outside(&[], false)?;
@@ -14902,7 +14935,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 return Ok(());
             }
         }
-        let instance_id = program.create_app(&app.id).await.map_err(|refusal| program_fault_text(&refusal, self.active_terminology(), self.active_locale()))?;
+        let instance_id = program.create_app(&app.id).await.map_err(|refusal| self.note_refused_open(refusal))?;
         self.install_app_session(plugin_id, app, instance_id);
         self.refresh_ui(UiDirtyScope::Full).await
     }
@@ -15002,10 +15035,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let program = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).ok_or("space program missing")?;
             let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "openSpace".into(), args: crate::action_args_json!({ "spaceId": space_id }) };
             let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
-            let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await?;
+            let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await.map_err(|refusal| self.note_refused_open(refusal))?;
             for effect in &result.requested_effects {
                 if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
-                    program.load_app_document_pack(session.instance_id, pack, spr).await?;
+                    program.load_app_document_pack(session.instance_id, pack, spr).await.map_err(|refusal| self.note_refused_open(refusal))?;
                 }
             }
             self.sync_session_chrome();
@@ -15938,7 +15971,7 @@ impl ShellState {
             Ok(identity) => identity,
             Err(error) => {
                 self.app_document_identities.remove(&key);
-                return Err(error);
+                return Err(self.note_refused_open(error));
             }
         };
         if !self.app_document_identities.accept(&key, request, identity.app_instance_id, identity.parent_document_id) {
@@ -22540,7 +22573,7 @@ impl ShellState {
     /// Measures overlay's own pass and through the same revision-keyed ingress, so an unchanged body
     /// pays nothing. A window whose body fails to project keeps no document and reports a surface
     /// fault rather than blanking the refresh.
-    fn refresh_window_action_panes(&mut self, windows: &[String], faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+    fn refresh_window_action_panes(&mut self, windows: &[String], faults: &mut Vec<(String, String, crate::program_bridge::ProgramFault)>) -> Result<(), String> {
         let stale: Vec<String> = self.window_actions_documents.keys().chain(self.window_search_documents.keys()).filter(|window_id| !windows.contains(window_id)).cloned().collect();
         for window_id in stale.into_iter().chain(windows.iter().cloned()) {
             let previous = self.window_actions_documents.remove(&window_id);
@@ -22556,10 +22589,10 @@ impl ShellState {
                     Ok(document) => {
                         self.window_actions_documents.insert(window_id.clone(), document);
                     }
-                    Err(error) => faults.push((surface.clone(), semio_framework::UiRefreshSection::Engagements.body_key().to_string(), error)),
+                    Err(error) => faults.push((surface.clone(), semio_framework::UiRefreshSection::Engagements.body_key().to_string(), error.into())),
                 },
                 Ok(None) => {}
-                Err(error) => faults.push((surface.clone(), semio_framework::UiRefreshSection::Engagements.body_key().to_string(), error)),
+                Err(error) => faults.push((surface.clone(), semio_framework::UiRefreshSection::Engagements.body_key().to_string(), error.into())),
             }
             let surface = window_search_surface_id(&window_id);
             match self.build_window_search_ui(&window_id).map(|node| panel_ui_scroll_records(&surface, &node)).transpose() {
@@ -22567,10 +22600,10 @@ impl ShellState {
                     Ok(document) => {
                         self.window_search_documents.insert(window_id.clone(), document);
                     }
-                    Err(error) => faults.push((surface.clone(), WINDOW_SEARCH_BODY_KEY.to_string(), error)),
+                    Err(error) => faults.push((surface.clone(), WINDOW_SEARCH_BODY_KEY.to_string(), error.into())),
                 },
                 Ok(None) => {}
-                Err(error) => faults.push((surface.clone(), WINDOW_SEARCH_BODY_KEY.to_string(), error)),
+                Err(error) => faults.push((surface.clone(), WINDOW_SEARCH_BODY_KEY.to_string(), error.into())),
             }
         }
         Ok(())
@@ -24417,6 +24450,8 @@ fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuestFaul
 /// (`kernel::fault_notice` over the framework's tables — the host's guest admission `plugin.channel-mismatch` names both
 /// channels), else the call's own text.
 fn program_fault_text(refusal: &crate::program_bridge::ProgramFault, terminology: Terminology, locale: Locale) -> String {
+    #[cfg(not(target_arch = "wasm32"))]
+    if refusal.frame.is_some() { return LocalizedLabel::native("The input could not be delivered.", "Die Eingabe konnte nicht zugestellt werden.").resolve(terminology, locale).to_string(); }
     refusal.fault.as_ref().and_then(|fault| semio_framework::kernel::fault_notice(fault, &[], terminology, locale)).map_or_else(|| refusal.text.clone(), |notice| notice.text)
 }
 
@@ -24538,16 +24573,26 @@ impl ShellState {
     /// 📣️ Records one refused program call's structured guest fault beside the refusing app's notices for the funnel, and
     /// answers the `code: message` text every `String` dispatch channel carries.
     fn refused_guest_call(&mut self, refusal: crate::program_bridge::ProgramFault, app: &AppDefinition) -> String {
+        #[cfg(not(target_arch = "wasm32"))]
+        { if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; } }
+        #[cfg(not(target_arch = "wasm32"))]
+        let detail = if refusal.frame.is_some() { program_fault_text(&refusal, self.active_terminology(), self.active_locale()) } else { refusal.text };
+        #[cfg(target_arch = "wasm32")]
+        let detail = refusal.text;
         self.chrome_build.refused_guest_fault = refusal.fault.map(|fault| RefusedGuestFault { fault, notices: app.fault_notices.clone() });
-        refusal.text
+        detail
     }
 
     /// 🤝️ Tells one refused instance open — the host's guest admission (`plugin.channel-mismatch`, both channels named) or any
     /// other structured refusal — through the dispatch-fault funnel, so it reaches the person as its localized notice and never
     /// as a raw code; answers the text the open's own status keeps ([`program_fault_text`]).
     pub(crate) fn note_refused_open(&mut self, refusal: crate::program_bridge::ProgramFault) -> String {
+        #[cfg(not(target_arch = "wasm32"))]
+        { if self.chrome_build.refused_frame_fault.is_none() { self.chrome_build.refused_frame_fault = refusal.frame; } }
         let detail = program_fault_text(&refusal, self.active_terminology(), self.active_locale());
         self.chrome_build.refused_guest_fault = refusal.fault.map(|fault| RefusedGuestFault { fault, notices: Vec::new() });
+        #[cfg(not(target_arch = "wasm32"))]
+        if refusal.frame.is_some() { self.note_dispatch_fault(&detail); return detail; }
         self.note_dispatch_fault(&refusal.text);
         detail
     }

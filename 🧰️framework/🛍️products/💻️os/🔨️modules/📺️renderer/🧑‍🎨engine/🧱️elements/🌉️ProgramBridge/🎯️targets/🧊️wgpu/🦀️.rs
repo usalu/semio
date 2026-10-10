@@ -36,28 +36,31 @@ use crate::kernel_runtime::{KernelClient, MountedProductReplayAdmission};
 pub struct ProgramFault {
     pub fault: Option<semio_framework::Fault>,
     pub text: String,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub frame: Option<semio_framework_actor::pack::PackError>,
 }
 
 impl From<String> for ProgramFault {
     fn from(text: String) -> Self {
-        Self { fault: None, text }
+        Self { fault: None, text, #[cfg(not(target_arch = "wasm32"))] frame: None }
     }
 }
 
 impl From<&str> for ProgramFault {
     fn from(text: &str) -> Self {
-        Self { fault: None, text: text.to_string() }
+        Self { fault: None, text: text.to_string(), #[cfg(not(target_arch = "wasm32"))] frame: None }
     }
 }
 
-impl From<ProgramFault> for String {
-    fn from(fault: ProgramFault) -> Self {
-        fault.text
-    }
+#[cfg(not(target_arch = "wasm32"))]
+impl From<semio_framework_actor::pack::PackError> for ProgramFault {
+    fn from(error: semio_framework_actor::pack::PackError) -> Self { Self { fault: None, text: String::new(), frame: Some(error) } }
 }
 
 impl std::fmt::Display for ProgramFault {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(error) = &self.frame { return std::fmt::Display::fmt(error, formatter); }
         formatter.write_str(&self.text)
     }
 }
@@ -122,7 +125,7 @@ use semio_framework_value::ToValue;
     /// 🧯️ An `AppFrame::Error` as a [`ProgramFault`]: the decoded guest fault beside its full message.
     fn app_frame_program_fault(fault: &[u8], report: &[u8]) -> ProgramFault {
         let decoded = pack_rt::decode_wire_value(fault).ok().and_then(|value| <semio_framework::Fault as semio_framework_value::FromValue>::from_value(value).ok());
-        ProgramFault { fault: decoded, text: app_frame_error_message(fault, report) }
+        ProgramFault { fault: decoded, text: app_frame_error_message(fault, report), frame: None }
     }
 
     /// 🧾 An `AppFrame::Error`'s full message: the generic fault summary, plus — whenever `report`
@@ -142,7 +145,7 @@ use semio_framework_value::ToValue;
     /// reactor's dedicated command-page argument. `AppFrame`s the guest sends back travel as `Effect::SendMessage{
     /// target: Shell{instance}, payload: pack(AppFrame)}` and are already unpacked by
     /// `KernelClient::exchange_commands` — this fn is now a thin awaiting wrapper, not a decoder.
-    async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<crate::kernel_runtime::ExchangeOutcome, String> {
+    async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<crate::kernel_runtime::ExchangeOutcome, ProgramFault> {
         let outcome = client.exchange_commands(instance_id, commands).await?;
         observe_ephemeral(instance_id, &outcome.frames).await;
         Ok(outcome)
@@ -176,14 +179,14 @@ use semio_framework_value::ToValue;
         ephemeral_snapshots().lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&instance_id);
     }
 
-    fn expect_done(frames: &[AppFrame], seq: u64) -> Result<(), String> {
+    fn expect_done(frames: &[AppFrame], seq: u64) -> Result<(), ProgramFault> {
         if let Some(AppFrame::Error { fault, report, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: Some(reply), .. } if *reply == seq)) {
-            return Err(app_frame_error_message(fault, report));
+            return Err((app_frame_error_message(fault, report)).into());
         }
         if frames.iter().any(|frame| matches!(frame, AppFrame::Done { in_reply_to } if *in_reply_to == seq)) {
             return Ok(());
         }
-        Err(format!("plugin sent no Done for seq {seq}"))
+        Err((format!("plugin sent no Done for seq {seq}")).into())
     }
 
     /// 🎠️ H3-wgpu-native — `📓️design-abi.md` §2: `AppFrame::Effects`/`AppFrame::Events` no longer
@@ -271,7 +274,7 @@ use semio_framework_value::ToValue;
                     saw_invocation = saw_invocation || *in_reply_to == seq;
                 }
                 AppFrame::Error { in_reply_to, fault, report } if in_reply_to == &Some(seq) => {
-                    return Err(app_frame_program_fault(fault, report));
+                    return Err((app_frame_program_fault(fault, report)).into());
                 }
                 _ => {}
             }
@@ -287,7 +290,7 @@ use semio_framework_value::ToValue;
     /// session/document mount to seed a full projection (`replace=true` on the caller's fold) rather
     /// than waiting for the next incremental `Invocation.history_patch`. `ReadHistory` survives
     /// channel v12 unchanged (packet A4's report).
-    pub async fn read_history(client: &KernelClient, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
+    pub async fn read_history(client: &KernelClient, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, ProgramFault> {
         let seq = next_seq();
         let outcome = exchange(client, instance_id, vec![AppCommand::ReadHistory { seq }]).await?;
         outcome
@@ -297,14 +300,14 @@ use semio_framework_value::ToValue;
                 AppFrame::HistorySnapshot { in_reply_to, history_patch } if in_reply_to == seq => decode_wire::<semio_framework::kernel::HistoryPatch>(&history_patch).ok(),
                 _ => None,
             })
-            .ok_or_else(|| format!("plugin sent no HistorySnapshot for seq {seq}"))
+            .ok_or_else(|| ProgramFault::from(format!("plugin sent no HistorySnapshot for seq {seq}")))
     }
 
     /// ⚔️ The native twin of the React shell's `AppCommand::ReadConflicts` seed
     /// (`🏛️ShellHost/🟦️.tsx`'s conflicts-panel bootstrap): sends the command and decodes the packed
     /// `Vec<Conflict>` the guest replies with on `AppFrame::Conflicts`. Same shape as
     /// {@link read_history} — one exchange, one reply frame, best-effort at the caller.
-    pub async fn read_conflicts(client: &KernelClient, instance_id: u32) -> Result<Vec<protocol::Conflict>, String> {
+    pub async fn read_conflicts(client: &KernelClient, instance_id: u32) -> Result<Vec<protocol::Conflict>, ProgramFault> {
         let seq = next_seq();
         let outcome = exchange(client, instance_id, vec![AppCommand::ReadConflicts { seq }]).await?;
         outcome
@@ -314,14 +317,14 @@ use semio_framework_value::ToValue;
                 AppFrame::Conflicts { in_reply_to, conflicts } if in_reply_to == Some(seq) => decode_wire::<Vec<protocol::Conflict>>(&conflicts).ok(),
                 _ => None,
             })
-            .ok_or_else(|| format!("plugin sent no Conflicts for seq {seq}"))
+            .ok_or_else(|| ProgramFault::from(format!("plugin sent no Conflicts for seq {seq}")))
     }
 
     /// ⚔️ React's `onResolve(conflictId, resolution)` (`📌️ChromePanels/🟦️.tsx`'s Accept/Discard pair):
     /// `0` = accept, `1` = discard, matching `AppCommand::ResolveConflict`'s own wire encoding. The
     /// guest answers with the fresh `AppFrame::Conflicts` roster, which is returned so the caller
     /// never has to re-read to see the row leave.
-    pub async fn resolve_conflict(client: &KernelClient, instance_id: u32, conflict_id: &str, accept: bool) -> Result<Vec<protocol::Conflict>, String> {
+    pub async fn resolve_conflict(client: &KernelClient, instance_id: u32, conflict_id: &str, accept: bool) -> Result<Vec<protocol::Conflict>, ProgramFault> {
         let seq = next_seq();
         let commands = vec![AppCommand::ResolveConflict { seq, conflict_id: conflict_id.to_string(), resolution: u8::from(!accept) }];
         let outcome = exchange(client, instance_id, commands).await?;
@@ -391,17 +394,17 @@ use semio_framework_value::ToValue;
     }
 
     /// 🪪️ Reads exactly one typed identity reply from the app's own document store.
-    pub async fn read_app_document_identity(client: &KernelClient, instance_id: u32) -> Result<protocol::AppDocumentIdentity, String> {
+    pub async fn read_app_document_identity(client: &KernelClient, instance_id: u32) -> Result<protocol::AppDocumentIdentity, ProgramFault> {
         let seq = next_seq();
         let outcome = exchange(client, instance_id, vec![AppCommand::ReadDocumentIdentity { seq }]).await?;
         let mut frames = outcome.frames.into_iter();
         match (frames.next(), frames.next()) {
             (Some(AppFrame::DocumentIdentity { in_reply_to, identity }), None) if in_reply_to == seq && identity.app_instance_id == instance_id => Ok(identity),
-            _ => Err(format!("plugin sent no exact DocumentIdentity for instance {instance_id} seq {seq}")),
+            _ => Err((format!("plugin sent no exact DocumentIdentity for instance {instance_id} seq {seq}")).into()),
         }
     }
 
-    pub async fn read_app_document_archive(client: &KernelClient, instance_id: u32) -> Result<protocol::DocumentArchivePack, String> {
+    pub async fn read_app_document_archive(client: &KernelClient, instance_id: u32) -> Result<protocol::DocumentArchivePack, ProgramFault> {
         let seq = next_seq();
         let outcome = exchange(client, instance_id, vec![AppCommand::ReadDocumentArchive { seq }]).await?;
         outcome
@@ -411,7 +414,7 @@ use semio_framework_value::ToValue;
                 AppFrame::DocumentArchive { in_reply_to, archive } if in_reply_to == seq => Some(archive),
                 _ => None,
             })
-            .ok_or_else(|| format!("plugin sent no DocumentArchive for seq {seq}"))
+            .ok_or_else(|| ProgramFault::from(format!("plugin sent no DocumentArchive for seq {seq}")))
     }
 
     /// 🗃️ One whole-document load through the shared stepped host (`protocol::DocumentArchiveLoadHost`,
@@ -419,14 +422,14 @@ use semio_framework_value::ToValue;
     /// gateway and the `🏃️run` batch drive. A person cancels a live load from the history body (`historyEditCancelReplay`, the
     /// guest's own cancel), which the guest's `Cancelled` terminal reports with the previous document unchanged; that outcome
     /// and a `Fault` are refused by name. Progress reaches the person as the guest's `HistoryPatch.reprojection` (`kind: load`).
-    pub async fn load_app_document_archive(client: &KernelClient, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), String> {
+    pub async fn load_app_document_archive(client: &KernelClient, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), ProgramFault> {
         let mut host = protocol::DocumentArchiveLoadHost::new(archive.clone());
         loop {
             let (seq, command) = match host.step(next_seq) {
                 protocol::DocumentArchiveLoadStep::Send { seq, command } => (seq, command),
                 protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Ready) => return Ok(()),
-                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Cancelled) => return Err(DOCUMENT_LOAD_CANCELLED.to_string()),
-                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Fault(fault)) => return Err(app_frame_error_message(&fault, &[])),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Cancelled) => return Err((DOCUMENT_LOAD_CANCELLED.to_string()).into()),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Fault(fault)) => return Err((app_frame_error_message(&fault, &[])).into()),
             };
             let outcome = exchange(client, instance_id, vec![command]).await?;
             let answer = outcome.frames.iter().find(|frame| match frame {
@@ -436,8 +439,8 @@ use semio_framework_value::ToValue;
             });
             match answer.map(|frame| host.answer(seq, frame)) {
                 Some(Ok(_)) => {}
-                Some(Err(protocol::DocumentArchiveLoadRefusal::Refused(fault))) => return Err(app_frame_error_message(&fault, &[])),
-                Some(Err(protocol::DocumentArchiveLoadRefusal::Unanswered)) | None => return Err(format!("document archive load: the plugin sent no answer for seq {seq}")),
+                Some(Err(protocol::DocumentArchiveLoadRefusal::Refused(fault))) => return Err((app_frame_error_message(&fault, &[])).into()),
+                Some(Err(protocol::DocumentArchiveLoadRefusal::Unanswered)) | None => return Err((format!("document archive load: the plugin sent no answer for seq {seq}")).into()),
             }
         }
     }
@@ -447,7 +450,7 @@ use semio_framework_value::ToValue;
     /// section) — its ONE call site there was changed from a plain call to `.await`, the minimal
     /// "plugin-call site" edit needed to keep it off the winit thread's own CPU; the surrounding
     /// turn is driven by the renderer's app-task seam.
-    pub async fn apply_mutations(client: &KernelClient, instance_id: u32, operations: &[u8]) -> Result<(), String> {
+    pub async fn apply_mutations(client: &KernelClient, instance_id: u32, operations: &[u8]) -> Result<(), ProgramFault> {
         let envelopes = protocol::decode_envelopes(operations).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let outcome = exchange(client, instance_id, vec![AppCommand::ApplyEnvelopes { seq, envelopes }]).await?;
@@ -459,7 +462,7 @@ use semio_framework_value::ToValue;
     /// CREATION`): sends the document-wide presence roster (already own-actor-dropped by the caller)
     /// as a single `AppCommand::Presence`, one `encode_presence_peer` blob per peer. A plain `Done`
     /// reply, never decoded further here.
-    pub async fn push_presence(client: &KernelClient, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), String> {
+    pub async fn push_presence(client: &KernelClient, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), ProgramFault> {
         if peers.len() > flow::os_spr::channel::PRESENCE_ROSTER_MAXIMUM_ITEMS {
             return Err("presence roster exceeds its fixed producer admission".into());
         }
@@ -472,7 +475,7 @@ use semio_framework_value::ToValue;
         expect_done(&outcome.frames, seq)
     }
 
-    async fn exchange_document_backbone_binding(client: &KernelClient, command: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1) -> Result<Vec<Effect>, String> {
+    async fn exchange_document_backbone_binding(client: &KernelClient, command: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1) -> Result<Vec<Effect>, ProgramFault> {
         let instance = command.instance_id;
         let payload = command.encode()?;
         let mut outcome = client.exchange_events(instance, vec![Event::Message { source: MessageEndpoint::Shell { instance: PluginInstanceId(instance.to_string()) }, payload }]).await?;
@@ -486,14 +489,14 @@ use semio_framework_value::ToValue;
             })
             .collect::<Vec<_>>();
         if candidates.len() != 1 {
-            return Err(format!("plugin document-backbone binding returned {} shell receipts", candidates.len()));
+            return Err((format!("plugin document-backbone binding returned {} shell receipts", candidates.len())).into());
         }
         semio_framework_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(candidates[0].1, &command)?;
         outcome.effects.remove(candidates[0].0);
         Ok(outcome.effects)
     }
 
-    pub async fn bind_document_backbone(client: &KernelClient, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
+    pub async fn bind_document_backbone(client: &KernelClient, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, ProgramFault> {
         exchange_document_backbone_binding(
             client,
             semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
@@ -506,7 +509,7 @@ use semio_framework_value::ToValue;
         .await
     }
 
-    pub async fn retire_document_backbone(client: &KernelClient, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
+    pub async fn retire_document_backbone(client: &KernelClient, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, ProgramFault> {
         exchange_document_backbone_binding(
             client,
             semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
@@ -519,11 +522,11 @@ use semio_framework_value::ToValue;
         .await
     }
 
-    pub async fn receive_document_backbone(client: &KernelClient, instance_id: u32, uri: &str, payload: Vec<u8>) -> Result<Vec<Effect>, String> {
+    pub async fn receive_document_backbone(client: &KernelClient, instance_id: u32, uri: &str, payload: Vec<u8>) -> Result<Vec<Effect>, ProgramFault> {
         store::decode_hot_backbone_message_exact(&payload).map_err(|error| error.to_string())?;
         let outcome = client.exchange_events(instance_id, vec![Event::Message { source: MessageEndpoint::Backbone { uri: uri.to_string() }, payload }]).await?;
         if let Some(AppFrame::Error { fault, report, .. }) = outcome.frames.iter().find(|frame| matches!(frame, AppFrame::Error { .. })) {
-            return Err(app_frame_error_message(fault, report));
+            return Err((app_frame_error_message(fault, report)).into());
         }
         Ok(outcome.effects)
     }
@@ -538,7 +541,7 @@ use semio_framework_value::ToValue;
     /// targeted `AdvanceRetained` requests until the fixed producer publishes. Maintenance requests
     /// never poll the guest or emit visibility twice; exhausting the exact opportunity ceiling fails
     /// closed rather than returning an empty tree.
-    pub async fn render_with_document(client: &KernelClient, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+    pub async fn render_with_document(client: &KernelClient, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, ProgramFault> {
         let kernel_surface = kernel_surface_id(instance_id, surface_id);
         let surface = SurfaceId::try_from(kernel_surface.as_str()).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
         let mut outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: kernel_surface.clone(), body_key: body_key.to_string(), view_state: encode_wire(view_state) }]).await?;
@@ -547,7 +550,7 @@ use semio_framework_value::ToValue;
         }
         for frame in &outcome.frames {
             if let AppFrame::Error { in_reply_to: None, fault, report } = frame {
-                return Err(app_frame_error_message(fault, report));
+                return Err((app_frame_error_message(fault, report)).into());
             }
         }
         for _ in 0..(UI_DOCUMENT_PATCH_OPS + UI_DOCUMENT_NODES * UI_DOCUMENT_NODES + UI_DOCUMENT_LEASE_SLOTS) {
@@ -559,7 +562,7 @@ use semio_framework_value::ToValue;
         if let Some(document) = outcome.take_surface(&kernel_surface) {
             return Ok(document);
         }
-        Err(format!("plugin retained document for surface '{surface_id}' exceeded its bounded opportunity budget"))
+        Err((format!("plugin retained document for surface '{surface_id}' exceeded its bounded opportunity budget")).into())
     }
 
     /// 🪪️ The kernel's name for one instance's surface: `"<instance>:<surface>"`. A guest mounts, and
@@ -803,16 +806,16 @@ impl ProgramBridgeEntry {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub async fn dispatch_invoke_extension(&self, instance_id: u32, extension_id: &str, capability: &str, request_json: &str, req: u64) -> Result<semio_framework::kernel::InvocationResult, String> {
+    pub async fn dispatch_invoke_extension(&self, instance_id: u32, extension_id: &str, capability: &str, request_json: &str, req: u64) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
         match &self.backend {
-            ProgramBridgeBackend::Js(handle) => dispatch_invoke_extension_js(handle, instance_id, extension_id, capability, request_json, req).await,
+            ProgramBridgeBackend::Js(handle) => dispatch_invoke_extension_js(handle, instance_id, extension_id, capability, request_json, req).await.map_err(ProgramFault::from),
         }
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub async fn push_scoped_contributions(&self, instance_id: u32, app_id: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, String> {
+    pub async fn push_scoped_contributions(&self, instance_id: u32, app_id: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
         match &self.backend {
-            ProgramBridgeBackend::Js(handle) => push_scoped_contributions_js(handle, instance_id, app_id, view_state_json).await,
+            ProgramBridgeBackend::Js(handle) => push_scoped_contributions_js(handle, instance_id, app_id, view_state_json).await.map_err(ProgramFault::from),
         }
     }
 
@@ -833,10 +836,10 @@ impl ProgramBridgeEntry {
     /// `context-menu` has no defined path in the new reactor ABI (it was a synchronous
     /// `WasmPluginRuntime` export, not an `AppCommand`) — honest empty result until a packet gives it
     /// one, matching the wasm32 JS backend's own "function not exposed" fallback below.
-    pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::wgpu::ContextMenuItemSpec>, String> {
+    pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::wgpu::ContextMenuItemSpec>, ProgramFault> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => context_menu_js(handle, instance_id, &request).await,
+            ProgramBridgeBackend::Js(handle) => context_menu_js(handle, instance_id, &request).await.map_err(ProgramFault::from),
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { .. } => {
                 let _ = (instance_id, request);
@@ -849,12 +852,12 @@ impl ProgramBridgeEntry {
     /// (admit, poll to a terminal state, acknowledge; `📓️api-stepped-document-load.md` §2 of ticket
     /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), the one whole-document load: a long history folds across turns and a cancel
     /// leaves the previous document.
-    pub async fn load_app_document_pack(&self, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
+    pub async fn load_app_document_pack(&self, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), ProgramFault> {
         self.load_app_document_archive(instance_id, &protocol::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() }).await
     }
 
     /// 🪪️ Scalar document ownership query shared by native and browser bridges.
-    pub async fn read_app_document_identity(&self, instance_id: u32) -> Result<protocol::AppDocumentIdentity, String> {
+    pub async fn read_app_document_identity(&self, instance_id: u32) -> Result<protocol::AppDocumentIdentity, ProgramFault> {
         let identity = match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_app_document_identity(client, instance_id).await?,
@@ -876,10 +879,10 @@ impl ProgramBridgeEntry {
         Ok(identity)
     }
 
-    pub async fn read_app_document_archive(&self, instance_id: u32) -> Result<protocol::DocumentArchivePack, String> {
+    pub async fn read_app_document_archive(&self, instance_id: u32) -> Result<protocol::DocumentArchivePack, ProgramFault> {
         #[cfg(test)]
         if let Some(document) = self.fixture_document {
-            return (document.archive)(instance_id);
+            return (document.archive)(instance_id).map_err(ProgramFault::from);
         }
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
@@ -890,15 +893,15 @@ impl ProgramBridgeEntry {
                 args.push(&JsValue::from_f64(f64::from(instance_id)));
                 let result = call_js(handle, "readAppDocumentArchive", &args).await?;
                 let bytes = result.dyn_into::<js_sys::Uint8Array>().map_err(|_| "readAppDocumentArchive returned no byte archive".to_string())?.to_vec();
-                protocol::decode_document_archive_bytes(&bytes).await.map_err(|error| error.to_string())
+                protocol::decode_document_archive_bytes(&bytes).await.map_err(|error| ProgramFault::from(error.to_string()))
             }
         }
     }
 
-    pub async fn load_app_document_archive(&self, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), String> {
+    pub async fn load_app_document_archive(&self, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), ProgramFault> {
         #[cfg(test)]
         if let Some(document) = self.fixture_document {
-            return (document.load)(instance_id, archive);
+            return (document.load)(instance_id, archive).map_err(ProgramFault::from);
         }
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
@@ -906,24 +909,24 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => {
                 let bytes = protocol::encode_document_archive_bytes(archive).map_err(|error| error.to_string())?;
-                call_js_bytes(handle, "loadAppDocumentArchive", instance_id, &[bytes.as_slice()]).await
+                call_js_bytes(handle, "loadAppDocumentArchive", instance_id, &[bytes.as_slice()]).await.map_err(ProgramFault::from)
             }
         }
     }
 
-    pub async fn render(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
+    pub async fn render(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel) -> Result<UiDocumentLease, ProgramFault> {
         self.render_with_document(instance_id, surface_id, body_key, view_state, None, None).await
     }
 
-    pub async fn render_with_document(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+    pub async fn render_with_document(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, ProgramFault> {
         let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::latest_frame_authority(), crate::frame_latency::FrameLatencyStage::RetainedExchange, 1);
         #[cfg(test)]
         if let Some(render) = self.fixture_render {
-            return render(instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects);
+            return render(instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).map_err(ProgramFault::from);
         }
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).await,
+            ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).await.map_err(ProgramFault::from),
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::render_with_document(client, instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).await,
         }
@@ -932,7 +935,7 @@ impl ProgramBridgeEntry {
     /// 🎬️ Publishes the instance's reserved `framework.section.engagements` surface through the
     /// canonical retained render route shared by native and browser guests. The caller owns the
     /// returned lease and must retire it after [`window_engagements_from_section`] reads it.
-    pub async fn window_engagements_section(&self, instance_id: u32, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
+    pub async fn window_engagements_section(&self, instance_id: u32, view_state: &ViewModel) -> Result<UiDocumentLease, ProgramFault> {
         let body_key = semio_framework::UiRefreshSection::Engagements.body_key();
         self.render_with_document(instance_id, body_key, body_key, view_state, None, None).await
     }
@@ -942,7 +945,7 @@ impl ProgramBridgeEntry {
     /// `window_measures(view_state)` as canonical JSON in a paged-text carrier, exactly like the
     /// app-static catalogue. The caller owns the returned lease and retires it through its registry
     /// after [`window_measures_from_section`] has read it.
-    pub async fn window_measures_section(&self, instance_id: u32, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
+    pub async fn window_measures_section(&self, instance_id: u32, view_state: &ViewModel) -> Result<UiDocumentLease, ProgramFault> {
         let body_key = semio_framework::UiRefreshSection::Measures.body_key();
         self.render_with_document(instance_id, body_key, body_key, view_state, None, None).await
     }
@@ -953,7 +956,7 @@ impl ProgramBridgeEntry {
     /// `toolMeasuresByToolId` ref has had all along and this renderer had not, which is why
     /// `build_tool_panel_ui` could only render the tool's armed state. The caller owns the returned
     /// lease and retires it through its registry after {@link tool_measures_from_section} read it.
-    pub async fn tool_measures_section(&self, instance_id: u32, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
+    pub async fn tool_measures_section(&self, instance_id: u32, view_state: &ViewModel) -> Result<UiDocumentLease, ProgramFault> {
         let body_key = semio_framework::UiRefreshSection::Tools.body_key();
         self.render_with_document(instance_id, body_key, body_key, view_state, None, None).await
     }
@@ -962,7 +965,7 @@ impl ProgramBridgeEntry {
     /// is (the JS backend has no `exchange` door). React's twin is the `AppCommand::ReadConflicts`
     /// seed `🏛️ShellHost/🟦️.tsx` fires on session start/switch.
     #[cfg(not(target_arch = "wasm32"))]
-    pub async fn read_conflicts(&self, instance_id: u32) -> Result<Vec<protocol::Conflict>, String> {
+    pub async fn read_conflicts(&self, instance_id: u32) -> Result<Vec<protocol::Conflict>, ProgramFault> {
         match &self.backend {
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_conflicts(client, instance_id).await,
             #[cfg(target_arch = "wasm32")]
@@ -973,7 +976,7 @@ impl ProgramBridgeEntry {
     /// ⚔️ Accept or discard one open conflict, answering the roster that survives it — React's
     /// `dispatchResolveConflict`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub async fn resolve_conflict(&self, instance_id: u32, conflict_id: &str, accept: bool) -> Result<Vec<protocol::Conflict>, String> {
+    pub async fn resolve_conflict(&self, instance_id: u32, conflict_id: &str, accept: bool) -> Result<Vec<protocol::Conflict>, ProgramFault> {
         match &self.backend {
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::resolve_conflict(client, instance_id, conflict_id, accept).await,
             #[cfg(target_arch = "wasm32")]
@@ -981,30 +984,30 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn bind_document_backbone(&self, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
+    pub async fn bind_document_backbone(&self, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, ProgramFault> {
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::bind_document_backbone(client, instance_id, binding_generation, uri).await,
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => document_backbone_js(handle, instance_id, "bind", binding_generation, uri).await,
+            ProgramBridgeBackend::Js(handle) => document_backbone_js(handle, instance_id, "bind", binding_generation, uri).await.map_err(ProgramFault::from),
         }
     }
 
-    pub async fn retire_document_backbone(&self, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
+    pub async fn retire_document_backbone(&self, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, ProgramFault> {
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::retire_document_backbone(client, instance_id, binding_generation, uri).await,
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => document_backbone_js(handle, instance_id, "retire", binding_generation, uri).await,
+            ProgramBridgeBackend::Js(handle) => document_backbone_js(handle, instance_id, "retire", binding_generation, uri).await.map_err(ProgramFault::from),
         }
     }
 
-    pub async fn receive_document_backbone(&self, instance_id: u32, uri: &str, payload: Vec<u8>) -> Result<Vec<Effect>, String> {
+    pub async fn receive_document_backbone(&self, instance_id: u32, uri: &str, payload: Vec<u8>) -> Result<Vec<Effect>, ProgramFault> {
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::receive_document_backbone(client, instance_id, uri, payload).await,
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => receive_document_backbone_js(handle, instance_id, uri, &payload).await,
+            ProgramBridgeBackend::Js(handle) => receive_document_backbone_js(handle, instance_id, uri, &payload).await.map_err(ProgramFault::from),
         }
     }
 
@@ -1040,18 +1043,18 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn apply_mutations(&self, instance_id: u32, operations: &[u8]) -> Result<(), String> {
+    pub async fn apply_mutations(&self, instance_id: u32, operations: &[u8]) -> Result<(), ProgramFault> {
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::apply_mutations(client, instance_id, operations).await,
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => call_js_bytes(handle, "applyMutations", instance_id, &[operations]).await,
+            ProgramBridgeBackend::Js(handle) => call_js_bytes(handle, "applyMutations", instance_id, &[operations]).await.map_err(ProgramFault::from),
         }
     }
 
     /// 👥️ Native twin of the browser host's `AppChannelClient.pushPresence` (contract-freeze §C7.6).
     #[cfg(not(target_arch = "wasm32"))]
-    pub async fn push_presence(&self, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), String> {
+    pub async fn push_presence(&self, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), ProgramFault> {
         match &self.backend {
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::push_presence(client, instance_id, own_color, peers).await,
             #[cfg(target_arch = "wasm32")]
@@ -1062,10 +1065,10 @@ impl ProgramBridgeEntry {
     /// 🧾️ ticket §C5 — full history snapshot for an instance: the native exchange's `ReadHistory`
     /// (`wasm_program_exchange::read_history`), and on the browser build the JS bridge's `readHistory`, the same
     /// command through the guest's `AppChannelClient` — what a restored document archive re-reads its rows and head from.
-    pub async fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
+    pub async fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, ProgramFault> {
         #[cfg(test)]
         if let Some(document) = self.fixture_document {
-            return (document.history)(instance_id);
+            return (document.history)(instance_id).map_err(ProgramFault::from);
         }
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
@@ -1075,7 +1078,7 @@ impl ProgramBridgeEntry {
                 let args = Array::new();
                 args.push(&JsValue::from_f64(f64::from(instance_id)));
                 let text = call_js(handle, "readHistory", &args).await?.as_string().ok_or_else(|| "readHistory answered no JSON".to_string())?;
-                semio_framework_pack_json::from_json_str::<semio_framework::kernel::HistoryPatch>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
+                semio_framework_pack_json::from_json_str::<semio_framework::kernel::HistoryPatch>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ProgramFault::from(error.to_string()))
             }
         }
     }
@@ -1105,6 +1108,10 @@ pub fn window_engagements_from_section(document: &UiDocumentLease) -> Result<Has
     let payload = document.read_paged_text().map_err(|error| format!("window engagements section unreadable: {error:?}"))?;
     serde_json::from_str(&payload).map_err(|error| format!("window engagements section parse: {error}"))
 }
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/📦️frame/🦀️.rs"]
+mod frame_tests;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/📏️wgpu-window-measures-section/🦀️.rs"]
@@ -1530,7 +1537,7 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface
     let published = envelope.document;
     let root = published.root.ok_or_else(|| format!("plugin published no root node for surface '{surface_id}'"))?;
     if published.nodes.is_empty() {
-        return Err(format!("plugin published an empty retained document for surface '{surface_id}'"));
+        return Err((format!("plugin published an empty retained document for surface '{surface_id}'")).into());
     }
     let identity = ui_contract::UiDocumentAssemblyIdentity {
         generation: browser_document_generation(surface_id, published.revision),
@@ -1723,7 +1730,7 @@ pub async fn install_js_extension(record_json: &str, extension_id: &str, version
     };
     let entry = ProgramBridgeEntry::from_js(extension_id.to_string(), handle).map_err(|error| format!("extension {extension_id}: {error}"))?;
     if entry.manifest.plugin_id != extension_id || entry.manifest.version != version {
-        return Err(format!("extension {extension_id}: loaded manifest identity/version mismatch"));
+        return Err((format!("extension {extension_id}: loaded manifest identity/version mismatch")).into());
     }
     Ok(entry)
 }
@@ -1803,7 +1810,7 @@ use semio_framework_value::ToValue;
         return Err("hub execution-target descriptor is not its exact canonical package projection".into());
     }
     if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || package.hashes.wasm_sha256 != component_sha256 {
-        return Err(format!("hub execution-target descriptor identity mismatch: {plugin_id}"));
+        return Err((format!("hub execution-target descriptor identity mismatch: {plugin_id}")).into());
     }
     ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(component_sha256.to_string()), component.to_path_buf(), package.manifest)
 }
@@ -1821,7 +1828,7 @@ async fn read_descriptor_manifest(path: &std::path::Path, plugin_id: &str, wasm_
     close_native_json_pages(&mut pages);
     let descriptor = descriptor.map_err(|error| format!("Native descriptor {}: {error}", path.display()))?;
     if descriptor.manifest.plugin_id != plugin_id || descriptor.hashes.wasm_sha256 != wasm_sha256 {
-        return Err(format!("Native descriptor identity mismatch: {plugin_id}"));
+        return Err((format!("Native descriptor identity mismatch: {plugin_id}")).into());
     }
     Ok(descriptor)
 }
@@ -1839,19 +1846,19 @@ async fn read_native_json_pages(path: &std::path::Path, max_bytes: u64) -> Resul
             Ok(value) => value,
             Err(error) => {
                 close_native_json_pages(&mut pages);
-                return Err(error);
+                return Err((error).into());
             }
         };
         let semio_framework_os_services::NativeIoValue::Page { bytes, eof } = value else {
             close_native_json_pages(&mut pages);
-            return Err(format!("{}: native I/O returned the wrong value for a page read", path.display()));
+            return Err((format!("{}: native I/O returned the wrong value for a page read", path.display())).into());
         };
         let count = bytes.len() as u64;
         pages.push(bytes);
         offset = offset.saturating_add(count);
         if offset > max_bytes || (count == 0 && !eof) {
             close_native_json_pages(&mut pages);
-            return Err(format!("{}: native JSON exceeds {max_bytes} bytes or produced an empty nonterminal page", path.display()));
+            return Err((format!("{}: native JSON exceeds {max_bytes} bytes or produced an empty nonterminal page", path.display())).into());
         }
         if eof {
             return Ok(pages);

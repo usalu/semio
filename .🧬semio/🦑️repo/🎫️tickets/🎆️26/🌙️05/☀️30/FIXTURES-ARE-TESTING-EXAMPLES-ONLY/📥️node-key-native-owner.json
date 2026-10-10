@@ -1,0 +1,20 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "92525adedd0c7618223951e9a4c9e5f9aa6b66563d3103a7dee87886222d36e4",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/🦀️.rs",
+      "sha256": "7ee4adcdb56d55eb319814628a5bccbb8663393137b3e2ebe7b65eba6254368d",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "44914a350c71951f5a86c9a4548c40962c0de15df8887bae1123603e2d373579",
+      "authored": false
+    }
+  ],
+  "executed": false
+}

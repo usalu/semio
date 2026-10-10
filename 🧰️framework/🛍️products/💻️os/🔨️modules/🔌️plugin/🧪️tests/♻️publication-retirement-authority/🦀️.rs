@@ -640,7 +640,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
         output_chunks: None,
         cancellation_lease: Some(lease),
-        terminal_outcome: semio_framework_job::JobOutcomeSlot::empty(),
+        worker_semantic_pending: false, worker_outcome_pending: false, worker_fault_capture: None,
         terminal_seen: true,
         publication: Some(crate::app::ArtifactToolCompletionValue::Emit(Ok(crate::app::Emit::default()), crate::app::EphemeralEmit { window_transient: vec![misaddressed], ..Default::default() })),
         pending_artifact_publication: None,

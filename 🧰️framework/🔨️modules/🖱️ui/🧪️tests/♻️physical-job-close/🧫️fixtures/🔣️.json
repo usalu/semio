@@ -52,5 +52,64 @@
       "retainedCapacityBytes": 0,
       "releasedBytes": 257
     }
-  ]
+  ],
+  "clipboardOutcome": {
+    "grantSource": "framework.job.original-semantic-loan",
+    "outcome": "cancelled",
+    "deniedItems": 0,
+    "sameInputPointer": true,
+    "borrowHeapBytes": 0,
+    "acknowledgementItems": 1,
+    "inputHeldUntilClose": true
+  },
+  "preparedOutcome": {
+    "operation": 1,
+    "fuel": 100,
+    "deadlineUs": 10,
+    "deniedItems": 0,
+    "expected": {
+      "deniedReceipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "completeStateAbsent": true,
+      "completeOutputAbsent": true,
+      "faultLoanIdentity": true,
+      "acknowledgementItems": 1
+    }
+  },
+  "clipboardIngress": {
+    "identity": {
+      "epoch": 1,
+      "operation": 1,
+      "generation": 1
+    },
+    "recipient": {
+      "slot": 0,
+      "generation": 1,
+      "capability": "text-paste"
+    },
+    "grant": {
+      "items": 1,
+      "copy": 4096,
+      "capacity": 65536,
+      "release": 262144,
+      "depth": 64
+    },
+    "cancelled": false,
+    "stages": [
+      "shell-ingress",
+      "worker-step",
+      "receive-turn",
+      "borrow-result",
+      "acknowledge",
+      "close-job",
+      "close-recipient"
+    ],
+    "sameIdentity": true,
+    "sameRecipient": true,
+    "conservedReceipt": true
+  }
 }

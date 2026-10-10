@@ -1,13 +1,147 @@
 {
   "schemaVersion": 1,
   "owners": [
-    {"manifest":"specific/Cargo.toml","admitted":true},
-    {"manifest":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.toml","admitted":true},
-    {"manifest":"🧰️framework/🔨️modules/🗣️dsl/🧬️schema/Cargo.toml","admitted":true},
-    {"manifest":"ordinary/📦️packages/🦀️rust/Cargo.toml","admitted":true},
-    {"manifest":"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml","admitted":true},
-    {"manifest":".hidden/native/Cargo.toml","admitted":false},
-    {"manifest":"target/native/Cargo.toml","admitted":false},
-    {"manifest":"ordinary/🗑️generated/native/Cargo.toml","admitted":false}
-  ]
+    {
+      "manifest": "specific/Cargo.toml",
+      "admitted": true
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.toml",
+      "admitted": true
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/Cargo.toml",
+      "admitted": true
+    },
+    {
+      "manifest": "ordinary/📦️packages/🦀️rust/Cargo.toml",
+      "admitted": true
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml",
+      "admitted": true
+    },
+    {
+      "manifest": ".hidden/native/Cargo.toml",
+      "admitted": false
+    },
+    {
+      "manifest": "target/native/Cargo.toml",
+      "admitted": false
+    },
+    {
+      "manifest": "ordinary/🗑️generated/native/Cargo.toml",
+      "admitted": false
+    }
+  ],
+  "testingCollections": {
+    "members": [
+      {
+        "manifest": "framework/live/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "framework/🧫️fixtures/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "framework/🔨️modules/🧫️fixtures/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "framework/🔨️modules/🧫️fixtures/nested/🧫️fixtures/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "framework/🧫️examples/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "framework/🔨️modules/🧫️examples/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "framework/🔨️modules/🧫️examples/nested/🧫️examples/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "framework/🧪️fixtures/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "framework/🔨️modules/🧪️fixtures/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "framework/🔨️modules/🧪️fixtures/nested/🧪️fixtures/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "framework/🧪️examples/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "framework/🔨️modules/🧪️examples/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "framework/🔨️modules/🧪️examples/nested/🧪️examples/sample/Cargo.toml",
+        "admitted": false
+      }
+    ],
+    "owners": [
+      {
+        "manifest": "ordinary/live/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "ordinary/🧫️fixtures/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "ordinary/🔨️modules/🧫️fixtures/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "ordinary/🔨️modules/🧫️fixtures/nested/🧫️fixtures/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "ordinary/🧫️examples/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "ordinary/🔨️modules/🧫️examples/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "ordinary/🔨️modules/🧫️examples/nested/🧫️examples/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "ordinary/🧪️fixtures/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "ordinary/🔨️modules/🧪️fixtures/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "ordinary/🔨️modules/🧪️fixtures/nested/🧪️fixtures/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "ordinary/🧪️examples/sample/Cargo.toml",
+        "admitted": false
+      },
+      {
+        "manifest": "ordinary/🔨️modules/🧪️examples/Cargo.toml",
+        "admitted": true
+      },
+      {
+        "manifest": "ordinary/🔨️modules/🧪️examples/nested/🧪️examples/sample/Cargo.toml",
+        "admitted": false
+      }
+    ]
+  }
 }

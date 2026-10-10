@@ -4665,6 +4665,7 @@ name = "semio-framework-job"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-diagnostic",
  "semio-framework-trace",
  "semio-framework-value",
 ]
@@ -4967,6 +4968,7 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
+ "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -5185,6 +5187,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-actor",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-async-macros",

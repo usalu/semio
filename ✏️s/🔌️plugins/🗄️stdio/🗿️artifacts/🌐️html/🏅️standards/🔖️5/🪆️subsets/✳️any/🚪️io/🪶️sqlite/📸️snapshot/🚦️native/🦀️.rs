@@ -82,7 +82,7 @@ pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,n
     let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {
 
   let result=(||->Result<HtmlSnapshot,ValueError>{
-   let input=match payload{IoPayload::Text(text)=>store::semio_format::split_text_preamble_controlled(text,"stdio.html",store::semio_format::Component::Dsl,1,native).map_err(|e|e.into_value_error())?,IoPayload::Binary(bytes)=>{let bytes=store::semio_format::unwrap_binary_controlled(bytes,"stdio.html",store::semio_format::Component::Pack,1,native).map_err(|e|e.into_value_error())?;native.borrow_text(bytes)?}};
+   let input=match payload{IoPayload::Text(text)=>store::semio_format::split_text_preamble_controlled(text,"stdio.html",store::semio_format::Component::Dsl,1,native).map_err(|e|e.into_value_error())?,IoPayload::Binary(bytes)=>{let bytes=store::semio_format::unwrap_binary_controlled(bytes,"stdio.html",store::semio_format::Component::Pack,1,native)?;native.borrow_text(bytes)?}};
    let mut reader=Reader{input,pos:0,rows:1,native:native,arena:Vec::new(),open:Vec::new()};let (doctype,tail_start)=reader.parse()?;normalize(&mut reader,&input[tail_start..])?;normalized_domain(&mut reader,doctype.as_deref(),limits.max_rows,limits.max_value_bytes)?;let arena=std::mem::take(&mut reader.arena);let schema=reader.native.copy_text("stdio.html")?;let root=construct(arena,reader.native)?;Ok(HtmlSnapshot{schema,doctype,root})
   })();result
     });

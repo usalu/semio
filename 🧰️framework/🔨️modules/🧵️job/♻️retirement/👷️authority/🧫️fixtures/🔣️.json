@@ -13,7 +13,7 @@
     "parent-complete"
   ],
   "removal": "original-terminal-authority-in-place",
-  "bodyWords": 3,
+  "bodyWords": 4,
   "wordBytes": [
     4,
     8
@@ -31,7 +31,7 @@
     "depth"
   ],
   "jobRemoval": "original-terminal-job-in-place",
-  "jobPresenceBytes": 1,
+  "jobPresenceBytes": 0,
   "inlineJobBytes": [
     0,
     8192

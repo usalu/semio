@@ -1,0 +1,35 @@
+{
+  "contract": "framework.plugin.original-scheduled-archive-close",
+  "phasePolicy": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "incomingRemaining": [
+    4,
+    17,
+    8192,
+    65536,
+    9
+  ],
+  "admitted": [
+    1,
+    17,
+    8192,
+    65536,
+    9
+  ],
+  "currencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release"
+  ],
+  "metadataCopyCurrency": 0,
+  "originalOperationRetained": true,
+  "terminalStatusBeforePhysicalClose": false,
+  "terminalRemovalSeparate": true,
+  "childCompletionIsParentProgress": true
+}

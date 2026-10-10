@@ -1,0 +1,113 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/📡️invocation/🧬️schema/🔣️.json",
+      "sha256": "2781d5572e1d9cc98260b38640b8c2298ef23cb5111766afb4943c784c11ab2f",
+      "role": "current original schema/reader preimage hash"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/📡️invocation/🧪️tests/🟦️.ts",
+      "sha256": "a6567e04c8447a9138c34a86e8af02a4d3dc910505caec0f5e733e742edda5bf",
+      "role": "current original schema/reader preimage hash"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/📡️invocation/🧫️fixtures/🔣️.json",
+      "sha256": "8d057307733176f0a1f5a3ef30284616e012901b785d212b3739a95cc2737c47",
+      "role": "plain example preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧬️schema/🔣️.json",
+      "sha256": "98ddd12293a1e2aac9e5642e585a64be1e96cb42b5abb85eb16b8148eba028df",
+      "role": "current original schema/reader preimage hash"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts",
+      "sha256": "657092975defd7420b95017446e8143d57a67a41162621430fc5d69fc3694a8d",
+      "role": "current original schema/reader preimage hash"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧫️fixtures/🔣️.json",
+      "sha256": "0fedfa31217911b271591bbfc0917823148eed190d1c898506a675a6a0445a8e",
+      "role": "plain example preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "sha256": "4194ecaf2f79c6be79eca32bc824b199da4ab8b9f9f4fd84b7093d1236203f91",
+      "role": "current original schema/reader preimage hash"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+      "sha256": "18e3454c9658ca9434e07ff7aa7fb08508a8d0cf236ab2f37c7f386253be5003",
+      "role": "current original schema/reader preimage hash"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧫️fixtures/🔣️.json",
+      "sha256": "ab06bb7fc3f851467dae86c538a98140b796a51dee3bbc24ad36808ad497c83d",
+      "role": "plain example preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+      "sha256": "4c228ef6ea2450d3384768dffb3a62190cafe101bf924e9b54c6ad4bc5958ee3",
+      "role": "current original schema/reader preimage hash"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts",
+      "sha256": "6015e576fbd8c2f6fe3ab84c26b421242000926d0894b399f2ef1805de0f511d",
+      "role": "current original schema/reader preimage hash"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧫️fixtures/🔣️.json",
+      "sha256": "8e5a1bb677a814d1258a0c8cf0e8df350aec845f2ac56e44912291ca61d8657b",
+      "role": "plain example preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+      "sha256": "32cee995eb8f9667fa5b1f7dbb6eede99aaccbe9ccb0008009c1e523c96b0ffb",
+      "role": "shared actual source/seed wrapper consumer"
+    }
+  ],
+  "schemas": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/📡️invocation/🧬️schema/🔣️.json",
+      "rootKeys": [
+        "$schema",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties",
+        "definitions"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧬️schema/🔣️.json",
+      "rootKeys": [
+        "$schema",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties",
+        "definitions"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "rootKeys": [
+        "$schema",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+      "rootKeys": [
+        "$schema",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties"
+      ]
+    }
+  ]
+}

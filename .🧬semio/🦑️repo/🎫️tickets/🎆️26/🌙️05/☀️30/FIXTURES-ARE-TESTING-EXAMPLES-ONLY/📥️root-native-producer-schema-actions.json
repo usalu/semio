@@ -1,0 +1,28 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "ed86891ffb284aa3b20d5fc94b8c84c9fe07662f8d6152916c40bca5a064cb0f",
+      "afterSha256": "cc42e1c48f437c44e38056e9b5fef2a1916257ff15c0048b61584638aedd254d",
+      "exclusive": false,
+      "scope": "Genuine production NativeOwnerExecutionPolicy API, reuse actual positive child and transport constraints"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json",
+      "action": "created",
+      "afterSha256": "8844f860a9a27225e5bd269f56385fcc874847b235b49ca0480af82c2751d6b2",
+      "exclusive": false,
+      "scope": "Explicit production native child policy matches existing canonical architecture GUI resource class; independent of test vectors and ordinary0/null parent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "action": "updated",
+      "beforeSha256": "897b3a0a481c6787d3549c4e5c86ad7f002ecdd6354967d5d50b622b162a6de8",
+      "afterSha256": "def026368efa3bd364d37519ec936368ba5664d7e3c75da26296dfdfe96e691e",
+      "exclusive": false,
+      "scope": "Canonical Nx child selector, distinct from unchanged original requested argument array"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

@@ -1247,6 +1247,7 @@ fn inference_submit_handler(context: &InferenceToolContext<'_>, arguments: serde
 /// session-owned handle, and the plugin's guest runs on a job thread of its own so the call answers
 /// at once. Every later fact — progress, result, proposal, cancel — lands in the job's journal.
 fn submit_guest_job(context: &InferenceToolContext<'_>, workspace: &Arc<HeadlessWorkspace>, service: InferenceService, document_id: &str, arguments: &serde_json::Value) -> Result<(String, serde_json::Value), GatewayError> {
+    inference_original_turn(arguments)?;
     validate_inference_request(&service.declared, arguments.get("payload").filter(|value| !value.is_null()), Some(document_id))?;
     let jobs = crate::ui::job_registry();
     let job_id = jobs.begin("inference.submit");
@@ -1301,7 +1302,7 @@ fn run_guest_job(workspace: &Arc<HeadlessWorkspace>, actions: &crate::actions::A
             return;
         }
     };
-    let result = inference_run_result_value(&run.payload).unwrap_or(serde_json::Value::Null);
+    let result = run.payload.as_deref().and_then(inference_run_result_value).unwrap_or(serde_json::Value::Null);
     let Some(action) = service.commit_action.as_deref() else {
         jobs.succeed(job_id, result);
         return;
@@ -1655,15 +1656,36 @@ fn resolve_inference_artifact_document(workspace: &Arc<HeadlessWorkspace>, item:
 struct GuestInferenceRun {
     inference_schema: String,
     complete: bool,
-    payload: Vec<u8>,
+    payload: Option<Vec<u8>>,
 }
 
-const INFERENCE_MEMORY_POLICY: semio_framework_value::retained_clone::RetainedCloneGrant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 268_435_456, maximum_depth: 1024 };
+/// 🎟️ All retained axes come from the original turn's explicit grant.
+fn inference_original_retained(grant:&serde_json::Value)->Result<semio_framework_value::RetainedCloneGrant,GatewayError>{
+    let invalid=||inference_field_invalid("turn.grant","all five explicit retained axes are required within the cross-platform address range");
+    let fields=grant.as_object().ok_or_else(invalid)?;
+    if fields.len()!=5{return Err(invalid())}
+    let axis=|name|fields.get(name).and_then(serde_json::Value::as_u64).and_then(|number|u32::try_from(number).ok()).map(|number|number as usize).ok_or_else(invalid);
+    Ok(semio_framework_value::RetainedCloneGrant{maximum_items:axis("maximumItems")?,maximum_copy_bytes:axis("maximumCopyBytes")?,maximum_capacity_bytes:axis("maximumCapacityBytes")?,maximum_release_bytes:axis("maximumReleaseBytes")?,maximum_depth:axis("maximumDepth")?})
+}
+
+/// 🎟️ The command borrows original cancellation and carries its one caller turn and work policy.
+struct InferenceCallerAuthority<'a>{turn:semio_framework_actor::RetainedTurnInput,revision:u64,cancellation_id:&'a str,work_units:u64,maximum_elapsed_milliseconds:u64}
+
+/// 🎟️ Exact JSON identities are mandatory before any guest command or job is born.
+fn inference_original_turn(arguments:&serde_json::Value)->Result<InferenceCallerAuthority<'_>,GatewayError>{
+    let integer=|value:&serde_json::Value,name:&str,minimum:u64|value.get(name).and_then(serde_json::Value::as_u64).filter(|number|*number>=minimum&&*number<=9007199254740991).ok_or_else(||inference_field_invalid(name,"an explicit exact unsigned JSON identity or work bound is required"));
+    let source=arguments.get("turn").and_then(serde_json::Value::as_object).filter(|source|source.len()==4).ok_or_else(||inference_field_invalid("turn","the original operation, generation, epoch and full grant are required"))?;
+    let turn_value=&arguments["turn"];
+    let turn=semio_framework_actor::RetainedTurnInput{operation:integer(turn_value,"operation",1)?,generation:integer(turn_value,"generation",1)?,epoch:integer(turn_value,"epoch",1)?,grant:inference_original_retained(source.get("grant").ok_or_else(||inference_field_invalid("turn.grant","the original grant is required"))?)?};
+    let cancellation_id=arguments.get("cancellationId").and_then(serde_json::Value::as_str).filter(|value|!value.is_empty()).ok_or_else(||inference_field_invalid("cancellationId","the original nonempty cancellation identity is required"))?;
+    Ok(InferenceCallerAuthority{turn,revision:integer(arguments,"revision",0)?,cancellation_id,work_units:integer(arguments,"workUnits",1)?,maximum_elapsed_milliseconds:integer(arguments,"maximumElapsedMilliseconds",1)?})
+}
 
 /// 🏃️ The one guest engine both `inference_run` and a guest job drive: bind the artifact's document
 /// into the request, route it to the service's plugin guest, run it under `cancel`, reporting each
 /// step on `job_id`. `Ok(None)` is a run the caller's cancel stopped.
 fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &crate::actions::ActionAdapter, item: &DeclaredInference, artifact_id: Option<&str>, arguments: &serde_json::Value, job_id: &str, cancel: crate::actions::InferenceCancel) -> Result<Option<GuestInferenceRun>, GatewayError> {
+    let authority=inference_original_turn(arguments)?;
     let jobs = crate::ui::job_registry();
     jobs.report_progress(job_id, INFERENCE_BINDING_PROGRESS_START, Some(match artifact_id {
         Some(artifact_id) => format!("binding artifact `{artifact_id}` into the request body"),
@@ -1678,11 +1700,11 @@ fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &crate::acti
         plugin_id: item.route_plugin_id().to_string(),
         artifact_kind: item.artifact_kind.clone(),
         inference_schema: item.inference_schema.clone(),
-        revision: arguments.get("revision").and_then(serde_json::Value::as_u64).unwrap_or(0),
-        generation: arguments.get("generation").and_then(serde_json::Value::as_u64).unwrap_or(0),
-        cancellation_id: arguments.get("cancellationId").and_then(serde_json::Value::as_str).map_or_else(mint_inference_request_id, str::to_string),
-        work_units: arguments.get("workUnits").and_then(serde_json::Value::as_u64).unwrap_or(INFERENCE_DEFAULT_WORK_UNITS),
-        retained: INFERENCE_MEMORY_POLICY,
+        revision: authority.revision,
+        turn: authority.turn,
+        cancellation_id: authority.cancellation_id.to_string(),
+        work_units: authority.work_units,
+        maximum_elapsed_milliseconds: authority.maximum_elapsed_milliseconds,
         canonical_payload: inference_run_payload_bytes(arguments),
         artifact_id: artifact_id.unwrap_or_default().to_string(),
         artifact_document,
@@ -1736,8 +1758,8 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
     }
     let item = service.declared.clone();
     let caller_payload = arguments.get("payload").filter(|value| !value.is_null());
-    let cancellation_id = arguments.get("cancellationId").and_then(serde_json::Value::as_str).map(str::to_string).unwrap_or_else(mint_inference_request_id);
-    let arguments = merge_inference_run_fields(arguments.clone(), serde_json::json!({ "cancellationId": cancellation_id }));
+    let authority=match inference_original_turn(&arguments){Ok(authority)=>authority,Err(error)=>return CallToolResult::tool_error(&error)};
+    let cancellation_id=authority.cancellation_id;
     let cancel = crate::actions::InferenceCancel::default();
 
     let jobs = crate::ui::job_registry();
@@ -1768,9 +1790,9 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
         Ok(Some(_)) | Err(_) if jobs.is_cancel_requested(&job_id) => cancelled(&job_id, base),
         Ok(None) => cancelled(&job_id, base),
         Ok(Some(run)) => {
-            let structured = merge_inference_run_fields(base, serde_json::json!({ "status": "SUCCEEDED", "complete": run.complete, "payload": inference_run_result_value(&run.payload), "payloadBytes": run.payload.len() }));
+            let structured = merge_inference_run_fields(base, serde_json::json!({ "status": if run.complete{"SUCCEEDED"}else{"RUNNING"}, "complete": run.complete, "payload": run.payload.as_deref().and_then(inference_run_result_value), "payloadBytes": run.payload.as_ref().map_or(0,Vec::len) }));
             jobs.succeed(&job_id, structured.clone());
-            CallToolResult::ok(vec![ContentBlock::Text { text: format!("`{}` produced {} byte(s) (complete: {})", run.inference_schema, run.payload.len(), run.complete) }], Some(structured))
+            CallToolResult::ok(vec![ContentBlock::Text { text: format!("`{}` produced {} byte(s) (complete: {})", run.inference_schema, run.payload.as_ref().map_or(0,Vec::len), run.complete) }], Some(structured))
         }
         Err(error) => {
             let field = inference_error_field(&error);
@@ -1829,10 +1851,6 @@ fn merge_inference_run_fields(mut base: serde_json::Value, extra: serde_json::Va
 /// binding row and routing.
 const INFERENCE_BINDING_PROGRESS_START: f64 = 0.15;
 const INFERENCE_BINDING_PROGRESS_SPAN: f64 = 0.1;
-
-/// ⏱️ The default work-unit budget one `inference_run` grants when the caller names none — the same
-/// order of magnitude `job_infer`'s own user-visible lane clamps to.
-const INFERENCE_DEFAULT_WORK_UNITS: u64 = 1_024;
 
 /// 🔢️ `RoutingArtifactChannel` resolves an inference's plugin from the command's own `pluginId`, so
 /// the `instance` slot the mutation protocol encodes carries no meaning here — a fixed, documented

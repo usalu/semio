@@ -6,7 +6,7 @@ use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, ExtensionInvocation, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Arm
@@ -33,10 +33,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// afford. A faulted answer is still bounded here: it folds as an envelope the session cannot seed,
 /// which abandons the window rather than re-parking the identical request.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FlowEvalResolve {
     pub window_id: String,
     pub node_hash: u64,
-    pub output_json: String,
+    pub output_json: Option<String>,
 }
 
 /// ✅️ Folds one answer into `window_id`'s latch and owes the chain exactly one continuation: the
@@ -46,8 +47,25 @@ pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, FlowSnapshot>, 
     if payload.window_id.is_empty() {
         return Err(Fault::from("flow-eval-resolve-window-required"));
     }
-    let given_up = match session.resolve_preview_eval(payload.node_hash, &payload.output_json) {
-        flow::PreviewEvalOutcome::Complete { output_json } => flow::host::io::evaluation_response::decode_flow_node_output_json(&output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err(),
+    let Some(output_json)=payload.output_json.as_deref()else{return Ok(Emit::default())};
+    let given_up = match session.resolve_preview_eval_cold(payload.node_hash, output_json).map_err(|error|semio_framework_diagnostic::FaultFrom::into_fault(error))? {
+        flow::PreviewEvalOutcome::Complete { output_json } => {
+            if session.invocation_origin_cold(&payload.window_id,payload.node_hash).is_some_and(|origin|origin.outer_node_hash.is_some()){
+                session.retain_invocation_reply_cold(&payload.window_id,payload.node_hash,output_json).map_err(|(error,source)|{flow::host::retire_invocation_reply_cold(source);semio_framework_diagnostic::FaultFrom::into_fault(error)})?;
+                return Ok(Emit::default());
+            }
+            flow::host::io::evaluation_response::decode_flow_node_output_json(&output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err()
+        },
+        flow::PreviewEvalOutcome::Pending(pending)=>{
+            let hash=pending.node_hash;
+            if session.invocation_origin_cold(&payload.window_id,hash).is_none(){
+                let origin=session.invocation_origin_cold(&payload.window_id,payload.node_hash).ok_or_else(||Fault::from("flow-eval-pending-original-context-required"))?.pending_origin_cold(pending);
+                session.retain_invocation_origin_cold(flow::host::FlowInvocationOriginLease::from_cold(origin));
+            }
+            let origin=session.invocation_origin_cold(&payload.window_id,hash).ok_or_else(||Fault::from("flow-eval-pending-source-required"))?;
+            let invocation=ExtensionInvocation::new(origin.extension_id.clone(),"evaluate",origin.request_json_cold(false),"flowEvalResolve");
+            return Ok(Emit{extension_invocations:vec![invocation],..Default::default()});
+        },
         flow::PreviewEvalOutcome::Cancelled => true,
         flow::PreviewEvalOutcome::Working => false,
     };

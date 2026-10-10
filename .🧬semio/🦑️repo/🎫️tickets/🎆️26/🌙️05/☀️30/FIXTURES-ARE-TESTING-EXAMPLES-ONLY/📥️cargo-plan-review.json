@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "sha256": "e24214dada87d1af5062344b22c8e1d4e31b6b6d49b73c093dd3843812295424"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/📇️discovery/🔣️.json",
+      "sha256": "8df426d132b46f9fe5254e787b2659b5b7fef8a792825eb2b1e2023bc69bf204"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts",
+      "sha256": "c345ca961e7a881f483ad5f00756fc67ed4a2a3b37c6727496272eff3b37bd95"
+    }
+  ]
+}

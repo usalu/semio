@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy",
+    "maximumPageBytes",
+    "sourceBytes",
+    "pageExtents",
+    "metadataCopyBytes"
+  ],
+  "properties": {
+    "policy": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "maximumPageBytes": {
+      "const": 16384
+    },
+    "sourceBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pageExtents": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "metadataCopyBytes": {
+      "const": 0
+    }
+  }
+}

@@ -1,13 +1,18 @@
-import { readFileSync } from "node:fs";
+import { parseGeneration3dPreviewCamera as parseEditorCamera } from "../../../../../✏️editor/🎚️config/🚪️io/📝️text/🟦️.ts";
+import { parseGeneration3dPreviewCamera as parsePresenceCamera } from "../../../../../✏️editor/👥️presence/🚪️io/📝️text/🟦️.ts";
+import { parseGeneration3dViewCamera, parseGeneration3dViewConfig } from "../../../../../👁️viewer/🎚️config/🚪️io/📝️text/🟦️.ts";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
-import { parseChangeSliderValue } from "../../../../../🧬️schema/🧬️mutations/🎚️change-slider-value/🦠️mutation/🟦️.ts";
-import { parseChangeWidgetInput } from "../../../../../🧬️schema/🧬️mutations/🎛️change-widget-input/🦠️mutation/🟦️.ts";
-import { parseDragTransforms } from "../../../../../🧬️schema/🧬️mutations/✋️drag-transforms/🦠️mutation/🟦️.ts";
-import { parseMoveNodes } from "../../../../../🧬️schema/🧬️mutations/🚚️move-nodes/🦠️mutation/🟦️.ts";
-import { parseRotateTransforms } from "../../../../../🧬️schema/🧬️mutations/🔃️rotate-transforms/🦠️mutation/🟦️.ts";
-import { parseScaleTransforms } from "../../../../../🧬️schema/🧬️mutations/📏️scale-transforms/🦠️mutation/🟦️.ts";
+import { parseChangeSliderValue } from "../../../../📝️text/🧬️mutations/🎚️change-slider-value/🦠️mutation/🟦️.ts";
+import { parseChangeWidgetInput } from "../../../../📝️text/🧬️mutations/🎛️change-widget-input/🦠️mutation/🟦️.ts";
+import { parseDragTransforms } from "../../../../📝️text/🧬️mutations/✋️drag-transforms/🦠️mutation/🟦️.ts";
+import { parseMoveNodes } from "../../../../📝️text/🧬️mutations/🚚️move-nodes/🦠️mutation/🟦️.ts";
+import { parseRotateTransforms } from "../../../../📝️text/🧬️mutations/🔃️rotate-transforms/🦠️mutation/🟦️.ts";
+import { parseScaleTransforms } from "../../../../📝️text/🧬️mutations/📏️scale-transforms/🦠️mutation/🟦️.ts";
+import { parseGeneration3dStringList, parseGeneration3dPreviewCamera } from "../../../../📝️text/📸️snapshot/🟦️.ts";
+import { parseGeneration3dInference } from "../../../../📝️text/💡️inferences/🟦️.ts";
 import { binary64Value } from "../../../../../🧬️schema/🟦️.ts";
 
 /** 🚪️ Every gesture leaf's TypeScript twin parser, by wire keyword. */
@@ -72,5 +77,43 @@ export function assertGeneration3dSemanticWire(): number {
   assert.equal(new Set(corpus.cases.map((row) => row.keyword)).size, 6);
   assert.equal(new Set(corpus.cases.map((row) => row.tag)).size, 6);
   assert.deepEqual([...new Set(corpus.cases.filter((row) => row.keyword === "change-widget-input").map((row) => row.mutation.type))], ["number", "text", "boolean", "point", "vector", "plane", "numberList", "textList", "booleanList", "pointList", "vectorList"], "every widget-input type has a vector");
+  const admission: { schemas: Record<string, object>; cases: { kind: string; name: string; input: unknown; output?: unknown; reject?: boolean }[] } = read("🧫️fixtures/🧬️semantic-wire/🚪️admission.json");
+  const projectionAjv = new Ajv({ strict: true, allErrors: true, removeAdditional: true }).addKeyword({ keyword: "x-semio-derived", metaSchema: { type: "boolean" } });
+  const inferenceSchema = JSON.parse(readFileSync(resolve(root, "../../../🧬️schema/💡️inferences/🔣️.json"), "utf8"));
+  const projectionSchemas = { ...admission.schemas, inference: inferenceSchema };
+  const projectionParsers: Record<string, (value: unknown) => unknown> = { "string-list": parseGeneration3dStringList, "preview-camera": parseGeneration3dPreviewCamera, inference: parseGeneration3dInference, "editor-camera": parseEditorCamera, "presence-camera": parsePresenceCamera, "view-camera": parseGeneration3dViewCamera, "view-config": parseGeneration3dViewConfig };
+  for (const row of admission.cases) {
+    const validate = projectionAjv.compile(projectionSchemas[row.kind as keyof typeof projectionSchemas]);
+    const independent = JSON.parse(JSON.stringify(row.input));
+    assert.equal(validate(independent), !row.reject, `${row.kind}/${row.name}: independent admission`);
+    if (row.reject) assert.throws(() => projectionParsers[row.kind](row.input), `${row.kind}/${row.name}: native admission`);
+    else {
+      assert.deepEqual(independent, row.output, `${row.kind}/${row.name}: independent output`);
+      assert.deepEqual(projectionParsers[row.kind](row.input), independent, `${row.kind}/${row.name}: native output`);
+    }
+    checks += row.reject ? 2 : 3;
+  }
+  const semanticRoot = resolve(root, "../../../🧬️schema");
+  const visit = (directory: string, rustOwnership = true): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory() && entry.name !== "🧪️tests") visit(path, rustOwnership);
+      if (entry.isFile() && entry.name === "🟦️.ts") {
+        const source = readFileSync(path, "utf8");
+        assert(!/export\s+function\s+parse\w+/.test(source), `${path} owns portable representation admission`);
+        assert(!/export\s*\{[^}]*\}\s*from\s*["'][^"']*🚪️io/.test(source), `${path} reexports an IO-owned codec`);
+        checks += 1;
+      }
+      if (rustOwnership && entry.isFile() && entry.name === "🦀️.rs") {
+        const source = readFileSync(path, "utf8");
+        assert(!/#\[derive\([^\]]*\b(?:ToValue|FromValue)\b/.test(source), `${path} owns a value representation derive`);
+        assert(!source.includes("fn gumball_widget_json"), `${path} owns the gumball representation helper`);
+        assert(!/protocol::list_delta![\s\S]*?values_only/.test(source), `${path} expands a hidden list codec`);
+        checks += 3;
+      }
+    }
+  };
+  visit(semanticRoot);
+  for (const facet of ["👁️viewer/🎚️config", "✏️editor/🎚️config", "✏️editor/👥️presence", "✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient"]) visit(resolve(semanticRoot, "..", facet, "🧬️schema"), false);
   return checks + 8;
 }

@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 /** 🏁️ Completes the default production graph after Nx has built or restored its deliverables. */
@@ -8,4 +9,4 @@ class CompleteScript extends Script {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(import.meta.dir).register("complete", CompleteScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("complete", CompleteScript)).run(process.argv.slice(2), original));

@@ -1,0 +1,24 @@
+{
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 3,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 8
+  },
+  "sourceHex": "414243",
+  "failures": [
+    {
+      "copyOffset": 0,
+      "prefixHex": ""
+    },
+    {
+      "copyOffset": 1,
+      "prefixHex": "41"
+    },
+    {
+      "copyOffset": 2,
+      "prefixHex": "4142"
+    }
+  ]
+}

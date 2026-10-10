@@ -722,7 +722,21 @@
     "native-orchestration": [
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts"
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧪️tests/🟦️.ts"
+    ],
+    "invocation": [
+      "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts"
+    ],
+    "exact-cargo-control": [
+      "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts"
     ]
   },
   "receivingBindings": [
@@ -890,6 +904,52 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧵️fresh-process/🔣️.json",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🧬️schema/🔣️.json",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🧫️fixtures/🔣️.json",
-    "🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts"
+    "🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/🌳️ownership/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📪️exit.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧬️schema/📬️target-declarations/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📣️progress/🛑️interruption/🧫️fixtures/🔣️.json"
+  ],
+  "invocationBindings": [
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+  ],
+  "processPreimage": {
+    "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "sha256": "12ff7cb672239174600b65c3c42c301d252bbf5d23151d15bc02d78f9a35497b"
+  },
+  "nativeOwnerPreimage": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+    "sha256": "9694d46070270ff32ba6f99d43affdd8e3e6bdce5bbdb83f7013b125cffc27f6"
+  },
+  "authorityPreimage": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "sha256": "796df77bad05af10705251aa778a52b62cc17fba780f48cdb204b8c8c095a099"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "sha256": "4132defc09c273fb8713ad2817582b35b4dd3c523879e586efa6b7150128d852"
+    }
+  ],
+  "exactCargoBindings": [
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧫️fixtures/📨️managed-output.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📥️capture/📋️policy/🧬️schema/🔣️.json"
   ]
 }

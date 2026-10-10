@@ -1,5 +1,55 @@
+fn fixture_issued_turn(budget: semio_framework_actor::Budget) -> IssuedShardTurn { IssuedShardTurn::new(original_retained_turn(), budget, 1).expect("declared original single envelope") }
+fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
 use super::*;
 use std::sync::Mutex;
+
+#[semio_framework_async_macros::async_test]
+async fn issued_shard_batch_has_one_original_ledger_and_one_terminal_return(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../🎟️grant/🧫️fixtures/📦️batch.json")).unwrap();let input:semio_framework_actor::RetainedTurnInput=serde_json::from_value(law["input"].clone()).unwrap();let budget=semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);let mut turn=IssuedShardTurn::new(input,budget,law["envelopes"].as_u64().unwrap()as usize).unwrap();let mut completions=0;let mut original=input;
+ for (index,spent) in law["spent"].as_array().unwrap().iter().enumerate(){
+  let issued=turn.issue_envelope(index).unwrap();assert_eq!(issued,original);let progress=serde_json::from_value(spent.clone()).unwrap();let receipt=issued.return_original(progress).unwrap();let mut forged=receipt;forged.input.epoch+=1;
+  let(refused,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||turn.settle_envelope(index,forged));assert!(refused.is_err());assert_eq!(serde_json::to_value([physical.requested_bytes,physical.released_bytes]).unwrap(),law["refusalHeap"]);
+  let accepted=turn.settle_envelope(index,receipt).unwrap();original=semio_framework_actor::RetainedTurnInput{grant:receipt.remaining,..issued};if let Some(whole)=accepted{completions+=1;assert_eq!(index+1,law["envelopes"].as_u64().unwrap()as usize);whole.validate_for(input).unwrap();assert_eq!(serde_json::to_value(whole.remaining).unwrap(),law["remaining"])}else{assert!(index+1<law["envelopes"].as_u64().unwrap()as usize)}
+  let(duplicate,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||turn.settle_envelope(index,receipt));assert_eq!(serde_json::to_value(duplicate.is_err()).unwrap(),law["duplicateRefused"]);assert_eq!(serde_json::to_value([physical.requested_bytes,physical.released_bytes]).unwrap(),law["refusalHeap"]);
+ }
+ assert_eq!(serde_json::to_value(completions).unwrap(),law["completionCount"]);assert!(turn.issue_envelope(3).is_err());eprintln!("[DEBUG] Actual issued Shard batch original71/3/19 three envelope loans preserve remaining all5axes forged/duplicate heap0 one final original return no per-envelope renewal");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn shard_grant_transports_original_retained_authority_independently_of_scaled_scheduling() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json")).unwrap();
+    let original: semio_framework_actor::RetainedTurnInput = serde_json::from_value(law["input"].clone()).unwrap();
+    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).scaled(0.125).await;
+    let frame = ShardFrame::Grant { actor: ActorId(71), retained: original, budget, envelopes: Vec::new() };
+    let mut bytes = Vec::with_capacity(256);
+    let backing = bytes.as_ptr();
+    let (_, encoded) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_async::poll::resolve_ready(frame.pack_encode(&mut bytes)));
+    assert_eq!(encoded.requested_bytes, 0);
+    assert_eq!(encoded.released_bytes, 0);
+    assert_eq!(bytes.as_ptr(), backing);
+    let mut cursor = 0;
+    let (decoded, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_async::poll::resolve_ready(ShardFrame::pack_decode(&bytes, &mut cursor)));
+    assert_eq!(physical.requested_bytes, 0);
+    assert_eq!(physical.released_bytes, 0);
+    let decoded = decoded.unwrap();
+    assert_eq!(decoded, frame);
+    let ShardFrame::Grant { retained, budget: decoded_budget, .. } = decoded else { panic!("original grant frame") };
+    assert_eq!(serde_json::to_value(retained).unwrap(), law["input"]);
+    assert_eq!(retained, original);
+    assert_eq!(decoded_budget, budget);
+    assert_eq!(cursor, bytes.len());
+    eprintln!("[DEBUG] Actual ShardFrame original71/3/19 all5currencies independent of eighth scheduling scale same Pack backing zero heap encode/decode");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn shard_grant_invalid_original_operation_preserves_wire_backing_without_heap() {
+    let mut original = original_retained_turn();original.operation = 0;
+    let frame = ShardFrame::Grant { actor: ActorId(71), retained: original, budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive), envelopes: Vec::new() };
+    let mut bytes = Vec::with_capacity(256);bytes.extend_from_slice(&[11,13]);let pointer=bytes.as_ptr();let capacity=bytes.capacity();
+    let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(frame.pack_encode(&mut bytes)));
+    assert_eq!(result.unwrap_err(),semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"));assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0));assert_eq!(bytes.as_ptr(),pointer);assert_eq!(bytes.capacity(),capacity);assert_eq!(bytes,[11,13]);let ShardFrame::Grant{budget,..}=frame else{unreachable!()};assert_eq!(*budget.original_input(),original);
+    eprintln!("[DEBUG] Actual ShardFrame invalid original operation0 checked before tag/header/body write heap0; original71/3/19 grant and supplied wire backing unchanged");
+}
 
 /// 🧪️ [`LoopbackTransport`] (module level, above — moved there so [`ShardTransports`] can name
 /// it) hands this back from `paired()`; `pub(super)` so the parent `shard` module's own
@@ -46,7 +96,7 @@ async fn drain_replay_lifecycle(shard: &mut ShardLoop, actor: u64) {
         if shard.replay_seeds.iter().all(Option::is_none) && shard.replay_seed_refusals.iter().all(Option::is_none) {
             return;
         }
-        shard.granted_budgets.insert(actor, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+        shard.granted_budgets.insert(actor, fixture_issued_turn(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }));
         if !shard.drive_replay_refusal().await.expect("replay refusal close") {
             let _ = shard.drive_replay_seed().await;
         }
@@ -60,7 +110,7 @@ async fn retain_replay_seed(shard: &mut ShardLoop, actor: ActorId, job: u64) -> 
         if matches!(seed.phase, ReplaySeedPhase::Retained) {
             return seed.authority;
         }
-        shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+        shard.granted_budgets.insert(actor.0, fixture_issued_turn(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }));
         assert!(shard.drive_replay_seed().await.expect("replay retention opportunity"));
     }
     panic!("bounded replay retention exhausted");
@@ -89,7 +139,7 @@ fn instance_close_event_matches_the_shared_first_party_fixture_and_serde_structu
 async fn encode_payload_envelope(to: ActorId, seq: u64, payload: Payload) -> Vec<u8> {
     let envelope = Envelope { to, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
     let mut bytes = Vec::new();
-    ShardFrame::Envelope(envelope).pack_encode(&mut bytes).await;
+    ShardFrame::Envelope(envelope).pack_encode(&mut bytes).await.expect("declared original frame authority");
     bytes
 }
 
@@ -649,7 +699,7 @@ async fn exclusive_placement_is_stepped_before_inline_placement_admitted_the_sam
         Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Maintenance, seq: 3, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn: exclusive_authority } },
     ];
     let mut grant = Vec::new();
-    ShardFrame::Grant { actor, budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance), envelopes }.pack_encode(&mut grant).await;
+    ShardFrame::Grant { actor, retained: original_retained_turn(), budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance), envelopes }.pack_encode(&mut grant).await.expect("declared original frame authority");
     probe.push_inbound(grant).await;
     assert_eq!(pump(&mut shard).await.expect("first placement-selected step"), 1);
     assert_eq!(pump(&mut shard).await.expect("second pump"), 1, "the second job steps on the next actor turn");
@@ -700,7 +750,7 @@ macro_rules! shard_frame_round_trip {
         async fn $name() {
             let value: ShardFrame = $value;
             let mut bytes = Vec::new();
-            value.pack_encode(&mut bytes).await;
+            value.pack_encode(&mut bytes).await.expect("declared original frame authority");
             let mut pos = 0usize;
             let decoded = ShardFrame::pack_decode(&bytes, &mut pos).await.expect("pack_decode");
             assert_eq!(pos, bytes.len(), "pack_decode must consume exactly what pack_encode wrote");
@@ -713,8 +763,7 @@ shard_frame_round_trip!(shard_frame_round_trip_register, ShardFrame::Register { 
 shard_frame_round_trip!(shard_frame_round_trip_unregister, ShardFrame::Unregister { actor: ActorId(9) });
 shard_frame_round_trip!(
     shard_frame_round_trip_grant,
-    ShardFrame::Grant {
-        actor: ActorId(11),
+    ShardFrame::Grant {         actor: ActorId(11),
         budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive),
         envelopes: vec![Envelope {
             to: ActorId(11),
@@ -771,7 +820,7 @@ async fn shard_outcome_owned_pack_round_trips_every_variant() {
     ];
     for value in values {
         let mut bytes = Vec::new();
-        value.pack_encode(&mut bytes).await;
+        value.pack_encode(&mut bytes).await.expect("declared original frame authority");
         assert_eq!(decode_outcome(&bytes).await, value);
     }
 }
@@ -790,14 +839,14 @@ async fn grant_with_no_envelopes_still_records_the_budget() {
     let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
     budget.fuel = 123_456;
     let mut bytes = Vec::new();
-    ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await;
+    ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
 
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),crate::shard::test_identity_issuer()).await;
     shard.register(actor, instance);
     let driven = pump(&mut shard).await.expect("pump");
     assert_eq!(driven, 0, "no envelopes bundled — nothing to drive yet");
-    assert_eq!(shard.granted_budget(actor.0).fuel, 123_456, "the Grant's budget must be recorded even with no envelopes");
+    assert_eq!(shard.granted_budget(actor.0).unwrap().budget.fuel, 123_456, "the Grant's budget must be recorded even with no envelopes");
 }
 //#endregion 🔖️ShardFrameRoundTrips
 
@@ -835,7 +884,7 @@ async fn a_grants_budget_is_what_the_turn_actually_executes_under() {
         payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() },
     };
     let mut bytes = Vec::new();
-    ShardFrame::Grant { actor, budget: first_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes).await;
+    ShardFrame::Grant { actor, retained: original_retained_turn(), budget: first_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
     pump(&mut shard).await.expect("pump 1");
     assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called").fuel, 111_111, "the FIRST Grant's own fuel must reach execute_turn, not a constant");
@@ -853,7 +902,7 @@ async fn a_grants_budget_is_what_the_turn_actually_executes_under() {
         payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() },
     };
     let mut bytes2 = Vec::new();
-    ShardFrame::Grant { actor, budget: second_budget, envelopes: vec![envelope2] }.pack_encode(&mut bytes2).await;
+    ShardFrame::Grant { actor, retained: original_retained_turn(), budget: second_budget, envelopes: vec![envelope2] }.pack_encode(&mut bytes2).await.expect("declared original frame authority");
     probe.push_inbound(bytes2).await;
     pump(&mut shard).await.expect("pump 2");
     assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called again").fuel, 222_222, "a DIFFERENT second Grant's fuel must reach execute_turn too — proving it travels per-Grant, not a fixed constant");
@@ -880,7 +929,7 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
     budget.fuel = 333_333;
     let mut bytes = Vec::new();
-    ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await;
+    ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![] }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
     assert_eq!(pump(&mut shard).await.expect("budget grant pump"), 0, "an empty Grant updates authority without driving a guest");
     let turn = test_job_turn(actor, 999, 0, 0);
@@ -892,7 +941,7 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let job_bytes = {
         let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Maintenance, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
         let mut out = Vec::new();
-        ShardFrame::Envelope(envelope).pack_encode(&mut out).await;
+        ShardFrame::Envelope(envelope).pack_encode(&mut out).await.expect("declared original frame authority");
         out
     };
     probe.push_inbound(job_bytes).await;
@@ -901,15 +950,13 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let _ = probe.take_outbound().await;
 }
 
-/// 🎯️ An actor that was NEVER granted a budget still gets a real, principled one (the
-/// Maintenance lane's default) — never a panic, never a zeroed budget.
+/// 🎟️ An actor without an actual issued turn has no execution authority.
 #[semio_framework_async_macros::async_test]
-async fn an_actor_never_granted_a_budget_falls_back_to_the_maintenance_lane_default() {
+async fn an_actor_never_granted_authority_preserves_unissued_work() {
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = ActorId(73);
     let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(LoopbackTransport::default()),crate::shard::test_identity_issuer()).await;
-    let expected = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
-    assert_eq!(shard.granted_budget(actor.0), expected);
+    assert_eq!(shard.granted_budget(actor.0), None);
 }
 //#endregion 🔖️GrantBudgetExecution
 
@@ -930,7 +977,7 @@ async fn unregister_frame_drops_the_instance_exactly_like_the_direct_call() {
     assert!(shard.is_registered(actor).await);
 
     let mut bytes = Vec::new();
-    ShardFrame::Unregister { actor }.pack_encode(&mut bytes).await;
+    ShardFrame::Unregister { actor }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
     let driven = pump(&mut shard).await.expect("pump");
     assert_eq!(driven, 1, "Unregister consumes one bounded authority opportunity");
@@ -945,7 +992,7 @@ async fn register_frame_is_accepted_without_error_and_has_no_local_side_effect()
     let actor = ActorId(82);
     let (transport, probe) = LoopbackTransport::paired().await;
     let mut bytes = Vec::new();
-    ShardFrame::Register { actor }.pack_encode(&mut bytes).await;
+    ShardFrame::Register { actor }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),crate::shard::test_identity_issuer()).await;
     let driven = pump(&mut shard).await.expect("pump must not error on a Register frame");
@@ -1104,7 +1151,7 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
         payload: Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") },
     });
     let mut bytes = Vec::new();
-    ShardFrame::Grant { actor: interactive_actor, budget: interactive_budget, envelopes }.pack_encode(&mut bytes).await;
+    ShardFrame::Grant { actor: interactive_actor, budget: interactive_budget, envelopes }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     probe.push_inbound(bytes).await;
 
     let driven = pump(&mut shard).await.expect("pump");
@@ -1261,7 +1308,7 @@ async fn permanently_over_capacity_frame_uses_the_same_bounded_overflow_handoff(
         .map(|seq| Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: seq as u64, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Cancel { seq: seq as u64 } })
         .collect();
     let mut raw = Vec::new();
-    ShardFrame::Grant { actor, budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background), envelopes }.pack_encode(&mut raw).await;
+    ShardFrame::Grant { actor, retained: original_retained_turn(), budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background), envelopes }.pack_encode(&mut raw).await.expect("declared original frame authority");
     probe.push_inbound(raw.clone()).await;
 
     assert!(matches!(shard.drive_one().await, ShardDrive::Fault { consumed_epoch: None, terminal_overflow: true, work_remains: false, .. }));
@@ -1287,7 +1334,7 @@ fn terminal_overflow_slot_rejects_an_aba_key_after_rearm() {
 async fn transient_frame_rejection_keeps_its_original_epoch_until_admission() {
     let actor = ActorId(51);
     let mut bytes = Vec::new();
-    ShardFrame::Register { actor }.pack_encode(&mut bytes).await;
+    ShardFrame::Register { actor }.pack_encode(&mut bytes).await.expect("declared original frame authority");
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
     let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default()),crate::shard::test_identity_issuer()).await;
     shard.rejected_frame = Some((9, bytes));
@@ -1412,7 +1459,7 @@ async fn replay_failure_and_actor_loss_enter_one_close_funnel_before_reporting()
     let mut seed = MountedReplaySeed::new(actor.0, 24, turn, request, JobPlacement::Inline, kind, input).expect("mounted seed");
     seed.seed.as_mut().expect("fixed seed").kind_pages = JOB_REPLAY_KIND_PAGE_CAPACITY;
     shard.replay_seeds[0] = Some(seed);
-    shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+    shard.granted_budgets.insert(actor.0, fixture_issued_turn(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }));
     let error = shard.drive_replay_seed().await.expect_err("capture admission must fault");
     assert!(error.to_string().contains("kind page admission refused"));
     let seed = shard.replay_seeds[0].as_ref().expect("faulted seed remains discoverable");
@@ -1461,10 +1508,10 @@ async fn mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_wo
     shard.replay_seeds[0] = Some(MountedReplaySeed::new(actor.0, job, turn, request, JobPlacement::Inline, kind, input).expect("fixed mounted replay seed"));
 
     let initial_phase = shard.replay_seeds[0].as_ref().expect("mounted seed").phase;
-    shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 0, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+    shard.granted_budgets.insert(actor.0, fixture_issued_turn(semio_framework_actor::Budget { fuel: 0, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }));
     assert!(!shard.drive_replay_seed().await.expect("zero fuel refuses unchanged"));
     assert_eq!(shard.replay_seeds[0].as_ref().expect("unchanged seed").phase, initial_phase);
-    shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 0, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+    shard.granted_budgets.insert(actor.0, fixture_issued_turn(semio_framework_actor::Budget { fuel: 1, wall_ms: 0, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }));
     assert!(!shard.drive_replay_seed().await.expect("expired deadline refuses unchanged"));
     assert_eq!(shard.replay_seeds[0].as_ref().expect("unchanged seed").phase, initial_phase);
 
@@ -1478,13 +1525,13 @@ async fn mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_wo
     assert!(shard.begin_replay_seed(actor.0, turn, request, 1, u16::MAX).is_err());
 
     shard.replay_seeds[0].as_mut().expect("mounted seed").phase = ReplaySeedPhase::CaptureInput;
-    shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+    shard.granted_budgets.insert(actor.0, fixture_issued_turn(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }));
     let stale_started = std::time::Instant::now();
     assert!(shard.drive_replay_seed().await.expect("stale actor starts exact close"));
     assert!(stale_started.elapsed() < std::time::Duration::from_millis(8));
     assert_eq!(shard.replay_seeds[0].as_ref().expect("stale seed remains discoverable").phase, ReplaySeedPhase::Closing);
     while shard.replay_seeds[0].is_some() {
-        shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+        shard.granted_budgets.insert(actor.0, fixture_issued_turn(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }));
         let started = std::time::Instant::now();
         assert!(shard.drive_replay_seed().await.expect("one close opportunity"));
         assert!(started.elapsed() < std::time::Duration::from_millis(8));
@@ -1522,7 +1569,8 @@ async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before
     cancel.effects.push(Effect::CancelJob { job });
     mock.script_turn(actor, cancel).await;
 
-    let budget = shard.granted_budget(actor.0);
+    let budget = fixture_issued_turn(semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance));
+    shard.granted_budgets.insert(actor.0, budget);
     let lane = shard.actor_lane(actor.0);
     assert!(!shard.execute_turn_for(actor.0, &Event::Wake, budget, lane).await.expect("mounted cancel turn"));
     assert_eq!(mock.cancel_admissions(), 1);
@@ -1530,7 +1578,7 @@ async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before
     assert_eq!(shard.replay_seeds[0].as_ref().expect("cancelled seed remains discoverable").phase, ReplaySeedPhase::Closing);
     assert!(!shard.running_jobs.contains(&(actor.0, job)));
     while shard.replay_seeds[0].is_some() {
-        shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+        shard.granted_budgets.insert(actor.0, fixture_issued_turn(semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) }));
         let started = std::time::Instant::now();
         assert!(shard.drive_replay_seed().await.expect("one cancelled-owner close opportunity"));
         assert!(started.elapsed() < std::time::Duration::from_millis(8));
@@ -1552,4 +1600,41 @@ fn a_wake_to_a_mid_flight_turn_resumes_it_with_no_events() {
     let job = Event::JobCompleted { job: 7, result: RequestOutcome::Ok(Vec::new()) };
     assert!(matches!(turn_events(&job, true), [Event::JobCompleted { job: 7, .. }]));
     assert!(matches!(turn_events(&job, false), [Event::JobCompleted { job: 7, .. }]));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn original_host_dispatch_refusal_keeps_original_decision_and_typed_cause_without_heap() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🎟️grant/🧫️fixtures/🔣️.json")).unwrap();
+    let mut retained: semio_framework_actor::RetainedTurnInput = serde_json::from_value(law["input"].clone()).unwrap();
+    retained.operation = 0;
+    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+    let decision = semio_framework_actor::Decision { run: vec![semio_framework_actor::TurnGrant { actor: ActorId(71), shard: semio_framework_actor::ShardId(0), budget, envelopes: Vec::new() }], wake_at: Some(19) };
+    let pointer = decision.run.as_ptr();
+    let mut input = Some(decision);
+    let mut dispatch = grant::OriginalShardDispatch::default();
+    let (result, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| dispatch.admit(&mut input));
+    let error = result.unwrap_err();
+    assert_eq!(error, semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"));
+    assert_eq!((physical.requested_bytes, physical.released_bytes), (0, 0));
+    assert!(input.is_none());
+    assert_eq!(dispatch.decision().unwrap().run.as_ptr(), pointer);
+    assert_eq!(*dispatch.decision().unwrap().run[0].original_input(), retained);
+    assert_eq!(dispatch.cursor(), law["dispatch"]["cursor"].as_u64().unwrap() as usize);
+    assert_eq!(dispatch.refusal(), Some(&error));
+    let mut bytes = Vec::with_capacity(256);
+    bytes.extend_from_slice(&[11, 13]);
+    let wire = bytes.as_ptr();
+    let (packed, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_async::poll::resolve_ready(ShardFrame::pack_encode_grant(dispatch.next().unwrap(), grant::ShardResourceBudget::from_original(&budget), &mut bytes)));
+    assert_eq!(packed.unwrap_err(), error);
+    assert_eq!((physical.requested_bytes, physical.released_bytes), (0, 0));
+    assert_eq!(bytes.as_ptr(), wire);
+    assert_eq!(bytes, [11, 13]);
+    let mut next = Some(semio_framework_actor::Decision { run: Vec::new(), wake_at: Some(20) });
+    let (refused, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| dispatch.admit(&mut next));
+    assert_eq!(refused.unwrap_err(), error);
+    assert_eq!((physical.requested_bytes, physical.released_bytes), (0, 0));
+    assert_eq!(next.as_ref().unwrap().wake_at, Some(20));
+    assert!(dispatch.finish().is_none());
+    assert_eq!(dispatch.decision().unwrap().run.as_ptr(), pointer);
+    eprintln!("[DEBUG] Actual Host original Decision backing retained through typed checked frame refusal/retry, original epoch19/cursor0 wire unchanged heap0; no replacement Decision admitted");
 }

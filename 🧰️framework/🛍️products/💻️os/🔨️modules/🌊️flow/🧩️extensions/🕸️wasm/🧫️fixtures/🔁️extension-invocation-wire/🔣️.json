@@ -2,6 +2,7 @@
   "capability": "evaluate",
   "note": "The evaluate capability owns initial input/dependency source once in its existing retained map. Compact resume requests use resume:true, empty inputJson/dependencyJson, and the exact parked operator/node hash/version/cancellation header. Full changed sources are replacement requests. Language-agnostic rows define the ordinary unaddressed wire and retainedAdmission defines bounded addressed admission.",
   "requestFields": [
+    "neuronId",
     "operatorId",
     "inputJson",
     "retained"
@@ -60,7 +61,7 @@
   "rows": [
     {
       "name": "ok",
-      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{\\\"number\\\":2}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128}}",
+      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{\\\"number\\\":2}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128},\"neuronId\":\"tree.fixture.echo\"}",
       "outcome": "ok",
       "done": true,
       "phase": "complete",
@@ -71,7 +72,7 @@
     },
     {
       "name": "empty-output",
-      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128}}",
+      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128},\"neuronId\":\"tree.fixture.echo\"}",
       "outcome": "ok",
       "done": true,
       "phase": "complete",
@@ -82,7 +83,7 @@
     },
     {
       "name": "operator-fault",
-      "requestJson": "{\"operatorId\":\"test.missing\",\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128}}",
+      "requestJson": "{\"operatorId\":\"test.missing\",\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128},\"neuronId\":\"tree.fixture.echo\"}",
       "outcome": "ok",
       "done": true,
       "phase": "complete",
@@ -93,7 +94,7 @@
     },
     {
       "name": "bad-request",
-      "requestJson": "{\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128}}",
+      "requestJson": "{\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128},\"neuronId\":\"tree.fixture.echo\"}",
       "outcome": "fault",
       "fault": "missing field `operatorId`"
     }
@@ -151,7 +152,7 @@
       "resume": true,
       "inputJson": "",
       "dependencyJson": "",
-      "initialPhase": "input-parse",
+      "initialPhase": "request-admit",
       "cancelPhase": "cancelled",
       "nodeHash": 8080808,
       "operatorVersion": "test-v1",
@@ -252,5 +253,93 @@
     "sameOriginalCause": true,
     "sameActualReceipt": true,
     "terminalCauseClose": true
+  },
+  "originalRequestAdmission": {
+    "copyPolicies": [
+      1,
+      3,
+      64
+    ],
+    "sameSource": true,
+    "sourceMovedBeforeAdmission": false,
+    "metadataCopiedBeforeAdmission": false,
+    "sameKeyedSlot": true,
+    "originalRequestRetained": true,
+    "responseRequiresGrant": true,
+    "terminalDropBytes": 0
+  },
+  "originalEnvelopeSource": {
+    "sourceBirthBytes": 0,
+    "sourceCopyBytes": 0,
+    "outputSourceMoved": true,
+    "writerRequiresIncomingGrant": true,
+    "terminalDropBytes": 0
+  },
+  "originalRegistryRemoval": {
+    "predicateMeansKeep": true,
+    "sameOwnerRemoved": true,
+    "unrelatedOwnerRetained": true,
+    "terminalDropBytes": 0
+  },
+  "originalPendingWire": {
+    "neuronId": "tree.original.雪",
+    "extensionId": "geometry",
+    "operatorId": "geometry.eval",
+    "nodeHash": 700707,
+    "inputJson": "{\"value\":\"same input 雪\"}"
+  },
+  "neuronId": "tree.fixture.echo",
+  "originalPayloadWire": [
+    {
+      "complete": false,
+      "canonicalPayload": null
+    },
+    {
+      "complete": true,
+      "canonicalPayload": [
+        123,
+        125
+      ]
+    }
+  ],
+  "originalGatewayOwnership": {
+    "outerAuthority": true,
+    "wholeRequestRetained": true,
+    "samePayloadAllocation": true,
+    "pendingPayload": null,
+    "metadataMaterializedWhilePending": false,
+    "terminalDropBytes": 0,
+    "originalCallerIdentity": true,
+    "childTerminalRequired": true
+  },
+  "originalGeometryPreparation": {
+    "source": {
+      "nodes": [
+        "original 雪"
+      ]
+    },
+    "policy": [
+      1,
+      3,
+      64
+    ],
+    "dependencies": [
+      [
+        "same owner",
+        [
+          2,
+          4,
+          8
+        ]
+      ]
+    ],
+    "cancellationId": "actual.operation.17",
+    "validity": "valid",
+    "quality": "PolygonMesh",
+    "copyPolicies": [
+      1,
+      3,
+      64
+    ]
   }
 }

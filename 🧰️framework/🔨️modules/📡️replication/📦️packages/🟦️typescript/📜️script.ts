@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-replication` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
@@ -27,4 +28,4 @@ class IndexSetTestScript extends BundleScript {
 class IndexInsertionTestScript extends BundleScript{async run():Promise<void>{const {testHistoryIndexInsertion}=await import("../../🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts");testHistoryIndexInsertion();}}
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-index-entry",IndexEntryTestScript).register("test-index-insertion",IndexInsertionTestScript).register("test-index-set",IndexSetTestScript);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

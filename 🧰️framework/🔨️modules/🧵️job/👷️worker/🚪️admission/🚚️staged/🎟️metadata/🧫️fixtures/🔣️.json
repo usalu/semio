@@ -1,0 +1,53 @@
+{
+  "contract": "framework.job.original-staged-metadata.v1",
+  "grant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "metadata": [
+    {
+      "stage": "source-bind",
+      "copy": 0
+    },
+    {
+      "stage": "source-presence",
+      "copy": 0
+    },
+    {
+      "stage": "birth-headers",
+      "copy": 0
+    },
+    {
+      "stage": "destination-cursor",
+      "copy": 0
+    },
+    {
+      "stage": "params-handoff",
+      "copy": 0
+    },
+    {
+      "stage": "source-removal",
+      "copy": 0
+    },
+    {
+      "stage": "destination-slots",
+      "copy": 0
+    },
+    {
+      "stage": "destination-page-publication",
+      "copy": 0
+    }
+  ],
+  "faultSourceBytes": 26,
+  "sourceBytes": 8192,
+  "ranges": [
+    4096,
+    4096
+  ],
+  "metadataBirth": 0,
+  "metadataRelease": 0,
+  "retirementMetadataCopy": 0
+}

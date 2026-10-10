@@ -25,10 +25,11 @@ fn unbind_clock() { CLOCK.with(|clock| clock.set(None)); }
 struct EntryProbe { entered: usize, closing: bool }
 
 impl InteractiveJob for EntryProbe {
-    fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {
         self.entered += 1;
-        StepOutcome::Yield
+        JobOutcomeBorrow::admit_yield(cx)
     }
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
 
     fn begin_close(&mut self) { self.closing = true; }
     fn close_step(&mut self,_:RetainedCloneGrant)->InteractiveJobCloseStep { InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()} }
@@ -44,11 +45,11 @@ fn microsecond_zero_expired_or_empty_fuel_never_enters_job() {
     for (fuel, deadline) in [(1, 1_000), (1, 999), (0, 1_500)] {
         let mut probe = EntryProbe { entered: 0, closing: false };
         let mut sequence = 0;
-        let outcome = drive_step(&mut probe, "microsecond-entry", allocate_operation_id(), Generation(1), InteractiveStage::InteractiveStep, StepBudget::new(fuel, deadline,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), now, &mut sequence, &mut None);
+        let mut receipt=RetainedCloneProgress::default(); let mut context=StepContext::new(allocate_operation_id(),Generation(1),StepBudget::new(fuel,deadline,crate::component::TEST_RETAINED_POLICY),root_cancel_token(),now,&mut sequence,&mut receipt); let outcome=drive_step(&mut probe,&mut context,"microsecond-entry",InteractiveStage::InteractiveStep,&mut None); assert!(outcome.unwrap().is_none());
         probe.begin_close();
         assert_eq!(probe.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
         assert!(probe.terminal_is_empty());
-        assert!(matches!(outcome.0, StepOutcome::Yield));
+        assert_eq!(receipt,RetainedCloneProgress::default());
         assert_eq!(probe.entered, 0, "expired or exhausted grant entered job: fuel={fuel}, deadline={deadline}");
     }
 }
@@ -87,7 +88,7 @@ fn close_authority(mut authority: WorkerJobAuthorityOwner<EntryProbe>) -> usize 
     assert_eq!(job.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
     assert!(job.terminal_is_empty());
     let entered = job.entered;
-    while !authority.outcome.is_empty() { let _ = close_step_outcome_slot(&mut authority.outcome, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+    while !authority.outcome.is_empty() { let _ = authority.outcome.close_step( RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }); }
     while !authority.preadmitted_fault.is_empty() { let _ = authority.preadmitted_fault.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
     authority.job.remove_terminal(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64}).unwrap();
     entered
@@ -98,9 +99,11 @@ fn microsecond_retained_worker_admits_half_ms_and_rejects_missing_or_overflow_cl
     for (clock, grant, fuel, expected_entries, faulted) in [(Some(1_000), 500, 1, 1, false), (Some(1_000), 0, 1, 0, false), (Some(1_000), 500, 0, 0, false), (None, 500, 1, 0, true), (Some(u64::MAX - 100), 500, 1, 0, true)] {
         bind_clock(clock);
         let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "microsecond-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: fuel, step_budget_us: grant }, now_us: now };
-        let mut authority = WorkerJobAuthorityOwner::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
+        let mut authority = admit_original_fixture_owner!(WorkerJobAuthorityOwner,EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
+        authority.issued_retained=crate::component::TEST_RETAINED_POLICY;
         let terminal = drive_worker_job_authority(&mut authority);
-        let actual_fault = matches!(authority.outcome.original(), Some(StepOutcome::Fault(_)));
+        assert!(authority.retained_step_progress.fits(authority.issued_retained));assert!(authority.retained_receipt_pending);authority.retained_receipt_pending=false;
+        let actual_fault = matches!(authority.outcome.original(), Some(original) if original.kind()==JobOutcomeKind::Fault);
         let entered = close_authority(authority);
         assert_eq!(terminal, faulted);
         assert_eq!(actual_fault, faulted);
@@ -128,8 +131,10 @@ fn microsecond_platform_clock_and_real_half_ms_worker_progress() {
     let entered = (0..REAL_CLOCK_ATTEMPTS)
         .map(|_| {
             let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "microsecond-real-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: default_now_us };
-            let mut authority = WorkerJobAuthorityOwner::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
+            let mut authority = admit_original_fixture_owner!(WorkerJobAuthorityOwner,EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
+            authority.issued_retained=crate::component::TEST_RETAINED_POLICY;
             assert!(!drive_worker_job_authority(&mut authority), "a spent real grant yields, it never terminates");
+            assert!(authority.retained_step_progress.fits(authority.issued_retained));assert!(authority.retained_receipt_pending);authority.retained_receipt_pending=false;
             close_authority(authority)
         })
         .find(|entered| *entered != 0);
@@ -139,17 +144,22 @@ fn microsecond_platform_clock_and_real_half_ms_worker_progress() {
 //#endregion 🧵️RetainedWorker
 
 //#region 🔒️CallbackQuarantine
-struct CompletionProbe { end: Option<u64>, closing: bool }
+struct CompletionProbe { end: Option<u64>, closing: bool, output: Option<JobPayloadSlot> }
 
 impl InteractiveJob for CompletionProbe {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        let output = cx.payload_from_bytes(JobPayloadStream::CommitOutput, b"kept").unwrap_or_else(|_| panic!("exact fixture page admission"));
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {
+        if self.output.is_none(){let output = cx.payload_from_bytes(JobPayloadStream::CommitOutput, b"kept").unwrap_or_else(|_| panic!("exact fixture page admission"));self.output=Some(JobPayloadSlot::from_payload(output));}
         bind_clock(self.end);
-        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output })
+        JobOutcomeBorrow::admit_complete(cx,None,self.output.as_ref().and_then(JobPayloadSlot::original))
     }
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{descriptor.complete(None,self.output.as_ref().and_then(JobPayloadSlot::original))}
     fn begin_close(&mut self) { self.closing = true; }
-    fn close_step(&mut self,_:RetainedCloneGrant)->InteractiveJobCloseStep { InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()} }
-    fn terminal_is_empty(&self) -> bool { self.closing }
+    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep { if let Some(output)=self.output.as_mut(){if !output.is_empty(){return match output.close_step(grant){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};} } InteractiveJobCloseStep::Complete{progress:Default::default()} }
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.output.as_ref().map(JobPayloadSlot::retirement_demands).transpose()?.unwrap_or_default().copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.output.as_ref().map(JobPayloadSlot::retirement_demands).transpose()?.unwrap_or_default().release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.output.as_ref().map(JobPayloadSlot::retirement_demands).transpose()?.unwrap_or_default().depth)}
+    fn terminal_is_empty(&self) -> bool { self.closing && self.output.as_ref().is_none_or(JobPayloadSlot::is_empty) }
 }
 
 #[test]
@@ -162,22 +172,21 @@ fn microsecond_exact_callback_quarantine_retains_original_output_and_session_ide
     for law in fixture["verdicts"].as_array().unwrap().iter().filter(|law| !law["start"].is_null()) {
         bind_clock(law["start"].as_u64());
         let params = BatchJobParams { operation, generation, cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "microsecond-exact-quarantine", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: now };
-        let mut session = WorkerJobSession::try_new(CompletionProbe { end: law["end"].as_u64(), closing: false }, params).unwrap_or_else(|_| panic!("exact worker admission"));
-        assert!(matches!(session.try_step_on_caller(), Ok((_, WorkerJobPoll::Terminal))));
-        let owner = session.take_terminal().unwrap_or_else(|_| panic!("exact terminal owner"));
-        let verdict = owner.callback_verdict().expect("callback verdict is retained by the exact session");
-        let faulted = verdict.is_fault();
-        assert_eq!(faulted, law["fault"].as_bool().unwrap());
-        assert_eq!(verdict.operation(), operation);
-        assert_eq!(verdict.generation(), generation);
+        let mut session = admit_original_fixture_owner!(WorkerJobSession,CompletionProbe { end: law["end"].as_u64(), closing: false, output:None }, params).unwrap_or_else(|_| panic!("exact worker admission"));
+        let(ticket,poll)=session.try_step_on_caller(crate::component::TEST_RETAINED_POLICY).expect("one actual caller opportunity");
+        let mut first=match poll{WorkerJobPoll::Terminal=>session.take_terminal().unwrap(),WorkerJobPoll::Outcome=>session.take_outcome(ticket).unwrap(),_=>panic!("original opportunity must retain its exact owner")};
+        let original_receipt=first.take_retained_step_receipt().expect("original callback receipt recipient");assert!(original_receipt.1.fits(original_receipt.0));let verdict=first.callback_verdict().expect("first original callback verdict retained");let faulted=verdict.is_fault();assert_eq!(faulted,law["fault"].as_bool().unwrap());assert_eq!(verdict.operation(),operation);assert_eq!(verdict.generation(),generation);
+        let original_output=first.job().output.as_ref().and_then(JobPayloadSlot::original).expect("original output birth stays in producer").page(0).unwrap().as_ptr();
+        let owner=if poll==WorkerJobPoll::Terminal{first}else{match first.resume(){Ok(())=>{},Err(original)=>{let _original=original;panic!("original semantic absence failed to resume same owner")}};let mut terminal=None;for _ in 0..64{let(ticket,poll)=session.try_step_on_caller(crate::component::TEST_RETAINED_POLICY).unwrap();if poll==WorkerJobPoll::Terminal{let mut original=session.take_terminal().unwrap();let original_receipt=original.take_retained_step_receipt().expect("original terminal receipt");assert!(original_receipt.1.fits(original_receipt.0));terminal=Some(original);break;}let mut original=session.take_outcome(ticket).unwrap();let original_receipt=original.take_retained_step_receipt().expect("original continuation receipt");assert!(original_receipt.1.fits(original_receipt.0));for _ in 0..2{original.acknowledge_outcome(crate::component::TEST_RETAINED_POLICY);}match original.resume(){Ok(())=>{},Err(original)=>{let _original=original;panic!("funded original continuation failed to resume same owner")}};}terminal.expect("funded original continuation reaches terminal within64 opportunities")};
+        assert_eq!(owner.job().output.as_ref().and_then(JobPayloadSlot::original).unwrap().page(0).unwrap().as_ptr(),original_output);
         let quarantined = law["sessionTerminal"].as_bool().unwrap();
         assert!(!quarantined || faulted, "a quarantine implies a breached sample");
         if quarantined {
-            assert!(matches!(owner.outcome(), StepOutcome::Fault(_)));
-            let Some(StepOutcome::Complete(candidate)) = owner.authority.as_ref().unwrap().quarantined_outcome.original() else { panic!("quarantined original candidate must remain owned") };
-            assert_eq!(candidate.output.single_page(), Some(b"kept".as_slice()));
+            assert!(matches!(owner.outcome().unwrap(), Some(JobOutcomeView::Fault{..})));
+            let output=owner.job().output.as_ref().and_then(JobPayloadSlot::original).expect("quarantined original output remains owned before semantic publication");
+            assert_eq!(output.single_page(), Some(b"kept".as_slice()));
         } else {
-            assert!(matches!(owner.outcome(), StepOutcome::Complete(_)));
+            assert!(matches!(owner.outcome().unwrap(), Some(JobOutcomeView::Complete{..})));
             assert!(owner.authority.as_ref().unwrap().quarantined_outcome.is_empty());
         }
         let ledger = Arc::clone(owner.authority.as_ref().unwrap().payload_ledger.as_ref().expect("original admitted worker ledger"));
@@ -189,7 +198,7 @@ fn microsecond_exact_callback_quarantine_retains_original_output_and_session_ide
         for _ in 0..64 {
             let phase=session.close_phase();let caller=super::retained_ownership_tests::caller_worker_close_policy(phase);
             match session.close_step(caller) {
-                WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes:bytes,..}} => { assert!(released_items <= 1 && bytes <= caller.maximum_release_bytes); if matches!(phase,WorkerJobClosePhase::QuarantinedOutcome|WorkerJobClosePhase::Outcome|WorkerJobClosePhase::PreadmittedFault){assert!(bytes<=JOB_PAYLOAD_PAGE_BYTES);released_bytes += bytes;} }
+                WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes:bytes,..}} => { assert!(released_items <= 1 && bytes <= caller.maximum_release_bytes); if matches!(phase,WorkerJobClosePhase::QuarantinedOutcome|WorkerJobClosePhase::Outcome|WorkerJobClosePhase::PreadmittedFault|WorkerJobClosePhase::Job){assert!(bytes<=JOB_PAYLOAD_PAGE_BYTES);released_bytes += bytes;} }
                 WorkerJobCloseStep::Blocked => std::thread::yield_now(),
             WorkerJobCloseStep::Refused{kind,..}=>panic!("original close grant refused: {kind:?}"),
                 WorkerJobCloseStep::Complete {progress} => break,
@@ -214,7 +223,7 @@ struct SlowProbe {
 }
 
 impl InteractiveJob for SlowProbe {
-    fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {
         self.steps += 1;
         let slow = self.remaining_slow_steps > 0;
         if slow {
@@ -226,8 +235,9 @@ impl InteractiveJob for SlowProbe {
         }
         let elapsed_us = u64::try_from(started.elapsed().as_micros()).unwrap_or(u64::MAX);
         bind_clock(now().map(|value| value.saturating_add(elapsed_us)));
-        StepOutcome::Yield
+        JobOutcomeBorrow::admit_yield(cx)
     }
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
     fn begin_close(&mut self) { self.closing = true; }
     fn close_step(&mut self,_:RetainedCloneGrant)->InteractiveJobCloseStep { InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()} }
     fn terminal_is_empty(&self) -> bool { self.closing }
@@ -238,8 +248,8 @@ fn close_slow_authority(mut authority: WorkerJobAuthorityOwner<SlowProbe>) -> us
     job.begin_close();
     assert_eq!(job.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
     let steps = job.steps;
-    while !authority.outcome.is_empty() { let _ = close_step_outcome_slot(&mut authority.outcome, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
-    while !authority.quarantined_outcome.is_empty() { let _ = close_step_outcome_slot(&mut authority.quarantined_outcome, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+    while !authority.outcome.is_empty() { let _ = authority.outcome.close_step( RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }); }
+    while !authority.quarantined_outcome.is_empty() { let _ = authority.quarantined_outcome.close_step( RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }); }
     while !authority.preadmitted_fault.is_empty() { let _ = authority.preadmitted_fault.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
     authority.job.remove_terminal(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64}).unwrap();
     steps
@@ -255,16 +265,17 @@ fn drive_slow_probe(slow_steps: usize, attempts: usize) -> (usize, Option<usize>
         config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "sustained-overrun-probe", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: INTERACTIVE_LANE_WALL_US },
         now_us: now,
     };
-    let mut authority = WorkerJobAuthorityOwner::try_new(SlowProbe { remaining_slow_steps: slow_steps, steps: 0, closing: false }, params).unwrap_or_else(|_| panic!("exact worker admission"));
+    let mut authority = admit_original_fixture_owner!(WorkerJobAuthorityOwner,SlowProbe { remaining_slow_steps: slow_steps, steps: 0, closing: false }, params).unwrap_or_else(|_| panic!("exact worker admission"));
     let mut quarantined_at = None;
     for attempt in 0..attempts {
-        if drive_worker_job_authority(&mut authority) {
-            quarantined_at = Some(attempt);
-            break;
-        }
-        while !authority.outcome.is_empty() { close_step_outcome_slot(&mut authority.outcome, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+        authority.issued_retained=crate::component::TEST_RETAINED_POLICY;
+        let terminal=drive_worker_job_authority(&mut authority);
+        assert!(authority.retained_step_progress.fits(authority.issued_retained));assert!(authority.retained_receipt_pending);authority.retained_receipt_pending=false;
+        if authority.fault_pending && quarantined_at.is_none(){quarantined_at=Some(attempt);}
+        if terminal {if quarantined_at.is_none(){quarantined_at=Some(attempt);}break;}
+        while !authority.outcome.is_empty() { authority.outcome.close_step( RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }); }
     }
-    assert_eq!(matches!(authority.outcome.original(), Some(StepOutcome::Fault(_))), quarantined_at.is_some());
+    assert_eq!(matches!(authority.outcome.original(), Some(original) if original.kind()==JobOutcomeKind::Fault), quarantined_at.is_some());
     let ledger = authority.overruns;
     let steps = close_slow_authority(authority);
     (steps, quarantined_at, ledger.consecutive_overruns(), ledger.total_overruns(), ledger.worst_elapsed_us())
@@ -317,11 +328,13 @@ impl RetainedReceiptProbe{
  fn demand(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:usize::from(self.phase==1)*23,capacity_bytes:usize::from(self.phase==0)*64,release_bytes:usize::from(self.phase==2)*self.output.capacity(),depth:3}}
 }
 impl InteractiveJob for RetainedReceiptProbe{
- fn step(&mut self,cx:&mut StepContext<'_>)->StepOutcome{
-  let grant=cx.retained_grant();let demand=self.demand();if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return StepOutcome::Yield;}
-  let progress=match self.phase{0=>{self.output.try_reserve_exact(64).unwrap();RetainedCloneProgress{copied_items:1,retained_capacity_bytes:self.output.capacity(),..Default::default()}},1=>{self.output.extend_from_slice(b"original source payload");cx.consume_fuel(2);RetainedCloneProgress{copied_items:1,copied_bytes:23,..Default::default()}},2=>{let bytes=self.output.capacity();drop(std::mem::take(&mut self.output));RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}},_=>return StepOutcome::Yield};
-  cx.consume_retained(progress).unwrap();self.phase+=1;if self.panic_after_birth{panic!("actual receipt survives producer panic");}StepOutcome::Yield
+ fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{
+  let grant=cx.retained_grant();let demand=self.demand();if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(None);}
+  let progress=match self.phase{0=>{self.output.try_reserve_exact(64).unwrap();RetainedCloneProgress{copied_items:1,retained_capacity_bytes:self.output.capacity(),..Default::default()}},1=>{self.output.extend_from_slice(b"original source payload");cx.consume_fuel(2);RetainedCloneProgress{copied_items:1,copied_bytes:23,..Default::default()}},2=>{let bytes=self.output.capacity();drop(std::mem::take(&mut self.output));RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}},_=>return Ok(None)};
+  cx.consume_retained(progress).unwrap();self.phase+=1;if self.panic_after_birth{panic!("actual receipt survives producer panic");}Ok(None)
  }
+
+ fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
  fn begin_close(&mut self){self.closing=true;}
  fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep{if self.output.capacity()==0{return InteractiveJobCloseStep::Complete{progress:Default::default()};}if grant.maximum_items==0||grant.maximum_release_bytes<self.output.capacity()||grant.maximum_depth==0{return InteractiveJobCloseStep::Pending{progress:Default::default()};}let bytes=self.output.capacity();drop(std::mem::take(&mut self.output));InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}}
  fn terminal_is_empty(&self)->bool{self.closing&&self.output.capacity()==0}
@@ -340,7 +353,7 @@ fn original_job_step_context_conserves_actual_independent_retained_wallet(){
 
 #[test]
 fn original_worker_job_retains_actual_step_receipt_across_producer_panic(){
- bind_clock(Some(1000));let grant=RetainedCloneGrant{maximum_items:3,maximum_copy_bytes:23,maximum_capacity_bytes:64,maximum_release_bytes:65536,maximum_depth:3};let params=BatchJobParams{operation:OperationId(98144),generation:Generation(17),cancel:root_cancel_token(),config:BatchDriveConfig{retained:grant,site:"actual-retained-receipt-panic",stage:InteractiveStage::InteractiveStep,fuel_per_step:7,step_budget_us:500},now_us:now};let mut authority=WorkerJobAuthorityOwner::try_new(RetainedReceiptProbe{output:Vec::new(),phase:0,panic_after_birth:true,closing:false},params).unwrap_or_else(|_|panic!("original worker owner admission"));assert!(drive_worker_job_authority(&mut authority));assert_eq!(authority.retained_step_progress,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:64,..Default::default()});assert_eq!(authority.retained_progress,authority.retained_step_progress);let pointer=authority.job.original().unwrap().output.as_ptr();assert_eq!(authority.job.original().unwrap().output.capacity(),64);authority.job.original_mut().unwrap().begin_close();assert_eq!(authority.job.original().unwrap().output.as_ptr(),pointer);authority.job.original_mut().unwrap().close_step(crate::component::TEST_RETAINED_POLICY);authority.job.remove_terminal(crate::component::TEST_RETAINED_POLICY).unwrap();while !authority.outcome.is_empty(){close_step_outcome_slot(&mut authority.outcome,crate::component::TEST_RETAINED_POLICY).unwrap();}while !authority.preadmitted_fault.is_empty(){authority.preadmitted_fault.close_step(crate::component::TEST_RETAINED_POLICY).unwrap();}authority.params=None;while !authority.0.is_empty(){authority.close_terminal_worker_authority(crate::component::TEST_RETAINED_POLICY);}eprintln!("[DEBUG] actual original worker panic retains born64 receipt and same original deep allocation until funded close");
+ bind_clock(Some(1000));let grant=RetainedCloneGrant{maximum_items:3,maximum_copy_bytes:23,maximum_capacity_bytes:64,maximum_release_bytes:65536,maximum_depth:3};let params=BatchJobParams{operation:OperationId(98144),generation:Generation(17),cancel:root_cancel_token(),config:BatchDriveConfig{retained:grant,site:"actual-retained-receipt-panic",stage:InteractiveStage::InteractiveStep,fuel_per_step:7,step_budget_us:500},now_us:now};let mut authority=admit_original_fixture_owner!(WorkerJobAuthorityOwner,RetainedReceiptProbe{output:Vec::new(),phase:0,panic_after_birth:true,closing:false},params).unwrap_or_else(|_|panic!("original worker owner admission"));authority.issued_retained=grant;assert!(drive_worker_job_authority(&mut authority));assert!(authority.retained_receipt_pending);assert!(authority.retained_step_progress.fits(grant));authority.retained_receipt_pending=false;assert_eq!(authority.retained_step_progress,RetainedCloneProgress{copied_items:2,retained_capacity_bytes:64,..Default::default()});assert_eq!(authority.retained_progress,authority.retained_step_progress);let pointer=authority.job.original().unwrap().output.as_ptr();assert_eq!(authority.job.original().unwrap().output.capacity(),64);authority.job.original_mut().unwrap().begin_close();assert_eq!(authority.job.original().unwrap().output.as_ptr(),pointer);authority.job.original_mut().unwrap().close_step(crate::component::TEST_RETAINED_POLICY);authority.job.remove_terminal(crate::component::TEST_RETAINED_POLICY).unwrap();while !authority.outcome.is_empty(){authority.outcome.close_step(crate::component::TEST_RETAINED_POLICY);}while !authority.preadmitted_fault.is_empty(){authority.preadmitted_fault.close_step(crate::component::TEST_RETAINED_POLICY).unwrap();}while authority.original_worker_failure_demands(crate::component::TEST_RETAINED_POLICY.maximum_copy_bytes).unwrap().is_some(){authority.close_original_worker_failure(crate::component::TEST_RETAINED_POLICY).unwrap();}while authority.params.is_some()||authority.cancel_retirement.is_some(){authority.close_original_worker_params(crate::component::TEST_RETAINED_POLICY);}while !authority.0.is_empty(){authority.close_terminal_worker_authority(crate::component::TEST_RETAINED_POLICY);}eprintln!("[DEBUG] actual original worker panic retains born64 receipt and same original deep allocation until funded close");
 }
 
 #[test]

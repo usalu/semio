@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "4832677926b299be1c2f5d4467dcd24b95c07311395a05ad295f877727f8968c",
+      "afterSha256": "7a94f22e3b257c72c903cca6ade6a5521940ad9c5f27bbcaa565998f53f55325",
+      "exclusive": false,
+      "scope": "Actual extracted NativeScript child handoff must retain identical original transport reference; canonical output domain independently admitted by Ajv"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

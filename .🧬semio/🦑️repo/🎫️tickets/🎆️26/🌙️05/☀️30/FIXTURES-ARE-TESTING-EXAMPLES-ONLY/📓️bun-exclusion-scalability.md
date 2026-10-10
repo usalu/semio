@@ -1,0 +1,11 @@
+# Exact Native Exclusion Scaling
+
+Current20350 remains productive execution; minutes per scope do not establish a measured hotspot. Installed fast-glob settings enable braceExpansion and extglob; tasks distribute negative patterns across inside/outside positive groups. This exposes a plausible pattern-count cost, not proof of CPU location.
+
+[Official Bun Glob grammar](https://bun.sh/docs/runtime/glob) supports braces, character classes, globstar and escape; it does not document extglob. Do not emit !(modules) based only on fast-glob support. A broad four-name negative plus module subtree reinclusion is unsound because nested true collections below that module must remain refused. Unicode character-complement finite grammar still needs independent installed Bun parity; earlier gitignore surrogate approach is not portable.
+
+Clean exact compression candidate: construct a deterministic trie of the **same currently found literal forbidden roots**, factor common literal prefixes, group sibling literal components with native brace alternation, and retain terminal /**. This is a compressed representation of the actual complete exclusions, not a package allowlist or dropping roots. Escape each literal before brace grouping; never interpret Source literal braces as operators. Keep nested grouping within Bun documented10-depth limit or emit separate groups. A trie terminal must dominate descendant roots, preserving exact first-forbidden-root semantics. Sorting is byte deterministic.
+
+Prove expanded alternatives equal original literal exclusion set, then independent installed Bun/fast-glob match every positive genuine module and nested collection vector plus actual six-scope membership. No perf win claim before measured normal renewal; brace expansion in fast-glob may erase count benefit, so its actual task/matcher cost must be observed. General module-exception compact glob remains unsupported until exact grammar parity proves it.
+
+Root planned topology obligation is necessary: retain observed state/list identities and policy epoch, revalidate before returning a complete publication, detect new/removed manifests and directory replacement after yield. Consumed text checks alone cannot establish topology. No jobs/edits or global absence claimed.

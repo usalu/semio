@@ -1,0 +1,58 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧬️schema/🔣️.json",
+      "action": "delete",
+      "beforeSha256": "1bc03db4010ee684680fffa785fb29dbad4db18201810f6614911e65c2fe9d32",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧬️schema/🔣️.json",
+      "action": "delete",
+      "beforeSha256": "5ce72215ff443668184c81601226925329ec3629461009c03407a2de09afe7f5",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial schema"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧪️tests/🟦️.ts",
+      "action": "update",
+      "beforeSha256": "f5295b07c1b8283573587b8dfcd43c48377d922a1f820150425a22f1a9693467",
+      "afterSha256": "a6e89b50ee1ddae9e7ecc1336c1a972e6cbf084d27a75f6e5f458756d3edbbfb",
+      "scope": "whole-trial admission replaced by actual Grant-only canonical oracle"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🟦️.ts",
+      "action": "update",
+      "beforeSha256": "afade27751fb1884cbca159303b4beaddbb9b5b1a9be851d47121b57407d74fe",
+      "afterSha256": "028e9653df45c9205ba06d4de7d8da345fca372f688af514cf0335d004a1d467",
+      "scope": "only whole-trial load/admission/mutants removed; independent typed/UTF8/JSONPatch laws preserved"
+    }
+  ],
+  "preservedObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧫️fixtures/🔣️.json",
+      "sha256": "777eba0ec65f7c44db9e50e5510bb873afbd780c8b63be3e39094af97788543c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧪️tests/🦀️.rs",
+      "sha256": "c5a827de555a6d87d2ea44ca69ea01d4c0ab7d552aab8c424f7e84659ad016a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🦀️.rs",
+      "sha256": "36af49ca22d3901ab3ef7b9fcf792125eb62a0fbcbff0592b5f7813f5d1a0f92"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧫️fixtures/🔣️.json",
+      "sha256": "daa9f7d6d62d5d89aa5145d3c1345a5ce604b2c2b8a78e8611dac692745cd2da"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+      "sha256": "9fc7795398eb42879e7297b1538badc45e56da18265143950084535f30d35023"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs",
+      "sha256": "76ee04672d423e73f9b89d8b4de6a9edc1b97008d2836281ae2fe5446586cef9"
+    }
+  ]
+}

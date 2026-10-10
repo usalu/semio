@@ -37,7 +37,7 @@ pub fn decode_sqlite_snapshot_record_native<T:semio_framework_value::retirement:
             let (spec,record,output)=intermediate.as_mut().unwrap();let spec=spec.as_ref().unwrap();
             *record=Some(match payload {
                 crate::io_schema::IoPayload::Binary(bytes) => {
-                    let body = super::semio_format::unwrap_binary_controlled(bytes, envelope_id, super::semio_format::Component::Pack, 1, native).map_err(super::semio_format::SemioError::into_value_error)?;
+                    let body = super::semio_format::unwrap_binary_controlled(bytes, envelope_id, super::semio_format::Component::Pack, 1, native)?;
                     pack::record::decode_document_controlled(body, &spec, &pack::record::DecodeOptions::default(), native).map_err(super::PackRefusal::into_value_error)?.0
                 }
                 crate::io_schema::IoPayload::Text(text) => {

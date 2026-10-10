@@ -4,7 +4,11 @@
   "bodyBytes": 131072,
   "textBody": "🧬\u0000body",
   "retained": {
-    "budgets": [1, 8, 256],
+    "budgets": [
+      1,
+      8,
+      256
+    ],
     "textRepeats": 128,
     "retirementBytes": 3,
     "sourceReleases": 1,
@@ -21,8 +25,14 @@
     "payloadBytes": 1152,
     "minimumPayloadRetirementTurns": 384,
     "structuralCopy": [
-      { "nativeWordBytes": 4, "optionalTextHeaderBytes": 12 },
-      { "nativeWordBytes": 8, "optionalTextHeaderBytes": 24 }
+      {
+        "nativeWordBytes": 4,
+        "optionalTextHeaderBytes": 12
+      },
+      {
+        "nativeWordBytes": 8,
+        "optionalTextHeaderBytes": 24
+      }
     ],
     "ownership": {
       "copy": "bounded-original-payload",
@@ -30,6 +40,29 @@
       "release": "exact-physical-allocation",
       "depth": "exact-original-frontier",
       "refusal": "original-owner-kept"
+    },
+    "finalPublication": {
+      "cancellation": "originalFinalNativeStep",
+      "retainedOutput": "samePointer",
+      "completedOnRefusal": false,
+      "resume": "sameOriginalControlAndWallet"
     }
-  }
+  },
+  "binaryRefusals": [
+    {
+      "case": "prefix",
+      "kind": "invalidValue",
+      "message": "invalid binary semio header: invalid binary envelope prefix"
+    },
+    {
+      "case": "truncated",
+      "kind": "invalidValue",
+      "message": "invalid binary semio header: truncated envelope token"
+    },
+    {
+      "case": "identity",
+      "kind": "invalidValue",
+      "message": "invalid binary semio header: declared envelope identity mismatch"
+    }
+  ]
 }

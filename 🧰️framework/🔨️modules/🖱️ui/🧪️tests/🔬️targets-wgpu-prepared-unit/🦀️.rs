@@ -65,9 +65,30 @@ fn close_abandoned_input_step() -> bool {
     }
 }
 
+pub(super) fn atlas_fixture_authority() -> PreparedAtlasAuthority {
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: 65536, maximum_release_bytes: 16777216, maximum_depth: 64 };
+    PreparedAtlasAuthority { normal: grant, retirement: grant }
+}
+
+pub(super) fn atlas_fixture_owner(width: u32, height: u32, channels: u8, bytes: usize) -> Result<PreparedAtlasPages, ValueError> {
+    let authority = atlas_fixture_authority();
+    let (mut owner, progress) = PreparedAtlasPages::try_new(width, height, channels, bytes, authority)?;
+    assert!(progress.fits(authority.normal));
+    let progress = owner.admit_original_slots(authority.normal)?;
+    assert!(progress.fits(authority.normal));
+    Ok(owner)
+}
+
+pub(super) fn atlas_fixture_page(owner: &mut PreparedAtlasPages, source: &[u8], row: u32) -> Result<bool, ValueError> {
+    let grant = atlas_fixture_authority().normal;
+    let (complete, progress) = owner.push_page(source, row, grant)?;
+    assert!(progress.fits(grant));
+    Ok(complete)
+}
+
 fn close_abandoned_atlas_step() -> bool {
     use semio_framework_job::InteractiveJobCloseStep as Close;
-    let grant = PreparedAtlasPages::next_abandoned_close_demands(16 * 1024).unwrap();
+    let grant = atlas_fixture_authority().retirement;
     match PreparedAtlasPages::close_abandoned_step(grant) {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
@@ -80,7 +101,7 @@ fn close_abandoned_atlas_step() -> bool {
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32")))]
 #[path = "../♻️physical-job-close/🎟️prepared/🦀️.rs"]
 mod physical_job_close_laws;
-use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveStage, OperationId, StepBudget};
+use semio_framework_job::{root_cancel_token, Generation, InteractiveStage, JobOutcomeBorrow, JobOutcomeKind, OperationId, StepBudget};
 
 #[test]
 fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
@@ -102,7 +123,7 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
                 }
             }
             let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, Some(overlay), 0.0), 1);
-            assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
+            assert!(matches!(drive_preparation_until_terminal(&mut job), Some(JobOutcomeKind::Complete)));
             let mut packet = job.take_packet().expect("measured packet");
             assert_eq!(packet.has_animated_primitives(), row["active"].as_bool().unwrap(), "{}", row["id"]);
             while !close_packet_step(&mut packet) {}
@@ -132,7 +153,7 @@ static PREPARED_PROCESS_TEST_LOCK: Mutex<()> = Mutex::new(());
 /// 4/64 …)`). The guard therefore drains both rings before it hands the lock back: every law starts
 /// from a quiescent process, whatever the law before it left behind and whatever order the runner
 /// picked.
-fn prepared_process_guard() -> std::sync::MutexGuard<'static, ()> {
+pub(super) fn prepared_process_guard() -> std::sync::MutexGuard<'static, ()> {
     let guard = match PREPARED_PROCESS_TEST_LOCK.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(),
@@ -162,12 +183,39 @@ fn now_ms() -> Option<u64> {
     Some(1)
 }
 
-fn drive_preparation_until_terminal(job: &mut PreparedRenderJob) -> StepOutcome {
+
+fn observe_prepared_step(job: &mut PreparedRenderJob, operation: OperationId, generation: Generation, budget: StepBudget, cancel: semio_framework_job::CancelToken, now: fn() -> Option<u64>, preview: &mut u64, acknowledgement: RetainedCloneGrant) -> (Option<JobOutcomeKind>, RetainedCloneProgress) {
+    let mut receipt = RetainedCloneProgress::default();
+    let descriptor = {
+        let mut cx = StepContext::new(operation, generation, budget, cancel, now, preview, &mut receipt);
+        semio_framework_job::drive_step(job, &mut cx, "ui-wgpu.prepare", InteractiveStage::BackgroundStep, &mut None).unwrap().map(JobOutcomeBorrow::into_descriptor)
+    };
+    assert!(receipt.fits(budget.retained));
+    let kind = descriptor.map(|mut descriptor| {
+        let kind = descriptor.kind();
+        assert_eq!(job.borrow_outcome(&descriptor).unwrap().is_terminal(), descriptor.is_terminal());
+        let progress = descriptor.acknowledge(acknowledgement).progress();
+        assert!(progress.fits(acknowledgement));
+        assert!(descriptor.is_acknowledged());
+        kind
+    });
+    (kind, receipt)
+}
+
+fn observe_prepared_terminal(job: &mut PreparedRenderJob, operation: OperationId, generation: Generation, budget: StepBudget, cancel: semio_framework_job::CancelToken, now: fn() -> Option<u64>, preview: &mut u64, acknowledgement: RetainedCloneGrant) -> (Option<JobOutcomeKind>, RetainedCloneProgress) {
+    for _ in 0..4_096 {
+        let result = observe_prepared_step(job, operation, generation, budget, cancel.clone(), now, preview, acknowledgement);
+        if result.0.is_some_and(|kind| matches!(kind, JobOutcomeKind::Complete | JobOutcomeKind::Cancelled | JobOutcomeKind::Fault)) { return result; }
+    }
+    panic!("prepared render job did not reach a terminal outcome within fixed test credits");
+}
+
+fn drive_preparation_until_terminal(job: &mut PreparedRenderJob) -> Option<JobOutcomeKind> {
     let mut preview = 0;
     for _ in 0..4_096 {
-        let (outcome,original_retained_receipt) = drive_step(job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+        let (outcome,original_retained_receipt) = observe_prepared_step(job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
         assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-        if !matches!(outcome, StepOutcome::Yield) {
+        if !matches!(outcome, None | Some(JobOutcomeKind::Yield)) {
             return outcome;
         }
     }
@@ -296,13 +344,13 @@ fn atlas_page_cap_plus_one_faults_before_process_credit_transfer() {
     drain_abandoned_atlases();
     let height = 33_554_433_u32;
     let byte_len = 33_554_433_usize;
-    assert!(matches!(PreparedAtlasPages::try_new(1, height, 1, byte_len), Err("atlas page or byte credits exceeded")));
-    let mut admitted = match PreparedAtlasPages::try_new(4, 2, 4, 32) {
+    assert!(matches!(atlas_fixture_owner(1, height, 1, byte_len), Err(ref error) if error.message.as_ref() == "atlas page or byte credits exceeded"));
+    let mut admitted = match atlas_fixture_owner(4, 2, 4, 32) {
         Ok(admitted) => admitted,
         Err(fault) => panic!("fixed atlas admission faulted: {fault}"),
     };
     let mut turns = 0;
-    while !admitted.close_step() {
+    while !matches!(admitted.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {
         turns += 1;
     }
     assert!(turns >= 6, "fixed backing and four permit scalars close independently");
@@ -314,17 +362,17 @@ fn atlas_close_releases_one_fixed_page_then_its_exact_credit() {
     let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let source = [9_u8; 32];
-    let mut pages = match PreparedAtlasPages::try_new(4, 2, 4, source.len()) {
+    let mut pages = match atlas_fixture_owner(4, 2, 4, source.len()) {
         Ok(pages) => pages,
         Err(fault) => panic!("fixed atlas admission faulted: {fault}"),
     };
-    assert!(matches!(pages.push_page(&source, 0), Ok(true)));
+    assert!(matches!(atlas_fixture_page(&mut pages, &source, 0), Ok(true)));
     assert_eq!(pages.page(0), Some((&source[..], 0, 2)));
-    assert!(!pages.close_step());
+    assert!(!matches!(pages.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }));
     assert_eq!(pages.len(), 0);
     assert!(!pages.terminal_is_empty());
     let mut turns = 0;
-    while !pages.close_step() {
+    while !matches!(pages.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {
         turns += 1;
     }
     assert!(turns >= 6, "slot backing and permit fields each consume a distinct grant");
@@ -337,14 +385,14 @@ fn atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit() {
     drain_abandoned_atlases();
     let mut owners: [Option<PreparedAtlasPages>; PREPARED_ATLAS_PROCESS_ITEMS] = std::array::from_fn(|_| None);
     for owner in &mut owners {
-        *owner = Some(match PreparedAtlasPages::try_new(1, 1, 1, 1) {
+        *owner = Some(match atlas_fixture_owner(1, 1, 1, 1) {
             Ok(owner) => owner,
             Err(fault) => panic!("one exact process item: {fault}"),
         });
     }
-    assert!(matches!(PreparedAtlasPages::try_new(1, 1, 1, 1), Err("atlas process permit credits exhausted")));
+    assert!(matches!(atlas_fixture_owner(1, 1, 1, 1), Err(ref error) if error.message.as_ref() == "atlas process permit credits exhausted"));
     for owner in owners.iter_mut().filter_map(Option::as_mut) {
-        while !owner.close_step() {}
+        while !matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {}
         assert!(owner.terminal_is_empty());
     }
     assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
@@ -354,11 +402,11 @@ fn atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit() {
 fn abandoned_atlas_schedules_the_same_incremental_close_authority() {
     let _guard = prepared_process_guard();
     drain_abandoned_atlases();
-    let mut owner = match PreparedAtlasPages::try_new(4, 2, 4, 32) {
+    let mut owner = match atlas_fixture_owner(4, 2, 4, 32) {
         Ok(owner) => owner,
         Err(fault) => panic!("abandonment owner: {fault}"),
     };
-    assert!(owner.push_page(&[7; 32], 0).is_ok());
+    assert!(atlas_fixture_page(&mut owner, &[7; 32], 0).is_ok());
     drop(owner);
     let mut turns = 0;
     while !close_abandoned_atlas_step() {
@@ -374,13 +422,13 @@ fn interrupted_atlas_close_rejoins_the_same_abandonment_authority() {
     let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let source = vec![3_u8; PREPARED_ATLAS_PAGE_BYTES + 1];
-    let mut owner = match PreparedAtlasPages::try_new(1, u32::try_from(source.len()).unwrap_or(u32::MAX), 1, source.len()) {
+    let mut owner = match atlas_fixture_owner(1, u32::try_from(source.len()).unwrap_or(u32::MAX), 1, source.len()) {
         Ok(owner) => owner,
         Err(fault) => panic!("two-page abandonment owner: {fault}"),
     };
-    assert!(matches!(owner.push_page(&source, 0), Ok(false)));
-    assert!(matches!(owner.push_page(&source, owner.next_row()), Ok(true)));
-    assert!(!owner.close_step());
+    assert!(matches!(atlas_fixture_page(&mut owner, &source, 0), Ok(false)));
+    assert!(matches!({ let row = owner.next_row(); atlas_fixture_page(&mut owner, &source, row) }, Ok(true)));
+    assert!(!matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }));
     assert_eq!(owner.len(), 1);
     drop(owner);
     let mut turns = 0;
@@ -397,7 +445,7 @@ fn atlas_allocation_refusal_preserves_the_packed_permit_ledger() {
     let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let before = PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire);
-    assert!(matches!(PreparedAtlasPages::try_new(0, 1, 4, 4), Err("atlas dimensions do not fit fixed page credits")));
+    assert!(matches!(atlas_fixture_owner(0, 1, 4, 4), Err(ref error) if error.message.as_ref() == "atlas dimensions do not fit fixed page credits"));
     assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), before);
 }
 
@@ -406,12 +454,12 @@ fn atlas_contended_permit_attempts_are_nonblocking_and_poison_free() {
     let _guard = prepared_process_guard();
     drain_abandoned_atlases();
     let handles = std::array::from_fn::<_, 8, _>(|_| {
-        std::thread::spawn(|| match PreparedAtlasPages::try_new(1, 1, 1, 1) {
+        std::thread::spawn(|| match atlas_fixture_owner(1, 1, 1, 1) {
             Ok(mut owner) => {
-                while !owner.close_step() {}
+                while !matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {}
                 owner.terminal_is_empty()
             }
-            Err("atlas process permit credits exhausted") => true,
+            Err(ref error) if error.message.as_ref() == "atlas process permit credits exhausted" => true,
             Err(_) => false,
         })
     });
@@ -479,9 +527,9 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
     let mut job = PreparedRenderJob::new(input, 1);
     let mut preview = 0;
     for expected in [PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES, 0] {
-        let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(11), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+        let (outcome,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(11), Generation(3), StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
         assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-        assert!(matches!(outcome, StepOutcome::Yield));
+        assert!(matches!(outcome, None | Some(JobOutcomeKind::Yield)));
         assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.len(), expected);
     }
     assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.as_ptr(), retained_pointer);
@@ -644,7 +692,7 @@ fn a_disabled_shadow_never_publishes_a_gpu_shadow_scalar() {
 }
 
 /// 🎟️ A raster producer must be bound to the frame it is published into BEFORE it is pushed, and the
-/// job's refusal must be readable — `StepOutcome::Fault` carries an empty payload here, so
+/// job's refusal must be readable — the held fault loan carries empty native detail pages here, so
 /// [`PreparedRenderJob::fault`] is the only way a driver can name it
 /// (`📓️w7b-presenter-one-frame-per-boot.md` §1).
 #[test]
@@ -655,9 +703,9 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     assert!(input.try_push_raster_producer(unbound).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
     let mut preview = 0;
-    let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (outcome,original_retained_receipt) = observe_prepared_terminal(&mut job, OperationId(1), Generation(3), StepBudget::new(4, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-    assert!(matches!(outcome, StepOutcome::Fault(_)));
+    assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert_eq!(job.fault(), Some("raster producer generation is stale"));
     while !close_job_step(&mut job) {}
 
@@ -666,9 +714,9 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_raster_producer(bound).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
-    let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (outcome,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(4, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-    assert!(matches!(outcome, StepOutcome::Yield));
+    assert!(matches!(outcome, None | Some(JobOutcomeKind::Yield)));
     assert_eq!(job.fault(), None);
     while !close_job_step(&mut job) {}
 }
@@ -727,18 +775,18 @@ fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     let mut job = PreparedRenderJob::new(input, 1);
     let mut preview = 0;
 
-    let (zero,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(0, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (zero,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(0, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
 
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-    assert!(matches!(zero, StepOutcome::Yield));
+    assert!(matches!(zero, None | Some(JobOutcomeKind::Yield)));
     let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
     assert_eq!(retained.source.as_ptr(), source_pointer);
     assert!(retained.pages.as_ref().unwrap().slots.is_empty());
 
-    let (expired,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 1,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (expired,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(1, 1,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
 
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-    assert!(matches!(expired, StepOutcome::Yield));
+    assert!(matches!(expired, None | Some(JobOutcomeKind::Yield)));
     let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
     assert_eq!(retained.source.as_ptr(), source_pointer);
     assert!(retained.pages.as_ref().unwrap().slots.is_empty());
@@ -787,10 +835,10 @@ fn receiver_survives_worker_ownership_of_the_job() {
         let mut job = job;
         let mut preview = 0;
         loop {
-            let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+            let (outcome,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
             assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-            if outcome.is_terminal() {
-                assert!(matches!(outcome, StepOutcome::Complete(_)));
+            if outcome.is_some_and(|kind| matches!(kind, JobOutcomeKind::Complete | JobOutcomeKind::Cancelled | JobOutcomeKind::Fault)) {
+                assert!(matches!(outcome, Some(JobOutcomeKind::Complete)));
                 break;
             }
         }
@@ -812,9 +860,9 @@ fn preparation_yields_at_the_configured_item_budget() {
     let input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
     let mut job = PreparedRenderJob::new(input, 1);
     let mut preview = 0;
-    let (first,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (first,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-    assert!(matches!(first, StepOutcome::Yield));
+    assert!(matches!(first, None | Some(JobOutcomeKind::Yield)));
     drop(job);
     drain_abandoned_preparations();
 }
@@ -826,7 +874,7 @@ fn preparation_completes_across_bounded_steps() {
     draw.layers.extend((0..2).map(|_| DrawLayer::default()));
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
     let outcome = drive_preparation_until_terminal(&mut job);
-    assert!(matches!(outcome, StepOutcome::Complete(_)));
+    assert!(matches!(outcome, Some(JobOutcomeKind::Complete)));
     let mut packet = job.take_packet().expect("prepared packet");
     assert_eq!((packet.scene_revision, packet.preview_generation), (7, 3));
     while !close_packet_step(&mut packet) {}
@@ -839,9 +887,9 @@ fn preparation_rejects_a_stale_generation_before_publication() {
     let _guard = prepared_process_guard();
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 2, DrawList::default(), None, 0.0), 8);
     let mut preview = 0;
-    let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (outcome,original_retained_receipt) = observe_prepared_terminal(&mut job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-    assert!(matches!(outcome, StepOutcome::Fault(_)));
+    assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert!(job.take_packet().is_none());
     drop(job);
     drain_abandoned_preparations();
@@ -853,9 +901,9 @@ async fn preparation_observes_cancellation_without_replacing_a_packet() {
     cancel.cancel().await;
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0), 8);
     let mut preview = 0;
-    let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, now_ms, &mut preview, &mut None);
+    let (outcome,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-    assert!(matches!(outcome, StepOutcome::Cancelled));
+    assert!(matches!(outcome, Some(JobOutcomeKind::Cancelled)));
     assert!(job.take_packet().is_none());
     drop(job);
     drain_abandoned_preparations();
@@ -979,7 +1027,7 @@ fn upload_byte_cap_faults_before_packet_publication() {
     assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4], width: 2, height: 2 }).is_ok());
     let mut job = PreparedRenderJob::new(input, 64);
     let outcome = drive_preparation_until_terminal(&mut job);
-    assert!(matches!(outcome, StepOutcome::Fault(_)));
+    assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert!(job.take_packet().is_none());
     while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
@@ -993,7 +1041,7 @@ fn eviction_byte_cap_faults_before_packet_publication() {
     assert!(input.try_push_eviction(PreparedRenderEviction::Mesh { key: "mesh".into() }).is_ok());
     let mut job = PreparedRenderJob::new(input, 64);
     let outcome = drive_preparation_until_terminal(&mut job);
-    assert!(matches!(outcome, StepOutcome::Fault(_)));
+    assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert!(job.take_packet().is_none());
     while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
@@ -1008,7 +1056,7 @@ fn draw_item_cap_faults_before_packet_publication() {
     input.limits.max_draw_items = 0;
     let mut job = PreparedRenderJob::new(input, 64);
     let outcome = drive_preparation_until_terminal(&mut job);
-    assert!(matches!(outcome, StepOutcome::Fault(_)));
+    assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert!(job.take_packet().is_none());
     while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
@@ -1099,11 +1147,11 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
     let mut preview = 0;
     let mut steps = 0;
     loop {
-        let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(41), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+        let (outcome,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(41), Generation(3), StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
         assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
         steps += 1;
-        if outcome.is_terminal() {
-            assert!(matches!(outcome, StepOutcome::Complete(_)));
+        if outcome.is_some_and(|kind| matches!(kind, JobOutcomeKind::Complete | JobOutcomeKind::Cancelled | JobOutcomeKind::Fault)) {
+            assert!(matches!(outcome, Some(JobOutcomeKind::Complete)));
             break;
         }
         assert!(steps < 128);
@@ -1203,8 +1251,8 @@ fn prepared_render_common_close_funds_declared_frontiers_without_losing_original
         };
         let atlas = &fixture["atlas"];
         let pixels = vec![7; atlas["byteLength"].as_u64().unwrap() as usize];
-        let mut pages = PreparedAtlasPages::try_new(atlas["width"].as_u64().unwrap() as u32, atlas["height"].as_u64().unwrap() as u32, atlas["channels"].as_u64().unwrap() as u8, pixels.len()).unwrap();
-        pages.push_page(&pixels, 0).unwrap();
+        let mut pages = atlas_fixture_owner(atlas["width"].as_u64().unwrap() as u32, atlas["height"].as_u64().unwrap() as u32, atlas["channels"].as_u64().unwrap() as u8, pixels.len()).unwrap();
+        atlas_fixture_page(&mut pages, &pixels, 0).unwrap();
         let mut retained_input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
         retained_input.uploads.try_push(PreparedRenderUpload::GlyphAtlasPages { pixels: pages }).unwrap();
         let mut job = PreparedRenderJob::new(retained_input, 1);

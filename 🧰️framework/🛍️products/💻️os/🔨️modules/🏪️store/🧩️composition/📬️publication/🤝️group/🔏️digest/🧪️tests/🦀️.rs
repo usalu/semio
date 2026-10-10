@@ -7,8 +7,8 @@ fn below(full:RetainedCloneGrant)->[RetainedCloneGrant;5]{[RetainedCloneGrant{ma
 #[test]
 fn original_group_digest_wrapper_retains_native_edit_and_separate_physical_frame(){
  let policy:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let maximum_turns=policy["maximumTurns"].as_u64().unwrap()as usize;
- let cases:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧫️fixtures/🔣️.json"))).unwrap();
- let expected:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🔏️seal/🧫️fixtures/🔣️.json"))).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧫️fixtures/🔣️.json"))).unwrap();
+ let expected:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧫️fixtures/🔣️.json"))).unwrap();
  for(index,row)in cases["cases"].as_array().unwrap().iter().enumerate(){for pause in policy["law"]["nativeDigestCancellationTurns"].as_array().unwrap(){let cancel_at=pause.as_u64().map(|turn|turn as usize);
   let encoded=serde_json::to_string(&row["edit"]).unwrap();let(original,heap)=observe(||Box::new(semio_framework_pack_json::from_json_str::<Edit<bool>>(&encoded,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()));let held=heap.requested_bytes-heap.released_bytes;let mut born=0;let mut released=0;let mut original=Some(original);let pointer=std::ptr::from_ref(original.as_ref().unwrap().as_ref());let id=original.as_ref().unwrap().id.as_ptr();let forwards=original.as_ref().unwrap().forwards.as_ptr();
   let full=grant(artifact_batch_digest_birth_demand::<bool>().unwrap());

@@ -1,0 +1,21 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "action": "updated",
+      "beforeSha256": "def026368efa3bd364d37519ec936368ba5664d7e3c75da26296dfdfe96e691e",
+      "afterSha256": "61f1de0dcd7472626feaf807d9386d9318957e86f7549380be2e46249fff7490",
+      "exclusive": false,
+      "scope": "Actual declared bootstrap launch command set, separate exact selected child; support all actual Nx command vectors"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "8e2397a4fdfd7891b957f023cec089378cf3e5de50c5d27a0fa65c551d62837d",
+      "afterSha256": "477824bc29984e5cde386ca54e0efeaf415f227adc5616d276b9a1b326beca53",
+      "exclusive": false,
+      "scope": "Explicit production outer issuer, closed declared child selector, preserve generic original envelope; existing native receiver never fabricates resources or reselects"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

@@ -1,0 +1,19 @@
+import grantSchema from "../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import {semioSchemaAjvV1} from "../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import{resolveOriginalTurnInputSource}from"../../🔎️source/🟦️.ts";
+/** 🫴️ Neutral issued-turn conservation and epoch admission have independent SQL and JSON witnesses. */
+import{test,expect}from"bun:test";import{Database}from"bun:sqlite";
+import fixture from "../🧫️fixtures/🔣️.json";
+import policy from "../../📃️policy/🧫️fixtures/🔣️.json";
+test("original actor issued receipts conserve every axis and authorize only genuine next epochs",()=>{
+ const validate=semioSchemaAjvV1().compile(grantSchema);for(const grant of [policy.input.grant,...fixture.remaining])expect(validate(grant)).toBe(true);expect(fixture.epochAuthorizer).toBe("scheduler.nonempty-mailbox-admission.checked-next-epoch");
+ const database=new Database(":memory:");try{let grant=policy.input.grant;for(const [index,spent]of fixture.spent.entries()){const remaining=database.query("SELECT ?-? AS maximumItems,?-? AS maximumCopyBytes,?-? AS maximumCapacityBytes,?-? AS maximumReleaseBytes,? AS maximumDepth").get(grant.maximumItems,spent.copiedItems,grant.maximumCopyBytes,spent.copiedBytes,grant.maximumCapacityBytes,spent.retainedCapacityBytes,grant.maximumReleaseBytes,spent.releasedBytes,grant.maximumDepth);expect(remaining).toEqual(fixture.remaining[index]);grant=fixture.remaining[index]!;}expect(database.query("SELECT ?+1 AS epoch").get(fixture.zeroSpend.firstEpoch)).toEqual({epoch:fixture.zeroSpend.secondEpoch});expect(database.query("SELECT ?<>? AS stale").get(fixture.zeroSpend.firstEpoch,fixture.zeroSpend.secondEpoch)).toEqual({stale:1});}finally{database.close();}
+ expect(Object.values(fixture.zeroSpend.spent)).toEqual([0,0,0,0]);expect(BigInt(fixture.overflow.epoch)).toBe((1n<<64n)-1n);expect(BigInt(fixture.overflow.epoch)+1n).toBeGreaterThan((1n<<64n)-1n);expect(fixture.emptyAdmission).toEqual({epochUnchanged:true,issued:false});expect(JSON.parse(JSON.stringify(policy.input))).toEqual(policy.input);
+ console.log("[DEBUG] Canonical Grant Ajv/SQLite/JSON/BigInt issued turn axes conserve original remaining, exact19-to20 epoch, stale zero-spend identity and maximumu64 refusal contract; native scheduler assertions are separate");
+});
+
+test("original Actor receiving keeps original input preserved through resource scheduling and validates before metrics",async()=>{
+ const{readFileSync}=await import("node:fs"),actor=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8"),original=resolveOriginalTurnInputSource(actor),entry=original.replace("self.","entry.");expect(actor.includes(entry+" = RetainedTurnInput { grant: result.retained_receipt.remaining, ..issued }")).toBe(true);expect(actor.includes(entry+".epoch.checked_add(1)?")).toBe(true);expect(actor.includes("(!self.returned || "+original+".epoch.checked_add(1).is_some())")).toBe(true);expect(actor.includes("e.can_issue()")).toBe(true);const start=actor.indexOf("pub async fn complete(&mut self, actor: ActorId, result: &TurnResult"),body=actor.slice(start,actor.indexOf("pub async fn ",start+20));expect(body.indexOf("validate_for(issued)")).toBeGreaterThan(0);expect(body.indexOf("validate_for(issued)")).toBeLessThan(body.indexOf(entry+" = RetainedTurnInput"));expect(body.indexOf("validate_for(issued)")).toBeLessThan(body.indexOf("meta.metrics.record_turn"));expect(body.includes("entry.issued = None")).toBe(true);console.log("[DEBUG] Actual original-input source resolution conserves returned authority and checked epoch, validates exact issued receipt before state/metrics; native execution separate");
+});
+
+test("original Actor 🫴️receiving keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original Actor plain trial has no whole-corpus schema authority");});

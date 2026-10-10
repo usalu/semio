@@ -75,7 +75,7 @@ pub fn factory_constructor_birth_bytes<T:FactoryPayloadRetirement>(child_constru
 
 impl<T:FactoryPayloadRetirement> FactoryRetirement for T {
     fn factory_retirement_birth_bytes(&self)->usize {factory_retirement_frame_bytes::<T>().checked_add(self.close_state_birth_bytes()).expect("factory ticket birth layout")}
-    fn factory_retirement_copy_byte_demand(&self)->usize {std::mem::size_of::<FactoryTicket<T>>().checked_add(self.close_state_constructor_copy_bytes()).expect("factory original constructor copy layout")}
+    fn factory_retirement_copy_byte_demand(&self)->usize {self.close_state_constructor_copy_bytes()}
     fn factory_retirement_depth_demand(&self)->usize {self.close_state_constructor_depth().checked_add(1).expect("factory constructor depth")}
     fn preborn_factory_retirement(self:Arc<Self>,grant:RetainedCloneGrant)->Result<(Box<dyn FactoryRetirementTicket>,RetainedCloneProgress),FactoryRetirementAdmissionError> {
         let copy=self.factory_retirement_copy_byte_demand();
@@ -133,7 +133,7 @@ impl<T:FactoryPayloadRetirement> Drop for FactoryTicket<T> {fn drop(&mut self){a
 
 /// 📏️ Borrows each exact currency including the final admitted ticket-frame release.
 pub fn factory_ticket_demands<T:ErasedSnapshotRetirement+?Sized>(ticket:&Box<T>,copy:usize)->Result<RetirementDemand,ValueError> {
-    if ticket.terminal_is_empty(){return Ok(RetirementDemand {copy_bytes:std::mem::size_of::<Option<Box<T>>>(),release_bytes:std::mem::size_of_val(ticket.as_ref()),depth:1,..Default::default()});}
+    if ticket.terminal_is_empty(){return Ok(RetirementDemand {release_bytes:std::mem::size_of_val(ticket.as_ref()),depth:1,..Default::default()});}
     Ok(RetirementDemand {copy_bytes:ticket.next_copy_byte_demand()?,capacity_bytes:ticket.next_capacity_byte_demand(copy)?,release_bytes:ticket.next_release_byte_demand()?,depth:ticket.next_depth_demand()?})
 }
 
@@ -145,9 +145,9 @@ pub fn close_factory_ticket<T:ErasedSnapshotRetirement+?Sized>(slot:&mut Option<
     if ticket.terminal_is_empty() {
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"terminal ticket requires admitted depth"));}
         let bytes=std::mem::size_of_val(ticket.as_ref());
-        let copy=std::mem::size_of::<Option<Box<T>>>();if grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(empty));}
+        if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(empty));}
         drop(slot.take());
-        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:copy,released_bytes:bytes,..empty}));
+        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
     }
     let step=ticket.close_step(grant)?;
     let step=crate::retained_clone::admit_retained_clone_close(grant,step,ticket.terminal_is_empty(),"factory ticket payload")?;
@@ -164,7 +164,7 @@ impl FactoryAuthority {
     pub fn new(source:Arc<dyn FactoryRetirement>)->Self {Self{source:ManuallyDrop::new(Some(source)),ticket:ManuallyDrop::new(None)}}
     pub fn factory_address(&self)->usize {self.source.as_ref().map_or(0,|source|Arc::as_ptr(source)as*const()as usize)}
     pub fn demands(&self,work:usize)->Result<RetirementDemand,ValueError>{
-        if let Some(source)=self.source.as_ref(){return Ok(RetirementDemand{copy_bytes:source.factory_retirement_copy_byte_demand()+2*std::mem::size_of_val(&*self.source)+std::mem::size_of_val(&*self.ticket),capacity_bytes:source.factory_retirement_birth_bytes(),depth:source.factory_retirement_depth_demand(),..Default::default()});}
+        if let Some(source)=self.source.as_ref(){return Ok(RetirementDemand{copy_bytes:source.factory_retirement_copy_byte_demand(),capacity_bytes:source.factory_retirement_birth_bytes(),depth:source.factory_retirement_depth_demand(),..Default::default()});}
         self.ticket.as_ref().map_or(Ok(Default::default()),|ticket|factory_ticket_demands(ticket,work))
     }
     pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
@@ -174,9 +174,8 @@ impl FactoryAuthority {
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"factory authority exceeds admitted depth"));}
         if !permits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.source.is_some(){
-            let header=2*std::mem::size_of_val(&*self.source)+std::mem::size_of_val(&*self.ticket);let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-header,..grant};
-            let(ticket,receipt)=match self.source.take().unwrap().preborn_factory_retirement(child){Ok(value)=>value,Err(error)=>{*self.source=error.original;*self.ticket=error.ticket;return Err(error.error.with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:error.progress.copied_bytes+header,..error.progress}));}};
-            let receipt=RetainedCloneProgress{copied_bytes:receipt.copied_bytes+header,..receipt};
+            let child=grant;
+            let(ticket,receipt)=match self.source.take().unwrap().preborn_factory_retirement(child){Ok(value)=>value,Err(error)=>{*self.source=error.original;*self.ticket=error.ticket;return Err(error.error.with_retained_progress(error.progress));}};
             *self.ticket=Some(ticket);
             if !receipt.fits(grant)||receipt.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"factory authority changed its admitted constructor receipt").with_retained_progress(receipt));}
             return Ok(RetainedCloneStep::Progress(receipt));

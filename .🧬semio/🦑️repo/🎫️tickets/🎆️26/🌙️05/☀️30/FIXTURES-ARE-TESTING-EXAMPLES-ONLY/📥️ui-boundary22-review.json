@@ -1,0 +1,42 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/📋️outcome.json",
+    "sha256": "00785b258645076dd3ad6419fb1497db970bc07cba833aec27a8480123abcd90",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json",
+    "sha256": "40fab76b356e857f7c224cedf227f53370c2eb209fb21bfac7467e3345755046",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🟦️.ts",
+    "sha256": "b5fb33f86a3b7a6cb805076b2b07a0aac62d4bf25d15884c00860aad83a5392e",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+    "sha256": "57f3827de8b802638dbfb1c0f1fc12fc740f722d15bd959f082190b728540c60",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧬️schema/🫴️receiving.json",
+    "sha256": "2d8af67c2e335c62cac9b853a374e57e2f96b15f10c668f2b4d1bb3e7d0e393d",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🫴️receiving.json",
+    "sha256": "adfd8b87d8ec2f8125a2682b264c6b4fffe6b3aace9216bd82b26bb3a437a183",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🟦️.ts",
+    "sha256": "7751441a5471807d088474a60666fc0c253e6a2f3a97e27141ef699132abe700",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs",
+    "sha256": "7ddb95b8512ce80559ed416556090e184dc3bfa4bfe9ddb63d9d35072c36103a",
+    "ownership": false
+  }
+]

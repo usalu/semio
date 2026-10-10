@@ -3277,3 +3277,28 @@ fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
         assert_eq!(visible,law["expected"].as_str().unwrap(),"{}",law["name"]);
     }
 }
+
+#[test]
+fn original_layout_admission_params_cancel_and_full_error_close_with_system_receipts(){
+ use semio_framework_job::{BatchJobParams,BatchDriveConfig,OperationId,Generation,InteractiveStage,RetainedCloneGrant};
+ use semio_framework_value::{ValueError,ValueRefusalKind};
+ use crate::wgpu::host::physical_job_close_tests::measured;
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🫴️receiving.json")).unwrap();
+ for copy in law["admission"]["copies"].as_array().unwrap().iter().map(|row|row.as_u64().unwrap()as usize){
+  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:law["grant"]["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:law["grant"]["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:law["grant"]["maximumDepth"].as_u64().unwrap()as usize};
+  let((root,receipt),root_born,root_free)=measured(||semio_framework_job::CancelToken::admit_root(grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((root_born,root_free),(receipt.retained_capacity_bytes,receipt.released_bytes));
+  let((mut original,pointer),born,free)=measured(||{let error=ValueError::new(ValueRefusalKind::InvariantViolated,"original owned layout refusal 雪🌊️");let pointer=error.message.as_ptr();let mut original=LayoutWorkerAdmission::default();*original.params=Some(BatchJobParams{operation:OperationId(law["operation"].as_u64().unwrap()),generation:Generation(law["admission"]["callerGeneration"].as_u64().unwrap()),cancel:root.clone(),config:BatchDriveConfig{retained:grant,site:"ui.layout-original-receipt",stage:InteractiveStage::UserVisibleSimStep,fuel_per_step:1,step_budget_us:1000},now_us:semio_framework_job::default_now_us});*original.failure=Some(error);(original,pointer)});
+  let owned=born-free;let(mut births,mut releases,mut idle)=(0,0,0);
+  for turn in 0..100000{
+   if original.terminal_is_empty(){break}
+   let(step,born,free)=measured(||original.close_step(RetainedCloneGrant{maximum_items:0,..grant},Some(&root)).unwrap());assert_eq!(step,Some(Default::default()));assert_eq!((born,free),(0,0));
+   if let Some(error)=original.failure.as_ref(){assert_eq!(error.message.as_ptr(),pointer)}
+   if let Some(error)=original.failure_close.as_ref().and_then(|owner|owner.original()){assert_eq!(error.message.as_ptr(),pointer)}
+   if let Some(cancel)=original.cancel.as_ref(){if !cancel.terminal_is_empty(){assert!(cancel.is_original_alias_witness(&root))}}
+   let(step,born,free)=measured(||original.close_step(grant,Some(&root)).unwrap());let receipt=step.expect("same borrowed root funds original alias return");assert!(receipt.fits(grant));assert_eq!((born,free),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=born;releases+=free;if receipt==Default::default(){idle+=1}else{idle=0}assert!(idle<law["admission"]["maximumZeroTurns"].as_u64().unwrap()as usize,"original layout source stalled copy={copy} turn={turn}");
+  }
+  assert!(original.terminal_is_empty());assert_eq!(owned+births,releases);assert_eq!(measured(||drop(original)),((),0,0));assert!(!root.is_cancelled_now());
+  let mut root=semio_framework_async::CancelTokenRetirement::from_token(root);for _ in 0..1000{if root.terminal_is_empty(){break}let(step,born,free)=measured(||root.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((born,free),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=born;releases+=free;}assert!(root.terminal_is_empty());assert_eq!(root_born+owned+births,releases);assert_eq!(measured(||drop(root)),((),0,0));
+  eprintln!("[DEBUG] Original layout params/cancel/full-error copy={copy} samePointer=true physicalReceipts=true terminalDrop=0");
+ }
+}

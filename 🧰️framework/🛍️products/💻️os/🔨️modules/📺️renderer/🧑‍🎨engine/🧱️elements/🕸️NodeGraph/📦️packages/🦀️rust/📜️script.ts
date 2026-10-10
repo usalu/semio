@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { BROWSER_CANVAS_HOT_CRATES } from "../../../../../../../../../🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
@@ -20,4 +21,4 @@ class TestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-node-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env));}
 }
 const router=new ScriptRouter(import.meta.dir).register("wasm",WasmScript).register("test",TestScript).register("test-source",SourceScript);
-await runScriptMain(router,{defaultCommand:"wasm"});
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"wasm"}) }));

@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "pins": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "bytes": 7451,
+      "sha256": "dee6340485170cd1ef85ac727f0ad0aa4c75b09dc1218ec01339ff4dcaabd2d1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "bytes": 103328,
+      "sha256": "f07956887de3ad15c78a88144b2bd19594d76f93e246c2acb292e90c7baeb279"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "bytes": 45842,
+      "sha256": "1d721232010462779b7b2f962a01da696046373fb00c0230511d221462556492"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "bytes": 15336,
+      "sha256": "3adb6db0c66c0ef0c781c638a65a44779eac30f000d7d23a2079a467881cd020"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts",
+      "bytes": 2854,
+      "sha256": "ae4c25479bbc2d52fbb40102ad7da394433b6fdbe0cc8556fdcd28f73fc6787b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "bytes": 8354,
+      "sha256": "42fd861f6a6411ff3744e0e62026da4f7273f7d9721a9b33b82fa74e02d5a036"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧪️tests/🟦️.ts",
+      "bytes": 11314,
+      "sha256": "f0d1d5078477731ea65ab050dd48c5730405f53171b45b03743f96bf265f5a0e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "bytes": 28124,
+      "sha256": "54674c2b2d466f0f51b98c9b82c2dc97ec4dbfda70be291944a386b1c3b7c929"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "bytes": 86045,
+      "sha256": "ae8b2d9fd28a610f9a99e6b0632f058f5f040582076dc166857b3d789a1ad72d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "bytes": 124167,
+      "sha256": "6de95e5aed3175c6064ce2cc34e46fa9e5926fd3a22652108ef15032df419b94"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "bytes": 1116850,
+      "sha256": "6efacddff78759062b4c8f7c167fcd40ebcfd0b04e66f7c573a1f5a5bee9c01c"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/parent.json",
+      "bytes": 1102,
+      "sha256": "c78fb630cba59927efa200d5653c2d616691dfeb9ba6a047b54a641d217a2436"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/scope.json",
+      "bytes": 1182,
+      "sha256": "0b89b29f44edce598037fca2aa024ca4ef2bc0bc81445b532ff72e645740cad1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "bytes": 2971,
+      "sha256": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟦️.ts",
+      "bytes": 1162,
+      "sha256": "ef20f2a94425a8f000abc7ae3b2db0f40aaa5d40b5737122c42342687a0e0a2d"
+    }
+  ]
+}

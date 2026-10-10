@@ -1,0 +1,33 @@
+{
+  "accepted": [
+    {
+      "input": "{\"revision\":0}",
+      "revision": 0
+    },
+    {
+      "input": " { \"revision\" : 18446744073709551615 } ",
+      "revision": 18446744073709551615
+    },
+    {
+      "input": "{\"\\u0072evision\":7}",
+      "revision": 7
+    }
+  ],
+  "refused": [
+    "{}",
+    "{\"revision\":1,\"revision\":2}",
+    "{\"other\":1}",
+    "{\"revision\":-1}",
+    "{\"revision\":1.0}",
+    "{\"revision\":01}",
+    "{\"revision\":18446744073709551616}",
+    "{\"revision\":1} false"
+  ],
+  "grant": {
+    "items": 64,
+    "copyBytes": 4096,
+    "capacityBytes": 8192,
+    "releaseBytes": 8192,
+    "depth": 64
+  }
+}

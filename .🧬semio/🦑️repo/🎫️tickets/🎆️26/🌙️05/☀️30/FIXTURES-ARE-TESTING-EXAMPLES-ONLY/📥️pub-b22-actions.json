@@ -1,0 +1,64 @@
+{
+  "scope": "two actual current boundary22 test corpus authorities only",
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf0a\ufe0fflow/\ud83d\udda5\ufe0fhost/\ud83d\udce4\ufe0fpublication/\ud83d\udce1\ufe0finvocation/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "beforeSha256": "94b30a27a61afa697894d9ca62cc78fa34765da373e67fc891cacf3ef6a87347",
+      "afterSha256": null,
+      "action": "delete exclusive whole-trial schema authority"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf0a\ufe0fflow/\ud83d\udda5\ufe0fhost/\ud83d\udce4\ufe0fpublication/\ud83d\udce1\ufe0finvocation/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "2054615dde6b462e6eafec785510d263d1e495cb75b3a1c57d82ff6f47795d3a",
+      "guardedBeforeSha256": "c39c8bd9c72ff8a070bfd473af40ac219d0de16c861a999453b7897186dc703a",
+      "afterSha256": "82bacdf3a813514c36ba2694a2cd5c69addd47349ee724a90eb2099e66a51340",
+      "action": "retire only whole-fixture schema load/compile/refusal; original JSONPatch/SQLite/Buffer and genuine per-value grant preserved"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0ftool-run/\ud83c\udf31\ufe0foperation/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "beforeSha256": "23659c0f2b8589827d7309566bb4140d5669a20ab9a06f5be6a11da186d13bb3",
+      "afterSha256": null,
+      "action": "delete exclusive whole-trial schema authority"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0ftool-run/\ud83c\udf31\ufe0foperation/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "ab03f996ab470af63a7f524b9a458d262f7175a52fa42c9182102caf623eb79e",
+      "guardedBeforeSha256": "1267beb224a04292734e120a45fb5de879337940055bee3b18319cfd40eaae4b",
+      "afterSha256": "e97fad78dc2ddb70b3e18286ea175247d51df903b19e8dcfa78357df2560d8bb",
+      "action": "retire only whole-fixture schema load/compile/refusal; original JSONPatch/SQLite/Buffer and genuine per-value grant preserved"
+    }
+  ],
+  "plainRustObservers": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf0a\ufe0fflow/\ud83d\udda5\ufe0fhost/\ud83d\udce4\ufe0fpublication/\ud83d\udce1\ufe0finvocation/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "4fdf1332ee0e8d5eb2f4ef027c0beb42a57539f883fcb642ff85aa53d82bbe31",
+      "afterSha256": "4fdf1332ee0e8d5eb2f4ef027c0beb42a57539f883fcb642ff85aa53d82bbe31"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf0a\ufe0fflow/\ud83d\udda5\ufe0fhost/\ud83d\udce4\ufe0fpublication/\ud83d\udce1\ufe0finvocation/\ud83e\udd80\ufe0f.rs",
+      "sha256": "3dc789b1f1b4336e806e550bb3064f7e1634eab2eadcd0d817727e08a040b40e",
+      "afterSha256": "3dc789b1f1b4336e806e550bb3064f7e1634eab2eadcd0d817727e08a040b40e"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udf0a\ufe0fflow/\ud83d\udda5\ufe0fhost/\ud83d\udce4\ufe0fpublication/\ud83d\udce1\ufe0finvocation/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "0d6fcda34eb995dc1851b4b18b79295b06bc6839b24dfab2cd57ecc216d6cd29",
+      "afterSha256": "0d6fcda34eb995dc1851b4b18b79295b06bc6839b24dfab2cd57ecc216d6cd29"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0ftool-run/\ud83c\udf31\ufe0foperation/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "7136553371efafd820a4964403746fb9aee8709e34202635bc3f8c5561d0eaf6",
+      "afterSha256": "7136553371efafd820a4964403746fb9aee8709e34202635bc3f8c5561d0eaf6"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0ftool-run/\ud83c\udf31\ufe0foperation/\ud83e\udd80\ufe0f.rs",
+      "sha256": "818eeda4a7195e01f1d92bfad5e778a716227aaf0765f008dba9146da91b3972",
+      "afterSha256": "818eeda4a7195e01f1d92bfad5e778a716227aaf0765f008dba9146da91b3972"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0ftool-run/\ud83c\udf31\ufe0foperation/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "6de5ad1a339ae4e0feea3c9aebd8ea8eb7db29d5d0900440221e7f658592e434",
+      "afterSha256": "6de5ad1a339ae4e0feea3c9aebd8ea8eb7db29d5d0900440221e7f658592e434"
+    }
+  ],
+  "native": "No Cargo/native or original Rust mutation from this cohort"
+}

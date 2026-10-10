@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🖨️ `@semio-tech/print` router: `bun ./📜️script.ts fonts|generate viz|preview-generated|test`. */
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -60,4 +61,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check",CheckScript)
   .register("test", TestScript);
 
-if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -1,0 +1,21 @@
+{
+  "green": "original registered Source facet Nx0/603ms",
+  "laws": 1,
+  "assertions": 10,
+  "extraOriginalDepthAssertions": 612,
+  "consumerSha256": "7c821d9275122def7b0fc6f9dd71e291d0b9b41a5bcdd1a6423271e672d86c97",
+  "matchesAuthored": true,
+  "schemaAbsent": true,
+  "excludedAfter": [
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧫️fixtures/🔣️.json",
+      "sha256": "de6b9a7cd27f9dfaeacb1371218fd7956eaa7f7f8d37708148d53e82fbddcf7b",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧪️tests/🦀️.rs",
+      "sha256": "f1d196923d7f50ba7650f6a1438ce3b9c3268e90a94d9750089365416c704a5f",
+      "matches": true
+    }
+  ]
+}

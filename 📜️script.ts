@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import {type PolicyModSpan,policyMaskLiterals,policyTestModSpans,policyLineInTestMod,interactivityCfgTestItemSpans} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/🔎️source/🟦️.ts";
+import {type InteractivityToolRunRequirement,INTERACTIVITY_TOOL_RUN_TRIGGER,interactivityToolRunWithin,interactivityToolRunScopePath,interactivityToolRunCode,interactivityToolRunEnclosing,interactivityToolRunLocalLifecycleFailures,interactivityToolRunLegacyTraceFailures,interactivityToolRunDeclarationFailures,interactivityToolRunReservedActionFailures} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts";
 import { exactCargoGeneratedOutputHasLiveLease } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { resolveTestLevel } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "./🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
@@ -11,7 +13,7 @@ import { toolJobDrawingGestureOperationOwnerSelfTests } from "./🧰️framework
 import { toolJobArtifactRetainedCommandSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-artifact-retained-command/🟦️.ts";
 import { interactivityAllAppDiscoverySelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-all-app-discovery/🟦️.ts";
 import { interactivityRuntimeSourceSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-runtime-source/🟦️.ts";
-import { interactivityToolRunPolicySelfTests } from "./🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🧪️interactivity-tool-run-policy/🟦️.ts";
+import { interactivityToolRunPolicySelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🧪️interactivity-tool-run-policy/🟦️.ts";
 import { historyClosurePolicySelfTests } from "./🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️history-closure-policy/🟦️.ts";
 import { interactivityLiveReconcileSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-live-reconcile/🟦️.ts";
 import { interactivityMountedLayoutTextSelfTests } from "./🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️interactivity-mounted-layout-text/🟦️.ts";
@@ -1209,22 +1211,26 @@ export function toolJobFactoryProofActivationScan(root: string): { owners: numbe
 
 //#region ⏱️MicrosecondBudgetLaws
 /** ⏱️ Cross-checks exact microsecond deadlines with strict Ajv and independent BigInt arithmetic. */
-function toolJobMicrosecondWorkerExact(pluginRaw: string, jobRaw: string, traceRaw: string): boolean {
+function toolJobMicrosecondWorkerExact(pluginRaw: string, jobRaw: string, traceRaw: string, loanRaw: string): boolean {
   const plugin = toolJobProductionSource(pluginRaw);
   const job = toolJobProductionSource(jobRaw);
   const trace = toolJobProductionSource(traceRaw);
+  const loan = toolJobProductionSource(loanRaw);
   const body = (source: string, marker: string): string | undefined => {
     if (source.split(marker).length !== 2) return undefined;
     return toolJobRustBlock(source, source.indexOf("{", source.indexOf(marker)))?.body;
   };
   const setup = toolJobRetainedDispatchSetup(plugin);
   const operation = body(plugin, "impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>");
-  const driver = body(job, "fn drive_step_with_payload_ledger<");
+  const driver = body(loan, "pub fn drive_step<");
+  const fault = body(job, "fn publish_original_worker_fault<");
   const worker = body(job, "fn drive_worker_job_authority<");
   const duration = body(job, "pub fn from_duration(");
   const clock = body(job, "pub fn default_now_us(");
-  const preflight = "if budget.fuel == 0 || start_us.is_none_or(|start_us| start_us >= budget.deadline_us)";
-  return toolJobMountedDispatchOneTurnExact(plugin) && !!setup && !!operation && !!driver && !!worker && !!duration && !!clock
+  const preflight = "ifcx.fuel_remaining()==0||cx.latest_us().map(|now|now>=cx.deadline_us()).unwrap_or_else(||cx.deadline_exceeded())";
+  const compactWorker = worker?.replace(/\s+/g, "");
+  const compactDriver = driver?.replace(/\s+/g, "");
+  return toolJobMountedDispatchOneTurnExact(plugin) && !!setup && !!operation && !!driver && !!worker && !!fault && !!duration && !!clock
     && /step_budget_us:\s*u64::from\(admission\.proof\.contract\(\)\.max_step_micros\),/.test(setup)
     && setup.includes("now_us: semio_framework_job::default_now_us,")
     && setup.includes("fuel_per_step: admission.proof.contract().max_work_units_per_step")
@@ -1232,9 +1238,13 @@ function toolJobMicrosecondWorkerExact(pluginRaw: string, jobRaw: string, traceR
     && ["self.decoded_items > self.contract.max_decoded_items", "self.contract.max_work_units_per_step == 0", "self.contract.max_output_bytes"].every((token) => operation.includes(token))
     && plugin.includes("if encoded.len() > TYPED_OPERATION_RESULT_PAGE_BYTES") && plugin.includes("one typed-operation result exceeds its fixed incremental encoder authority")
     && duration.includes("start_us.checked_add(duration_us).map(")
-    && worker.includes("let start_us = (params.now_us)();") && worker.includes("start_us.and_then(|start_us| StepBudget::from_duration(config.fuel_per_step, start_us, config.step_budget_us))")
-    && worker.includes("invalid deadline retains its pre-admitted terminal fault page")
-    && driver.includes(preflight) && driver.indexOf(preflight) < driver.indexOf("job.step(&mut cx)")
+    && compactWorker!.includes("letretained=authority.issued_retained;")
+    && compactWorker!.includes("letstart_us=(params.now_us)();")
+    && compactWorker!.includes("start_us.and_then(|start_us|StepBudget::from_duration(config.fuel_per_step,start_us,config.step_budget_us,retained))")
+    && compactWorker!.includes("authority.clock.begin(start_us)") && compactWorker!.includes("authority.last_step_end_us=cx.latest_us()")
+    && fault.includes("JobOutcomeBorrow::admit_original_fault(params.operation,params.generation,authority.issued_retained,&mut authority.retained_step_progress,authority.preadmitted_fault.original()")
+    && compactDriver!.includes(preflight) && compactDriver!.indexOf(preflight) < compactDriver!.indexOf("job.step(cx)")
+    && compactDriver!.includes("letend=(cx.now_us)();")
     && clock.includes("semio_framework_trace::try_now_us()")
     && /fn default_clock_us\(\) -> Option<u64> \{\s*None\s*\}/.test(trace)
     && trace.includes("elapsed().as_micros()).ok()");
@@ -1480,10 +1490,10 @@ function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
   const inner = start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start));
   const setup = toolJobRetainedDispatchSetup(source);
   if (!inner || !setup) return false;
-  const workerSignature = "fn drive_worker_step(&mut self, pool: &semio_framework_async::WorkerPool, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>";
+  const workerSignature = "fn drive_worker_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>";
   if (count(source, workerSignature) !== 1) return false;
   const direct = "self.start_typed_command_operation(command, admission, meta, operation_id, None).await";
-  const stages = ["dispatch_wire_retained_with_spec", "MountedWorkerJobSession::try_new", "self.tool_operations.insert_admitted(", "active.drive_worker_step(&pool,"];
+  const stages = ["dispatch_wire_retained_with_spec", "MountedWorkerJobSession::try_new", "self.tool_operations.insert_admitted(", "active.drive_worker_step(self.mounted_policy.maintenance)"];
   const offsets = stages.map((token) => setup.indexOf(token));
   return count(inner.body, direct) === 1 && stages.every((token) => count(setup, token) === 1)
     && offsets.every((offset, index) => offset >= 0 && (index === 0 || offset > offsets[index - 1]!))
@@ -6529,7 +6539,7 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   const inner = innerOpen < 0 ? undefined : toolJobRustBlock(plugin, innerOpen);
   if (!inner || inner.body.includes("A::handle(&command")) failures.push("dispatch_typed_command_inner still bypasses the job bus with a direct A::handle call");
   if (!toolJobMountedDispatchOneTurnExact(plugin)) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
-  if (!toolJobMicrosecondWorkerExact(plugin, jobRuntime, policyReadFileSafe(root, "🧰️framework/🔨️modules/⏱️trace/🦀️.rs"))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
+  if (!toolJobMicrosecondWorkerExact(plugin, jobRuntime, policyReadFileSafe(root, "🧰️framework/🔨️modules/⏱️trace/🦀️.rs"), policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs"))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
   const forKindStart = manifest.indexOf("pub fn for_kind(kind: ActionKind)");
   const forKindOpen = forKindStart < 0 ? -1 : manifest.indexOf("{", forKindStart);
   const forKind = forKindOpen < 0 ? undefined : toolJobRustBlock(manifest, forKindOpen);
@@ -9210,57 +9220,9 @@ function interactivityMaskComments(raw: string, initialDepth: number): { code: s
   return { code, depth };
 }
 
-/** 🧪️Brace-spans of any free item guarded by a `cfg` expression containing `test`. */
-/** 🧩️ What a `#[cfg(test)]` attribute's same-line remainder starts: a parameter, field or argument (`hook: T,`, `hook: T) -> R {`)
- * ends at a top-level `,` or an unmatched `)`/`]` and leaves its enclosing item in production; anything else is the item itself. */
-function interactivityCfgTestSameLineKind(item: string): "member" | "item" {
-  let depth = 0;
-  for (const char of item) {
-    if (char === "(" || char === "[") depth++;
-    else if (char === ")" || char === "]") {
-      if (depth === 0) return "member";
-      depth--;
-    } else if (depth === 0 && char === ",") return "member";
-    else if (depth === 0 && (char === "{" || char === ";")) return "item";
-  }
-  return "item";
-}
 
-/** 🧪️ The line spans of `#[cfg(test)]` items — an attribute that names `test` without negating it (`cfg(not(test))` is production) —
- * whether the item starts on the attribute's own line (`#[cfg(test)] hook: T,`, `#[cfg(test)] if armed {`) or on a later one. A
- * test-only parameter or field (`,`) keeps its enclosing production item. */
-function interactivityCfgTestItemSpans(lines: readonly string[]): PolicyModSpan[] {
-  const spans: PolicyModSpan[] = [];
-  const stack: { startLine: number; depth: number }[] = [];
-  let pendingStart: number | undefined;
-  let depth = 0;
-  lines.forEach((raw, i) => {
-    const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
-    const attribute = /#\[cfg\((?![^\]]*\bnot\s*\()[^\]]*\btest\b[^\]]*\)\]/.exec(codeOnly);
-    if (attribute) pendingStart = i + 1;
-    const sameLine = pendingStart === i + 1 && attribute ? codeOnly.slice(attribute.index + attribute[0].length) : "";
-    if (sameLine.trim().length > 0 && !/^\s*#\[/.test(sameLine) && interactivityCfgTestSameLineKind(sameLine) === "member") pendingStart = undefined;
-    const item = pendingStart === undefined ? "" : i + 1 > pendingStart ? codeOnly : sameLine;
-    if (pendingStart !== undefined && item.trim().length > 0 && !/^\s*#\[/.test(item)) {
-      const openCount = (item.match(/\{/g) ?? []).length;
-      if (openCount > 0) {
-        stack.push({ startLine: pendingStart, depth });
-        pendingStart = undefined;
-      } else if (/;\s*$/.test(item)) {
-        spans.push({ name: "cfg(test)", startLine: pendingStart, endLine: i + 1 });
-        pendingStart = undefined;
-      } else if (/,\s*$/.test(item)) {
-        pendingStart = undefined;
-      }
-    }
-    depth += (codeOnly.match(/\{/g) ?? []).length - (codeOnly.match(/\}/g) ?? []).length;
-    while (stack.length > 0 && depth <= stack[stack.length - 1]!.depth) {
-      const top = stack.pop()!;
-      spans.push({ name: "cfg(test)", startLine: top.startLine, endLine: i + 1 });
-    }
-  });
-  return spans;
-}
+
+
 
 /** ⏱️Scans one file's lines for `patterns`, skipping `#[cfg(test)] mod … { … }` bodies — matches this repo's own R4 precedent that a test module is a sanctioned executor/blocking entry point, and keeps the audit signal free of unit-test noise unrelated to the UI-thread interactivity goal. */
 function interactivityScanFile(repoRoot: string, relPath: string, patterns: readonly InteractivityAuditPatternDef[]): InteractivityFinding[] {
@@ -9672,33 +9634,17 @@ export function interactivityPuzzleFillP4eFailures(precomputeSource: string, fil
 //#endregion 🪣️PuzzleFillToolRun
 
 //#region ⏯️ToolRunPolicy
-/**
- * ⏯️ One tool the phase-4 inventory (`26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📓️audit-p4-tool-inventory.md`) classifies
- * `algorithmic-mutating`. `toolId` is the Tool/UtilityDefinition id expected under `root` (artifact subset or engine
- * dir); `scope` lists the tool's own files or dirs (relative to `root` unless repo-rooted); `verbs` are per-plugin run verbs and lifecycle states that must vanish from `root` once `run` is declared, `measures` the
- * plugin-local progress/cancel measures that must vanish from `scope`; `lane` is the converting contract lane.
- */
-export type InteractivityToolRunRequirement = {
-  readonly toolId: string;
-  readonly root: string;
-  readonly scope: readonly string[];
-  readonly verbs: readonly string[];
-  readonly measures: readonly string[];
-  readonly lane: string;
-  readonly inventory: string;
-};
 
-/** ⏯️ A repo-relative source handed to the tool-run policy predicates. */
-export type InteractivityToolRunSource = { readonly path: string; readonly text: string };
 
-/** ⏯️ A tool-run policy violation anchored to a file and a 1-based line (0 when a whole file or table row is at fault). */
-export type InteractivityToolRunFinding = { readonly file: string; readonly line: number; readonly text: string };
 
-type InteractivityToolRunDeclaration = { readonly id: string; readonly kind: "Tool" | "Utility"; readonly file: string; readonly line: number; readonly run: boolean };
 
-type InteractivityToolRunTool = { readonly label: string; readonly root: string; readonly scope: readonly string[]; readonly flat: boolean; readonly verbs: readonly string[]; readonly measures: readonly string[]; readonly declared: boolean };
 
-type InteractivityToolRunIndex = { readonly code: ReadonlyMap<string, readonly string[]>; readonly declarations: readonly InteractivityToolRunDeclaration[] };
+
+
+
+
+
+
 
 const INTERACTIVITY_TOOL_RUN_ANY = "🏅️standards/🔖️1/🪆️subsets/✳️any";
 
@@ -9739,161 +9685,31 @@ export const INTERACTIVITY_TOOL_RUN_REQUIREMENTS: readonly InteractivityToolRunR
   { toolId: "reorganizeWorkflow", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/🗂️reorganize-workflow"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
 ];
 
-const INTERACTIVITY_TOOL_RUN_TRIGGER = /run\s*:\s*Some\s*\(|\.run\s*=\s*Some\s*\(|toolRun[A-Z]|TOOL_RUN_\w+_ACTION_ID|TRIED_|FillTried|WorldFillTried|push_tried|fillBuildPreview|FillBuildPreview|fill_build_preview|FILL_PREVIEW_JSON|FillPreviewJson|fill_preview_json/;
 
-const INTERACTIVITY_TOOL_RUN_LEGACY_TRACE = /\b(?:\w*_TRIED_RING|\w*_TRIED_MAX|FillTried\w*|WorldFillTried\w*|push_tried|fillBuildPreview|FillBuildPreview|fill_build_preview|\w*FILL_PREVIEW_JSON\w*|FillPreviewJson\w*|fill_preview_json\w*)\b/;
 
-const INTERACTIVITY_TOOL_RUN_LOCAL_LIFECYCLE: readonly RegExp[] = [
-  /\bfn\s+\w*(?:progress|cancel)_measure\b/,
-  /["'`](?:cancel|abort|stop|retry|discard|adopt|pause|resume|finalize)[A-Z]\w*["'`]/,
-  /["'`][a-z]\w*(?:Tick|Cancel|Abort|Adopt|Discard|Retry|Finalize)["'`]/,
-  /["'`](?:start|cancel|abort|stop|retry|discard|adopt|pause|resume|finalize)-[a-z0-9-]+["'`]/,
-];
 
-const INTERACTIVITY_TOOL_RUN_RESERVED: readonly RegExp[] = [
-  /["'`]toolRun[A-Z]\w*["'`]/,
-  /\bActionDefinition::new(?:_catalog)?\s*\(\s*(?:[\w:]+::)?TOOL_RUN_\w+_ACTION_ID\b/,
-  /\b(?:[\w:]+::)?TOOL_RUN_\w+_ACTION_ID\s*(?:\|\s*(?:[\w:]+::)?TOOL_RUN_\w+_ACTION_ID\s*)*=>/,
-];
 
-const INTERACTIVITY_TOOL_RUN_INDEXES = new WeakMap<readonly InteractivityToolRunSource[], InteractivityToolRunIndex>();
 
-/** 📍️ True when `path` is `prefix` or lies below it. */
-function interactivityToolRunWithin(path: string, prefix: string): boolean {
-  return path === prefix || path.startsWith(`${prefix}/`);
-}
 
-/** 📍️ A requirement scope entry as a repo-relative path. */
-function interactivityToolRunScopePath(root: string, entry: string): string {
-  return entry.startsWith("✏️s/") || entry.startsWith("🧰️framework/") ? entry : `${root}/${entry}`;
-}
 
-/** ✂️ Line-aligned code of one source: comments blanked, string literals kept, Rust `#[cfg(test)]` items emptied. */
-function interactivityToolRunCode(source: InteractivityToolRunSource): string[] {
-  const lines = source.text.split(/\r?\n/);
-  const tests = source.path.endsWith(".rs") ? [...policyTestModSpans(lines), ...interactivityCfgTestItemSpans(lines)] : [];
-  let depth = 0;
-  return lines.map((raw, index) => {
-    const masked = policyMaskLiterals(raw);
-    let code = "";
-    for (let at = 0; at < raw.length; ) {
-      const pair = masked.slice(at, at + 2);
-      if (depth > 0) {
-        depth += pair === "/*" ? 1 : pair === "*/" ? -1 : 0;
-        at += pair === "/*" || pair === "*/" ? 2 : 1;
-      } else if (pair === "//") {
-        break;
-      } else if (pair === "/*") {
-        depth = 1;
-        at += 2;
-      } else {
-        code += raw[at];
-        at += 1;
-      }
-    }
-    return policyLineInTestMod(tests, index + 1) ? "" : code;
-  });
-}
 
-/** 🧱️ The innermost `opener … }` span of `text` (literal-safe) that encloses offset `at`. */
-function interactivityToolRunEnclosing(text: string, at: number, opener: RegExp): string | undefined {
-  if (at < 0) return undefined;
-  const masked = policyMaskLiterals(text);
-  let enclosing: string | undefined;
-  for (const match of masked.matchAll(opener)) {
-    const open = match.index + match[0].length - 1;
-    if (open > at) break;
-    let depth = 0;
-    let close = masked.length;
-    for (let index = open; index < masked.length; index += 1) {
-      depth += masked[index] === "{" ? 1 : masked[index] === "}" ? -1 : 0;
-      if (depth === 0) {
-        close = index;
-        break;
-      }
-    }
-    if (close >= at) enclosing = text.slice(match.index, close + 1);
-  }
-  return enclosing;
-}
 
-/** 🗂️ Code lines per source plus every Tool/UtilityDefinition declaration under `✏️s/`, its resolved id and whether it declares `run`. */
-function interactivityToolRunIndex(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunIndex {
-  const cached = INTERACTIVITY_TOOL_RUN_INDEXES.get(sources);
-  if (cached) return cached;
-  const code = new Map(sources.map((source) => [source.path, interactivityToolRunCode(source)] as const));
-  const constants = new Map<string, Map<string, Set<string>>>();
-  const plugin = (path: string) => path.split("/").slice(0, 3).join("/");
-  for (const [path, lines] of code) {
-    if (!path.endsWith(".rs")) continue;
-    for (const match of lines.join("\n").matchAll(/\bconst\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]*)"/g)) {
-      for (const key of [path, plugin(path)]) {
-        const byName = constants.get(key) ?? new Map<string, Set<string>>();
-        byName.set(match[1]!, (byName.get(match[1]!) ?? new Set<string>()).add(match[2]!));
-        constants.set(key, byName);
-      }
-    }
-  }
-  const resolve = (path: string, expression: string): string | undefined => {
-    const literal = expression.match(/^"([^"]*)"$/);
-    if (literal) return literal[1];
-    const name = expression.match(/^(?:[\w]+::)*([A-Z][A-Z0-9_]*)$/)?.[1];
-    if (!name) return undefined;
-    for (const key of [path, plugin(path)]) {
-      const values = constants.get(key)?.get(name);
-      if (values?.size === 1) return [...values][0];
-    }
-    return undefined;
-  };
-  const declarations: InteractivityToolRunDeclaration[] = [];
-  for (const [path, lines] of code) {
-    if (!path.startsWith("✏️s/") || !path.endsWith(".rs")) continue;
-    const joined = lines.join("\n");
-    for (const match of joined.matchAll(/\b(Tool|Utility)Definition::new\(\s*([^,()]+?)\s*,/g)) {
-      const id = resolve(path, match[2]!.trim());
-      if (id === undefined) continue;
-      const kind = match[1] as "Tool" | "Utility";
-      const literal = interactivityToolRunEnclosing(joined, match.index, new RegExp(`\\b${kind}Definition\\s*\\{`, "g"));
-      const body = interactivityToolRunEnclosing(joined, match.index, /\bfn\s+\w+[^{;]*\{/g);
-      const run = (literal !== undefined && /\brun\s*:\s*Some\s*\(/.test(literal)) || (body !== undefined && /\.run\s*=\s*Some\s*\(/.test(body));
-      declarations.push({ id, kind, file: path, line: joined.slice(0, match.index).split("\n").length, run });
-    }
-  }
-  const index = { code, declarations };
-  INTERACTIVITY_TOOL_RUN_INDEXES.set(sources, index);
-  return index;
-}
 
-/** 🧰️ Tools the lifecycle predicate governs: every requirement row, plus every run-declaring tool no row names (scoped to its declaring directory). */
-function interactivityToolRunTools(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunTool[] {
-  const { declarations } = interactivityToolRunIndex(sources);
-  const rows = requirements.map((row) => ({
-    label: `${row.toolId} (${row.root}, lane ${row.lane}, inventory ${row.inventory})`,
-    root: row.root,
-    scope: row.scope.map((entry) => interactivityToolRunScopePath(row.root, entry)),
-    flat: false,
-    verbs: row.verbs,
-    measures: row.measures,
-    declared: declarations.some((declaration) => declaration.run && declaration.id === row.toolId && interactivityToolRunWithin(declaration.file, row.root)),
-  }));
-  const discovered = declarations
-    .filter((declaration) => declaration.run && !requirements.some((row) => row.toolId === declaration.id && interactivityToolRunWithin(declaration.file, row.root)))
-    .map((declaration) => {
-      const directory = declaration.file.slice(0, declaration.file.lastIndexOf("/"));
-      return { label: `${declaration.id} (${declaration.file}:${declaration.line})`, root: directory, scope: [directory], flat: true, verbs: [], measures: [], declared: true };
-    });
-  return [...rows, ...discovered];
-}
 
-/** 📍️ True when `path` belongs to the tool's own files. */
-function interactivityToolRunInScope(tool: InteractivityToolRunTool, path: string): boolean {
-  return tool.scope.some((entry) => (tool.flat ? path.slice(0, path.lastIndexOf("/")) === entry : interactivityToolRunWithin(path, entry)));
-}
 
-/** 🔎️ A word-bounded token matcher that treats `-` as part of a token. */
-function interactivityToolRunToken(token: string): RegExp {
-  return new RegExp(`(?<![\\w-])${token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`);
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** 📚️ Every repo runtime Rust/TS source a tool-run predicate can hit: under a requirement root or scope, or carrying one of their trigger tokens. */
 export function interactivityToolRunPolicySources(repoRoot: string, requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunSource[] {
@@ -9906,77 +9722,13 @@ export function interactivityToolRunPolicySources(repoRoot: string, requirements
     });
 }
 
-/** ⏯️ (1) Once a tool declares `run`, no per-plugin run verb, lifecycle state or plugin-local progress/cancel measure survives (`📋️tool-run-contract.md` §2.5, §3.6). */
-export function interactivityToolRunLocalLifecycleFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
-  const { code } = interactivityToolRunIndex(sources);
-  const findings: InteractivityToolRunFinding[] = [];
-  for (const tool of interactivityToolRunTools(sources, requirements).filter((candidate) => candidate.declared)) {
-    const verbs = tool.verbs.map((verb) => [verb, interactivityToolRunToken(verb)] as const);
-    const measures = tool.measures.map((measure) => [measure, interactivityToolRunToken(measure)] as const);
-    for (const [path, lines] of code) {
-      const rooted = interactivityToolRunWithin(path, tool.root);
-      const scoped = interactivityToolRunInScope(tool, path);
-      if (!rooted && !scoped) continue;
-      lines.forEach((line, index) => {
-        const hits = [...(rooted ? verbs : []), ...(scoped ? measures : [])].filter(([, pattern]) => pattern.test(line)).map(([token]) => token);
-        if (scoped) hits.push(...INTERACTIVITY_TOOL_RUN_LOCAL_LIFECYCLE.flatMap((pattern) => line.match(pattern)?.[0] ?? []));
-        for (const hit of new Set(hits)) findings.push({ file: path, line: index + 1, text: `[⏯️ local-lifecycle] ${tool.label}: ${hit} survives next to a declared ToolRunDefinition; use the framework toolRun* actions, ToolRunState and the ToolRun panel (contract §2.5, §3.6)` });
-      });
-    }
-  }
-  return findings;
-}
 
-/** ⏯️ (2) No tried-candidate ring, `fillBuildPreview` tail or fill preview JSON cap survives anywhere; tested candidates travel only as trace pages (`📋️tool-run-contract.md` §3.2, §3.6). */
-export function interactivityToolRunLegacyTraceFailures(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunFinding[] {
-  const { code } = interactivityToolRunIndex(sources);
-  const findings: InteractivityToolRunFinding[] = [];
-  for (const [path, lines] of code) {
-    lines.forEach((line, index) => {
-      const hit = line.match(INTERACTIVITY_TOOL_RUN_LEGACY_TRACE)?.[0];
-      if (hit) findings.push({ file: path, line: index + 1, text: `[⏯️ legacy-trace] ${hit} survives; tested candidates travel only as ToolRunTracePage deltas rendered by the ToolRunTraceLayer (contract §3.2, §3.6)` });
-    });
-  }
-  return findings;
-}
 
-/** ⏯️ (3) Every `algorithmic-mutating` tool of [[INTERACTIVITY_TOOL_RUN_REQUIREMENTS]] declares `run: Some(ToolRunDefinition)` on its Tool/UtilityDefinition, and every table row still points at real sources (`📋️tool-run-contract.md` §2.4, §3.7). */
-export function interactivityToolRunDeclarationFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
-  const { code, declarations } = interactivityToolRunIndex(sources);
-  const paths = [...code.keys()];
-  const findings: InteractivityToolRunFinding[] = [];
-  const seen = new Set<string>();
-  for (const row of requirements) {
-    const label = `[⏯️ declaration] ${row.toolId} (${row.root}, lane ${row.lane}, inventory ${row.inventory})`;
-    const key = `${row.root}#${row.toolId}`;
-    if (seen.has(key)) findings.push({ file: row.root, line: 0, text: `${label}: duplicate requirement row` });
-    seen.add(key);
-    if (!paths.some((path) => interactivityToolRunWithin(path, row.root))) {
-      findings.push({ file: row.root, line: 0, text: `${label}: requirement root has no sources (stale row)` });
-      continue;
-    }
-    if (row.scope.length > 0 && !row.scope.some((entry) => paths.some((path) => interactivityToolRunWithin(path, interactivityToolRunScopePath(row.root, entry))))) findings.push({ file: row.root, line: 0, text: `${label}: no scope entry exists any more (stale row)` });
-    const matching = declarations.filter((declaration) => declaration.id === row.toolId && interactivityToolRunWithin(declaration.file, row.root));
-    if (matching.some((declaration) => declaration.run)) continue;
-    const found = matching[0];
-    findings.push(found ? { file: found.file, line: found.line, text: `${label}: ${found.kind}Definition "${row.toolId}" declares no run: Some(ToolRunDefinition) (contract §2.4)` } : { file: row.root, line: 0, text: `${label}: no Tool/UtilityDefinition "${row.toolId}" exists; the algorithm is not a tool run yet (contract §2.4, §3.7)` });
-  }
-  return findings;
-}
 
-/** ⏯️ (4) `toolRun*` action ids are framework-reserved: plugins never declare, literal-copy or route them (`📋️tool-run-contract.md` §2.5). */
-export function interactivityToolRunReservedActionFailures(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunFinding[] {
-  const { code } = interactivityToolRunIndex(sources);
-  const findings: InteractivityToolRunFinding[] = [];
-  for (const [path, lines] of code) {
-    if (!path.startsWith("✏️s/")) continue;
-    lines.forEach((line, index) => {
-      const hit = INTERACTIVITY_TOOL_RUN_RESERVED.map((pattern) => line.match(pattern)?.[0]).find((match) => match !== undefined);
-      if (hit) findings.push({ file: path, line: index + 1, text: `[⏯️ reserved-action] ${hit.trim()}: toolRun* actions are framework-reserved and injected from ToolRunDefinition; reference the framework constants only to dispatch (contract §2.5)` });
-    });
-  }
-  return findings;
-}
+
+
+
+
 //#endregion ⏯️ToolRunPolicy
 
 //#region 🚫️HistoryClosure
@@ -15545,7 +15297,7 @@ function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
 //#region 🔧️PolicyRegionParsing
 type PolicyRegionEvent = { kind: "open" | "close"; line: number; spaceAfterSlashes: boolean; label: string };
 type PolicyRegionSpan = { label: string; closeLabel: string; startLine: number; endLine: number };
-type PolicyModSpan = { name: string; startLine: number; endLine: number };
+
 
 const POLICY_REGION_OPEN_RE = /^(\s*)\/\/(\s*)#region(?:\s+(.*))?\s*$/;
 const POLICY_REGION_CLOSE_RE = /^(\s*)\/\/(\s*)#endregion(?:\s+(.*))?\s*$/;
@@ -15579,15 +15331,7 @@ function policyPairRegionSpans(events: readonly PolicyRegionEvent[]): PolicyRegi
   return spans;
 }
 
-/**
- * 🧹️Masks `"..."` string-literal contents and `'x'` char-literal contents (same length, so indices stay
- * aligned) — line-bounded (`\n` excluded from both classes) and the char-literal form requires exactly one
- * char/escape, so a Rust lifetime apostrophe (`&'static`, `'a`) never greedily pairs with an unrelated
- * quote elsewhere in the file (which would otherwise corrupt brace-counting across huge, unrelated spans).
- */
-function policyMaskLiterals(line: string): string {
-  return line.replace(/"(?:[^"\\\n]|\\.)*"/g, (m) => `"${" ".repeat(Math.max(0, m.length - 2))}"`).replace(/'(?:\\.|[^'\\\n])'/g, (m) => `'${" ".repeat(Math.max(0, m.length - 2))}'`);
-}
+
 
 const POLICY_MOD_OPEN_RE = /^\s*pub mod (\w+)\b.*\{\s*$/;
 
@@ -15613,28 +15357,9 @@ function policyModAtLine(modSpans: readonly PolicyModSpan[], lineNo: number): st
   return containing.sort((a, b) => a.endLine - a.startLine - (b.endLine - b.startLine))[0]?.name ?? "";
 }
 
-const POLICY_MOD_ANY_OPEN_RE = /^\s*(?:pub\s+)?mod\s+(\w+)\b.*\{\s*$/;
 
-/** 🧪️Brace-spans of `#[cfg(test)] mod … { … }` blocks — synthetic test fixtures (e.g. `App::builder` in a unit test) aren't real app registrations. */
-function policyTestModSpans(lines: readonly string[]): PolicyModSpan[] {
-  const spans: PolicyModSpan[] = [];
-  const stack: { name: string; startLine: number; depth: number; isTest: boolean }[] = [];
-  let depth = 0;
-  lines.forEach((raw, i) => {
-    const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
-    const modMatch = raw.match(POLICY_MOD_ANY_OPEN_RE);
-    if (modMatch) {
-      const isTest = lines.slice(Math.max(0, i - 2), i).some((l) => /#\[cfg\([^\]]*\btest\b[^\]]*\)\]/.test(l)) || modMatch[1] === "tests";
-      stack.push({ name: modMatch[1]!, startLine: i + 1, depth, isTest });
-    }
-    depth += (codeOnly.match(/\{/g) ?? []).length - (codeOnly.match(/\}/g) ?? []).length;
-    while (stack.length > 0 && depth <= stack[stack.length - 1]!.depth) {
-      const top = stack.pop()!;
-      if (top.isTest) spans.push({ name: top.name, startLine: top.startLine, endLine: i + 1 });
-    }
-  });
-  return spans;
-}
+
+
 
 /** 🏷️Strips a leading non-letter (emoji/sigil) prefix off a region label, e.g. "🔖️Tests" -> "Tests". */
 function policyLabelName(label: string): string {
@@ -16982,10 +16707,7 @@ function policyOsStateAuthorityPathInScope(relPath: string): boolean {
   return true;
 }
 
-/** 🏷️True when `lineNo` sits inside a `#[cfg(test)] mod …` / `mod tests` brace span. */
-function policyLineInTestMod(testSpans: readonly PolicyModSpan[], lineNo: number): boolean {
-  return testSpans.some((s) => s.startLine <= lineNo && lineNo <= s.endLine);
-}
+
 
 /**
  * 📏️OS-exclusive state authority: outside `🧰️framework/🛍️products/💻️os/`, no item-scope interior

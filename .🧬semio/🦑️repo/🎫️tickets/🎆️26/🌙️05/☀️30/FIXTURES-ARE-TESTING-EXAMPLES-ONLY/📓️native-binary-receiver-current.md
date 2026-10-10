@@ -1,0 +1,7 @@
+# Required Binary Raw Receiving
+
+Actual original Source RED92115 Nx1/1.1s reached canonical Grant admission and independent Uint8Array/Buffer/BinarySnapshot projections before missing required ArtifactPackReceiving implementation. The implementation now uses the existing original receiving::bind through the same typed NativeSnapshotDecodeOwner. Raw bytes preserve the original carrier law; no envelope parsing, new control, caller policy or new receiving algorithm. Exact guarded actions include the tiny raw binder visibility entry, defining trait and original System/cancel24cuts law. Rust is outside Publication current Kernel cut. Original native law UNRUN; Source renewal pending.
+
+Original Source GREEN50671 Nx0/2.8s, actual1 law9assertions plus independent depth612. Rustfmt parses actual3 files with0errors; no compiler/type/runtime inference. Original receiving binder bodies preserved, genuine required interface+tiny binder entry authored. New24cut System law is UNRUN and belongs existing Binary test-original-receiving-native original selection; complete Kernel does not run dependency-package unit laws. Plain input current drift is not authored and will qualify the eventual acquisition epoch.
+
+Current combined original TS35195 executes all14 selected original Binary/Presence/Backbone laws,384 assertions (Nx0/4.7s) plus depth612. Fresh normal Binary Source90471 executes actual existing original owner successfully with DEBUG. The new required receiver native law still UNRUN, separate package required.

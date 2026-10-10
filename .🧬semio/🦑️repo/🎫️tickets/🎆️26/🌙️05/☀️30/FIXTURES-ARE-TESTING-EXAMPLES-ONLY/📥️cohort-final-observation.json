@@ -1,0 +1,142 @@
+{
+  "executionByAudit": false,
+  "observedOnly": true,
+  "rows": [
+    {
+      "ledger": "native-b25-actions",
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧬️schema/⚠️cancellation/🔣️.json",
+      "expectedAfter": null,
+      "observed": null,
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-b25-actions",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🧬️schema/🔣️.json",
+      "expectedAfter": null,
+      "observed": null,
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-b25-actions",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛫️encoding/🧬️schema/🔣️.json",
+      "expectedAfter": null,
+      "observed": null,
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-b25-actions",
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🟦️.ts",
+      "expectedAfter": "9addd364def1d779a3c2ab695691d4a5117baccbae4c66abcdde9dda9d47f501",
+      "observed": "9addd364def1d779a3c2ab695691d4a5117baccbae4c66abcdde9dda9d47f501",
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-b25-actions",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "expectedAfter": "33f7564cb71c1e79cb5dfb257d66280401958bf6750be63c521c3e8ec9cfeb8a",
+      "observed": "33f7564cb71c1e79cb5dfb257d66280401958bf6750be63c521c3e8ec9cfeb8a",
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-ds-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧬️schema/🔣️.json",
+      "expectedAfter": null,
+      "observed": null,
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-ds-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧬️schema/🔣️.json",
+      "expectedAfter": null,
+      "observed": null,
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-ds-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🟦️.ts",
+      "expectedAfter": "d6369b3e4f72290d24d9204ec3c8c8834fbbffd7135dca7f75211eb85d0f4154",
+      "observed": "d6369b3e4f72290d24d9204ec3c8c8834fbbffd7135dca7f75211eb85d0f4154",
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-ds-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🟦️.ts",
+      "expectedAfter": "38bc0a962c7132926a15ca2f56dde00c5a79e68454ba563c380035fdfd48a1e9",
+      "observed": "38bc0a962c7132926a15ca2f56dde00c5a79e68454ba563c380035fdfd48a1e9",
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-byte-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🦀️.rs",
+      "expectedAfter": "04f6acf3a0d92296dce88232bb36e9d6f38cf99c6aabf7beb6dedf0ef789d2cc",
+      "observed": "04f6acf3a0d92296dce88232bb36e9d6f38cf99c6aabf7beb6dedf0ef789d2cc",
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "native-byte-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs",
+      "expectedAfter": "69390c52344cacd322a22f0524aa6b6e157ef0390f938df7e85f5c30ea817712",
+      "observed": "69390c52344cacd322a22f0524aa6b6e157ef0390f938df7e85f5c30ea817712",
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "pub-value-job-actions",
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧬️schema/🔣️.json",
+      "expectedAfter": null,
+      "observed": null,
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "pub-value-job-actions",
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧬️schema/🔣️.json",
+      "expectedAfter": null,
+      "observed": null,
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "pub-value-job-actions",
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🟦️.ts",
+      "expectedAfter": null,
+      "observed": "cf869bb8d23b81b109b77e53d29109cbdeef32ec5fde722265ba3d14e775e5d4",
+      "matches": false,
+      "ownership": false
+    },
+    {
+      "ledger": "pub-value-job-actions",
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🟦️.ts",
+      "expectedAfter": null,
+      "observed": "3c67ffa2a699df7bfbe8153e87f5f5c234468c01b4b5fe13d0a1c1c58826c9e8",
+      "matches": false,
+      "ownership": false
+    },
+    {
+      "ledger": "pub-return-actions",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧬️schema/🔣️.json",
+      "expectedAfter": null,
+      "observed": null,
+      "matches": true,
+      "ownership": false
+    },
+    {
+      "ledger": "pub-return-actions",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "expectedAfter": null,
+      "observed": "95a4e6015b5681a0cfb391e54ca639f3882a25ebd35d0e4e6b8de57840de1d7d",
+      "matches": false,
+      "ownership": false
+    }
+  ]
+}

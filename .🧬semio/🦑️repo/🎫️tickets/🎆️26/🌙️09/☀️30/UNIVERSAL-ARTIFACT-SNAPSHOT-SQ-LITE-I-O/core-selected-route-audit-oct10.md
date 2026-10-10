@@ -1,0 +1,11 @@
+# Core Selected Receiving Route Audit
+
+Read-only validation on October 10; no build or source/native test execution. Both SnapshotReceiving classes, router registrations, framework Rust project targets, package Nx scripts and GUI/seed configurations now exist. This supersedes the earlier absent-route observation.
+
+Existing jsonc-parser parsed actual launch.json and launch seed with zero errors. Each contains exactly the two selected Original Receiving entries and matching commands, 660000ms policies and capability owner/command fields. Native additionally selects long test level. Original manifest declares semio-framework; Native selects exactly that package, lib tests and original_receiving_ filter with nocapture under original Cargo policy, signal and remainingMilliseconds callback.
+
+Resolved Source test, owned-execution module and manifest paths exist and have 89, 83 and 68 Unicode characters respectively, below256. The Source class resolves both child paths from actual framework Rust package root. GUI and seed preserve adjacent Snapshot SQLite presentation grouping and ascending order.
+
+Source childBudget floors finite fractional remaining and recalculates it separately for typecheck and Source run. Its current null branch invents a30000ms timeout even when the original operation is untimed. The raw runOwnedCommand contract takes numeric timeout rather than original nullable remaining; therefore this does not preserve original untimed deadline semantics. At zero finite remaining, raw owned runner lacks pre-spawn budget refusal, so it can spawn before timer cancellation. These issues were sent to Root; original invocation child routing is the appropriate authority boundary if untimed semantics must persist.
+
+CSV/TSV actual artifact Rust scans find no direct validate_sqlite_snapshot_subset override and no new decoding/encoding validator override at inspection time. Their existing direct trait default permits wildcard after original SQL checkpoint and refuses nonwildcard. Newly explicitUnsupported generic codec defaults now require genuine selected CSV/TSV receiving opt-in. CodecHigh received this scope and the need to preserve exact requested subset behavior, original checkpoints and physical error authority. Source law or installed route syntax provides no Native receiving qualification.

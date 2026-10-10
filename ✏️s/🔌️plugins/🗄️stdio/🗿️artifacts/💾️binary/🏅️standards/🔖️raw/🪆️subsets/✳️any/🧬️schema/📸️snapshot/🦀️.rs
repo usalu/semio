@@ -12,7 +12,7 @@ use framework_schema::ArtifactSchema;
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
 /// (so it can be embedded as a block in a record),
 /// it does not touch the artifact's own honest hex-text/raw-binary envelope format.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary")]
 pub struct BinarySnapshot {

@@ -1,0 +1,1 @@
+{"schema":"original-tool-tick-writer-admission.v1","policy":[1,4096,65536,262144,64],"metadataCopyBytes":0,"stages":["native-column-birth","original-wire-handoff","entity-binding","trace-binding","progress-binding","payload-birth","actual-payload-copy","original-preview-loan"],"original":"same-native-writer-source-and-policy"}

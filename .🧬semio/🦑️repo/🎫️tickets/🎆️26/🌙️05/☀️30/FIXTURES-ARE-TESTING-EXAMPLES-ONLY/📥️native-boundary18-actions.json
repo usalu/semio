@@ -1,0 +1,110 @@
+{
+  "trueRed": {
+    "session": 62653,
+    "Nx": 1,
+    "duration": "2.7s",
+    "failures": "Both original Source absence guards actual true vs expected false, no timeout"
+  },
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🟦️.ts",
+      "beforeSha": "9ada8c99cc4814661c61baad065c69e980ee107c30f2e80dd57993eef13cbdf0",
+      "afterSha": "763f269ce2b6f7b63a26d7a164a900740b3ad904e02dac625c3d21fbd1df9170",
+      "actions": [
+        {
+          "beforeBlock": "import Ajv2020 from \"ajv/dist/2020\";",
+          "afterBlock": "import Ajv from \"ajv\";"
+        },
+        {
+          "beforeBlock": "import schema from \"../🧬️schema/🔣️.json\";",
+          "afterBlock": "import grantSchema from \"../../../../🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json\";"
+        },
+        {
+          "beforeBlock": " const validate=new Ajv2020({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);",
+          "afterBlock": " const validate=new Ajv({strict:true}).compile(grantSchema);expect(validate(fixture.closeGrant)).toBe(true);expect(validate(fixture.deniedGrant)).toBe(true);"
+        },
+        {
+          "beforeBlock": " for(const key of Object.keys(fixture)){const missing={...fixture} as Record<string,unknown>;delete missing[key];expect(validate(missing)).toBe(false);}\n",
+          "afterBlock": ""
+        },
+        {
+          "beforeBlock": " expect(validate({...fixture,replacement:\"accept\"})).toBe(false);",
+          "afterBlock": " expect(fixture.replacement).toBe(\"refuseWithoutConsuming\");expect(fixture.custody).toBe(\"originalRecipient\");"
+        },
+        {
+          "beforeBlock": "closed policy and UTF8 cumulative receipt compared with independent Ajv",
+          "afterBlock": "plain policy and UTF8 cumulative receipt compared with canonical per-grant Ajv"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "beforeSha": "50e06f292bfcc828aced97158abfb0e1ef20ccaf3e0ab0815d065badc475b8f7",
+      "afterSha": "3f34599bb52c53adc28df760cb474ff5be6494a6bfa836bd2cefed448b5489e5",
+      "actions": [
+        {
+          "beforeBlock": "import schema from \"./🧬️schema/🔣️.json\";",
+          "afterBlock": "import grantSchema from \"../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json\";"
+        },
+        {
+          "beforeBlock": " const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(fixture)).toBe(true);",
+          "afterBlock": " const validate=new Ajv({strict:true,allErrors:true}).compile(grantSchema);expect(validate(fixture.grant)).toBe(true);expect(validate(fixture.deniedGrant)).toBe(true);"
+        },
+        {
+          "beforeBlock": " for(const field of schema.required){const missing:Record<string,unknown>={...fixture};delete missing[field];expect(validate(missing)).toBe(false);}\n",
+          "afterBlock": ""
+        },
+        {
+          "beforeBlock": " expect(validate({...fixture,extra:true})).toBe(false);",
+          "afterBlock": ""
+        },
+        {
+          "beforeBlock": "expect(validate({...fixture,grant:missing})).toBe(false);expect(validate({...fixture,grant:{...fixture.grant,[axis]:-1}})).toBe(false);",
+          "afterBlock": "expect(validate(missing)).toBe(false);expect(validate({...fixture.grant,[axis]:-1})).toBe(false);"
+        },
+        {
+          "beforeBlock": "Original receiving closed fixture matches independent Ajv",
+          "afterBlock": "Original receiving plain law matches canonical per-grant Ajv and independent"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧬️schema/🔣️.json",
+      "action": "remove",
+      "beforeSha": "ba3dc262c2f6c7f4a46f133b6af8edeab6367212a1746499e893816991168013",
+      "afterExists": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧬️schema/🔣️.json",
+      "action": "remove",
+      "beforeSha": "0b81b8dd5a815b7779633fc0e15e3be7c14d0a355d7fa505f8964e80c68b35ff",
+      "afterExists": false
+    }
+  ],
+  "plainAndRust": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🦀️.rs",
+      "sha256": "ae999804d304714d3cd25b1390d9602fa297e45e40d9407e2fb621d530e7d238",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧫️fixtures/🔣️.json",
+      "sha256": "0d63493d8c42d5c0b299324c2483806ac223d07ff2d669fea389976659c3d2b9",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "cf36ad22fc8f058e4d52095f66f8e6f7e6f2c200357be42179e6fa683668b8c7",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "182846cd60348f80095d6ba9bd199c3f95ac1e0585aa1a81a136ec09822ce070",
+      "unchanged": true
+    }
+  ],
+  "canonicalGrantObserver": {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",
+    "sha256": "55312df9ab0aa4830de3151722210e27b161cff0d67db066444164b09bf4da7f"
+  }
+}

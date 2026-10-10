@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "52de1bef1176a4b72e81bc853a6312c0b38e73a016b9c7f0402700de3850a582",
+      "afterSha256": "d1d38a73fc836be9316d7a7d6c865d4d81497f5af21585674e5ad9880e75723e",
+      "exclusive": false,
+      "scope": "Remove only Root erroneous standalone registration of registerTests1 helper; genuine source-owning test entry retained"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

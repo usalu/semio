@@ -1,0 +1,55 @@
+{
+  "schema": "semio.action-bus.original-factory-admission.v1",
+  "sourceFields": [
+    "payload",
+    "input",
+    "checkpoint"
+  ],
+  "contextSource": "originalStepContext",
+  "payloadSource": "sameOriginalBox",
+  "inputSource": "sameOriginalPages",
+  "pendingSource": "callerSlots",
+  "refusedSource": "callerSlotsAndWholeValueError",
+  "demandAxes": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "frameBirth": "exactOriginalJobLayout",
+  "payloadArcBirth": "exactSharedAllocationLayout",
+  "payloadBoxRelease": "exactOriginalPayloadLayout",
+  "headerCopyBytes": 0,
+  "cancellationSource": "actualOperationDecimalPaidCursor",
+  "coldDefault": false,
+  "terminalDropBytes": 0,
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "cases": [
+    {
+      "kind": "typed",
+      "wire": false,
+      "checkpoint": false,
+      "operation": 93,
+      "generation": 11
+    },
+    {
+      "kind": "wire",
+      "wire": true,
+      "checkpoint": false,
+      "operation": 18374686479671623680,
+      "generation": 29
+    },
+    {
+      "kind": "refusedCheckpoint",
+      "wire": true,
+      "checkpoint": true,
+      "operation": 107,
+      "generation": 37
+    }
+  ]
+}

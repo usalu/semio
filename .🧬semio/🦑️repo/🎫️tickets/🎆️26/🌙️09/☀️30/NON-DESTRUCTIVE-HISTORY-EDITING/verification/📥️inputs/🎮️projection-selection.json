@@ -1,0 +1,36 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/repo-dashboard-rs:launch",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "generate",
+    "26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/repo-dashboard-rs:launch",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "generate",
+    "26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING"
+  ]
+}

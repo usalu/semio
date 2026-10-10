@@ -1,9 +1,0 @@
-{
-  "status": "rejected",
-  "messages": [
-    {
-      "level": "error",
-      "code": "s.home.directory-event-page-frontier-race"
-    }
-  ]
-}

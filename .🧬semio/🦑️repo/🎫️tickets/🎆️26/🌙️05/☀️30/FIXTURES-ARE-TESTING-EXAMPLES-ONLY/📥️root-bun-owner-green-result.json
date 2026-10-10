@@ -1,0 +1,9 @@
+{
+  "exitCode": 0,
+  "passed": 8,
+  "failed": 0,
+  "assertions": 107,
+  "durationMs": 18100,
+  "logSha256": "4dfbd45d20b50219d2e0eeba1ecca0bcf4992ede999088b5c856881afe7c0a77",
+  "qualification": "Actual original lower Bun test includes new top-level scope regression: first-party/fast-glob/native-install agreement. Intended red log name is not proof of failure; implementation already included root owner guard, so earlier Low cut was superseded."
+}

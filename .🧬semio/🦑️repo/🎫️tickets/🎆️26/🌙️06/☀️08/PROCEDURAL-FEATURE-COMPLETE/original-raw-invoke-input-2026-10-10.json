@@ -1,0 +1,13 @@
+{
+  "qualification": "input epoch only; native not qualified",
+  "files": {
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\udde9\ufe0fextension/\ud83d\udeaa\ufe0fretirement/\ud83e\udd80\ufe0f.rs": "e1e5187a6734baa14577dfc3053800e0a7cb40bdcd5df252bc36181e36484978",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\udde9\ufe0fextension/\ud83d\udce8\ufe0finvoke/\u26a0\ufe0ffailure/\ud83e\udd80\ufe0f.rs": "a262b673631d0763d94b174495acb9cc86cbf1ff19e7532cbbeeed20d93730fe",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\udde9\ufe0fextension/\ud83d\udce8\ufe0finvoke/\u26a0\ufe0ffailure/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs": "69935acd16fe6023a6b74afb86c30634f171d308ef253dd09571f70464f38ded",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\u269b\ufe0freactor/\ud83d\udd04\ufe0fturn/\ud83e\udd80\ufe0f.rs": "f9c46885a40969821c1ab9bed79651176b6ae938fdbc6680643860c1f0d7cd11",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\udde9\ufe0fextension/\ud83e\uddec\ufe0fschema/\ud83d\udce8\ufe0finvoke/\ud83d\udd23\ufe0f.json": "3903dce582f6843e4a1013bd5da02285f11a653664909e2f9ec93cbf0a21bb7b",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\udde9\ufe0fextension/\ud83e\uddeb\ufe0ffixtures/\ud83d\udce8\ufe0finvoke/\ud83d\udd23\ufe0f.json": "2ddf5c0ddc5905dbbd30bf15a80f4b55d055668f5d881533d900d724e852683d",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\udd80\ufe0f.rs": "02f29658d810cbdabcdc10d38e1a40cb6b8222f4a389d259d57010fdd0a9b843",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfad\ufe0factor/\ud83c\udfa0\ufe0factivation-reservation/\ud83e\udd80\ufe0f.rs": "48ca315c2e7d7fd56573338360d7850842bd8ab45b63761ad49ec4201d19bf36"
+  }
+}

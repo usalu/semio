@@ -1,0 +1,55 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "b24ec249c68dcb07b43114a710591758c460ee5655198eaeb3f48d1f8970f3a7",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "ef12655b397e560654c973b3f75ef91ea463cfbfffed9147c0bdc43d383badf2",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "81cb2736dca26c4dad0d408a85ccf1a1cf8a0e2bb346db4f91f467873871d867",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "9cfd951f0090c1be664163c65d929ba0e771a42734cbade9326fb602e0615123",
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "4d90b2a5ade532558ccc818587af259a8e62cc2e8a52cccc3c72d63762959775",
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "7d7aa918d5d38f38160046ba9f7f853b6c3b531a1edb4a2a7c1ce12b0cc03878",
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "f5e0e8f503f74b3cae2b0c7e9ecc43c1976f86705b7a0b502889f4f06dc46242",
+      "authored": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "d0854fa72773606c39462c836b68c9dd2229d32c5ee705f9507ed044c1724866",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "44914a350c71951f5a86c9a4548c40962c0de15df8887bae1123603e2d373579",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "2a090ef2027effab4e32aa39e9aded4dc9fece82dc93b560a54a228f37468905",
+      "authored": false
+    }
+  ],
+  "executed": false
+}

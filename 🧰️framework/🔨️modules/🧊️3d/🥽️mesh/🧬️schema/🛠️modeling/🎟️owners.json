@@ -1,0 +1,519 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "copyGrants",
+    "maximumDeniedReleaseBytes",
+    "sameSourceArrays",
+    "handoffReleaseBytes",
+    "terminalDropBytes",
+    "physical",
+    "oneItemPerGrant",
+    "snapshotPreparation",
+    "snapshotCallers",
+    "translation",
+    "translationStart",
+    "snapshotClosedPreparation",
+    "orientationInitialization"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "maximumDeniedReleaseBytes": {
+      "const": 8
+    },
+    "sameSourceArrays": {
+      "const": true
+    },
+    "handoffReleaseBytes": {
+      "const": 0
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "physical": {
+      "const": "sourcePlusAdmittedFrames"
+    },
+    "oneItemPerGrant": {
+      "const": true
+    },
+    "snapshotPreparation": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 84,
+        "underGrantedCopyBytes": [
+          0,
+          1,
+          3
+        ],
+        "cancelTurns": [
+          0,
+          1,
+          3,
+          8,
+          17
+        ],
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "flippedNormal": [
+          0,
+          0,
+          -1
+        ],
+        "reservationBuffers": [
+          "positions",
+          "faces",
+          "normals",
+          "corners"
+        ],
+        "sourceBytesCopiedPerPosition": 12,
+        "sourceBytesCopiedPerBoundary": 4,
+        "copiedBytesPerSwap": 8,
+        "sameOriginalSource": true,
+        "normalFirstCopyBytes": 36,
+        "normalMiddleCopyBytes": 24,
+        "normalLastCopyBytes": 72,
+        "forwardCopyBytes": 220,
+        "flippedCopyBytes": 236,
+        "forwardAtoms": [
+          0,
+          0,
+          0,
+          12,
+          12,
+          12,
+          12,
+          0,
+          4,
+          4,
+          4,
+          4,
+          36,
+          24,
+          24,
+          72
+        ]
+      }
+    },
+    "snapshotCallers": {
+      "const": {
+        "operations": [
+          "mirror",
+          "mergeCoplanar",
+          "weld",
+          "subdivide",
+          "orient",
+          "fillHoles",
+          "knife",
+          "inset",
+          "extrude",
+          "loopCut",
+          "bevel",
+          "decimate"
+        ],
+        "maximumItems": 1,
+        "maximumCopyBytes": 84,
+        "parentDepthFrames": 2,
+        "cancelTurns": [
+          0,
+          1,
+          3,
+          8,
+          17
+        ],
+        "maximumSetupSteps": 256,
+        "originalPointers": [
+          "vertices",
+          "halfedges",
+          "faces"
+        ],
+        "setupGrant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 84,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 1048576,
+          "maximumDepth": 64
+        },
+        "cancelAtCompletedFrontier": true,
+        "closedSourceOperations": [
+          "bevel",
+          "decimate"
+        ]
+      }
+    },
+    "translation": {
+      "const": {
+        "offset": [
+          1,
+          2,
+          3
+        ],
+        "positions": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            3,
+            2,
+            3
+          ],
+          [
+            3,
+            3,
+            3
+          ],
+          [
+            1,
+            3,
+            3
+          ]
+        ],
+        "maximumItems": 1,
+        "maximumCopyBytes": 12,
+        "depth": 3,
+        "deniedCopyBytes": [
+          0,
+          1,
+          3,
+          11
+        ],
+        "cancelTurns": [
+          0,
+          1,
+          3,
+          4,
+          5
+        ],
+        "positionCopyBytes": 12,
+        "transitionCopyBytes": 0,
+        "handoffCopyBytes": 0,
+        "retainedOriginalSource": true
+      }
+    },
+    "translationStart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumReleaseBytes",
+        "depth",
+        "frame",
+        "sourcePointers",
+        "deniedCapacityBytes",
+        "rootTransferCopyBytes",
+        "cancelStages",
+        "retainInputOnFault"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumCopyBytes": {
+          "const": 0
+        },
+        "maximumReleaseBytes": {
+          "const": 0
+        },
+        "depth": {
+          "const": 2
+        },
+        "frame": {
+          "const": "originalTransform"
+        },
+        "sourcePointers": {
+          "const": [
+            "vertices",
+            "halfedges",
+            "faces"
+          ]
+        },
+        "deniedCapacityBytes": {
+          "const": 0
+        },
+        "rootTransferCopyBytes": {
+          "const": 0
+        },
+        "cancelStages": {
+          "const": [
+            "cold",
+            "started"
+          ]
+        },
+        "retainInputOnFault": {
+          "const": true
+        }
+      }
+    },
+    "snapshotClosedPreparation": {
+      "const": {
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ]
+        ],
+        "faces": [
+          [
+            3,
+            2,
+            1,
+            0
+          ],
+          [
+            4,
+            5,
+            6,
+            7
+          ],
+          [
+            0,
+            1,
+            5,
+            4
+          ],
+          [
+            1,
+            2,
+            6,
+            5
+          ],
+          [
+            2,
+            3,
+            7,
+            6
+          ],
+          [
+            3,
+            0,
+            4,
+            7
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            -1
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            -1,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            -1,
+            0,
+            0
+          ]
+        ],
+        "forwardCopyBytes": 1128,
+        "forwardAtoms": [
+          0,
+          0,
+          0,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          0,
+          4,
+          4,
+          4,
+          4,
+          36,
+          24,
+          24,
+          72,
+          0,
+          4,
+          4,
+          4,
+          4,
+          36,
+          24,
+          24,
+          72,
+          0,
+          4,
+          4,
+          4,
+          4,
+          36,
+          24,
+          24,
+          72,
+          0,
+          4,
+          4,
+          4,
+          4,
+          36,
+          24,
+          24,
+          72,
+          0,
+          4,
+          4,
+          4,
+          4,
+          36,
+          24,
+          24,
+          72,
+          0,
+          4,
+          4,
+          4,
+          4,
+          36,
+          24,
+          24,
+          72
+        ],
+        "closed": true,
+        "volume": 1
+      }
+    },
+    "orientationInitialization": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 64,
+        "parentDepth": 3,
+        "reservationBuffers": [
+          "adjacency",
+          "oriented",
+          "flipped"
+        ],
+        "reservationCopyBytes": 0,
+        "flagBytes": 1,
+        "adjacencySlotPointers": 3,
+        "cancelTurns": [
+          0,
+          1,
+          3,
+          8,
+          17
+        ],
+        "sources": [
+          "snapshotPreparation",
+          "snapshotClosedPreparation"
+        ],
+        "sourcePointers": [
+          "vertices",
+          "halfedges",
+          "faces"
+        ],
+        "terminalDropBytes": 0,
+        "physical": "sourcePlusAdmittedFrames",
+        "normalDemandFields": [
+          "copyBytes",
+          "capacityBytes",
+          "releaseBytes",
+          "depth"
+        ]
+      }
+    }
+  }
+}

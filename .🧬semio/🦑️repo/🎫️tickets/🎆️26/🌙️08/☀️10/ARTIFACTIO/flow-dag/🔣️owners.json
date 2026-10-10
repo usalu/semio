@@ -54,10 +54,13 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
     "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🦀️.rs"
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🦀️.rs",
+    "🧰️framework/🔨️modules/📡️replication/🚪️io/👥️presence/🔍️borrowed/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📢️publication-fixtures-presence/🦀️.rs"
   ],
   "typescript": [
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/📊️progress/🟦️.ts"
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/📊️progress/🟦️.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/flow-dag/📜️script.ts"
   ]
 }

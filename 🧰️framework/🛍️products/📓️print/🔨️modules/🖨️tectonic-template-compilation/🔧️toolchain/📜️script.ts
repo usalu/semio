@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, lstatSync, writeFileSync, rmSync } from "node:fs";
 import { open } from "node:fs/promises";
@@ -107,4 +108,4 @@ class VerifyScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("prepare", PrepareScript).register("verify", VerifyScript);
-if (import.meta.main) await router.run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

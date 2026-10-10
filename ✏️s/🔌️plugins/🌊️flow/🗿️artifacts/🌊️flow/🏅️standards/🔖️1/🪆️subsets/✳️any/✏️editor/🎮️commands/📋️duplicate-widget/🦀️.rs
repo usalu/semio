@@ -7,6 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "duplicate-widget")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct DuplicateWidget {
     pub widget_id: String,
 }

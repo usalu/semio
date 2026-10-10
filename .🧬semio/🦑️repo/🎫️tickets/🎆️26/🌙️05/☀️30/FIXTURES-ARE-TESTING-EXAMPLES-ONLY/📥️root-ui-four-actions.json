@@ -1,0 +1,70 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "ad3bc0349732d8c082709649bfc6d30fc583a88efd12b87a80041593c9314552",
+      "afterSha256": "2d210bf660185c7b6e7868c39ea21bae41d5b1738821933f7d50f968deffff92",
+      "exclusive": false,
+      "scope": "Retire only whole-test schema admission; genuine domain Grant/ViewContext/LocalizedLabel and independent SQL/JSON/bytes/source/native laws remain"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "e110eab8457d0e162c09fb1fd56c099d63fb694bfe9dc21afe25cf8696cc34cd",
+      "afterSha256": "3608a78c67da390b748e613316badecaf9db6dabea805b2d455d95f1acbfffdc",
+      "exclusive": false,
+      "scope": "Retire only whole-test schema admission; genuine domain Grant/ViewContext/LocalizedLabel and independent SQL/JSON/bytes/source/native laws remain"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "edfab8837f40d4cf53727ba07feab10008ffbf2b2d4a68f87df73c2dc89f27ab",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "Retire only whole-test schema admission; genuine domain Grant/ViewContext/LocalizedLabel and independent SQL/JSON/bytes/source/native laws remain"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🖼️atlas/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "8c1f13360359c5cf6af717139b1a9ea65671d03f2bb1734c4c18ab2736d0627e",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "Retire only whole-test schema admission; genuine domain Grant/ViewContext/LocalizedLabel and independent SQL/JSON/bytes/source/native laws remain"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔢️integer-carriers.json",
+      "action": "removed",
+      "beforeSha256": "165686b77d33f899442004b22b1621d30a10e433ef7d0a2fe552adaacd9095a5",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "Retire only whole-test schema admission; genuine domain Grant/ViewContext/LocalizedLabel and independent SQL/JSON/bytes/source/native laws remain"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/♻️retirement/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "47e9182a231a774cc070409a21635b5c987ea88ef92ff2ad9d1ed530603f7deb",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "Retire only whole-test schema admission; genuine domain Grant/ViewContext/LocalizedLabel and independent SQL/JSON/bytes/source/native laws remain"
+    }
+  ],
+  "unchangedPlain": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/🧫️fixtures/🔣️.json",
+      "sha256": "1baaf65becf5bf8e27d3f1ce5e2a7f166d79517cfb8cbe71813b66b192f0f6ad"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🖼️atlas/🧫️fixtures/🔣️.json",
+      "sha256": "da8ddb95fb8609c6d4674abdf34fca120b57a89db653080c3858c59b0b53f0d3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/♻️retirement/🧫️fixtures/🔣️.json",
+      "sha256": "f2774c9c0ce506f68e7b5001e83b70c942bd00e9772a0934ff3723234d806a66"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json",
+      "sha256": "069f74a1309deef5ec818434f9df3b24eab042f8e3815c59a6f6be1808d09884"
+    }
+  ]
+}

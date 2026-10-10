@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runRepositoryCargoTests } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -15,9 +16,9 @@ class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const names = assertConcreteCompositionOwnership(this.root);
     const { rest } = resolveTestLevel(segments, "quick");
-    await runRepositoryCargoTests(names, this.repoRoot, rest);
+    await runRepositoryCargoTests(names, this.repoRoot, this.invocation.control, rest);
   }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("ownership", OwnershipScript).register("native", NativeScript);
-await runScriptMain(router, { defaultCommand: "ownership" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "ownership" }) }));

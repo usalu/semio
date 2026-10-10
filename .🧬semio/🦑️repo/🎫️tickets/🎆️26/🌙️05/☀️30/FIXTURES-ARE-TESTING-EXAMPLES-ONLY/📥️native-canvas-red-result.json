@@ -1,0 +1,73 @@
+{
+  "execSession": 12251,
+  "exitCode": 1,
+  "terminal": "Nx1/2m35s, natural Cargo101, one E0606 test-only borrowed Box pointer cast; no assertions",
+  "afterObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "sha256": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+      "chars": 75,
+      "role": "current observer; narrow authored blocks in actions",
+      "currentSha256": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+      "sha256": "7fee3bf98df2ed143b80021e9b07800a247c247e6e8d18bace76e43e655b146b",
+      "chars": 84,
+      "role": "current observer; narrow authored blocks in actions",
+      "currentSha256": "7fee3bf98df2ed143b80021e9b07800a247c247e6e8d18bace76e43e655b146b",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "sha256": "1c1bfcbb18264a642a43060fa22afb8aed3ed44aa21caff5f2fcb2b151815838",
+      "chars": 64,
+      "role": "current observer; narrow authored blocks in actions",
+      "currentSha256": "1c1bfcbb18264a642a43060fa22afb8aed3ed44aa21caff5f2fcb2b151815838",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+      "chars": 82,
+      "role": "current observer; narrow authored blocks in actions",
+      "currentSha256": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+      "chars": 87,
+      "role": "current observer; narrow authored blocks in actions",
+      "currentSha256": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+      "sha256": "5e05c16a904302369fb2b7cf36bab5b46ee1836e10e3c0a8b798ae7ffbcdc426",
+      "chars": 92,
+      "role": "current observer; narrow authored blocks in actions",
+      "currentSha256": "5e05c16a904302369fb2b7cf36bab5b46ee1836e10e3c0a8b798ae7ffbcdc426",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🟦️.ts",
+      "sha256": "486b5b45535d56cc01ea3752a7c7ad7caf3e2bb0fec9edc61755e0a8576b66a9",
+      "chars": 92,
+      "role": "current observer; narrow authored blocks in actions",
+      "currentSha256": "486b5b45535d56cc01ea3752a7c7ad7caf3e2bb0fec9edc61755e0a8576b66a9",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "8f6ac69a648247a9caf7667f9ff10eb3bb547c91a106e94c73f7f4b71322359b",
+      "chars": 105,
+      "role": "current observer; narrow authored blocks in actions",
+      "currentSha256": "8f6ac69a648247a9caf7667f9ff10eb3bb547c91a106e94c73f7f4b71322359b",
+      "matches": true
+    }
+  ],
+  "knownOwnPIDsAlive": [],
+  "sourceAuthorship": "Only narrow original actions; beforecut direct8 hashes match; not transitive proof"
+}

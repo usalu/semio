@@ -1,0 +1,5 @@
+# Native Current Trial Authority Retirement
+
+Three current whole-trial schema roots constrain test case collections rather than returned domain payloads: finite invocation rows, cancellation admission matrix, and owned exit rows. Original policies, Process envelopes, Value grant contracts, all plain vectors and native implementations remain authoritative. Fresh source absence guards precede retirement; independent per-domain Ajv, SQLite and Node spawn behavior stay intact.
+
+Actual registered original-Source facet RED93794 Nx1/772ms reached three schema-present guards. GREEN24587 Nx0/17.2s executed seven original finite/cancellation/owned Process laws with95 assertions, followed by original depth1/612. Finite laws still admit actual production envelopes with Ajv and independent Node arithmetic; cancellation quotes actual five-axis Value grants with Ajv and SQLite. Node child code0/code7/SIGTERM outcomes and complete UTF8 stdout/stderr remain observed; signals always refuse success. Three schema roots are absent and three current consumer hashes match authored endpoints. No native assertion or global inventory credit.

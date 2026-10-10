@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runExactCargoLaws } from "../../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { resolve } from "node:path";
@@ -36,15 +38,12 @@ class BuiltTreeRetirementScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testBuiltTreeRetirementFixture();
     if (segments.length === 1 && segments[0] === "--oracle-only") return;
-    const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-ui-contract": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory,
-      cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
-      groups: [{ package: "semio-framework-ui-contract", target: { kind: "lib" }, laws: [
+    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 }, manifestPaths: { "semio-framework-ui-contract": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, cargoArgs: segments, groups: [{ package: "semio-framework-ui-contract", target: { kind: "lib" }, laws: [
         "built_tree_retirement_closes_all_typed_fields_and_preserves_foreign_values",
         "built_tree_retirement_closes_full_page_chain_beyond_observer_depth",
         "built_child_retirement_contention_retains_exact_page",
         "built_tree_retirement_preserves_foreign_queued_page_at_full_capacity",
-      ] }],
-    });
+      ] }] });
     console.log(`built-tree exact native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
@@ -151,5 +150,5 @@ if (import.meta.main) {
     .register("generate", GenerateScript)
     .register("preview-generated", PreviewGeneratedScript)
     .register("check", CheckScript);
-  await runScriptMain(router);
+  await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

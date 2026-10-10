@@ -1,6 +1,6 @@
 pub(crate) struct MemberReceiptOperation(pub(crate) String);
 impl store::ArtifactCanonicalJson for MemberReceiptOperation {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, String> { if path.is_empty() { Ok(store::ArtifactCanonicalJsonNode::String(&self.0)) } else { Err("neutral receipt operation has only its original string root".into()) } }
+    fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> { if path.is_empty() { Ok(store::ArtifactCanonicalJsonNode::String(&self.0)) } else { Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "neutral receipt operation has only its original string root")) } }
 }
 pub(crate) struct MemberReceiptPublication { pub(crate) edit: String, pub(crate) forward: Vec<MemberReceiptOperation>, pub(crate) inverse: Vec<MemberReceiptOperation>, pub(crate) metadata: Vec<protocol::MutationMeta>, pub(crate) schemas: Vec<(String,String)> }
 impl store::ErasedMemberStoreOneItemPublication for MemberReceiptPublication {

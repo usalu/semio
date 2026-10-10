@@ -1,0 +1,177 @@
+{
+  "findings": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/📏️depth/🧬️schema/🔣️.json",
+      "sha256": "6d7abfbe22d28b282a5cbb345dab77470ab308458e1d2d62fd156b7b5db3db27",
+      "title": null,
+      "id": "semio.pack.json.container-depth.v1",
+      "rootProperties": [
+        "version",
+        "maximumBytes",
+        "maximumAllocationBytes",
+        "maximumItems",
+        "maximumTurns",
+        "normalAuthority",
+        "retirementAuthority",
+        "turn",
+        "closeTurn",
+        "cases"
+      ],
+      "defs": [
+        "grant"
+      ],
+      "required": [
+        "version",
+        "maximumBytes",
+        "maximumAllocationBytes",
+        "maximumItems",
+        "maximumTurns",
+        "normalAuthority",
+        "retirementAuthority",
+        "turn",
+        "closeTurn",
+        "cases"
+      ],
+      "ref": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧬️schema/🔣️.json",
+      "sha256": "7a33a36e5b50f3b9f36db100bb9e8f78ea51c1bd8b9d2e74cd58200d8dc15f21",
+      "title": null,
+      "id": null,
+      "rootProperties": [
+        "format",
+        "owner",
+        "objectOrder",
+        "numberStorage",
+        "nativeCustody",
+        "publication",
+        "callerGrant",
+        "cases",
+        "rejectedWire",
+        "schemaRefusals",
+        "semanticEdges"
+      ],
+      "defs": [],
+      "required": [
+        "format",
+        "owner",
+        "objectOrder",
+        "numberStorage",
+        "nativeCustody",
+        "publication",
+        "callerGrant",
+        "cases",
+        "rejectedWire",
+        "schemaRefusals",
+        "semanticEdges"
+      ],
+      "ref": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": "467d64e483c04cc41d5ad6eae7f5ad4a0808cfda61eca915b365e5757cf82e60",
+      "title": null,
+      "id": "flow.original-vcs-closure.v1",
+      "rootProperties": [
+        "version",
+        "text",
+        "repeat",
+        "utf8Bytes",
+        "copyGrants",
+        "maximumTurns",
+        "actionVariants",
+        "expected",
+        "closeAdmissionCases",
+        "closeReceiptCases"
+      ],
+      "defs": [],
+      "required": [
+        "version",
+        "text",
+        "repeat",
+        "utf8Bytes",
+        "copyGrants",
+        "maximumTurns",
+        "actionVariants",
+        "expected",
+        "closeAdmissionCases",
+        "closeReceiptCases"
+      ],
+      "ref": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+      "sha256": "6940d4c91c3f6e154e01ebc74b0fa7ce602a871f4b7c102275473d7f4fd87a51",
+      "title": null,
+      "id": null,
+      "rootProperties": [
+        "cases"
+      ],
+      "defs": [],
+      "required": [
+        "cases"
+      ],
+      "ref": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "sha256": "244dbf18b45f6ffc07ac24d3686b33de179df45bc2b7447e7c08cf9da414e05c",
+      "title": null,
+      "id": "semio:flow:original-evaluation-source:corpus",
+      "rootProperties": [
+        "cases"
+      ],
+      "defs": [],
+      "required": [
+        "cases"
+      ],
+      "ref": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+      "sha256": "129a63cee5174b1a896769ac53e20a10114e50bb62a14d64facfc168babbab1b",
+      "title": null,
+      "id": "semio.flow.typed-copy.corpus.v1",
+      "rootProperties": [
+        "schema",
+        "sourceFixture",
+        "allocationAdmission",
+        "grants",
+        "cases",
+        "cancelAfter",
+        "expected",
+        "factoryCustody"
+      ],
+      "defs": [],
+      "required": [
+        "schema",
+        "sourceFixture",
+        "allocationAdmission",
+        "grants",
+        "cases",
+        "cancelAfter",
+        "expected",
+        "factoryCustody"
+      ],
+      "ref": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json",
+      "sha256": "16bca34c62b2d9d4278cd52016c4e97b6898a58904f466412fef83518fca77df",
+      "title": null,
+      "id": "https://json.schemas.assets.semio-tech.com/framework/os/neural/engine/evaluation/corpus.json",
+      "rootProperties": [
+        "copyBytes",
+        "cases"
+      ],
+      "defs": [],
+      "required": [
+        "copyBytes",
+        "cases"
+      ],
+      "ref": null
+    }
+  ],
+  "authorship": false
+}

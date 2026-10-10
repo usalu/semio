@@ -1,0 +1,34 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json",
+      "action": "delete",
+      "beforeSha256": "45d63da5837e17187d6a2485f065054482fbed8cdac7c4e4aa0bac88e513ed3f",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial snapshot codec root"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "action": "update",
+      "beforeSha256": "95a4e6015b5681a0cfb391e54ca639f3882a25ebd35d0e4e6b8de57840de1d7d",
+      "afterSha256": "dda02e31aeeb10b22336af97f8a49f48bc641f3a6dcd03e31ed454f77ec25aea",
+      "beforeBlockSha256": "2f32ef0785dc59786d8a9c58b1ebba36ef054e7640d960371971c11042fe5b20",
+      "afterBlockSha256": "ef07cc453756df38d4a3dfe69ff1897bcd45fcd74f6cd93609c2e037a6b1f2e4",
+      "scope": "only SnapshotCodecReceivingScript whole-trial load/compile; canonical Grant/SQL/SQLite/native selectors preserved"
+    }
+  ],
+  "preservedObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🗄️.sql",
+      "sha256": "d85842e05542cf99a2218da3d8277543ba6f52c034caaa8905a15f44d85c6305"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧫️fixtures/🔣️.json",
+      "sha256": "c97b73be6f69a7fdc8453d4926ab63ee32862c94364952e4cca69a0662af0392"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs",
+      "sha256": "e9bbec9f5e0b1f58a67894a34b5e9f3fa81152b8ac03b2c6fb24f8a2fa4e3f39"
+    }
+  ]
+}

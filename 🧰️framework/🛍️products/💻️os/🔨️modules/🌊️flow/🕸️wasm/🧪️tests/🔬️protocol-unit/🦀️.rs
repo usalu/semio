@@ -27,6 +27,9 @@ impl FlowFeature for MockFeature {
             return FlowFeatureStep::Failed(FlowFailure::new(AbiErrorCode::Cancelled, "cancelled"));
         }
         self.phase += 1;
+        if self.phase == 1 && self.payload.as_deref() == Some(&[9]) {
+            return FlowFeatureStep::Failed(FlowFailure::new(AbiErrorCode::Busy, String::new()).with_retained_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 3, retained_capacity_bytes: 5, released_bytes: 7 }));
+        }
         if self.phase == 1 && self.payload.as_deref() == Some(&[7]) {
             return FlowFeatureStep::RetainedPage(vec![7; 129]);
         }
@@ -138,6 +141,89 @@ fn every_request_is_a_cancellable_progress_checkpoint_preview_feature() {
     assert_eq!(terminal.event.get(), FLOW_EVENT_TERMINAL);
     acknowledge_event(&mut bridge, &terminal);
     assert!(matches!(poll_message(&mut bridge), AbiMessage::Reply(_)));
+}
+
+/// 🧾️ The actual Bridge retains a failed normal child's receipt for its poll and clears the next poll.
+#[test]
+fn original_flow_bridge_preserves_normal_failed_receipt_before_reply() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️retained-receipt/🔣️.json")).unwrap();
+    let row = &fixture["normalFailure"];
+    let p = &row["progress"];
+    let expected = RetainedCloneProgress { copied_items: p["copiedItems"].as_u64().unwrap() as usize, copied_bytes: p["copiedBytes"].as_u64().unwrap() as usize, retained_capacity_bytes: p["retainedCapacityBytes"].as_u64().unwrap() as usize, released_bytes: p["releasedBytes"].as_u64().unwrap() as usize };
+    let mut bridge = FlowBridge::new(MockDomain::default);
+    let session = open(&mut bridge, 1, 1);
+    let mut body = FlowPayloadWriter::default();
+    body.handle(session);
+    body.bytes(&[9]).unwrap();
+    bridge.try_send(request(2_501, 2, 1, body.finish()), budget()).unwrap();
+    let AbiMessage::Event(admitted) = poll_message(&mut bridge) else { panic!("original failure admission") };
+    acknowledge_event(&mut bridge, &admitted);
+    let AbiPortPoll::Message(AbiMessage::Event(terminal)) = bridge.poll(budget()).unwrap() else { panic!("original failed terminal") };
+    assert_eq!(terminal.event.get(), FLOW_EVENT_TERMINAL);
+    assert!(row["retainedBeforeReply"].as_bool().unwrap());
+    assert_eq!(bridge.retained_progress, expected);
+    assert!(matches!(bridge.poll(budget()).unwrap(), AbiPortPoll::Message(AbiMessage::Reply(_))));
+    assert!(row["nextPollCleared"].as_bool().unwrap());
+    assert_eq!(bridge.retained_progress, Default::default());
+    eprintln!("[DEBUG] original Bridge failed normal child receipt preserved through terminal then cleared; projection boundary only");
+}
+
+/// 🧬️ Complete original refusals keep their kind, prose allocation and receipt through both Flow boundaries.
+#[test]
+fn original_flow_failure_retains_and_closes_complete_value_cause() {
+    use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+    use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, retirement::controlled::ControlledRetirement};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️retained-receipt/🔣️.json")).unwrap();
+    let law = &fixture["failureCauses"];
+    let text = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
+    assert_eq!(text.len(), law["utf8Bytes"].as_u64().unwrap() as usize);
+    let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 3, retained_capacity_bytes: 5, released_bytes: 7 };
+    for kind in law["kinds"].as_array().unwrap() {
+        let kind = ValueRefusalKind::from_wire(kind.as_str().unwrap()).unwrap();
+        for borrowed in [false, true] {
+            for through_vcs in [false, true] {
+                for copy in law["copyGrants"].as_array().unwrap() {
+                    let copy = copy.as_u64().unwrap() as usize;
+                    let mut owned = String::with_capacity(if borrowed { 0 } else { law["capacityBytes"].as_u64().unwrap() as usize });
+                    if !borrowed { owned.push_str(&text); }
+                    let original_extent = owned.capacity();
+                    let error = if borrowed { ValueError::literal(kind, "original borrowed refusal") } else { ValueError::new(kind, owned) }.with_retained_progress(progress);
+                    let original_pointer = error.message.as_ptr();
+                    let (failure, heap) = observe(|| if through_vcs { super::super::flow_vcs_close_failure(crate::vcs::FlowVcsCloseFailure::from(error)) } else { super::super::flow_close_value_failure(error) });
+                    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                    let FlowFailureCause::Value(original) = &failure.cause else { panic!("complete original value cause") };
+                    assert_eq!(original.kind, kind);
+                    assert_eq!(original.message.as_ptr(), original_pointer);
+                    assert_eq!(original.retained_progress(), progress);
+                    assert_eq!(failure.retained_progress, progress);
+                    let (owner, heap) = observe(|| ControlledRetirement::new(failure));
+                    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                    let mut owner = owner.unwrap_or_else(|_| panic!("original Flow refusal declares complete typed retirement"));
+                    let mut born = 0usize;
+                    let mut freed = 0usize;
+                    let mut empty_turns = 0usize;
+                    for turn in 0..1_048_576 {
+                        if owner.terminal_is_empty() { break; }
+                        assert!(turn < 1_048_575, "complete original Flow refusal must close");
+                        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() };
+                        let (result, heap) = observe(|| owner.step(grant));
+                        let step = result.unwrap();
+                        assert!(step.progress().fits(grant));
+                        assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (heap.requested_bytes, heap.released_bytes));
+                        born += heap.requested_bytes;
+                        freed += heap.released_bytes;
+                        empty_turns = if step.progress() == Default::default() { empty_turns + 1 } else { 0 };
+                        assert!(empty_turns < 64, "funded original refusal cannot silently stall");
+                    }
+                    assert!(owner.terminal_is_empty());
+                    assert_eq!(freed, original_extent + born);
+                    let (_, heap) = observe(|| drop(owner));
+                    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                }
+            }
+        }
+    }
+    eprintln!("[DEBUG] original Flow cause kinds8 ownedAndBorrowed=true directAndVcs=true copy1/3/64 sameProse=true exactSystem=true terminalDrop0");
 }
 
 #[test]

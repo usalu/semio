@@ -30,8 +30,8 @@ struct MigrateInput {
 
 // 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory` (see
 // `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); the admission body is a pure constructor call.
-pub(super) fn job_migrate(_job: u64, input: &[u8], restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
-    Ok(Box::new(TwoPhaseBoundedJob::admit("job.migrate", input, restored, decode_phase, execute_phase)))
+pub(super) fn job_migrate(_job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>,semio_framework_value::ValueError> {
+    super::admit_original_job(input,restored,cx,|input,restored|TwoPhaseBoundedJob::admit("job.migrate", input, restored, decode_phase, super::BuiltinExecuteFn::Pure(execute_phase)))
 }
 
 // 🚫️async: E4 phase slot — `BuiltinPhaseFn` is synchronous by contract; `decode` itself has no

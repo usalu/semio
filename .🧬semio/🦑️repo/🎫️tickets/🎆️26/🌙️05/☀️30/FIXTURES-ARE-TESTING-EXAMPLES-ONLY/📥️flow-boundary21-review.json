@@ -1,0 +1,74 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+    "exists": true,
+    "sha256": "b4f61d4a70824874b151af97a0fe50972a484dce7854843a8b783e0be35cedbf",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+    "exists": true,
+    "sha256": "65ed11fe01e8a2f02633db0cda8faceae746523107d5507e60398169cbef08db",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "sha256": "ab06bb7fc3f851467dae86c538a98140b796a51dee3bbc24ad36808ad497c83d",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+    "exists": true,
+    "sha256": "40a94afe8a01f446b182033bb2b29fc1d042f4417764f6fa2aece92c6322832e",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts",
+    "exists": true,
+    "sha256": "983f579c8c01938f0c2bcd069c6c7f04900de439b1cb711db05d3edd27cb89a1",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "sha256": "8e5a1bb677a814d1258a0c8cf0e8df350aec845f2ac56e44912291ca61d8657b",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧬️schema/🔣️.json",
+    "exists": true,
+    "sha256": "be69ef4f4394054defbbcec9fdc3df6eae1c75caccb4cd2c80dd5be2cdf65b69",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts",
+    "exists": true,
+    "sha256": "c980e7441daab6fed443f401ebe15b15e26114b0805d3076a0c4f390a6947ecb",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "sha256": "0fedfa31217911b271591bbfc0917823148eed190d1c898506a675a6a0445a8e",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧬️schema/🔣️.json",
+    "exists": true,
+    "sha256": "0374521a9d736b7a9bec2d2783dc96c7e73ee99e9edaac7ddbdb6ced64e8e6a7",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+    "exists": true,
+    "sha256": "97d3a7dfa9a44f0b74f553480b032eb19bb7143839efa0bda77783906844060f",
+    "ownership": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "sha256": "9894949c25e4da5dc73a4bb6dd8bb852a6381104b50653e7ec8bcf8eda34e9fc",
+    "ownership": false
+  }
+]

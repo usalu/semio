@@ -1,0 +1,36 @@
+{
+  "grant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "cases": [
+    {
+      "text": "null",
+      "expected": null
+    },
+    {
+      "text": "{\"雪\":\"λ🙂\",\"a\":[false,-7,18]}",
+      "expected": {
+        "雪": "λ🙂",
+        "a": [
+          false,
+          -7,
+          18
+        ]
+      }
+    }
+  ],
+  "invalid": [
+    "{\"x\":",
+    "\"\\ud800\""
+  ],
+  "custody": {
+    "source": "borrowedOriginalBytes",
+    "refused": "originalNativeRecipient",
+    "accepted": "sameDecodedValueBeforePublication",
+    "issuers": "noCreatedAuthority"
+  }
+}

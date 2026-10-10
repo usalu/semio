@@ -16,17 +16,17 @@ impl CancelTokenRetirement{
     pub fn is_original_alias_witness(&self,witness:&CancelToken)->bool{self.node.is_none()&&self.current.as_ref().is_some_and(|original|Arc::ptr_eq(&original.0,&witness.0))}
     /// 📏️ Quotes only the selected original Arc, empty waiter backing or retained node metadata.
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{
-        if self.current.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<CancelNode>()+size_of::<CancelToken>(),release_bytes:shared_retirement_allocation_bytes::<CancelNode>(),depth:1,..Default::default()});}
+        if self.current.is_some(){return Ok(RetirementDemand{copy_bytes:0,release_bytes:shared_retirement_allocation_bytes::<CancelNode>(),depth:1,..Default::default()});}
         let Some(node)=self.node.as_ref()else{return Ok(Default::default());};let waiters=node.waiters.try_lock().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original cancellation waiter guard is occupied"))?;
-        if waiters.capacity()>0{return Ok(RetirementDemand{copy_bytes:size_of::<Vec<(u64,Waker)>>(),release_bytes:waiters.capacity().checked_mul(size_of::<(u64,Waker)>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"cancellation waiter backing overflow"))?,depth:1,..Default::default()});}
-        Ok(RetirementDemand{copy_bytes:size_of::<CancelNode>()+size_of::<CancelToken>(),depth:1,..Default::default()})
+        if waiters.capacity()>0{return Ok(RetirementDemand{copy_bytes:0,release_bytes:waiters.capacity().checked_mul(size_of::<(u64,Waker)>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"cancellation waiter backing overflow"))?,depth:1,..Default::default()});}
+        Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})
     }
     /// 🪢️ Returns this original token alias while its matching borrowed strong root stays live through the paid turn.
     pub fn return_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<RetainedCloneStep,CancelTokenRetirementError>{
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         let Some(original)=self.current.as_ref().filter(|original|Arc::ptr_eq(&original.0,&witness.0))else{return Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed cancellation root does not witness this original alias")));};
         if self.node.is_some(){return Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"cancellation node custody cannot be returned as a root alias")));}
-        let demand=RetirementDemand{copy_bytes:size_of::<CancelToken>(),depth:1,..Default::default()};
+        let demand=RetirementDemand{copy_bytes:0,depth:1,..Default::default()};
         let _=original;
         advance_retirement_turn(demand,grant,|_|{drop(self.current.take());let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};Ok::<_,CancelTokenRetirementError>((RetainedCloneStep::Complete(progress),true))}).map_err(|error|match error{RetirementTurnError::Owner(error)=>error,RetirementTurnError::Receipt(error)=>CancelTokenRetirementError::Refused(error)})
     }

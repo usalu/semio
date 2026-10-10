@@ -1,0 +1,38 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "bun",
+    "test",
+    "./\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\u23ef\ufe0ftool-run/\ud83c\udf9e\ufe0ftick/\ud83d\udeeb\ufe0fencode/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts"
+  ],
+  "selection": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "bun",
+    "test",
+    "./\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\u23ef\ufe0ftool-run/\ud83c\udf9e\ufe0ftick/\ud83d\udeeb\ufe0fencode/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

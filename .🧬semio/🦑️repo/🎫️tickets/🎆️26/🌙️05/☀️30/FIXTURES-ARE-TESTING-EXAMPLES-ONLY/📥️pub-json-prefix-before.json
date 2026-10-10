@@ -1,0 +1,11 @@
+{
+  "sources": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs": "898e2fb3b85fcd8c393b2376104498b726beb5b5f3c03e1c898fd45a4efac0a6",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🦀️.rs": "35d9ee4da380d02f10256600cc19c2a56286c47fc41b37b077587491f1209a31",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🦀️.rs": "475577accf0f8c98c72f6c99543688048ca5cbd6b2bf9ebafe57d8e19202c05e",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts": "b39b7d2fd57de9eaf4b56528eafae745dc0605e1787aa1628502f07dc3dadc17",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/🚧️canonical-error-progress.json": "c1b6c5340c5986940e81c07d4ee4813751595fda824be34cba997b13ce43f04f",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/⚠️failure/🧬️schema/🔣️.json": null
+  },
+  "sourceCopiesRetained": false
+}

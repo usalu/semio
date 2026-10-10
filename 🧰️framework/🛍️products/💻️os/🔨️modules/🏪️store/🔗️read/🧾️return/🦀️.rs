@@ -3,6 +3,26 @@ use super::{SnapshotReadReturn,SnapshotReadLeaseRegistry,snapshot_registry_frame
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::{mem::ManuallyDrop,sync::Arc};
 
+impl super::ErasedSnapshotRead {
+ /// 🫴️ Returns the exact original read only after its independent authority and registry admit custody.
+ pub fn try_return_to_registry_witness(mut self,grant:RetainedCloneGrant)->Result<(SnapshotReadReturn,RetainedCloneProgress),(ValueError,Self)>{
+  let copied_bytes=size_of::<SnapshotReadReturn>()+size_of::<u64>()+size_of::<usize>();
+  let denied=if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes{Some((ValueRefusalKind::WorkLimit,"original read return requires its complete witness and publication metadata"))}else if grant.maximum_depth<2{Some((ValueRefusalKind::DepthLimit,"original read return requires its registry depth"))}else{None};
+  if let Some((kind,message))=denied{return Err((ValueError::literal(kind,message),self))}
+  let Some(lease)=self.lease.as_ref()else{return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"original read return lacks its exact lease"),self))};
+  let registry=lease.registry.clone();
+  let locked=match registry.state.try_lock(){Ok(locked)=>locked,Err(_)=>return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original read return registry is busy"),self))};
+  let index=lease.index;let generation=lease.generation;let slot=index as usize;
+  if self.owner.is_none()||slot>=super::SNAPSHOT_READ_LEASE_CAPACITY||locked.occupied[slot/64]&(1<<(slot%64))==0||registry.lease_generations[slot].load(std::sync::atomic::Ordering::Acquire)!=generation{drop(locked);return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"original read return lost its registry generation"),self))}
+  let original=unsafe{locked.slots[slot].assume_init_ref()};
+  if original.generation!=generation||!Arc::ptr_eq(&original.owner,self.owner.as_ref().expect("validated original read owner")){drop(locked);return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"original read return requires its exact registry slot and source pointer"),self))}
+  registry.returned.fetch_add(1,std::sync::atomic::Ordering::AcqRel);
+  if registry.lease_generations[slot].compare_exchange(generation,generation|(1u64<<63),std::sync::atomic::Ordering::AcqRel,std::sync::atomic::Ordering::Acquire).is_err(){registry.returned.fetch_sub(1,std::sync::atomic::Ordering::AcqRel);drop(locked);return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"original read return lost its exact return mark"),self))}
+  drop(self.owner.take());drop(self.lease.take());drop(locked);
+  Ok((SnapshotReadReturn{registry,index,generation},RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))
+ }
+}
+
 struct SnapshotReadReturnRetirement {
  registry:ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryHandle>>,
  last_registry:ManuallyDrop<Option<SnapshotReadLeaseRegistry>>,

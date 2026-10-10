@@ -47,9 +47,9 @@ struct Call<'a> {
     mode: WireArtifactInferenceCacheMode,
 }
 
-fn call(host: &GeometryHost, call: Call<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn call(host: &GeometryHost, call: Call<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1 << 24, work_units: call.work_units, recursion_depth: 8 };
-    let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, cancellation_id: "geometry-test", previous_state: call.previous, requested_cache_mode: call.mode, canonical_payload: call.payload.as_bytes(), dependencies: &[] };
+    let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &budgets, cancellation_id: "geometry-test", previous_state: call.previous, requested_cache_mode: call.mode, canonical_payload: call.payload.as_bytes(), dependencies: &[] };
     geometry_inference_service().infer_with_context(&request, host)
 }
 
@@ -85,7 +85,7 @@ fn the_registered_metadata_publishes_the_widget_step_contract_and_both_schemas_p
 #[test]
 fn a_service_without_its_geometry_host_refuses_by_name() {
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1 << 20, work_units: 10, recursion_depth: 1 };
-    let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, cancellation_id: "x", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Incremental, canonical_payload: b"{}", dependencies: &[] };
+    let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &budgets, cancellation_id: "x", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Incremental, canonical_payload: b"{}", dependencies: &[] };
     assert_eq!(geometry_inference_service().infer(&request).unwrap_err().code, "artifact-inference.context-required");
     assert_eq!(geometry_inference_service().infer_with_context(&request, &0u8).unwrap_err().code, "generation3d.geometry.context");
 }
@@ -213,7 +213,7 @@ fn invalid_requests_and_budgets_are_refused_by_name() {
     assert_eq!(refusal("{\"snapshot\": 3}", 10).code, "generation3d.geometry.invalid-request");
     assert_eq!(refusal("not json", 10).code, "generation3d.geometry.invalid-request");
     let tight = WireArtifactInferenceBudget { allocation_bytes: 8, work_units: 10, recursion_depth: 1 };
-    let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &tight, cancellation_id: "x", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Incremental, canonical_payload: payload.as_bytes(), dependencies: &[] };
+    let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &tight, cancellation_id: "x", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Incremental, canonical_payload: payload.as_bytes(), dependencies: &[] };
     assert_eq!(geometry_inference_service().infer_with_context(&request, &host).unwrap_err().code, "generation3d.geometry.invalid-request");
     let garbage = ArtifactInferenceExecutionRequest { previous_state: Some(b"nope"), budgets: &WireArtifactInferenceBudget { allocation_bytes: 1 << 24, work_units: 10, recursion_depth: 1 }, ..request };
     assert_eq!(geometry_inference_service().infer_with_context(&garbage, &host).unwrap_err().code, "generation3d.geometry.invalid-request");

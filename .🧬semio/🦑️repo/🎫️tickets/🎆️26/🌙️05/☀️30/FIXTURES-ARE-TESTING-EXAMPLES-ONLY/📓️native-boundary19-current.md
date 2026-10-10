@@ -1,0 +1,7 @@
+# Original Latest-Key Trial Authority Retirement
+
+Boundary19 identified a schema inside Plugin latest-key tests. Its closed root admits the entire schema/policy/cases trial and has no named produced DTO. Actual input is a u32 instance and four original borrowed strings; the unchanged native law consumes the same fixed five-axis policy. This whole-trial schema was removed under its fresh exact hash guard. No test authority was moved or renamed.
+
+Original Source true RED81878 completed Nx1/4.4s because physical schema presence was true when the original absence law required false. After deleting the exact authority and removing only its whole-trial reader/compiler, original GREEN65950 completed Nx0/5.6s:1law15assertions plus the existing separate depth612 law. The actual granted policy projection now validates against canonical RetainedCloneGrant; SQLite/Buffer/TextEncoder preserve UTF8/NUL/giant byte framing and actual Rust ownership tokens. Logs are native-boundary19-red.log and native-boundary19-green.log.
+
+Fresh before/action/result hash-only ledgers retain the two narrow actions. Plain examples, native Rust test and production latest-key Rust bytes all match their before observations. Physical schema absence and current consumer hash are recorded. This is scoped Source/per-value admission and independent oracle proof, not actual latest-key native System assertions or complete repository zero findings. Own Canvas Stroke74290 remains the only fleet-owned Cargo acquisition; no held Rust source changed.

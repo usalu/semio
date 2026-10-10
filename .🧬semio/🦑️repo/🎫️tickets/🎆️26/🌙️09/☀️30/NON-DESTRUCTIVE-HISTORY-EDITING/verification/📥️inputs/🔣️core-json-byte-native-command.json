@@ -1,0 +1,54 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-pack-json-rs:test-native",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_json_native_fixed2_derives_utf8_bytes_and_retires_partial_native_backing)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-pack-json-rs:test-native",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_json_native_fixed2_derives_utf8_bytes_and_retires_partial_native_backing)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ]
+}

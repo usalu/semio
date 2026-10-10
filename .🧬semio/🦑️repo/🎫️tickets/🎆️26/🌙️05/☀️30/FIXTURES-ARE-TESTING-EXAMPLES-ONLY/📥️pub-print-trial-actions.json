@@ -1,0 +1,66 @@
+{
+  "boundaryRed": {
+    "epoch": "Root full boundary19",
+    "NxStatus": 1,
+    "modules": 4798,
+    "scopes": 3760,
+    "actualFindings": 6,
+    "qualification": "Parent supplied exact terminal counts; no unobserved session ID asserted. Own registered Source42154 independently confirms whole authority presence."
+  },
+  "sourceRed": {
+    "session": 42154,
+    "NxStatus": 1,
+    "duration": "1.7s",
+    "Bun": "4pass/2fail/56assertions",
+    "log": "🗑️generated/pub-print-trial-red.log"
+  },
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🚪️io/🧫️fixtures/🏛️ownership/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "40841fcb834902b8bfa1205862a85d90c5c7b20cc19c1b525372128cff96a334",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial owner roster/cases/refused/pure-validation schema; no real DTO export",
+      "observedCurrentSha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🚪️typed-inference/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "53974679cd32085c374d26bc431c8c309cee459da2fb33f30ba1b0d4f570c017",
+      "guardedRetirementBeforeSha256": "ff7a11b108891f27840227f4dc97f9a040179890428b96a02be86e8b5ce5f0bd",
+      "afterSha256": "0a6f12aab33c17f8669c1dd5b50b6771428315160b487ea65b53e6fe6dd5915c",
+      "scope": "whole-trial SchemaSubset/Ajv imports/admissions removed; absence regression added; actual independent TreeSitter/D3/pure-validation failure preserved",
+      "observedCurrentSha256": "1ddd618111733c200240788279dd54fdd26d167fbcccfd8f6c77d5a434f077cf"
+    }
+  ],
+  "preservedObservers": [
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🚪️io/🧫️fixtures/🏛️ownership/🔣️.json",
+      "sha256": "a0a581e4ecca1edad495ad0225f01754d04d2d0a93213051558868ab255099d7",
+      "matchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs",
+      "sha256": "c2b8df300115e9852b5bd3debad4a617949751d8e96c635e8981eac81cf244cf",
+      "matchesBefore": true
+    }
+  ],
+  "native": "UNCHANGED/UNRUN",
+  "remainingFailure": "current inference entry ownership failure, original semantic validation projection now corrected by peer observed source",
+  "sourceCurrent": {
+    "session": 67663,
+    "NxStatus": 1,
+    "duration": "1.2s",
+    "Bun": "5pass/1fail/54assertions",
+    "log": "🗑️generated/pub-print-trial-current.log",
+    "qualification": "New absence law passes; preserved original semantic validation law fails actual production to_value projection. No complete Source GREEN claimed."
+  },
+  "sourceRenewal": {
+    "session": 78080,
+    "NxStatus": 1,
+    "duration": "4.6s",
+    "Bun": "6pass/1fail/63assertions",
+    "log": "🗑️generated/pub-print-trial-renewed.log",
+    "qualification": "Current peer-owned typed validation now passes; new inference entry ownership law fails root execute_chart_inference remains instead of actual binary IO owner. New peer test bytes are observer only."
+  }
+}

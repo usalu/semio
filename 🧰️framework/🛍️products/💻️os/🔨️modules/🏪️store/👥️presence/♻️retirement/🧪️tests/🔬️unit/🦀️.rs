@@ -1,3 +1,21 @@
+
+fn adopt_fixture(publication: &mut PresencePeersPublication<Value>, actor: String, presence: Value, received: i64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
+    let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
+    let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let mut actor = Some(actor); let mut presence = Some(presence);
+    let result = publication.adopt(&mut actor, &mut presence, received, &mut original);
+    assert!(result.is_ok(), "fixture must retain rejected inputs in its original caller");
+    result
+}
+
+fn commit_fixture(publication: &mut PresencePeersPublication<Value>, grant: RetainedCloneGrant) -> Result<PresencePeersCommit<Value>, ValueError> {
+    let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
+    let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
+    let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let (commit, receipt) = publication.take_commit(&mut original)?;
+    assert_eq!(receipt, original.progress()); assert!(receipt.fits(grant)); Ok(commit)
+}
 use super::fixture_mutations::{SetValue, ValueMutation};
 use super::*;
 use crate::os_store::component::presence_test_retirement::{Factory, CountedPresence, CLOSE_GRANT, observed_close, observed_step, finish, finish_box, admit_returned_string, finish_registry};
@@ -74,10 +92,11 @@ struct CapturedLocalJob {
 }
 
 impl semio_framework_job::InteractiveJob for CapturedLocalJob {
-    fn step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         assert_eq!(self.read.as_ref().unwrap().original().unwrap().get().0, 23);
-        semio_framework_job::StepOutcome::Yield
+        semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
     }
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> { descriptor.yielded() }
     fn begin_close(&mut self) { self.closing = true; }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         let Some(read) = self.read.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }; };
@@ -116,16 +135,31 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
         config: semio_framework_job::BatchDriveConfig { retained: CLOSE_GRANT, site: "presence.local.capture", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 8000 },
         now_us: semio_framework_job::default_now_us,
     };
-    let mut session = semio_framework_job::MountedWorkerJobSession::try_new(job, params).unwrap_or_else(|_| panic!("exact mounted capture slot"));
+    let mut job=Some(job);let mut params=Some(params);let original=params.as_ref().unwrap();
+    let now=original.now_us;let deadline=now().expect("original capture clock")+original.config.step_budget_us;
+    let mut admission_receipt=RetainedCloneProgress::default();
+    let mut admission=semio_framework_job::WorkerJobAdmissionContext::new(original.operation,original.generation,semio_framework_job::StepBudget::new(original.config.fuel_per_step,deadline,CLOSE_GRANT),now,&mut admission_receipt).unwrap();
+    let(admitted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::MountedWorkerJobSession::try_admit_owned(&mut job,&mut params,&mut admission));
+    let(mut session,receipt)=admitted.unwrap().expect("original fixture grant funds exact mounted capture admission");drop(admission);
+    assert!(job.is_none()&&params.is_none());assert_eq!(receipt,admission_receipt);assert!(receipt.fits(CLOSE_GRANT));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
     let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
     for _ in 0..100_000 {
-        session.pump_one(&pool, semio_framework_async::Lane::Interactive).unwrap_or_else(|_| panic!("mounted Presence capture must pump its exact worker"));
-        if session.checked_out_outcome().is_some() {
+        session.pump_one(&pool, semio_framework_async::Lane::Interactive, CLOSE_GRANT).unwrap_or_else(|_| panic!("mounted Presence capture must pump its exact worker"));
+        if let Some((issued, progress)) = session.take_checked_out_retained_step_receipt() {
+            assert_eq!(issued, CLOSE_GRANT);
+            assert!(progress.fits(issued));
+            assert_eq!(progress, RetainedCloneProgress { copied_items: 1, ..Default::default() });
+        }
+        if session.checked_out_outcome().unwrap().is_some() {
             break;
         }
         std::thread::yield_now();
     }
-    assert!(session.checked_out_outcome().is_some());
+    assert!(session.checked_out_outcome().unwrap().is_some());
+    let acknowledged = session.acknowledge_checked_out_outcome(CLOSE_GRANT);
+    assert!(matches!(acknowledged, RetainedCloneStep::Progress(progress) if progress == (RetainedCloneProgress { copied_items: 1, ..Default::default() })));
+    let removed = session.acknowledge_checked_out_outcome(CLOSE_GRANT);
+    assert!(matches!(removed, RetainedCloneStep::Complete(progress) if progress == (RetainedCloneProgress { copied_items: 1, ..Default::default() })));
     cancel.cancel_now();
     session.begin_close();
     let mut observed_worker_page = false;
@@ -247,13 +281,27 @@ fn close_peer_root(mut retirement: PresencePeersRetirement<Value>) -> usize {
 }
 
 fn peer_commit(owner: &PresenceStore<Value, ValueMutation>, peer: &serde_json::Value) -> PresencePeersCommit<Value> {
-    let mut publication = owner.begin_peer_publication().unwrap();
-    while publication.prune_one(|_| true).unwrap() {}
-    publication.adopt(peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0).ok().unwrap();
-    while publication.release_created_one() {}
-    let commit = publication.take_commit().unwrap();
+    let mut publication = owner.begin_peer_publication(CLOSE_GRANT).unwrap().0;
+    while publication.prune_one(|_| true, CLOSE_GRANT).unwrap().0 {}
+    adopt_fixture(&mut publication, peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0, CLOSE_GRANT).ok().unwrap();
+    while publication.release_created_one(CLOSE_GRANT).unwrap().0 {}
+    let commit = commit_fixture(&mut publication, CLOSE_GRANT).unwrap();
     assert!(publication.terminal_is_empty());
     commit
+}
+
+#[test]
+fn sealed_peer_read_captures_and_returns_the_same_original_root_factory_pair(){
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🔗️read.json")).unwrap();
+    let g=&law["grant"];let grant=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
+    let count=Arc::new(std::sync::atomic::AtomicUsize::new(0));let factory=Arc::new(Factory(count.clone()));let mut store=PresenceStore::<Value,ValueMutation>::new(Value(0));store.install_local_retirement_factory(factory.clone()).unwrap();store.install_peer_retirement_factory(factory).unwrap();
+    let mut publication=store.begin_peer_publication(CLOSE_GRANT).unwrap().0;while publication.prune_one(|_|true,CLOSE_GRANT).unwrap().0{}adopt_fixture(&mut publication,law["peer"]["actor"].as_str().unwrap().into(),Value(law["peer"]["value"].as_i64().unwrap()as i32),17,CLOSE_GRANT).unwrap();while publication.release_created_one(CLOSE_GRANT).unwrap().0{}let commit=commit_fixture(&mut publication,CLOSE_GRANT).unwrap();close_peer_root(store.publish_peer_commit(commit).ok().unwrap().unwrap());
+    let root=Arc::as_ptr(store.peers.as_ref().unwrap());let factory=Arc::as_ptr(store.peer_retirement_factory.as_ref().unwrap());
+    for axis in law["refusals"].as_array().unwrap(){let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:0,..grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..grant},_=>unreachable!()};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.capture_peer_root(denied));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(Arc::as_ptr(store.peers.as_ref().unwrap()),root);assert_eq!(Arc::as_ptr(store.peer_retirement_factory.as_ref().unwrap()),factory);}
+    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.capture_peer_root(grant));let(mut read,progress)=result.unwrap();assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));assert_eq!(read.root()as*const _,root);assert_eq!(read.root().peers().map(|(actor,value)|serde_json::json!({"actor":actor,"value":value.0})).collect::<Vec<_>>(),vec![law["peer"].clone()]);
+    for axis in law["refusals"].as_array().unwrap(){let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:0,..grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..grant},_=>unreachable!()};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||read.into_retirement(denied));let(error,same)=result.err().expect("original read transfer refuses without moving source");assert!(matches!(error.kind,semio_framework_value::ValueRefusalKind::WorkLimit|semio_framework_value::ValueRefusalKind::DepthLimit|semio_framework_value::ValueRefusalKind::OwnershipLimit));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(same.root()as*const _,root);read=same;}
+    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||read.into_retirement(grant));let(mut retirement,progress)=result.ok().unwrap();assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));assert_eq!(Arc::as_ptr(retirement.root.as_ref().unwrap()),root);assert_eq!(Arc::as_ptr(retirement.factory.as_ref().unwrap()),factory);finish(&mut retirement);assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed),0);let mut close=store.begin_retirement(Arc::new(Value(0)),|value|value.0==0).ok().unwrap();finish(&mut close);assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed),1);assert!(publication.terminal_is_empty());
+    println!("[DEBUG] sealed peer read preserves original root/factory pair and actual payload through every grant refusal; original alias and final Store custody close independently");
 }
 
 #[test]
@@ -298,14 +346,34 @@ fn original_peer_publication_refuses_before_birth_and_settles_actual_original_re
         assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (heap.requested_bytes, heap.released_bytes));
         assert_eq!(original.progress(), step.progress());
         assert!(actor.is_none() && presence.is_none());
+        let before = publication.candidate.as_ref().unwrap().len;
+        let pointer = publication.candidate.as_ref().unwrap().entries[0].as_ref().unwrap().actor.as_ptr();
+        let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| publication.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }));
+        assert_eq!(denied.unwrap().progress(), RetainedCloneProgress::default());
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(publication.candidate.as_ref().unwrap().len, before);
+        assert_eq!(publication.candidate.as_ref().unwrap().entries[0].as_ref().unwrap().actor.as_ptr(), pointer);
         while publication.release_created_one(grant).unwrap().0 {}
         let (commit, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| publication.take_commit(&mut original));
-        let (commit, progress) = commit.unwrap();
+        let (mut commit, progress) = commit.unwrap();
         assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (heap.requested_bytes, heap.released_bytes));
         assert_eq!(original.native().owned_bytes(), original.progress().retained_capacity_bytes);
         let produced = commit.root.peers().map(|(actor, value)| serde_json::json!({ "actor": actor, "value": value.0 })).collect::<Vec<_>>();
         assert_eq!(produced, vec![law["peer"].clone()]);
         assert_eq!(commit.root.entries[0].as_ref().unwrap().actor.as_ptr(), actor_pointer);
+        for refusal in law["commitTransferRefusals"].as_array().unwrap() {
+            let refused = match refusal.as_str().unwrap() { "items" => RetainedCloneGrant { maximum_items: 0, ..grant }, "copy" => RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }, "depth" => RetainedCloneGrant { maximum_depth: 0, ..grant }, _ => unreachable!() };
+            let root = Arc::as_ptr(&commit.root);
+            let factory = Arc::as_ptr(&commit.factory);
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| commit.into_retirement(refused));
+            let (error, retained) = result.err().expect("strict original transfer grant refusal");
+            assert!(matches!(error.kind, semio_framework_value::ValueRefusalKind::WorkLimit | semio_framework_value::ValueRefusalKind::OwnershipLimit | semio_framework_value::ValueRefusalKind::DepthLimit));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            assert_eq!(Arc::as_ptr(&retained.root), root);
+            assert_eq!(Arc::as_ptr(&retained.factory), factory);
+            assert_eq!(retained.root.entries[0].as_ref().unwrap().actor.as_ptr(), actor_pointer);
+            commit = retained;
+        }
         assert!(publication.terminal_is_empty());
         close_peer_root(store.publish_peer_commit(commit).ok().unwrap().unwrap());
         let mut close = store.begin_retirement(Arc::new(Value(0)), |value| value.0 == 0).ok().unwrap();
@@ -343,7 +411,10 @@ fn retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_
             }
             Ok(None) => panic!("peer commit must hand back its exact displaced root"),
             Err(commit) => {
-                let mut retirement = commit.into_retirement();
+                let (transfer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| commit.into_retirement(CLOSE_GRANT));
+                let (mut retirement, receipt) = transfer.ok().unwrap();
+                assert!(receipt.fits(CLOSE_GRANT));
+                assert_eq!((receipt.retained_capacity_bytes, receipt.released_bytes), (heap.requested_bytes, heap.released_bytes));
                 for _ in 0..2048 {
                     if matches!(observed_close(&mut retirement, CLOSE_GRANT), RetainedCloneStep::Complete(_)) {
                         break;
@@ -386,11 +457,11 @@ fn retained_presence_store_close_preserves_distinct_original_local_and_peer_fact
     owner.install_local_retirement_factory(Arc::new(Factory(local.clone()))).unwrap();
     owner.install_peer_retirement_factory(Arc::new(Factory(peer.clone()))).unwrap();
     let read = owner.local_read().unwrap();
-    let mut publication = owner.begin_peer_publication().unwrap();
-    while publication.prune_one(|_| true).unwrap() {}
-    publication.adopt(law["peer"]["actor"].as_str().unwrap().into(), Value(law["peer"]["value"].as_i64().unwrap() as i32), 0).ok().unwrap();
-    while publication.release_created_one() {}
-    close_peer_root(owner.publish_peer_commit(publication.take_commit().unwrap()).ok().unwrap().unwrap());
+    let mut publication = owner.begin_peer_publication(CLOSE_GRANT).unwrap().0;
+    while publication.prune_one(|_| true, CLOSE_GRANT).unwrap().0 {}
+    adopt_fixture(&mut publication, law["peer"]["actor"].as_str().unwrap().into(), Value(law["peer"]["value"].as_i64().unwrap() as i32), 0, CLOSE_GRANT).ok().unwrap();
+    while publication.release_created_one(CLOSE_GRANT).unwrap().0 {}
+    close_peer_root(owner.publish_peer_commit(commit_fixture(&mut publication, CLOSE_GRANT).unwrap()).ok().unwrap().unwrap());
     let foreign_factory = Arc::new(Factory(foreign.clone()));
     let mut close = owner.begin_retirement(Arc::new(Value(0)), |value| value.0 == 0).ok().unwrap();
     drop(read);
@@ -415,25 +486,25 @@ fn retained_presence_overlapping_rosters_retire_shared_entries_once_across_worke
         let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(23));
         owner.install_local_retirement_factory(factory.clone()).unwrap();
         owner.install_peer_retirement_factory(factory.clone()).unwrap();
-        let mut publication = owner.begin_peer_publication().unwrap();
-        while publication.prune_one(|_| true).unwrap() {}
+        let mut publication = owner.begin_peer_publication(CLOSE_GRANT).unwrap().0;
+        while publication.prune_one(|_| true, CLOSE_GRANT).unwrap().0 {}
         for peer in law["first"].as_array().unwrap() {
-            publication.adopt(peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0).ok().unwrap();
+            adopt_fixture(&mut publication, peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0, CLOSE_GRANT).ok().unwrap();
         }
-        while publication.release_created_one() {}
-        let commit = publication.take_commit().unwrap();
+        while publication.release_created_one(CLOSE_GRANT).unwrap().0 {}
+        let commit = commit_fixture(&mut publication, CLOSE_GRANT).unwrap();
         assert_eq!(close_peer_root(owner.publish_peer_commit(commit).ok().unwrap().unwrap()), 0);
         let reader = owner.peers_root();
-        let mut publication = owner.begin_peer_publication().unwrap();
-        while publication.prune_one(|_| true).unwrap() {}
+        let mut publication = owner.begin_peer_publication(CLOSE_GRANT).unwrap().0;
+        while publication.prune_one(|_| true, CLOSE_GRANT).unwrap().0 {}
         for peer in law["second"].as_array().unwrap().iter().skip(law["first"].as_array().unwrap().len()) {
-            publication.adopt(peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0).ok().unwrap();
+            adopt_fixture(&mut publication, peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0, CLOSE_GRANT).ok().unwrap();
         }
-        while publication.release_created_one() {}
-        let mut first = owner.publish_peer_commit(publication.take_commit().unwrap()).ok().unwrap().unwrap();
-        let mut publication = owner.begin_peer_publication().unwrap();
-        while publication.prune_one(|_| false).unwrap() {}
-        let second = owner.publish_peer_commit(publication.take_commit().unwrap()).ok().unwrap().unwrap();
+        while publication.release_created_one(CLOSE_GRANT).unwrap().0 {}
+        let mut first = owner.publish_peer_commit(commit_fixture(&mut publication, CLOSE_GRANT).unwrap()).ok().unwrap().unwrap();
+        let mut publication = owner.begin_peer_publication(CLOSE_GRANT).unwrap().0;
+        while publication.prune_one(|_| false, CLOSE_GRANT).unwrap().0 {}
+        let second = owner.publish_peer_commit(commit_fixture(&mut publication, CLOSE_GRANT).unwrap()).ok().unwrap().unwrap();
         assert!(!owner.retirement_started());
         assert!(owner.peers_root().is_empty());
         let bytes = if race {
@@ -598,13 +669,13 @@ fn retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_pee
         let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(case["local"].as_i64().unwrap() as i32));
         owner.install_local_retirement_factory(factory.clone()).unwrap();
         owner.install_peer_retirement_factory(factory.clone()).unwrap();
-        let mut publication = owner.begin_peer_publication().unwrap();
-        assert!(!publication.prune_one(|_| true).unwrap());
+        let mut publication = owner.begin_peer_publication(CLOSE_GRANT).unwrap().0;
+        assert!(!publication.prune_one(|_| true, CLOSE_GRANT).unwrap().0);
         for peer in case["peers"].as_array().unwrap() {
-            assert!(publication.adopt(peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0).is_ok());
+            assert!(adopt_fixture(&mut publication, peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0, CLOSE_GRANT).is_ok());
         }
-        while publication.release_created_one() {}
-        let commit = publication.take_commit().unwrap();
+        while publication.release_created_one(CLOSE_GRANT).unwrap().0 {}
+        let commit = commit_fixture(&mut publication, CLOSE_GRANT).unwrap();
         assert_eq!(close_peer_root(owner.publish_peer_commit(commit).ok().unwrap().unwrap()), 0);
         assert!(publication.terminal_is_empty());
         let shared = case["sharedReaders"].as_bool().unwrap();
@@ -618,7 +689,7 @@ fn retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_pee
         assert_eq!(Arc::as_ptr(close.local.as_ref().unwrap()), local_pointer);
         assert_eq!(Arc::as_ptr(close.peers.as_ref().unwrap()), peers_pointer);
         assert!(owner.apply_one(0, ValueMutation::SetValue(SetValue { n: 1 })).is_err());
-        assert!(owner.begin_peer_publication().is_err());
+        assert!(owner.begin_peer_publication(CLOSE_GRANT).is_err());
         assert_eq!(observed_close(&mut close, RetainedCloneGrant { maximum_items: 0, ..CLOSE_GRANT }), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         let mut released = 0;
         let mut blocked_local = false;
@@ -669,15 +740,18 @@ fn retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_witho
     assert!(Arc::ptr_eq(&terminal, &rejected.1));
     assert!(!owner.retirement_started());
     drop((terminal, rejected));
-    let mut publication = owner.begin_peer_publication().unwrap();
-    assert!(!publication.prune_one(|_| true).unwrap());
-    assert!(publication.adopt("late".into(), Value(11), 0).is_ok());
-    assert!(publication.release_created_one());
-    let commit = publication.take_commit().unwrap();
+    let mut publication = owner.begin_peer_publication(CLOSE_GRANT).unwrap().0;
+    assert!(!publication.prune_one(|_| true, CLOSE_GRANT).unwrap().0);
+    assert!(adopt_fixture(&mut publication, "late".into(), Value(11), 0, CLOSE_GRANT).is_ok());
+    assert!(publication.release_created_one(CLOSE_GRANT).unwrap().0);
+    let commit = commit_fixture(&mut publication, CLOSE_GRANT).unwrap();
     let mut close = owner.begin_retirement(Arc::new(Value(0)), |value| value.0 == 0).ok().unwrap();
     let rejected = owner.publish_peer_commit(commit).err().expect("closed store preserves the exact rejected commit");
     assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 0);
-    let mut rejected = rejected.into_retirement();
+    let (transfer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| rejected.into_retirement(CLOSE_GRANT));
+    let (mut rejected, receipt) = transfer.ok().unwrap();
+    assert!(receipt.fits(CLOSE_GRANT));
+    assert_eq!((receipt.retained_capacity_bytes, receipt.released_bytes), (heap.requested_bytes, heap.released_bytes));
     for turn in 0..128 {
         for cursor in [&mut close, &mut rejected] {
             observed_close(cursor, CLOSE_GRANT);

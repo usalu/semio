@@ -1,0 +1,515 @@
+{
+  "observationOnly": true,
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 18900,
+      "sourceSha256": "8300d7410709399ac7b296628c4654553559a25425309657acd3d2300acb87a1",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🦀️.rs",
+      "line": 39,
+      "sourceSha256": "e02b20794fa506858b6be0c288980f2c49d5004151c3645316cda3d99711dc24",
+      "signature": "pub(crate) fn advance(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🦀️.rs",
+      "line": 64,
+      "sourceSha256": "e02b20794fa506858b6be0c288980f2c49d5004151c3645316cda3d99711dc24",
+      "signature": "pub(crate) fn adopt(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+      "line": 219,
+      "sourceSha256": "aaed75be928b3c9e5db70ca76d6e77058d77cfa9231c087914cfdb1bf3737723",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
+      "line": 166,
+      "sourceSha256": "1ef4fb78423ec258367aa046aaa232e46e8cab53034f20f87979ee04dc7de791",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧵️publication/🦀️.rs",
+      "line": 80,
+      "sourceSha256": "37b165263c6e0615ccf7dae28d4c58fc3f40295fc86b498c08aabe3949f3b376",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 5050,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 5125,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn advance_preparation(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 18403,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 27806,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 27807,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 27808,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn adopt_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28082,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28119,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28132,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn adopt_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28547,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn prepare_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28551,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn stage_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, _grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> { match *self {} }"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28553,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn adopt_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, _grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> { match *self {} }"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28847,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28850,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn stage_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 28853,
+      "sourceSha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "signature": "fn adopt_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🦀️.rs",
+      "line": 52,
+      "sourceSha256": "5926f8cf53ccb1c1fc28821bbdc08400ad47bf9c522309ccf6bf2a920007b0f5",
+      "signature": "pub(super) fn stage_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🦀️.rs",
+      "line": 146,
+      "sourceSha256": "5926f8cf53ccb1c1fc28821bbdc08400ad47bf9c522309ccf6bf2a920007b0f5",
+      "signature": "pub(super) fn adopt_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🦀️.rs",
+      "line": 341,
+      "sourceSha256": "bb48f91c91603e3c4b16f673ecc10750366983eb6f9045e2a12892d22a8ec8fb",
+      "signature": "fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🦀️.rs",
+      "line": 96,
+      "sourceSha256": "9442ce7b09cf23479358ed9d7c2b93c1b9c2419c01b6d88d12bb8ad4a72b99e0",
+      "signature": "fn advance(&mut self, original: &M, replacement: Option<&InputReplacement>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactReplayPreparationStep, String>;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🦀️.rs",
+      "line": 128,
+      "sourceSha256": "9442ce7b09cf23479358ed9d7c2b93c1b9c2419c01b6d88d12bb8ad4a72b99e0",
+      "signature": "pub fn step(&mut self, original: &M, replacement: Option<&InputReplacement>, generation: u64, revision: [u8; 32], grant: ArtifactStoreOneItemGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ArtifactReplayPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🦀️.rs",
+      "line": 167,
+      "sourceSha256": "9442ce7b09cf23479358ed9d7c2b93c1b9c2419c01b6d88d12bb8ad4a72b99e0",
+      "signature": "pub fn admit_replay_preparation_step(step: ArtifactReplayPreparationStep, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactReplayPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 47,
+      "sourceSha256": "4173181037a498b90d5ab5340db4bb6e1ca03ccd7192b68d72d5b34c5950ba93",
+      "signature": "fn advance(&mut self, original: &TextInput, replacement: Option<&InputReplacement>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactReplayPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 217,
+      "sourceSha256": "4173181037a498b90d5ab5340db4bb6e1ca03ccd7192b68d72d5b34c5950ba93",
+      "signature": "fn advance(&mut self, _: &(), _: Option<&InputReplacement>, _: ArtifactStoreOneItemGrant) -> Result<ArtifactReplayPreparationStep, String> { Ok(ArtifactReplayPreparationStep::Blocked) }"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs",
+      "line": 118,
+      "sourceSha256": "933e5b833d856c73c672680b2e10e93b3c49eaa0fd9256e796aa92d943e3bbd2",
+      "signature": "fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 1763,
+      "sourceSha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "signature": "fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 1766,
+      "sourceSha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "signature": "fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 1769,
+      "sourceSha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "signature": "fn adopt_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 2927,
+      "sourceSha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "signature": "fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 3726,
+      "sourceSha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "signature": "fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 3938,
+      "sourceSha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "signature": "fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 4502,
+      "sourceSha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "signature": "fn advance(&mut self,grant:ArtifactStoreOneItemGrant)->Result<ArtifactStoreOneItemPreparationStep,String> {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 12106,
+      "sourceSha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "signature": "fn advance(&mut self, _: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> { Ok(ArtifactStoreOneItemPreparationStep::Blocked) }"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "line": 677,
+      "sourceSha256": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589",
+      "signature": "pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 673,
+      "sourceSha256": "26b36f010c2a118f7f13c1e0212245d96467f8eff7bb1cb8a9e4507d704b044d",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 822,
+      "sourceSha256": "26b36f010c2a118f7f13c1e0212245d96467f8eff7bb1cb8a9e4507d704b044d",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 865,
+      "sourceSha256": "71b67b59576ee83b3fb96d4eb497248ca76c733cd407736ccd59d8ea280717ab",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1177,
+      "sourceSha256": "71b67b59576ee83b3fb96d4eb497248ca76c733cd407736ccd59d8ea280717ab",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1713,
+      "sourceSha256": "3a102f0ef67ab3ae7595a74f0318bb47630bba1211edef6765f9e7d48fc675bb",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1906,
+      "sourceSha256": "3a102f0ef67ab3ae7595a74f0318bb47630bba1211edef6765f9e7d48fc675bb",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 215,
+      "sourceSha256": "258d02cc981444dda1776205ca84a680909717630da01fbe6b435a873c92c1fd",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 502,
+      "sourceSha256": "a9d040e8b1445d2590c7b658437eb0b671b29bb0981ceb2d82fcfcf684b1bfc2",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 624,
+      "sourceSha256": "a9d040e8b1445d2590c7b658437eb0b671b29bb0981ceb2d82fcfcf684b1bfc2",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 301,
+      "sourceSha256": "72a93ad13ecceffeb9cc925a964641b17cf083eb63407c8f11663d644efc0c8c",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 334,
+      "sourceSha256": "9115fb6b3925a5b0e509c565ea0b543ef0f98d71664ed9874627f9c8389410ab",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 524,
+      "sourceSha256": "8854c925bc754f776b64f3b0b26d58455d4f80325659c5309d147ec5682d4093",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 142,
+      "sourceSha256": "5c5c7f405e55c5e9b3f522a6bb7934421a401f89c2f9c440ee9540bb0550178e",
+      "signature": "fn advance(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/✏️editor/📬️preparation/🦀️.rs",
+      "line": 135,
+      "sourceSha256": "e44b9acb773d7bd7bdafe1e2746e0d64980c3bb53973445e09f2aaf14fded22d",
+      "signature": "fn advance(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "line": 103,
+      "sourceSha256": "d1dfac23a277c46ecf6b6c35a10713d576e2c0bdd8f89813bbb40db942c04da2",
+      "signature": "fn advance(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "line": 307,
+      "sourceSha256": "3be61430667c4e820ce4816136d011e6fee1accf614a73785da37e72f8760647",
+      "signature": "fn advance(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 974,
+      "sourceSha256": "d4630e69ecfb838e28209f5fa886e5add430f2901b17667aa8f2e99a3c2e9aa2",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 563,
+      "sourceSha256": "56e20af8788b05ab5c83d1dab0b1532e2eeb1a133888160a879a31ef84440c66",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+      "line": 612,
+      "sourceSha256": "1c6c0da0686bc66920215e5e591ba1608e213d53a8356912244d4ae36a5e2646",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 408,
+      "sourceSha256": "2716e8d06bc996c21273e204220fcdd59ba84cd7e817328c832dec9a06e2162b",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1795,
+      "sourceSha256": "6225aa0b16d31459c743e4828dddc758a329bba16f3fa93feeec2ca77f626c56",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1929,
+      "sourceSha256": "6225aa0b16d31459c743e4828dddc758a329bba16f3fa93feeec2ca77f626c56",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 932,
+      "sourceSha256": "3134327ca66fafccdb5be06a74f4d929917404aa218825d03bd09dba52c52f9a",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1069,
+      "sourceSha256": "3134327ca66fafccdb5be06a74f4d929917404aa218825d03bd09dba52c52f9a",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 724,
+      "sourceSha256": "ec9a0430846cdd19c043dfd937facdb42acca9089adefde8c359a3dbf9fc66a2",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 668,
+      "sourceSha256": "9c36232cc3235110f53381c690de1e47a13915e76eaec6e6c85fa14f3f1ecb81",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 310,
+      "sourceSha256": "736362fbf2ba6886ae7ebe0d8e204fc635e02902cdc3f62bc5b39f126467c490",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 604,
+      "sourceSha256": "87b88023ec2eae74eff6519bee310bdcda847b0b1cbbfa7c62dd9712acac9697",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 671,
+      "sourceSha256": "87b88023ec2eae74eff6519bee310bdcda847b0b1cbbfa7c62dd9712acac9697",
+      "signature": "fn stage(&mut self) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 603,
+      "sourceSha256": "1b56ad558904caa2ea6571b304c50182d6651ff5d0beb5b0cd18d31e1c7c82e7",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 769,
+      "sourceSha256": "1b56ad558904caa2ea6571b304c50182d6651ff5d0beb5b0cd18d31e1c7c82e7",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 882,
+      "sourceSha256": "6aa569b3dbb0fdd2ebcd0b2b245ea6c6efef8ffd202f962d0356303a77fa0082",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 932,
+      "sourceSha256": "80d215a69de4b41e55126897c947cb53e410c8e9a6124262a8a8edec65408a88",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 6266,
+      "sourceSha256": "3555c47596a1987e5d2b4bebd35e3188349cb3c59e9b021117a935ccc34051a0",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 6448,
+      "sourceSha256": "3555c47596a1987e5d2b4bebd35e3188349cb3c59e9b021117a935ccc34051a0",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 8547,
+      "sourceSha256": "254262da546c70a1317cfe8748ac087e0b9c471b61df2d9f7e752604ce04ef6c",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 8672,
+      "sourceSha256": "254262da546c70a1317cfe8748ac087e0b9c471b61df2d9f7e752604ce04ef6c",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 2086,
+      "sourceSha256": "fa952f708b0e4e027f989d3905f33c44dabc70528f32a2cdb8b5ad23a9bd216b",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 2262,
+      "sourceSha256": "fa952f708b0e4e027f989d3905f33c44dabc70528f32a2cdb8b5ad23a9bd216b",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+      "line": 503,
+      "sourceSha256": "5ec0e027b8dd5aa14bf0b87aaddac07c6c3de5e31285cf4873bab078c0acf7ce",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+      "line": 442,
+      "sourceSha256": "370daa92f2f55e19663402eccc5822c1d14a4c2e316de28d75cf9714b96c913c",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1494,
+      "sourceSha256": "551e20231ec0ee3e6b35227ee28d2d3cc692b4e39136a325b2a2120166025f4e",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 405,
+      "sourceSha256": "a600dbc086808895f79e6b1437fb50a01c1b1f95d939a496ff1e761e97fed033",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1356,
+      "sourceSha256": "f3652afd3a91846717ce7231c178031e9afedfa489502dea41a0e8babec6fe7a",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1495,
+      "sourceSha256": "f3652afd3a91846717ce7231c178031e9afedfa489502dea41a0e8babec6fe7a",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1447,
+      "sourceSha256": "e0866b70080ce57702a7fd222709eca6bbbf1d3269c8dfefc7507c29b0f3c048",
+      "signature": "fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {"
+    }
+  ]
+}

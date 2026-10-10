@@ -249,6 +249,36 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test physical-close-native"
       }
+    },
+    "test-mounted-admission": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test mounted-admission"
+      }
+    },
+    "test-mounted-admission-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test mounted-admission-native"
+      }
     }
   }
 }

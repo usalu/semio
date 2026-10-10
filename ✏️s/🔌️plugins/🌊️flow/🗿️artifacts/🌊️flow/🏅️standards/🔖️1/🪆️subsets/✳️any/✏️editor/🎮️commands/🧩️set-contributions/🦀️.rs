@@ -12,6 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `page`/`page_count` keep the registry's page-run addressing so a multi-page run assembles the same closure.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-contributions")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct SetContributions {
     pub json: String,
     pub page: u64,

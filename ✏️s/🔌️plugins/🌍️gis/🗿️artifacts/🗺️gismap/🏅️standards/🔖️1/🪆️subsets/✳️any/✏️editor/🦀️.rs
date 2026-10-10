@@ -535,6 +535,7 @@ pub struct GisMapOneItemStampV1 {
     pub mutation_id: protocol::MutationId,
     pub timestamp: protocol::HybridLogicalTimestamp,
 }
+semio_framework_value::artifact_retire_struct!(GisMapOneItemStampV1 { mutation_id, timestamp });
 
 /// 📍 Creates the exact parent Map preparation port used by the retained fixed-three assembly.
 pub fn gis_map_parent_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
@@ -591,16 +592,29 @@ pub fn gis_map_value_stamped_one_item_preparation_factory(
 }
 
 struct Gis2dOneItemPreparation<P, M> {
-    base: Option<store::SnapshotRead<P>>,
-    mutation: Option<M>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    candidate: Option<(P, Vec<M>, M)>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+    base: std::mem::ManuallyDrop<Option<store::SnapshotRead<P>>>,
+
+    mutation: std::mem::ManuallyDrop<Option<M>>,
+
+    inverse: std::mem::ManuallyDrop<Option<Vec<M>>>,
+    refused: std::mem::ManuallyDrop<Option<(protocol::Edit<M>, std::sync::Arc<P>)>>,
+    apply_refusal: std::mem::ManuallyDrop<Option<protocol::MutationApplyError>>,
+    authority: std::mem::ManuallyDrop<Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>>,
+
+    candidate: std::mem::ManuallyDrop<Option<(P, Vec<M>, M)>>,
+
+    prepared: std::mem::ManuallyDrop<Option<store::ArtifactStoreOneItemPrepared<P, M>>>,
+
+    mutation_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<M>>>>,
+    snapshot_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<P>>>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     phase: u8,
     cancelled: bool,
     closing: bool,
-    stamp: Option<GisMapOneItemStampV1>,
+    stamp: std::mem::ManuallyDrop<Option<GisMapOneItemStampV1>>,
+
+    active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    factories: std::mem::ManuallyDrop<[Option<semio_framework_value::FactoryAuthority>; 2]>,
 }
 
 /// 🛡️ The authority-minted one-item edit, carrying the Hub-derived identity when a stamped committer prepares it.
@@ -614,10 +628,30 @@ fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, authority: &store::Artifa
     edit
 }
 
+impl<P, M> Gis2dOneItemPreparation<P, M>
+where P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static, M: semio_framework_value::retirement::RetireOwned + Send + 'static,
+{
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preparation close depth overflow"))?; Ok(demand) };
+        if let Some(active) = self.active.as_ref() { return nested(store::artifact_retirement_box_demands(active, body)?); }
+        if self.prepared.is_some() { let birth = store::ArtifactStoreOneItemPrepared::<P, M>::retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
+        if self.mutation.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.mutation)?); }
+        if self.inverse.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.inverse)?); }
+        if self.refused.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.refused)?); }
+        if self.apply_refusal.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.apply_refusal)?); }
+        if self.candidate.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.candidate)?); }
+        if self.stamp.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.stamp)?); }
+        if self.base.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.base)?); }
+        if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
+        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()), |factory| nested(factory.demands(body)?))
+    }
+}
+
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for Gis2dOneItemPreparationFactory<P, M>
 where
-    P: Clone + Send + Sync + 'static,
-    M: protocol::Mutation<P> + Send + Sync + 'static,
+    P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
     fn stamped_clock(&self) -> Option<protocol::HybridLogicalTimestamp> {
@@ -635,63 +669,99 @@ where
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+    fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        let capacity_bytes = std::mem::size_of::<Gis2dOneItemPreparation<P, M>>().checked_add(self.stamp.as_ref().map_or(0, |stamp| stamp.mutation_id.len())).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp birth extent overflow"))?;
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS preparation rejected original publication authority"), request));
         }
-        Ok(Box::new(Gis2dOneItemPreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            candidate: None,
-            prepared: None,
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let mut progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        let copied_bytes = self.stamp.as_ref().map_or(0, |stamp| stamp.mutation_id.len());
+        if grant.maximum_copy_bytes < copied_bytes { return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp copy exceeds supplied authority"), request)); }
+        progress.copied_bytes = copied_bytes;
+        Ok((Box::new(Gis2dOneItemPreparation {
+            base: std::mem::ManuallyDrop::new(Some(request.base)),
+            mutation: std::mem::ManuallyDrop::new(Some(request.mutation)),
+            inverse: std::mem::ManuallyDrop::new(None),
+            refused: std::mem::ManuallyDrop::new(None),
+            apply_refusal: std::mem::ManuallyDrop::new(None),
+            authority: std::mem::ManuallyDrop::new(Some(request.authority)),
+            candidate: std::mem::ManuallyDrop::new(None),
+            prepared: std::mem::ManuallyDrop::new(None),
+            mutation_retirement: std::mem::ManuallyDrop::new(Some(request.mutation_retirement)),
+            snapshot_retirement: std::mem::ManuallyDrop::new(Some(request.snapshot_retirement)),
+            active: std::mem::ManuallyDrop::new(None),
+            factories: std::mem::ManuallyDrop::new(Default::default()),
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             phase: 0,
             cancelled: false,
             closing: false,
-            stamp: self.stamp.clone(),
-        }))
+            stamp: std::mem::ManuallyDrop::new(self.stamp.clone()),
+        }), progress))
     }
 }
 
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for Gis2dOneItemPreparation<P, M>
 where
-    P: Clone + Send + Sync + 'static,
-    M: protocol::Mutation<P> + Send + 'static,
+    P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.refused.is_some() || self.apply_refusal.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.prepared.is_some() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
         }
         match self.phase {
             0 => {
-                let base = self.base.as_ref().ok_or_else(|| "GIS map retained preparation lost its exact base root".to_string())?;
-                let mutation = self.mutation.take().ok_or_else(|| "GIS map retained preparation lost its mutation owner".to_string())?;
-                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
-                self.candidate = Some((post, inverse, mutation));
+                let authority = self.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its Store authority"))?;
+                let base = self.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its exact base root"))?;
+                let mutation = self.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its mutation owner"))?;
+                let inverse = match mutation.inverse(base.get()) {
+                    Ok(inverse) => inverse,
+                    Err(error) => { *self.mutation = Some(mutation); return Err(error); }
+                };
+                let post = match protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+                    Ok(post) => post,
+                    Err(error) => {
+                        *self.mutation = Some(mutation);
+                        *self.inverse = Some(inverse);
+                        *self.apply_refusal = Some(error);
+                        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retained the original mutation application refusal"));
+                    }
+                };
+                *self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };
                 Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
             }
             1 => {
-                let authority = self.authority.as_ref().ok_or_else(|| "GIS map retained preparation lost its Store authority".to_string())?;
+                let authority = self.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its Store authority"))?;
+
                 let line_bytes = authority.line_id().map_or(0, str::len);
                 if grant.maximum_bytes < line_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-                let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "GIS map retained preparation lost its semantic candidate".to_string())?;
+                let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its semantic candidate"))?;
                 let edit = gis2d_one_item_edit(mutation, inverse, authority, self.stamp.take());
-                let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+                let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+                    Ok(prepared) => prepared,
+                    Err((error, edit, post)) => { *self.refused = Some((edit, post)); return Err(error); }
+                };
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1 + line_bytes as u64, digest: prepared.edit_digest() };
-                self.prepared = Some(prepared);
+                *self.prepared = Some(prepared);
                 self.phase = 2;
                 Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
             }
@@ -719,32 +789,51 @@ where
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+        let empty = RetainedCloneProgress::default(); let grant = grant.retained_grant();
+        if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "preparation close exceeds original depth")); }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active.is_some() { return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.prepared.is_some() {
+            if self.mutation_retirement.is_none() || self.snapshot_retirement.is_none() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation retains its original installed issuers")); }
+            let original = self.prepared.take().expect("observed original prepared candidate");
+            let mutations = self.mutation_retirement.take().expect("original mutation issuer");
+            let snapshots = self.snapshot_retirement.take().expect("original snapshot issuer");
+            return match original.admit_retirement(mutations, snapshots, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original prepared close birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation child changed its actual admitted birth")); } Ok(RetainedCloneStep::Progress(progress)) },
+                Err((error, original, mutations, snapshots)) => { *self.prepared = Some(original); *self.mutation_retirement = Some(mutations); *self.snapshot_retirement = Some(snapshots); Err(error) },
+            };
         }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+        if self.mutation.is_some() { return store::artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child); }
+        if self.inverse.is_some() { return store::artifact_retirement_admit_owned(&mut self.inverse, &mut self.active, child); }
+        if self.refused.is_some() { return store::artifact_retirement_admit_owned(&mut self.refused, &mut self.active, child); }
+        if self.apply_refusal.is_some() { return store::artifact_retirement_admit_owned(&mut self.apply_refusal, &mut self.active, child); }
+        if self.candidate.is_some() { return store::artifact_retirement_admit_owned(&mut self.candidate, &mut self.active, child); }
+        if self.stamp.is_some() { return store::artifact_retirement_admit_owned(&mut self.stamp, &mut self.active, child); }
+        if self.base.is_some() { return store::artifact_retirement_admit_owned(&mut self.base, &mut self.active, child); }
+        if let Some(authority) = self.authority.take() { return match authority.retire(child) { Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original preparation authority close birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation authority changed admitted birth")); } Ok(RetainedCloneStep::Progress(progress)) }, Err((error, original)) => { *self.authority = Some(original); Err(error) } }; }
+        if let Some(factory) = self.mutation_retirement.take() { let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factories[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
+        if let Some(factory) = self.snapshot_retirement.take() { let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factories[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
+        if let Some(slot) = self.factories.iter_mut().find(|slot| slot.is_some()) { let factory = slot.as_mut().expect("original preparation factory alias"); let step = factory.step(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original preparation factory close")?; if factory.terminal_is_empty() { *slot = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        Ok(RetainedCloneStep::Complete(empty))
     }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.active.is_none() && self.factories.iter().all(Option::is_none) && self.mutation_retirement.is_none() && self.snapshot_retirement.is_none() && self.inverse.is_none() && self.refused.is_none() && self.apply_refusal.is_none() && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.stamp.is_none() && self.prepared.is_none()
     }
+}
+
+impl<P, M> Drop for Gis2dOneItemPreparation<P, M> {
+    fn drop(&mut self) { assert!(std::thread::panicking() || (self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none() && self.inverse.is_none() && self.refused.is_none() && self.apply_refusal.is_none() && self.mutation_retirement.is_none() && self.snapshot_retirement.is_none() && self.active.is_none() && self.candidate.is_none() && self.stamp.is_none() && self.factories.iter().all(Option::is_none)), "preparation must retain original owners until supplied-grant terminal closure"); }
 }
 //#endregion 📬️OneItemPreparation
 

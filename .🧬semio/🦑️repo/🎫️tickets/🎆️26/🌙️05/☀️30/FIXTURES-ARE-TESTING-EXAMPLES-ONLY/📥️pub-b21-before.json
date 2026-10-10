@@ -1,0 +1,90 @@
+{
+  "boundaryRed": "Root26332 actualNx1/4817modules3760scopes7findings46shared",
+  "observers": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧬️schema/🔣️.json",
+      "sha256": "d667e3832ab399d72f432336e84e7db19eeb3f5bf853fc300aad6f2bd3549e5f",
+      "classification": "Exclusive whole trial authority or test reader"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "sha256": "2aad07b9d83b82101e4bd403c2751466b8a497d3577eaebd5d4c5226ddb787e4",
+      "classification": "Exclusive whole trial authority or test reader"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧫️fixtures/🔣️.json",
+      "sha256": "4d528668d4d29e9d3e5965a6ea8be6123ef350afcc5e451985c75fb4c3b9adac",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "30ee0708b163c39e2ddfb73a68b46b9a2864b44ef38624d84c65878c95f7036e",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs",
+      "sha256": "54b0be128abe61f4f498376ee34a2508b9cb76cbb25f193abfc5f50de34ac8b3",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs",
+      "sha256": "7c209e9c8c5c472e599e81fb0ce7f59397e1fac375d18c36dec414c1c93f82db",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧬️schema/🔣️.json",
+      "sha256": "adc67a1ac15edb486efb4fee52102b4c9457e3e6ab07f61d604a5cc81aa6c2a2",
+      "classification": "Exclusive whole trial authority or test reader"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "sha256": "fdf8c9acfcd03ad36e5d1c2748e6e2a37f59a17a3181baf8346ffa1755ac22f9",
+      "classification": "Exclusive whole trial authority or test reader"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧫️fixtures/🔣️.json",
+      "sha256": "0b8b7e5c618b0efdebc4e5991ed71f7dea39656d229c3b4d097cd5bb0071da84",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "6abaa2602e1afd730de64fb4f61c3eee6faf69f3dfc912e5c5fe2a8e2d36b4b7",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs",
+      "sha256": "d5a4cc12c9cd902d896e90dcc9969388d96302bbb38a8e78c1ad991e9cdd587f",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs",
+      "sha256": "ecac0f127eab66c0c591d6d4067e1836ee96d8ac359ccd4842720306127f9b5d",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧬️schema/🔣️.json",
+      "sha256": "a193a0317c66b16803d75818783ee7413b79b6b7d0fb68af87cd5d0fefda0e3f",
+      "classification": "Exclusive whole trial authority or test reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧬️schema/🔣️.json",
+      "sha256": "538b3cc2cc9d6d33bf8e897195b9656007de084ad1d4360966ddded4fee9f952",
+      "classification": "Exclusive whole trial authority or test reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts",
+      "sha256": "27239795f29c15ee91595f1e0401e53e4c94daa56c9846d35cc7cb1a40910d0b",
+      "classification": "Exclusive whole trial authority or test reader"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧫️fixtures/🔣️.json",
+      "sha256": "553d46484f17371b6a29691bedcd1fe868aeaffc2a4b93f22d281b337ba6bb4d",
+      "classification": "Preserved plain/Rust observer"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🦀️.rs",
+      "sha256": "c44c422faad731ca5b230b62571bf850e164066a0b0bdada1e63fb54523bde43",
+      "classification": "Preserved plain/Rust observer"
+    }
+  ]
+}

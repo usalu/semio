@@ -1,0 +1,26 @@
+{
+  "observers": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "b4ad88fdf6aca0decd4ca80a39c97bd65b27b482c2224d7c50b97796c21d0407"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "b0d2c30938f3bc41601c26fbb66e9be5ff7698dfa9339ab221d20332b42124cb"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "0430d1212c3ac9553f11e6494bd6c76e1b8313ab993371e27a9184ad0188c42a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "14ee43e21d01e53b935551e2210320e855d4c1f8a7c04672f89e68e45d5474b2"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\ude80\ufe0fbootstrap/\ud83d\udcdc\ufe0fscript.ts",
+      "sha256": "d91487c6a307e5d723c1def2d44fe24a422d1e5f36d046cdcd6e138e8b8e1f62"
+    }
+  ],
+  "newPlain": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83e\uddeb\ufe0ffixtures/\ud83c\udf3f\ufe0fordinary.json",
+  "productionMutation": "none at true RED dispatch"
+}

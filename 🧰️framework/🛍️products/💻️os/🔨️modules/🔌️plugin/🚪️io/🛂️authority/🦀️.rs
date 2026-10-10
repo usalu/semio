@@ -80,7 +80,25 @@ pub fn with_wit_operation_authority<T>(operation:impl FnOnce(&mut semio_framewor
 }
 
 #[cfg(all(target_arch="wasm32",target_env="p2"))]
+/// 🎭️ The actor caller retains its original semantic output before this scalar-only identity return.
+pub fn with_actor_operation_authority(operation:impl FnOnce(&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<(),ValueError>)->Result<(),ValueError>{
+    use return_types::pure;
+    use semio_framework_value::native_encoding::{NativeEncodeAllocation,NativeEncodeProgress};
+    let maximum=usize::try_from(pure::operation_begin().map_err(refusal)?).map_err(|_|refusal(2))?;
+    let rejected=std::cell::Cell::new(0);
+    let mut observer=|next:NativeEncodeProgress|{let code=pure::operation_progress(next.completed as u64,next.total as u64,next.owned_bytes as u64);if code!=0{rejected.set(code);}code==0};
+    let mut allocate=|next:NativeEncodeAllocation|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected.set(code);}admitted(code)};
+    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer,&mut allocate)?;
+    let result=operation(&mut identity);
+    let receipt=identity.pause_forwarded()?;
+    let returned=admitted(pure::operation_finish(receipt.owned_bytes()as u64));
+    result?;
+    if rejected.get()!=0{return Err(refusal(rejected.get()))}
+    returned
+}
+
+#[cfg(all(target_arch="wasm32",target_env="p2"))]
 #[path="🪶️snapshot/🦀️.rs"]
 mod snapshot;
 #[cfg(all(target_arch="wasm32",target_env="p2"))]
-pub use snapshot::{with_snapshot_authority,snapshot_retirement,snapshot_close,snapshot_take,SnapshotReturn};
+pub use snapshot::{with_snapshot_authority,snapshot_retirement,snapshot_original_progress,snapshot_close,snapshot_take,SnapshotReturn};

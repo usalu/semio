@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { spawn, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
-import { Script, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { Script, ScriptRouter, checkScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
-import { discoverBunWorkspaces, bunWorkspaceNativePatterns } from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
+import { publishBunWorkspaceOwnership } from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import {withPreparedCargoDependencyPairV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts";
 import {fileURLToPath} from "node:url";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
@@ -73,16 +74,26 @@ export class SyncScript extends Script {
   protected readonly mode: "sync" | "lock" = "sync";
   async run(args: string[]): Promise<void> {
     if (args.length && !(args.length===1 && args[0]==="--all") && !(args.length===2 && args[0]==="--scope")) throw new Error("Dependency synchronization accepts --all or --scope <owner>");
-    const scopes=discoverBunWorkspaces(this.root), requested=args[0]==="--all" || !args.length && this.mode==="lock" ? scopes : scopes.filter(scope=>scope.directory===(args[0]==="--scope"?args[1]:"."));
-    if(!requested.length)throw new Error("Unknown present Bun installation scope");
-    const controller = new AbortController();
-    let cancelled: NodeJS.Signals | undefined;
-    const stop = (signal: NodeJS.Signals): void => { cancelled ??= signal; controller.abort(); };
-    const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
-    process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
-    try { for(const scope of requested) { const path=join(this.root,scope.manifest), before=readFileSync(path,"utf8"), document=JSON.parse(before), patterns=bunWorkspaceNativePatterns(this.root,scope); if(JSON.stringify(document.workspaces)!==JSON.stringify(patterns)){if(readFileSync(path,"utf8")!==before)throw new Error("Bun workspace changed during source discovery");writeFileSync(path,JSON.stringify({...document,workspaces:patterns},null,2)+"\n");} console.log(`[bun-workspace] ${scope.manifest} ${this.mode}`); await prepareJavascriptDependencies(this.mode, join(this.root,scope.directory), controller.signal); } }
-    catch (error) { if (!cancelled) throw error; process.exitCode = cancelled === "SIGINT" ? 130 : 143; }
-    finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
+    checkScriptInvocation(this.invocation);
+    const report = await publishBunWorkspaceOwnership(this.root, {
+      signal: this.invocation.control.signal,
+      advance: async progress => {
+        checkScriptInvocation(this.invocation);
+        if (progress.completedOperations % 128 === 0) {
+          await this.invocation.control.publish({ owner: this.invocation.policy.owner, command: "Bun ownership " + progress.operation + " " + progress.completedOperations, stage: "running" });
+          await this.invocation.control.yieldContinuation();
+        }
+        checkScriptInvocation(this.invocation);
+      },
+    });
+    const scopes = report.scopes.map(scope => ({ ...scope, directory: dirname(scope.manifest).replaceAll("\\", "/") })), requested = args[0] === "--all" || !args.length && this.mode === "lock" ? scopes : scopes.filter(scope => scope.directory === (args[0] === "--scope" ? args[1] : "."));
+    if (!requested.length) throw new Error("Unknown present Bun installation scope");
+    for (const scope of requested) {
+      checkScriptInvocation(this.invocation);
+      console.log("[bun-workspace] " + scope.manifest + " " + this.mode);
+      await prepareJavascriptDependencies(this.mode, join(this.root, scope.directory), this.invocation.control.signal);
+      checkScriptInvocation(this.invocation);
+    }
   }
 }
 
@@ -95,12 +106,14 @@ export class RefreshLockScript extends SyncScript {
 export class ContractCheckScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Dependency contract check accepts no arguments");
+    checkScriptInvocation(this.invocation);
     const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, ".🧬semio/🦑️repo/⚡️cache/tests/bootstrap-dependencies");
     mkdirSync(artifacts, { recursive: true });
-    await runTool(process.execPath,["test", join(import.meta.dir, "🧪️tests/🟦️.ts")],this.root,new AbortController().signal,false,{ ...process.env, SEMIO_TEST_ARTIFACT_DIR: artifacts },repositoryCargoPreparationStorageV1(process.cwd()));
+    await runTool(process.execPath,["test", join(import.meta.dir, "🧪️tests/🟦️.ts")],this.root,this.invocation.control.signal,false,{ ...process.env, SEMIO_TEST_ARTIFACT_DIR: artifacts },repositoryCargoPreparationStorageV1(process.cwd()));
+    checkScriptInvocation(this.invocation);
   }
 }
 
-if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("sync", SyncScript).register("lock", RefreshLockScript).register("contract-check", ContractCheckScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(getWorkspaceRoot()).register("sync", SyncScript).register("lock", RefreshLockScript).register("contract-check", ContractCheckScript)).run(process.argv.slice(2), original));
 
 export {repositoryCargoPreparationStorageV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";

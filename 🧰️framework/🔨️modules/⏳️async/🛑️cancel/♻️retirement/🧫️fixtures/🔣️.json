@@ -26,10 +26,10 @@
   "metadata": "original-node-kept-until-separate-parent-transfer",
   "denied": [
     "items",
-    "copy",
     "release",
     "depth"
   ],
   "waiterGate": "original-inline-atomic-guard",
-  "gateContended": "blocked-original-retained"
+  "gateContended": "blocked-original-retained",
+  "metadataCopyCurrency": 0
 }

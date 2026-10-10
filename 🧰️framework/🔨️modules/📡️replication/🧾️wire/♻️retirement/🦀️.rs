@@ -33,8 +33,8 @@ fn slot_mut(cause:&mut ProtocolError,slot:TextSlot)->&mut String{
 /// 🧾️ Quotes the first original cause slot through a borrow without allocating or transferring ownership.
 pub fn protocol_cause_retirement_demand(cause:&ProtocolError)->Result<RetirementDemand,ValueError>{
  Ok(match slot(cause)?{
-  Some((_,capacity))=>RetirementDemand{copy_bytes:2*std::mem::size_of::<String>(),release_bytes:capacity,depth:1,..Default::default()},
-  None=>RetirementDemand{copy_bytes:std::mem::size_of::<Option<ProtocolError>>(),depth:1,..Default::default()},
+  Some((_,capacity))=>RetirementDemand{release_bytes:capacity,depth:1,..Default::default()},
+  None=>RetirementDemand{depth:1,..Default::default()},
  })
 }
 /// 🔎️ Reads the first original owned cause slot without allocating, copying its text, or erasing provider custody.

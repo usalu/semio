@@ -1,0 +1,7 @@
+# Original Edit Canonical Projection
+
+The actual Edit domain already exposes bounded indexed node/key projections preserving canonical field order and exclusion of sequenceNumber. Its separate borrowed_value path nevertheless eagerly creates boxed iterators for metadata/mutations/dependencies. Only that duplicate eager path and its overriding borrowed_root method were removed; the actual indexed implementation, plain payload bytes and peer source elsewhere remain intact. This is genuine domain projection integration, not a copied serialized snapshot or adapter.
+
+Actual registered Source45388 was Nx1/17.0s. The new original metadata law compared the retained plain expected JSON against JSON/TextEncoder and original forwards/inverse, then rejected the current eager projection. A separate original 5s rustfmt observation timed out in that RED epoch and remains qualified. After the narrow source change, unchanged Source51332 terminated Nx0/11.9s,3pass0fail36 assertions. Canonical failure schema/Ajv, real prefix/depth cases, Graph intent projection and original three Rust parses also passed. No timeout or caller grant was enlarged.
+
+The exact action ledger is 📥️pub-json-edit-actions.json; original plain fixture hash is retained. This bounded positive does not prove generic owned borrowed iterator admission, reader/sealer retirement, the three Plugin collectors or native System assertions. Those remain required actual integration. No global source freeze is asserted.

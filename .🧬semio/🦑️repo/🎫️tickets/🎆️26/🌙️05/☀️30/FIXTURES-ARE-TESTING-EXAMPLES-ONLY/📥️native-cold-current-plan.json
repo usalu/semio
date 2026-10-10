@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-09T22:44:23.285193+00:00",
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "94c8fa0666e91531be3c840b531bfeca733c8a27d4e6cfeee2a4d932c56f9776",
+      "bytes": 71798,
+      "role": "read-only current observation; no authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs",
+      "sha256": "40ad92ad1534ff6721a421f4aa207099bc266bbce410bb5fc7aa96a3f72bf54b",
+      "bytes": 6347,
+      "role": "read-only current observation; no authored action"
+    }
+  ],
+  "qualification": "Source planning only, native Kernel blocked by transient CanonicalJSON cohort; no source mutation/test success assumed."
+}

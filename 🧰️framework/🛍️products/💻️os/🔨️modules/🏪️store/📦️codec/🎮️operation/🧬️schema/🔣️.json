@@ -1,0 +1,109 @@
+{
+  "type": "object",
+  "required": [
+    "grant",
+    "custody",
+    "metadata"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "grant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copy": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "custody": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "source",
+          "catalog",
+          "receipt",
+          "terminal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "borrowed",
+              "sourceDenied",
+              "sourceBorn",
+              "ticketBorn",
+              "canceled",
+              "catalogClosed",
+              "recipientPaid",
+              "transferred"
+            ]
+          },
+          "source": {
+            "const": "original"
+          },
+          "catalog": {
+            "type": "boolean"
+          },
+          "receipt": {
+            "type": "boolean"
+          },
+          "terminal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "copiedBytes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "enum": [
+              "session",
+              "command",
+              "discard"
+            ]
+          },
+          "copiedBytes": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

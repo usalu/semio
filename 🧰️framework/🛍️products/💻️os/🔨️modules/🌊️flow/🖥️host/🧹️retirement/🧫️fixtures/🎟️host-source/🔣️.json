@@ -27,6 +27,8 @@
     "baseline_retirement",
     "baseline_publication_progress",
     "pending_evaluation",
+    "evaluation_revision",
+    "evaluation_progress",
     "baseline_registry_generation",
     "next_widget_serial",
     "next_synapse_serial",
@@ -45,6 +47,7 @@
     "edited_note",
     "gesture_active",
     "pending_extension_evals",
+    "pending_remaining",
     "interaction_revision",
     "interaction_projection",
     "displaced"

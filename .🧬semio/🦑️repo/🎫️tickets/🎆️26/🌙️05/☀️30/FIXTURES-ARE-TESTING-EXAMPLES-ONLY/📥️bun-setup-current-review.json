@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": ".devcontainer/devcontainer.json",
+      "sha256": "aad7c021cf96d2bced92d011418f1cae4465e39cbc4a97723f7ee977627b3e45"
+    },
+    {
+      "path": "📋️project.json",
+      "sha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "sha256": "ca5ab5871e5d4969e13d902edaf62c078f67b601978349952cab7c8e96800493"
+    }
+  ]
+}

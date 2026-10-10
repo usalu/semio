@@ -1,0 +1,12 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sourceSha256": "7d58ff844d992f79cae9c9229c820d41b679484a29ec601343d6b5529beca535",
+  "logSha256": "b012b0c2681879e774f86756aad18d7bfae99673b632dc923a7c274c264c474d",
+  "actualOutcome": {
+    "pass": 14,
+    "fail": 6,
+    "assertions": 234
+  },
+  "cause": "not established"
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@semio-tech/process",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Neutral owned process, script routing and bounded build execution contracts",
+  "exports": {
+    "./routing": "./🧭️routing/🟦️.ts",
+    "./execution": "./🎛️execution/🟦️.ts",
+    "./budget": "./⏱️budget/🟦️.ts",
+    "./test-budget": "./🧪️testing/🎚️budget/🟦️.ts",
+    "./test-execution": "./🧪️testing/🎛️execution/🟦️.ts",
+    "./vitest": "./🧪️testing/🧪️vitest/🟦️.ts",
+    "./cargo-test": "./🧪️testing/🦀️cargo/🟦️.ts",
+    "./cargo-laws": "./🧪️testing/🦀️laws/🟦️.ts",
+    "./artifact-files": "./📦️artifacts/🗂️files/🟦️.ts",
+    "./artifact-publication": "./📦️artifacts/📤️publication/🟦️.ts",
+    "./native-build": "./📦️artifacts/🏗️native-build/🟦️.ts",
+    "./wasm-build": "./📦️artifacts/🕸️wasm-build/🟦️.ts",
+    "./leases": "./🔒️leases/🟦️.ts",
+    "./context": "./📋️context/🟦️.ts",
+    "./command": "./🎛️command/🟦️.ts"
+  },
+  "license": "LGPL-3.0-or-later",
+  "nx": {
+    "includedScripts": []
+  }
+}

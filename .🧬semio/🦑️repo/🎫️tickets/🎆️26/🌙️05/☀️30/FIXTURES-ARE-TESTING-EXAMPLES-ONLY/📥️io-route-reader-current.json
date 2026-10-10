@@ -1,0 +1,30 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🛂️route/🧬️schema/🔣️.json",
+      "sha256": "d5423c51d5b05fe87678326dac5ea09d5233282cd78cd4211b283c829994b9e8",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🛂️route/🧫️fixtures/🔣️.json",
+      "sha256": "15f4cf7e2087412b0ddd13b8b243713b6a24069288965a133ab25c8bb412c067",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "94882501d73bd739cc1ace0992f714bf50f817ad9fd6437c48eda2d125d512e8",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "618545d11aa540bc518cd3170334dc8fbc03b0e65eedd597b8df3520776a0b0e",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🦀️.rs",
+      "sha256": "3ab31ae770dcaba9a38bcba5c164d3ae07cefb99940ec84e2ba8a2c02117591b",
+      "authored": false
+    }
+  ],
+  "executed": false
+}

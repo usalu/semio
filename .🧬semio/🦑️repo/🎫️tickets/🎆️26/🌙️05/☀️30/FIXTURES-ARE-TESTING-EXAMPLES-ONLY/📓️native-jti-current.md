@@ -1,0 +1,5 @@
+# Original JSON String / Timestamp / ID Trial Retirement
+
+Fresh original schemas are whole trial records: JSON strings and refused cases, timestamp values plus expected text/metadata-copy, and a UUID/prefix plus expected output. Fixed grants belong to original immutable test policy. None defines a projected variable production DTO. Their sole three TS readers compile entire laws; actual JSON/SQLite UTF8, Date/SQLite timestamps and SQLite/Buffer UUID behavior is separate and preserved. Exact observations retained without Source copies. Rust remains held for Publication acquisition; no native credit.
+
+Actual absence65765 terminal Nx1/8.2s3fails proves exact three live roots. First renewal53671 Nx1/12.1s passed three absence laws and actual semantic oracles, then rejected three obsolete source-only constructor literals because genuine current methods use borrowed generic <S:...> signatures. Only those exact literal guards were corrected. Final original Source24853 terminal Nx0/7.6s6laws42assertions plus independent depth1/612, original JSON/Date/SQLite/Buffer DEBUG outputs executed. All3 plain hashes unchanged. No Rust/native assertion credit.

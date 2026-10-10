@@ -8,6 +8,11 @@ pub use semio_framework_os_kernel::{io_schema, os_dsl, sqlite_snapshot};
 pub use semio_framework_os_kernel::{io, os_pack};
 pub use semio_framework_os_kernel::os_pack::codec;
 
+#[path = "../../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+
 #[path = "../🦀️.rs"]
 mod decoding;
 #[path = "../../../🪶️native-encoding/🧪️tests/🦀️.rs"]

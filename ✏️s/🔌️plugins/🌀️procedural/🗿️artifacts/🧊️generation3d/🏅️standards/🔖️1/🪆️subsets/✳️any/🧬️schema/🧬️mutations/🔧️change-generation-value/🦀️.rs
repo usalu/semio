@@ -4,13 +4,11 @@
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ChangeGenerationValue
 /// 🔧 Nested address: outermost `id` (the generation) then `question_id` (the form field).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[value(rename_all = "camelCase")]
 pub struct ChangeGenerationValue {
     pub id: String,
     pub question_id: String,

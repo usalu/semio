@@ -48,6 +48,7 @@ semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-actor = { workspace = true }
 # ⏯️ Tool run contract (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W0-D): the runtime ledger/driver
 # folds `ToolRunTick`s and publishes one `Edit` at finalize; the pure contract crate never depends back on this one.
 semio-framework-tool-run = { workspace = true }

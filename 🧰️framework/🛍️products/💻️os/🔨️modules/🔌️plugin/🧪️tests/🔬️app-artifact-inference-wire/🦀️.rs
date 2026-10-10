@@ -15,11 +15,11 @@ mod artifact_inference_wire_tests {
         }
     }
 
-    fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
-        Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
+    fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+        Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: Some(request.canonical_payload.to_vec()), diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
     }
 
-    fn cancel(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+    fn cancel(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
         cancel_artifact_inference(request.cancellation_id)?;
         echo(request)
     }
@@ -86,16 +86,16 @@ mod artifact_inference_wire_tests {
             canonical_payload: Vec::new(),
             dependencies: Vec::new(),
         };
-        let error = wire_artifact_infer(semio_framework_pack_json::to_json_string(&request).as_bytes()).await.unwrap_err();
+        let error = wire_artifact_infer_cold(semio_framework_pack_json::to_json_string(&request).as_bytes(),71,3).await.unwrap_err();
         assert_eq!(error.code, "artifact-inference.wire-version");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn wire_execution_preserves_every_echoed_request_fact() {
         let mut registry = ArtifactInferenceServiceRegistry::new();
-        registry.register(ArtifactInferenceService::new(metadata("s.test.inference.echo").await, echo)).unwrap();
+        registry.register(ArtifactInferenceService::new(metadata("s.test.inference.echo").await, echo,completed_child_demands)).unwrap();
         let request = request("s.test.inference.echo").await;
-        let bytes = wire_artifact_infer_from(&registry, semio_framework_pack_json::to_json_string(&request).as_bytes()).unwrap();
+        let bytes = wire_artifact_infer_from_cold(&registry, semio_framework_pack_json::to_json_string(&request).as_bytes(),71,3).unwrap();
         let result: WireArtifactInferenceResult = semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(result.policy, request.policy);
         assert_eq!(result.budgets, request.budgets);
@@ -106,22 +106,23 @@ mod artifact_inference_wire_tests {
         assert_eq!(result.actual_cache_mode, WireArtifactInferenceCacheMode::Cold);
     }
 
-    fn physical_receipt(request:&ArtifactInferenceExecutionRequest<'_>)->Result<ArtifactInferenceExecution,ArtifactInferenceExecutionError>{
+    fn physical_receipt(request:&ArtifactInferenceExecutionRequest<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
         let mut execution=echo(request)?;
-        execution.retirement_progress=RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536};
+        execution.retained_progress=RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536};
+        execution.execution.as_mut().unwrap().retirement_progress=execution.retained_progress;
         Ok(execution)
     }
 
     #[semio_framework_async_macros::async_test]
     async fn original_wire_dispatch_preserves_actual_cumulative_physical_receipt(){
         let mut registry=ArtifactInferenceServiceRegistry::new();
-        registry.register(ArtifactInferenceService::new(metadata("s.test.inference.receipt").await,physical_receipt)).unwrap();
+        registry.register(ArtifactInferenceService::new(metadata("s.test.inference.receipt").await,physical_receipt,completed_child_demands)).unwrap();
         let request=request("s.test.inference.receipt").await;
-        let bytes=wire_artifact_infer_from(&registry,semio_framework_pack_json::to_json_string(&request).as_bytes()).unwrap();
+        let bytes=wire_artifact_infer_from_cold(&registry,semio_framework_pack_json::to_json_string(&request).as_bytes(),71,3).unwrap();
         let oracle:serde_json::Value=serde_json::from_slice(&bytes).unwrap();
         assert_eq!(oracle["retirementProgress"],serde_json::json!({"copiedItems":7,"copiedBytes":23,"retainedCapacityBytes":0,"releasedBytes":65536}));
         let result:WireArtifactInferenceResult=semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert_eq!(result.retirement_progress,physical_receipt(&ArtifactInferenceExecutionRequest{policy:&request.policy,budgets:&request.budgets,retained:request.retained,cancellation_id:&request.cancellation_id,previous_state:None,requested_cache_mode:request.requested_cache_mode.clone(),canonical_payload:&request.canonical_payload,dependencies:&request.dependencies}).unwrap().retirement_progress);
+        assert_eq!(result.retirement_progress,physical_receipt(&ArtifactInferenceExecutionRequest{operation:71,generation:3,cancelled:false,policy:&request.policy,budgets:&request.budgets,retained:request.retained,cancellation_id:&request.cancellation_id,previous_state:None,requested_cache_mode:request.requested_cache_mode.clone(),canonical_payload:&request.canonical_payload,dependencies:&request.dependencies}).unwrap().retained_progress);
         assert_eq!(result.retained,request.retained);
         println!("[DEBUG] original service cumulative physical receipt crosses wire unchanged after actual dispatch");
     }
@@ -129,12 +130,12 @@ mod artifact_inference_wire_tests {
     #[semio_framework_async_macros::async_test]
     async fn wire_execution_observes_midflight_cancellation() {
         let mut registry = ArtifactInferenceServiceRegistry::new();
-        registry.register(ArtifactInferenceService::new(metadata("s.test.inference.cancel").await, cancel)).unwrap();
+        registry.register(ArtifactInferenceService::new(metadata("s.test.inference.cancel").await, cancel,completed_child_demands)).unwrap();
         let request = request("s.test.inference.cancel");
-        let error = wire_artifact_infer_from(&registry, semio_framework_pack_json::to_json_string(&request.await).as_bytes()).unwrap_err();
+        let error = wire_artifact_infer_from_cold(&registry, semio_framework_pack_json::to_json_string(&request.await).as_bytes(),71,3).unwrap_err();
         assert_eq!(error.code, "artifact-inference.cancelled");
     }
-    fn wallet_echo(request:&ArtifactInferenceExecutionRequest<'_>)->Result<ArtifactInferenceExecution,ArtifactInferenceExecutionError>{
+    fn wallet_echo(request:&ArtifactInferenceExecutionRequest<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
         let expected:RetainedCloneGrant=semio_framework_pack_json::from_json_str(std::str::from_utf8(request.canonical_payload).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(request.retained,expected);echo(request)
     }
@@ -143,12 +144,14 @@ mod artifact_inference_wire_tests {
     async fn original_wire_dispatch_transports_the_exact_incoming_retained_wallet(){
         let fixture:serde_json::Value=serde_json::from_str(semio_framework_value::retained_clone::RETAINED_CLONE_GRANT_SCHEMA).unwrap();assert_eq!(fixture["required"].as_array().unwrap().len(),5);
         let rows=[RetainedCloneGrant::default(),RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:37,maximum_release_bytes:65536,maximum_depth:9},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:23,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0}];
-        let mut registry=ArtifactInferenceServiceRegistry::new();registry.register(ArtifactInferenceService::new(metadata("s.test.inference.wallet").await,wallet_echo)).unwrap();
+        let mut registry=ArtifactInferenceServiceRegistry::new();registry.register(ArtifactInferenceService::new(metadata("s.test.inference.wallet").await,wallet_echo,completed_child_demands)).unwrap();
         for wallet in rows{let mut request=request("s.test.inference.wallet").await;request.retained=wallet;request.canonical_payload=semio_framework_pack_json::to_json_string(&wallet).into_bytes();request.budgets.allocation_bytes=1024;
-            let bytes=wire_artifact_infer_from(&registry,semio_framework_pack_json::to_json_string(&request).as_bytes()).unwrap();
-            let result:WireArtifactInferenceResult=semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(result.retained,wallet);assert_eq!(result.canonical_payload,request.canonical_payload);
+            let bytes=wire_artifact_infer_from_cold(&registry,semio_framework_pack_json::to_json_string(&request).as_bytes(),71,3).unwrap();
+            let result:WireArtifactInferenceResult=semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(result.retained,wallet);assert_eq!(result.canonical_payload,Some(request.canonical_payload));
         }
         println!("[DEBUG] original native inference service receives every independent incoming wallet unchanged");
     }
 
 }
+
+fn completed_child_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}

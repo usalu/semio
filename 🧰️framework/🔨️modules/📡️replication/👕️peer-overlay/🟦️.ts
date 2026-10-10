@@ -194,6 +194,9 @@ export function orbitPointToScreen(
   return [(ndcX + 1) * 0.5 * localSizePx[0], (1 - ndcY) * 0.5 * localSizePx[1]];
 }
 
+/** 🔺️ Carries the apex and four ordered far-plane corners. */
+export type OrbitFrustumCorners = readonly [readonly [number, number, number], readonly [number, number, number], readonly [number, number, number], readonly [number, number, number], readonly [number, number, number]];
+
 export function orbitFrustumCorners(
   position: readonly [number, number, number],
   target: readonly [number, number, number],
@@ -201,7 +204,7 @@ export function orbitFrustumCorners(
   fovDeg: number,
   aspect: number,
   depth: number,
-): readonly (readonly [number, number, number])[] {
+): OrbitFrustumCorners {
   const forward = normalize([target[0] - position[0], target[1] - position[1], target[2] - position[2]]);
   const right = normalize(cross(forward, up));
   const trueUp = cross(right, forward);
@@ -218,7 +221,7 @@ export function orbitFrustumCorners(
 }
 
 export function orbitFrustumSegments(
-  corners: readonly (readonly [number, number, number])[],
+  corners: OrbitFrustumCorners,
 ): readonly (readonly [readonly [number, number, number], readonly [number, number, number]])[] {
   const [apex, a, b, c, d] = corners;
   return [[apex, a], [apex, b], [apex, c], [apex, d], [a, b], [b, c], [c, d], [d, a]];

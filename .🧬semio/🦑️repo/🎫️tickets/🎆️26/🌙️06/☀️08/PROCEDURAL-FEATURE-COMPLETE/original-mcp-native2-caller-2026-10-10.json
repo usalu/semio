@@ -1,0 +1,60 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-mcp-rs:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--skip-remote-cache",
+    "--output-style=stream",
+    "--",
+    "long",
+    "--offline",
+    "--lib",
+    "-E",
+    "test(original_mcp_inference_preserves_required_caller_authority) | test(original_mcp_source_requires_exact_turn_revision_cancellation_and_work)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 3600000
+    },
+    "network": {
+      "offline": true
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-mcp-rs:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--skip-remote-cache",
+    "--output-style=stream",
+    "--",
+    "long",
+    "--offline",
+    "--lib",
+    "-E",
+    "test(original_mcp_inference_preserves_required_caller_authority) | test(original_mcp_source_requires_exact_turn_revision_cancellation_and_work)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ]
+}

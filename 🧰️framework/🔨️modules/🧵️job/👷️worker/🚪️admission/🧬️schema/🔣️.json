@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "original",
+    "layout",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.job.original-session-prebirth.v1"
+    },
+    "original": {
+      "const": "same-job-and-parameters-until-parent-admission"
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorityCapacity",
+        "ledgerCapacity",
+        "faultCapacity",
+        "sessionCapacity",
+        "retirementCapacity",
+        "jobCopy",
+        "paramsCopy",
+        "metadataCopy",
+        "faultCopy"
+      ],
+      "properties": {
+        "authorityCapacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ledgerCapacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "faultCapacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sessionCapacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retirementCapacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "jobCopy": {
+          "const": 0
+        },
+        "paramsCopy": {
+          "const": 0
+        },
+        "metadataCopy": {
+          "const": 0
+        },
+        "faultCopy": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "grant",
+          "cancelled",
+          "entryUs",
+          "sameIdentity",
+          "admitted",
+          "receipt",
+          "originalSourcesRetained"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "funded",
+              "zero-items",
+              "zero-copy",
+              "short-copy",
+              "short-capacity",
+              "zero-release",
+              "zero-depth",
+              "cancelled",
+              "missing-clock",
+              "different-operation"
+            ]
+          },
+          "grant": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "entryUs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "sameIdentity": {
+            "type": "boolean"
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "receipt": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "originalSourcesRetained": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

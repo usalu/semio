@@ -1,0 +1,22 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "📋️project.json",
+      "sha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "f40540a8dc3ed347b61c067a589a0531de0d9f6996da3386e38f6fe3060a02e5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "sha256": "ec01612ad6966402ded9f0eb79204d0f5219fc45eb0a04e0abd19e2cf41d6d07"
+    },
+    {
+      "path": "node_modules/nx/dist/src/command-line/run-many/run-many.js",
+      "sha256": "7a3796a18031b928f7f1c1a5ea0bf8979d6fb88af033420c4cd872b028acd921"
+    }
+  ]
+}

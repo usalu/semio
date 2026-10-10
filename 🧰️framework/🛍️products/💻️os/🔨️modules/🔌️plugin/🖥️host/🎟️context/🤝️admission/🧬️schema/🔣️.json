@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Host Actor Admission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "originalIdentity",
+    "fixedGuestPolicy",
+    "spent",
+    "phases",
+    "failureSpent",
+    "emptyInputUntilReady",
+    "requiredReceiving",
+    "requiredClose",
+    "ownedExports",
+    "singleOriginalCheckout"
+  ],
+  "properties": {
+    "contract": {
+      "const": "host.original-actor-admission/v1"
+    },
+    "originalIdentity": {
+      "const": [
+        71,
+        3,
+        19
+      ]
+    },
+    "fixedGuestPolicy": {
+      "const": [
+        1,
+        0,
+        512,
+        512,
+        8
+      ]
+    },
+    "spent": {
+      "const": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          64,
+          0
+        ],
+        [
+          1,
+          0,
+          128,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "phases": {
+      "const": [
+        "pending",
+        "pending",
+        "pending",
+        "ready"
+      ]
+    },
+    "failureSpent": {
+      "const": [
+        1,
+        7,
+        0,
+        0
+      ]
+    },
+    "emptyInputUntilReady": {
+      "const": true
+    },
+    "requiredReceiving": {
+      "const": true
+    },
+    "requiredClose": {
+      "const": true
+    },
+    "ownedExports": {
+      "const": 24
+    },
+    "singleOriginalCheckout": {
+      "const": true
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "collections": {
+    "names": [
+      "🧫️fixtures",
+      "🧫️examples",
+      "🧪️fixtures",
+      "🧪️examples"
+    ],
+    "moduleMember": "🔨️modules"
+  }
+}

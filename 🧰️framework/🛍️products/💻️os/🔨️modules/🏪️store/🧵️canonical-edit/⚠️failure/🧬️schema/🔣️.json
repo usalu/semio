@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/canonical-edit/failure/schema.json",
+  "title": "ArtifactCanonicalJsonEncodeError",
+  "description": "Original initialized canonical JSON prefix and Value refusal sole physical receipt.",
+  "type": "object",
+  "properties": {
+    "writtenBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reason": {
+      "$ref": "https://semio.tech/schema/value/refusal/codec"
+    }
+  },
+  "required": [
+    "writtenBytes",
+    "reason"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "action": "update",
+    "beforeSha256": "d64c6ec73a121486af383a9834166854f5f2cda57a9b7a10c9c64f1b0a76d5a8",
+    "afterSha256": "61adafacc611e9c62675751866e9461149803b116b54b80c9c1b6f5f75f84cd6",
+    "qualification": "Canonical schema collection admission adds both missing example names; genuine module-member exception and nested collection refusal remain original helper behavior"
+  }
+]

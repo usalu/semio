@@ -1,3 +1,4 @@
+import {existsSync as testingSchemaExists} from "node:fs";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
@@ -6,11 +7,9 @@ import {readFileSync} from "node:fs";
 /** 🧾️ The original contribution worker consumes actual effects before yielding or refusing. */
 export function testFlowContributionsReceiver():void{
  const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎟️contributions/🔣️.json",import.meta.url),"utf8"));
- const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🎟️contributions/🔣️.json",import.meta.url),"utf8"));
- const ajv=new Ajv({strict:true,allErrors:true});const validate=ajv.compile(schema);assert.equal(validate(fixture),true,JSON.stringify(validate.errors)?.slice(0,650));let assertions=1;
- for(const field of fixture.axes){const invalid=structuredClone(fixture);delete invalid.cases[0].progress[field];assert.equal(validate(invalid),false);assertions++;}
- for(const field of ["grant","initial","recorded","remaining","ready","failed"]){const invalid=structuredClone(fixture);delete invalid.cases[0][field];assert.equal(validate(invalid),false);assertions++;}
- const extra=structuredClone(fixture);extra.cases[0].progress.depth=1;assert.equal(validate(extra),false);assertions++;
+assert.equal(testingSchemaExists(new URL("../../🧬️schema/🎟️contributions/🔣️.json",import.meta.url)),false,"Testing examples have no schema authority");
+ const grantSchema=JSON.parse(readFileSync(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",import.meta.url),"utf8")),grant=new Ajv({strict:true,allErrors:true}).compile(grantSchema);let assertions=1;
+ for(const row of fixture.cases){assert.equal(grant(row.grant),true,JSON.stringify(grant.errors));assert.equal(grant(row.remaining),true,JSON.stringify(grant.errors));assertions+=2;}
  const db=new Database(":memory:");db.run("CREATE TABLE receipt(items INTEGER, copied INTEGER, capacity INTEGER, released INTEGER)");
  const grantAxes=["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"];
  const progressValues=(value:Record<string,number>):number[]=>(fixture.axes as string[]).map(axis=>value[axis]!);const grantValues=(value:Record<string,number>):number[]=>grantAxes.map(axis=>value[axis]!);
@@ -44,5 +43,5 @@ export function testFlowContributionsReceiver():void{
  assert.equal(instance.includes("maximum_items: usize, maximum_bytes: usize"),false);assertions++;
  const fields=source.match(/struct FlowInstanceOperationOwner\s*\{([^}]+)\}/)![1];assert.deepEqual([...fields.matchAll(/^\s*(\w+)\s*:/gm)].map(match=>match[1]),fixture.instanceOwnerFields);assertions++;
  for(const mutant of [receiver.replace("cx.consume_retained(progress)","cx.consume_retained(Default::default())"),receiver.replace("error.retained_progress()","Default::default()"),receiver.replace("progress==Default::default()","true")]){assert.equal(mutant.includes("cx.consume_retained(progress)")&&mutant.includes("error.retained_progress()")&&mutant.includes("progress==Default::default()"),false);assertions++;}
- console.log("[DEBUG] original Flow contributions receiving cases="+fixture.cases.length+" assertions="+assertions+" strictAjv=true SQLiteReference=true sourceReceivingOnly=true");
+ console.log("[DEBUG] original Flow contributions receiving cases="+fixture.cases.length+" assertions="+assertions+" canonicalGrantAjv=true schemaAuthority=absent SQLiteReference=true sourceReceivingOnly=true");
 }

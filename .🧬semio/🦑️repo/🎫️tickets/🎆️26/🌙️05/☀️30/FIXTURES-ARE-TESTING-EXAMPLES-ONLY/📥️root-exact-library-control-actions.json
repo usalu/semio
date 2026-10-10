@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "bd4df5730707d269fd9f90576706f11be53fb7e443915317d8b37f0eaeea8580",
+      "afterSha256": "131871805d7b791ddda74003292d973c5b6303abe76e256cf53375c237c87704",
+      "exclusive": false,
+      "scope": "Validate supplied policy/original caller before selection; actual owned selected preparation uses same signal/current deadline and bounded original transport instead of synchronous child"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# Current Original Canvas Path Native Result
+
+Owned session17880 completed exit0 through the genuine bun nx bootstrap, registered Canvas test owner and original long/lib literal selection. Real graph admission and styling generator prerequisite preceded Nextest/Cargo. Actual compiler acquisition completed; Nextest ran the named original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts law:1PASS,0FAIL,52skipped, summary0.027s. Nx task duration1m31s; total command also included graph discovery. All original budgets/features/package/profile and durable Cargo roots were preserved.
+
+The log native-canvas-next.log contains actual DEBUG original pointer/capacity/order/Kurbo and System allocation/free equality at the twelve original path/cancellation cuts, with retained empty capacity, separately funded final frame and zero terminal Drop work. This current test includes the copy-axis repair: a nonempty PathEl pop requires sizeofPathEl copied authority and refuses zero/one-below before ownership mutation. It supersedes the older pre-copy-axis native result only for this bounded leaf.
+
+Current before/after hashes and known own process disappearance are retained in native-canvas-next-result.json. Shared source observers are qualified separately from narrow authorship; no global freeze was required and foreign compiler processes were preserved. Retained Nextest artifacts remain under generated/cp-out. Source tests and the current native assertion are distinct proof scopes. Stroke native remains a separate unrun selection; Canvas Scene/Frame/Vello and full runtime fixture boundary remain unproved.
+
+Actual Nextest binaries metadata binds the Canvas lib test binary to its real package and aarch64-apple-darwin platform, approved durable target/build roots and retained binary SHA. The binary path is within256 characters. This compiler witness proves the selected native test artifact only; no WGPU/staged artifact is inferred.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runOwnedCommand } from "../🏃️process/🎛️owned-execution/🟦️.ts";
 import { cmdBudgetMs } from "../🏃️process/⏱️budget/🟦️.ts";
 /** 🔲️ Pixel editing verification through the shared workspace task runner. */
@@ -43,4 +44,4 @@ class TestScript extends BundleScript {
   }
 }
 
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, ...({ defaultCommand: "test" }) }));

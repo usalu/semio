@@ -1,0 +1,25 @@
+{
+  "scope": "real Tree scalar write and independent immutable positive native caller policy; discovered exclusive whole-trial Schema removal",
+  "before": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
+      "sha256": "a56efee33dcf33dfb76b4b8d98850d1ac532055eb145bd6e12130344336af165"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs",
+      "sha256": "d23932b3d51be88c8d683bf0e4236d090afc2c987214dd9d322638ca97789d9b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🟦️.ts",
+      "sha256": "49815697b201ed7e60a4fd6cb44ad446ea44004b63a487fe91a80ba8efd1f47f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧬️schema/🔣️.json",
+      "sha256": "89418a73da532bc3fd2cbb082ffe3fe9ebef8832163e61d22911f948463f2cc0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧫️fixtures/🔣️.json",
+      "sha256": "48ed7c25d6ed460b0f33f0615be2e3fa9cf240582cd5cfcd8b3fa2b95a8d730e"
+    }
+  ]
+}

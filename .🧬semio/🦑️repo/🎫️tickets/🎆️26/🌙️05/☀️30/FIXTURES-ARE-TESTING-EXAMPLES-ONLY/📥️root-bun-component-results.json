@@ -1,0 +1,46 @@
+{
+  "red": {
+    "session": 2448,
+    "exitCode": 1,
+    "pass": 8,
+    "fail": 5,
+    "newSemanticFailures": 3,
+    "priorNativeTimeouts": 2
+  },
+  "renewal": {
+    "session": 50068,
+    "exitCode": 1,
+    "pass": 8,
+    "fail": 5,
+    "expect": 253,
+    "fiveExternalNeutralLawsPassed": true,
+    "remainingFailures": "five prior native installation tests exceeded5000ms and owned child cancellation caused null exit",
+    "normalCli": false,
+    "budgetOverride": false
+  },
+  "publishedSixScopes": {
+    "session": 86476,
+    "exitCode": 0,
+    "log": "\ud83d\uddd1\ufe0fgenerated/root-bun-external-scope-current.log",
+    "schemaVersion": 1
+  },
+  "asynchronousScopeRenewal": {
+    "session": 22232,
+    "exitCode": 1,
+    "pass": 14,
+    "fail": 6,
+    "betweenTestErrors": 5,
+    "expect": 239,
+    "reason": "actual Root installations exceed original5000ms; unfinished async assertions after cancellation must retire",
+    "log": "\ud83d\uddd1\ufe0fgenerated/root-bun-installation-current.log"
+  },
+  "directOriginalRootInstaller": {
+    "session": 28078,
+    "exitCode": 0,
+    "packagesChecked": 2,
+    "reportedSeconds": 9.03,
+    "actualCli": "bun install --ignore-scripts",
+    "log": "\ud83d\uddd1\ufe0fgenerated/root-bun-install-probe.log",
+    "qualification": "Independent expensive Root startup observation, no test deadline altered and no suite success"
+  }
+}

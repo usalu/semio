@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Presence Metadata Borrow",
+  "type": "object",
+  "required": ["actor", "connectedAtMs", "surface", "color", "presencePack", "interaction"],
+  "properties": {
+    "actor": { "type": "string", "description": "Validated UTF8 span borrowed from the original complete wire." },
+    "connectedAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "surface": { "type": ["string", "null"] },
+    "color": { "type": ["integer", "null"], "minimum": 0, "maximum": 255 },
+    "presencePack": { "type": ["array", "null"], "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "maxItems": 2048 },
+    "interaction": {
+      "type": ["object", "null"],
+      "required": ["appId", "domains"],
+      "properties": {
+        "appId": { "type": "string" },
+        "domains": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": ["domain", "granularity", "selected", "hovered"],
+            "properties": {
+              "domain": { "type": "string" },
+              "granularity": { "type": "string" },
+              "selected": { "type": "array", "maxItems": 64, "items": { "type": "string" } },
+              "hovered": { "type": "array", "maxItems": 64, "items": { "type": "string" } }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "x-original-wire": {
+    "maximumBytes": 4096,
+    "completeCanonicalValidation": true,
+    "ignoredFieldsRemainBorrowed": true,
+    "returnedSpansRemainInsideOriginalInput": true,
+    "malformedResult": "allocation-free literal ValueError",
+    "physicalBirthBytes": 0,
+    "physicalReleaseBytes": 0,
+    "neutralCorpus": "📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json"
+  }
+}

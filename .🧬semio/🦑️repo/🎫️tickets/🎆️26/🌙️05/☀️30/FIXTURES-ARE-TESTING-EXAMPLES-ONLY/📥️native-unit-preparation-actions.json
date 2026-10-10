@@ -1,0 +1,23 @@
+{
+  "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "beforeWholeObserver": "d7cfbd38ee20702935ca76828b541d5688a56d02ffcf8cf07133c35476248e2e",
+  "afterWholeObserver": "72d75ffe7d48808acfaeaa07fdd879a37a58c9574a7b758818dedd2308bb11e9",
+  "blocks": [
+    {
+      "start": "struct DemoEphemeralPreparation {",
+      "end": "fn close_durable_publication",
+      "beforeSha256": "c4f91a17b7cea14e0e40d4c871f66b0cfa3e7ef4907936716419c6c9576e8446",
+      "afterSha256": "89e2f87b8dba3d460eb96e8dafe58adce08ecefe3e6ce110f0d1f637699261b3",
+      "owner": "DemoEphemeralPreparation"
+    },
+    {
+      "start": "struct DemoRetainedCloneEditCursor {",
+      "end": "fn retained_clone_preparation_factory",
+      "beforeSha256": "a58ad880daa740bb847afccee129a5eb37344f6455bd1b67717da47ee06a4f1f",
+      "afterSha256": "d7713f6d127d889c2265aaf8f642287682ec15678d65e99e43a93e39a1a0276b",
+      "owner": "DemoRetainedCloneEditCursor"
+    }
+  ],
+  "native": "unrun",
+  "qualification": "typed original refusal custody; cold semantic provider allocations not credited as fully funded"
+}

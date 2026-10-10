@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "sourceRoot": "/neutral/pack",
+  "widenedAfterAdmissionChildMilliseconds": 30000,
+  "cases": [
+    {
+      "id": "original-finite",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 30000
+      },
+      "capabilityAccepted": true,
+      "accepted": true,
+      "budget": 27000
+    },
+    {
+      "id": "smaller-authored-child",
+      "elapsed": 30000,
+      "remaining": 10000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 6000
+      },
+      "capabilityAccepted": true,
+      "accepted": true,
+      "budget": 6000
+    },
+    {
+      "id": "fractional-original-time",
+      "elapsed": 30000,
+      "remaining": 1.75,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 1
+      },
+      "capabilityAccepted": true,
+      "accepted": true,
+      "budget": 1
+    },
+    {
+      "id": "missing-child",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source"
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "zero-child",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 0
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "negative-child",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": -1
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "fractional-child",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 1.5
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "widened-child",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 30001
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "wrong-command",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-reference",
+        "maximumChildElapsedMilliseconds": 30000
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "missing-root",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 30000
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "wrong-root",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/other/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 30000
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "unknown-capability",
+      "elapsed": 30000,
+      "remaining": 27000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 30000,
+        "extra": true
+      },
+      "capabilityAccepted": false,
+      "accepted": false
+    },
+    {
+      "id": "ordinary-host",
+      "elapsed": 0,
+      "remaining": null,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 30000
+      },
+      "capabilityAccepted": true,
+      "accepted": false
+    },
+    {
+      "id": "finite-without-time",
+      "elapsed": 30000,
+      "remaining": null,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 30000
+      },
+      "capabilityAccepted": true,
+      "accepted": false
+    },
+    {
+      "id": "exhausted-parent",
+      "elapsed": 30000,
+      "remaining": 0,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 30000
+      },
+      "capabilityAccepted": true,
+      "accepted": false
+    },
+    {
+      "id": "child-widens-parent",
+      "elapsed": 5000,
+      "remaining": 4000,
+      "capabilities": {
+        "sourceRoot": "/neutral/pack",
+        "sourceCommand": "test-read-policy-source",
+        "maximumChildElapsedMilliseconds": 6000
+      },
+      "capabilityAccepted": true,
+      "accepted": false
+    }
+  ]
+}

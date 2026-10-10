@@ -1,0 +1,92 @@
+{
+  "original": {
+    "version": 1,
+    "body": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 7,
+      "maximumCapacityBytes": 4096,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 4096
+    },
+    "metadata": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 4096,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 4096
+    }
+  },
+  "bodyCopyGrants": [
+    1,
+    7
+  ],
+  "invalidInputs": [
+    {
+      "version": 1,
+      "body": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 7,
+        "maximumCapacityBytes": 4096,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 4096
+      }
+    },
+    {
+      "version": 1,
+      "body": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 7,
+        "maximumCapacityBytes": 4096,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 4096
+      },
+      "metadata": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 4096,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 4096
+      },
+      "policyFromDemand": true
+    },
+    {
+      "version": 1,
+      "body": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 7,
+        "maximumCapacityBytes": 4096,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 4096
+      },
+      "metadata": {
+        "maximumItems": 1,
+        "maximumCopyBytes": -1,
+        "maximumCapacityBytes": 4096,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 4096
+      }
+    }
+  ],
+  "denials": [
+    "zero-items",
+    "one-short-copy",
+    "one-short-capacity",
+    "one-short-depth"
+  ],
+  "expectedDeniedReceipt": {
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "requiredReceivingPorts": [
+    "ArtifactCanonicalPreparationControl",
+    "advance_with_metadata",
+    "metadata_progress"
+  ],
+  "forbiddenAuthority": [
+    "metadata.unwrap_or",
+    "metadata_grant.unwrap_or",
+    "maximum_copy_bytes:usize::MAX"
+  ]
+}

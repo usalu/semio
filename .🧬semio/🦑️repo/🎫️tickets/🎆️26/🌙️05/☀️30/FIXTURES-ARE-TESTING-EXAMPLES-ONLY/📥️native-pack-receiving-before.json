@@ -1,0 +1,26 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs",
+    "beforeSha256": "40ad92ad1534ff6721a421f4aa207099bc266bbce410bb5fc7aa96a3f72bf54b",
+    "bytes": 6347,
+    "wholeFile": "observer only; narrow logical action follows"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "beforeSha256": "a4fa4b665034d4fb245ec08c263fd8c7769274c1b35747568408fc0f0c8d5a48",
+    "bytes": 1992011,
+    "wholeFile": "observer only; narrow logical action follows"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+    "beforeSha256": "090334e501f3a121d6bd47e7726ba662215472a5bbc4ba2010e1d4b745a48af9",
+    "bytes": 384979,
+    "wholeFile": "observer only; narrow logical action follows"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+    "beforeSha256": "80e8c6b97b1b58557119cbf300a6718d1e641ef2b4cf929bfd7040932e9f4eb8",
+    "bytes": 6833,
+    "wholeFile": "observer only; narrow logical action follows"
+  }
+]

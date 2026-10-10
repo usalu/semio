@@ -1,0 +1,11 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧪️tests/🟦️.ts",
+      "action": "update",
+      "beforeSha256": "5ba53e560a4c2408fdbd99f3fa9adbb5f0ffde679bd78f550edadd44221cc225",
+      "afterSha256": "29d48983637ef5c49a6eb0d93a5739fbd8905d1d598766afcf90e39dc48995aa",
+      "scope": "actual canonical Grant field projection, no policy change"
+    }
+  ]
+}

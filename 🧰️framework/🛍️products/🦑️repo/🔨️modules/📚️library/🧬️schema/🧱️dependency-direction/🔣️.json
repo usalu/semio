@@ -8,7 +8,8 @@
       "additionalProperties": false,
       "required": [
         "roles",
-        "rules"
+        "rules",
+        "publicApi"
       ],
       "properties": {
         "roles": {
@@ -72,6 +73,31 @@
               }
             }
           }
+        },
+        "publicApi": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "rulePrefix",
+            "sdkPackage",
+            "toolingRoles"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "rulePrefix": {
+              "const": "no-cross-package-relative-"
+            },
+            "sdkPackage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "toolingRoles": {
+              "const": []
+            }
+          }
         }
       }
     },
@@ -129,7 +155,9 @@
             "required": [
               "name",
               "owner",
-              "exports"
+              "exports",
+              "sourceOwner",
+              "exportTargets"
             ],
             "properties": {
               "name": {
@@ -142,12 +170,155 @@
               },
               "exports": {
                 "type": "array",
-                "minItems": 1,
                 "uniqueItems": true,
                 "items": {
                   "type": "string",
                   "pattern": "^\\.(?:/.*)?$"
                 }
+              },
+              "exportTargets": {
+                "$ref": "#/$defs/AuthoredExportTargets"
+              },
+              "sourceOwner": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "AuthoredExportTargets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subpath",
+          "target"
+        ],
+        "properties": {
+          "subpath": {
+            "type": "string",
+            "pattern": "^\\.(?:/.*)?$"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\./[^\\\\]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "AuthoredPublicPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "sourceOwner",
+        "name",
+        "exports",
+        "exportTargets"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exports": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\.(?:/.*)?$"
+          }
+        },
+        "exportTargets": {
+          "$ref": "#/$defs/AuthoredExportTargets"
+        },
+        "dependencyRole": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "AuthoredPublicOwnerRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "severity",
+        "comment",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^no-cross-package-relative-.+"
+        },
+        "severity": {
+          "const": "error"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "pathNot"
+          ],
+          "properties": {
+            "path": {
+              "const": "^"
+            },
+            "pathNot": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "to": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "pathNot"
+          ],
+          "properties": {
+            "path": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "pathNot": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
               }
             }
           }

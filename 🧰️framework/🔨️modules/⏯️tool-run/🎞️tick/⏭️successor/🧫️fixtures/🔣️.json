@@ -1,0 +1,41 @@
+{
+  "schema": "original-tool-run-tick-successor.v1",
+  "policy": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 262144,
+    "depth": 64
+  },
+  "cases": [
+    {
+      "sequence": 0,
+      "page": 0,
+      "step": 0,
+      "base": 0,
+      "appends": 0,
+      "pendingPage": false
+    },
+    {
+      "sequence": 17,
+      "page": 23,
+      "step": 31,
+      "base": 101,
+      "appends": 64,
+      "pendingPage": true
+    },
+    {
+      "sequence": 51,
+      "page": 131,
+      "step": 257,
+      "base": 10001,
+      "appends": 8192,
+      "pendingPage": false
+    }
+  ],
+  "metadataCopy": 0,
+  "heapBirth": 0,
+  "heapRelease": 0,
+  "original": "unchanged-native-writer-and-columns",
+  "successor": "empty-native-columns-after-ack"
+}

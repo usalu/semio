@@ -1,0 +1,31 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🦀️.rs",
+      "sha256": "83800d8fdb4132e74fa8ba8c595554e9b73ecf9db82b94ac3e9f22acd02039ec",
+      "bytes": 20299
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧬️schema/🔣️.json",
+      "sha256": "f86df9c908e449e225ffb2da369e3a3a730ae6a16d2b8196bc9d3208367212ed",
+      "bytes": 1413
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧫️fixtures/🔣️.json",
+      "sha256": "93e7c67e7090272bd615bf1dc410512f9739d25b930ef709ceb0eb49a3f8d845",
+      "bytes": 448
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🟦️.ts",
+      "sha256": "aff814960bf6701d3f9f1d119e0b2e5d5a2361a4597cb17d9d72f286a9c60a02",
+      "bytes": 2858
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs",
+      "sha256": "9018902d4208677129e97b58824451c94b0f1c81ae0e4fd59ae18b95906512e5",
+      "bytes": 10587
+    }
+  ],
+  "nativeRed": "actual PubKernel19618 E0308 beforeassertions",
+  "trialRoot": "sole whole-law reader; no $defs/productionDTO"
+}

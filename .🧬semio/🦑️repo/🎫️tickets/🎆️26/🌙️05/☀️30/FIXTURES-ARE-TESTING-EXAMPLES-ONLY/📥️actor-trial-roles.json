@@ -1,0 +1,72 @@
+{
+  "observedOnly": true,
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧬️schema/🔣️.json",
+      "sha256": "eb6a7eb4616cc13c81c4b84b13798c362d97dcb16646f838827533c77793219e",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🟦️.ts",
+      "sha256": "2ff9302c20003816a2c1710d152bdcc004f9a96e1a64143667035c6cd594e62b",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "40e576307da17b2f3e3731dc7ab69df6eb61f57e924d05033275f59023d7da14",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧬️schema/🔣️.json",
+      "sha256": "f97e0bf887f39e091963f8b6fa687ab098fa584a225e1e409890c7ab24aa8f05",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🟦️.ts",
+      "sha256": "321206ca9801f8e9255f06717138c177bc2f8001f355e49d221a862ecdbc44b0",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json",
+      "sha256": "920fe5353a8a67618592be475e0d8be5155470fda1a5e64009dc0da19f8ec273",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧬️schema/🔣️.json",
+      "sha256": "15e7343cfce137c7a55a603e19cf3bba16cfe7820cf21f56e89d42f336da20ca",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🟦️.ts",
+      "sha256": "da5fb345ba3e05a7666e3d59433bd363ae2bc05758e456478dc211048c83dfd4",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧫️fixtures/🔣️.json",
+      "sha256": "1438371ba7abe616114798022c54c44b6e8880ee4dca761aa9dd57f3b008736e",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧬️schema/🔣️.json",
+      "sha256": "ae5e11e348ecd322c752313dcef3f43483cc32ff7e56376312d94b2650b560fe",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/🟦️.ts",
+      "sha256": "7944d08b267965f31e49b041de71531857fcd34e236df351ab6b1a4b59c0093c",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧫️fixtures/🔣️.json",
+      "sha256": "86e26c34bc0f80f8ed02c100b7e40fedb7045e84c9222a5ce19bdb31af109441",
+      "ownership": false
+    }
+  ],
+  "neutralCaseRoles": [
+    "fixed supplied operation/grant plus immutable phase and refusal outcome rows: trial",
+    "variable input/grant/spent/remaining actual produced record: domain",
+    "variable command expected precondition: domain",
+    "whole schema read without outcome relation: unresolved",
+    "single fixed caller policy without test observations: domain"
+  ]
+}

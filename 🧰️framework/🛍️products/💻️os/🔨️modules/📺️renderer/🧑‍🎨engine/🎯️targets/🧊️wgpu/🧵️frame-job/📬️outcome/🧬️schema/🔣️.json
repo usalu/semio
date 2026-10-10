@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "identity",
+    "grant",
+    "phases",
+    "progress",
+    "statePresent",
+    "outputPresent",
+    "sameCandidate",
+    "copyBytes",
+    "cancelAlias"
+  ],
+  "properties": {
+    "contract": {
+      "const": "renderer.original-frame-outcome/v1"
+    },
+    "identity": {
+      "const": {
+        "operation": 71,
+        "generation": 3
+      }
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 1
+      }
+    },
+    "phases": {
+      "const": [
+        "deniedCandidate",
+        "originalCandidate",
+        "deniedPublication",
+        "originalPublication",
+        "acknowledge",
+        "closeCandidate",
+        "terminal"
+      ]
+    },
+    "progress": {
+      "const": [
+        {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        {
+          "copiedItems": 1,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        {
+          "copiedItems": 1,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        {
+          "copiedItems": 1,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        {
+          "copiedItems": 1,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      ]
+    },
+    "statePresent": {
+      "const": false
+    },
+    "outputPresent": {
+      "const": false
+    },
+    "sameCandidate": {
+      "const": true
+    },
+    "copyBytes": {
+      "const": 0
+    },
+    "cancelAlias": {
+      "const": {
+        "deniedItems": 0,
+        "admittedItems": 1,
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releasedBytes": 0,
+        "depth": 1,
+        "sameRoot": true,
+        "retainedUntilPaidReturn": true
+      }
+    }
+  }
+}

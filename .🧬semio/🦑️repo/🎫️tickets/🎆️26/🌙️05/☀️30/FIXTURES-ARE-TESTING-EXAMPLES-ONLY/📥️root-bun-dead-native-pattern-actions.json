@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "action": "updated",
+      "beforeSha256": "0019585adca7c6e5b00bb6b1600c5651aadf958a592d3ed3b8b880129e5e8cc2",
+      "afterSha256": "9f3c446ad443477b1dbc197616e15148cbf767d0f90c5bebad10e25193656145",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

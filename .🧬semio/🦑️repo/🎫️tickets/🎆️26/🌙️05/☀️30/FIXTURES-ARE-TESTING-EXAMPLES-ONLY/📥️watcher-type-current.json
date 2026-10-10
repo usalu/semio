@@ -1,0 +1,13 @@
+{
+  "ownership": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "dbc310ee4f66c3a8455c10239e69f2b854b4219ecf2104e6b014d986e020b038"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "sha256": "005188c46fc52a7e853541b8548d24f761b83c7bf23f2099a80cbc14e249a3b9"
+    }
+  ]
+}

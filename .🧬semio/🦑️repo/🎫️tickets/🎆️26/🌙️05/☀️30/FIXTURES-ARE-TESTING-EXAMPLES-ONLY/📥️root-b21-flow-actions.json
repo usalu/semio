@@ -1,0 +1,73 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "b4f61d4a70824874b151af97a0fe50972a484dce7854843a8b783e0be35cedbf",
+      "afterSha256": null,
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "40a94afe8a01f446b182033bb2b29fc1d042f4417764f6fa2aece92c6322832e",
+      "afterSha256": null,
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "0374521a9d736b7a9bec2d2783dc96c7e73ee99e9edaac7ddbdb6ced64e8e6a7",
+      "afterSha256": null,
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "be69ef4f4394054defbbcec9fdc3df6eae1c75caccb4cd2c80dd5be2cdf65b69",
+      "afterSha256": null,
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "b54ec0a81623bcda13d82f7101b559c35856435287448bd75b291d903207ea53",
+      "afterSha256": "82a80c28a518717f0465e156be524398533bf69e47e32f820f00939b60451987",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "11f7779629c2853a272be7fdda44589f3fc72090662b94b3e547b6a457094966",
+      "afterSha256": "e6d3dbbf65fc2f363315d3de2f626111f033015b59913ff00509034bafcc8e23",
+      "exclusive": false
+    }
+  ],
+  "plainObservations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧫️fixtures/🔣️.json",
+      "beforeSha256": "ab06bb7fc3f851467dae86c538a98140b796a51dee3bbc24ad36808ad497c83d",
+      "afterSha256": "ab06bb7fc3f851467dae86c538a98140b796a51dee3bbc24ad36808ad497c83d",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧫️fixtures/🔣️.json",
+      "beforeSha256": "8e5a1bb677a814d1258a0c8cf0e8df350aec845f2ac56e44912291ca61d8657b",
+      "afterSha256": "8e5a1bb677a814d1258a0c8cf0e8df350aec845f2ac56e44912291ca61d8657b",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧫️fixtures/🔣️.json",
+      "beforeSha256": "9894949c25e4da5dc73a4bb6dd8bb852a6381104b50653e7ec8bcf8eda34e9fc",
+      "afterSha256": "9894949c25e4da5dc73a4bb6dd8bb852a6381104b50653e7ec8bcf8eda34e9fc",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧫️fixtures/🔣️.json",
+      "beforeSha256": "0fedfa31217911b271591bbfc0917823148eed190d1c898506a675a6a0445a8e",
+      "afterSha256": "0fedfa31217911b271591bbfc0917823148eed190d1c898506a675a6a0445a8e",
+      "unchanged": true
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

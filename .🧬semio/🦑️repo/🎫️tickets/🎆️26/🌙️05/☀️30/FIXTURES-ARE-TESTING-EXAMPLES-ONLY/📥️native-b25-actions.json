@@ -1,0 +1,102 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧬️schema/⚠️cancellation/🔣️.json",
+      "before": "ca860dc4ee60e75a06562c05ca57c75fbbb82ef4744566dffcd0815d29e598ef",
+      "after": null,
+      "action": "remove exclusive full-trial authority"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🧬️schema/🔣️.json",
+      "before": "51a10e63f43937a00b32afe9c6617cb0461b9579f7f0f1b73a4594656203081f",
+      "after": null,
+      "action": "remove exclusive full-trial authority"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛫️encoding/🧬️schema/🔣️.json",
+      "before": "480582f45337e94c1aac3713dc8177280e99bcb2ca20a1d13762841dad9b1036",
+      "after": null,
+      "action": "remove exclusive full-trial authority"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🟦️.ts",
+      "before": "68bc3c1f72e7d61f5e0c9d764054b6b8d4e20e2d7eca6016fe21a7f7cde71561",
+      "after": "9addd364def1d779a3c2ab695691d4a5117baccbae4c66abcdde9dda9d47f501",
+      "action": "remove only trial admission/mirror mutants; retain exact ledger and SQLite/UTF8 behavior"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "before": "ec917f07df6ae55b69086eaeec56240bf24268d39bcf05b1a1108a6918672f07",
+      "after": "33f7564cb71c1e79cb5dfb257d66280401958bf6750be63c521c3e8ec9cfeb8a",
+      "action": "retire whole encoding schedule validator/mirror mutants; retain per-Grant canonical Ajv and original Buffer/SQLite/cause laws"
+    }
+  ],
+  "plainBefore": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧫️fixtures/🧮️allocation/🔣️.json",
+      "sha256": "99b02c899dd2e4af5bcf9da82e2c74b7c51ce2bc9be3bda462b2789bfd6d33df",
+      "bytes": 2330
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "383ba4ddaa4045f808c5a8275516bc50379ffc73cc93678cce92653456f8679d",
+      "bytes": 10321
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛫️encoding/🧫️fixtures/🔣️.json",
+      "sha256": "a9b24d5400bc4b36406b471e13979e13077fbc234e7a5be245d0e90968296118",
+      "bytes": 2760
+    }
+  ],
+  "guardActions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🟦️.ts",
+      "before": "23f2fa753856188c90481cf08c9d2607edbae383592f7acf14875f2f0af00eff",
+      "afterCurrent": "9addd364def1d779a3c2ab695691d4a5117baccbae4c66abcdde9dda9d47f501",
+      "action": "add exact original-source absence guard; reader retirement separately recorded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "before": "c4cc30c75d12c992295cc55727afb97723b6b9a4d652f6a0feb8ee6819d466d2",
+      "afterCurrent": "cc726ada6dbeddd13aef27f81b6fe417bd3397bbf77bf1f65999a50a80777104",
+      "action": "add exact original-source absence guard; reader retirement separately recorded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "before": "2930578c41119fd90f64c608ef63f84ef6a8e0ebb2b6cebba9d93f9708aa8225",
+      "afterCurrent": "33f7564cb71c1e79cb5dfb257d66280401958bf6750be63c521c3e8ec9cfeb8a",
+      "action": "add exact original-source absence guard; reader retirement separately recorded"
+    }
+  ],
+  "plainCurrent": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧫️fixtures/🧮️allocation/🔣️.json",
+      "sha256": "99b02c899dd2e4af5bcf9da82e2c74b7c51ce2bc9be3bda462b2789bfd6d33df",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "383ba4ddaa4045f808c5a8275516bc50379ffc73cc93678cce92653456f8679d",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛫️encoding/🧫️fixtures/🔣️.json",
+      "sha256": "a9b24d5400bc4b36406b471e13979e13077fbc234e7a5be245d0e90968296118",
+      "matchesBefore": true
+    }
+  ],
+  "absenceCurrent": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧬️schema/⚠️cancellation/🔣️.json",
+      "absent": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🧬️schema/🔣️.json",
+      "absent": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛫️encoding/🧬️schema/🔣️.json",
+      "absent": true
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧬️schema/🔣️.json",
+      "before": "6d9fc1418d0875b160c928174c1f7fb87a598687633f33eb82c45767a9b144ef",
+      "after": null,
+      "action": "remove exclusive whole-trial authority"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧬️schema/🔣️.json",
+      "before": "6739f65744ec74039c1d40680af2ad34528d579b56e0993480ab157adedd277a",
+      "after": null,
+      "action": "remove exclusive whole-trial authority"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🟦️.ts",
+      "beforeMutation": "0081516fe8ee578562d07bd98354d0defe6f12a9fdafc28c1450adb0484c22b9",
+      "beforeGuard": "b19e0b5d9c0aa255bd66e4b35eacf082f22c4a7d51bedf7b625cbeae59498c61",
+      "after": "d6369b3e4f72290d24d9204ec3c8c8834fbbffd7135dca7f75211eb85d0f4154",
+      "action": "retire whole-trial admission/import; retain canonical per-Grant Ajv and original SQLite/Buffer/JSON/source/native laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🟦️.ts",
+      "beforeMutation": "5ddd257b814a1c24f3c6b48a13ee2307353e4c5adb280d43f6dacc1f86a0e86d",
+      "beforeGuard": "0a4ad1410da0a77117087cbcaac55b1da2df334d685163a69e9b72eb39688178",
+      "after": "38bc0a962c7132926a15ca2f56dde00c5a79e68454ba563c380035fdfd48a1e9",
+      "action": "retire whole-trial admission/import; retain canonical per-Grant Ajv and original SQLite/Buffer/JSON/source/native laws"
+    }
+  ],
+  "plainObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧫️fixtures/🔣️.json",
+      "before": "a09e2ba8c93262e762e05f8c4dbe57cf8850d70f9307da5fd9cbd00fb111b345",
+      "after": "a09e2ba8c93262e762e05f8c4dbe57cf8850d70f9307da5fd9cbd00fb111b345"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧫️fixtures/🔣️.json",
+      "before": "830e60956cc90098cc5289c52cb3c6ea60a0cd9af52b1005e7985e5deba98d03",
+      "after": "830e60956cc90098cc5289c52cb3c6ea60a0cd9af52b1005e7985e5deba98d03"
+    }
+  ]
+}

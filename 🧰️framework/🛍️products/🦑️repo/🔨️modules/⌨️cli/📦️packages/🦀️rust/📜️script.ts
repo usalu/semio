@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 /** ⚙️ Builds/tests the `semio-framework-repo-cli` crate and execs its `semio-repo` binary (nx bridge for `repo/cli/rs`). */
@@ -18,7 +19,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([crate], this.repoRoot, rest);
+    await runRepositoryCargoTests([crate], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -49,4 +50,4 @@ class McpScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("mcp", McpScript).register("repo", RepoScript);
 
-await runScriptMain(router);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

@@ -92,7 +92,7 @@ fn a_refused_guest_channel_is_told_as_its_localized_notice() {
         ] {
             let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_framework_ui_locale::Terminology::Native);
             shell.locale_id = locale_id.into();
-            let detail = shell.note_refused_open(crate::program_bridge::ProgramFault { fault: Some(fault.clone()), text: format!("create_app promise failed: {}", fault.describe()) });
+            let detail = shell.note_refused_open(crate::program_bridge::ProgramFault { fault: Some(fault.clone()), frame: None, text: format!("create_app promise failed: {}", fault.describe()) });
             assert_eq!(detail, expected, "{name} {locale_id}: the open's status keeps the localized notice");
             let told: Vec<(String, Option<String>, Option<String>)> = shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.role, node.label, node.description)).collect();
             assert_eq!(told, [("status".to_string(), Some(expected.clone()), Some(code.to_string()))], "{name} {locale_id}: told politely, described by its code");

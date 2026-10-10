@@ -8,23 +8,19 @@ fn fixture() -> (serde_json::Value, serde_json::Value) {
 }
 
 fn close(cursor: &mut dyn ErasedSnapshotRetirement, bytes: usize) -> usize {
-    let mut released = 0;
-    assert!(matches!(cursor.close_step(0, bytes).unwrap(), SnapshotRetirementStep::Blocked));
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📨️authority.json")).unwrap();let original:RetainedCloneGrant=serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap();let mut recipient=store::NativeSnapshotBodyWallet::new(original);
+    let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(RetainedCloneGrant{maximum_items:0,..recipient.remaining_grant()}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(serde_json::to_value([physical.requested_bytes,physical.released_bytes]).unwrap(),law["zeroItemPhysicalBytes"]);
+    let(mut released,mut original_completed,mut physical_matches)=(0,false,true);
     for _ in 0..200_000 {
-        match cursor.close_step(1, bytes).unwrap() {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= bytes);
-                released += released_bytes;
-            }
-            SnapshotRetirementStep::Complete => {
-                assert!(cursor.terminal_is_empty());
-                return released;
-            }
-            SnapshotRetirementStep::Blocked => panic!("positive interaction retirement grant blocked"),
-        }
+        let remaining=recipient.remaining_grant();let grant=RetainedCloneGrant{maximum_items:remaining.maximum_items.min(1),maximum_copy_bytes:remaining.maximum_copy_bytes.min(bytes),maximum_release_bytes:remaining.maximum_release_bytes.min(bytes),..remaining};
+        let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(grant).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();physical_matches&=(physical.requested_bytes,physical.released_bytes)==(progress.retained_capacity_bytes,progress.released_bytes);assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=bytes&&progress.released_bytes<=bytes);released+=progress.released_bytes;
+        if matches!(step,RetainedCloneStep::Complete(_)){original_completed=true;break}if progress==Default::default(){break}
     }
-    panic!("interaction retirement failed to terminate");
+    for _ in 0..200_000 {
+        if cursor.terminal_is_empty(){break}let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(recipient.remaining_grant()).unwrap());let progress=step.progress();recipient.record_progress(progress).unwrap();physical_matches&=(physical.requested_bytes,physical.released_bytes)==(progress.retained_capacity_bytes,progress.released_bytes);if matches!(step,RetainedCloneStep::Complete(_)){break}
+    }
+    eprintln!("[DEBUG] Original interaction retirement workLimit={bytes} originalCompleted={original_completed} actualPhysicalReceipts={physical_matches} releasedUnderOriginalLimit={released} cumulativeOriginalReceipt={:?} terminalEmpty={}",recipient.progress(),cursor.terminal_is_empty());
+    assert!(cursor.terminal_is_empty(),"original retirement caller owner did not close");assert!(physical_matches,"retirement receipt differs from actual native allocator/release");assert!(original_completed,"original positive interaction retirement work byte limit {bytes} blocked");assert!(recipient.progress().fits(original));released
 }
 
 #[test]

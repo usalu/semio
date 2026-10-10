@@ -1,14 +1,324 @@
-{"cases":[
-{"id":"binary-export","operation":"export-binary","value":7,"subset":"*","cancelPhase":null,"succeeds":true,"retirements":1},
-{"id":"text-export","operation":"export-text","value":7,"subset":"*","cancelPhase":null,"succeeds":true,"retirements":1},
-{"id":"binary-import","operation":"import-binary","value":7,"subset":"*","cancelPhase":null,"succeeds":true,"retirements":1},
-{"id":"text-import","operation":"import-text","value":7,"subset":"*","cancelPhase":null,"succeeds":true,"retirements":1},
-{"id":"cancel-before-decode","operation":"export-binary","value":7,"subset":"*","cancelPhase":"DecodeNative","succeeds":false,"retirements":0},
-{"id":"cancel-projection","operation":"export-text","value":7,"subset":"*","cancelPhase":"ProjectSnapshot","succeeds":false,"retirements":1},
-{"id":"cancel-before-reconstruction","operation":"import-binary","value":7,"subset":"*","cancelPhase":"ReconstructSnapshot","succeeds":false,"retirements":0},
-{"id":"cancel-after-reconstruction","operation":"import-text","value":7,"subset":"*","cancelPhase":"ProjectSnapshot","succeeds":false,"retirements":1},
-{"id":"cancel-encoding","operation":"import-binary","value":7,"subset":"*","cancelPhase":"EncodeNative","succeeds":false,"retirements":1},
-{"id":"reject-export-subset","operation":"export-text","value":7,"subset":"reject","cancelPhase":null,"succeeds":false,"retirements":1},
-{"id":"reject-import-subset","operation":"import-binary","value":7,"subset":"reject","cancelPhase":null,"succeeds":false,"retirements":1},
-{"id":"reject-native-encoding","operation":"import-binary","value":-2,"subset":"*","cancelPhase":null,"succeeds":false,"retirements":1}
-]}
+{
+  "cases": [
+    {
+      "id": "binary-export",
+      "operation": "export-binary",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": null,
+      "succeeds": true,
+      "retirements": 1
+    },
+    {
+      "id": "text-export",
+      "operation": "export-text",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": null,
+      "succeeds": true,
+      "retirements": 1
+    },
+    {
+      "id": "binary-import",
+      "operation": "import-binary",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": null,
+      "succeeds": true,
+      "retirements": 1
+    },
+    {
+      "id": "text-import",
+      "operation": "import-text",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": null,
+      "succeeds": true,
+      "retirements": 1
+    },
+    {
+      "id": "cancel-before-decode",
+      "operation": "export-binary",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": "DecodeNative",
+      "succeeds": false,
+      "retirements": 0
+    },
+    {
+      "id": "cancel-projection",
+      "operation": "export-text",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": "ProjectSnapshot",
+      "succeeds": false,
+      "retirements": 1
+    },
+    {
+      "id": "cancel-before-reconstruction",
+      "operation": "import-binary",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": "ReconstructSnapshot",
+      "succeeds": false,
+      "retirements": 0
+    },
+    {
+      "id": "cancel-after-reconstruction",
+      "operation": "import-text",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": "ProjectSnapshot",
+      "succeeds": false,
+      "retirements": 1
+    },
+    {
+      "id": "cancel-encoding",
+      "operation": "import-binary",
+      "value": 7,
+      "subset": "*",
+      "cancelPhase": "EncodeNative",
+      "succeeds": false,
+      "retirements": 1
+    },
+    {
+      "id": "reject-export-subset",
+      "operation": "export-text",
+      "value": 7,
+      "subset": "reject",
+      "cancelPhase": null,
+      "succeeds": false,
+      "retirements": 1
+    },
+    {
+      "id": "reject-import-subset",
+      "operation": "import-binary",
+      "value": 7,
+      "subset": "reject",
+      "cancelPhase": null,
+      "succeeds": false,
+      "retirements": 1
+    },
+    {
+      "id": "reject-native-encoding",
+      "operation": "import-binary",
+      "value": -2,
+      "subset": "*",
+      "cancelPhase": null,
+      "succeeds": false,
+      "retirements": 1
+    }
+  ],
+  "custodyCases": [
+    {
+      "id": "import-refused-frame-birth",
+      "maximumItems": 0,
+      "callerRetainsDatabase": true,
+      "recipientOccupied": false
+    },
+    {
+      "id": "import-refused-input-adoption-copy",
+      "maximumCopyBytes": 0,
+      "callerRetainsDatabase": true,
+      "recipientOccupied": true
+    },
+    {
+      "id": "import-refused-frame-capacity",
+      "maximumCapacityBytes": 0,
+      "callerRetainsDatabase": true,
+      "recipientOccupied": false
+    },
+    {
+      "id": "import-refused-frame-depth",
+      "maximumDepth": 0,
+      "callerRetainsDatabase": true,
+      "recipientOccupied": false
+    },
+    {
+      "id": "import-refused-release",
+      "maximumReleaseBytes": 0,
+      "callerRetainsDatabase": false,
+      "recipientOccupied": true
+    },
+    {
+      "id": "export-refused-release",
+      "maximumReleaseBytes": 0,
+      "recipientOccupied": true
+    },
+    {
+      "id": "original-semantic-error",
+      "subset": "reject",
+      "cause": "declared semantic owner refusal",
+      "recipientOccupied": false
+    }
+  ],
+  "original": {
+    "nativeMaximumBytes": 16777216,
+    "grant": {
+      "maximumItems": 65536,
+      "maximumCopyBytes": 1048576,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 4096
+    },
+    "defaultRefusalGrant": {
+      "maximumItems": 0,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 0
+    }
+  },
+  "relocationCases": [
+    {
+      "id": "complete-original-order",
+      "values": [
+        3,
+        1,
+        2
+      ],
+      "refuseWorkAt": null,
+      "original": [
+        3,
+        1,
+        2
+      ],
+      "replacement": [],
+      "completed": true
+    },
+    {
+      "id": "refused-after-original-first-move",
+      "values": [
+        3,
+        1,
+        2
+      ],
+      "refuseWorkAt": 2,
+      "original": [
+        3,
+        1
+      ],
+      "replacement": [
+        2
+      ],
+      "completed": false
+    },
+    {
+      "id": "refused-before-original-reversal",
+      "values": [
+        3,
+        1,
+        2
+      ],
+      "refuseWorkAt": 4,
+      "original": [],
+      "replacement": [
+        2,
+        1,
+        3
+      ],
+      "completed": false
+    }
+  ],
+  "defaultRefusalCases": [
+    {
+      "operation": "projection",
+      "nativeCancelled": false,
+      "kind": "UnsupportedOwner",
+      "cause": "snapshot owner has no original SQL projection receiving implementation",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "operation": "reconstruction",
+      "nativeCancelled": false,
+      "kind": "UnsupportedOwner",
+      "cause": "snapshot owner has no original SQL reconstruction receiving implementation",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "operation": "decode",
+      "nativeCancelled": false,
+      "kind": "UnsupportedOwner",
+      "cause": "snapshot owner has no controlled native decoding implementation",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "operation": "encode",
+      "nativeCancelled": false,
+      "kind": "UnsupportedOwner",
+      "cause": "snapshot owner has no controlled native encoding implementation",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "operation": "preflight",
+      "nativeCancelled": false,
+      "kind": "UnsupportedOwner",
+      "cause": "snapshot owner has no bounded native encoding preflight",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "operation": "validate-decode",
+      "nativeCancelled": false,
+      "kind": "UnsupportedOwner",
+      "cause": "snapshot subset has no original decode receiving validator",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "operation": "validate-encode",
+      "nativeCancelled": false,
+      "kind": "UnsupportedOwner",
+      "cause": "snapshot subset has no original encode receiving validator",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "operation": "decode",
+      "nativeCancelled": true,
+      "kind": "Canceled",
+      "cause": "native decoding canceled",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "operation": "encode",
+      "nativeCancelled": true,
+      "kind": "Canceled",
+      "cause": "native encoding canceled",
+      "nativeMaximumBytes": 0,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "ownedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    }
+  ]
+}

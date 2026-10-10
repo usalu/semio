@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "variants",
+    "copyGrants",
+    "retainedWholeCause",
+    "formatted",
+    "terminalDrop"
+  ],
+  "properties": {
+    "variants": {
+      "const": [
+        "native",
+        "json",
+        "execution",
+        "literal"
+      ]
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "retainedWholeCause": {
+      "const": true
+    },
+    "formatted": {
+      "const": false
+    },
+    "terminalDrop": {
+      "const": 0
+    }
+  }
+}

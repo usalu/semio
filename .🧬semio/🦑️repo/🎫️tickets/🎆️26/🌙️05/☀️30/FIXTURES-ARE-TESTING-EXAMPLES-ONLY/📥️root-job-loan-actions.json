@@ -1,0 +1,36 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "058f7e2c1737c323e8dee96e23c3e8fd50c9011486117515ad8ad4f86545dd93",
+      "afterSha256": "b688bcd4e79b7224acf613e12b3b4ec039de4d331f25f64cdcdb525e355e0bd3",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "f6268ed9e047ed2394513a5d1c04f5e644c6396c22a8a7376e83cc65e228eca7",
+      "afterSha256": null,
+      "exclusive": false
+    }
+  ],
+  "excludedObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧫️fixtures/🔣️.json",
+      "sha256": "cccd4fcda26655c43967e06471a765afa795f3fd28ebde35e03ad867a6a383f5",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🦀️.rs",
+      "sha256": "83947333ab36321c74f8972de969a02cb31824234c51b1bbf00032737437651c",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs",
+      "sha256": "ad77a9de201f74585dde43dd481d232445130c17fed080e09ef7e905acbdfc62",
+      "authored": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

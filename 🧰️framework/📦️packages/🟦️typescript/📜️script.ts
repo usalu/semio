@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
 import { strict as assert } from "node:assert";
@@ -397,4 +398,4 @@ class InstallationIdentityScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

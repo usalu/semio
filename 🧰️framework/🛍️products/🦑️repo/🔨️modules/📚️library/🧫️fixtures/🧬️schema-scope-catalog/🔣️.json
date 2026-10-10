@@ -8715,6 +8715,1085 @@
       "schemaCompile": {
         "🧰️framework/🔨️modules/🧪️examples/nested/🧫️examples/🧬️schema/🔣️.json": true
       }
+    },
+    {
+      "id": "literal-grant-paired-input-observation",
+      "reason": "Immutable supplied authority paired with frozen input/result examples defines a trial; literal configuration, produced values and variable runtime schedules remain domain authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "authority": {
+                  "maximumItems": 1,
+                  "maximumCopyBytes": 3,
+                  "maximumCapacityBytes": 16,
+                  "maximumReleaseBytes": 16,
+                  "maximumDepth": 4
+                },
+                "attempts": [
+                  {
+                    "input": {
+                      "text": "λ"
+                    },
+                    "expectedKind": "accepted"
+                  },
+                  {
+                    "input": {
+                      "text": "🙂"
+                    },
+                    "expectedKind": "refused"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "literal-property-grant-paired-input-observation",
+      "reason": "Immutable supplied authority paired with frozen input/result examples defines a trial; literal configuration, produced values and variable runtime schedules remain domain authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "authority",
+                "attempts"
+              ],
+              "properties": {
+                "authority": {
+                  "const": {
+                    "maximumItems": 1,
+                    "maximumCopyBytes": 3,
+                    "maximumCapacityBytes": 16,
+                    "maximumReleaseBytes": 16,
+                    "maximumDepth": 4
+                  }
+                },
+                "attempts": {
+                  "const": [
+                    {
+                      "input": {
+                        "text": "λ"
+                      },
+                      "expectedKind": "accepted"
+                    },
+                    {
+                      "input": {
+                        "text": "🙂"
+                      },
+                      "expectedKind": "refused"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "literal-denied-authority-result-schedule",
+      "reason": "Immutable supplied authority paired with frozen input/result examples defines a trial; literal configuration, produced values and variable runtime schedules remain domain authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "authority": {
+                  "maximumItems": 1,
+                  "maximumCopyBytes": 3,
+                  "maximumCapacityBytes": 16,
+                  "maximumReleaseBytes": 16,
+                  "maximumDepth": 4
+                },
+                "refusals": [
+                  {
+                    "axis": "copy",
+                    "value": 0,
+                    "kind": "ownershipLimit"
+                  },
+                  {
+                    "axis": "depth",
+                    "value": 0,
+                    "kind": "depthLimit"
+                  }
+                ],
+                "invalidNumberWords": [
+                  "+1",
+                  "01"
+                ],
+                "cancellation": "everyOriginalCheckpoint"
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "literal-grant-configuration-retains-authority",
+      "reason": "Immutable supplied authority paired with frozen input/result examples defines a trial; literal configuration, produced values and variable runtime schedules remain domain authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "version": 1,
+                "authority": {
+                  "maximumItems": 1,
+                  "maximumCopyBytes": 3,
+                  "maximumCapacityBytes": 16,
+                  "maximumReleaseBytes": 16,
+                  "maximumDepth": 4
+                },
+                "publication": "moveOriginal"
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "literal-produced-record-retains-authority",
+      "reason": "Immutable supplied authority paired with frozen input/result examples defines a trial; literal configuration, produced values and variable runtime schedules remain domain authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "authority": {
+                  "maximumItems": 1,
+                  "maximumCopyBytes": 3,
+                  "maximumCapacityBytes": 16,
+                  "maximumReleaseBytes": 16,
+                  "maximumDepth": 4
+                },
+                "kind": "refused",
+                "releasedBytes": 0
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "variable-runtime-authority-schedule-retains-authority",
+      "reason": "Immutable supplied authority paired with frozen input/result examples defines a trial; literal configuration, produced values and variable runtime schedules remain domain authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "authority": {
+                  "const": {
+                    "maximumItems": 1,
+                    "maximumCopyBytes": 3,
+                    "maximumCapacityBytes": 16,
+                    "maximumReleaseBytes": 16,
+                    "maximumDepth": 4
+                  }
+                },
+                "refusals": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "axis": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "integer"
+                      },
+                      "kind": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "inert-literal-trial-schema-parser-input",
+      "reason": "A literal trial schema can be parser input data without schema authority.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️p/🧫️fixtures/🔬️parser/🔣️.json": {
+          "cases": [
+            {
+              "input": {
+                "schema": {
+                  "const": {
+                    "authority": {
+                      "maximumItems": 1,
+                      "maximumCopyBytes": 3,
+                      "maximumCapacityBytes": 16,
+                      "maximumReleaseBytes": 16,
+                      "maximumDepth": 4
+                    },
+                    "attempts": [
+                      {
+                        "input": {
+                          "text": "λ"
+                        },
+                        "expectedKind": "accepted"
+                      },
+                      {
+                        "input": {
+                          "text": "🙂"
+                        },
+                        "expectedKind": "refused"
+                      }
+                    ]
+                  }
+                }
+              },
+              "expected": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "immutable-produced-audit-preserves-domain-authority",
+      "reason": "Real integer nonnegative caller authority and unperformed expected observations are distinct from produced audit observations and unrelated literal metadata.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "authority": {
+                  "maximumItems": 1,
+                  "maximumCopyBytes": 3,
+                  "maximumCapacityBytes": 16,
+                  "maximumReleaseBytes": 16,
+                  "maximumDepth": 4
+                },
+                "audit": [
+                  {
+                    "input": "λ",
+                    "expected": "accepted",
+                    "actual": "accepted"
+                  },
+                  {
+                    "input": "🙂",
+                    "expected": "refused",
+                    "actual": "refused"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "fractional-metadata-is-not-supplied-grant-authority",
+      "reason": "Real integer nonnegative caller authority and unperformed expected observations are distinct from produced audit observations and unrelated literal metadata.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "authority": {
+                  "maximumItems": 1.5,
+                  "maximumCopyBytes": 3,
+                  "maximumCapacityBytes": 16,
+                  "maximumReleaseBytes": 16,
+                  "maximumDepth": 4
+                },
+                "attempts": [
+                  {
+                    "input": "λ",
+                    "expected": "accepted"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "unlinked-literal-refusal-words-retain-domain-authority",
+      "reason": "Real integer nonnegative caller authority and unperformed expected observations are distinct from produced audit observations and unrelated literal metadata.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "authority": {
+                  "maximumItems": 1,
+                  "maximumCopyBytes": 3,
+                  "maximumCapacityBytes": 16,
+                  "maximumReleaseBytes": 16,
+                  "maximumDepth": 4
+                },
+                "refusals": [
+                  {
+                    "axis": "theme",
+                    "value": 1,
+                    "kind": "light"
+                  },
+                  {
+                    "axis": "contrast",
+                    "value": 2,
+                    "kind": "dark"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "large-integer-authority-paired-trial-refused",
+      "reason": "The defining Grant schema admits exact nonnegative integers above the JavaScript safe-integer threshold. Immutable unperformed trial input/expected schedules remain testing data; standalone domain configuration retains authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "authority": {
+                  "maximumItems": 1152921504606846976,
+                  "maximumCopyBytes": 1152921504606846976,
+                  "maximumCapacityBytes": 1152921504606846976,
+                  "maximumReleaseBytes": 1152921504606846976,
+                  "maximumDepth": 1152921504606846976
+                },
+                "attempts": [
+                  {
+                    "input": {
+                      "text": "λ"
+                    },
+                    "expectedKind": "accepted"
+                  },
+                  {
+                    "input": {
+                      "text": "🙂"
+                    },
+                    "expectedKind": "refused"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "grantExamples": [
+        {
+          "input": {
+            "maximumItems": 1152921504606846976,
+            "maximumCopyBytes": 1152921504606846976,
+            "maximumCapacityBytes": 1152921504606846976,
+            "maximumReleaseBytes": 1152921504606846976,
+            "maximumDepth": 1152921504606846976
+          },
+          "expected": true
+        }
+      ]
+    },
+    {
+      "id": "large-integer-authority-refusal-schedule-refused",
+      "reason": "The defining Grant schema admits exact nonnegative integers above the JavaScript safe-integer threshold. Immutable unperformed trial input/expected schedules remain testing data; standalone domain configuration retains authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "authority": {
+                  "maximumItems": 1152921504606846976,
+                  "maximumCopyBytes": 1152921504606846976,
+                  "maximumCapacityBytes": 1152921504606846976,
+                  "maximumReleaseBytes": 1152921504606846976,
+                  "maximumDepth": 1152921504606846976
+                },
+                "refusals": [
+                  {
+                    "axis": "copy",
+                    "value": 576460752303423488,
+                    "kind": "ownershipLimit"
+                  },
+                  {
+                    "axis": "depth",
+                    "value": 576460752303423488,
+                    "kind": "depthLimit"
+                  }
+                ],
+                "invalidNumberWords": [
+                  "+1",
+                  "01"
+                ],
+                "cancellation": "everyOriginalCheckpoint"
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "grantExamples": [
+        {
+          "input": {
+            "maximumItems": 1152921504606846976,
+            "maximumCopyBytes": 1152921504606846976,
+            "maximumCapacityBytes": 1152921504606846976,
+            "maximumReleaseBytes": 1152921504606846976,
+            "maximumDepth": 1152921504606846976
+          },
+          "expected": true
+        }
+      ]
+    },
+    {
+      "id": "large-integer-domain-configuration-retained",
+      "reason": "The defining Grant schema admits exact nonnegative integers above the JavaScript safe-integer threshold. Immutable unperformed trial input/expected schedules remain testing data; standalone domain configuration retains authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "version": 1,
+                "authority": {
+                  "maximumItems": 1152921504606846976,
+                  "maximumCopyBytes": 1152921504606846976,
+                  "maximumCapacityBytes": 1152921504606846976,
+                  "maximumReleaseBytes": 1152921504606846976,
+                  "maximumDepth": 1152921504606846976
+                },
+                "publication": "moveOriginal"
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "schemaCompile": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      },
+      "grantExamples": [
+        {
+          "input": {
+            "maximumItems": 1152921504606846976,
+            "maximumCopyBytes": 1152921504606846976,
+            "maximumCapacityBytes": 1152921504606846976,
+            "maximumReleaseBytes": 1152921504606846976,
+            "maximumDepth": 1152921504606846976
+          },
+          "expected": true
+        }
+      ]
     }
   ]
 }

@@ -77,7 +77,7 @@ pub(crate) fn encode_pack(value:&StepSnapshot,options:&store::PackEncodeOptions)
 pub(crate) fn decode_pack(bytes:&[u8],options:&store::PackDecodeOptions)->Result<StepSnapshot,store::PackError>{
  let limits=store::sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;let mut native=NativeDecodeControl::new(limits.max_allocation_bytes,&mut progress);
  let spec=Frame::__dsl_spec_producer().decode(&mut native).map_err(store::PackError::from)?;
- let body=store::semio_format::unwrap_binary_controlled(bytes,STDIO_STEP_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native).map_err(|error|store::PackError::from(error.into_value_error()))?;
+ let body=store::semio_format::unwrap_binary_controlled(bytes,STDIO_STEP_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native).map_err(store::PackError::from)?;
  let(record,_)=store::pack_rt::decode_document_controlled(body,&spec,options,&mut native)?;
  let frame=binding::frame(&record,&mut native,limits.max_rows).map_err(store::PackError::from)?;
  reconstruct(frame,&mut native).map_err(store::PackError::from)

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -12,7 +13,23 @@ import { PreviewGeneratedScript, TypegenScript } from "../../🧬️typegen/🏃
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-actor"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-actor"], cwd: this.root, extraArgs: rest, signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env));
+  }
+}
+
+/** 🎟️ Verifies original Actor authority with independent neutral schema and SQLite oracles. */
+class OriginalReceivingSourceScript extends BundleScript {
+  private childBudget(): number {
+    const remaining = this.invocation.control.remainingMilliseconds();
+    if (remaining !== null && remaining < 1) throw Error("Original Actor source deadline exhausted");
+    return remaining === null ? 0 : Math.floor(remaining);
+  }
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Expected test-original-receiving-source");
+    const { runOwnedCommand } = await import("../../../🏃️process/🎛️owned-execution/🟦️.ts");
+    const tests = ["🧪️tests/🟦️.ts", "📃️policy/🧪️tests/🟦️.ts", "🫴️receiving/🧪️tests/🟦️.ts"].map(test => resolve(this.root, "../../🎟️retained-turn", test)).concat(resolve(this.root, "../../🧪️tests/📄️checkpoint/🟦️.ts"),resolve(this.root,"../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts"));
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.repoRoot, "actor:original-receiving:types", this.childBudget(), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, ["test", ...tests], this.repoRoot, "actor:original-receiving:source", this.childBudget(), { signal: this.invocation.control.signal });
   }
 }
 
@@ -28,5 +45,5 @@ class WasmScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript);
-await runScriptMain(router, { defaultCommand: "test" });
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-original-receiving-source", OriginalReceivingSourceScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

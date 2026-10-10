@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "generalReadsProduct": false,
+  "parentPropagationField": "parentPropagation",
+  "cases": [
+    {"id": "Neutral Source", "source": "new URL('../🦀️.rs', import.meta.url)", "readsProduct": false},
+    {"id": "Product Source", "source": "new URL('../../🛍️products/📦️example/🦀️.rs', import.meta.url)", "readsProduct": true},
+    {"id": "Product Import", "source": "import value from '../../🛍️products/📦️example/🟦️.ts'", "readsProduct": true},
+    {"id": "Neutral Import", "source": "import value from '../../../🌱️value/🟦️.ts'", "readsProduct": false}
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "scope": "Current physical endpoint observations only; authored logical blocks retained separately in native-host action inputs. Includes shared peer source, no whole-file authorship claim.",
+  "sourceResult": {
+    "session": 39331,
+    "status": 0,
+    "duration": "3.3s",
+    "laws": 1,
+    "assertions": 29,
+    "extraDepthAssertions": 612,
+    "log": "🗑️generated/native-host-renewed-source7.log",
+    "qualification": "Source-only latest five exhausted-finite admission assertions; original normal57864 precedes these test-only assertions."
+  },
+  "normalResult": {
+    "32684": "naturalNx1 beforeTSC due absent mandatory outputauthority",
+    "14004": "naturalNx1 strictTSC two fixture comparisons; no assertion run",
+    "61413": "natural Nx1 strict TSC heterogeneous capability identity comparison; no runtime test credit",
+    "57864": {
+      "status": 0,
+      "duration": "34.3s task",
+      "log": "🗑️generated/native-host-normal-routing4.log",
+      "qualification": "Actual original normal Process routing, strict TSC and DEBUG invocation/deadline/cancellation/ordinary host assertions; wrapper suppresses counts. No native allocator credit."
+    }
+  },
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "bcf2a006e907c521b3471e45a5a977ea4f3b2351fb3c31f2dbfe7c611f0884f1",
+      "bytes": 12658,
+      "previousSha256": "bcf2a006e907c521b3471e45a5a977ea4f3b2351fb3c31f2dbfe7c611f0884f1",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "977e3207cc98c6380fb3825466478285f2955cde6ec7f62f8dc3dcf2b84e2052",
+      "bytes": 4913,
+      "previousSha256": "977e3207cc98c6380fb3825466478285f2955cde6ec7f62f8dc3dcf2b84e2052",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "sha256": "5f8239672d7ad687f4b7d5441eab0bdbbe20c58f53418bfdd06deb6e753283dd",
+      "bytes": 6392,
+      "previousSha256": "5f8239672d7ad687f4b7d5441eab0bdbbe20c58f53418bfdd06deb6e753283dd",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "sha256": "1179ac3e6614f92d7d0cc408423e614baed701da3767197c3036632362e0c272",
+      "bytes": 14506,
+      "previousSha256": "1179ac3e6614f92d7d0cc408423e614baed701da3767197c3036632362e0c272",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "sha256": "4132defc09c273fb8713ad2817582b35b4dd3c523879e586efa6b7150128d852",
+      "bytes": 4708,
+      "previousSha256": "4132defc09c273fb8713ad2817582b35b4dd3c523879e586efa6b7150128d852",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧫️fixtures/🌿️ordinary.json",
+      "sha256": "e7cc6cb6cdb911d33cb02fb55556eac5a34d1e07fce34a189825dbb93bdaf392",
+      "bytes": 2387,
+      "previousSha256": "02ef30cf64a10af894bc0febf11829491a7dd528fc5289ee0c32378c7e155933",
+      "matchesPreviousObservation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "sha256": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "bytes": 1247,
+      "previousSha256": "6f4296000c73fa4d20b0526c180783f710d97defea201bfc940f8560eaeb059a",
+      "matchesPreviousObservation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "sha256": "796df77bad05af10705251aa778a52b62cc17fba780f48cdb204b8c8c095a099",
+      "bytes": 3963,
+      "previousSha256": "796df77bad05af10705251aa778a52b62cc17fba780f48cdb204b8c8c095a099",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧫️fixtures/🔣️.json",
+      "sha256": "8005d48fd373fce74e217c8b7a71dc99f494d6e2b56480c8be48a4468012d8ca",
+      "bytes": 1743,
+      "previousSha256": "8005d48fd373fce74e217c8b7a71dc99f494d6e2b56480c8be48a4468012d8ca",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "sha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "bytes": 550,
+      "previousSha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "sha256": "283c76fdb8b0da19a0506b010a0fd44d33287a20cf7297abc3deebb2427c8eea",
+      "bytes": 5477,
+      "previousSha256": "283c76fdb8b0da19a0506b010a0fd44d33287a20cf7297abc3deebb2427c8eea",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+      "sha256": "e4773360cdc99f08ec529bc65e2140a55d7b62b67a27f0f36a9ea3b3a47fb923",
+      "bytes": 27474,
+      "previousSha256": "129be91e82ab86296137a5a88a6d07e895034e82f5e8ffffa1f6215d12283d14",
+      "matchesPreviousObservation": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "e9fd7c3930750dc04742e4ce4e902c6ef826d2c06a7d5afda36883c8c1242eb5",
+      "bytes": 1290,
+      "previousSha256": "e9fd7c3930750dc04742e4ce4e902c6ef826d2c06a7d5afda36883c8c1242eb5",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "sha256": "9694d46070270ff32ba6f99d43affdd8e3e6bdce5bbdb83f7013b125cffc27f6",
+      "bytes": 7363,
+      "previousSha256": "9694d46070270ff32ba6f99d43affdd8e3e6bdce5bbdb83f7013b125cffc27f6",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+      "sha256": "68eb335daf8548323293e09922154ff16bd73e17e475bbc184365258ef433191",
+      "bytes": 28217,
+      "previousSha256": "68eb335daf8548323293e09922154ff16bd73e17e475bbc184365258ef433191",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
+      "sha256": "8ad0c1a98423071ba6eb6130a34729ab34cb0e1ff76ed56cfde0e973fd24b708",
+      "bytes": 7573,
+      "previousSha256": "8ad0c1a98423071ba6eb6130a34729ab34cb0e1ff76ed56cfde0e973fd24b708",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "dbc310ee4f66c3a8455c10239e69f2b854b4219ecf2104e6b014d986e020b038",
+      "bytes": 34960,
+      "previousSha256": "dbc310ee4f66c3a8455c10239e69f2b854b4219ecf2104e6b014d986e020b038",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "3cac3795abb485485c6421d31c475ada94d8f9c033807829c7f2a3f9993e8af3",
+      "bytes": 85168,
+      "previousSha256": "3cac3795abb485485c6421d31c475ada94d8f9c033807829c7f2a3f9993e8af3",
+      "matchesPreviousObservation": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "sha256": "bd4df5730707d269fd9f90576706f11be53fb7e443915317d8b37f0eaeea8580",
+      "bytes": 251245,
+      "previousSha256": "bd4df5730707d269fd9f90576706f11be53fb7e443915317d8b37f0eaeea8580",
+      "matchesPreviousObservation": true
+    }
+  ],
+  "observedAt": "2026-10-09T22:37:39.155925+00:00"
+}

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "generalReadsSpecific": false,
+  "moduleImports": {
+    "boundary": "/general",
+    "excludedBoundary": "/general/specific",
+    "cases": [
+      {"id": "neutral-module", "resolved": "/general/modules/value/source.ts", "allowed": true},
+      {"id": "neutral-sdk", "resolved": "/general/sdk/process.ts", "allowed": true},
+      {"id": "specific-product", "resolved": "/general/specific/product/source.ts", "allowed": false},
+      {"id": "repository", "resolved": "/repo/script.ts", "allowed": false},
+      {"id": "specific-app", "resolved": "/s/plugin/source.ts", "allowed": false},
+      {"id": "prefix-neighbor", "resolved": "/generalish/source.ts", "allowed": false}
+    ]
+  },
+  "ownedSourceFiles": ["🎞️tick/🛫️encode/🧪️tests/🟦️.ts"],
+  "cases": [
+    { "id": "neutral-module", "source": "#[path=\"../🌱️value/🦀️.rs\"] mod value;", "specific": false },
+    { "id": "product-module", "source": "#[path=\"../../🛍️products/example/🦀️.rs\"] mod product;", "specific": true },
+    { "id": "product-fixture", "source": "include_str!(\"../../🛍️products/example/🔣️.json\")", "specific": true },
+    { "id": "specific-hub", "source": "include_str!(\"../../🌎️hub/example/🔣️.json\")", "specific": true },
+    { "id": "specific-s", "source": "#[path=\"../../✏️s/example/🦀️.rs\"] mod example;", "specific": true }
+  ]
+}

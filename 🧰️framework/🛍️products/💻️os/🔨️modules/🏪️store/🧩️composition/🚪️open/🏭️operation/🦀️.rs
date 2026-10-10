@@ -338,6 +338,7 @@ where
     decoded_history: ManuallyDrop<Option<crate::os_spr::HistoryLog>>,
     hydration: ManuallyDrop<Option<crate::os_store::RetainedPersistedDocumentHydration<P, M>>>,
     owners: ManuallyDrop<Option<crate::os_store::DocumentStoreOwners<P, M>>>,
+    constructor_error: ManuallyDrop<Option<ValueError>>,
     member: ManuallyDrop<Option<Box<ArtifactStore<P, M>>>>,
     active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     operation: OperationId,
@@ -373,6 +374,7 @@ where
             && self.decoded_history.is_none()
             && self.hydration.is_none()
             && self.owners.is_none()
+            && self.constructor_error.is_none()
             && self.member.is_none()
             && self.active.is_none()
     }
@@ -386,6 +388,7 @@ where
 {
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return crate::os_store::artifact_retirement_box_demands(active, body); }
+        if self.constructor_error.is_some() { return crate::os_store::artifact_retirement_owned_birth_demands(&self.constructor_error); }
         if self.genesis_request.is_some() { return crate::os_store::artifact_retirement_owner_demands(&self.genesis_request, body); }
         if self.genesis_pack.is_some() { return crate::os_store::artifact_retirement_owned_birth_demands(&self.genesis_pack); }
         if self.hydration.is_some() { return crate::os_store::artifact_retirement_owner_demands(&self.hydration, body); }
@@ -427,12 +430,12 @@ where
         if grant.maximum_items == 0 || grant.maximum_depth < required.depth || grant.maximum_capacity_bytes < required.capacity_bytes { return Err(MemberOpenAdmissionError { request, diagnostic: MemberOpenDiagnostic::Capacity }); }
         let source_capacity = match P::member_store_owners_birth_demand() { Ok(source) => source.capacity_bytes, Err(_) => return Err(MemberOpenAdmissionError { request, diagnostic: MemberOpenDiagnostic::Capacity }) };
         let source_grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: source_capacity, ..grant };
-        let (owners, mut diagnostic) = match P::member_store_owners(source_grant) {
+        let (owners, mut diagnostic, constructor_error) = match P::member_store_owners(source_grant) {
             Ok((owners, progress)) => {
                 let diagnostic = if progress.fits(source_grant) && progress.retained_capacity_bytes == source_capacity { None } else { Some(MemberOpenDiagnostic::Capacity) };
-                (Some(owners), diagnostic)
+                (Some(owners), diagnostic, None)
             }
-            Err(refused) => (refused.owners, Some(MemberOpenDiagnostic::Capacity)),
+            Err(refused) => (refused.owners, Some(MemberOpenDiagnostic::Capacity), Some(refused.error)),
         };
         let (snapshot_open, genesis_request) = if diagnostic.is_none() {
             match P::SnapshotOpen::begin(request) {
@@ -459,6 +462,7 @@ where
             decoded_history: ManuallyDrop::new(None),
             hydration: ManuallyDrop::new(None),
             owners: ManuallyDrop::new(owners),
+            constructor_error: ManuallyDrop::new(constructor_error),
             member: ManuallyDrop::new(None),
             active: ManuallyDrop::new(None),
             operation,
@@ -539,9 +543,10 @@ where
         if let Some(owners) = self.owners.as_mut() {
             if !owners.constructor_is_complete() {
                 if cx.should_yield() { return MemberOpenStep::Pending(self.replay_progress()); }
-                let demand = match owners.constructor_demands() { Ok(demand) => demand, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
-                if grant.maximum_items == 0 || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_depth < demand.depth { return MemberOpenStep::Pending(self.replay_progress()); }
-                let progress = match owners.admit_constructor(grant) { Ok(progress) => progress, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
+                let demand = match owners.constructor_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => { *self.constructor_error=Some(error); return self.reject(MemberOpenDiagnostic::Capacity); } };
+                if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return MemberOpenStep::Pending(self.replay_progress()); }
+                let progress = match owners.admit_constructor(grant) { Ok(progress) => progress, Err((error,progress)) => { *self.constructor_error=Some(error); self.input_buffer_progress=progress; if let Err(diagnostic)=super::record_member_step(cx,progress){return self.reject(diagnostic)} return self.reject(MemberOpenDiagnostic::Capacity); } };
+                self.input_buffer_progress=progress;
                 if let Err(diagnostic) = super::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 return MemberOpenStep::Pending(self.replay_progress());
             }
@@ -853,6 +858,7 @@ where
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
         if self.active.is_some() { return crate::os_store::artifact_retirement_box_close_step(&mut self.active, grant); }
+        if self.constructor_error.is_some() { return crate::os_store::artifact_retirement_admit_owned(&mut self.constructor_error, &mut self.active, grant); }
         if self.genesis_request.is_some() { return crate::os_store::artifact_retirement_owner_close(&mut self.genesis_request, grant); }
         if self.genesis_pack.is_some() { return crate::os_store::artifact_retirement_admit_owned(&mut self.genesis_pack, &mut self.active, grant); }
         if self.hydration.is_some() { return crate::os_store::artifact_retirement_owner_close(&mut self.hydration, grant); }

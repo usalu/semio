@@ -285,7 +285,7 @@ fn an_ambiguous_artifact_handle_is_refused_by_name_with_its_candidates() {
 fn inference_never_travels_the_shell_route() {
     let binding = std::sync::Arc::new(SessionChannelBinding::new(None));
     let mut channel = ShellArtifactChannel::new(binding, empty_catalog());
-    let fault = channel.exchange(0, vec![AppCommand::Infer(crate::actions::InferCommand::default())]).expect_err("inference is refused");
+    let fault = channel.exchange(0, vec![AppCommand::Infer(crate::actions::InferCommand{plugin_id:"neutral".into(),artifact_kind:"test.neutral.record".into(),inference_schema:"test.neutral.record.compute".into(),turn:semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},revision:7,cancellation_id:"original shell refusal cancellation".into(),work_units:11,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:crate::actions::InferenceCancel::default()})]).expect_err("inference is refused");
     assert_eq!(fault.code, "plugin.unavailable");
     assert!(fault.message.contains("inference"), "{}", fault.message);
 }

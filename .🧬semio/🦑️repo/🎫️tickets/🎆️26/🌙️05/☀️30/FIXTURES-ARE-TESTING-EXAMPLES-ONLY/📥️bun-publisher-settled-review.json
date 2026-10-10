@@ -1,0 +1,13 @@
+{
+  "ownership": false,
+  "paths": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "sha256": "9969bda55c5df9a88c797ae3a44aed5f6fb78231bbeba9479cff3662d05f4122"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "sha256": "8b3fec5cead17af9b9eadcc7f69b36ed9b73cfa4a4ae4582bbae47463172b61e"
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "at": "2026-10-09T23:33:40.703496+00:00",
+  "argv": [
+    "bun",
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test-native",
+    "--skip-nx-cache",
+    "--outputStyle=static",
+    "--",
+    "long",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--no-fail-fast",
+    "--",
+    "--nocapture"
+  ],
+  "definingNativeArgs": [
+    "--lib",
+    "--features",
+    "sync,ureq"
+  ],
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "sha256": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589",
+      "bytes": 50737,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔣️scalar/🦀️.rs",
+      "sha256": "7632cd4a05d08f6ee92ac9880b64ddf9bc21a3493865183e42825e0ca715fe43",
+      "bytes": 4855,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
+      "sha256": "42fe8bb4d526c7ab2e26874855ae6c972961db311a9495a845c932298b4ae77a",
+      "bytes": 19013,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "7364ed9f0768002ac4b329950742307bbb22c16913e1dccd4bf430f4e05726fb",
+      "bytes": 31635,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "sha256": "dd4cfc96dafdd0abd220606bbae57a1dd9344b3e4c0e8936fc6e200adf68e7c2",
+      "bytes": 18808,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs",
+      "sha256": "9d915ad3ffb2d919f6caf8770c4f5f9bb264fdb637c5a13d3d9956b4c35375f4",
+      "bytes": 18306,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🦀️.rs",
+      "sha256": "7e844efe15079e528cc8e566f44e6fba958212e4f30079c4e6d23f939e513a58",
+      "bytes": 5838,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "2cb3dd4541a6535a3cf627b3d6928f864ef152b817de674a1a031919805cc06e",
+      "bytes": 7969,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🌱️value/🦀️.rs",
+      "sha256": "7b4d49a0fe132ef97c702a406b560d56d346fa66ac0e01f52b410a4b8a02dcde",
+      "bytes": 2870,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+      "sha256": "fdfa5b0e6210f7b41a31bb107c754f3d31c6d190f56894d7cd37e02377382f4d",
+      "bytes": 26409,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧪️tests/🦀️.rs",
+      "sha256": "bcf763cf13276f44bb5330ef6e26d352206ebcf6a15a95a0caf6aaa11e419cd7",
+      "bytes": 4365,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+      "sha256": "98415366d3515473e1ed7e649168e3eaa416e525383c5bff9e5d6307eec665a5",
+      "bytes": 22602,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "bytes": 967655,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📖️capture/🦀️.rs",
+      "sha256": "442127ea4c223640a13d435bda673b35fa2206e43a02c6ca328f01e02db9907b",
+      "bytes": 10127,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs",
+      "sha256": "859ef256ce8f496958e01d5c589b56867e27e1981bf0ab188d8c41a150d27b55",
+      "bytes": 19826,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🧪️tests/🦀️.rs",
+      "sha256": "e3510f8282cf2ef9820e46ffb16d7f8b9f39577fb152c760c127c0a24435faa6",
+      "bytes": 33555,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs",
+      "sha256": "1ad564de6c6f51b93579bbd3897399c7445c1e84e2c132884296231a50a9662d",
+      "bytes": 14546,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/📦️codec/🫳️borrowed/🦀️.rs",
+      "sha256": "b0074b8b7d6776fe64475fca752fbe300110e6ecb9d125b50100b8fd39a01a32",
+      "bytes": 5301,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔏️canonical/🦀️.rs",
+      "sha256": "6e25b3e3483a94005b59c4cba6c5af66156925f03db4e630b76b32c9e38ec806",
+      "bytes": 4490,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔏️canonical/🦀️.rs",
+      "sha256": "f481c1adc3795b530022f9149ef90d2d21d866649d0512ed33d6dcd783cd2dac",
+      "bytes": 6450,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "d1dfac23a277c46ecf6b6c35a10713d576e2c0bdd8f89813bbb40db942c04da2",
+      "bytes": 50929,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "3be61430667c4e820ce4816136d011e6fee1accf614a73785da37e72f8760647",
+      "bytes": 42358,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "cfe1476fa7a1fe8b0f1cf53f09853236f3a04e5d67b17e7d431ef4822ec82c5d",
+      "bytes": 52424,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🦀️.rs",
+      "sha256": "8d10e42a9375f1acb1e428c8983585cdd099d4e89341bfc8aaa4db6e0cdf63a5",
+      "bytes": 7117,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "fb3e028bf84924522bd1645ade40d41f764b347401515318d31166aa4f2bee17",
+      "bytes": 42737,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs",
+      "sha256": "bceb956a80ed45dcba20e50a1d5a8146ce043fdf780ac7e41e4eb7db1b62f4f2",
+      "bytes": 15568,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "sha256": "a3aa8f0dda8b7bf3fd3308a1389841e83617e9fd75255573f5f2bc1c520728db",
+      "bytes": 32683,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+      "sha256": "72df8f0c515b4776ccd765e80f048675bccc1b0d279975a116141bdd7b7d90e2",
+      "bytes": 4181,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "b4f156fff4f577c372b6d1aaf1f15a7ad05959a5915a2fe13dafb08383e59fd9",
+      "bytes": 23486,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "47c53a660360cf7787cc66111f0496dfaa68a09f31f1f76976fd97ef1de9a374",
+      "bytes": 125263,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧫️fixtures/🔣️.json",
+      "sha256": "f9a83cfe5422a4199b5d0c85a852d123650397b228c31c33eac889b1e84d48a1",
+      "bytes": 1364,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "bytes": 1982921,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "3958f1cbf696314420f097b4ebfc2b4db8b9c5a267d29d137ea2f00bfe486c96",
+      "bytes": 206372,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "5515420cce470e08df88513d00396ee218762f251eb3965d7a09e8d58b8172a7",
+      "bytes": 28422,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "476880e142d101da0d5724da4366c463707fc5b6b13e47a3486ea26033b9ddea",
+      "bytes": 11999,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/Cargo.toml",
+      "sha256": "07df0297d745b7635a5a718caabf13ec50785fe72f197c5ed113251d2a6c7e07",
+      "bytes": 11485,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/Cargo.lock",
+      "sha256": "14d10ca05170a3b1dd8ccc73ac8d391fa4608ce5dbd0ed69b605ea7b907ce332",
+      "bytes": 177637,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "sha256": "f2b14f58ef66b1d3d7d126029d760d3e095d4a50519df9a9ee27adda259fa704",
+      "bytes": 3892,
+      "role": "fresh current observation, not authorship"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs",
+      "sha256": "766a90498a98721062cbba1306d27f8906e9486e9c249ec101d6551c68d44a24",
+      "bytes": 16778,
+      "role": "fresh current observation, not authorship"
+    }
+  ],
+  "pubCutMatches": true,
+  "inheritedOverrideKeys": [],
+  "scope": "complete current Kernel library suite, package-dependent Pack tests are separately unrun",
+  "rawLog": "🗑️generated/native-kernel-full2.log",
+  "sessionId": 72285,
+  "rootPid": 72867,
+  "knownOwnPids": [
+    72867,
+    72868,
+    73000,
+    73407,
+    73423,
+    73429,
+    73511
+  ],
+  "lastActualObservation": {
+    "at": "2026-10-09T23:37:07.603590+00:00",
+    "phase": "selected Cargo preparation",
+    "selectedPreparationPid": 73511,
+    "cpuPercent": 84.2,
+    "elapsed": "2m17s preparation",
+    "compilerAssertions": 0
+  }
+}

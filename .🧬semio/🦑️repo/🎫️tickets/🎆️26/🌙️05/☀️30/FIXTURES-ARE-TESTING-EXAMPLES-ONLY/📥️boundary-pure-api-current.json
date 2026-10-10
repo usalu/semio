@@ -1,0 +1,31 @@
+{
+  "observedOnly": true,
+  "executed": false,
+  "sources": [
+    {
+      "path": "📜️script.ts",
+      "sha256": "7c237a1b859e2d2068aec728b8a9e9be0ff48080d093e4ab4385fcbe8d69127b",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "2d6d406e74a78f91948dd264323c8099b7b3c53a46ab5ddf76494da5dbc9ca78",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "61adafacc611e9c62675751866e9461149803b116b54b80c9c1b6f5f75f84cd6",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "sha256": "54e1701e198840322d65d8fe615916acc8fb95172089c53c44298f53104f804b",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "sha256": "0d6d00e7b949b80122d3530f5c6d097409d56b2b90b1add7f01717bc4fbf12c9",
+      "ownership": false
+    }
+  ]
+}

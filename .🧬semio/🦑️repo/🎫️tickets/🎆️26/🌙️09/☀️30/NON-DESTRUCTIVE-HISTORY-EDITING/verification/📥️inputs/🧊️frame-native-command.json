@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "repositoryRoot": "/Users/ueli/Documents/semio",
+  "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+  "command": {
+    "kind": "native-owner-command",
+    "manifest": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+    "workingDirectory": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+    "program": "bun",
+    "arguments": [
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+      "test-wgpu-unit",
+      "long",
+      "-E",
+      "test(original_frame_outcome_keeps_candidate_and_absent_payload_through_funded_descriptor_ack)",
+      "--no-fail-fast",
+      "--status-level",
+      "pass",
+      "--final-status-level",
+      "all",
+      "--",
+      "--nocapture"
+    ]
+  },
+  "transport": {
+    "maximumBytes": 536870912,
+    "maximumLines": 65536
+  },
+  "child": {
+    "maximumElapsedMilliseconds": 1800000
+  },
+  "network": {
+    "offline": false
+  }
+}

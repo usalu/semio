@@ -23,7 +23,7 @@ impl RetirementCursor for LeaseRetirement {
         match crate::close_factory_ticket(&mut self.0.payload,grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}
     }
     fn terminal_is_empty(&self)->bool {self.0.payload.is_none()}
-    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
+    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.copy_bytes))}
     fn next_birth_bytes(&self,body:usize)->Option<usize> {self.0.payload.as_ref().map_or(Some(0),|owner|crate::factory_ticket_demands(owner,body).ok().map(|demand|demand.capacity_bytes))}
     fn next_close_byte_demand(&self)->Option<usize> {self.0.payload.as_ref().map_or(Some(0),|owner|crate::factory_ticket_demands(owner,0).ok().map(|demand|demand.release_bytes))}
     fn next_depth_demand(&self)->Result<usize,ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.depth))}

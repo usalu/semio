@@ -1,0 +1,123 @@
+{
+  "grant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "callbackCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "cases": [
+    {
+      "body": "",
+      "snapshot": {
+        "schema": "stdio.txt",
+        "lines": [],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      }
+    },
+    {
+      "body": "\n",
+      "snapshot": {
+        "schema": "stdio.txt",
+        "lines": [
+          ""
+        ],
+        "trailingNewline": true,
+        "lineEnding": "lf"
+      }
+    },
+    {
+      "body": "a\r\nb\r\n",
+      "snapshot": {
+        "schema": "stdio.txt",
+        "lines": [
+          "a",
+          "b"
+        ],
+        "trailingNewline": true,
+        "lineEnding": "crLf"
+      }
+    },
+    {
+      "body": "a\nb",
+      "snapshot": {
+        "schema": "stdio.txt",
+        "lines": [
+          "a",
+          "b"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      }
+    },
+    {
+      "body": "\r\n",
+      "snapshot": {
+        "schema": "stdio.txt",
+        "lines": [
+          ""
+        ],
+        "trailingNewline": true,
+        "lineEnding": "crLf"
+      }
+    },
+    {
+      "body": "α\u0000中\nlast",
+      "snapshot": {
+        "schema": "stdio.txt",
+        "lines": [
+          "α\u0000中",
+          "last"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      }
+    },
+    {
+      "body": "a\r\nb\nc",
+      "snapshot": {
+        "schema": "stdio.txt",
+        "lines": [
+          "a",
+          "b\nc"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "crLf"
+      }
+    }
+  ],
+  "originalCallerGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 64
+  }
+}

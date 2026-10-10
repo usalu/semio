@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "custody": "originalNativeRecipient",
+  "nativeMaximumBytes": 16777216,
+  "bodyGrant": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "closeGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "deniedCloseGrant": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 0
+  },
+  "maximumCloseTurns": 65536,
+  "observerContinuation": {
+    "state": "sameOriginalCapturedCell",
+    "copyExtentBytes": 140000,
+    "cancelAfterBytes": 65534,
+    "canceledCloseKind": "Canceled",
+    "resumedSameObserver": true,
+    "nativeCause": {
+      "kind": "Canceled",
+      "message": "native decoding canceled",
+      "storage": "borrowedLiteral"
+    }
+  }
+}

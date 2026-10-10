@@ -452,6 +452,41 @@
         "wireVersion": {
           "minimum": 0.0,
           "type": "integer"
+        },
+        "retained": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "title": "Retained Clone Grant",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         }
       },
       "required": [
@@ -472,7 +507,8 @@
         "requestedCacheMode",
         "revision",
         "sourceDialect",
-        "wireVersion"
+        "wireVersion",
+        "retained"
       ],
       "type": "object"
     },
@@ -490,7 +526,10 @@
             "minimum": 0.0,
             "type": "integer"
           },
-          "type": "array"
+          "type": [
+            "array",
+            "null"
+          ]
         },
         "complete": {
           "type": "boolean"
@@ -1326,6 +1365,74 @@
       },
       "type": "object"
     },
+    "InferenceRetainedAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "InferenceRetainedTurnInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "epoch",
+        "grant"
+      ],
+      "properties": {
+        "operation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "grant": {
+          "$ref": "#/$defs/InferenceRetainedAuthority"
+        }
+      }
+    },
     "InferenceRunInput": {
       "additionalProperties": false,
       "properties": {
@@ -1336,31 +1443,43 @@
           "type": "string"
         },
         "cancellationId": {
-          "type": "string"
-        },
-        "generation": {
-          "minimum": 0,
-          "type": "integer"
+          "type": "string",
+          "minLength": 1
         },
         "inferenceSchema": {
           "type": "string"
+        },
+        "maximumElapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
         },
         "payload": {},
         "pluginId": {
           "type": "string"
         },
         "revision": {
+          "type": "integer",
           "minimum": 0,
-          "type": "integer"
+          "maximum": 9007199254740991
+        },
+        "turn": {
+          "$ref": "#/$defs/InferenceRetainedTurnInput"
         },
         "workUnits": {
+          "type": "integer",
           "minimum": 1,
-          "type": "integer"
+          "maximum": 9007199254740991
         }
       },
       "required": [
         "artifactKind",
-        "inferenceSchema"
+        "inferenceSchema",
+        "turn",
+        "revision",
+        "cancellationId",
+        "workUnits",
+        "maximumElapsedMilliseconds"
       ],
       "type": "object"
     },
@@ -1404,6 +1523,10 @@
     "InferenceSubmitInput": {
       "additionalProperties": false,
       "properties": {
+        "cancellationId": {
+          "type": "string",
+          "minLength": 1
+        },
         "documentId": {
           "type": "string"
         },
@@ -1412,13 +1535,36 @@
           "minimum": 1,
           "type": "integer"
         },
+        "maximumElapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
         "requestId": {
           "pattern": "^[0-9a-f]{32}$",
           "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "turn": {
+          "$ref": "#/$defs/InferenceRetainedTurnInput"
+        },
+        "workUnits": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
         }
       },
       "required": [
-        "documentId"
+        "documentId",
+        "turn",
+        "revision",
+        "cancellationId",
+        "workUnits",
+        "maximumElapsedMilliseconds"
       ],
       "type": "object"
     },

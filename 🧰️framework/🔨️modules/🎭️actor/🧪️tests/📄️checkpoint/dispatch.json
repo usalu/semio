@@ -1,0 +1,20 @@
+{
+  "schema": "actor.original-dispatch/v1",
+  "originalInput": {
+    "operation": 91,
+    "generation": 3,
+    "epoch": 19
+  },
+  "originalGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 8388608,
+    "maximumCapacityBytes": 8388608,
+    "maximumReleaseBytes": 8388608,
+    "maximumDepth": 64
+  },
+  "scheduledFuel": 2000000,
+  "hostFuel": 80000000,
+  "copiedAuthority": "exactIssuedTurnGrantRetained",
+  "newAuthority": false,
+  "receiverCarrier": "issuedShardTurnRetained"
+}

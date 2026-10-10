@@ -7,12 +7,10 @@
 use super::geometry::{infer_geometry, GeometryInput};
 use super::topology::compute_generation3d_topology;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.procedural.generation3d.inference")]
 pub struct Generation3dInference {
     #[derived]

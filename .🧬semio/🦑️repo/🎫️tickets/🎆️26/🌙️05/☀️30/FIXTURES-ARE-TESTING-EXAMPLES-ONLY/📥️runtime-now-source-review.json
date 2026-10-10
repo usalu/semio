@@ -1,0 +1,26 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+    "ownership": false,
+    "exists": true,
+    "sha256": "569dcded61b5368c0f01ca08340a04e490075d3f64933eb7b408b1c20c24dbeb"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "8349c6c838feba7c04f17143cc29b2f985c746bb1c5338aecffe689016228bbc"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null
+  }
+]

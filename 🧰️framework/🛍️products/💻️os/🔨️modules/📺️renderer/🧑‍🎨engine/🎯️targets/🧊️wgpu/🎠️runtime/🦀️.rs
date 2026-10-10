@@ -20,6 +20,8 @@ pub struct ParallelRuntime {
     guest_runtime: Arc<GuestRuntimes>,
     shards: Vec<Arc<ShardExecutor>>,
     outcomes: Arc<OutcomeSink>,
+    dispatch: semio_framework_plugin_host::shard::grant::OriginalShardDispatch,
+    dispatch_bytes: Vec<u8>,
 }
 
 impl ParallelRuntime {
@@ -36,7 +38,7 @@ impl ParallelRuntime {
         for shard in 0..shard_count {
             shards.push(ShardExecutor::new(pool.clone(), guest_runtime.clone(), Vec::new(), outcomes.clone(),identity_issuers(shard)).await);
         }
-        Self { kernel, guest_runtime, shards, outcomes }
+        Self { kernel, guest_runtime, shards, outcomes, dispatch: Default::default(), dispatch_bytes: Vec::new() }
     }
 
     pub fn kernel(&self) -> &Kernel {
@@ -73,7 +75,7 @@ impl ParallelRuntime {
         caps: &[BrokerCapabilityGrant],
         instantiate_budget: &TurnBudget,
     ) -> Result<ActorId, semio_framework_plugin_host::activation::ActivationRefusal> {
-        let request = semio_framework_actor::activation::KernelActivationRequest { package, plugin_ordinal, kind, lane, window, event };
+        let request = semio_framework_actor::activation::KernelActivationRequest { package, plugin_ordinal, kind, lane, window, event, retained: instantiate_budget.retained };
         let reservation = self.kernel.reserve_activation(request).await.map_err(|refused| semio_framework_plugin_host::activation::ActivationRefusal::host(format!("Kernel activation refused: {:?}", refused.reason)))?;
         semio_framework_plugin_host::activation::install_actor(&mut self.kernel, &self.guest_runtime, &self.shards, reservation, compiled, caps, instantiate_budget).await
     }
@@ -91,33 +93,36 @@ impl ParallelRuntime {
     /// shard that received at least one grant this tick, on whichever `Lane` the grant's own
     /// envelopes carry (every envelope for one actor shares a lane, fixed at scheduler registration).
     ///
-    /// 🐛️ terra-kernel-loop finding, load-bearing (unchanged by P1e): the grant's OWN `budget` field
-    /// is NOT used for the dispatched frame. `Kernel::activate` has no per-actor budget parameter at
-    /// all — it always computes the SCHEDULED (and later throttle-scaled) budget from
-    /// `lane_defaults::budget_for(lane)`, a 4-tier table with no room for a caller's own ceiling. Both
-    /// native callers this file serves carry their OWN, deliberately-higher fuel ceilings for a
-    /// documented reason (`kernel_runtime::TURN_BUDGET`, `scale_bench::BENCH_FUEL`) — dispatching
-    /// `grant.budget` verbatim would silently fuel-starve nearly every real turn. `budget_for` lets
-    /// the caller supply the ACTUAL per-actor ceiling to dispatch, keeping `Kernel::tick`'s real
-    /// value: WHO is due and WHICH envelopes/shard, i.e. genuine DRR fairness and shard routing.
+    /// 🎟️ Host resource overrides retain the scheduler's exact original receipt and five-axis grant.
     ///
     /// Returns the raw `Decision` so a caller can honour `wake_at` for its own park deadline.
-    pub async fn tick_and_dispatch(&mut self, now_ms: u64, budget_for: impl Fn(ActorId) -> semio_framework_actor::Budget) -> Decision {
-        for shard in &self.shards {
-            if let Some((_, instance)) = shard.take_unclaimed_registration() {
-                self.guest_runtime.drop_instance(instance).await;
+    pub fn dispatch_refusal(&self) -> Option<&semio_framework_actor::pack::PackError> { self.dispatch.refusal() }
+    pub fn pending_decision(&self) -> Option<&Decision> { self.dispatch.decision() }
+
+    pub async fn tick_and_dispatch(&mut self, now_ms: u64, budget_for: impl Fn(ActorId, semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> Result<Decision, semio_framework_actor::pack::PackError> {
+        if self.dispatch.decision().is_none() {
+            for shard in &self.shards {
+                if let Some((_, instance)) = shard.take_unclaimed_registration() {
+                    self.guest_runtime.drop_instance(instance).await;
+                }
             }
+            let mut decision = Some(self.kernel.tick(now_ms).await);
+            self.dispatch.admit(&mut decision)?;
         }
-        let decision = self.kernel.tick(now_ms).await;
-        for grant in &decision.run {
-            let shard_index = grant.shard.0 as usize;
-            let Some(shard) = self.shards.get(shard_index) else { continue };
-            let lane = grant.envelopes.first().map(|envelope| envelope.lane).unwrap_or(Lane::Maintenance);
-            let mut bytes = Vec::new();
-            ShardFrame::Grant { actor: grant.actor, budget: budget_for(grant.actor), envelopes: grant.envelopes.clone() }.pack_encode(&mut bytes).await;
-            shard.send_frame(bytes, lane).await;
+        if let Some(error) = self.dispatch.refusal() { return Err(*error); }
+        while let Some(grant) = self.dispatch.next() {
+            let Some(shard) = self.shards.get(grant.shard.0 as usize) else {
+                return Err(self.dispatch.refuse(semio_framework_actor::pack::PackError::InvalidLifecycle("original grant shard is absent")));
+            };
+            let lane = grant.envelopes.first().map_or(Lane::Maintenance, |envelope| envelope.lane);
+            let budget = budget_for(grant.actor, semio_framework_plugin_host::shard::grant::ShardResourceBudget::from_original(&grant.budget));
+            if let Err(error) = ShardFrame::pack_encode_grant(grant, budget, &mut self.dispatch_bytes).await {
+                return Err(self.dispatch.refuse(error));
+            }
+            shard.send_frame(std::mem::take(&mut self.dispatch_bytes), lane).await;
+            self.dispatch.published();
         }
-        decision
+        self.dispatch.finish().ok_or(semio_framework_actor::pack::PackError::InvalidLifecycle("original dispatch decision is absent"))
     }
 
     /// ✂️ Mirrors `activate`: sends a `ShardFrame::Unregister` to the actor's own pinned shard.
@@ -125,12 +130,13 @@ impl ParallelRuntime {
     /// `suspend`/`resume`/`request_exclusive`/`commit_frame` is its whole façade) — this only retires
     /// the SHARD-side `GuestInstance`; a stale `Kernel`-level registry entry for a destroyed actor is
     /// a pre-existing gap this file did not introduce and does not close.
-    pub async fn unregister(&mut self, actor: ActorId) {
-        let Some(record) = self.kernel.actor_record(actor).await else { return };
-        let Some(shard) = self.shards.get(record.shard.0 as usize) else { return };
+    pub async fn unregister(&mut self, actor: ActorId) -> Result<(), semio_framework_actor::pack::PackError> {
+        let Some(record) = self.kernel.actor_record(actor).await else { return Ok(()) };
+        let Some(shard) = self.shards.get(record.shard.0 as usize) else { return Ok(()) };
         let mut bytes = Vec::new();
-        ShardFrame::Unregister { actor }.pack_encode(&mut bytes).await;
+        ShardFrame::Unregister { actor }.pack_encode(&mut bytes).await?;
         shard.send_frame(bytes, Lane::Maintenance).await;
+        Ok(())
     }
 
     /// 🌉️ `to_actor_turn_result` + `Kernel::complete`. Callers pass the RAW

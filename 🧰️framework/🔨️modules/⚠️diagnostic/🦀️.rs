@@ -918,3 +918,11 @@ pub use owned_close::{FaultCloseOwner,FaultCloseStep};
 #[cfg(test)]
 #[path="🧾️retained/🧪️tests/🦀️.rs"]
 mod retained_fault_tests;
+
+#[path="📤️wire/👣️cursor/🦀️.rs"]
+mod fault_wire_cursor;
+pub use fault_wire_cursor::FaultWireCursor;
+
+#[cfg(test)]
+#[path="📤️wire/👣️cursor/🧪️tests/🦀️.rs"]
+mod fault_wire_cursor_tests;

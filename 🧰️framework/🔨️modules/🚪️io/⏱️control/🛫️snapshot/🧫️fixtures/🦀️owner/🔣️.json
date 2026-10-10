@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "package": "semio-framework-os-kernel",
+  "project": "@semio-tech/framework-os-kernel",
+  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+  "target": "test-snapshot-receiving-native",
+  "filter": "original_receiving_",
+  "minimumSelectedLaws": 6,
+  "originalDeadlineMilliseconds": 660000
+}

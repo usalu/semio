@@ -302,8 +302,12 @@ impl ErasedToolJob {
 }
 
 impl InteractiveJob for ErasedToolJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError> {
         self.inner.step(cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError> {
+        self.inner.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {

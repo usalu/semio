@@ -32,7 +32,7 @@
     "parent-complete"
   ],
   "slotHeaderRemoval": "in-place",
-  "slotPresenceBytes": 1,
+  "slotPresenceBytes": 0,
   "faultSlotHeaderRemoval": "in-place",
-  "faultSlotPresenceBytes": 1
+  "faultSlotPresenceBytes": 0
 }

@@ -1,0 +1,5 @@
+# Store Transfer Original Typed Fault
+
+Plugin retry 11 recorded a genuine E0053 at the transfer preparation task `advance` method: the shared preparation trait requires `semio_framework_value::ValueError`, while that compiled snapshot returned `String`. The original single diagnostic is at line 17617 of `🗑️generated/plugin/media-original-signature-oct10-red11.log`; Cargo rejected the Kernel library before native assertions.
+
+Fresh resumed source already contains the exact typed `ValueError` return on `TransferTask::advance`, matching the preparation trait. This simultaneous correction was preserved without a duplicate edit. The method's original mutation handoff, grant preflight, Arc allocation and returned physical progress are unchanged. Existing native transfer tests still compare measured allocation/release, source allocation identity and independent Serde semantics under the original neutral fixture grants. Those tests have not run against this source in the recorded Plugin gate. A new full registered compiler/runtime gate is required; no native acceptance is claimed.

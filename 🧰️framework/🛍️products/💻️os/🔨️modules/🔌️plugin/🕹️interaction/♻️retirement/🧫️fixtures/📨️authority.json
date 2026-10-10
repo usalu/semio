@@ -1,0 +1,21 @@
+{
+  "grantSource": "caller.retirement-request",
+  "originalWorkByteLimits": [
+    1,
+    64,
+    4096
+  ],
+  "wholeOperationGrant": {
+    "maximumItems": 1000000,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 8388608,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 128
+  },
+  "zeroItemPhysicalBytes": [
+    0,
+    0
+  ],
+  "originalLimitsAreRenewed": false,
+  "retainedOwnerClosedBeforeFailure": true
+}

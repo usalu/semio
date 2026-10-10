@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "complete",
+    "fault",
+    "copyBytes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "complete": {
+      "const": "semantic-absence"
+    },
+    "fault": {
+      "const": "original-retained-builder"
+    },
+    "copyBytes": {
+      "const": 0
+    }
+  }
+}

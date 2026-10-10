@@ -1,0 +1,3 @@
+# Original Job Descriptor Examples
+
+Physical trial-Schema absence failed first (0 pass/1 fail/1 assertion), then its anonymous grant/variants/stages wrapper and sole whole-law Ajv admission were removed. Actual renewed original reader 8710 passed one law with 47 assertions, Nx 0, Bun 79 ms. Independent SQLite and RFC6902 six-variant transitions, original owner/loan/ack source assertions, plain example bytes and defining/native Rust law were preserved. There was no reusable payload type to extract from the wrapper. Native descriptor System/pointer/receipt assertions remain unrun by this Source test.

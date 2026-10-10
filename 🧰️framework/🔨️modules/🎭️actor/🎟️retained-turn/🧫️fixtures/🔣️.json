@@ -1,0 +1,27 @@
+{
+  "input": {
+    "operation": 71,
+    "generation": 3,
+    "epoch": 19,
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 64
+    }
+  },
+  "spent": {
+    "copiedItems": 1,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 128,
+    "releasedBytes": 0
+  },
+  "remaining": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65408,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  }
+}

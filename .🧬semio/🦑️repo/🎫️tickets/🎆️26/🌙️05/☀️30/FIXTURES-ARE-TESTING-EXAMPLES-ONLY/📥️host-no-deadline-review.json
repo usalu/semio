@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "sha256": "796df77bad05af10705251aa778a52b62cc17fba780f48cdb204b8c8c095a099"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "sha256": "4132defc09c273fb8713ad2817582b35b4dd3c523879e586efa6b7150128d852"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "sha256": "6f4296000c73fa4d20b0526c180783f710d97defea201bfc940f8560eaeb059a"
+    }
+  ]
+}

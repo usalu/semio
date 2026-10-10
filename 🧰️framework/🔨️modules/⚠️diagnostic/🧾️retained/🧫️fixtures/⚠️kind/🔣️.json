@@ -20,5 +20,5 @@
   ],
   "sameReceipt": true,
   "sameParam": true,
-  "parentTimeTravel": "same-original-kind-and-receipt"
+  "parentPropagation": "same-original-kind-and-receipt"
 }

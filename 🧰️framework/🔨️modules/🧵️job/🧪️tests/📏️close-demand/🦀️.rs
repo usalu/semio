@@ -8,7 +8,8 @@ struct PhysicalDemandJob {
 }
 
 impl InteractiveJob for PhysicalDemandJob {
-    fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome { StepOutcome::Yield }
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {JobOutcomeBorrow::admit_yield(cx)}
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
     fn begin_close(&mut self) { self.closing = true; }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError>{Ok(0)}
@@ -40,7 +41,7 @@ fn worker_close_demand_queries_preserve_exact_physical_grants() {
         let calls = Arc::new(Mutex::new(Vec::with_capacity(64)));
         let job = PhysicalDemandJob { backing: Some(backing), calls: Arc::clone(&calls), closing: false };
         let params = BatchJobParams { operation: OperationId(98_100), generation: Generation(11), cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "test.close-demand", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 1_000 }, now_us: default_now_us };
-        let mut session = WorkerJobSession::try_new(job, params).unwrap_or_else(|_| panic!("close demand session admission"));
+        let mut session = admit_original_fixture_owner!(WorkerJobSession,job, params).unwrap_or_else(|_| panic!("close demand session admission"));
         session.begin_close();
         let scaffold_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:admission,maximum_depth:64};
         for _ in 0..16 {

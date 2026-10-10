@@ -1,0 +1,83 @@
+{
+  "grantInteger": {
+    "red": {
+      "session": 89394,
+      "exitCode": 1,
+      "pass": 140,
+      "fail": 2,
+      "assertions": 1231
+    },
+    "green": {
+      "session": 39491,
+      "exitCode": 0,
+      "pass": 142,
+      "fail": 0,
+      "skip": 66,
+      "assertions": 1237,
+      "neutralRows": 139,
+      "NxSeconds": 15.4
+    }
+  },
+  "bunParent": {
+    "prior": {
+      "session": 56725,
+      "exitCode": 1,
+      "pass": 14,
+      "fail": 6,
+      "assertions": 234
+    },
+    "first": {
+      "session": 91038,
+      "exitCode": 1,
+      "pass": 20,
+      "fail": 1,
+      "assertions": 270
+    },
+    "consumerGreen": {
+      "session": 5574,
+      "exitCode": 0,
+      "pass": 21,
+      "fail": 0,
+      "assertions": 274,
+      "NxSeconds": 2.7
+    }
+  },
+  "bunControlled": {
+    "red": {
+      "session": 87432,
+      "exitCode": 1,
+      "pass": 21,
+      "fail": 4,
+      "assertions": 278
+    },
+    "first": {
+      "session": 40992,
+      "exitCode": 1,
+      "pass": 24,
+      "fail": 1,
+      "assertions": 282,
+      "cause": "Test Ajv reference incorrectly used absent schema.$id"
+    },
+    "green": {
+      "session": 82000,
+      "exitCode": 0,
+      "pass": 25,
+      "fail": 0,
+      "assertions": 301,
+      "NxSeconds": 4.8
+    }
+  },
+  "canonicalBun": {
+    "misrouted": {
+      "session": 47837,
+      "exitCode": 1,
+      "testsRun": 0,
+      "cause": "Installed Nx directly bypassed genuine repository bun nx bootstrap"
+    },
+    "normal": {
+      "session": 94419,
+      "status": "running",
+      "inputAuthority": "Original bun nx wrapper and explicitly declared ticket test artifacts, no fabricated ScriptInvocation/policy/deadline"
+    }
+  }
+}

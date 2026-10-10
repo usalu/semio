@@ -1,5 +1,0 @@
-{
-  "ApplyDirectoryPage": {
-    "pageJson": "{\"schema\":\"semio.directory.event-page.v1\",\"sessionBindingSha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"authorizationGeneration\":3,\"afterSeqExclusive\":2,\"throughSeqInclusive\":4,\"hasMore\":false,\"events\":[{\"seq\":4,\"id\":\"event-4\",\"hlc\":{\"physicalMs\":4,\"logical\":0},\"actor\":{\"kind\":\"user\",\"id\":\"user:u1#s1\"},\"spaceId\":\"space-a\",\"body\":{\"kind\":\"space.renamed\",\"spaceId\":\"space-a\",\"name\":\"Atelier\"},\"recordedAtMs\":4}],\"receiptSha256\":\"1e68df47baac69e0ea20ddeef72f5b00347a124dbe2451fbda59d7d2696a03d8\"}"
-  }
-}

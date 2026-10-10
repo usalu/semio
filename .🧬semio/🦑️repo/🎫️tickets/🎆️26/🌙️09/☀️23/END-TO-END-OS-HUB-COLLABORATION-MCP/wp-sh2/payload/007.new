@@ -1,3 +1,0 @@
-type HomeConfig {
-  retiredLocalStudioIds: [String!]! @state(class: CONFIG)
-}

@@ -1,0 +1,16 @@
+{
+  "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+  "beforeSha256": "77483821b93b4554fe3e47bc84cc28d8b64fa107cf0fab3cdc359377e9e8469b",
+  "afterSha256": "5e05c16a904302369fb2b7cf36bab5b46ee1836e10e3c0a8b798ae7ffbcdc426",
+  "actions": [
+    {
+      "beforeBlock": "        assert_eq!(expected.len(), oracle.elements().len());",
+      "afterBlock": "        assert_eq!(expected.len(), oracle.elements().len());\n        let actual_bounds = BezPath::from_elements(expected.clone()).bounding_box();\n        let oracle_bounds = kurbo::Shape::bounding_box(&oracle);\n        for (actual, expected) in [(actual_bounds.x0(), oracle_bounds.x0), (actual_bounds.y0(), oracle_bounds.y0), (actual_bounds.x1(), oracle_bounds.x1), (actual_bounds.y1(), oracle_bounds.y1)] {\n            assert!((actual - expected).abs() < 1e-9, \"original path bounds differ from Kurbo\");\n        }"
+    },
+    {
+      "beforeBlock": "                if owner.original_elements().is_empty() && !owner.terminal_is_empty() {",
+      "afterBlock": "                if owner.terminal_is_empty() {\n                    let shell_pointer = owner as *const CanvasPathRetirement;\n                    for denied in [RetainedCloneGrant { maximum_release_bytes: size_of::<CanvasPathRetirement>() - 1, ..policy }, RetainedCloneGrant { maximum_copy_bytes: size_of::<Option<Box<CanvasPathRetirement>>>() - 1, ..policy }, RetainedCloneGrant { maximum_items: 0, ..policy }] {\n                        let (step, allocated, released) = observe_backing(|| semio_framework_value::close_factory_ticket(&mut slot, denied).unwrap());\n                        assert_eq!(step.progress(), Default::default());\n                        assert_eq!((allocated, released), (0, 0));\n                        assert_eq!(slot.as_ref().unwrap().as_ref() as *const CanvasPathRetirement, shell_pointer);\n                    }\n                }\n                if slot.as_ref().unwrap().original_elements().is_empty() && !slot.as_ref().unwrap().terminal_is_empty() {"
+    }
+  ],
+  "qualification": "Actual native law UNRUN; adds independent Kurbo numeric bounds and denied terminal original Box identity; immutable positive policy unchanged"
+}

@@ -1,0 +1,35 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-job-rs:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_batch_receipt_and_mutable_job_fence_preserve_none_semantics_and_original_authority) | test(original_outcome_descriptors_keep_same_payload_and_receipt_until_paid_ack) | test(original_worker_admission_preserves_sources_metadata_zero_and_exact_native_birth) | test(original_context_cancel_alias_preserves_same_root_paid_metadata_zero_and_return_witness) | test(original_source_publication_preserves_native_identity_paid_stages_and_every_cancellation_frontier) | test(original_typed_fault_publication_streams_canonical_wire_without_truncation_and_preserves_native_custody)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

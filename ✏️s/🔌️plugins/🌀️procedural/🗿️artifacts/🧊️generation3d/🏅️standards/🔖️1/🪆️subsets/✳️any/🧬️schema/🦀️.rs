@@ -13,12 +13,10 @@ use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snaps
 use ::semio_framework_schema::ArtifactSchema;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Generation3dArtifact
 /// 🧬️ Generation3dArtifact facet type.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.procedural.generation3d")]
 pub struct Generation3dArtifact {
     #[state(artifact)]
@@ -30,8 +28,7 @@ pub struct Generation3dArtifact {
 
 //#region 🔖️PreviewCamera
 /// 📷️ 3D preview viewport camera (schema twin of the app config record).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Generation3dPreviewCamera {
     pub position_x: f64,
     pub position_y: f64,
@@ -331,12 +328,11 @@ impl<'a> GraphEditor<'a> {
         self.leaves.extend(leaves);
     }
 
-    /// 🧩️ Creates the widget `descriptor_json` describes at `(x, y)`: a `create-widget` at the end of the list and the
-    /// `move-widget` that places it. Answers the new widget's id.
-    pub fn add_widget(&mut self, descriptor_json: &str, x: f64, y: f64) -> Result<String, String> {
+    /// 🧩️ Creates the admitted widget at `(x, y)` and records its placement.
+    pub fn add_widget(&mut self, descriptor: &semio_framework_artifact_flow_flow::WidgetDescriptor, x: f64, y: f64) -> Result<String, String> {
         use crate::standards::v1::subsets::any::schema::mutations::{create_widget::CreateWidget, Generation3dMutation};
         let index = self.host.host_snapshot.widgets.len();
-        let id = self.host.add_widget(descriptor_json, x, y).map_err(|error| error.to_string())?;
+        let id = self.host.add_widget_descriptor(descriptor, x, y).map_err(|error| error.to_string())?;
         let widget = self.host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id).cloned().ok_or_else(|| format!("created widget {id} is missing"))?;
         self.leaves.push(Generation3dMutation::CreateWidget(CreateWidget { index, widget }));
         self.layout_leaf(&id);
@@ -421,9 +417,9 @@ impl<'a> GraphEditor<'a> {
     }
 
     /// 🗺️ Lays the graph out again with the host's layered layout: one `move-widget` per widget that moves.
-    pub fn reorganize(&mut self, options_json: &str) -> Result<(), String> {
+    pub fn reorganize(&mut self, options: &semio_framework_os_infinite::board::schema::layout::DagLayoutOptions, control: &mut semio_framework_os_infinite::board::schema::layout::LayoutControl<'_>) -> Result<(), String> {
         let before = self.host.host_snapshot.layout.clone();
-        let reorganized = self.host.reorganize(options_json).map_err(|error| error.to_string());
+        let reorganized = self.host.reorganize(options, control).map_err(|error| error.to_string());
         let moved: Vec<String> = self.host.host_snapshot.layout.iter().filter(|(id, layout)| before.get(id) != Some(*layout)).map(|(id, _)| id.clone()).collect();
         let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
         retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(before));
@@ -497,10 +493,6 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_artifact_in
 
 
 
-#[cfg(feature = "component-app-assembly")]
-pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<semio_framework_value::DslValue> {
-    host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).map(semio_framework_value::ToValue::to_value)
-}
 
 /// 🚫️ Why a gumball refuses its selection — each a NAMED fault code `generation3d.gumball.*` that a shell localizes; the
 /// English [`GumballRefusal::detail`] is only the developer detail.

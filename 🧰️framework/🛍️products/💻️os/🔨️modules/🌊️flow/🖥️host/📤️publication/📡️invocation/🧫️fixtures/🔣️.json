@@ -1,0 +1,11 @@
+{
+ "version":1,
+ "sameOriginalContext":true,
+ "emptyRetrySubstitutes":false,
+ "terminalDrop":0,
+ "identities":[{"operationId":"0","cancellationId":"0"},{"operationId":"19","cancellationId":"19"},{"operationId":"18446744073709551615","cancellationId":"18446744073709551615"}],
+ "cases":[
+  {"id":"original-retry","source":{"windowId":"flow-main","windowKindId":"flow-main","neuronId":"outer","extensionId":"geometry","operatorId":"mesh","nodeHash":19,"inputJson":"{\"handle\":\"original\"}","dependencyJson":"{\"nodes\":[\"outer\"]}","operatorVersion":"registry:7;geometry:1;policy:1"},"pending":{"neuronId":"child","extensionId":"math","operatorId":"add","nodeHash":23,"inputJson":"{\"a\":2,\"b\":3}"},"expected":{"windowId":"flow-main","windowKindId":"flow-main","neuronId":"child","extensionId":"math","operatorId":"add","nodeHash":23,"inputJson":"{\"a\":2,\"b\":3}","dependencyJson":"{\"nodes\":[\"outer\"]}","operatorVersion":"registry:7;geometry:1;policy:1"}},
+  {"id":"original-unicode-context","source":{"windowId":"窓-雪","windowKindId":"preview","neuronId":"outer-原","extensionId":"geometry","operatorId":"surface","nodeHash":31,"inputJson":"{\"text\":\"雪🌳️\"}","dependencyJson":"{\"source\":\"原\"}","operatorVersion":"registry:9;geometry:1;policy:1"},"pending":{"neuronId":"child-雪","extensionId":"text","operatorId":"join","nodeHash":37,"inputJson":"{\"text\":\"同じ\"}"},"expected":{"windowId":"窓-雪","windowKindId":"preview","neuronId":"child-雪","extensionId":"text","operatorId":"join","nodeHash":37,"inputJson":"{\"text\":\"同じ\"}","dependencyJson":"{\"source\":\"原\"}","operatorVersion":"registry:9;geometry:1;policy:1"}}
+ ]
+}

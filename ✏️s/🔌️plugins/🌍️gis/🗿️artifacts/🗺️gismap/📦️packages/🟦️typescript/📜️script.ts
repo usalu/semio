@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌍 GIS Map inference, history and acknowledged-view conformance command owner. */
 import { join } from "node:path";
@@ -588,7 +590,7 @@ class TileCheckScript extends BundleScript {
     console.log(`gis-map-tiles: laws=${await proveGisMapTilesV1(root)} passed`);
     if (args.includes("--native")) {
       const { runExactCargoLaws } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["tile_coordinates::tests::portable_tile_coordinates_and_ranges_match_json_and_geo_oracles"] }], progress: event => console.log(`gis-map-tiles ${event.stage} ${event.law ?? ""}`) });
+      await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["tile_coordinates::tests::portable_tile_coordinates_and_ranges_match_json_and_geo_oracles"] }], progress: event => console.log(`gis-map-tiles ${event.stage} ${event.law ?? ""}`) });
     }
   }
 }
@@ -621,7 +623,7 @@ const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyS
 if(["build","check","test"].includes(process.argv[2]??"")){
  const{runArtifactTypeScriptPackageMain}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts");
  await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/gis-gismap-js",{suites:["📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🌐️hub/🧪️tests/🔣️transport/🟦️.ts"]});
-}else await runScriptMain(router,{defaultCommand:"inference-check"});
+}else await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"inference-check"}) }));
 
 
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🌉️ `@semio-tech/framework-os-mcp-rs` task router: `bun ./📜️script.ts <build|check|test|dev>`. */
@@ -8,7 +9,7 @@ import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
 import { daemonBudgetOpts, orchestratorBudgetOpts, runCargo, runRepositoryCargoTests, runCmd, runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
@@ -131,21 +132,23 @@ class InstalledServiceCheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
 class ProbeSqliteSourceScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Probe SQLite source law has no arguments");
-    runCmd("bun", ["test", join(this.root, "..", "..", "🏠️workspace", "🪶️sqlite", "🧪️tests", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    const source=join(this.root,"..","..","🏠️workspace","🪶️sqlite","🧪️tests","🟦️.ts");
+    await runRepositoryCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"mcp:probe-sqlite-types",scriptInvocationBudget(this.invocation,buildBudgetMs()),{env:process.env,signal:this.invocation.control.signal});
+    await runRepositoryCommand(process.execPath, ["test",source], this.repoRoot, "mcp:probe-sqlite-source", scriptInvocationBudget(this.invocation,buildBudgetMs()), { env:process.env,signal:this.invocation.control.signal });
   }
 }
 
 class ProbeSqliteNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Probe SQLite native law has a fixed original selector");
-    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
+    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, this.invocation.control, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
   }
 }
 
@@ -613,4 +616,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("schema-mirror", SchemaMirrorScript)
   .register("dev", DevScript);
 
-await runScriptMain(router, { defaultCommand: "check" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));

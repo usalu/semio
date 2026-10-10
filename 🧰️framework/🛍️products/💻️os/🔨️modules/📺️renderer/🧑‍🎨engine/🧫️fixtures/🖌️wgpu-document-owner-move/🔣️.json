@@ -5,16 +5,95 @@
   "rendererSource": "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
   "frameJobSource": "🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
   "winitSource": "🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
-  "documentReaders": ["take_window_document", "restore_window_document", "panel_documents.remove"],
+  "documentReaders": [
+    "take_window_document",
+    "restore_window_document",
+    "panel_documents.remove"
+  ],
   "forbiddenDocumentReader": "try_alias",
   "terminalCursorRelease": "terminal_is_fault",
   "terminalCursorReleaseHelper": "document_opportunity_remains",
-  "terminalCursorWalks": ["paint_window_measures_step", "paint_window_projection_step", "paint_window_pane_body_step", "render_main_window_step", "render_panel_step", "render_mobile_panel_step", "render_hub_workspace_step"],
+  "terminalCursorWalks": [
+    "paint_window_measures_step",
+    "paint_window_projection_step",
+    "paint_window_pane_body_step",
+    "render_main_window_step",
+    "render_panel_step",
+    "render_mobile_panel_step",
+    "render_hub_workspace_step"
+  ],
   "supersededVariant": "Superseded",
   "supersededFaultRecorder": "record_frame_fault",
   "supersededConditions": 6,
   "effectStormChargeSite": "FrameTransactionStage::FlushEffects;",
   "presentDriveBudget": "INTERACTIVE_STEP_CEILING_US / 2",
-  "frameWorkerTurn": "session.try_step_on_worker()",
-  "forbiddenFrameDriveLoop": "drive_deadline_us"
+  "frameWorkerTurn": "session.try_step_on_worker(self.retained)",
+  "forbiddenFrameDriveLoop": "drive_deadline_us",
+  "workerInvocation": {
+    "nativeType": "RendererAssetDecodeInvocation",
+    "grantField": "retained",
+    "receiptPort": "take_retained_step_receipt",
+    "ackPort": "acknowledge_outcome",
+    "expectedGrantAdmissions": [
+      true,
+      true,
+      false,
+      false
+    ],
+    "grantCases": [
+      {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      },
+      {
+        "maximumItems": 0,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      },
+      {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144
+      },
+      {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64,
+        "grantFromDimensions": true
+      }
+    ],
+    "expectedDeniedReceipt": {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    "originalHostPorts": [
+      "CancelToken::admit_root",
+      "JobPayloadAuthority::admit",
+      "StepContext::with_payload_authority"
+    ],
+    "hostSource": "🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs",
+    "forbiddenSessionAuthority": [
+      "root_cancel_token()",
+      "allocate_operation_id()",
+      "WorkerJobSession::try_new",
+      "UI_WORKER_RETIREMENT_POLICY"
+    ]
+  },
+  "frameReceiving": {
+    "admissionPort": "try_admit_owned",
+    "receiptPort": "take_retained_step_receipt",
+    "acknowledgementPort": "acknowledge_outcome",
+    "forbiddenOutcomeRemoval": "owner.take_outcome()",
+    "forbiddenAdmission": "WorkerJobSession::try_new"
+  }
 }

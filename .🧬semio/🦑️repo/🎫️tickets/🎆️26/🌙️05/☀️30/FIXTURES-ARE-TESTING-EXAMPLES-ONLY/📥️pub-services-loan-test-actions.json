@@ -1,0 +1,15 @@
+{
+  "scope": "plain loan witness and actual source TDD only",
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83d\udeaa\ufe0fnative-io/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "beforeSha256": "a04d60028a74a4e5dc2529eb371fb43187e294a6fda648152866f8e967694cf0",
+      "afterSha256": "956ca04da2a9366ddd76fe28b01ab913d145bf85861fbc84584ac224730695de"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83e\uddea\ufe0ftests/\ud83e\uddee\ufe0fcompute-retained/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "111277663100b440f42b14bc4b0fb60c8127a83d6530d125a9ffe01130be26f3",
+      "afterSha256": "d793a7fb7f322a38095a6176ace17163bfcb13b0f1a6241c7dbf10611de9aafa"
+    }
+  ]
+}

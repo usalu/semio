@@ -96,6 +96,8 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js"
       ]
     },
+    "test-evaluation-work": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-evaluation-work","cwd":"{projectRoot}"}},
+    "test-evaluation-seeds": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-evaluation-seeds","cwd":"{projectRoot}"}},
     "test-evaluation-source": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -1,0 +1,33 @@
+{
+  "copyAllowances": [1, 3, 64],
+  "cancellationTurns": [0, 9, 37, 101],
+  "descriptorCopyBytes": 0,
+  "originalChannelPointersPreserved": true,
+  "terminalDropBytes": 0,
+  "cases": [
+    {
+      "id": "original-note",
+      "widgets": [{"id":"note-原","kind":"inputNote","text":"same 雪"}],
+      "inputs": {"note-原":{}},
+      "outputs": {"note-原":{"text":{"schema":"text","value":"same 雪"}}},
+      "kindInfos": {},
+      "expected": {"note-原":{"in":{},"out":{"text":{"schema":"text","value":"same 雪"}}}}
+    },
+    {
+      "id": "same-parameter-overwrite",
+      "widgets": [{"id":"node","kind":"neuron","neuronKind":"echo","params":{"value":"parameter 雪","hidden":true}}],
+      "inputs": {"node":{"value":"incoming","other":"omit"}},
+      "outputs": {"node":{"result":{"schema":"text","value":"same result"}}},
+      "kindInfos": {"echo":{"inputs":["value"],"variadicSlot":null}},
+      "expected": {"node":{"in":{"value":"parameter 雪"},"out":{"result":{"schema":"text","value":"same result"}}}}
+    },
+    {
+      "id": "original-variadic-and-fault",
+      "widgets": [{"id":"node","kind":"neuron","neuronKind":"collect","params":{}}],
+      "inputs": {"node":{"slots":{"left":"a","right":"b"},"named":"c"}},
+      "outputs": {"node":{"error":"actual fault 雪"}},
+      "kindInfos": {"collect":{"inputs":["*","named"],"variadicSlot":"slots"}},
+      "expected": {"node":{"in":{"left":"a","right":"b","named":"c"},"out":{"error":"actual fault 雪"},"error":"actual fault 雪"}}
+    }
+  ]
+}

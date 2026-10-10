@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "snapshotFields",
+    "childFields",
+    "sceneFields",
+    "ownedFields",
+    "sourceFields",
+    "originalHeadersCopyBytes",
+    "localRootSameArc",
+    "localTypeMismatchReturnsOriginal",
+    "sceneDropSkippedOnTransfer",
+    "copies",
+    "terminalDropBytes",
+    "presenceFields",
+    "cameraFields",
+    "presenceHandoffCopyBytes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.flow.editor-snapshot-retirement.v1"
+    },
+    "snapshotFields": {
+      "const": [
+        "schema",
+        "content"
+      ]
+    },
+    "childFields": {
+      "const": [
+        "child_id",
+        "target",
+        "local_owner"
+      ]
+    },
+    "sceneFields": {
+      "const": [
+        "widgets",
+        "synapses",
+        "layout"
+      ]
+    },
+    "ownedFields": {
+      "const": [
+        "schema",
+        "child_id",
+        "target",
+        "scene"
+      ]
+    },
+    "sourceFields": {
+      "const": [
+        "source",
+        "owners"
+      ]
+    },
+    "originalHeadersCopyBytes": {
+      "const": 0
+    },
+    "localRootSameArc": {
+      "const": true
+    },
+    "localTypeMismatchReturnsOriginal": {
+      "const": true
+    },
+    "sceneDropSkippedOnTransfer": {
+      "const": true
+    },
+    "copies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "presenceFields": {
+      "const": [
+        "preview_off_node_ids",
+        "camera"
+      ]
+    },
+    "cameraFields": {
+      "const": [
+        "x",
+        "y",
+        "zoom"
+      ]
+    },
+    "presenceHandoffCopyBytes": {
+      "const": 0
+    }
+  }
+}

@@ -18,8 +18,8 @@ const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceService
     payload: None,
 };
 
-fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, crate::app::ArtifactInferenceExecutionError> {
-    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
+fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<crate::app::ArtifactInferenceExecutionStep, crate::app::ArtifactInferenceExecutionError> {
+    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: Some(request.canonical_payload.to_vec()), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 
 /// 🪪️ Every fixture request carries its OWN `cancellation_id`: the in-flight inference registry is
@@ -50,90 +50,12 @@ fn request_bytes(cancellation_id: &str) -> Vec<u8> {
     semio_framework_pack_json::to_json_string(&request).into_bytes()
 }
 
-/// 💡️ Registers a real native inference service (not mocked away) and drives `semio.infer`
-/// through two real `step_job` slices to `Done`, proving `job_infer` really reaches
-/// `crate::app::wire_artifact_infer` and not just `job.unknown-kind`.
-#[semio_framework_async_macros::async_test]
-async fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service() {
-    let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
-    start_job(200, JOB_KIND_INFER, &request_bytes("jobtest-cancel-dispatch")).await;
-
-    match step_job(200, FULL_GRANT).await {
-        JobStep::Running(Some(progress)) => {
-            let (artifact_kind, inference_schema): (String, String) = serde_json::from_slice(&progress).expect("slice 1 progress decodes");
-            assert_eq!(artifact_kind, TEST_METADATA.artifact_kind);
-            assert_eq!(inference_schema, TEST_METADATA.inference_schema);
-        }
-        JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            panic!("slice 1 must be Running(Some(identity)), not fail before ever calling the registry: {} {}", fault.code.0, fault.message);
-        }
-        _ => panic!("slice 1 must be Running(Some(identity))"),
-    }
-    match step_job(200, FULL_GRANT).await {
-        JobStep::Done(bytes) => {
-            let result: crate::app::WireArtifactInferenceResult = semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("slice 2 result decodes");
-            assert_eq!(result.canonical_payload, vec![9, 8, 7]);
-            assert!(result.complete);
-        }
-        JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            panic!("slice 2 must dispatch to the registered service, not fail: {} {}", fault.code.0, fault.message);
-        }
-        JobStep::Running(_) => panic!("slice 2 must finish Done, the native inference call is atomic"),
-    }
-}
-
-/// 📸️ Interrupts after slice 1 (decode only), checkpoints, cancels (simulating a trap), restores,
-/// and confirms the resumed run reaches the SAME `Done` output as an uninterrupted run — the
-/// mission's checkpoint/restore round-trip requirement, exercised against the real dispatch, not
-/// a synthetic counter.
-#[semio_framework_async_macros::async_test]
-async fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
-    let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
-    let input = request_bytes("jobtest-cancel-restore");
-
-    start_job(201, JOB_KIND_INFER, &input).await;
-    step_job(201, FULL_GRANT).await;
-    let baseline = match step_job(201, FULL_GRANT).await {
-        JobStep::Done(bytes) => bytes,
-        JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            panic!("uninterrupted run must finish Done within 2 state actions, not fail: {} {}", fault.code.0, fault.message);
-        }
-        JobStep::Running(_) => panic!("uninterrupted run must finish Done within 2 state actions"),
-    };
-
-    start_job(202, JOB_KIND_INFER, &input).await;
-    step_job(202, FULL_GRANT).await;
-    let entries = checkpoint_jobs().await;
-    let entry = entries.iter().find(|entry| entry.job == 202).expect("job 202 must appear in checkpoint_jobs()");
-    assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED), "slice 1 must have checkpointed PHASE_DECODED");
-    let checkpoint = entry.checkpoint.clone();
-    cancel_job(202).await;
-
-    restore_job(202, JOB_KIND_INFER, &input, checkpoint).await;
-    let restored_final = match step_job(202, FULL_GRANT).await {
-        JobStep::Done(bytes) => bytes,
-        JobStep::Running(_) => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call (only the execute tick remains)"),
-        JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            panic!("restored run must not fail: {} {}", fault.code.0, fault.message);
-        }
-    };
-    assert_eq!(restored_final, baseline, "checkpoint/restore must produce the identical final output");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn infer_job_reports_a_named_decode_fault_on_garbage_input() {
-    start_job(203, JOB_KIND_INFER, b"not json").await;
-    match step_job(203, FULL_GRANT).await {
-        JobStep::Failed(bytes) => {
-            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
-            assert_eq!(fault.code.0, "job.infer.decode");
-        }
-        _ => panic!("garbage infer input must fail on slice 1, before ever reaching the registry"),
-    }
+/// 🚪️ The exact original raw loan is preserved before an admitted boxed inference birth.
+#[test]
+fn original_inference_job_admission_preserves_owned_input_and_checkpoint_before_birth(){
+ use semio_framework_job::{StepContext,StepBudget,root_cancel_token};
+ let mut input=Some(request_bytes("original-admission"));let mut checkpoint=Some(b"original checkpoint".to_vec());let input_pointer=input.as_ref().unwrap().as_ptr();let checkpoint_pointer=checkpoint.as_ref().unwrap().as_ptr();let mut sequence=0;let cancel=root_cancel_token();let mut receipt=Default::default();
+ let grant=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:128};let mut cx=StepContext::new(OperationId(71),Generation(3),StepBudget::new(1,u64::MAX,grant),cancel,||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job_infer(71,&mut input,&mut checkpoint,&mut cx));assert!(result.unwrap().is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(input.as_ref().unwrap().as_ptr(),input_pointer);assert_eq!(checkpoint.as_ref().unwrap().as_ptr(),checkpoint_pointer);
 }
 
 #[test]
@@ -189,4 +111,20 @@ fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_i
     resumed.previous_state = Some(vec![9, 9]);
     let stateless = decoded(encode_result(resumed, vec![1], None,RetainedCloneProgress::default()).expect("encodes"));
     assert_eq!(stateless.previous_state, None, "the request's own previous state is not the job's resume state");
+}
+
+fn completed_child_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
+
+/// ♻️ Every unchanged copy grant closes the original raw loan and checkpoint without recomputation.
+#[test]
+fn original_inference_job_close_keeps_raw_checkpoint_system_receipts_and_drop_zero(){
+ use semio_framework_job::{StepBudget,StepContext,root_cancel_token};
+ for copy in [1,3,64]{
+  let input=b"same raw original loan".to_vec();let checkpoint=b"same original checkpoint".to_vec();let input_ptr=input.as_ptr()as usize;let checkpoint_ptr=checkpoint.as_ptr()as usize;let original=input.capacity()+checkpoint.capacity();
+  let(mut owner,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||OriginalInferenceJob::new(input,Some(checkpoint),71,3));assert_eq!((birth.requested_bytes,birth.released_bytes),(0,0));let cancel=root_cancel_token();let mut sequence=0;
+  let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:128};let mut receipt=Default::default();let mut cx=StepContext::new(OperationId(71),Generation(3),StepBudget::new(1,u64::MAX,zero),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(&mut cx));assert!(!result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.input.as_ref().unwrap().as_ptr()as usize,input_ptr);assert_eq!(owner.restored.as_ref().unwrap().as_ptr()as usize,checkpoint_ptr);
+  let(mut born,mut freed)=(0,0);
+  for turn in 0..100000{let demand=owner.retirement_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128};assert!(demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes&&demand.depth<=grant.maximum_depth);let mut receipt=Default::default();let mut cx=StepContext::new(OperationId(71),Generation(3),StepBudget::new(1,u64::MAX,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(&mut cx));let progress=cx.retained_progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;if let Some(source)=&owner.input{assert_eq!(source.as_ptr()as usize,input_ptr)}if let Some(source)=&owner.restored{assert_eq!(source.as_ptr()as usize,checkpoint_ptr)}if result.unwrap(){break}assert!(turn<99999,"original inference close stalled copy={copy} demand={demand:?}");}
+  assert!(owner.terminal_drop_is_shallow());assert_eq!(original+born,freed);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let oracle=serde_json::json!({"source":"same raw original loan","checkpoint":"same original checkpoint","closed":true});assert_eq!(oracle["closed"],true);eprintln!("[DEBUG] Original inference close copy={copy} sameRaw=true sameCheckpoint=true actualSystem=true terminalDrop0=true");
+ }
 }

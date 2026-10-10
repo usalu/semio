@@ -66,7 +66,7 @@ pub(crate) fn input(bytes: &[u8], binary: bool, control: &mut SqliteSnapshotCont
         let mut native = NativeDecodeControl::new(remaining, &mut callback);
         let result = (|| {
             let body = if binary {
-                store::semio_format::unwrap_binary_controlled(bytes, "stdio.pptx", store::semio_format::Component::Pack, 1, &mut native).map_err(store::semio_format::SemioError::into_value_error)?
+                store::semio_format::unwrap_binary_controlled(bytes, "stdio.pptx", store::semio_format::Component::Pack, 1, &mut native)?
             } else {
                 let text = native.borrow_text(bytes)?;
                 store::semio_format::split_text_preamble_controlled(text, "stdio.pptx", store::semio_format::Component::Dsl, 1, &mut native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes()

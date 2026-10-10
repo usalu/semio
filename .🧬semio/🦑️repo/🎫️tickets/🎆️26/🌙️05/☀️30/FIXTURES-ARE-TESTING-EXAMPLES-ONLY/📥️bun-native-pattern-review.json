@@ -1,0 +1,67 @@
+{
+  "owned": false,
+  "scopes": [
+    {
+      "path": "package.json",
+      "sha256": "15ecb8129fa571efe80cdfcc8e5b828fe3b1bbcc6762d0b7cae424abfdbec77b",
+      "prefixMatches": true,
+      "nativePatterns": 970,
+      "declarationPatterns": 12,
+      "negativeTailOnly": true,
+      "unconditionalFixtureMask": false,
+      "owned": false
+    },
+    {
+      "path": "🎓️teaching/package.json",
+      "sha256": "70a55253038bb41d25bee76367332ddfcf2ac5c2c0e773d70b2e5a670e6c954e",
+      "prefixMatches": true,
+      "nativePatterns": 973,
+      "declarationPatterns": 13,
+      "negativeTailOnly": true,
+      "unconditionalFixtureMask": false,
+      "owned": false
+    },
+    {
+      "path": "✏️s/package.json",
+      "sha256": "8a0948bb59503263e41e9fcc9107d385a4bc6887d176fffa5fa6ad21dddec1c5",
+      "prefixMatches": true,
+      "nativePatterns": 1900,
+      "declarationPatterns": 13,
+      "negativeTailOnly": true,
+      "unconditionalFixtureMask": false,
+      "owned": false
+    },
+    {
+      "path": "🏢️semio-tech/package.json",
+      "sha256": "ab0ec4b0b76628a4a22b914380ada4dd7268741ea578edb7691058e95ee679e9",
+      "prefixMatches": true,
+      "nativePatterns": 1905,
+      "declarationPatterns": 14,
+      "negativeTailOnly": true,
+      "unconditionalFixtureMask": false,
+      "owned": false
+    },
+    {
+      "path": "🌎️hub/package.json",
+      "sha256": "b601abdf67ee6e985dda31c7fcdfaf41e1aa00cc319e7e5166ae02c68cc0ba9e",
+      "prefixMatches": true,
+      "nativePatterns": 1938,
+      "declarationPatterns": 14,
+      "negativeTailOnly": true,
+      "unconditionalFixtureMask": false,
+      "owned": false
+    },
+    {
+      "path": "♻️mit-bestand/package.json",
+      "sha256": "576c4d3a3ed7563601d507f25cac4b7df513fe4e832bebc9ed09dcf2d7be5847",
+      "prefixMatches": true,
+      "nativePatterns": 1902,
+      "declarationPatterns": 14,
+      "negativeTailOnly": true,
+      "unconditionalFixtureMask": false,
+      "owned": false
+    }
+  ],
+  "sourceEstimatedRegexConstructions": 2129177,
+  "estimateUsesParentReportedSelectedPackageCounts": true
+}

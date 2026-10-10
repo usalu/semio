@@ -61,7 +61,7 @@ fn json_refusal_receipt_preserves_actual_work_before_cancellation(){
     for row in fixture["cases"].as_array().unwrap(){
         let mut cursor=JsonSourceCursor::<_,Value>::new(text,JsonMemberPolicy::Reject,limits).unwrap();let armed=Cell::new(false);let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|!(armed.get()&&event.completed==1&&event.total==1);let mut control=semio_framework_value::NativeDecodeControl::new(limits.maximum_allocation_bytes,&mut callback);let frontier=row["frontier"].as_str().unwrap();let mut prepared=false;
         for _ in 0..maximum_turns{
-            let demand=cursor.normal_step_demands().unwrap();prepared=match frontier{"utf8Scan"=>cursor.position()==0,"stringCapacity"=>cursor.phase()=="materialize-string"&&demand.capacity_bytes==4,"stringCopy"=>cursor.phase()=="materialize-string"&&demand.copy_bytes==4,_=>unreachable!()};
+            let demand=cursor.normal_step_demands().unwrap();prepared=match frontier{"utf8Scan"=>cursor.position()==0,"stringCapacity"=>cursor.phase()=="materialize-string"&&demand.capacity_bytes==4,"stringCopy"=>cursor.phase()=="materialize-string"&&demand.copy_bytes==1,_=>unreachable!()};
             if prepared{break;}assert!(cursor.step(1,&mut control,preparation).unwrap().is_none());
         }
         assert!(prepared);control.begin_stage(1).unwrap();armed.set(true);let original_source=cursor.source().as_ptr();let incoming=grant(&row["grant"]);let expected=&row["receipt"];
@@ -73,7 +73,7 @@ fn json_refusal_receipt_preserves_actual_work_before_cancellation(){
         assert_eq!(cursor.normal_step_progress(),expected,"{frontier}");assert!(expected.fits(incoming));
         let JsonError::Native(refusal)=&error else{unreachable!()};assert_eq!(refusal.retained_progress(),expected,"{frontier}");
         let((source,grammar),born,released)=test_allocation::observe_backing(||cursor.into_grammar());assert_eq!((born,released),(0,0));assert_eq!(source.as_ptr(),original_source);
-        if frontier=="stringCopy"{let Some(JsonLexeme::String(scan))=&grammar.lexeme else{unreachable!()};assert_eq!(scan.output.as_bytes(),serde_json::from_str::<String>(text).unwrap().as_bytes());}
+        if frontier=="stringCopy"{let Some(JsonLexeme::String(scan))=&grammar.lexeme else{unreachable!()};assert_eq!(scan.output.as_slice(),&serde_json::from_str::<String>(text).unwrap().as_bytes()[..expected.copied_bytes]);}
         if frontier=="stringCapacity"{let Some(JsonLexeme::String(scan))=&grammar.lexeme else{unreachable!()};assert_eq!(scan.output.capacity(),expected.retained_capacity_bytes);assert!(scan.output.is_empty());}
         close(JsonSourceCursor::from_grammar(source,grammar),closing,maximum_turns);
     }

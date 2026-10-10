@@ -1,0 +1,17 @@
+{
+  "contractId": "semio.plugin.checkpoint.original-actor-admission/v1",
+  "source": "actor:bob🧑",
+  "grantSource": "io.native-snapshot-encode-owner/v1/cases",
+  "acceptedGrants": ["full", "maximumCopyBytes", "maximumReleaseBytes"],
+  "refusedGrants": ["maximumItems", "maximumCapacityBytes", "maximumDepth"],
+  "frameLayouts": [
+    {"nativeWordBytes": 4, "arcBytes": 20},
+    {"nativeWordBytes": 8, "arcBytes": 40}
+  ],
+  "semanticMetadataCopyBytes": 0,
+  "prebirthRequestedBytes": 0,
+  "prebirthReleasedBytes": 0,
+  "preserveOriginalPointer": true,
+  "preserveOriginalCapacity": true,
+  "preserveOriginalNativeControl": true
+}

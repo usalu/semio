@@ -1,0 +1,36 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_history_record_native_vector_growth_preserves_payloads_and_paid_receiving_custody) | test(original_history_operation_native_fields_preserve_paid_partial_and_ready_receiving) | test(decode_fault_descriptor_borrows_original_payload_until_paid_nested_close) | test(original_catalog_constructor_stages_retain_original_sources_and_conserve_native_heap) | test(current_catalog_sources_admit_original_allocations_then_fund_each_ticket) | test(erased_member_snapshot_read_releases_its_alias_before_the_live_current_root) | test(original_history_identity_native_ranges_and_prior_edit_keep_exact_receipts) | test(original_history_message_native_targets_keep_partial_receiving_and_physical_receipts)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": ["nx","run","@semio-tech/framework-os-kernel:test","--skip-nx-cache","--excludeTaskDependencies","--","long","--lib","-E","test(original_history_record_native_vector_growth_preserves_payloads_and_paid_receiving_custody) | test(original_history_operation_native_fields_preserve_paid_partial_and_ready_receiving) | test(decode_fault_descriptor_borrows_original_payload_until_paid_nested_close) | test(original_catalog_constructor_stages_retain_original_sources_and_conserve_native_heap) | test(current_catalog_sources_admit_original_allocations_then_fund_each_ticket) | test(erased_member_snapshot_read_releases_its_alias_before_the_live_current_root) | test(original_history_identity_native_ranges_and_prior_edit_keep_exact_receipts) | test(original_history_message_native_targets_keep_partial_receiving_and_physical_receipts)","--no-fail-fast","--status-level","pass","--final-status-level","all","--","--nocapture"],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

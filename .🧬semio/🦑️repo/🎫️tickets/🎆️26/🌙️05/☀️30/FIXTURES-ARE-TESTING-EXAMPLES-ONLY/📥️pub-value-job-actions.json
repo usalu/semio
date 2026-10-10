@@ -1,0 +1,54 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "5515cbf5b99d6639685ee8db0cac6c525755fa191aaf9a3a5b6b002f895c9da5",
+      "afterSha256": null,
+      "scope": "exclusive entire original testing grant/value/protocol-mirror schedule retired; canonical production Grant unchanged"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "d856dc67bd90b3fb18848696c00d407f43a308aa3f79413790335e9f58863c8c",
+      "afterSha256": null,
+      "scope": "exclusive entire original testing grant/value/protocol-mirror schedule retired; canonical production Grant unchanged"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "531a4e974d5f26303e0ad75ed40c7211afb1927ed896723bb8f03bb2c90a7ffa",
+      "afterSha256": "cf869bb8d23b81b109b77e53d29109cbdeef32ec5fde722265ba3d14e775e5d4",
+      "scope": "whole-law schema compile retired; actual original tuple Grant projection admitted canonical five currencies, SQLite/source receipt laws preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "b7abc53da326f1205a0f3845453159773b77dba506e9c28e4b27c95e55936b89",
+      "afterSha256": "3c67ffa2a699df7bfbe8153e87f5f5c234468c01b4b5fe13d0a1c1c58826c9e8",
+      "scope": "whole-law schema compile retired; actual original scalar policy uses canonical Grant only, SQLite/metadata zero-copy real Source laws preserved"
+    }
+  ],
+  "preservedObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧫️fixtures/🔣️.json",
+      "sha256": "e45f8013836f273cd1d0c240414d8651b300db9c302b67698a74b48089d5f71a",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🦀️.rs",
+      "sha256": "6f0629286c773b1c9bca9f3fcef68b922f426856fcc27320cb254631889b027b",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧫️fixtures/🔣️.json",
+      "sha256": "f7d875768c86af4178aeb8fd09bcf80ae7435233f3da47df2685a7be8a5ee037",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🦀️.rs",
+      "sha256": "972182ddbefb97f5c15b6824048b676548d70aaefc924c03139a200b17de49e9",
+      "unchanged": true
+    }
+  ]
+}

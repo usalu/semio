@@ -1,0 +1,9 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"semio://repo/discovery/policy/tool-run",
+ "$defs":{
+  "Source":{"type":"object","additionalProperties":false,"required":["path","text"],"properties":{"path":{"type":"string","minLength":1},"text":{"type":"string"}}},
+  "Requirement":{"type":"object","additionalProperties":false,"required":["toolId","root","scope","verbs","measures","lane","inventory"],"properties":{"toolId":{"type":"string","minLength":1},"root":{"type":"string","minLength":1},"scope":{"type":"array","items":{"type":"string","minLength":1}},"verbs":{"type":"array","items":{"type":"string","minLength":1}},"measures":{"type":"array","items":{"type":"string","minLength":1}},"lane":{"type":"string","minLength":1},"inventory":{"type":"string","minLength":1}}},
+  "Finding":{"type":"object","additionalProperties":false,"required":["file","line","text"],"properties":{"file":{"type":"string","minLength":1},"line":{"type":"integer","minimum":0},"text":{"type":"string","minLength":1}}}
+ }
+}

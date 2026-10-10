@@ -24,29 +24,70 @@ enum Phase { Discover, Find, Reserve, Insert, Select, SymbolsCount, Symbols, Sym
 #[derive(Default, Debug)]
 pub struct BorrowedProjectedPackProgress { pub progress: RetainedCloneProgress, pub written_bytes: usize, pub complete: bool }
 
+/// ⚠️ The original Value refusal retains the sole physical receipt and initialized output prefix.
+#[derive(Debug)]
+pub struct BorrowedProjectedPackFailure { pub reason: ValueError, pub written_bytes: usize }
+
+impl From<ValueError> for BorrowedProjectedPackFailure {
+    fn from(reason: ValueError) -> Self { Self { reason, written_bytes: 0 } }
+}
+
+fn failed_turn(reason: ValueError, progress: RetainedCloneProgress) -> BorrowedProjectedPackFailure {
+    let performed = progress.checked_add(reason.retained_progress()).expect("one addressable borrowed Pack turn has representable physical progress");
+    BorrowedProjectedPackFailure { reason: reason.with_retained_progress(performed), written_bytes: 0 }
+}
+
+
 /// 🧭️ Locators own no text; symbol pages remain retained until their whole physical close grant.
 pub struct BorrowedProjectedPackCursor {
     identity: Option<usize>, root_spec: Option<BorrowedRecordSpec>, intrinsic_field: Option<u16>, phase: Phase, symbols: PagedList<Symbol, SYMBOL_LIMIT>,
     frames: [Frame; 64], path: [usize; 64], depth: usize,
-    note: Option<Symbol>, search: usize, compare_offset: usize, insertion: usize,
+    note: Option<Symbol>, search: usize, compare_offset: usize, compare_left: Option<u8>, insertion: usize,
     selected: usize, symbol_index: usize, symbol_offset: usize,
     pending: [u8; 24], pending_length: usize, pending_offset: usize,
 }
 
 impl Default for BorrowedProjectedPackCursor {
-    fn default() -> Self { Self { identity: None, root_spec: None, intrinsic_field: None, phase: Phase::Discover, symbols: PagedList::empty(), frames: [Frame::default(); 64], path: [0; 64], depth: 0, note: None, search: 0, compare_offset: 0, insertion: 0, selected: 0, symbol_index: 0, symbol_offset: 0, pending: [0; 24], pending_length: 0, pending_offset: 0 } }
+    fn default() -> Self { Self { identity: None, root_spec: None, intrinsic_field: None, phase: Phase::Discover, symbols: PagedList::empty(), frames: [Frame::default(); 64], path: [0; 64], depth: 0, note: None, search: 0, compare_offset: 0, compare_left: None, insertion: 0, selected: 0, symbol_index: 0, symbol_offset: 0, pending: [0; 24], pending_length: 0, pending_offset: 0 } }
 }
 
 fn invalid(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, reason) }
-fn page_error(error: semio_framework_value::list::PagedListError) -> ValueError { ValueError::new(match error.kind { semio_framework_value::list::PagedListRefusalKind::AllocationFailed => ValueRefusalKind::AllocationFailed, semio_framework_value::list::PagedListRefusalKind::OwnershipLimit => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvariantViolated }, error.reason) }
+fn page_error(error: semio_framework_value::list::PagedListError) -> ValueError { ValueError::literal(match error.kind { semio_framework_value::list::PagedListRefusalKind::AllocationFailed => ValueRefusalKind::AllocationFailed, semio_framework_value::list::PagedListRefusalKind::OwnershipLimit => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvariantViolated }, error.reason) }
 
 impl BorrowedProjectedPackCursor {
     pub fn is_complete(&self) -> bool { self.phase == Phase::Complete && self.pending_offset == self.pending_length }
     pub fn terminal_is_empty(&self) -> bool { self.phase == Phase::Closed && self.symbols.terminal_is_empty() }
     pub fn next_capacity_byte_demand(&self) -> Result<usize, ValueError> { if self.phase == Phase::Reserve { self.symbols.next_allocation_bytes().map_err(page_error) } else { Ok(0) } }
+    /// 🪜️ Quotes the actual next original source path or symbol backing without pricing authority.
+    pub fn next_advance_depth_demand(&self) -> Result<usize,ValueError> {
+        let source_depth=self.depth.checked_add(1).ok_or_else(||invalid("Pack source depth overflow"))?;
+        let symbol_depth=|index:usize|->Result<usize,ValueError>{
+            let original=self.symbols.get(index).ok_or_else(||invalid("Pack symbol depth lost original locator"))?;
+            let source=original.depth.checked_add(1).ok_or_else(||invalid("Pack symbol source depth overflow"))?;
+            let backing=self.symbols.next_pop_depth_demand().map_err(page_error)?.checked_add(1).ok_or_else(||invalid("Pack symbol backing depth overflow"))?;
+            Ok(source.max(backing))
+        };
+        if self.pending_offset<self.pending_length{return Ok(1);}
+        Ok(match self.phase {
+            Phase::Discover=>source_depth+usize::from(self.frames[self.depth].phase!=0&&self.frames[self.depth].index<self.frames[self.depth].length),
+            Phase::Find if self.search<self.symbols.len()=>symbol_depth(self.search)?.max(self.note.ok_or_else(||invalid("Pack depth lost pending text locator"))?.depth+1),
+            Phase::Reserve=>self.symbols.next_reserve_depth_demand().map_err(page_error)?.checked_add(1).ok_or_else(||invalid("Pack symbol reservation depth overflow"))?,
+            Phase::Insert=>self.symbols.next_pop_depth_demand().map_err(page_error)?.checked_add(1).ok_or_else(||invalid("Pack symbol insertion depth overflow"))?,
+            Phase::Select|Phase::Symbols|Phase::SymbolBytes if self.symbol_index<self.symbols.len()=>symbol_depth(self.symbol_index)?,
+            Phase::Body=>{
+                let frame=self.frames[self.depth];
+                let child=match frame.phase {10..=18=>source_depth+2,1..=5|20|23=>source_depth+1,_=>source_depth};
+                let symbol=match frame.phase {7 if frame.index<self.symbols.len()=>symbol_depth(frame.index)?,18 if frame.count<self.symbols.len()=>symbol_depth(frame.count)?,_=>0};
+                child.max(symbol)
+            },
+            Phase::Complete|Phase::Closed=>0,
+            _=>1,
+        })
+    }
+
     pub fn next_minimum_copy_bytes(&self) -> usize {
         if self.pending_offset < self.pending_length { return 1; }
-        match self.phase { Phase::Find => 2, Phase::SymbolBytes => 1, Phase::Body => if matches!(self.frames[self.depth].phase, 7 | 18) { 2 } else { 1 }, _ => 0 }
+        match self.phase { Phase::Find | Phase::SymbolBytes | Phase::Body => 1, _ => 0 }
     }
     pub fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if !self.symbols.is_empty() { Ok(0) } else { self.symbols.next_release_allocation_bytes().map_err(page_error) } }
 
@@ -65,12 +106,12 @@ impl BorrowedProjectedPackCursor {
         let (shape, table_row) = if let Some(B::Table(make)) = parent.shape { (Some(B::Record(make)), true) }
         else if let Some(record) = parent.record { (Some(record.fields.get(ordinal).ok_or_else(|| invalid("Pack source ordinal exceeds declared fields"))?.shape), false) }
         else { (match parent.shape { Some(B::List(make) | B::Tuple(make, _) | B::Block(make)) => Some(make()), Some(B::Coord(_) | B::Dim(_) | B::Dir | B::Range) => Some(B::Float), _ => None }, false) };
-        if self.depth + 1 == 64 { return Err(ValueError::new(ValueRefusalKind::DepthLimit, "borrowed Pack exceeds inline depth")); }
+        if self.depth + 1 == 64 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "borrowed Pack exceeds inline depth")); }
         self.path[self.depth] = ordinal; self.depth += 1;
         self.frames[self.depth] = Frame { shape, table_row, force_text: parent.table_row && matches!(shape, Some(B::Text | B::Ref(_))), ..Default::default() }; Ok(())
     }
     fn table_cell<'a>(&mut self, source: &'a dyn FieldProjectionSource, row: usize, column: usize) -> Result<V<'a>, ValueError> {
-        if self.depth + 2 >= 64 { return Err(ValueError::new(ValueRefusalKind::DepthLimit, "Pack Table exceeds inline depth")); }
+        if self.depth + 2 >= 64 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "Pack Table exceeds inline depth")); }
         self.path[self.depth] = row;
         let V::Record(ids) = source.projection_view(&self.path[..self.depth + 1])? else { return Err(invalid("Pack Table row changed declared Record shape")); };
         let spec = self.frames[self.depth].record.ok_or_else(|| invalid("Pack Table lost declared columns"))?;
@@ -82,16 +123,24 @@ impl BorrowedProjectedPackCursor {
     fn pop(&mut self) { if self.depth == 0 { self.phase = if self.phase == Phase::Discover { Phase::Select } else { Phase::Complete }; self.symbol_index = 0; } else { self.depth -= 1; } }
 
     fn compare(&mut self, left: &[u8], right: &[u8], maximum: usize) -> Option<(Option<Ordering>, usize)> {
-        let remaining = left.len().min(right.len()).saturating_sub(self.compare_offset);
-        if remaining == 0 { self.compare_offset = 0; return Some((Some(left.len().cmp(&right.len())), 0)); }
-        let count = (maximum / 2).min(32).min(remaining);
-        if count == 0 { return None; }
-        let offset = self.compare_offset;
-        let order = left[offset..offset + count].cmp(&right[offset..offset + count]);
-        self.compare_offset += count;
-        let finished = order != Ordering::Equal || self.compare_offset == left.len().min(right.len());
-        if finished { self.compare_offset = 0; Some((Some(if order == Ordering::Equal { left.len().cmp(&right.len()) } else { order }), count * 2)) }
-        else { Some((None, count * 2)) }
+        let limit = left.len().min(right.len());
+        if self.compare_offset == limit { self.compare_offset = 0; self.compare_left = None; return Some((Some(left.len().cmp(&right.len())), 0)); }
+        let mut copied = 0;
+        while copied < maximum {
+            let Some(first) = self.compare_left.take() else {
+                self.compare_left = Some(left[self.compare_offset]);
+                copied += 1;
+                continue;
+            };
+            let order = first.cmp(&right[self.compare_offset]);
+            copied += 1;
+            self.compare_offset += 1;
+            if order != Ordering::Equal || self.compare_offset == limit {
+                self.compare_offset = 0;
+                return Some((Some(if order == Ordering::Equal { left.len().cmp(&right.len()) } else { order }), copied));
+            }
+        }
+        (copied != 0).then_some((None, copied))
     }
 
     fn declare(&mut self, view: &V<'_>) -> Result<(), ValueError> {
@@ -114,7 +163,7 @@ impl BorrowedProjectedPackCursor {
             (Some(B::UInt | B::Count), V::UInt(_)) | (Some(B::Float | B::Quantity(_) | B::Angle(_)), V::Float(_)) |
             (Some(B::Text | B::Ref(_)), V::Text(_)) | (Some(B::Bytes64), V::Bytes(_)) | (Some(B::Enum(_)), V::Enum(_)) |
             (Some(B::Block(_)), V::Block) | (Some(B::List(_)), V::List(_)) | (Some(B::Tuple(_, _) | B::Coord(_) | B::Dim(_) | B::Dir | B::Range), V::Tuple(_)));
-        if valid { Ok(()) } else { Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "borrowed Pack requires its exact literal Record/scalar/sequence shape authority")) }
+        if valid { Ok(()) } else { Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "borrowed Pack requires its exact literal Record/scalar/sequence shape authority")) }
     }
 
     fn discover(&mut self, source: &dyn FieldProjectionSource) -> Result<(), ValueError> {
@@ -123,7 +172,7 @@ impl BorrowedProjectedPackCursor {
         if frame.phase == 0 {
             self.declare(&view)?;
             match view {
-                V::Text(_) | V::IntrinsicText(_) => { self.note = Some(Symbol { path: self.path, depth: self.depth, occurrences: 1, selected: false, forced: frame.force_text }); self.frames[self.depth].phase=1; self.pop(); self.phase = Phase::Find; self.search = 0; self.compare_offset = 0; }
+                V::Text(_) | V::IntrinsicText(_) => { self.note = Some(Symbol { path: self.path, depth: self.depth, occurrences: 1, selected: false, forced: frame.force_text }); self.frames[self.depth].phase=1; self.pop(); self.phase = Phase::Find; self.search = 0; self.compare_offset = 0; self.compare_left = None; }
                 V::Block => { self.frames[self.depth].phase=1;self.frames[self.depth].length=1; }
                 V::Record(ids) => { self.frames[self.depth].phase = 1; self.frames[self.depth].length = ids.len(); }
                 V::List(length) | V::Tuple(length) | V::IntrinsicArray(length) | V::IntrinsicObject(length) => { self.frames[self.depth].phase = 1; self.frames[self.depth].length = length; }
@@ -136,26 +185,28 @@ impl BorrowedProjectedPackCursor {
     }
 
     /// ✍️ Performs one structural event, one physical birth, or at most sixty-four source/output bytes.
-    pub fn advance(&mut self, source: &dyn FieldProjectionSource, spec: BorrowedRecordSpec, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, ValueError> {
+    pub fn advance(&mut self, source: &dyn FieldProjectionSource, spec: BorrowedRecordSpec, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
         self.advance_root(source,Some(spec),None,output,grant)
     }
 
     /// 🌱️ Emits one declared intrinsic Body field, preserving original member order and duplicates.
-    pub fn advance_intrinsic(&mut self, source: &dyn FieldProjectionSource, field_id: u16, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, ValueError> {
+    pub fn advance_intrinsic(&mut self, source: &dyn FieldProjectionSource, field_id: u16, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
         self.advance_root(source,None,Some(field_id),output,grant)
     }
 
-    fn advance_root(&mut self, source: &dyn FieldProjectionSource, spec: Option<BorrowedRecordSpec>, field_id: Option<u16>, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, ValueError> {
+    fn advance_root(&mut self, source: &dyn FieldProjectionSource, spec: Option<BorrowedRecordSpec>, field_id: Option<u16>, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
+        let mut progress = RetainedCloneProgress::default();
+        let result = (|| -> Result<BorrowedProjectedPackProgress, ValueError> {
         if matches!(self.phase, Phase::Closing | Phase::Closed) { return Err(invalid("borrowed Pack cursor is closing")); }
-        let identity = source as *const dyn FieldProjectionSource as *const () as usize;
+        let identity = source.projection_identity();
         if self.identity.is_some_and(|expected| expected != identity) { return Err(invalid("borrowed Pack original source identity changed")); }
         if self.identity.is_some() && (self.intrinsic_field != field_id || self.root_spec.is_some() != spec.is_some()) { return Err(invalid("borrowed Pack root framing authority changed")); }
         if self.root_spec.is_some_and(|original| spec.is_none_or(|spec|original.fields.as_ptr() != spec.fields.as_ptr() || original.fields.len() != spec.fields.len())) { return Err(invalid("borrowed Pack declared root fields changed")); }
         if self.is_complete() { return Ok(BorrowedProjectedPackProgress { complete: true, ..Default::default() }); }
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < self.next_minimum_copy_bytes() { return Ok(Default::default()); }
-        if grant.maximum_depth < 64 { return Err(ValueError::new(ValueRefusalKind::DepthLimit, "borrowed Pack requires its declared inline depth")); }
+        if grant.maximum_depth < self.next_advance_depth_demand()? { return Ok(Default::default()); }
         self.identity = Some(identity); self.root_spec = spec; self.intrinsic_field = field_id;
-        let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        progress.copied_items = 1;
         let maximum = grant.maximum_copy_bytes.min(64);
         if self.pending_offset < self.pending_length {
             let count = output.len().min(maximum).min(self.pending_length - self.pending_offset);
@@ -179,7 +230,7 @@ impl BorrowedProjectedPackCursor {
                 if !self.symbols.has_reserved_slot() {
                     let required = self.symbols.next_allocation_bytes().map_err(page_error)?;
                     if required > grant.maximum_capacity_bytes { return Ok(Default::default()); }
-                    let step = self.symbols.reserve_one(required).map_err(|error| page_error(error.refusal()))?;
+                    let step = self.symbols.reserve_one(required).map_err(|error| { progress.retained_capacity_bytes = error.allocated_bytes; page_error(error.refusal()) })?;
                     progress.retained_capacity_bytes = step.allocated_bytes;
                 } else { self.symbols.push_reserved(self.note.ok_or_else(|| invalid("Pack insertion lost text locator"))?).map_err(|_| invalid("Pack symbol reserved slot rejected"))?; self.search = self.symbols.len() - 1; self.phase = Phase::Insert; }
             }
@@ -208,13 +259,15 @@ impl BorrowedProjectedPackCursor {
                 if self.symbol_offset == bytes.len() { self.symbol_index += 1; self.phase = Phase::Symbols; }
                 return Ok(BorrowedProjectedPackProgress { progress, written_bytes: count, complete: false });
             }
-            Phase::Body => { return self.body(source, output, maximum, progress); }
+            Phase::Body => { return self.body(source, output, maximum, &mut progress); }
             _ => unreachable!(),
         }
         Ok(BorrowedProjectedPackProgress { progress, written_bytes: 0, complete: self.is_complete() })
+        })();
+        result.map_err(|reason| failed_turn(reason, progress))
     }
 
-    fn body(&mut self, source: &dyn FieldProjectionSource, output: &mut [u8], maximum: usize, mut progress: RetainedCloneProgress) -> Result<BorrowedProjectedPackProgress, ValueError> {
+    fn body(&mut self, source: &dyn FieldProjectionSource, output: &mut [u8], maximum: usize, progress: &mut RetainedCloneProgress) -> Result<BorrowedProjectedPackProgress, ValueError> {
         let frame = self.frames[self.depth];
         let view = source.projection_view(&self.path[..self.depth])?;
         if frame.phase == 0 {
@@ -226,7 +279,7 @@ impl BorrowedProjectedPackCursor {
                 V::List(length) | V::Tuple(length) => { self.frames[self.depth].phase = 4; self.frames[self.depth].length = length; self.frames[self.depth].flags = if length == 0 { 0 } else { 3 }; }
                 V::IntrinsicArray(length) => { self.queue_number(Some(TAG_LIST),length as u64);self.frames[self.depth].phase=5;self.frames[self.depth].length=length; }
                 V::IntrinsicObject(length) => { self.queue_number(Some(TAG_MAP),length as u64);self.frames[self.depth].phase=21;self.frames[self.depth].length=length; }
-                V::Text(_) | V::IntrinsicText(_) => { self.frames[self.depth].phase = 7; self.compare_offset = 0; }
+                V::Text(_) | V::IntrinsicText(_) => { self.frames[self.depth].phase = 7; self.compare_offset = 0; self.compare_left = None; }
                 V::Bytes(bytes) | V::IntrinsicBytes(bytes) => { self.queue_number(Some(TAG_BYTES), bytes.len() as u64); self.frames[self.depth].phase = 8; }
                 V::Bool(value) | V::IntrinsicBool(value) => { self.queue(&[if value { TAG_TRUE } else { TAG_FALSE }]); self.pop(); }
                 V::IntrinsicNull => { self.queue(&[TAG_NULL]);self.pop(); }
@@ -287,7 +340,7 @@ impl BorrowedProjectedPackCursor {
                 if count == 0 && frame.offset < bytes.len() { return Ok(Default::default()); }
                 output[..count].copy_from_slice(&bytes[frame.offset..frame.offset + count]); self.frames[self.depth].offset += count; progress.copied_bytes = count;
                 if self.frames[self.depth].offset == bytes.len() { self.pop(); }
-                return Ok(BorrowedProjectedPackProgress { progress, written_bytes: count, complete: self.is_complete() });
+                return Ok(BorrowedProjectedPackProgress { progress: *progress, written_bytes: count, complete: self.is_complete() });
             }
             10 => { self.queue_number(None,frame.record.ok_or_else(||invalid("Pack Table columns disappeared"))?.fields.len() as u64); self.frames[self.depth].phase=11; self.frames[self.depth].candidate=u32::MAX; }
             11 => {
@@ -316,8 +369,8 @@ impl BorrowedProjectedPackCursor {
                         (ELEM_INT,V::Int(value))=>self.queue_number(None,((value as u64)<<1)^((value>>63)as u64)),
                         (ELEM_UINT,V::UInt(value))=>self.queue_number(None,value),
                         (ELEM_ENUM,V::Enum(value))=>self.queue_number(None,u64::from(value)),
-                        (ELEM_STR,V::Text(_))=>{self.frames[self.depth].phase=18;self.frames[self.depth].count=0;self.frames[self.depth].rank=0;self.compare_offset=0;return Ok(BorrowedProjectedPackProgress{progress,..Default::default()});},
-                        (ELEM_FALLBACK,_)=>{self.frames[self.depth].index+=1;self.push(frame.index)?;self.declare(&source.projection_view(&self.path[..self.depth])?)?;self.frames[self.depth].phase=19;self.push(frame.offset)?;return Ok(BorrowedProjectedPackProgress{progress,..Default::default()});},
+                        (ELEM_STR,V::Text(_))=>{self.frames[self.depth].phase=18;self.frames[self.depth].count=0;self.frames[self.depth].rank=0;self.compare_offset=0;self.compare_left=None;return Ok(BorrowedProjectedPackProgress{progress: *progress,..Default::default()});},
+                        (ELEM_FALLBACK,_)=>{self.frames[self.depth].index+=1;self.push(frame.index)?;self.declare(&source.projection_view(&self.path[..self.depth])?)?;self.frames[self.depth].phase=19;self.push(frame.offset)?;return Ok(BorrowedProjectedPackProgress{progress: *progress,..Default::default()});},
                         _=>return Err(invalid("Pack Table cell changed declared scalar shape")),
                     } self.frames[self.depth].index+=1; }
                 }
@@ -339,12 +392,12 @@ impl BorrowedProjectedPackCursor {
                 if count==0&&frame.offset<bytes.len(){return Ok(Default::default());}
                 output[..count].copy_from_slice(&bytes[frame.offset..frame.offset+count]);self.frames[self.depth].offset+=count;progress.copied_bytes=count;
                 if self.frames[self.depth].offset==bytes.len(){self.frames[self.depth].phase=23;}
-                return Ok(BorrowedProjectedPackProgress{progress,written_bytes:count,complete:false});
+                return Ok(BorrowedProjectedPackProgress{progress: *progress,written_bytes:count,complete:false});
             }
             23 => {self.frames[self.depth].phase=21;self.frames[self.depth].index+=1;self.push(frame.index)?;},
             _ => return Err(invalid("Pack cursor phase changed")),
         } }
-        Ok(BorrowedProjectedPackProgress { progress, written_bytes: 0, complete: self.phase == Phase::Complete && self.pending_offset == self.pending_length })
+        Ok(BorrowedProjectedPackProgress { progress: *progress, written_bytes: 0, complete: self.phase == Phase::Complete && self.pending_offset == self.pending_length })
     }
 
     /// 📏️ Quotes the original symbol frontier with separate release and structural depth.
@@ -355,17 +408,22 @@ impl BorrowedProjectedPackCursor {
     }
 
     /// 🍂️ Retires one inline locator or one whole paid symbol allocation without source disposal.
-    pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, ValueError> {
+    pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, BorrowedProjectedPackFailure> {
+        let mut progress = RetainedCloneProgress::default();
+        let result = (|| -> Result<BorrowedProjectedPackProgress, ValueError> {
         if self.phase == Phase::Closed { return Ok(BorrowedProjectedPackProgress { complete: true, ..Default::default() }); }
         let demand = self.retirement_demands()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(Default::default()); }
-        self.phase = Phase::Closing; self.note = None;
-        let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        self.phase = Phase::Closing; self.note = None; self.compare_left = None;
+        progress.copied_items = 1;
         if !self.symbols.is_empty() { self.symbols.pop(); }
         else if !self.symbols.terminal_is_empty() { let required = self.symbols.next_release_allocation_bytes().map_err(page_error)?; if required > grant.maximum_release_bytes { return Ok(Default::default()); } let step = self.symbols.release_empty_page(required).map_err(page_error)?; progress.released_bytes = step.released_allocation_bytes; }
         else { self.identity = None; self.phase = Phase::Closed; }
         Ok(BorrowedProjectedPackProgress { progress, written_bytes: 0, complete: self.phase == Phase::Closed })
+        })();
+        result.map_err(|reason| failed_turn(reason, progress))
     }
+
 }
 
 impl Drop for BorrowedProjectedPackCursor {

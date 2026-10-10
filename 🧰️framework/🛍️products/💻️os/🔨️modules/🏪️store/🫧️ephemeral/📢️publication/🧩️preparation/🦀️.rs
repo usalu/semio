@@ -14,7 +14,7 @@ pub enum ArtifactEphemeralPreparationTaskStep<P> {
 
 /// 🛠️ Constructs one root within each grant; consumed mutations remain in the task or result.
 pub trait ArtifactEphemeralPreparationTask<P, M>: ErasedSnapshotRetirement {
-    fn advance(&mut self, base: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactEphemeralPreparationTaskStep<P>, String>;
+    fn advance(&mut self, base: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError>;
     fn begin_close(&mut self);
 }
 
@@ -115,7 +115,7 @@ impl<P, M> ArtifactEphemeralTaskPreparation<P, M> {
 }
 
 impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPreparation<P, M> for ArtifactEphemeralTaskPreparation<P, M> {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if self.cancelled || self.closing || !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -126,10 +126,10 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if grant.maximum_depth < 2 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
-        let task = self.task.as_mut().ok_or_else(|| "ephemeral preparation lost its construction task".to_string())?;
-        let base = self.base.as_ref().ok_or_else(|| "ephemeral preparation lost its base read".to_string())?;
+        let task = self.task.as_mut().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"ephemeral preparation lost its construction task"))?;
+        let base = self.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"ephemeral preparation lost its base read"))?;
         let child=ArtifactStoreOneItemGrant { maximum_items: 1, maximum_depth:grant.maximum_depth-1, ..grant };
-        let step = task.advance(base.as_ref(), &mut self.mutation, child)?;
+        let step = match task.advance(base.as_ref(), &mut self.mutation, child){Ok(step)=>step,Err(error)=>{self.cancelled=true;return Err(error);}};
         let ownership=match &step {ArtifactEphemeralPreparationTaskStep::Progress(_,ownership)|ArtifactEphemeralPreparationTaskStep::Prepared{ownership,..}=>*ownership,ArtifactEphemeralPreparationTaskStep::Blocked=>Default::default()};
         let checkpoint = match &step {
             ArtifactEphemeralPreparationTaskStep::Progress(checkpoint, _) | ArtifactEphemeralPreparationTaskStep::Prepared { checkpoint, .. } => Some(*checkpoint),
@@ -155,7 +155,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
             ArtifactEphemeralPreparationTaskStep::Blocked => ArtifactStoreOneItemPreparationStep::Blocked,
         };
         if invalid {
-            return Err("ephemeral construction task exceeded its exact grant".into());
+            self.cancelled=true;return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"ephemeral construction task exceeded its exact grant").with_retained_progress(ownership));
         }
         Ok(result)
     }

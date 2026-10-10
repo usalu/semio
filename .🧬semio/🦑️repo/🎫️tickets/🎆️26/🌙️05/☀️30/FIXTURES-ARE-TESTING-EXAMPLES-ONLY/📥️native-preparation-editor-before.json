@@ -1,0 +1,288 @@
+{
+  "observationOnly": true,
+  "rows": [
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "d4630e69ecfb838e28209f5fa886e5add430f2901b17667aa8f2e99a3c2e9aa2",
+      "bytes": 100336,
+      "preparationAdvanceStringLines": [
+        974
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "80d215a69de4b41e55126897c947cb53e410c8e9a6124262a8a8edec65408a88",
+      "bytes": 80142,
+      "preparationAdvanceStringLines": [
+        932
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "87b88023ec2eae74eff6519bee310bdcda847b0b1cbbfa7c62dd9712acac9697",
+      "bytes": 73909,
+      "preparationAdvanceStringLines": [
+        604
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "3134327ca66fafccdb5be06a74f4d929917404aa218825d03bd09dba52c52f9a",
+      "bytes": 137482,
+      "preparationAdvanceStringLines": [
+        932,
+        1069
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "6225aa0b16d31459c743e4828dddc758a329bba16f3fa93feeec2ca77f626c56",
+      "bytes": 261200,
+      "preparationAdvanceStringLines": [
+        1795,
+        1929
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "736362fbf2ba6886ae7ebe0d8e204fc635e02902cdc3f62bc5b39f126467c490",
+      "bytes": 43137,
+      "preparationAdvanceStringLines": [
+        310
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "9c36232cc3235110f53381c690de1e47a13915e76eaec6e6c85fa14f3f1ecb81",
+      "bytes": 86823,
+      "preparationAdvanceStringLines": [
+        668
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "ec9a0430846cdd19c043dfd937facdb42acca9089adefde8c359a3dbf9fc66a2",
+      "bytes": 70311,
+      "preparationAdvanceStringLines": [
+        724
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "56e20af8788b05ab5c83d1dab0b1532e2eeb1a133888160a879a31ef84440c66",
+      "bytes": 89014,
+      "preparationAdvanceStringLines": [
+        563
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "258d02cc981444dda1776205ca84a680909717630da01fbe6b435a873c92c1fd",
+      "bytes": 27830,
+      "preparationAdvanceStringLines": [
+        215
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+      "sha256": "370daa92f2f55e19663402eccc5822c1d14a4c2e316de28d75cf9714b96c913c",
+      "bytes": 115996,
+      "preparationAdvanceStringLines": [
+        442
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+      "sha256": "5ec0e027b8dd5aa14bf0b87aaddac07c6c3de5e31285cf4873bab078c0acf7ce",
+      "bytes": 111100,
+      "preparationAdvanceStringLines": [
+        503
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "71b67b59576ee83b3fb96d4eb497248ca76c733cd407736ccd59d8ea280717ab",
+      "bytes": 148619,
+      "preparationAdvanceStringLines": [
+        865,
+        1177
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "f3652afd3a91846717ce7231c178031e9afedfa489502dea41a0e8babec6fe7a",
+      "bytes": 174190,
+      "preparationAdvanceStringLines": [
+        1356,
+        1495
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "6aa569b3dbb0fdd2ebcd0b2b245ea6c6efef8ffd202f962d0356303a77fa0082",
+      "bytes": 94080,
+      "preparationAdvanceStringLines": [
+        882
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "3a102f0ef67ab3ae7595a74f0318bb47630bba1211edef6765f9e7d48fc675bb",
+      "bytes": 174061,
+      "preparationAdvanceStringLines": [
+        1713,
+        1906
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "a600dbc086808895f79e6b1437fb50a01c1b1f95d939a496ff1e761e97fed033",
+      "bytes": 53191,
+      "preparationAdvanceStringLines": [
+        405
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "e0866b70080ce57702a7fd222709eca6bbbf1d3269c8dfefc7507c29b0f3c048",
+      "bytes": 131590,
+      "preparationAdvanceStringLines": [
+        1447
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "8854c925bc754f776b64f3b0b26d58455d4f80325659c5309d147ec5682d4093",
+      "bytes": 67326,
+      "preparationAdvanceStringLines": [
+        524
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "551e20231ec0ee3e6b35227ee28d2d3cc692b4e39136a325b2a2120166025f4e",
+      "bytes": 176744,
+      "preparationAdvanceStringLines": [
+        1494
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "26b36f010c2a118f7f13c1e0212245d96467f8eff7bb1cb8a9e4507d704b044d",
+      "bytes": 113091,
+      "preparationAdvanceStringLines": [
+        673,
+        822
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5c5c7f405e55c5e9b3f522a6bb7934421a401f89c2f9c440ee9540bb0550178e",
+      "bytes": 28139,
+      "preparationAdvanceStringLines": [
+        142
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "d1dfac23a277c46ecf6b6c35a10713d576e2c0bdd8f89813bbb40db942c04da2",
+      "bytes": 50929,
+      "preparationAdvanceStringLines": [
+        103
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "3be61430667c4e820ce4816136d011e6fee1accf614a73785da37e72f8760647",
+      "bytes": 42358,
+      "preparationAdvanceStringLines": [
+        307
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "e44b9acb773d7bd7bdafe1e2746e0d64980c3bb53973445e09f2aaf14fded22d",
+      "bytes": 14371,
+      "preparationAdvanceStringLines": [
+        135
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "fa952f708b0e4e027f989d3905f33c44dabc70528f32a2cdb8b5ad23a9bd216b",
+      "bytes": 312665,
+      "preparationAdvanceStringLines": [
+        2086,
+        2262
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "254262da546c70a1317cfe8748ac087e0b9c471b61df2d9f7e752604ce04ef6c",
+      "bytes": 571448,
+      "preparationAdvanceStringLines": [
+        8547,
+        8672
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "3555c47596a1987e5d2b4bebd35e3188349cb3c59e9b021117a935ccc34051a0",
+      "bytes": 469924,
+      "preparationAdvanceStringLines": [
+        6266,
+        6448
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "9115fb6b3925a5b0e509c565ea0b543ef0f98d71664ed9874627f9c8389410ab",
+      "bytes": 46117,
+      "preparationAdvanceStringLines": [
+        334
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "72a93ad13ecceffeb9cc925a964641b17cf083eb63407c8f11663d644efc0c8c",
+      "bytes": 42208,
+      "preparationAdvanceStringLines": [
+        301
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "a9d040e8b1445d2590c7b658437eb0b671b29bb0981ceb2d82fcfcf684b1bfc2",
+      "bytes": 76499,
+      "preparationAdvanceStringLines": [
+        502,
+        624
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "sha256": "2716e8d06bc996c21273e204220fcdd59ba84cd7e817328c832dec9a06e2162b",
+      "bytes": 34375,
+      "preparationAdvanceStringLines": [
+        408
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+      "sha256": "1c6c0da0686bc66920215e5e591ba1608e213d53a8356912244d4ae36a5e2646",
+      "bytes": 39421,
+      "preparationAdvanceStringLines": [
+        612
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "1b56ad558904caa2ea6571b304c50182d6651ff5d0beb5b0cd18d31e1c7c82e7",
+      "bytes": 91597,
+      "preparationAdvanceStringLines": [
+        603,
+        769
+      ]
+    }
+  ]
+}

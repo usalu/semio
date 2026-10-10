@@ -1,10 +1,9 @@
-import {test,expect} from "bun:test";
-import {readFileSync} from "node:fs";
-import {join} from "node:path";
-import {Buffer} from "node:buffer";
-test("raw retirement examples separate copied content from original backing release",()=>{
- const root=join(import.meta.dir,"../..");
- const fixture=JSON.parse(readFileSync(join(root,"🧫️fixtures/🚪️raw-allocation-close.json"),"utf8"));
- for(const row of fixture.cases){const original=Buffer.alloc(row.capacity);expect(row.initializedBytes).toBeLessThanOrEqual(original.byteLength);expect(row.expectedCopiedBytes).toBe(original.subarray(0,row.initializedBytes).byteLength);expect(row.expectedReleasedBytes).toBe(original.byteLength);}
- expect(fixture.cases.some((row:{capacity:number;initializedBytes:number})=>row.capacity>fixture.maximumCopyBytes&&row.initializedBytes===0)).toBe(true);
+/** ♻️ Node Buffer and SQLite distinguish an empty metadata view from the original physical backing. */
+import{test,expect}from"bun:test";import{Database}from"bun:sqlite";import{existsSync,readFileSync}from"node:fs";import{join}from"node:path";import{Buffer}from"node:buffer";
+test("raw retirement preserves metadata copy zero and independent original backing release",()=>{
+ const root=join(import.meta.dir,"../.."),law=JSON.parse(readFileSync(join(root,"🧫️fixtures/🚪️raw-allocation-close.json"),"utf8"));
+ const db=new Database(":memory:");try{db.run("CREATE TABLE backing(id TEXT,capacity INTEGER,initialized INTEGER,copied INTEGER)");for(const row of law.cases){const original=Buffer.alloc(row.capacity,42),pointer=original.buffer,empty=original.subarray(row.initializedBytes,row.initializedBytes);expect(row.initializedBytes).toBeLessThanOrEqual(original.byteLength);expect(empty.byteLength).toBe(0);expect(empty.buffer).toBe(pointer);expect(original.byteLength).toBe(row.expectedReleasedBytes);expect(row.expectedCopiedBytes).toBe(0);db.query("INSERT INTO backing VALUES(?,?,0,0)").run(row.id,original.byteLength)}expect(db.query("SELECT sum(copied) AS copied FROM backing").get()).toEqual({copied:0});expect(db.query("SELECT capacity FROM backing WHERE id=?").get("partial-large-capacity")).toEqual({capacity:65536})}finally{db.close()}
+ const source=readFileSync(join(root,"🦀️.rs"),"utf8");expect(source).toContain("if !self.raw.is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}");expect(source).toContain("self.raw.clear();return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};");expect(source).not.toContain("self.raw.len().min(grant.maximum_copy_bytes)");console.log("[DEBUG] Node Buffer/SQLite raw deinitialization metadataCopy0 same backing independent65536 release; native unchanged five-axis source denial remains executable");
 });
+
+test("original raw backing examples cannot own a trial schema",()=>{expect(existsSync(new URL("../../🧬️schema/♻️raw-allocation-close.json",import.meta.url))).toBe(false);});

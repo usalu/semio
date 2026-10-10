@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/operation-wire/output/schema.json",
+  "title": "ArtifactPreparedOperationOutput",
+  "type": "array",
+  "items": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 255
+  },
+  "description": "Exact original initialized operation octets. Payload and total retained capacity limits are explicitly supplied by the embedding owner; per-turn physical grants remain independent. Partial prefixes and complete operation bytes share this payload contract, with retained backing closed through its actual owner.",
+  "$defs": {
+    "ArtifactPreparedOperations": {
+      "title": "ArtifactPreparedOperations",
+      "description": "Original protocol operation sequence. Each initialized octet payload is admitted independently; the embedding proposal owns total extent and physical grants.",
+      "type": "array",
+      "items": {
+        "$ref": "#"
+      }
+    }
+  }
+}

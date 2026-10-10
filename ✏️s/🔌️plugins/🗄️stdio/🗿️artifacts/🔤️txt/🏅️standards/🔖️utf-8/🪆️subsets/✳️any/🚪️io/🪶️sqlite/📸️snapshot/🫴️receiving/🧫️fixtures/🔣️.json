@@ -1,0 +1,959 @@
+{
+  "version": 1,
+  "bodyGrant": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 4194304,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "closeGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "deniedCloseGrant": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 0
+  },
+  "nativeMaximumBytes": 16777216,
+  "maximumCloseTurns": 65536,
+  "source": {
+    "unit": "文🌠",
+    "repeat": 20000,
+    "bytes": 140000,
+    "cancelAfterBytes": 65536
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "snapshot": {
+        "schema": "literal empty",
+        "lines": [],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "literal empty",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "body": ""
+    },
+    {
+      "id": "one-empty-line",
+      "snapshot": {
+        "schema": "literal empty line",
+        "lines": [
+          ""
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "literal empty line",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  0,
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "body": ""
+    },
+    {
+      "id": "multiple-empty-lines",
+      "snapshot": {
+        "schema": "empty rows",
+        "lines": [
+          "",
+          ""
+        ],
+        "trailingNewline": true,
+        "lineEnding": "lf"
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "empty rows",
+                  1,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  0,
+                  ""
+                ]
+              },
+              {
+                "rowid": 2,
+                "values": [
+                  2,
+                  1,
+                  1,
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "body": "\n\n"
+    },
+    {
+      "id": "unicode-nul-crlf",
+      "snapshot": {
+        "schema": "owned 文🌠",
+        "lines": [
+          "文🌠",
+          "\u0000ß",
+          ""
+        ],
+        "trailingNewline": true,
+        "lineEnding": "crLf"
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "owned 文🌠",
+                  1,
+                  "crlf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  0,
+                  "文🌠"
+                ]
+              },
+              {
+                "rowid": 2,
+                "values": [
+                  2,
+                  1,
+                  1,
+                  "\u0000ß"
+                ]
+              },
+              {
+                "rowid": 3,
+                "values": [
+                  3,
+                  1,
+                  2,
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "body": "文🌠\r\n\u0000ß\r\n\r\n"
+    },
+    {
+      "id": "literal-separators",
+      "snapshot": {
+        "schema": "embedded",
+        "lines": [
+          "a\nb",
+          "c\r\nd"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "embedded",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  0,
+                  "a\nb"
+                ]
+              },
+              {
+                "rowid": 2,
+                "values": [
+                  2,
+                  1,
+                  1,
+                  "c\r\nd"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "body": "a\nb\nc\r\nd"
+    },
+    {
+      "id": "reversed-surrogate-rows",
+      "snapshot": {
+        "schema": "literal surrogate",
+        "lines": [
+          "first",
+          "second"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "crLf"
+      },
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 71,
+                "values": [
+                  71,
+                  "literal surrogate",
+                  0,
+                  "crlf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 19,
+                "values": [
+                  19,
+                  71,
+                  1,
+                  "second"
+                ]
+              },
+              {
+                "rowid": 3,
+                "values": [
+                  3,
+                  71,
+                  0,
+                  "first"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "body": "first\r\nsecond"
+    }
+  ],
+  "malformed": [
+    {
+      "id": "no-root",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": []
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "TXT requires one document row"
+    },
+    {
+      "id": "two-roots",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              },
+              {
+                "rowid": 2,
+                "values": [
+                  2,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "TXT requires one document row"
+    },
+    {
+      "id": "root-identity",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  2,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "TXT document identity or width is invalid"
+    },
+    {
+      "id": "root-nonpositive",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 0,
+                "values": [
+                  0,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "TXT document identity or width is invalid"
+    },
+    {
+      "id": "root-width",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "TXT document identity or width is invalid"
+    },
+    {
+      "id": "schema-type",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  2,
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "TXT text cell is invalid"
+    },
+    {
+      "id": "flag-two",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  2,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "TXT trailing newline requires zero or one"
+    },
+    {
+      "id": "ending-unknown",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "mixed"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "TXT line ending is invalid"
+    },
+    {
+      "id": "line-identity",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  2,
+                  1,
+                  0,
+                  "bad"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT line identity, relationship or width is invalid"
+    },
+    {
+      "id": "line-orphan",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  9,
+                  0,
+                  "bad"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT line identity, relationship or width is invalid"
+    },
+    {
+      "id": "line-nonpositive",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 0,
+                "values": [
+                  0,
+                  1,
+                  0,
+                  "bad"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT line identity, relationship or width is invalid"
+    },
+    {
+      "id": "line-width",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  0
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT line identity, relationship or width is invalid"
+    },
+    {
+      "id": "line-text-type",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  0,
+                  2
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT text cell is invalid"
+    },
+    {
+      "id": "line-identity-duplicate",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  0,
+                  "a"
+                ]
+              },
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  1,
+                  "b"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT line identity is duplicated"
+    },
+    {
+      "id": "negative-ordinal",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  -1,
+                  "a"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT line ordinals must be contiguous and unique"
+    },
+    {
+      "id": "gap-ordinal",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  1,
+                  "a"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT line ordinals must be contiguous and unique"
+    },
+    {
+      "id": "duplicate-ordinal",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  1,
+                  0,
+                  "a"
+                ]
+              },
+              {
+                "rowid": 2,
+                "values": [
+                  2,
+                  1,
+                  0,
+                  "b"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "message": "TXT line ordinals must be contiguous and unique"
+    },
+    {
+      "id": "wrong-definition",
+      "database": {
+        "tables": [
+          {
+            "name": "text_document",
+            "sql": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)",
+            "rows": [
+              {
+                "rowid": 1,
+                "values": [
+                  1,
+                  "invalid",
+                  0,
+                  "lf"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "text_line",
+            "sql": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content INTEGER NOT NULL\n)",
+            "rows": []
+          }
+        ]
+      },
+      "message": "SQLite declaration differs from the authored receiving schema"
+    }
+  ]
+}

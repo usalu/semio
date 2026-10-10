@@ -3,16 +3,20 @@
 use crate::app::{AppOperationContext, ArtifactApp, ArtifactOwnedToolJobContext, ArtifactToolCompletion, ArtifactDownloadOutput, Emit, EphemeralEmit, HistoryView, InteractionHoverState};
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::Fault;
-use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, JobPublicationKind, RetainedFaultPublication, RetainedJobPayload, RetainedJobPublication, StepContext};
 use std::sync::Arc;
-use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retirement::controlled::ControlledRetirement};
+use std::mem::MaybeUninit;
 
 #[path="♻️metadata/🦀️.rs"]
 mod metadata_retirement;
 #[path="🎟️admission/🦀️.rs"]
 mod admission;
 pub use admission::ArtifactRetainedAdmissionRefusal;
+#[path="📸️checkpoint/👣️cursor/🦀️.rs"]
+mod checkpoint_cursor;
+pub use checkpoint_cursor::ArtifactCommandCheckpointCursor;
 
 //#region 🔖️Work
 pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;
@@ -173,9 +177,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
     }
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize>;
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault>;
-    fn checkpoint(&self, _target: &mut [u8]) -> Result<usize, Fault> {
-        Ok(0)
-    }
+    fn checkpoint_byte(&self, _index: usize) -> Option<u8> { None }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.is_empty() {
             Ok(())
@@ -287,6 +289,12 @@ enum ArtifactRetainedCommandPhase {
     Fault,
 }
 
+#[derive(Clone,Copy)]
+enum ArtifactCommandPublication {
+    Static { kind: JobPublicationKind, bytes: &'static [u8] },
+    Checkpoint,
+}
+
 pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     command: Option<A::Command>,
     snapshot: Option<Arc<A::Snapshot>>,
@@ -303,12 +311,23 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     work: Option<Box<dyn ArtifactCommandWork<A>>>,
     checkpoint_input: Option<RetainedToolWireInput>,
     checkpoint_bytes: [u8; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
+    checkpoint_target: [MaybeUninit<u8>; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
+    checkpoint_capture: Option<ArtifactCommandCheckpointCursor>,
+    publication: RetainedJobPublication,
+    fault_publication: RetainedFaultPublication,
+    pending_publication: Option<ArtifactCommandPublication>,
+    publication_delivered: bool,
+    fault: Option<Fault>,
+    fault_retirement: Option<ControlledRetirement<Fault>>,
+    decode_error: Option<protocol::ProtocolError>,
     checkpoint_byte_len: usize,
     checkpoint_page_cursor: usize,
+    checkpoint_page_offset: usize,
     raw_input: Option<RetainedToolWireInput>,
     raw: Vec<u8>,
     admission_refusal:Option<ArtifactRetainedAdmissionRefusal>,
     raw_page_cursor: usize,
+    raw_page_offset: usize,
     emit: Option<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>,
     download:Option<ArtifactDownloadOutput>,
     download_retirement:Option<ControlledRetirement<ArtifactDownloadOutput>>,
@@ -323,6 +342,13 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
 impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     fn controlled_close_step(step:Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->InteractiveJobCloseStep{match step{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
     fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if !self.publication.terminal_is_empty(){return self.publication.retirement_demands();}
+        if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands();}
+        if let Some(cursor)=self.checkpoint_capture.as_ref().filter(|cursor|!cursor.terminal_is_empty()){return Ok(cursor.retirement_demands());}
+        if self.checkpoint_capture.is_some()||self.pending_publication.is_some()||self.publication_delivered{return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if self.fault.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if let Some(owner)=self.fault_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
+        if self.decode_error.is_some(){return protocol::protocol_error_retirement_demand(&self.decode_error);}
         if self.admission_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if !self.raw.is_empty(){return Ok(RetirementDemand{copy_bytes:1,depth:1,..Default::default()});}
         if self.raw.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.raw.capacity(),depth:1,..Default::default()});}
@@ -381,12 +407,23 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             work: Some(payload.work),
             checkpoint_input,
             checkpoint_bytes: [0; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
+            checkpoint_target: [MaybeUninit::uninit(); ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
+            checkpoint_capture: None,
+            publication: RetainedJobPublication::new(),
+            fault_publication: RetainedFaultPublication::new(),
+            pending_publication: None,
+            publication_delivered: false,
+            fault: None,
+            fault_retirement: None,
+            decode_error: None,
             checkpoint_byte_len: 0,
             checkpoint_page_cursor: 0,
+            checkpoint_page_offset: 0,
             raw_input,
             raw: payload.raw,
             admission_refusal:payload.admission_refusal,
             raw_page_cursor: 0,
+            raw_page_offset: 0,
             emit: None,
             download:None,
             download_retirement:None,
@@ -399,37 +436,87 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         }
     }
 
-    fn retained_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
-        cx.payload_from_bytes(stream, bytes).unwrap_or_else(|rejected| {
-            drop(rejected.into_source());
-            RetainedJobPayload::empty(stream)
-        })
+    fn metadata(cx: &mut StepContext<'_>) -> Result<bool, ValueError> {
+        let grant = cx.retained_grant();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(false); }
+        cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+        Ok(true)
     }
 
-    fn checkpoint(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        let mut state = [0_u8; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES];
-        let mut work_state = [0_u8; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES - ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES];
-        let work_len = match self.work.as_ref().map(|work| work.checkpoint(&mut work_state)).transpose() {
-            Ok(Some(length)) if length <= ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES - ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES => length,
-            Ok(None) => 0,
-            _ => return self.fault(cx, b"retained command checkpoint was rejected"),
-        };
-        let length = match encode_artifact_command_checkpoint(
-            ArtifactCommandCheckpoint {
-                work_phase: self.phase == ArtifactRetainedCommandPhase::Work,
-                raw_page_cursor: self.raw_page_cursor as u64,
-                raw_bytes: self.raw.len() as u64,
-                work_progress: self.work_progress,
-                context_digest: self.context.as_ref().map_or(0, |context| context.identity_digest()),
-                workspace_identity: self.work.as_ref().map_or(0, |work| work.workspace_identity()),
-                work: &work_state[..work_len],
-            },
-            &mut state,
-        ) {
-            Ok(length) => length,
-            Err(_) => return self.fault(cx, b"retained command checkpoint could not be encoded"),
-        };
-        StepOutcome::CheckpointReady(Checkpoint { state: Self::retained_payload(cx, JobPayloadStream::CheckpointState, &state[..length]), applied_progress: self.work_progress.max(self.raw_page_cursor as u64) })
+    fn receive_step(cx: &mut StepContext<'_>, step: Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
+        match step {
+            Ok(step) => { cx.consume_retained(step.progress())?; Ok(step) }
+            Err(error) => { cx.consume_retained(error.retained_progress())?; Err(error) }
+        }
+    }
+
+    fn retire_publication(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
+        if !self.publication.terminal_is_empty() {
+            let grant=cx.retained_grant();
+            let step=self.publication.close_step(grant);
+            Self::receive_step(cx,step)?;
+            return Ok(());
+        }
+        if !self.fault_publication.terminal_is_empty() {
+            let grant=cx.retained_grant();
+            let step=self.fault_publication.close_step(grant);
+            Self::receive_step(cx,step)?;
+            return Ok(());
+        }
+        if let Some(cursor) = self.checkpoint_capture.as_mut().filter(|cursor| !cursor.terminal_is_empty()) {
+            let grant=cx.retained_grant();
+            let step=cursor.close_step(grant);
+            Self::receive_step(cx,step)?;
+            return Ok(());
+        }
+        if Self::metadata(cx)? {
+            if matches!(self.pending_publication, Some(ArtifactCommandPublication::Checkpoint)) { self.checkpoint_pending = false; }
+            self.checkpoint_capture.take();
+            self.pending_publication = None;
+            self.publication_delivered = false;
+        }
+        Ok(())
+    }
+
+    fn checkpoint<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if self.checkpoint_capture.is_none() {
+            if !Self::metadata(cx)? { return Ok(None); }
+            let work = self.work.as_ref().ok_or_else(Self::unadmitted_input)?;
+            self.checkpoint_capture = Some(ArtifactCommandCheckpointCursor::new(self.phase == ArtifactRetainedCommandPhase::Work, [
+                self.raw_page_cursor as u64, self.raw.len() as u64, self.work_progress,
+                self.context.as_ref().map_or(0, |context| context.identity_digest()), work.workspace_identity(),
+            ]));
+            self.pending_publication = Some(ArtifactCommandPublication::Checkpoint);
+            return Ok(None);
+        }
+        let work = self.work.as_deref().ok_or_else(Self::unadmitted_input)?;
+        let cursor = self.checkpoint_capture.as_mut().ok_or_else(Self::unadmitted_input)?;
+        if !cursor.is_complete() {
+            let step = cursor.advance_one(work, &mut self.checkpoint_target, |work, index| work.checkpoint_byte(index), cx.retained_grant());
+            Self::receive_step(cx, step)?;
+            return Ok(None);
+        }
+        let source = cursor.bytes(&self.checkpoint_target)?;
+        let result = self.publication.advance_from_source(JobPublicationKind::Checkpoint { applied_progress: self.work_progress.max(self.raw_page_cursor as u64) }, source, cx)?;
+        if result.is_some() { self.publication_delivered = true; }
+        Ok(result)
+    }
+
+    fn advance_publication<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if let Some(fault) = self.fault.as_ref() {
+            let result = self.fault_publication.advance_from_fault(fault, cx)?;
+            if result.is_some() { self.publication_delivered = true; }
+            return Ok(result);
+        }
+        match self.pending_publication {
+            Some(ArtifactCommandPublication::Static { kind, bytes }) => {
+                let result = self.publication.advance_from_source(kind, bytes, cx)?;
+                if result.is_some() { self.publication_delivered = true; }
+                Ok(result)
+            }
+            Some(ArtifactCommandPublication::Checkpoint) => self.checkpoint(cx),
+            None => Ok(None),
+        }
     }
 
     fn restore_checkpoint(&mut self) -> Result<(), Fault> {
@@ -444,31 +531,22 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         }
         self.raw.clear();
         self.raw_page_cursor = 0;
+        self.raw_page_offset = 0;
         Ok(())
     }
 
-    fn preview(&self, cx: &mut StepContext<'_>, bytes: &'static [u8]) -> StepOutcome {
-        StepOutcome::PreviewReady(Self::retained_payload(cx, JobPayloadStream::Preview, bytes))
+    fn preview(&mut self, bytes: &'static [u8]) {
+        self.pending_publication = Some(ArtifactCommandPublication::Static { kind: JobPublicationKind::Preview, bytes });
     }
 
-    fn fault(&mut self, cx: &mut StepContext<'_>, bytes: &'static [u8]) -> StepOutcome {
+    fn fault(&mut self, bytes: &'static [u8]) {
         self.phase = ArtifactRetainedCommandPhase::Fault;
-        crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] retained command {} faulted: {}", self.work.as_ref().map(|work| work.tool_id()).unwrap_or("<no work>"), String::from_utf8_lossy(bytes)));
-        StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, bytes) })
+        self.pending_publication = Some(ArtifactCommandPublication::Static { kind: JobPublicationKind::Fault, bytes });
     }
 
-    /// 🧯️ Carries the REDUCER's own fault code and message into the job fault instead of replacing it
-    /// with a fixed sentence. The app's `step` is the only party that knows why an operation was
-    /// refused, and dropping its `Fault` made every refusal read `retained command reducer rejected
-    /// operation` — one message for a missing session, an unsupported format and a rejected route
-    /// alike, which is a defect this lane had to reach for a browser probe to diagnose at all
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Truncated to the fault stream's own page, so an
-    /// oversized message narrows rather than replacing the report with nothing.
-    fn reducer_fault(&mut self, cx: &mut StepContext<'_>, fault: &Fault) -> StepOutcome {
+    fn reducer_fault(&mut self, fault: Fault) {
         self.phase = ArtifactRetainedCommandPhase::Fault;
-        crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] retained command {} reducer faulted: {}: {}", self.work.as_ref().map(|work| work.tool_id()).unwrap_or("<no work>"), fault.code.0, fault.message));
-        let detail = reducer_fault_detail(fault);
-        StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, &detail) })
+        self.fault = Some(fault);
     }
 
     #[cfg(test)]
@@ -491,160 +569,193 @@ pub fn reducer_fault_of_detail(detail: &[u8]) -> Option<Fault> {
 }
 
 impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
-        }
-        if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return StepOutcome::Yield;
-        }
-        if self.checkpoint_pending || self.phase != ArtifactRetainedCommandPhase::Work { cx.consume_fuel(1); }
-        if self.checkpoint_pending {
-            self.checkpoint_pending = false;
-            return self.checkpoint(cx);
-        }
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if cx.is_cancelled() { return JobOutcomeBorrow::admit_cancelled(cx); }
+        if cx.should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_depth == 0 { return Ok(None); }
+        if self.publication_delivered { self.retire_publication(cx)?; return Ok(None); }
+        if self.pending_publication.is_some() || self.fault.is_some() { return self.advance_publication(cx); }
+        if self.checkpoint_pending { return self.checkpoint(cx); }
         match self.phase {
             ArtifactRetainedCommandPhase::CheckpointPages => {
                 cx.set_stage("retained-command-checkpoint-page");
-                let Some(checkpoint) = self.checkpoint_input.as_ref() else { return self.fault(cx, b"retained command lost checkpoint owner") };
-                if let Some(page) = checkpoint.page(self.checkpoint_page_cursor) {
-                    let Some(end) = self.checkpoint_byte_len.checked_add(page.len()).filter(|end| *end <= ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) else {
-                        return self.fault(cx, b"retained command checkpoint exceeds capacity");
-                    };
-                    self.checkpoint_bytes[self.checkpoint_byte_len..end].copy_from_slice(page);
+                let input = self.checkpoint_input.as_ref().ok_or_else(Self::unadmitted_input)?;
+                if let Some(page) = input.page(self.checkpoint_page_cursor) {
+                    let source = page.get(self.checkpoint_page_offset..).ok_or_else(Self::unadmitted_input)?;
+                    if self.checkpoint_byte_len.checked_add(source.len()).is_none_or(|length| length > self.checkpoint_bytes.len()) {
+                        if Self::metadata(cx)? { self.fault(b"retained command checkpoint exceeds capacity"); }
+                        return Ok(None);
+                    }
+                    let bytes = source.len().min(cx.retained_grant().maximum_copy_bytes);
+                    if bytes == 0 && !source.is_empty() { return Ok(None); }
+                    let end = self.checkpoint_byte_len + bytes;
+                    self.checkpoint_bytes[self.checkpoint_byte_len..end].copy_from_slice(&source[..bytes]);
                     self.checkpoint_byte_len = end;
-                    self.checkpoint_page_cursor = self.checkpoint_page_cursor.saturating_add(1);
-                    return self.preview(cx, b"{\"en\":\"Reading checkpoint\",\"de\":\"Pr\xC3\xBCfpunkt wird gelesen\"}");
+                    self.checkpoint_page_offset += bytes;
+                    cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
+                    cx.consume_fuel(1);
+                    if self.checkpoint_page_offset == page.len() {
+                        self.checkpoint_page_cursor += 1;
+                        self.checkpoint_page_offset = 0;
+                        self.preview(b"{\"en\":\"Reading checkpoint\",\"de\":\"Pr\xC3\xBCfpunkt wird gelesen\"}");
+                    }
+                    return Ok(None);
                 }
-                if self.restore_checkpoint().is_err() {
-                    return self.fault(cx, b"retained command checkpoint is malformed");
+                if !Self::metadata(cx)? { return Ok(None); }
+                match self.restore_checkpoint() {
+                    Ok(()) => {
+                        self.checkpoint_input.as_mut().ok_or_else(Self::unadmitted_input)?.begin_close();
+                        self.phase = ArtifactRetainedCommandPhase::CheckpointRetire;
+                        self.preview(br#"{"en":"Restoring command","de":"Befehl wird wiederhergestellt"}"#);
+                    }
+                    Err(fault) => self.reducer_fault(fault),
                 }
-                self.checkpoint_input.as_mut().expect("checkpoint owner was validated above").begin_close();
-                self.phase = ArtifactRetainedCommandPhase::CheckpointRetire;
-                self.preview(cx, br#"{"en":"Restoring command","de":"Befehl wird wiederhergestellt"}"#)
             }
             ArtifactRetainedCommandPhase::CheckpointRetire => {
-                self.phase=ArtifactRetainedCommandPhase::WirePages;
-                self.checkpoint(cx)
+                let owner = self.checkpoint_input.as_mut().ok_or_else(Self::unadmitted_input)?;
+                if !owner.terminal_is_empty() {
+                    let grant = cx.retained_grant();
+                    let step = owner.close_step(grant).admit(grant, owner.terminal_is_empty());
+                    cx.consume_retained(step.progress())?;
+                    if let InteractiveJobCloseStep::Refused { kind, progress } = step {
+                        return Err(ValueError::literal(kind, "original checkpoint receiver retirement refused").with_retained_progress(progress));
+                    }
+                    return Ok(None);
+                }
+                if Self::metadata(cx)? {
+                    self.checkpoint_input.take();
+                    self.phase = ArtifactRetainedCommandPhase::WirePages;
+                    self.checkpoint_pending = true;
+                }
             }
             ArtifactRetainedCommandPhase::WirePages => {
                 cx.set_stage("retained-command-wire-page");
-                let Some(input) = self.raw_input.as_ref() else { return self.fault(cx, b"retained command lost wire owner") };
+                let input = self.raw_input.as_ref().ok_or_else(Self::unadmitted_input)?;
                 if let Some(page) = input.page(self.raw_page_cursor) {
-                    let Some(end) = self.raw.len().checked_add(page.len()).filter(|end| *end <= self.maximum_raw_bytes) else {
-                        return self.fault(cx, b"retained command exceeds raw capacity");
-                    };
-                    self.raw.extend_from_slice(page);
-                    debug_assert_eq!(self.raw.len(), end);
-                    self.raw_page_cursor = self.raw_page_cursor.saturating_add(1);
-                    self.checkpoint_pending = true;
-                    return self.preview(cx, br#"{"en":"Reading command page","de":"Befehlsseite wird gelesen"}"#);
+                    let source = page.get(self.raw_page_offset..).ok_or_else(Self::unadmitted_input)?;
+                    if self.raw.len().checked_add(source.len()).is_none_or(|length| length > self.maximum_raw_bytes || length > self.raw.capacity()) {
+                        if Self::metadata(cx)? { self.fault(b"retained command exceeds original raw capacity"); }
+                        return Ok(None);
+                    }
+                    let bytes = source.len().min(cx.retained_grant().maximum_copy_bytes);
+                    if bytes == 0 && !source.is_empty() { return Ok(None); }
+                    self.raw.extend_from_slice(&source[..bytes]);
+                    self.raw_page_offset += bytes;
+                    cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
+                    cx.consume_fuel(1);
+                    if self.raw_page_offset == page.len() {
+                        self.raw_page_cursor += 1;
+                        self.raw_page_offset = 0;
+                        self.checkpoint_pending = true;
+                        self.preview(br#"{"en":"Reading command page","de":"Befehlsseite wird gelesen"}"#);
+                    }
+                    return Ok(None);
                 }
-                self.phase = ArtifactRetainedCommandPhase::Decode;
-                self.checkpoint(cx)
+                if Self::metadata(cx)? {
+                    self.phase = ArtifactRetainedCommandPhase::Decode;
+                    self.checkpoint_pending = true;
+                }
             }
             ArtifactRetainedCommandPhase::Decode => {
                 cx.set_stage("retained-command-decode");
+                if !Self::metadata(cx)? { return Ok(None); }
                 let decoded = match <A::Command as protocol::OpBinary>::decode_op(&self.raw) {
                     Ok(command) => command,
-                    Err(_) => return self.fault(cx, b"retained command wire payload is malformed"),
+                    Err(error) => { self.decode_error=Some(error); self.fault(b"retained command wire payload is malformed"); return Ok(None); }
                 };
-                let Some(work) = self.work.as_ref() else { return self.fault(cx, b"retained command work owner is absent") };
+                let work = self.work.as_ref().ok_or_else(Self::unadmitted_input)?;
                 if (self.command_id)(&decoded) != work.tool_id() {
-                    return self.fault(cx, b"retained command wire authority does not match tool");
+                    return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "received command does not match original app work authority"));
                 }
                 self.command = Some(decoded);
                 self.phase = ArtifactRetainedCommandPhase::Preflight;
-                self.preview(cx, b"{\"en\":\"Validating command\",\"de\":\"Befehl wird gepr\xC3\xBCft\"}")
+                self.preview(b"{\"en\":\"Validating command\",\"de\":\"Befehl wird gepr\xC3\xBCft\"}");
             }
             ArtifactRetainedCommandPhase::Preflight => {
                 cx.set_stage("retained-command-preflight");
-                let (Some(command), Some(snapshot), Some(interaction), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.interaction_state.as_ref(), self.work.as_ref()) else {
-                    return self.fault(cx, b"retained command preflight owner is absent");
-                };
+                if !Self::metadata(cx)? { return Ok(None); }
+                let (Some(command), Some(snapshot), Some(interaction), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.interaction_state.as_ref(), self.work.as_ref()) else { return Err(Self::unadmitted_input()); };
                 let Some(extent) = work.extent(command, snapshot, interaction, self.context.as_deref()) else {
-                    return self.fault(cx, b"retained command work refused the command before any capacity was measured");
+                    self.fault(b"retained command work refused the command before any capacity was measured");
+                    return Ok(None);
                 };
                 if extent == 0 || extent > self.maximum_work_items {
-                    return self.fault(cx, b"retained command exceeds semantic work capacity");
+                    self.fault(b"retained command exceeds semantic work capacity");
+                    return Ok(None);
                 }
                 self.phase = ArtifactRetainedCommandPhase::Work;
-                self.preview(cx, br#"{"en":"Applying command","de":"Befehl wird angewendet"}"#)
+                self.preview(br#"{"en":"Applying command","de":"Befehl wird angewendet"}"#);
             }
             ArtifactRetainedCommandPhase::Work => {
                 cx.set_stage("retained-command-work");
-                let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) =
-                    (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut())
-                else {
-                    return self.fault(cx, b"retained command reducer owner is absent");
-                };
-                let fuel_before = cx.fuel_remaining();
+                let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut()) else { return Err(Self::unadmitted_input()); };
+                let before = cx.retained_progress();
+                let fuel = cx.fuel_remaining();
                 let step = work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), config, history, interaction, hover, context: self.context.as_deref(), operation }, cx);
-                if cx.fuel_remaining() == fuel_before { cx.consume_fuel(1); }
+                if cx.retained_progress() == before { Self::metadata(cx)?; }
+                if cx.fuel_remaining() == fuel { cx.consume_fuel(1); }
                 match step {
-                    Ok(ArtifactCommandWorkStep::Replay { stage, preview }) => {
-                        cx.set_stage(stage);
-                        self.checkpoint_pending = true;
-                        self.preview(cx, preview)
-                    }
-                    Ok(ArtifactCommandWorkStep::Progress { stage, preview }) => {
-                        cx.set_stage(stage);
-                        self.work_progress = self.work_progress.saturating_add(1);
-                        self.checkpoint_pending = true;
-                        self.preview(cx, preview)
-                    }
-                    Ok(ArtifactCommandWorkStep::CompleteDownload{download,ephemeral})=>{
-                        self.download=Some(download);self.ephemeral=Some(ephemeral);self.phase=ArtifactRetainedCommandPhase::Publish;
-                        self.preview(cx,r#"{"en":"Publishing download","de":"Download wird veröffentlicht"}"#.as_bytes())
+                    Ok(ArtifactCommandWorkStep::Replay { stage, preview }) => { cx.set_stage(stage); self.checkpoint_pending = true; self.preview(preview); }
+                    Ok(ArtifactCommandWorkStep::Progress { stage, preview }) => { cx.set_stage(stage); self.work_progress = self.work_progress.saturating_add(1); self.checkpoint_pending = true; self.preview(preview); }
+                    Ok(ArtifactCommandWorkStep::CompleteDownload { download, ephemeral }) => {
+                        self.download = Some(download); self.ephemeral = Some(ephemeral); self.phase = ArtifactRetainedCommandPhase::Publish;
+                        self.preview(r#"{"en":"Publishing download","de":"Download wird veröffentlicht"}"#.as_bytes());
                     }
                     Ok(ArtifactCommandWorkStep::Complete(emit)) => {
-                        self.emit = Some(emit);
-                        self.ephemeral = Some(EphemeralEmit::default());
-                        self.phase = ArtifactRetainedCommandPhase::Publish;
-                        self.preview(cx, b"{\"en\":\"Publishing result\",\"de\":\"Ergebnis wird ver\xC3\xB6ffentlicht\"}")
+                        self.emit = Some(emit); self.ephemeral = Some(EphemeralEmit::default()); self.phase = ArtifactRetainedCommandPhase::Publish;
+                        self.preview(b"{\"en\":\"Publishing result\",\"de\":\"Ergebnis wird ver\xC3\xB6ffentlicht\"}");
                     }
                     Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral }) => {
-                        self.emit = Some(emit);
-                        self.ephemeral = Some(ephemeral);
-                        self.phase = ArtifactRetainedCommandPhase::Publish;
-                        self.preview(cx, b"{\"en\":\"Publishing result\",\"de\":\"Ergebnis wird ver\xC3\xB6ffentlicht\"}")
+                        self.emit = Some(emit); self.ephemeral = Some(ephemeral); self.phase = ArtifactRetainedCommandPhase::Publish;
+                        self.preview(b"{\"en\":\"Publishing result\",\"de\":\"Ergebnis wird ver\xC3\xB6ffentlicht\"}");
                     }
-                    Err(fault) => self.reducer_fault(cx, &fault),
+                    Err(fault) => self.reducer_fault(fault),
                 }
             }
             ArtifactRetainedCommandPhase::Publish => {
                 cx.set_stage("retained-command-publish");
-                if let Some(emit)=self.emit.as_mut(){
-                    let bytes=emit.next_child_preparation_byte_demand().max(1);
-                    match emit.prepare_child_one(1,bytes){
-                        Ok(crate::app::ChildEmitPreparationStep::Ready)=>{},
-                        Ok(crate::app::ChildEmitPreparationStep::Pending)=>{cx.consume_fuel(1);return self.preview(cx,br#"{"en":"Preparing child operations","de":"Kindoperationen werden vorbereitet"}"#);},
-                        Ok(crate::app::ChildEmitPreparationStep::Refused(fault))|Err(fault)=>return self.reducer_fault(cx,&fault),
+                if let Some(emit) = self.emit.as_mut() {
+                    let step = emit.prepare_child_one(cx.retained_grant());
+                    let progress = match &step { Ok(step) => step.progress(), Err(fault) => fault.retained_progress() };
+                    cx.consume_retained(progress)?;
+                    match step {
+                        Ok(crate::app::ChildEmitPreparationStep::Ready(progress)) if progress == RetainedCloneProgress::default() => {}
+                        Ok(crate::app::ChildEmitPreparationStep::Ready(_) | crate::app::ChildEmitPreparationStep::Pending(_)) => { cx.consume_fuel(1); return Ok(None); }
+                        Ok(crate::app::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => { self.reducer_fault(fault); return Ok(None); }
                     }
                 }
-                let Some(completion) = self.completion.as_ref() else { return self.fault(cx, b"retained command completion owner is absent") };
-                if !completion.has_mounted_consumer() {
-                    return self.fault(cx, b"retained command completion consumer is absent");
-                }
-                if let Some(download)=self.download.take(){
-                    let Some(ephemeral)=self.ephemeral.take()else{self.download=Some(download);return self.fault(cx,b"retained download ephemeral owner is absent")};
-                    if let Err(rejected)=completion.complete_download(Ok(download),ephemeral){self.download=rejected.download.ok();self.ephemeral=Some(rejected.ephemeral);return self.reducer_fault(cx,&rejected.fault)}
-                    self.phase=ArtifactRetainedCommandPhase::Complete;
-                    return StepOutcome::Complete(CommitCandidate{state:RetainedJobPayload::empty(JobPayloadStream::CommitState),output:RetainedJobPayload::empty(JobPayloadStream::CommitOutput)});
-                }
-                let Some(emit) = self.emit.take() else { return self.fault(cx, b"retained command result owner is absent") };
-                let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"retained command ephemeral result owner is absent") };
-                if let Err(rejected) = completion.complete(Ok(emit), ephemeral) {
-                    self.emit = rejected.emit.ok();
-                    self.ephemeral = Some(rejected.ephemeral);
-                    drop(rejected.fault);
-                    return self.fault(cx, b"retained command result publication was rejected");
+                if !Self::metadata(cx)? { return Ok(None); }
+                let completion = self.completion.as_ref().ok_or_else(Self::unadmitted_input)?;
+                if !completion.has_mounted_consumer() { self.fault(b"retained command completion consumer is absent"); return Ok(None); }
+                if let Some(download) = self.download.take() {
+                    let Some(ephemeral) = self.ephemeral.take() else { self.download = Some(download); return Err(Self::unadmitted_input()); };
+                    if let Err(rejected) = completion.complete_download(Ok(download), ephemeral) {
+                        self.download = rejected.download.ok(); self.ephemeral = Some(rejected.ephemeral); self.reducer_fault(rejected.fault); return Ok(None);
+                    }
+                } else {
+                    let emit = self.emit.take().ok_or_else(Self::unadmitted_input)?;
+                    let Some(ephemeral) = self.ephemeral.take() else { self.emit = Some(emit); return Err(Self::unadmitted_input()); };
+                    if let Err(rejected) = completion.complete(Ok(emit), ephemeral) {
+                        self.emit = rejected.emit.ok(); self.ephemeral = Some(rejected.ephemeral); self.reducer_fault(rejected.fault); return Ok(None);
+                    }
                 }
                 self.phase = ArtifactRetainedCommandPhase::Complete;
-                StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
             }
-            ArtifactRetainedCommandPhase::Complete => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
-            ArtifactRetainedCommandPhase::Fault => self.fault(cx,self.admission_refusal.map(ArtifactRetainedAdmissionRefusal::detail).unwrap_or(b"retained command remains faulted")),
+            ArtifactRetainedCommandPhase::Complete => return JobOutcomeBorrow::admit_complete(cx, None, None),
+            ArtifactRetainedCommandPhase::Fault => {
+                if Self::metadata(cx)? { self.fault(self.admission_refusal.map(ArtifactRetainedAdmissionRefusal::detail).unwrap_or(b"retained command remains faulted")); }
+            }
+        }
+        Ok(None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete if self.phase == ArtifactRetainedCommandPhase::Complete => descriptor.complete(None, None),
+            JobOutcomeKind::Fault if self.fault.is_some() => self.fault_publication.borrow_outcome(descriptor),
+            JobOutcomeKind::PreviewReady | JobOutcomeKind::CheckpointReady { .. } | JobOutcomeKind::Fault => self.publication.borrow_outcome(descriptor),
+            _ => Err(Self::unadmitted_input()),
         }
     }
 
@@ -670,6 +781,13 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
         if grant.maximum_items==0{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}
         let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
         if grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()};}
+        if !self.publication.terminal_is_empty(){return Self::controlled_close_step(self.publication.close_step(grant));}
+        if !self.fault_publication.terminal_is_empty(){return Self::controlled_close_step(self.fault_publication.close_step(grant));}
+        if let Some(cursor)=self.checkpoint_capture.as_mut().filter(|cursor|!cursor.terminal_is_empty()){return Self::controlled_close_step(cursor.close_step(grant));}
+        if self.checkpoint_capture.is_some()||self.pending_publication.is_some()||self.publication_delivered{self.checkpoint_capture.take();self.pending_publication=None;self.publication_delivered=false;self.checkpoint_pending=false;return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
+        if let Some(fault)=self.fault.take(){match ControlledRetirement::new(fault){Ok(owner)=>self.fault_retirement=Some(owner),Err((error,original))=>{self.fault=Some(original);return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()};}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
+        if let Some(owner)=self.fault_retirement.as_mut(){let step=owner.step(grant);if owner.terminal_is_empty(){self.fault_retirement.take();}return Self::controlled_close_step(step);}
+        if self.decode_error.is_some(){return Self::controlled_close_step(protocol::close_protocol_error_one(&mut self.decode_error,grant));}
         if self.admission_refusal.take().is_some(){return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
         if !self.raw.is_empty(){let bytes=self.raw.len().min(grant.maximum_copy_bytes);if bytes==0{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}self.raw.truncate(self.raw.len()-bytes);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};}
         if self.raw.capacity()!=0{let bytes=self.raw.capacity();if grant.maximum_release_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}drop(std::mem::take(&mut self.raw));return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};}
@@ -695,6 +813,14 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
+            && self.publication.terminal_is_empty()
+            && self.fault_publication.terminal_is_empty()
+            && self.checkpoint_capture.is_none()
+            && self.pending_publication.is_none()
+            && !self.publication_delivered
+            && self.fault.is_none()
+            && self.fault_retirement.is_none()
+            && self.decode_error.is_none()
             && self.admission_refusal.is_none()
             && self.raw.is_empty()
             && self.raw.capacity() == 0
@@ -741,12 +867,23 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
             work: None,
             checkpoint_input: None,
             checkpoint_bytes: [0; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
+            checkpoint_target: [MaybeUninit::uninit(); ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
+            checkpoint_capture: None,
+            publication: RetainedJobPublication::new(),
+            fault_publication: RetainedFaultPublication::new(),
+            pending_publication: None,
+            publication_delivered: false,
+            fault: None,
+            fault_retirement: None,
+            decode_error: None,
             checkpoint_byte_len: 0,
             checkpoint_page_cursor: 0,
+            checkpoint_page_offset: 0,
             raw_input: None,
             raw,
             admission_refusal:None,
             raw_page_cursor: 0,
+            raw_page_offset: 0,
             emit: None,
             download:None,
             download_retirement:None,
@@ -762,7 +899,8 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
         let pointer=job.raw.as_ptr();
         let expected:Vec<u8>=serde_json::from_str(&serde_json::to_string(&vec![42u8;case["initializedBytes"].as_u64().unwrap() as usize]).unwrap()).unwrap();
         assert_eq!(job.raw,expected);
-        let unfunded=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
+        assert_eq!(job.next_close_copy_byte_demand().unwrap(),0);
+        let unfunded=RetainedCloneGrant{maximum_items:0,maximum_depth:1,..Default::default()};
         assert!(matches!(job.close_step(unfunded),InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()));
         assert_eq!(job.raw.as_ptr(),pointer);assert_eq!(job.raw.capacity(),capacity);
         let mut copied=0;let mut released=0;

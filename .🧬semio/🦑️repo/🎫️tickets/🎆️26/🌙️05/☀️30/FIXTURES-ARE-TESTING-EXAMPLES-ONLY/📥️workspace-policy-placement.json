@@ -1,0 +1,15 @@
+{
+  "owned": false,
+  "canonicalLogSha256": "407bcc9d1bb620e50af97ee05be2878bcb39422be167d2e1a5481707a7b990e0",
+  "newPolicyPresent": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "61adafacc611e9c62675751866e9461149803b116b54b80c9c1b6f5f75f84cd6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "590caa7f0b6c49c19d7bbcb2224c9ca6d6f6c6aaa8cc80db3e85f35672eef2f0"
+    }
+  ]
+}

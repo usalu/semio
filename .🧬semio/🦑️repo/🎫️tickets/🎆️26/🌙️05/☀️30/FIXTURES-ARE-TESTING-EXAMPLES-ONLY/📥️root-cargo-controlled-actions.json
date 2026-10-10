@@ -1,0 +1,19 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "b18516f70e4350d0f06e4ce0f156845ddfda7883511b8fd9b4bde2c569af6d7a",
+      "afterSha256": "e24214dada87d1af5062344b22c8e1d4e31b6b6d49b73c093dd3843812295424",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts",
+      "action": "updated",
+      "beforeSha256": "b95f7ef3a9e35438cf6afcbbfebf61d7f07a49ab477a82f21ffca215e9a26fa1",
+      "afterSha256": "c345ca961e7a881f483ad5f00756fc67ed4a2a3b37c6727496272eff3b37bd95",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

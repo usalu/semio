@@ -1,0 +1,47 @@
+{
+  "contract": "semio.tool-run.original-port-admission.v1",
+  "steps": [
+    {
+      "kind": "birth-native-queue",
+      "copyBytes": 0,
+      "items": 1
+    },
+    {
+      "kind": "handoff-original-effect",
+      "copyBytes": 0,
+      "items": 1
+    }
+  ],
+  "cases": [
+    {
+      "grant": [
+        1,
+        0,
+        8192,
+        65536,
+        9
+      ],
+      "admitted": true
+    },
+    {
+      "grant": [
+        0,
+        17,
+        8192,
+        65536,
+        9
+      ],
+      "admitted": false
+    },
+    {
+      "grant": [
+        1,
+        17,
+        8192,
+        65536,
+        0
+      ],
+      "admitted": false
+    }
+  ]
+}

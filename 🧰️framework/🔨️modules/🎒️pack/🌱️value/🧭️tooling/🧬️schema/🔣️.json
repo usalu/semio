@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.pack.value.tooling-boundary.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "dependency",
+    "mechanism",
+    "allowed"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "enum": [
+        "general",
+        "product"
+      ]
+    },
+    "dependency": {
+      "enum": [
+        "general",
+        "product",
+        "system"
+      ]
+    },
+    "mechanism": {
+      "enum": [
+        "static-import",
+        "computed-import",
+        "process-command",
+        "caller-port"
+      ]
+    },
+    "allowed": {
+      "type": "boolean"
+    }
+  }
+}

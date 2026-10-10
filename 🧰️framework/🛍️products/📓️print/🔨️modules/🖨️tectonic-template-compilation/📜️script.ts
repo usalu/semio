@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -39,4 +40,4 @@ class WatchScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("complete", CompleteScript).register("watch", WatchScript);
-if (import.meta.main) await router.run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

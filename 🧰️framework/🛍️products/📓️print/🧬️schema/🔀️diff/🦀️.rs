@@ -1,6 +1,6 @@
 //! 🔀️ Guarded field edits; composition preserves every intermediate precondition.
 use crate::ChartSnapshot;
-use semio_framework_value::{DslValue,FromValue,ToValue};
+use semio_framework_value::DslValue;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff, DiffAlgebra, DiffRegions, TouchedPaths};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -10,24 +10,7 @@ pub struct ChartEdit {
     pub after: Option<DslValue>,
 }
 
-impl ToValue for ChartEdit {
-    fn to_value(&self) -> DslValue {
-        let mut fields = vec![("path".into(),self.path.to_value())];
-        if let Some(value)=&self.before { fields.push(("before".into(),value.clone())); }
-        if let Some(value)=&self.after { fields.push(("after".into(),value.clone())); }
-        DslValue::object(fields)
-    }
-}
-impl FromValue for ChartEdit {
-    fn from_value(value:DslValue)->Result<Self,semio_framework_value::ValueError>{
-        let DslValue::Object(fields)=value else{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"chart edit must be an object"));};
-        let mut path=None;let mut before=None;let mut after=None;
-        for(key,value)in fields{match key.as_str(){"path"=>path=Some(Vec::<String>::from_value(value)?),"before"=>before=Some(value),"after"=>after=Some(value),_=>return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown chart edit field {key}"))),}}
-        Ok(Self{path:path.ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"chart edit path is required"))?,before,after})
-    }
-}
-
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ChartDiff {
     pub edits: Vec<ChartEdit>,
 }

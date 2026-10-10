@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "positive-policy-null-deadline-refused",
+      "maximumElapsedMilliseconds": 1000,
+      "deadlineOffsetMilliseconds": null,
+      "accepted": false
+    },
+    {
+      "id": "positive-original-finite-envelope",
+      "maximumElapsedMilliseconds": 1000,
+      "deadlineOffsetMilliseconds": 750,
+      "accepted": true
+    },
+    {
+      "id": "ordinary-explicit-host-preserved",
+      "maximumElapsedMilliseconds": 0,
+      "deadlineOffsetMilliseconds": null,
+      "accepted": true
+    }
+  ]
+}

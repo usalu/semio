@@ -1,0 +1,47 @@
+{
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "f07ef2bf5a27214ee0e8e54a3ffb27d0ac8852bb3ebc7b1159cd0ac0a1707f7e",
+      "afterSha256": "bdbfb3abd9490dd99104add57197ff035236b6bb413322b7d1e19b2d4f6b3d54",
+      "beforeBlock": "expect(readScriptProcessEnvelope(row.value, row.now).deadlineEpochMilliseconds - row.now).toBe(row.remaining);",
+      "afterBlock": "const deadline=readScriptProcessEnvelope(row.value,row.now).deadlineEpochMilliseconds;if(deadline===null)throw Error(\"Original finite test row requires finite deadline\");expect(deadline-row.now).toBe(row.remaining);"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "bdbfb3abd9490dd99104add57197ff035236b6bb413322b7d1e19b2d4f6b3d54",
+      "afterSha256": "f796ced5151de5e448e4600e6dc92e780753dd99509df6bc999a8e701e0570a2",
+      "beforeBlock": "const before = original.control.remainingMilliseconds();",
+      "afterBlock": "const before = original.control.remainingMilliseconds();\n    if(before===null)throw Error(\"Original finite handoff requires finite remaining authority\");"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83d\udccb\ufe0fnative-orchestration/\ud83e\uddea\ufe0ftests/\ud83d\udcec\ufe0ftest-body/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "74c5fde0b7a126f258a25c74a23389bdf030856098bc5170849a71e58217a236",
+      "afterSha256": "a77e69d18f204659b82010cdd9a31cf407a1d8f7d03b7b673ce8a0b76aad1a14",
+      "beforeBlock": "import {test,expect} from \"bun:test\";",
+      "afterBlock": "import {test,expect} from \"bun:test\";\nimport {scriptInvocationBudget} from \"../../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udfe6\ufe0f.ts\";\n"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83d\udccb\ufe0fnative-orchestration/\ud83e\uddea\ufe0ftests/\ud83d\udcec\ufe0ftest-body/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "a77e69d18f204659b82010cdd9a31cf407a1d8f7d03b7b673ce8a0b76aad1a14",
+      "afterSha256": "8bb5fa313a2601b9cb63277fec4f9515ed570b249108f05aae72829d9378598a",
+      "beforeBlock": "await consumeBody([\"owner\"],\"/repo/owner\",[],{});",
+      "afterBlock": "await consumeBody([\"owner\"],\"/repo/owner\",invocation.control,[],{});"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83d\udccb\ufe0fnative-orchestration/\ud83e\uddea\ufe0ftests/\ud83d\udcec\ufe0ftest-body/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "8bb5fa313a2601b9cb63277fec4f9515ed570b249108f05aae72829d9378598a",
+      "afterSha256": "a1a0ecf26b4fdb61e28c85186b01d44afb4ea01a5625660980e17626a2c963a7",
+      "beforeBlock": "\"process\",\"consumeOwnerArgumentsV1\",compile(native)",
+      "afterBlock": "\"process\",\"consumeOwnerArgumentsV1\",\"scriptInvocationBudget\",compile(native)"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83d\udccb\ufe0fnative-orchestration/\ud83e\uddea\ufe0ftests/\ud83d\udcec\ufe0ftest-body/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "a1a0ecf26b4fdb61e28c85186b01d44afb4ea01a5625660980e17626a2c963a7",
+      "afterSha256": "91e790fad225895ac6932de5e15a3c1a7cae289423e2d4305e77b12793e466d1",
+      "beforeBlock": "stderr:{write(){}}},consumeOwnerArgumentsV1);",
+      "afterBlock": "stderr:{write(){}}},consumeOwnerArgumentsV1,scriptInvocationBudget);"
+    }
+  ],
+  "originalAssertions": "independent Node expected argv/preparation unchanged; real original control/helper admitted; no fake API compatibility"
+}

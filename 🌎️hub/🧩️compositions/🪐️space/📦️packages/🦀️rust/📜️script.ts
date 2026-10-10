@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🪐️ `@semio-tech/space-plugin` router: `bun ./📜️script.ts test`. */
 import { join } from "node:path";
@@ -33,7 +35,7 @@ function retainedCommandValidators(repoRoot: string) {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-space"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-space"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -103,17 +105,12 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-projection-persistence-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({
-        cwd: this.root,
-        ...homeExactCargoEnvironment(),
-        groups: [{
+      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           cargoArgs: ["--features", "component-app-assembly"],
           laws: ["editor::home::transient::component::tests::the_projection_wire_round_trips_documents_and_rejects_corruption"],
-        }],
-        progress(event) { console.log(`home-directory-projection-persistence ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
-      });
+        }], progress(event) { console.log(`home-directory-projection-persistence ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
       console.log(`home-directory-projection-persistence-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log(`home-directory-projection-persistence-check: checks=${homeDirectoryProjectionPersistenceOracle(this.repoRoot)} clean`);
@@ -210,10 +207,7 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-event-page-owner-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({
-        cwd: this.root,
-        ...homeExactCargoEnvironment(),
-        groups: [{
+      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           cargoArgs: ["--features", "component-app-assembly"],
@@ -223,9 +217,7 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
             "editor::home::transient::component::tests::a_dropped_transient_rebootstraps_from_the_origin_without_history",
             "editor::home::component::tests::a_dispatched_page_publishes_one_transient_item_and_no_history_row",
           ],
-        }],
-        progress(event) { console.log(`home-directory-event-page-owner ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
-      });
+        }], progress(event) { console.log(`home-directory-event-page-owner ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
       console.log(`home-directory-event-page-owner-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log(`home-directory-event-page-owner-check: checks=${homeDirectoryEventPageOwnerOracle(this.repoRoot)} clean`);
@@ -413,10 +405,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-identity-rows-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({
-        cwd: this.root,
-        ...homeExactCargoEnvironment(),
-        groups: [
+      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
           {
             package: "semio-framework-plugin-host",
             target: { kind: "lib" },
@@ -440,9 +429,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
               "viewer::home::modes::view::windows::main::component::tests::a_row_stamps_the_space_row_id",
             ],
           },
-        ],
-        progress(event) { console.log(`home-directory-identity-rows ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
-      });
+        ], progress(event) { console.log(`home-directory-identity-rows ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
       console.log(`home-directory-identity-rows-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log(`home-directory-identity-rows-check: checks=${homeDirectoryIdentityRowsOracle(this.repoRoot)} clean`);
@@ -558,7 +545,7 @@ class SnapshotOwnerCensusScript extends BundleScript {
       console.log("[DEBUG] independent Hub Space census owner "+owner.kind+" package="+owner.package+" authored_SQL_tables="+owner.tables.length);
     }
     if(segments[0]==="native"){
-      const receipts=await runRepositoryExactCargoLaws({cwd:this.root,env:{...process.env,RUST_MIN_STACK:"268435456"},groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}],progress(event){console.log("[DEBUG] Hub Space census Native "+event.stage+" "+(event.law??""));}});
+      const receipts=await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){console.log("[DEBUG] Hub Space census Native "+event.stage+" "+(event.law??""));} });
       console.log("[DEBUG] Hub Space census Native receipts "+JSON.stringify(receipts));
     }
   }
@@ -568,10 +555,7 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("interactive-job-catalog-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({
-        cwd: this.root,
-        env: { ...process.env, RUST_MIN_STACK: "268435456" },
-        groups: [{
+      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{
           package: "semio-hub-space",
           target: { kind: "lib" },
           laws: [
@@ -584,9 +568,7 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
             "interactive_job_catalog_tests::every_app_instance_constructs_against_its_registered_proof_catalog",
             "interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census",
           ],
-        }],
-        progress(event) { console.log(`interactive-job-catalog ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
-      });
+        }], progress(event) { console.log(`interactive-job-catalog ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
       console.log(`interactive-job-catalog-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log(`interactive-job-catalog-check: checks=${interactiveJobCatalogOracle(this.repoRoot)} clean`);
@@ -638,4 +620,4 @@ const router = new ScriptRouter(import.meta.dir).register("test", TestScript).re
 
 registerPlaygroundSiteBuildCommands(router);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -1,0 +1,9 @@
+# Fixed Native Refusal Law Current
+
+Read-only current schema-first14-case fixture and Native law. Each operation creates actual control from explicit maximumBytes0 and callback, measures actual allocator requests/releases through existing crate::value::observe_retirement_allocations, asserts borrowed Cow cause, owned bytes0, exact declared kind/prose and zero retained receipt. Observer/control lifetimes remain inside original measurement, fixture parsing outside. No obvious Rust compile issue demonstrated by inspection.
+
+Source relative production guard currently ascends four parents before appending decode/encode direction; tests→refusal→decode→value needs exactly three. Root already owns fix. Canonical independent Ajv/SQLite/TextDecoder classify14 neutral cases and invalid UTF8, but SQLite CASE classification is an expectation oracle, not first-party Native execution. Closed local contract exists. No test run by audit.
+
+Scope limitation: maximum0 text/append cases reject in charge before actual allocator try_reserve failure. CollectionOverflow tests arithmetic extent, not system allocator denial. Native14 cases do not execute forwarded allocation callback refusal despite fixture forwardedRefusal preserveOriginal label. Those claims remain separate source behavior or future original native laws. Preserve actual callback error rather than replace it with static generated cause. No universal allocator-refusal qualification is inferred.
+
+Next genuine domain scope from declared census: Deflate two-table simple payload-byte root has actual native decode-control signature mismatch and missing controlled RetireOwned root; resolve that before giving receiving credit. Writer two-table tree has original full-dialect/identity policy and independent oracle but erased ArtifactChild local owner blocker. Larger LAS/Note/CAD/space domains require typed index/partial-tree retirement. No declaration row is runtime qualification.

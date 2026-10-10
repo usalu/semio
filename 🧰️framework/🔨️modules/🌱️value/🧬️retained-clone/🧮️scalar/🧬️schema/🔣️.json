@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "values",
+    "payloadBytes",
+    "depth",
+    "normalItems",
+    "copyGrants",
+    "cancelTurns",
+    "maximumDeniedReleaseBytes",
+    "sameOriginalRoot",
+    "deniedLeaseCountChanges",
+    "coldBirthBytes",
+    "rootTransferCopyBytes",
+    "terminalDropBytes",
+    "physical"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "values": {
+      "const": [
+        "0",
+        "18446744073709551615"
+      ]
+    },
+    "payloadBytes": {
+      "const": 8
+    },
+    "depth": {
+      "const": 1
+    },
+    "normalItems": {
+      "const": 1
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "cancelTurns": {
+      "const": [
+        0,
+        1
+      ]
+    },
+    "maximumDeniedReleaseBytes": {
+      "const": 8
+    },
+    "sameOriginalRoot": {
+      "const": true
+    },
+    "deniedLeaseCountChanges": {
+      "const": 0
+    },
+    "coldBirthBytes": {
+      "const": 0
+    },
+    "rootTransferCopyBytes": {
+      "const": 0
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "physical": {
+      "const": "source-plus-admitted-original-frames"
+    }
+  }
+}

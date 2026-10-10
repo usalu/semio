@@ -10,10 +10,10 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-if (segments[0] === "snapshot-guest") { await runArtifactRustTests("semio-s-artifact-note-note",this.repoRoot,["quick","--lib","snapshot_guest_tests"]); return; }
-if (segments[0] === "sqlite-snapshot-native") { await runArtifactRustTests("semio-s-artifact-note-note",this.repoRoot,["quick","--lib","--no-fail-fast","standards::v1::subsets::any::io::sqlite::snapshot::component::tests::sqlite_snapshot_note_"]); return; }
+if (segments[0] === "snapshot-guest") { await runArtifactRustTests("semio-s-artifact-note-note", this.repoRoot, ["quick","--lib","snapshot_guest_tests"], this.invocation.control); return; }
+if (segments[0] === "sqlite-snapshot-native") { await runArtifactRustTests("semio-s-artifact-note-note", this.repoRoot, ["quick","--lib","--no-fail-fast","standards::v1::subsets::any::io::sqlite::snapshot::component::tests::sqlite_snapshot_note_"], this.invocation.control); return; }
 if (segments[0] === "sqlite-snapshot-guest") {
-      await runArtifactRustTests("semio-s-artifact-note-note", this.repoRoot, ["quick", "--lib", "sqlite_guest_tests"]);
+      await runArtifactRustTests("semio-s-artifact-note-note", this.repoRoot, ["quick", "--lib", "sqlite_guest_tests"], this.invocation.control);
       return;
     }
 if (segments[0] === "note-empty-config-ownership") {
@@ -28,7 +28,7 @@ if (segments[0] === "note-empty-config-ownership") {
         || toolJobMountedDispatchOneTurnExact(workerSource.replace(initialDrive, `${initialDrive} ${initialDrive}`))) throw new Error("Note worker dispatch must perform exactly one initial drive");
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(windowRoot, "🧬️schema/🟦️.ts"), oracle], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        await runArtifactRustTests("semio-s-artifact-note-note", this.repoRoot, ["--lib", "note_empty_config_owner_"]);
+        await runArtifactRustTests("semio-s-artifact-note-note", this.repoRoot, ["--lib", "note_empty_config_owner_"], this.invocation.control);
       }
       return;
     }

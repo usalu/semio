@@ -12,10 +12,10 @@ pub(super) type FlowVcsRetirement=Option<ControlledRetirement<FlowVcsClosingOwne
 pub struct FlowVcsCloseDemands{pub copy_bytes:usize,pub capacity_bytes:usize,pub release_bytes:usize,pub depth:usize}
 
 /// 🧾️ A failed original VCS close retains every actual allocator effect in its receipt.
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct FlowVcsCloseFailure{pub fault:FlowVcsFault,pub retained_progress:RetainedCloneProgress}
-impl From<FlowVcsFault> for FlowVcsCloseFailure{fn from(fault:FlowVcsFault)->Self{Self{fault,retained_progress:Default::default()}}}
-impl From<ValueError> for FlowVcsCloseFailure{fn from(error:ValueError)->Self{Self{fault:FlowVcsFault::ClosePending,retained_progress:error.retained_progress()}}}
+#[derive(Debug,PartialEq,Eq)]
+pub struct FlowVcsCloseFailure{pub fault:FlowVcsFault,pub cause:Option<ValueError>,pub retained_progress:RetainedCloneProgress}
+impl From<FlowVcsFault> for FlowVcsCloseFailure{fn from(fault:FlowVcsFault)->Self{Self{fault,cause:None,retained_progress:Default::default()}}}
+impl From<ValueError> for FlowVcsCloseFailure{fn from(error:ValueError)->Self{Self{fault:FlowVcsFault::ClosePending,retained_progress:error.retained_progress(),cause:Some(error)}}}
 
 pub(super) fn owner_demands(owner:&FlowVcsRetirement,copy:usize)->Result<FlowVcsCloseDemands,FlowVcsCloseFailure>{
  let Some(owner)=owner.as_ref().filter(|owner|!owner.terminal_is_empty())else{return Ok(FlowVcsCloseDemands{depth:1,..Default::default()})};

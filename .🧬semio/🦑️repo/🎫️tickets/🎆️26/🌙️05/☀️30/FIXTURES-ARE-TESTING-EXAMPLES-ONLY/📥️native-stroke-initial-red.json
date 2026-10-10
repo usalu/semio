@@ -1,0 +1,9 @@
+{
+  "session": 70972,
+  "exit": 1,
+  "duration": "1.1s",
+  "assertions": 227,
+  "failure": "missing original dash borrow before production implementation",
+  "rawSha256": "fab1e54b7f2227704f765345ce4581eb2bc686a69ea626ef3a24039e024980c8",
+  "logPolicy": "Bun toContain printed whole original Source; raw generated log removed, boolean-only assertion renewed"
+}

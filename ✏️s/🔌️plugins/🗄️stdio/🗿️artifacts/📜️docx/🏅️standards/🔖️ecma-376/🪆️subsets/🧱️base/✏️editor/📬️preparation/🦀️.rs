@@ -767,7 +767,7 @@ fn canonical_node(node: &XmlNode) -> app_store::ArtifactCanonicalJsonValue<'_> {
 }
 
 impl app_store::ArtifactCanonicalJson for DocxMutation {
-    fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         Ok(Some(match self {
             DocxMutation::SetRunText(value) => canonical_object([("address", canonical_address(&value.address)), ("mutation", canonical_static("setRunText")), ("text", canonical_text(&value.text))]),
             DocxMutation::ReplaceXmlNode(replace_xml_node::ReplaceXmlNode { address, node }) => canonical_object([("address", canonical_address(address)), ("mutation", canonical_static("replaceXmlNode")), ("node", canonical_node(node))]),
@@ -794,7 +794,7 @@ impl app_store::ArtifactCanonicalJson for DocxMutation {
                 ("parent", canonical_address(&value.parent)),
                 ("revision", canonical_text(&value.revision)),
             ]),
-            _ => return Err(format!("{PREFIX}.canonical-mutation")),
+            _ => return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio-docx-base-set-page.canonical-mutation")),
         }))
     }
 }

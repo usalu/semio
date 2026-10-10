@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { join } from "node:path";
 import { runCmd } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -12,4 +13,4 @@ class ContractCheckScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("contract-check", ContractCheckScript);
-await runScriptMain(router, { defaultCommand: "contract-check" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "contract-check" }) }));

@@ -11,7 +11,7 @@ fn close_encode(native:&mut NativeEncodeControl<'_>,law:&serde_json::Value){let 
 #[test]
 fn probe_sqlite_original_native_io_roundtrips_both_encodings(){
  let law=contract();let incoming=grant(&law["bodyGrant"]);let maximum=law["nativeMaximumBytes"].as_u64().unwrap()as usize;
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
  for sample in cases["cases"].as_array().unwrap(){for encoding in [SnapshotEncoding::Text,SnapshotEncoding::Binary]{
   let wire=sample["wire"].as_str().unwrap();let oracle:serde_json::Value=serde_json::from_str(wire).unwrap();
   let payload=match encoding{SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(wire.to_string()),SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(wire.as_bytes().to_vec())};

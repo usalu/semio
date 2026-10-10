@@ -1,0 +1,11 @@
+# Actor Issued Epoch Current
+
+Concurrent source re-read: Budget.retained is restored; scaled copies exact input and pack encode includes its eight scalar input fields. External host activation83 and budget policy163 use budget.retained; Plugin runtime WIT input_to_wit and receipt_from_wit bind actual retained input. Removing field now would require genuine cross-boundary caller/schema/wire edits, not the four initializer repair.
+
+New neutral receiving fixture/schema have arrived. Contract actor.original-issued-turn/v1 declares policy input source, two exact spent/remaining vectors, epochs19/20/21, zero refusal heap, pending block, duplicate refusal and no exhausted reissue. Mounted Native tests now expect original issued input and thirteen forged-field refusals preserving metrics and original payload pointer, cumulative remaining, stale replay refusal and exhausted empty tick. These are authored laws; no executed assertion credit from this audit.
+
+Fresh production read still shows old ScheduledActor without issued owner, drain_turn popping mailbox before authority checks and Kernel.complete mutating metrics without validate_for. This reflects an in-progress producer/test change, not a completed repair. NativeHigh received current source/law mismatch and Root's explicit epoch authorization.
+
+Root authorized genuine scheduler next-turn epoch policy: actual first nonempty issued turn uses caller epoch19, next actual nonempty issued turn20 with checked increment before mailbox pop. Empty/refused/pending ticks must not advance epoch or consume mailbox. Completion validates exact in-flight receipt before metrics/failure/status mutation and replaces authority with exact remaining. A zero-spend accepted receipt still requires fresh epoch on next turn so delayed replay cannot match its unchanged grant. At u64::MAX refuse next issue before mailbox mutation; do not wrap/reset identity. Pending blocks concurrent duplicate issue.
+
+Receiving schema currently constrains epochs only to three positive integers, while actual fixture supplies19/20/21. Independent Source/Native law must assert exact authorized succession and max/empty/pending cases rather than treating arbitrary positive epochs as sufficient authority. Keep operations/generation fixed unless actual original caller authorizes replacement. No production edits made here.

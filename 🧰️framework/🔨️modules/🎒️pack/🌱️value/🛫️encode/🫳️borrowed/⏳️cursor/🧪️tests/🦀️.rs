@@ -133,3 +133,56 @@ fn borrowed_projected_pack_cursor_intrinsic_order_duplicates_and_exact_grants() 
         eprintln!("[DEBUG] intrinsic Pack {} {} bytes; original ordered source, 15 finite copy/output controls and five explicit cancellation-close positions",row["name"].as_str().unwrap(),bytes.len());
     }
 }
+
+#[test]
+fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing() {
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️failure/🔣️.json")).unwrap();
+    let p=&rows["policy"];
+    let policy=RetainedCloneGrant { maximum_items:p["maximumItems"].as_u64().unwrap()as usize, maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize, maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize, maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize, maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize };
+    let source=DslValue::String(rows["examples"][0]["text"].as_str().unwrap().into());
+    let original=match &source { DslValue::String(text)=>text.as_ptr(), _=>unreachable!() };
+    let mut cursor=BorrowedProjectedPackCursor::default();
+    let mut retained=0;
+    while !cursor.symbols.has_reserved_slot() {
+        let(step,birth,free)=crate::test_allocation::observe_backing(||cursor.symbols.reserve_one(policy.maximum_capacity_bytes).unwrap());
+        assert_eq!(birth,step.allocated_bytes);assert_eq!(free,0);assert!(birth<=policy.maximum_capacity_bytes);retained+=birth;
+    }
+    cursor.symbols.push_reserved(Symbol { path:[0;64], depth:0, occurrences:usize::MAX, selected:false, forced:false }).unwrap();
+    cursor.note=Some(Symbol { path:[0;64], depth:0, occurrences:1, selected:false, forced:false });
+    cursor.phase=Phase::Find;
+    let mut output=[0xa5;64];
+    let(failure,birth,free)=crate::test_allocation::observe_backing(||cursor.advance_intrinsic(&source,1,&mut output,policy).unwrap_err());
+    let receipt=failure.reason.retained_progress();
+    assert_eq!(failure.written_bytes,0);assert_eq!((birth,free),(0,0));assert_eq!(output,[0xa5;64]);
+    assert_eq!(receipt.copied_items,1);assert_eq!(receipt.copied_bytes,rows["examples"][0]["failure"]["reason"]["retainedProgress"]["copiedBytes"].as_u64().unwrap()as usize);
+    assert!(receipt.fits(policy));assert_eq!(failure.reason.message,rows["examples"][0]["failure"]["reason"]["message"].as_str().unwrap());
+    assert_eq!(match &source {DslValue::String(text)=>text.as_ptr(),_=>unreachable!()},original);
+    let mut released=0;
+    for _ in 0..64 {
+        let(step,birth,free)=crate::test_allocation::observe_backing(||cursor.close(policy).unwrap());
+        assert_eq!(birth,0);assert_eq!(free,step.progress.released_bytes);assert!(step.progress.fits(policy));released+=free;
+        if step.complete {break;}
+    }
+    assert!(cursor.terminal_is_empty());assert_eq!(released,retained);
+    eprintln!("[DEBUG] Pack post-comparison refusal retained original UTF8/source and every System symbol backing; sole Value receipt {} copy bytes",receipt.copied_bytes);
+}
+
+
+#[test]
+fn borrowed_pack_flat_intrinsic_uses_only_original_actual_depth_and_receipts(){
+    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️failure/🔣️.json")).unwrap();
+    let row=&rows["depthProbe"];let source=DslValue::Bool(row["source"].as_bool().unwrap());let field=row["fieldId"].as_u64().unwrap()as u16;
+    let p=&rows["policy"];let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
+    let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();
+    for _ in 0..64{
+        let(denied,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance_intrinsic(&source,field,&mut output,RetainedCloneGrant{maximum_depth:0,..policy}).unwrap());
+        assert_eq!(denied.progress,Default::default());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
+        assert!(cursor.next_advance_depth_demand().unwrap()<=policy.maximum_depth);
+        let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance_intrinsic(&source,field,&mut output,policy).unwrap());
+        assert!(step.progress.fits(policy));assert_eq!(event.requested_bytes,step.progress.retained_capacity_bytes);assert_eq!(event.released_bytes,step.progress.released_bytes);actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}
+    }
+    assert!(cursor.is_complete());assert_eq!(actual,expected(row["expectedHex"].as_str().unwrap()));
+    let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(policy).unwrap());
+    assert!(step.complete);assert!(step.progress.fits(policy));assert_eq!((event.requested_bytes,event.released_bytes),(step.progress.retained_capacity_bytes,step.progress.released_bytes));
+    eprintln!("[DEBUG] original flat intrinsic Pack byte oracle and System receipts use depth1, unchanged64 inline bound and fixed currencies");
+}

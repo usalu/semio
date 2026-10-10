@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:framework:pack:json:read-source-capabilities:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceRoot",
+    "sourceCommand",
+    "maximumChildElapsedMilliseconds"
+  ],
+  "properties": {
+    "sourceRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceCommand": {
+      "const": "test-read-policy-source"
+    },
+    "maximumChildElapsedMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30000
+    }
+  }
+}

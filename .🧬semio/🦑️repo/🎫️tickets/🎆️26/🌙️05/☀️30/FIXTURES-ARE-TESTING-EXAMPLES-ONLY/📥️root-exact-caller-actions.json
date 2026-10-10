@@ -1,0 +1,1269 @@
+{
+  "actions": [
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "fc345a0a08801645a834736585f875734dd17acf565b043a7374e42a857ecfa4",
+      "afterSha256": "fcd5f122f419c17b8980b82871614effa2b46dfd53835fc1b51d9ae9b9f05871",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 2532,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 2775,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 2930,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "120_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 3199,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "120_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 3317,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 3376,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 3396,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 3796,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()"
+          }
+        },
+        {
+          "line": 4899,
+          "origin": "typed original options",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 4963,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 4996,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "180_000"
+          }
+        },
+        {
+          "line": 5067,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "180_000"
+          }
+        },
+        {
+          "line": 7520,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 11626,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 11659,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 12931,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 13650,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 15490,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 15757,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "180_000"
+          }
+        },
+        {
+          "line": 15781,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "180_000"
+          }
+        },
+        {
+          "line": 15826,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 16193,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 16511,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 16567,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 16600,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 16974,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 16992,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "17b713e32f1d7f3095d8b61a6cf13f3bc340cebfd8d6e9f022ee2032997f21d5",
+      "afterSha256": "ad8311fabb5fd7de9580a0cf72438a2c655f090ae24ba8fe768ce2f9188ec3ee",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 151,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000)",
+            "listBudgetMs": "120_000",
+            "lawBudgetMs": "300_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "e4218bc73a068346181ea6bcf8d9f41520faf8b8c91644b2546cbc87049937b1",
+      "afterSha256": "7c3ede7402141b0b006999e117306d20eeb4c0de711793e11e815df5e9b51089",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 136,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000",
+            "lawBudgetMs": "60_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "9e6bbf2d001b4e747020cad86e765a522d2441d674e1342e23b1bda91b3ffbde",
+      "afterSha256": "3f71f7048e13c0558e2731a2177f073c1723a5934b17e341a2e2f9bc9b4dea83",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 74,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🗄️durable-three-store-assembly/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "caa9756c52bb45f99875b3ee1defedad31bee9546227eb40d831817309603ebe",
+      "afterSha256": "ca0fbfd0dafc97b0771c0471925a3a423c65db092fc1de61f48668126b4d95f8",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 61,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/🪪️native-openable-identity/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "62857d48671d502e757d0ddfdb518d18f39b999b11fc383fef3705eb0df6bbc6",
+      "afterSha256": "f79d48ceebd74c972d9cc72338eb7143a4b305ef70899f66e63ea56561b19342",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 38,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "06146a7f6c25914325b4d128044babef9e15e41b9cb2cc8f21bbd9e0bdc223ac",
+      "afterSha256": "59d663cce7823944aaef06342a95657cd859a4f889ab6ab5c6bfb1a175202249",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 103,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "6f443e05993c771495b85b7046b98c3b89d7fa214257b14cc8517e06e874e914",
+      "afterSha256": "f3a50a381a043a9ca90d80989e0d2da23d91d75bb4e9c807a7c6a07ab648e493",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 107,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 214,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 417,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 562,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 572,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "0b638b22eab1b4387c2ed722e100e0edfaeb136a79644f673d579589689c5f5d",
+      "afterSha256": "2169982bf6873aa79ac950ee1f89c4a898233eb9d78bb098fb9985d2eb5d6ee4",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 538,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "d1df5a90981a371cd98fef007201735728d466cf3b292eda9b568310313efbf6",
+      "afterSha256": "e9b6ae2073dd80a9d766aca4767e5e95072d3e49492de028078619e2c9b6e096",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 65,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 120,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 223,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 351,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 702,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 917,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 1031,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 1114,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 1414,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "180_000"
+          }
+        },
+        {
+          "line": 1470,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 1616,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "180_000"
+          }
+        },
+        {
+          "line": 1759,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 1813,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 1846,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 2166,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 2390,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 2482,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 2501,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 2582,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 2669,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000"
+          }
+        },
+        {
+          "line": 2928,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 2954,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60000",
+            "lawBudgetMs": "120000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "ae8b2d9fd28a610f9a99e6b0632f058f5f040582076dc166857b3d789a1ad72d",
+      "afterSha256": "2d5dea70ea86f507fa49b1e3035d21da5b4c70037a220c7027db6112f98bf2cb",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 906,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "54a7c746970ea5501bb670b59e32effcc55850cb7de08b8b0821fd2e80d424d1",
+      "afterSha256": "b80aaeda6d897427aa3a333df7de558ad286e97ede04de852d3306b5d30fc590",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 49,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 137,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 175,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 243,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 428,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 496,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 588,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 609,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 875,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 1018,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 1106,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "bd5dbbef9e6c9df10663bf0f08d8847564251748c4cdaccab138d18de6b9d7bc",
+      "afterSha256": "33c12d6a746bab5b8033090c48d53091c58132951d7a3eafd1da86bd393eb987",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 149,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 290,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 340,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "ead104ed42b768afe03f575425c3fb7c9bc047cad557dd145542a6431b806e4c",
+      "afterSha256": "65105bdb00e25b21ab1df51c1e84d2ff6024282c910282ca8e2a22dd09c875ab",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 21,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧩️map-create-region-group/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "d7debf67008057a76c469ced017a62f21d6789d397bd98fc0641e186dc281b04",
+      "afterSha256": "0fe9182972f1d61b38a6945481db762ab803ae0b67d4cb9c44182b7c58519a2a",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 89,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "60_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "26d2e9028342a36d002f0a7eefe5de08cf4df28f1f59c15cfd15e0bce476b1b7",
+      "afterSha256": "0cb4e164e258d1c3797d3931733f4a3a71b63a224e957d70b62d27fa127b29f1",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 80,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 126,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 162,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 184,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 210,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 232,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "86_400_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 281,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "86_400_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 325,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "86_400_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 376,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 434,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 455,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS??3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 468,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 482,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120000"
+          }
+        },
+        {
+          "line": 510,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3600000",
+            "listBudgetMs": "60000",
+            "lawBudgetMs": "120000"
+          }
+        },
+        {
+          "line": 525,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "300000",
+            "listBudgetMs": "60000",
+            "lawBudgetMs": "60000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "a648df7bb5b3c6bde94e6398dd5a0434142f8b467b9a91ce7647d605bffa227d",
+      "afterSha256": "d6e1ea456fe2d2afca5ffb60bfbd8658d09dc83f280b6510b13a3a1e5d1bdec0",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 55,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 242,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "86_400_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 340,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "86_400_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 450,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "86_400_000",
+            "lawBudgetMs": "60_000"
+          }
+        },
+        {
+          "line": 463,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 482,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "lawBudgetMs": "300000"
+          }
+        },
+        {
+          "line": 495,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "lawBudgetMs": "120000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "bb6e7ac1496d69d74c9b82bec8704ba17d4e27d5f86659f753b95c47abb08f3d",
+      "afterSha256": "169ffea953f2e2b174441ce4bf8257acba9eba06a44572ecfa7c323d36ee5177",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 41,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3600000)",
+            "lawBudgetMs": "600000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "4d90b2a5ade532558ccc818587af259a8e62cc2e8a52cccc3c72d63762959775",
+      "afterSha256": "48bc5bfb54ab9d11e9fce7dee92cb6ac71cb99dc95c66ef25eadd1e897446ad8",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 39,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 71,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 191,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "501b1de0a0bc2f24be6d67c5587490dc1b3d107deca7e54ddd59437b4218feef",
+      "afterSha256": "425a021b0fdcfc1b7cd4b09365d4e8f5636a84ac3c585b522613cc39ab973914",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 21,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "f166c46dee3e8e7a0dfb76f64c4f32a162184d9d518fe152da473d09a2827a73",
+      "afterSha256": "c89d6cde63518e4f24433e5dba24de347f7243f93680295560490b4a11ee5ee6",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 11,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "lawBudgetMs": "120_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "72ed6257c0f1613897ac89d8552631f52c8e2e98aeb70b71d1666270ba396161",
+      "afterSha256": "b757d3ace3a5e31ee19bdadbf9e06e42eaeab06a8befccd57bc12b70076fbf64",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 16,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "lawBudgetMs": "600_000"
+          }
+        },
+        {
+          "line": 25,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "lawBudgetMs": "600_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "80495b90ea539a8e88c2d0fa656d4fbf39f19343988a54268055d99193d337d0",
+      "afterSha256": "a64d3baf880247c3e6d860919cfc6910eccf88dfd3616d11810a94beed321d94",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 22,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "lawBudgetMs": "600_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "b22c2d7aeaa6a0f862c162b4f65009fea4173b055949b90d29a2a0bcb126e415",
+      "afterSha256": "c10d0b44ff2a4a00bf009f85025eaba32a9393553bd4db37d5239e709c812b17",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 28,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "lawBudgetMs": "600_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "ddba0a3332c04d5a820b698a92384fbd3946807a6f78fcd1c38c1fa251758ca6",
+      "afterSha256": "386696f9acd727a8847fc1940a21d6068683565d3575e3c605317db308d6bf56",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 17,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "lawBudgetMs": "600_000"
+          }
+        },
+        {
+          "line": 27,
+          "origin": "runRepositoryExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "lawBudgetMs": "600_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "e5cb3b30bcc5daf790b40a351134146b26caf551b5908e1a01c750e5be630b23",
+      "afterSha256": "0dc66d201b4d33fa1b0576eb0e3e9b8313e6391d370f0af09341b2ae7d4980b5",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 293,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 337,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {}
+        },
+        {
+          "line": 382,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "92fd5c6a497e3d1b42cc0d26f9818a8fad8bf4c7935fc722cdeeb4767e118a9f",
+      "afterSha256": "a2da18ee220b0d33831dda44238d91e57b28f7e8efc7665efbdff9a1d8ae4173",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 24,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "buildBudgetMs()",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "7a8d0d68450cb49e8802140564128c54cdb3def21e9d20dce194182f7ed9ecdd",
+      "afterSha256": "eabbc6ab6a424f705ed752456fefc3f2b55a53522b73f655b738816d1b87af65",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 25,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "7785267772a5079481340a7767f1311b29a7e83158975c3edd7672fd4e04ce1f",
+      "afterSha256": "863b2e04ea27e90cd9cccc42e3abce1856d17e45d5d0b37ad9be38295cd45e55",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 40,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "8cc8b1047960bd50fa8c670446446bdf4e42b0d587f14edac05ee3f9487098cc",
+      "afterSha256": "9cd93a7cdc812dd808093e7ce527b3fbee1563a51a4a223c19a47f584b80cdcd",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 31,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "159a1466f86c3ce213b302deb955d8a0cf1265f8a0262d0020eb2e328ae8643d",
+      "afterSha256": "8d37c749a167164f70dc5413c3af321bcd8e80fc4dac82cb28a33cdee8e05dfb",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 56,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 93,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 147,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        },
+        {
+          "line": 205,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000)",
+            "listBudgetMs": "60_000",
+            "lawBudgetMs": "120_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "a7b73169a3d28de1f28803d47b2f7964af912eab95d46f674115a36664f4d434",
+      "afterSha256": "cf3e335457c432a839bb79494fe6d1d73033fddda90e006afb082fdf10c5cb6f",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 19,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {
+            "buildBudgetMs": "3_600_000",
+            "lawBudgetMs": "60_000"
+          }
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "c81ac2b2f6ea999fb2d348fdac30b63a99b23078c08145122cbaea3927ee3aa9",
+      "afterSha256": "a14dc1ce0a07feefa99cbd28d30228a5562714661a0f96280c0baf90c8b50772",
+      "exclusive": false,
+      "scope": "Require original invocation and canonical actual execution policy at native outer caller; preserve all prior explicitly authored phase expressions",
+      "sites": [
+        {
+          "line": 592,
+          "origin": "runExactCargoLaws",
+          "originalPhaseValues": {}
+        }
+      ]
+    }
+  ],
+  "unresolved": [
+    {
+      "path": "/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "origin": "runRepositoryExactCargoLaws",
+      "at": 10675,
+      "text": "{\n      cwd: repoRoot,\n      groups: [\n        {\n          package: \"semio-hub-gis\",\n          target: { kind: \"test\", name: \"component_cold_map_patch\" },\n          cargoArgs: [\"--no-default-features\", \"--features\", \"component-receipt-acceptance\"],\n          l"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "origin": "runRepositoryExactCargoLaws",
+      "at": 11328,
+      "text": "{\n    cwd: repoRoot, ...exactCargoStageEnvironments(), artifactDir: artifactRoot,\n    groups: [{ package: \"semio-hub\", target: { kind: \"bin\", name: \"os-hub\" }, cargoArgs: [\"--features\", \"integration-fixtures\"], laws: [\n      \"trusted_catalog_command::tests::tr"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "origin": "runExactCargoLaws",
+      "at": 1547,
+      "text": "{ ...options, manifestPaths, cargoTargetDir: cargoTargetDirectory(root, environment) }"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🗣️verb-vocabulary/🟦️.ts",
+      "origin": "runRepositoryExactCargoLaws",
+      "at": 25,
+      "text": "{ cwd: repoRoot, progress: (event) => console.log(`mutation-verb-native ${event.stage} ${event.law ?? event.package}`), groups: [{ package: \"semio-framework-os-kernel\", target: { kind: \"lib\", name: \"semio_framework_os_kernel\" }, laws: [\"os_spr::command::tests:"
+    }
+  ]
+}

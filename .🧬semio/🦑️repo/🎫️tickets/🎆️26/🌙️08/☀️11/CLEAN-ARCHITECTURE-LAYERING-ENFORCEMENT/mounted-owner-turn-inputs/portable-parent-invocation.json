@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "policy": {
+    "version": 1,
+    "owner": "mounted-owner-portable-root-pr3",
+    "maximumElapsedMilliseconds": 300000
+  },
+  "capabilities": {
+    "version": 1,
+    "repositoryRoot": "/Users/ueli/Documents/semio",
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mn/t",
+    "command": {
+      "kind": "native-owner-command",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml",
+      "workingDirectory": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust",
+      "program": "bun",
+      "arguments": [
+        "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/📜️script.ts",
+        "portable"
+      ]
+    },
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 60000
+    },
+    "network": {
+      "offline": true
+    }
+  }
+}

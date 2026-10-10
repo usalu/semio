@@ -1,0 +1,19 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "action": "updated",
+      "beforeSha256": "fdf78064607aac90204549ca5bc8b3bd22a1450d647f4d1b2592e472cbb9196f",
+      "afterSha256": "6ea29df2aaeab3ad782c74757ae107cfad2e8e668f88a73cb3d54ef45b3389d4",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "4540b1249d92319c603f000883904f7a4382a9c5b4e6d06a3da0e891764bd3e6",
+      "afterSha256": "e3096be5861766e0f8cdca63c717ed8d3ad580158225fc4434651c517a772649",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

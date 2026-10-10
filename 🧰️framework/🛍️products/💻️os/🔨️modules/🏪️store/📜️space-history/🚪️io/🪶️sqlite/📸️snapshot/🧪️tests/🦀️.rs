@@ -159,7 +159,7 @@ fn sqlite_snapshot_framework_space_history_independent_surrogate_renumber_preser
     let codec = codec();
     let changed = oracle::renumber(&database(), f()["identityOffset"].as_i64().unwrap());
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let native = with_original_encode(|native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), changed.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),native_owner)).unwrap().value;
+        let native = with_original_import(changed.clone(),|input,native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), input, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),native_owner)).unwrap().value;
         assert_eq!(decode(native), source);
     }
 }
@@ -171,6 +171,16 @@ fn with_original_decode<T>(operation:impl FnOnce(&mut store::NativeSnapshotDecod
 /// 🫴️ Installs and drains one actual caller recipient for each independent encode fixture operation.
 fn with_original_encode<T>(operation:impl FnOnce(&mut store::NativeSnapshotEncodeOwner<'_,'_>)->T)->T{let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(event.owned_bytes<=1<<30&&(event.total==0||event.completed<=event.total));true};let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut progress);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotEncodeOwner::new(&mut native,caller_grant());let output=operation(&mut owner);drop(owner);close_encode_history_recipient(&mut native);drop(native);assert!(!recipient.has_owner());output}
 /// ♻️ Retires actual encoder refusal custody through its unchanged original allocation control.
+/// 🫴️ Keeps each original SQL fixture slot through refusal and closes it under the same caller wallet.
+fn with_original_import<T>(database:SqliteDatabase,operation:impl FnOnce(&mut Option<SqliteDatabase>,&mut store::NativeSnapshotEncodeOwner<'_,'_>)->T)->T{
+ with_original_encode(|native|{
+  let mut input=semio_framework_value::retirement::controlled::ControlledRetirement::new(Some(database)).unwrap_or_else(|_|panic!("SQL fixture supports original retirement"));
+  let result=operation(input.original_mut().unwrap(),native);
+  for _ in 0..100000{if input.terminal_is_empty(){break}let grant=native.remaining_grant();let capacity=input.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();native.native().checkpoint().unwrap();native.native().charge(capacity).unwrap();let step=input.step(grant).unwrap();let progress=step.progress();assert!(progress.fits(grant));native.record_progress(progress).unwrap();assert!(progress!=Default::default()||input.terminal_is_empty(),"original SQL fixture close made no funded progress");}
+  assert!(input.terminal_is_empty());result
+ })
+}
+
 fn close_encode_history_recipient(native:&mut semio_framework_value::NativeEncodeControl<'_>){for _ in 0..100_000{if !native.has_retirement_owner(){return}let step=native.close_retirement_recipient(caller_grant()).unwrap();assert!(step.progress()!=Default::default()||!native.has_retirement_owner(),"original encoder close must advance actual custody");}assert!(!native.has_retirement_owner(),"original encoder return supervisor did not finish");}
 
 /// ♻️ Returns only original pending snapshot custody under the unchanged independent test policy.
@@ -299,10 +309,10 @@ fn sqlite_snapshot_framework_space_history_known_unicode_native_frontiers_cancel
          native_owner));
         assert!(decoded_interior && export.is_err(), "native input must expose known interior Unicode work before typed construction");
         let mut encoded_interior = false;
-        let import = with_original_encode(|native_owner|(codec.import)(
+        let import = with_original_import(expected.clone(),|input,native_owner|(codec.import)(
             S_SPACE_HISTORY_SCHEMA,
             &dialect(),
-            expected.clone(),
+            input,
             encoding,
             &mut SqliteSnapshotControl::new(
                 &mut |event| {
@@ -339,7 +349,7 @@ fn sqlite_snapshot_framework_space_history_erased_both_directions_preserve_all_s
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let native = payload(&source, encoding);
         assert_eq!(with_original_decode(|native_owner|(codec.export)(S_SPACE_HISTORY_SCHEMA, &dialect(), &native, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value, expected);
-        let native = with_original_encode(|native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), expected.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),native_owner)).unwrap().value;
+        let native = with_original_import(expected.clone(),|input,native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), input, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),native_owner)).unwrap().value;
         assert_eq!(decode(native), source);
     }
 }
@@ -348,7 +358,7 @@ fn sqlite_snapshot_framework_space_history_independent_sql_edit_retains_literal_
     let codec = codec();
     let edited = oracle::edit(&database(), &f());
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let native = with_original_encode(|native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), edited.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),native_owner)).unwrap().value;
+        let native = with_original_import(edited.clone(),|input,native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), input, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),native_owner)).unwrap().value;
         let value = decode(native);
         assert!(value.checkpoints.iter().all(|row| row.message == f()["edit"]["value"].as_str().unwrap()));
     }
@@ -365,13 +375,13 @@ fn sqlite_snapshot_framework_space_history_authored_schema_and_exact_semantic_ro
         for maximum in [rows - 1, rows] {
             let limits = SqliteDatabaseLimits { max_rows: maximum, ..SqliteDatabaseLimits::default() };
             let output = with_original_decode(|native_owner|(codec.export)(S_SPACE_HISTORY_SCHEMA, &dialect(), &native, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner));
-            let input = with_original_encode(|native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), expected.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),native_owner));
+            let input = with_original_import(expected.clone(),|input,native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), input, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),native_owner));
             assert_eq!(output.is_ok(), maximum == rows);
             assert_eq!(input.is_ok(), maximum == rows);
         }
         let limits = SqliteDatabaseLimits { max_schema_bytes: SQL.len() - 1, ..SqliteDatabaseLimits::default() };
         assert!(with_original_decode(|native_owner|(codec.export)(S_SPACE_HISTORY_SCHEMA, &dialect(), &native, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).is_err());
-        assert!(with_original_encode(|native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), expected.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),native_owner)).is_err());
+        assert!(with_original_import(expected.clone(),|input,native_owner|(codec.import)(S_SPACE_HISTORY_SCHEMA, &dialect(), input, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),native_owner)).is_err());
     }
 }
 #[test]
@@ -403,10 +413,10 @@ fn sqlite_snapshot_framework_space_history_all_owned_phases_cancel_and_wrong_dia
         }
         for phase in [SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::EncodeNative] {
             let mut seen = false;
-            let result = with_original_encode(|native_owner|(codec.import)(
+            let result = with_original_import(expected.clone(),|input,native_owner|(codec.import)(
                 S_SPACE_HISTORY_SCHEMA,
                 &dialect(),
-                expected.clone(),
+                input,
                 encoding,
                 &mut SqliteSnapshotControl::new(
                     &mut |p| {

@@ -230,7 +230,7 @@ fn sqlite_snapshot_binding_moves_original_octet_allocations_with_exact_structura
     assert!(retirement.terminal_is_empty());
     let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(retirement));
     assert_eq!((allocated, released), (0, 0));
-    println!("[DEBUG] SQLite binding original two32768-byte payload allocations moved without duplication; fixed65536 copy authority; structural receipt/System equality; denied original retained and terminalDrop0");
+    println!("[DEBUG] SQLite binding original32768 octets in two16384-byte payload allocations moved without duplication; fixed65536 copy authority; structural receipt/System equality; denied original retained and terminalDrop0");
 }
 
 #[test]

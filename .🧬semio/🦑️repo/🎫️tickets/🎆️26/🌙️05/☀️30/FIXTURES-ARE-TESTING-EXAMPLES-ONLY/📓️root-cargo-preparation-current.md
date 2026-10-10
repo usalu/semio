@@ -1,0 +1,7 @@
+# Current Controlled Cargo Preparation
+
+Original missing-function law failed (Nx1, 0/1/1), then genuine shared preparation plan passed early and physical cancellation, original reason custody, real Bun recipe child-tree/pipe draining and unchanged sync closure (Nx0/1.3s, 1/19). Renewed production exclusion+control laws passed4/95. Original scoped dependency/dedupe/explicit workspace/parse/matcher regression passed4/212;18 other laws filtered, no Cargo invocation. Actual strict TypeScript5 roots302 Sources: original3 own diagnostics corrected, then0 diagnostics/0 observer drift before latest ancestry edit.
+
+Audited real recipe Source swap produced a real RED: foreign marker was created before eventual symlink refusal (Nx1,1pass/1fail22). Immediate physical script/cwd/current digest guard now yields Nx0/2.0s,2pass23 with no foreign marker. Recipe timeout remains original30000 intersected through incoming childBudget. Stdout routes actual recipe diagnostics to stderr using owned process lifecycle. Existing Cargo discovery test executable includes the new selected-preparation reader; no new executable or launch entry.
+
+Remaining: original Script control/default progress into pair and command, async capture/resolver lifecycle, guarded relevant currentness at publication/final return, complete normal Native capability handoff and current full suite. Source success does not establish native compilation, full corpus/runtime or global boundary zero. Exact narrow actions are shared non-exclusive observations.

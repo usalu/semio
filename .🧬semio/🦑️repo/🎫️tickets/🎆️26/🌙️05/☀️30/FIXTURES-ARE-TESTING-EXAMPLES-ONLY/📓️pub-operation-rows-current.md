@@ -1,0 +1,11 @@
+# Original Operation Row Ownership
+
+Actual registered Source RED85348 ended Nx1/634ms: independent Ajv2020, JSON, Buffer and dense original payload assertions reached the missing production row owner (10 pass,1 fail,180 assertions). Initial implementation GREEN63791 ended Nx0/748ms (11 pass,191 assertions). Final91027 ended Nx0/1.8s (11 pass,193 assertions), including the actual new owner and original native file Rust grammar with unchanged5s parse budget.
+
+The existing output production schema now defines ArtifactPreparedOperations as an array of its original octet payload; the parser retains each accepted original row and sequence. The new production owner admits original buffer headers into bounded paid pages, separately births the actual protocol row-header backing, moves original buffers without copying their payloads, closes old pages before handoff and retains all originals during denied/canceled closure. Caller grants and original plain limits remain unchanged. This is genuine payload authority, not a testing-law schema.
+
+The original Kernel native file now contains original_operation_rows_preserve_each_buffer_and_paid_collection_cancel_cut: immutable plain policy, same real buffers, denied original identity,50 protocol/cancellation cuts and exact same-thread System capacity/release equality. This native law is authored and UNRUN. Source/grammar establishes no native or whole collector proof.
+
+Exact own actions are pub-operation-rows-tests.json, pub-operation-rows-actions.json and pub-operation-rows-native-actions.json. Original sources stay in their canonical repository owners; none are copied into the ticket. Whole source hashes observe current peers without attributing their changes.
+
+The next acquisition is the original complete Kernel library route, long/default policy, no-E and unchanged sync,ureq defining owner, with the approved durable target/build/resource roots. pub-k3-before.json retains current finite observers and foreign jobs. Prior pub-k2 exit130 was the now-repaired original host prerequisite; it had no Cargo or native assertions. The mounted synchronous admission source failure, genuine three collector propagation, transaction proposal recipient and Frame/backend work remain incomplete.

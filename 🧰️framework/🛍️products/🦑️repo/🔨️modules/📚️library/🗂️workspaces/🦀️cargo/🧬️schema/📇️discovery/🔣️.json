@@ -39,5 +39,35 @@
         "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
       }
     }
+  },
+  "$defs": {
+    "CargoWorkspaceProgressV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "path",
+        "completedOperations"
+      ],
+      "properties": {
+        "operation": {
+          "enum": [
+            "state",
+            "presence",
+            "list",
+            "text",
+            "recipe"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "completedOperations": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
   }
 }

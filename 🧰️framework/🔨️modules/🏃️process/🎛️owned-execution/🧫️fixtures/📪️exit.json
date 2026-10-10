@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "name": "complete",
+      "code": 0,
+      "signal": null,
+      "stdout": "original 🧪 complete",
+      "stderr": "original stderr complete"
+    },
+    {
+      "name": "nonzero",
+      "code": 7,
+      "signal": null,
+      "stdout": "original 🧪 failed",
+      "stderr": "original stderr failed"
+    },
+    {
+      "name": "signal",
+      "code": null,
+      "signal": "SIGTERM",
+      "stdout": "original 🧪 signalled",
+      "stderr": "original stderr signalled"
+    }
+  ]
+}

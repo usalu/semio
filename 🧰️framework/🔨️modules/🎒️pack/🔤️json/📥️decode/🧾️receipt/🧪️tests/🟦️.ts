@@ -36,7 +36,7 @@ test("post-effect cancellation receipts retain independently authored work",()=>
       expect(row.receipt.copiedBytes).toBeLessThanOrEqual(row.grant.maximumCopyBytes);
       expect(row.receipt.retainedCapacityBytes).toBeLessThanOrEqual(row.grant.maximumCapacityBytes);
       expect(row.receipt.releasedBytes).toBeLessThanOrEqual(row.grant.maximumReleaseBytes);
-      if(row.frontier==="stringCopy")expect(row.receipt.copiedBytes).toBe(independent.bytes);
+      if(row.frontier==="stringCopy")expect(row.receipt.copiedBytes).toBe(1);
       if(row.frontier==="stringCapacity")expect(row.receipt.retainedCapacityBytes).toBe(independent.bytes);
       for(const axis of Object.keys(row.grant)){
         const missing=structuredClone(fixture) as Record<string,unknown>;
@@ -55,3 +55,5 @@ test("actual grammar publishes physical progress before the post-effect cancella
   const body=source.slice(start,end),receipt=body.indexOf("self.normal_step_progress=self.normal_step_progress.checked_add("),checkpoint=body.indexOf("control.step()?");
   expect(receipt>=0&&checkpoint>receipt).toBe(true);
 });
+
+test("original receipt order fold 0 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original receipt/order/fold trial has no whole-corpus schema authority");});

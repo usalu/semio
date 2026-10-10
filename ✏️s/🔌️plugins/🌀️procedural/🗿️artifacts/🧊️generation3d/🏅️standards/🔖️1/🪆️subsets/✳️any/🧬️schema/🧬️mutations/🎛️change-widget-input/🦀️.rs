@@ -6,7 +6,6 @@ use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_number,Generation3dMutation};
 
 use crate::Generation3dSnapshot;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️WidgetInputValue
 /// 📏️ The longest text input, in characters (the schema's `maxLength`).
@@ -17,8 +16,7 @@ pub const CHANGE_WIDGET_INPUT_MAXIMUM_CHANNEL: usize = 256;
 pub const CHANGE_WIDGET_INPUT_LABEL_TEXT: usize = 32;
 
 /// 🔣️ One typed input literal — on the wire `{type, value}`, a point or a vector as `[x, y, z]`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "type", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub enum WidgetInputValue {
     Number(f64),
     Text(String),
@@ -162,13 +160,11 @@ impl WidgetInputValue {
 
 //#region 🔖️ChangeWidgetInput
 /// 🎛️ Sets input `channel` of operator `id` to the typed literal `input` (a text source's `text` to its text).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[value(rename_all = "camelCase")]
 pub struct ChangeWidgetInput {
     pub id: String,
     pub channel: String,
-    #[value(flatten)]
     pub input: WidgetInputValue,
 }
 

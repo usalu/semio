@@ -47,9 +47,11 @@ export function toolJobLatestWinsSelfTests(): number {
     ["reject_cancelled_publication", "self.publication = completion.take()?"],
     ["advance_latest_wins_command_one", "self.latest_wins_order.items.front().copied()"],
     ["advance_latest_wins_command_one", "self.start_typed_command_operation(command, admission"],
-    ["advance_latest_wins_admission_unit", "pending.restarting = true"],
-    ["advance_latest_wins_admission_unit", "self.latest_wins_keys.begin(operation, key, pending.lease.as_ref()"],
+    ["advance_latest_wins_admission_unit", "pending.restarting=true"],
+    ["advance_latest_wins_admission_unit", "self.latest_wins_keys.begin(operation,key,pending.lease.as_ref()"],
     ["advance_latest_wins_admission_unit", "registration.latest_wins_target"],
+    ["advance_latest_wins_admission_unit", "ToolLatestWinsKeyCopy::admit_original(pending.meta.instance_id,parts,retained)"],
+    ["dispatch_typed_command_inner", "key_copy: None"],
     ["dispatch_typed_command_inner", "registration.latest_wins_command_disposer"],
     ["dispatch_typed_command_inner", "self.tool_cancellations.begin_keyed"],
     ["dispatch_typed_command_inner", "self.latest_wins_order.push(operation_id.0)"],
@@ -63,7 +65,7 @@ export function toolJobLatestWinsSelfTests(): number {
     ["typed_operation_slot_is_vacant", "self.latest_wins_commands.slot_is_vacant(slot)"],
     ["typed_operation_slot_is_vacant", "self.segmented_downloads.slot_is_vacant(slot)"],
     ["typed_operation_slot_is_vacant", "self.segmented_closures.slot_is_vacant(slot)"],
-    ["advance_latest_wins_admission_unit", ".rebind_keyed(base_revision, generation)?"],
+    ["advance_latest_wins_admission_unit", ".rebind_keyed(base_revision,generation)?"],
     ["rebind_keyed", "scope.operation != self.key"],
     ["rebind_keyed", "scope.operation.generation = generation"],
     ["advance_typed_operation_publication_unit", "self.next_advanceable_typed_operation()"],
@@ -98,7 +100,7 @@ export function toolJobLatestWinsSelfTests(): number {
     && text.includes("compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel")
     && text.includes("scope.operation")
     && ["retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close", "a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work", "a_status_only_host_call_finishes_every_typed_operation_it_admitted"].every((name) => runtimeContractTests.includes(`async fn ${name}()`))
-    && ordered(body(text, "dispatch_typed_command_inner"), ["self.live_runtime_instance_id != Some(meta.instance_id)", "self.require_complete_tool_operation_pipeline(&admission)?", "admission.verb != verb", "self.admit_typed_operation_slot()", "registration.latest_wins_command_disposer", "ToolLatestWinsKeyCopy::new(meta.instance_id", "self.tool_cancellations.begin_keyed", "self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(operation_id.0)", "self.latest_wins_order.push(operation_id.0)"]);
+    && ordered(body(text, "dispatch_typed_command_inner"), ["self.live_runtime_instance_id != Some(meta.instance_id)", "self.require_complete_tool_operation_pipeline(&admission)?", "admission.verb != verb", "self.admit_typed_operation_slot()", "registration.latest_wins_command_disposer", "self.tool_cancellations.begin_keyed", "self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(operation_id.0)", "self.latest_wins_order.push(operation_id.0)"]);
 
   if (!exact(source)) throw new Error("latest-wins production admission/publication authority is incomplete");
   for (const [, token] of obligations) if (exact(source.replaceAll(token, "unqualified_authority"))) throw new Error(`latest-wins accepts missing authority: ${token}`);
@@ -126,14 +128,14 @@ export function toolJobLatestWinsSelfTests(): number {
       && !tasks.includes("pub async fn host_for_instance") && tasks.includes("pub fn host_for_instance")
       && !handles.includes("pub async fn new(registry:") && handles.includes("pub fn new(registry:")
       && !admission.includes(".await") && !admission.includes("run(ctx)")
-      && execution.includes("let future = run(ctx);") && execution.includes("future.await")
+      && execution.includes("let future = run.run(ctx);") && execution.includes("future.await")
       && ordered(admission, ["instance_task_quota(instance)", "if live >= quota", "task.into_parts()", "executor.reserve()", "insert_admitted(task_id"]);
   };
   if (!taskAdmissionExact(source, reactor, host)) throw new Error("task publication invokes or polls user work before releasing its synchronous admission claim");
   const taskHostiles = [
     [source.replace("fn publish_mounted_typed_operation_unit", "async fn publish_mounted_typed_operation_unit"), reactor, host],
     [source, reactor.replace("pub(crate) fn spawn_task<", "pub(crate) async fn spawn_task<"), host],
-    [source, reactor.replace("reservation.install(Box::pin(async move {", "let future = run(ctx); reservation.install(Box::pin(async move {"), host],
+    [source, reactor.replace("reservation.install(Box::pin(async move {", "let future = run.run(ctx); reservation.install(Box::pin(async move {"), host],
     [source, reactor, host.replace("pub fn new(registry:", "pub async fn new(registry:")],
   ];
   for (const [main, tasks, handles] of taskHostiles) if (taskAdmissionExact(main, tasks, handles)) throw new Error("task admission accepts a suspended or prematurely invoked user factory");
@@ -213,7 +215,7 @@ export function toolJobLatestWinsSelfTests(): number {
   const admittedBatchSourceExact = (text: string): boolean => {
     const publisher = body(text, "publish_mounted_typed_operation_unit").replace(/\s+/gu, ""), lanes = {store:"artifact_mutations",config_store:"config_mutations",draft_store:"draft_mutations"};
     const calls = [...publisher.matchAll(/self\.(store|config_store|draft_store)\.admit_apply_batch\((.*?)\)\.map_err/gu)];
-    return calls.length > 0 && !publisher.includes(".await") && !publisher.includes(".last().cloned()") && Object.values(lanes).every(lane => calls.some(call => call[2].includes(`&mutemit.${lane},HistoryLane::Document`)) && !publisher.includes(`emit.${lane}.clone()`) && !publisher.includes(`emit.${lane}.clear()`) && !publisher.includes(`drop(std::mem::take(&mutemit.${lane}))`)) && calls.every(call => call[2].includes(`&mutemit.${lanes[call[1] as keyof typeof lanes]},HistoryLane::Document`) && call[2].endsWith("self.mounted_policy.preparation") && (toolJobRustBlock(publisher,publisher.indexOf("{",call.index!+call[0].length))?.body??"").includes("mounted.publication_ownership_progress=Some(ownership)"));
+    return text.replace(/\s+/gu, "").includes("self.publish_mounted_typed_operation_unit(mounted,crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,retained))?") && calls.length > 0 && !publisher.includes(".await") && !publisher.includes(".last().cloned()") && Object.values(lanes).every(lane => calls.some(call => call[2].includes(`&mutemit.${lane},HistoryLane::Document`)) && !publisher.includes(`emit.${lane}.clone()`) && !publisher.includes(`emit.${lane}.clear()`) && !publisher.includes(`drop(std::mem::take(&mutemit.${lane}))`)) && calls.every(call => call[2].includes(`&mutemit.${lanes[call[1] as keyof typeof lanes]},HistoryLane::Document`) && call[2].endsWith("retained") && (toolJobRustBlock(publisher,publisher.indexOf("{",call.index!+call[0].length))?.body??"").includes("mounted.publication_ownership_progress=Some((retained,ownership))"));
   };
   const ingress = body(storeSource, "admit_apply_batch"), admission = ingress.indexOf("if grant.maximum_items==0"), transfer = ingress.indexOf("std::mem::take(mutations)");
   if (admission < 0 || transfer <= admission || !["grant.maximum_copy_bytes<copied_bytes", "grant.maximum_capacity_bytes<retained_capacity_bytes", "grant.maximum_depth==0", "transaction:transaction.take()", "RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0}"].every(marker => ingress.includes(marker)) || ingress.includes("mutations.clone()")) throw new Error("actual borrowed batch ingress loses funded original custody or its receipt");
@@ -273,3 +275,4 @@ export function toolJobLatestWinsSelfTests(): number {
   }
   return fixture.cases.length + 3 + obligations.length + integration.cases.length + taskFixture.observations.length + taskHostiles.length + rawFixture.cases.length + 4 + rawHostiles.length + 3 + mountedChecks.length * 2 + 2 + dispatchFixture.cases.length * 2 + childCloseHostiles.length + 3;
 }
+

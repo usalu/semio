@@ -1,6 +1,30 @@
 use super::*;
 
 fn fixture_compute_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
+
+
+struct OriginalComputeRecipient { original: semio_framework_job::RetainedCloneGrant, progress: semio_framework_job::RetainedCloneProgress }
+impl ComputeRetainedRecipient for OriginalComputeRecipient {
+ fn remaining_grant(&self)->Result<semio_framework_job::RetainedCloneGrant,semio_framework_value::ValueError>{
+  if !self.progress.fits(self.original){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original compute fixture wallet is exhausted"))}
+  Ok(semio_framework_job::RetainedCloneGrant{maximum_items:self.original.maximum_items-self.progress.copied_items,maximum_copy_bytes:self.original.maximum_copy_bytes-self.progress.copied_bytes,maximum_capacity_bytes:self.original.maximum_capacity_bytes-self.progress.retained_capacity_bytes,maximum_release_bytes:self.original.maximum_release_bytes-self.progress.released_bytes,maximum_depth:self.original.maximum_depth})
+ }
+ fn record_progress(&mut self,progress:semio_framework_job::RetainedCloneProgress)->Result<(),semio_framework_value::ValueError>{
+  self.progress=self.progress.checked_add(progress)?;self.remaining_grant().map(|_|())
+ }
+}
+
+async fn receive_original_compute_job<J:InteractiveJob+'static>(pool:&ComputePool,runtime:&TokioHostRuntime,scope:&ScopeHandle,ctx:&OperationContext,original:J)->Result<(),ComputeError>{
+    use semio_framework_job::{BatchJobParams,Generation,OperationId,RetainedCloneProgress,StepBudget,WorkerJobAdmissionContext};
+    let grant=fixture_compute_grant();let mut receipt=OriginalComputeRecipient{original:grant,progress:RetainedCloneProgress::default()};let mut admission=RetainedCloneProgress::default();let mut job=Some(original);let mut params:Option<BatchJobParams>=None;
+    let deadline=ctx.deadline_ms.map_or(u64::MAX,|deadline|deadline.saturating_sub(runtime.pool.now_ms()).saturating_mul(1000).saturating_add(semio_framework_job::default_now_us().unwrap()));
+    let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,deadline,grant),semio_framework_job::default_now_us,&mut admission).unwrap();
+    assert!(ComputePool::prepare_job_params(ctx,grant,semio_framework_job::default_now_us,&mut params,&mut control,&mut receipt).unwrap());
+    let mut completion=None;assert!(pool.run_job(runtime,scope,ctx,grant,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|outcome|assert!(outcome.is_terminal())).await.unwrap(),"original supplied fixture authority admits unchanged source");let completion=completion.as_mut().unwrap();
+    drop(control);assert!(job.is_none()&&params.is_none());assert!(admission.retained_capacity_bytes>0);let result=completion.result().clone();
+    while !completion.terminal_is_empty(){let step=completion.close_step(&ctx.cancel,receipt.remaining_grant().unwrap()).unwrap();assert!(step.progress().fits(grant));receipt.record_progress(step.progress()).unwrap();if step.progress()==Default::default(){sleep_ms(runtime,1).await;}}
+    assert!(receipt.progress.released_bytes>=admission.retained_capacity_bytes);drop(completion);result
+}
 use semio_framework_async::TraceId;
 use std::pin::Pin;
 use std::sync::atomic::AtomicBool;
@@ -268,7 +292,7 @@ async fn interactive_jobs_never_exceed_the_compute_bound_under_a_burst() {
         let ctx = test_ctx(i as u64, scope.cancel.clone()).await;
         handles.push(async move {
             let job = CountingComputeJob { current: Some(current), observed_max: Some(observed_max), remaining_steps: 8, entered: false, closing: false };
-            pool.run_job(runtime, scope, ctx, fixture_compute_grant(), job).await.expect("interactive job without a deadline must not fail");
+            receive_original_compute_job(pool,runtime,scope,&ctx,job).await.expect("interactive job without a deadline must not fail");
         });
     }
     futures_join_all(handles).await;
@@ -285,7 +309,7 @@ async fn interactive_job_deadline_cancels_the_resumable_job() {
     let mut ctx = test_ctx(0, scope.cancel.clone()).await;
     ctx.deadline_ms = Some(now + 40);
     let cancel = ctx.cancel.clone();
-    let outcome = pool.run_job(&runtime, &scope, ctx, fixture_compute_grant(), NeverCompleteComputeJob { closing: false }).await;
+    let outcome = receive_original_compute_job(&pool,&runtime,&scope,&ctx,NeverCompleteComputeJob{closing:false}).await;
     assert_eq!(outcome, Err(ComputeError::DeadlineExceeded), "a non-terminal job must stop at its absolute deadline");
     assert!(cancel.is_cancelled().await, "deadline propagation must cancel the running job");
 }
@@ -298,8 +322,32 @@ async fn stopped_compute_pool_returns_worker_lost_and_releases_the_job_owner() {
     let pool = ComputePool::with_pool(1, workers);
     let scope = runtime.open_scope(ScopeOwner::Service("compute-stopped"), None).await;
     let ctx = test_ctx(0, scope.cancel.clone()).await;
-    let outcome = pool.run_job(&runtime, &scope, ctx, fixture_compute_grant(), NeverCompleteComputeJob { closing: false }).await;
+    let outcome = receive_original_compute_job(&pool,&runtime,&scope,&ctx,NeverCompleteComputeJob{closing:false}).await;
     assert_eq!(outcome, Err(ComputeError::WorkerLost));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn compute_original_admission_refusal_retains_source_addresses_without_native_births(){
+    use semio_framework_job::{BatchDriveConfig,BatchJobParams,Generation,OperationId,RetainedCloneProgress,StepBudget,WorkerJobAdmissionContext};
+    let runtime=TokioHostRuntime::with_pool(test_pool(1));let pool=ComputePool::with_pool(1,test_pool(1));let scope=runtime.open_scope(ScopeOwner::Service("compute-original-admission"),None).await;let ctx=test_ctx(81299,scope.cancel.clone()).await;let original=fixture_compute_grant();
+    let mut job=Some(NeverCompleteComputeJob{closing:false});let mut params=Some(BatchJobParams{operation:OperationId(ctx.trace.0),generation:Generation(u64::from(ctx.generation)),cancel:ctx.cancel.clone(),config:BatchDriveConfig{retained:original,site:"compute-original-admission",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1},now_us:semio_framework_job::default_now_us});
+    let job_pointer=job.as_ref().unwrap()as*const _;let params_pointer=params.as_ref().unwrap()as*const _;
+    for grant in[semio_framework_job::RetainedCloneGrant{maximum_items:0,..original},semio_framework_job::RetainedCloneGrant{maximum_copy_bytes:0,..original},semio_framework_job::RetainedCloneGrant{maximum_capacity_bytes:0,..original},semio_framework_job::RetainedCloneGrant{maximum_depth:0,..original}]{
+        let mut admission=RetainedCloneProgress::default();let mut receipt=OriginalComputeRecipient{original,progress:RetainedCloneProgress::default()};let mut completion=None;let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,u64::MAX,grant),semio_framework_job::default_now_us,&mut admission).unwrap();
+        let(result,heap)={let mut future=std::pin::pin!(pool.run_job(&runtime,&scope,&ctx,original,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|_|panic!("refused source cannot publish a semantic loan")));semio_framework_trace::observe_heap_allocations_on_this_thread(||future.as_mut().poll(&mut Context::from_waker(std::task::Waker::noop())))};assert!(matches!(result,Poll::Ready(Ok(false))));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(completion.is_none());drop(control);assert_eq!(admission,Default::default());assert_eq!(receipt.progress,Default::default());assert_eq!(job.as_ref().unwrap()as*const _,job_pointer);assert_eq!(params.as_ref().unwrap()as*const _,params_pointer);
+    }
+    let BatchJobParams{cancel,..}=params.take().unwrap();let mut close=semio_framework_async::CancelTokenRetirement::from_token(cancel);let step=close.return_alias_step(&ctx.cancel,original).unwrap();assert!(step.progress().fits(original));assert!(close.terminal_is_empty());drop(close);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn cancelled_compute_driver_preserves_the_original_caller_completion_slot(){
+    use semio_framework_job::{Generation,OperationId,RetainedCloneProgress,StepBudget,WorkerJobAdmissionContext};
+    let runtime=TokioHostRuntime::with_pool(test_pool(1));let pool=ComputePool::with_pool(1,test_pool(1));let scope=runtime.open_scope(ScopeOwner::Service("compute-original-driver"),None).await;let ctx=test_ctx(81300,scope.cancel.clone()).await;let grant=fixture_compute_grant();let mut job=Some(NeverCompleteComputeJob{closing:false});let mut params=None;let mut admission=RetainedCloneProgress::default();let mut receipt=OriginalComputeRecipient{original:grant,progress:RetainedCloneProgress::default()};let mut completion=None;
+    let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,u64::MAX,grant),semio_framework_job::default_now_us,&mut admission).unwrap();assert!(ComputePool::prepare_job_params(&ctx,grant,semio_framework_job::default_now_us,&mut params,&mut control,&mut receipt).unwrap());
+    {let mut driver=std::pin::pin!(pool.run_job(&runtime,&scope,&ctx,grant,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|_|panic!("nonterminal original job cannot publish completion")));assert!(matches!(driver.as_mut().poll(&mut Context::from_waker(std::task::Waker::noop())),Poll::Pending));}
+    drop(control);assert!(job.is_none()&&params.is_none());assert!(completion.is_some());let original=completion.as_ref().unwrap()as*const _;ctx.cancel.cancel().await;
+    while !completion.as_ref().unwrap().terminal_is_empty(){assert_eq!(completion.as_ref().unwrap()as*const _,original);let step=completion.as_mut().unwrap().close_step(&ctx.cancel,receipt.remaining_grant().unwrap()).unwrap();assert!(step.progress().fits(grant));receipt.record_progress(step.progress()).unwrap();if step.progress()==Default::default(){sleep_ms(&runtime,1).await;}}
+    assert!(receipt.progress.released_bytes>=admission.retained_capacity_bytes);drop(completion);
 }
 
 /// 🌀️ A self-contained cooperative yield with no tokio `rt`-feature dependency (this crate no
@@ -1484,4 +1532,13 @@ fn compute_returned_outcome_keeps_original_metadata_on_denied_grant_and_observes
     }
     owner.grant=grant;let step=owner.close_step().unwrap();assert_eq!(step,semio_framework_job::RetainedCloneStep::Complete(expected));assert!(owner.original.is_empty());assert_eq!(owner.progress,expected);assert_eq!(owner.grant,grant);assert_eq!(owner.close_step().unwrap().progress(),Default::default());assert_eq!(owner.progress,expected);
     eprintln!("[DEBUG] actual Services returned original metadata same pointer under item/copy/depth denial; caller grant unchanged; exact copied1 byte1 release0 terminal receipt");
+}
+
+#[test]
+fn original_compute_owned_admission_quotes_the_complete_atomic_child_before_receiving(){
+ let demand=semio_framework_job::WorkerJobSession::<NeverCompleteComputeJob>::owned_admission_demand().unwrap();
+ let original=fixture_compute_grant();
+ assert!(demand.copy_bytes>=std::mem::size_of::<NeverCompleteComputeJob>());
+ assert!(demand.capacity_bytes>0);
+ assert!(demand.copy_bytes<=original.maximum_copy_bytes&&demand.capacity_bytes<=original.maximum_capacity_bytes&&demand.depth<=original.maximum_depth);
 }

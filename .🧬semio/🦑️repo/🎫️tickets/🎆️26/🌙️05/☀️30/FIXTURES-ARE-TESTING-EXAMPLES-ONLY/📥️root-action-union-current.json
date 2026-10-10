@@ -3,7 +3,7 @@
     {
       "path": ".nxignore",
       "actionLedgers": [
-        "📥️root-nx-core-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-actions.json"
       ],
       "codepoints": 37,
       "utf16": 37
@@ -11,8 +11,9 @@
     {
       "path": ".vscode/launch.json",
       "actionLedgers": [
-        "reader-endpoints",
-        "law-routes-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json"
       ],
       "codepoints": 47,
       "utf16": 47
@@ -20,8 +21,9 @@
     {
       "path": ".vscode/🧩️launch.seed.jsonc",
       "actionLedgers": [
-        "reader-endpoints",
-        "law-routes-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json"
       ],
       "codepoints": 55,
       "utf16": 56
@@ -29,15 +31,62 @@
     {
       "path": "nx.json",
       "actionLedgers": [
-        "📥️root-nx-collection-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-actions.json"
       ],
       "codepoints": 35,
       "utf16": 35
     },
     {
+      "path": "package.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-native-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-scope-actions.json"
+      ],
+      "codepoints": 40,
+      "utf16": 40
+    },
+    {
+      "path": "♻️mit-bestand/package.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-native-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-scope-actions.json"
+      ],
+      "codepoints": 54,
+      "utf16": 54
+    },
+    {
+      "path": "✏️s/package.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-native-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-scope-actions.json"
+      ],
+      "codepoints": 44,
+      "utf16": 44
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎟️contributions/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-seven-trial-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 138,
+      "utf16": 148
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧬️schema/🎟️contributions/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 141,
+      "utf16": 151
+    },
+    {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
       "actionLedgers": [
-        "six-embedded-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-reader-actions.json"
       ],
       "codepoints": 161,
       "utf16": 173
@@ -45,15 +94,32 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "six-embedded-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-actions.json"
       ],
       "codepoints": 157,
       "utf16": 168
     },
     {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-seven-trial-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 157,
+      "utf16": 169
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 153,
+      "utf16": 164
+    },
+    {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "six-embedded-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-reader-actions.json"
       ],
       "codepoints": 182,
       "utf16": 198
@@ -61,7 +127,7 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "six-embedded-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-actions.json"
       ],
       "codepoints": 185,
       "utf16": 201
@@ -69,8 +135,8 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "six-embedded-reader-actions",
-        "pdf-cancel-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️pdf-cancel-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-reader-actions.json"
       ],
       "codepoints": 182,
       "utf16": 198
@@ -78,8 +144,8 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "six-embedded-actions",
-        "pdf-cancel-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️pdf-cancel-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-actions.json"
       ],
       "codepoints": 185,
       "utf16": 201
@@ -87,7 +153,7 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
       "actionLedgers": [
-        "root-five-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-five-actions.json"
       ],
       "codepoints": 148,
       "utf16": 161
@@ -95,7 +161,7 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json",
       "actionLedgers": [
-        "root-five-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-five-actions.json"
       ],
       "codepoints": 156,
       "utf16": 169
@@ -103,7 +169,7 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 147,
       "utf16": 160
@@ -111,7 +177,7 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 152,
       "utf16": 165
@@ -119,7 +185,7 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "six-embedded-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-actions.json"
       ],
       "codepoints": 146,
       "utf16": 158
@@ -127,7 +193,7 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 149,
       "utf16": 162
@@ -135,7 +201,7 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 153,
       "utf16": 166
@@ -143,15 +209,45 @@
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 152,
       "utf16": 165
     },
     {
+      "path": "🌎️hub/package.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-native-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-scope-actions.json"
+      ],
+      "codepoints": 46,
+      "utf16": 47
+    },
+    {
+      "path": "🎓️teaching/package.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-native-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-scope-actions.json"
+      ],
+      "codepoints": 51,
+      "utf16": 52
+    },
+    {
+      "path": "🏢️semio-tech/package.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-native-scope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-scope-actions.json"
+      ],
+      "codepoints": 53,
+      "utf16": 54
+    },
+    {
       "path": "📋️project.json",
       "actionLedgers": [
-        "📥️root-registry-source-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 42,
       "utf16": 43
@@ -159,9 +255,9 @@
     {
       "path": "📜️script.ts",
       "actionLedgers": [
-        "📥️root-registry-source-actions.json",
-        "📥️root-registry-placement-actions.json",
-        "📥️root-registry-boundary-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 39,
       "utf16": 40
@@ -169,24 +265,16 @@
     {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "📥️root-boundary12-test-actions.json",
-        "📥️root-boundary12-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-test-actions.json"
       ],
       "codepoints": 92,
       "utf16": 99
     },
     {
-      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema",
-      "actionLedgers": [
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json"
-      ],
-      "codepoints": 87,
-      "utf16": 93
-    },
-    {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "📥️root-boundary12-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json"
       ],
       "codepoints": 95,
       "utf16": 102
@@ -194,7 +282,7 @@
     {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "six-embedded-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-reader-actions.json"
       ],
       "codepoints": 82,
       "utf16": 88
@@ -202,7 +290,7 @@
     {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "six-embedded-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-actions.json"
       ],
       "codepoints": 85,
       "utf16": 91
@@ -210,7 +298,7 @@
     {
       "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 89,
       "utf16": 96
@@ -218,15 +306,90 @@
     {
       "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 92,
       "utf16": 99
     },
     {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-output-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-stdout-actions.json"
+      ],
+      "codepoints": 83,
+      "utf16": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-type-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-stdout-test-actions.json"
+      ],
+      "codepoints": 100,
+      "utf16": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📬️output/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-output-test-actions.json"
+      ],
+      "codepoints": 100,
+      "utf16": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-output-closure-actions.json"
+      ],
+      "codepoints": 91,
+      "utf16": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📤️stdout/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-stdout-test-actions.json"
+      ],
+      "codepoints": 105,
+      "utf16": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📬️output/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-output-test-actions.json"
+      ],
+      "codepoints": 105,
+      "utf16": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-stdout-test-actions.json"
+      ],
+      "codepoints": 100,
+      "utf16": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-output-test-actions.json"
+      ],
+      "codepoints": 100,
+      "utf16": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-output-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-stdout-registration-actions.json"
+      ],
+      "codepoints": 71,
+      "utf16": 75
+    },
+    {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
       "actionLedgers": [
-        "ecma-reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️ecma-reader-endpoints.json"
       ],
       "codepoints": 82,
       "utf16": 88
@@ -234,7 +397,7 @@
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "ecma-reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️ecma-reader-endpoints.json"
       ],
       "codepoints": 90,
       "utf16": 97
@@ -242,7 +405,7 @@
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧫️fixtures/🔣️.json",
       "actionLedgers": [
-        "ecma-reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️ecma-reader-endpoints.json"
       ],
       "codepoints": 95,
       "utf16": 102
@@ -250,7 +413,7 @@
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "ecma-reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️ecma-reader-endpoints.json"
       ],
       "codepoints": 93,
       "utf16": 100
@@ -258,7 +421,7 @@
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
       "actionLedgers": [
-        "ecma-reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️ecma-reader-endpoints.json"
       ],
       "codepoints": 91,
       "utf16": 98
@@ -266,8 +429,7 @@
     {
       "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "📥️root-conflict-actions.json",
-        "📥️root-b10-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-actions.json"
       ],
       "codepoints": 101,
       "utf16": 106
@@ -275,8 +437,7 @@
     {
       "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "📥️root-conflict-actions.json",
-        "📥️root-b10-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-actions.json"
       ],
       "codepoints": 104,
       "utf16": 109
@@ -284,7 +445,7 @@
     {
       "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "six-embedded-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-actions.json"
       ],
       "codepoints": 90,
       "utf16": 96
@@ -292,7 +453,7 @@
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 106,
       "utf16": 113
@@ -300,7 +461,7 @@
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "mesh-law-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️mesh-law-actions.json"
       ],
       "codepoints": 98,
       "utf16": 106
@@ -308,8 +469,8 @@
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
       "actionLedgers": [
-        "nine-laws-reader-actions",
-        "mesh-law-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️mesh-law-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 95,
       "utf16": 101
@@ -317,7 +478,7 @@
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
       "actionLedgers": [
-        "two-trial-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️two-trial-actions.json"
       ],
       "codepoints": 116,
       "utf16": 126
@@ -325,15 +486,107 @@
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "two-trial-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️two-trial-actions.json"
       ],
       "codepoints": 112,
       "utf16": 121
     },
     {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🔑️node-key/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 82,
+      "utf16": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-test-actions.json"
+      ],
+      "codepoints": 89,
+      "utf16": 94
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/📋️ingress.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-actions.json"
+      ],
+      "codepoints": 107,
+      "utf16": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/📋️outcome.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-actions.json"
+      ],
+      "codepoints": 107,
+      "utf16": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-test-actions.json"
+      ],
+      "codepoints": 103,
+      "utf16": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧬️schema/🫴️receiving.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-actions.json"
+      ],
+      "codepoints": 123,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-publication-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-route-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-route-test-actions.json"
+      ],
+      "codepoints": 89,
+      "utf16": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/📤️publication.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-publication-actions.json"
+      ],
+      "codepoints": 103,
+      "utf16": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🦀️owner/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-route-actions.json"
+      ],
+      "codepoints": 100,
+      "utf16": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/nested-io.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-wallet-test-actions.json"
+      ],
+      "codepoints": 85,
+      "utf16": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧬️schema/💰️wallet.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-wallet-actions.json"
+      ],
+      "codepoints": 87,
+      "utf16": 92
+    },
+    {
       "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 89,
       "utf16": 96
@@ -341,7 +594,7 @@
     {
       "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 92,
       "utf16": 99
@@ -349,7 +602,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
       "actionLedgers": [
-        "tess-current-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️tess-current-actions.json"
       ],
       "codepoints": 106,
       "utf16": 115
@@ -357,7 +610,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "tess-current-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️tess-current-actions.json"
       ],
       "codepoints": 125,
       "utf16": 135
@@ -365,7 +618,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/🎟️owners.json",
       "actionLedgers": [
-        "tess-current-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️tess-current-actions.json"
       ],
       "codepoints": 84,
       "utf16": 90
@@ -373,7 +626,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
       "actionLedgers": [
-        "📥️root-registry-source-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 76,
       "utf16": 80
@@ -381,7 +634,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🔣️.json",
       "actionLedgers": [
-        "📥️root-b8-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json"
       ],
       "codepoints": 91,
       "utf16": 95
@@ -389,7 +642,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "📥️root-b8-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json"
       ],
       "codepoints": 97,
       "utf16": 102
@@ -397,7 +650,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "📥️root-b8-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json"
       ],
       "codepoints": 100,
       "utf16": 105
@@ -405,7 +658,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/🦀️.rs",
       "actionLedgers": [
-        "📥️root-registry-boundary-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json"
       ],
       "codepoints": 75,
       "utf16": 80
@@ -413,7 +666,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/📤️exports/🦀️.rs",
       "actionLedgers": [
-        "📥️root-registry-source-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 74,
       "utf16": 79
@@ -421,7 +674,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
       "actionLedgers": [
-        "📥️root-registry-source-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 87,
       "utf16": 92
@@ -429,7 +682,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
       "actionLedgers": [
-        "📥️root-registry-source-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 82,
       "utf16": 88
@@ -437,7 +690,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "📥️root-registry-boundary-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json"
       ],
       "codepoints": 66,
       "utf16": 70
@@ -445,7 +698,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
       "actionLedgers": [
-        "📥️root-registry-boundary-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json"
       ],
       "codepoints": 64,
       "utf16": 68
@@ -453,7 +706,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🦀️.rs",
       "actionLedgers": [
-        "📥️root-registry-source-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 64,
       "utf16": 68
@@ -461,7 +714,7 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🟦️.ts",
       "actionLedgers": [
-        "📥️root-registry-boundary-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json"
       ],
       "codepoints": 96,
       "utf16": 102
@@ -469,15 +722,57 @@
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🦀️.rs",
       "actionLedgers": [
-        "📥️root-registry-boundary-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json"
       ],
       "codepoints": 96,
       "utf16": 102
     },
     {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-descriptor-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-descriptor-test-actions.json"
+      ],
+      "codepoints": 92,
+      "utf16": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-descriptor-actions.json"
+      ],
+      "codepoints": 95,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-loan-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-loan-test-actions.json"
+      ],
+      "codepoints": 86,
+      "utf16": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-loan-actions.json"
+      ],
+      "codepoints": 89,
+      "utf16": 96
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-route-trial-test-actions.json"
+      ],
+      "codepoints": 85,
+      "utf16": 91
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📋️project.json",
       "actionLedgers": [
-        "law-routes-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json"
       ],
       "codepoints": 121,
       "utf16": 129
@@ -485,7 +780,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 125,
       "utf16": 134
@@ -493,7 +788,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 123,
       "utf16": 132
@@ -501,8 +796,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "root-five-actions",
-        "four-recreated-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️four-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-five-actions.json"
       ],
       "codepoints": 154,
       "utf16": 165
@@ -510,7 +805,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧪️tests/🎟️source/🟦️.ts",
       "actionLedgers": [
-        "📥️root-b8-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json"
       ],
       "codepoints": 145,
       "utf16": 156
@@ -518,7 +813,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧬️schema/🎟️source/🔣️.json",
       "actionLedgers": [
-        "📥️root-b8-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json"
       ],
       "codepoints": 148,
       "utf16": 159
@@ -526,18 +821,50 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
       "actionLedgers": [
-        "root-five-actions",
-        "four-recreated-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️four-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-five-actions.json"
       ],
       "codepoints": 141,
       "utf16": 150
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json"
+      ],
+      "codepoints": 106,
+      "utf16": 115
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json"
+      ],
+      "codepoints": 109,
+      "utf16": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🫴️native/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json"
+      ],
+      "codepoints": 118,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🫴️semantic/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json"
+      ],
+      "codepoints": 120,
+      "utf16": 130
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
       "actionLedgers": [
-        "geometry-renewed-actions",
-        "four-recreated-actions",
-        "📥️root-b8-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️four-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️geometry-renewed-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json"
       ],
       "codepoints": 109,
       "utf16": 117
@@ -545,7 +872,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
       "actionLedgers": [
-        "geometry-renewed-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️geometry-renewed-actions.json"
       ],
       "codepoints": 112,
       "utf16": 120
@@ -553,45 +880,95 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
       "actionLedgers": [
-        "geometry-renewed-actions",
-        "four-recreated-actions",
-        "📥️root-b8-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️four-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️geometry-renewed-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json"
       ],
       "codepoints": 104,
       "utf16": 112
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-test-actions.json"
+      ],
+      "codepoints": 105,
+      "utf16": 113
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 116
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
       "actionLedgers": [
-        "📥️root-boundary12-test-actions.json",
-        "📥️root-boundary12-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-test-actions.json"
       ],
       "codepoints": 112,
       "utf16": 121
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt",
-      "actionLedgers": [
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json"
-      ],
-      "codepoints": 107,
-      "utf16": 115
-    },
-    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
       "actionLedgers": [
-        "📥️root-boundary12-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json"
       ],
       "codepoints": 115,
       "utf16": 124
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-test-actions.json"
+      ],
+      "codepoints": 117,
+      "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-actions.json"
+      ],
+      "codepoints": 120,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-test-actions.json"
+      ],
+      "codepoints": 121,
+      "utf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json"
+      ],
+      "codepoints": 124,
+      "utf16": 134
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-test-action.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-test-action.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-test-action.json",
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-test-actions.json"
       ],
       "codepoints": 113,
       "utf16": 122
@@ -608,19 +985,44 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
       "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-actions.json",
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-actions.json",
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json"
       ],
       "codepoints": 116,
       "utf16": 125
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b20-reader-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b20-reader-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-test-actions.json"
+      ],
+      "codepoints": 120,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b20-reader-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-actions.json"
+      ],
+      "codepoints": 123,
+      "utf16": 133
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
       "actionLedgers": [
-        "📥️root-b8-actions.json",
-        "📥️root-b10-actions",
-        "📥️root-boundary12-test-actions.json",
-        "📥️root-boundary12-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-test-actions.json"
       ],
       "codepoints": 120,
       "utf16": 130
@@ -628,31 +1030,24 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
       "actionLedgers": [
-        "two-trial-actions",
-        "flow-recreated-actions",
-        "flow-current2-actions",
-        "three-recreated-actions",
-        "four-recreated-actions",
-        "📥️root-b8-actions.json",
-        "📥️root-b10-session-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️flow-current2-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️flow-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️four-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-session-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️three-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️two-trial-actions.json"
       ],
       "codepoints": 123,
       "utf16": 133
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source",
-      "actionLedgers": [
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json"
-      ],
-      "codepoints": 115,
-      "utf16": 124
-    },
-    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
       "actionLedgers": [
-        "📥️root-b8-actions.json",
-        "📥️root-b10-actions",
-        "📥️root-boundary12-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json"
       ],
       "codepoints": 123,
       "utf16": 133
@@ -660,13 +1055,13 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
       "actionLedgers": [
-        "two-trial-actions",
-        "flow-recreated-actions",
-        "flow-current2-actions",
-        "three-recreated-actions",
-        "four-recreated-actions",
-        "📥️root-b8-actions.json",
-        "📥️root-b10-session-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️flow-current2-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️flow-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️four-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-session-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️three-recreated-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️two-trial-actions.json"
       ],
       "codepoints": 126,
       "utf16": 136
@@ -674,24 +1069,20 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
       "actionLedgers": [
-        "📥️root-boundary12-test-actions.json",
-        "📥️root-boundary12-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary18-selected-copy-actions.json"
       ],
       "codepoints": 144,
       "utf16": 156
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema",
-      "actionLedgers": [
-        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json"
-      ],
-      "codepoints": 118,
-      "utf16": 128
-    },
-    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "📥️root-boundary12-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary18-selected-copy-actions.json"
       ],
       "codepoints": 126,
       "utf16": 137
@@ -699,7 +1090,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
       "actionLedgers": [
-        "law-routes-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json"
       ],
       "codepoints": 112,
       "utf16": 121
@@ -707,7 +1098,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
       "actionLedgers": [
-        "law-routes-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json"
       ],
       "codepoints": 109,
       "utf16": 118
@@ -715,9 +1106,9 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
       "actionLedgers": [
-        "root-five-actions",
-        "three-recreated-actions",
-        "receiving-current-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️receiving-current-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-five-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️three-recreated-actions.json"
       ],
       "codepoints": 134,
       "utf16": 145
@@ -725,8 +1116,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
       "actionLedgers": [
-        "root-five-actions",
-        "three-recreated-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-five-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️three-recreated-actions.json"
       ],
       "codepoints": 122,
       "utf16": 132
@@ -734,7 +1125,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs",
       "actionLedgers": [
-        "📥️root-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 103,
       "utf16": 110
@@ -742,10 +1133,10 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
       "actionLedgers": [
-        "📥️root-presence-actions.json",
-        "📥️root-k5-presence-actions.json",
-        "📥️root-k6-presence-actions.json",
-        "📥️root-k8b-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k5-presence-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k6-presence-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-presence-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 118,
       "utf16": 127
@@ -753,8 +1144,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
       "actionLedgers": [
-        "📥️root-presence-actions.json",
-        "📥️root-k5-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k5-presence-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 117,
       "utf16": 127
@@ -762,8 +1153,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
       "actionLedgers": [
-        "📥️root-presence-actions.json",
-        "📥️root-k6-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k6-presence-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 113,
       "utf16": 121
@@ -771,7 +1162,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🛂️peer-admission.json",
       "actionLedgers": [
-        "📥️root-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 117,
       "utf16": 125
@@ -779,7 +1170,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🧹️retirement.json",
       "actionLedgers": [
-        "📥️root-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 113,
       "utf16": 121
@@ -787,7 +1178,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "📥️root-io-refusal-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-refusal-actions.json"
       ],
       "codepoints": 128,
       "utf16": 139
@@ -795,7 +1186,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
       "actionLedgers": [
-        "📥️root-detach-policy-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-detach-policy-actions.json"
       ],
       "codepoints": 116,
       "utf16": 124
@@ -803,7 +1194,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧫️fixtures/🔣️.json",
       "actionLedgers": [
-        "📥️root-detach-policy-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-detach-policy-actions.json"
       ],
       "codepoints": 112,
       "utf16": 120
@@ -811,7 +1202,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs",
       "actionLedgers": [
-        "📥️root-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 99,
       "utf16": 106
@@ -819,8 +1210,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
       "actionLedgers": [
-        "📥️root-presence-actions.json",
-        "📥️root-k5-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k5-presence-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 114,
       "utf16": 123
@@ -828,9 +1219,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "📥️root-planning-policy-test-action.json",
-        "📥️root-planning-policy-test-correction.json",
-        "📥️root-k8b-history-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-history-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-test-correction.json"
       ],
       "codepoints": 108,
       "utf16": 117
@@ -838,9 +1228,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
       "actionLedgers": [
-        "📥️root-k6-planning-actor-action.json",
-        "📥️root-planning-policy-actions.json",
-        "📥️root-k8b-history-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-history-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-actions.json"
       ],
       "codepoints": 108,
       "utf16": 117
@@ -848,8 +1237,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
       "actionLedgers": [
-        "📥️root-planning-policy-actions.json",
-        "📥️root-k8b-history-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-history-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-actions.json"
       ],
       "codepoints": 113,
       "utf16": 122
@@ -857,7 +1246,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "📥️root-io-refusal-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-refusal-actions.json"
       ],
       "codepoints": 105,
       "utf16": 114
@@ -865,8 +1254,8 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
       "actionLedgers": [
-        "📥️root-presence-actions.json",
-        "📥️root-k8b-history-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-history-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 79,
       "utf16": 85
@@ -874,8 +1263,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔗️backbone-detach/🟦️.ts",
       "actionLedgers": [
-        "📥️root-detach-policy-test-action.json",
-        "📥️root-detach-policy-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-detach-policy-actions.json"
       ],
       "codepoints": 105,
       "utf16": 113
@@ -883,15 +1271,76 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
       "actionLedgers": [
-        "📥️root-presence-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json"
       ],
       "codepoints": 94,
       "utf16": 102
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-registration-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-registration-correction-actions.json"
+      ],
+      "codepoints": 127,
+      "utf16": 138
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-seven-trial-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-grant-actions.json"
+      ],
+      "codepoints": 137,
+      "utf16": 150
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 140,
+      "utf16": 153
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-seven-trial-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 114,
+      "utf16": 123
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📡️actor-backbone/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-test-actions.json"
+      ],
+      "codepoints": 117,
+      "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-actions.json"
+      ],
+      "codepoints": 118,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-actions.json"
+      ],
+      "codepoints": 93,
+      "utf16": 100
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
       "actionLedgers": [
-        "plugin-target-correction"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️plugin-target-correction.json"
       ],
       "codepoints": 113,
       "utf16": 121
@@ -899,7 +1348,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 126,
       "utf16": 134
@@ -907,7 +1356,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 171,
       "utf16": 182
@@ -915,7 +1364,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "nine-laws-reader-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json"
       ],
       "codepoints": 137,
       "utf16": 146
@@ -923,19 +1372,86 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
       "actionLedgers": [
-        "📥️root-raw-current-actions.json",
-        "📥️root-raw-observer-action.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-raw-current-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-raw-observer-action.json"
       ],
       "codepoints": 111,
       "utf16": 119
     },
     {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b20-reader-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b20-reader-test-actions.json"
+      ],
+      "codepoints": 134,
+      "utf16": 144
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b20-reader-actions.json"
+      ],
+      "codepoints": 137,
+      "utf16": 147
+    },
+    {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-close/🔣️.json",
       "actionLedgers": [
-        "📥️root-raw-current-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-raw-current-actions.json"
       ],
       "codepoints": 122,
       "utf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-seven-trial-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 117,
+      "utf16": 125
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 120,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json"
+      ],
+      "codepoints": 110,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 120
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧭️topology/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-seven-trial-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧭️topology/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json"
+      ],
+      "codepoints": 111,
+      "utf16": 119
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
@@ -948,15 +1464,68 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
       "actionLedgers": [
-        "📥️root-nx-core-target-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-target-actions.json"
       ],
       "codepoints": 102,
       "utf16": 108
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-canonical-control-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json"
+      ],
+      "codepoints": 99,
+      "utf16": 105
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-import-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-actions.json"
+      ],
+      "codepoints": 137,
+      "utf16": 146
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-schema-actions.json"
+      ],
+      "codepoints": 152,
+      "utf16": 162
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-schema-actions.json"
+      ],
+      "codepoints": 136,
+      "utf16": 144
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-output-actions.json"
+      ],
+      "codepoints": 128,
+      "utf16": 136
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-output-test-actions.json"
+      ],
+      "codepoints": 148,
+      "utf16": 158
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
       "actionLedgers": [
-        "📥️root-nx-core-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-actions.json"
       ],
       "codepoints": 101,
       "utf16": 107
@@ -964,15 +1533,39 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
       "actionLedgers": [
-        "📥️root-nx-core-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-bootstrap-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-race-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-watcher-current-types-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-actions.json"
       ],
       "codepoints": 111,
       "utf16": 118
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-setup-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-deps-original-control-actions.json"
+      ],
+      "codepoints": 126,
+      "utf16": 134
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-deps-original-control-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-watcher-current-types-actions.json"
+      ],
+      "codepoints": 128,
+      "utf16": 137
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "📥️root-nx-core-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-actions.json"
       ],
       "codepoints": 104,
       "utf16": 111
@@ -980,7 +1573,7 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
       "actionLedgers": [
-        "📥️catalog-current-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️catalog-current-actions.json"
       ],
       "codepoints": 97,
       "utf16": 103
@@ -988,7 +1581,7 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
       "actionLedgers": [
-        "reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json"
       ],
       "codepoints": 116,
       "utf16": 124
@@ -996,16 +1589,72 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
       "actionLedgers": [
-        "reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-ancestry-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-registration-actions.json"
       ],
       "codepoints": 113,
       "utf16": 121
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-parent-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-selection-parser-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-compiler-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-context-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-correction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-bootstrap-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-types-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-parent-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-test-actions.json"
+      ],
+      "codepoints": 131,
+      "utf16": 141
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-test-actions.json"
+      ],
+      "codepoints": 115,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧫️fixtures/📥️native-caller.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-parent-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-test-actions.json"
+      ],
+      "codepoints": 133,
+      "utf16": 142
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-schema-actions.json"
+      ],
+      "codepoints": 131,
+      "utf16": 140
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts",
       "actionLedgers": [
-        "📥️root-registry-placement-actions.json",
-        "📥️root-registry-boundary-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json"
       ],
       "codepoints": 113,
       "utf16": 121
@@ -1013,9 +1662,8 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "📥️root-registry-placement-actions.json",
-        "📥️root-registry-alternate-test-action.json",
-        "📥️root-registry-route-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-route-actions.json"
       ],
       "codepoints": 121,
       "utf16": 130
@@ -1023,7 +1671,7 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧫️fixtures/🔣️.json",
       "actionLedgers": [
-        "📥️root-registry-placement-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json"
       ],
       "codepoints": 126,
       "utf16": 135
@@ -1031,11 +1679,11 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
       "actionLedgers": [
-        "reader-endpoints",
-        "dynamic-member-action",
-        "validator-method-action",
-        "construction-actions",
-        "default-effects-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️construction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️default-effects-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️dynamic-member-action.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️validator-method-action.json"
       ],
       "codepoints": 110,
       "utf16": 118
@@ -1043,8 +1691,8 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "reader-endpoints",
-        "construction-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️construction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json"
       ],
       "codepoints": 118,
       "utf16": 127
@@ -1052,9 +1700,9 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
       "actionLedgers": [
-        "reader-endpoints",
-        "construction-actions",
-        "default-effects-actions"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️construction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️default-effects-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json"
       ],
       "codepoints": 123,
       "utf16": 132
@@ -1062,7 +1710,7 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
       "actionLedgers": [
-        "reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json"
       ],
       "codepoints": 121,
       "utf16": 130
@@ -1070,7 +1718,7 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
       "actionLedgers": [
-        "reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json"
       ],
       "codepoints": 119,
       "utf16": 128
@@ -1078,8 +1726,11 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
       "actionLedgers": [
-        "reader-endpoints",
-        "📥️root-registry-boundary-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-const-envelope-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-const-precision-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-grant-integer-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json"
       ],
       "codepoints": 95,
       "utf16": 102
@@ -1087,8 +1738,8 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🟦️.ts",
       "actionLedgers": [
-        "📥️root-registry-source-actions.json",
-        "📥️root-registry-placement-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json"
       ],
       "codepoints": 115,
       "utf16": 124
@@ -1096,8 +1747,8 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧪️tests/🟦️.ts",
       "actionLedgers": [
-        "📥️root-registry-test-actions.json",
-        "📥️root-registry-placement-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-test-actions.json"
       ],
       "codepoints": 123,
       "utf16": 133
@@ -1105,8 +1756,8 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧫️fixtures/🔣️.json",
       "actionLedgers": [
-        "📥️root-registry-test-actions.json",
-        "📥️root-registry-placement-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-test-actions.json"
       ],
       "codepoints": 128,
       "utf16": 138
@@ -1114,7 +1765,7 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
       "actionLedgers": [
-        "📥️catalog-current-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️catalog-current-actions.json"
       ],
       "codepoints": 99,
       "utf16": 105
@@ -1122,16 +1773,214 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "actionLedgers": [
-        "reader-endpoints"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-schema-example-actions.json"
       ],
       "codepoints": 93,
       "utf16": 99
     },
     {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.cjs",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-controlled-actions.json"
+      ],
+      "codepoints": 107,
+      "utf16": 115
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-actions.json"
+      ],
+      "codepoints": 104,
+      "utf16": 111
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-concrete-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-controlled-actions.json"
+      ],
+      "codepoints": 102,
+      "utf16": 110
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-brace-selector-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-canonical-control-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-component-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-concrete-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-controlled-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-dead-native-pattern-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-exact-selector-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-fence-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-literal-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-observation-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-regex-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-setup-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-topology-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-actions.json"
+      ],
+      "codepoints": 103,
+      "utf16": 111
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-canonical-control-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-component-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-concrete-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-controlled-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-exact-selector-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-fence-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-installation-cancel-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-installation-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-literal-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-observation-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-owner-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-parent-boundary-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-parent-consumer-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-topology-test-actions.json"
+      ],
+      "codepoints": 110,
+      "utf16": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-brace-selector-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-component-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-concrete-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-controlled-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-exact-selector-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-fence-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-literal-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-observation-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-owner-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-parent-boundary-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-topology-test-actions.json"
+      ],
+      "codepoints": 115,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-component-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-concrete-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-controlled-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-exact-selector-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-literal-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 122
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-actions.json"
+      ],
+      "codepoints": 97,
+      "utf16": 104
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-async-collection-actions.json"
+      ],
+      "codepoints": 116,
+      "utf16": 125
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-async-collection-test-actions.json"
+      ],
+      "codepoints": 124,
+      "utf16": 134
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-ancestry-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-controlled-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-type-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-recipe-custody-actions.json"
+      ],
+      "codepoints": 104,
+      "utf16": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-ancestry-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-test-correction-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-controlled-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-controlled-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-denied-reader-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-type-actions.json"
+      ],
+      "codepoints": 120,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-recipe-custody-test-actions.json"
+      ],
+      "codepoints": 126,
+      "utf16": 136
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🎛️preparation/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-test-actions.json"
+      ],
+      "codepoints": 131,
+      "utf16": 141
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🧭️native-discovery/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-test-actions.json"
+      ],
+      "codepoints": 136,
+      "utf16": 146
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/📇️discovery/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-controlled-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-actions.json"
+      ],
+      "codepoints": 127,
+      "utf16": 137
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-actions.json"
+      ],
+      "codepoints": 107,
+      "utf16": 115
+    },
+    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
       "actionLedgers": [
-        "📥️root-nx-collection-actions.json",
-        "📥️root-nx-core-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-actions.json"
       ],
       "codepoints": 84,
       "utf16": 90
@@ -1139,10 +1988,12 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
       "actionLedgers": [
-        "📥️root-nx-collection-actions.json",
-        "📥️root-nx-collection-test-actions.json",
-        "📥️root-nx-core-adversarial-actions.json",
-        "📥️root-nx-core-test-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-adversarial-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-race-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-test-actions.json"
       ],
       "codepoints": 125,
       "utf16": 132
@@ -1150,8 +2001,11 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
       "actionLedgers": [
-        "📥️root-registry-test-actions.json",
-        "📥️root-registry-placement-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-grant-integer-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-schema-case-registration-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-schema-example-test-actions.json"
       ],
       "codepoints": 112,
       "utf16": 120
@@ -1159,11 +2013,22 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json",
       "actionLedgers": [
-        "📥️root-nx-collection-test-actions.json",
-        "📥️root-nx-core-adversarial-actions.json"
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-adversarial-actions.json"
       ],
       "codepoints": 130,
       "utf16": 137
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-const-envelope-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-const-precision-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-grant-integer-test-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-schema-example-test-actions.json"
+      ],
+      "codepoints": 119,
+      "utf16": 127
     }
   ],
   "retainedLedgerInputs": [
@@ -1185,6 +2050,10 @@
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️receiving-current-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-session-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b20-reader-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b20-reader-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b21-flow-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json",
@@ -1193,23 +2062,118 @@
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-test-action.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-test-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary16-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary18-selected-copy-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-brace-selector-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-canonical-control-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-component-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-component-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-concrete-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-concrete-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-controlled-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-controlled-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-dead-native-pattern-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-exact-selector-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-scope-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-external-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-fence-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-fence-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-installation-cancel-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-installation-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-literal-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-native-scope-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-observation-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-observation-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-owner-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-parent-boundary-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-parent-consumer-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-regex-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-scope-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-setup-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-target-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-topology-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-bun-topology-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-ancestry-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-ancestry-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-async-collection-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-async-collection-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-collection-test-correction-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-controlled-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-controlled-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-denied-reader-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-registration-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-preparation-type-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-recipe-custody-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-cargo-recipe-custody-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-conflict-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-const-envelope-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-const-envelope-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-const-precision-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-const-precision-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-deps-original-control-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-detach-policy-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-detach-policy-test-action.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-five-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-flow-boundary19-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-grant-integer-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-grant-integer-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-publication-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-publication-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-refusal-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-route-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-route-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-wallet-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-wallet-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-descriptor-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-descriptor-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-loan-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-job-loan-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k5-presence-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k6-planning-actor-action.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k6-presence-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k7-preflight-action.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-history-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-presence-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-compiler-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-context-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-correction-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-launch-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-bootstrap-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-import-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-outer-types-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-output-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-output-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-parent-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-parent-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-schema-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-producer-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-native-selection-parser-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-adversarial-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-target-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-race-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-race-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-output-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-output-closure-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-output-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-stdout-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-stdout-registration-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-owned-stdout-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-test-action.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-test-correction.json",
@@ -1222,6 +2186,22 @@
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-route-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-registration-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-registration-correction-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-renderer-trial-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-route-trial-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-schema-case-registration-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-schema-example-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-schema-example-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-seven-trial-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-six-trial-grant-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-ui-boundary22-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-watcher-current-types-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-workspace-policy-test-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-reader-actions.json",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️tess-current-actions.json",
@@ -1240,819 +2220,1301 @@
   "currentWholeFileObservations": [
     {
       "path": ".nxignore",
-      "sha256": "db85134d407467819bbcdd7dce6491db848bd4d675c58d30c590a689294c452b",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "db85134d407467819bbcdd7dce6491db848bd4d675c58d30c590a689294c452b"
     },
     {
       "path": ".vscode/launch.json",
-      "sha256": "da9034a1130c86e6d44549bf5a396e1b29f4bc60d6a49d3eaa3d49a2c9436523",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "82f0c70d0a01d5e3a2405ae265b7ba6c2939705642565bfbe0828ece901a1c18"
     },
     {
       "path": ".vscode/🧩️launch.seed.jsonc",
-      "sha256": "4b729b2973c471299efaa18dc0eb92b4d54246aed03bb5d45e74133d28acad34",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "7fee4c1fabb44a73e25f202ca00d6989df68921d63865c0c8c052b0406daf0a7"
     },
     {
       "path": "nx.json",
-      "sha256": "3413c117a2a97839347771c679df1ead8a7cb1aab96af2c3f64d578c9da42307",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "3413c117a2a97839347771c679df1ead8a7cb1aab96af2c3f64d578c9da42307"
+    },
+    {
+      "path": "package.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "b83097079302b781df3deda8f20544f8699056e28ba0bcd75883259fac3b241b"
+    },
+    {
+      "path": "♻️mit-bestand/package.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "590c99402b511a867f6dad8467241f6aa918d4f6621963dd8d8baa639f4ebd2a"
+    },
+    {
+      "path": "✏️s/package.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "b2251e6f0afebf01daa648cff2f8123ee08a581f70408e29868a7313c97e113f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎟️contributions/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "3c8abdc051908ce9bcf9bfb692d4bb56bf24c59326beffac6cf088b11eef9976"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧬️schema/🎟️contributions/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
-      "sha256": "90f38a54254e37bc827f6322664b307ea62e31ef8b0f360108c58f812fbed435",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "90f38a54254e37bc827f6322664b307ea62e31ef8b0f360108c58f812fbed435"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧬️schema/🔣️.json",
-      "sha256": "53829d6325b21dd8d386aa083661db05a81df03e508de2492e53b354bad16278",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "53829d6325b21dd8d386aa083661db05a81df03e508de2492e53b354bad16278"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "f6cd8cf73a92360e031b10c4e62ef494b73b23e1348f1402e7730c6b2d171694"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
-      "sha256": "d023c0f058430fad35775059063db88713502e695f40ac9c4339ec123602e601",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d023c0f058430fad35775059063db88713502e695f40ac9c4339ec123602e601"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧬️schema/🔣️.json",
-      "sha256": "7fc9830533d6f190d8339df11d7bcab825ca7e908fd0d4e2dd4d5a29fef1bacb",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "7fc9830533d6f190d8339df11d7bcab825ca7e908fd0d4e2dd4d5a29fef1bacb"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
-      "sha256": "10c8db99950ff89ccad405af9d315d3e596de1c11cb1ab5e961d0498f867a2d9",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "10c8db99950ff89ccad405af9d315d3e596de1c11cb1ab5e961d0498f867a2d9"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
-      "sha256": "2dff4302ad3ca3c0a95c6953bf250c368135ab483bc4d2ad90d4d571b095413a",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "2dff4302ad3ca3c0a95c6953bf250c368135ab483bc4d2ad90d4d571b095413a"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
-      "sha256": "cba0beda0638c160080a1bc876d5e17d5620b4ec8aacdbf4d19b1e40f995889a",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "cba0beda0638c160080a1bc876d5e17d5620b4ec8aacdbf4d19b1e40f995889a"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
-      "sha256": "fc63560cccdc2f28e1333f6c5738f4558b3091557f9599e86a34b42b9a64d161",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "fc63560cccdc2f28e1333f6c5738f4558b3091557f9599e86a34b42b9a64d161"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧬️schema/🔣️.json",
-      "sha256": "57db163476d755ebf7663b75cce53d05362f9c94ff0e1f5f88cbb7e4ce661ede",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "57db163476d755ebf7663b75cce53d05362f9c94ff0e1f5f88cbb7e4ce661ede"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
-      "sha256": "3df1dd7f78f5a61d45767bc263bf799ea95228f7bd2a61f24dcec4299033a1fc",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "3df1dd7f78f5a61d45767bc263bf799ea95228f7bd2a61f24dcec4299033a1fc"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🌎️hub/package.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "7dd4206d5c642d8955521900a04df50ee987252b8f977ee3ac4f89af23b1e376"
+    },
+    {
+      "path": "🎓️teaching/package.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ad3aac59b796f9b82d6e5e7584d3cffc3278f5a5e9b190e1ec3d6404d13ab490"
+    },
+    {
+      "path": "🏢️semio-tech/package.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e4b5291929d35c3ef81d30f28e7ff9bb2705b330978bb7fdb6a8dcc3b74c7f7c"
     },
     {
       "path": "📋️project.json",
-      "sha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a"
     },
     {
       "path": "📜️script.ts",
-      "sha256": "7c237a1b859e2d2068aec728b8a9e9be0ff48080d093e4ab4385fcbe8d69127b",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "b40d5561584c85cc9c3e300241f9f47e7d63c3acc58d69394fc1e931a7646a4a"
     },
     {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts",
-      "sha256": "696ad9d299063afdf373531575059574418341d0bd9b667faf0dd18830d61c85",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
-    },
-    {
-      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "696ad9d299063afdf373531575059574418341d0bd9b667faf0dd18830d61c85"
     },
     {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts",
-      "sha256": "a4e058082cacafcf01ef31e11d97f9766528cbece12fb8c2ba45cbb3f0562ebb",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "a4e058082cacafcf01ef31e11d97f9766528cbece12fb8c2ba45cbb3f0562ebb"
     },
     {
       "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧬️schema/🔣️.json",
-      "sha256": "ff5eb4b7fde1d5b045867b60bbb40d7c4717cda79d2d1dcf07fa1e519d33df35",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ff5eb4b7fde1d5b045867b60bbb40d7c4717cda79d2d1dcf07fa1e519d33df35"
     },
     {
       "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
-      "sha256": "dbd529088a9e16745ac88ed8ea61ac5032d439edb7c19d2da45024fde4df6672",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "dbd529088a9e16745ac88ed8ea61ac5032d439edb7c19d2da45024fde4df6672"
     },
     {
       "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ec50904f2f7416729c96ffeb21bbadf7d68b9e8eb712ac41096d2e73104823ba"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "efeae0e13b4ea284559d8c0209d532aeac8b06314e4287297d73f32bba061a87"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📬️output/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "90444ae1536fbc4917131937af1faf3fe1d084c25ff011c5c26e9352f1616794"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e704c76d757a14b2059545416cb504ccc4876419c29d52f2ff72701cb640a3de"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📤️stdout/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "4c349624b418d49aa34bcdd33c3e1af888fe6fa53bfebf7143d01fb774cc1890"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📬️output/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "af87b46c50cfa7ab4134c9572fd8b286f24f6e21368664aa59082368d31a70ef"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "98da81ef2a1bc61081ceb5a4e27c74959068c51531d1971bc22423db08b1fa8b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "826b1f70f7b7c6bf1b5fa99b24211b8fd0039537d8b8d4880dbe6d1f8b9b1828"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "042aedb70e63f437a6fd4a1c3500961939246090fe6eceb75472ce7dcc863354"
     },
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
-      "sha256": "4e1cc15199b3205f25efdfa2685dbf8578bf8674f37e4b9025960b553d03cac0",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "4e1cc15199b3205f25efdfa2685dbf8578bf8674f37e4b9025960b553d03cac0"
     },
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
-      "sha256": "b098fe519439314fffb32a34176c8120d64767eba35c62b5352c582dde2c106f",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "b098fe519439314fffb32a34176c8120d64767eba35c62b5352c582dde2c106f"
     },
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧫️fixtures/🔣️.json",
-      "sha256": "9938a8ceea5cd1545c33939bc2566b1cde85710189a09708d76e99ef501a2bcc",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "9938a8ceea5cd1545c33939bc2566b1cde85710189a09708d76e99ef501a2bcc"
     },
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json",
-      "sha256": "1daa5b2a4be0b3785bde3561cf18a708d7b876e5c5b018aba4d7dfa18dd4878c",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "1daa5b2a4be0b3785bde3561cf18a708d7b876e5c5b018aba4d7dfa18dd4878c"
     },
     {
       "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
-      "sha256": "11ecc306fe475b6e20fcef0c84b0306826b7ce70430e513e0660c43b35711860",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "11ecc306fe475b6e20fcef0c84b0306826b7ce70430e513e0660c43b35711860"
     },
     {
       "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts",
-      "sha256": "8ab203bd38583bfd935b85508a95d579b4878a798c8cb1d79f4532b35a9d4ce3",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "8ab203bd38583bfd935b85508a95d579b4878a798c8cb1d79f4532b35a9d4ce3"
     },
     {
       "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧬️schema/🔣️.json",
-      "sha256": "89fc0637c551aa17f494103bc8a1a1fc7d6169a2e1a21badecb0f6366e96c28f",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "89fc0637c551aa17f494103bc8a1a1fc7d6169a2e1a21badecb0f6366e96c28f"
     },
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
-      "sha256": "3a64f151cb60efad9f65ff46a74c913d0eb26ec9a059101da2c1e7de0e1c8739",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "3a64f151cb60efad9f65ff46a74c913d0eb26ec9a059101da2c1e7de0e1c8739"
     },
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
-      "sha256": "61ec2e7957d432cfa013321ee1aaf0b47ea02ef8398da641d37b5976b44024ff",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "61ec2e7957d432cfa013321ee1aaf0b47ea02ef8398da641d37b5976b44024ff"
     },
     {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🔑️node-key/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ee0f241ea030a3476bc1cb3c0a13b113e6a83bf77d47131dbf68aa0269c0c341"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/📋️ingress.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/📋️outcome.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d70abfaa033b9f8a36876bffdc8d6c3b03b4d9906f441d500a36f7e65b03f343"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧬️schema/🫴️receiving.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "392c9a5541afd144046474847288a367a2db4e2b61b6b576f10de921c2390ce2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "87a693b52bb04c3e3d33a014fa7cb105e168a8a38607744c7b800f2e9a2ec280"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/📤️publication.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🦀️owner/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/nested-io.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "77748b7e134d846dabd405ef844715ec806d1f523ed8001e7e3dec13e89393e4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧬️schema/💰️wallet.json",
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
-      "sha256": "599bf7b3a2d0f7c64a22efa37a2b81cdbe354b8e9a01867d58823bec2e2a73d6",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "599bf7b3a2d0f7c64a22efa37a2b81cdbe354b8e9a01867d58823bec2e2a73d6"
     },
     {
       "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
-      "sha256": "aeadd4889673008b13e74271c8b01f9f829eebd7b910f3011fb52f37da8e1887",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "aeadd4889673008b13e74271c8b01f9f829eebd7b910f3011fb52f37da8e1887"
     },
     {
       "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/🎟️owners.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
-      "sha256": "3cc9d4edaa4e60dc28567de3cc44950dae73c581c8505ce84f9e8877695d7b2e",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "3cc9d4edaa4e60dc28567de3cc44950dae73c581c8505ce84f9e8877695d7b2e"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🔣️.json",
-      "sha256": "71a583f1ebafed30c0ff23385d559fca131f0be0350299d59e18c39808e8c1b6",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "71a583f1ebafed30c0ff23385d559fca131f0be0350299d59e18c39808e8c1b6"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🟦️.ts",
-      "sha256": "9a759034d98c77585ee96ebebc72bd5eb04e8a12a19e43db893a3c9634940598",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "9a759034d98c77585ee96ebebc72bd5eb04e8a12a19e43db893a3c9634940598"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/🦀️.rs",
-      "sha256": "a3808c49a92e009386957cd16be3ddf6e3fa767f505b595a0900547312321ad1",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "a3808c49a92e009386957cd16be3ddf6e3fa767f505b595a0900547312321ad1"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/📤️exports/🦀️.rs",
-      "sha256": "487934f3a501ecf255089a2114074adfed1c6d608a2dcd8eb732c0688b12c41f",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "487934f3a501ecf255089a2114074adfed1c6d608a2dcd8eb732c0688b12c41f"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
-      "sha256": "79672947cae81627c79d87d13fb153659286c952d99b3e6e41c111c5b0b6546d",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "79672947cae81627c79d87d13fb153659286c952d99b3e6e41c111c5b0b6546d"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
-      "sha256": "a036342d9fe6e53c05f5f33e0cd4f7b19a79ff064dc48691374bb2d224e3bb4a",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "a036342d9fe6e53c05f5f33e0cd4f7b19a79ff064dc48691374bb2d224e3bb4a"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🔣️.json",
-      "sha256": "0885c1457f1b55cb61e59b643054d37599bce52c783b330f4c4bb6cebc3a7fba",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "0885c1457f1b55cb61e59b643054d37599bce52c783b330f4c4bb6cebc3a7fba"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
-      "sha256": "8e780f288aecae24599c4a624ebc018b03ea6d05069751338a3478587fab7e62",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "8e780f288aecae24599c4a624ebc018b03ea6d05069751338a3478587fab7e62"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🦀️.rs",
-      "sha256": "dbcf49a135b17e8d01236402ba936266005c417d02198b3950b1007391720fe9",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "dbcf49a135b17e8d01236402ba936266005c417d02198b3950b1007391720fe9"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🟦️.ts",
-      "sha256": "ce9209564e6dd8f44145610669ddc4dcdf17752bb0b2112b9f67c5c03ce558d3",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ce9209564e6dd8f44145610669ddc4dcdf17752bb0b2112b9f67c5c03ce558d3"
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🦀️.rs",
-      "sha256": "1742794c4688fc9a0d33048cc4109ab1177dea7fcdd612a7dbaa04285583b1b8",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "1742794c4688fc9a0d33048cc4109ab1177dea7fcdd612a7dbaa04285583b1b8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "62a9c6e0473e70798031b664a94b42f3be38eff37d561f3e59647256791c1bf5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "587c2304972c5df7013292f0d74b1bcb4cb085e5f154f2d6cbccb909ae78e322"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "78d38051509dfa9ce35fe50ef86c7133b8bbbc8319c7483e3db1d6e53612e6a1"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📋️project.json",
-      "sha256": "7170406bc0cd01f93be87b3b58be6b36d40459091cf1f4da4ab4ce1c2fe7d572",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "7170406bc0cd01f93be87b3b58be6b36d40459091cf1f4da4ab4ce1c2fe7d572"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
-      "sha256": "83fb8dfbcc5ad46b173bd64cec35a3936ed644a4e1b186e1b2045bfc6dd5b317",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "83fb8dfbcc5ad46b173bd64cec35a3936ed644a4e1b186e1b2045bfc6dd5b317"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧪️tests/🎟️source/🟦️.ts",
-      "sha256": "8cda8b62c7dc7054d780f5a7853cdef4bc1972ad5cde9bd8cdf808533911554e",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "8cda8b62c7dc7054d780f5a7853cdef4bc1972ad5cde9bd8cdf808533911554e"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧬️schema/🎟️source/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d03aa8cf622c3aee270c02cc57bb0dfb0f0b10594b391be7e3040abcd10532cb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🫴️native/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🫴️semantic/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
-      "sha256": "d5d2efdd54fa955ba06943d52e8f23fa665b75126fe68537de2ec0dc363bd2a9",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d5d2efdd54fa955ba06943d52e8f23fa665b75126fe68537de2ec0dc363bd2a9"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "66edfb33d060bde1a3a26d29476fbbd82dd56e1399206b9d657a8178d9cb987e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
-      "sha256": "10b34849a391f16acc1e06c11f895c05660e2b9d5998c52950f9519df644e18d",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e664622175633bb467ca249f9929280b7f8c2770182c5ce7fe0b95112cf396ae"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "657092975defd7420b95017446e8143d57a67a41162621430fc5d69fc3694a8d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "98ddd12293a1e2aac9e5642e585a64be1e96cb42b5abb85eb16b8148eba028df"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "6015e576fbd8c2f6fe3ab84c26b421242000926d0894b399f2ef1805de0f511d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "4c228ef6ea2450d3384768dffb3a62190cafe101bf924e9b54c6ad4bc5958ee3"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
-      "sha256": "9a8bd1aab2ef443eec943843f564ea8d48cf4511fe161cac7c6afc06f08a7d17",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "18e3454c9658ca9434e07ff7aa7fb08508a8d0cf236ab2f37c7f386253be5003"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema",
-      "sha256": null,
-      "isDirectory": true,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "directory"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
-      "sha256": "244dbf18b45f6ffc07ac24d3686b33de179df45bc2b7447e7c08cf9da414e05c",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "4194ecaf2f79c6be79eca32bc824b199da4ab8b9f9f4fd84b7093d1236203f91"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "32cee995eb8f9667fa5b1f7dbb6eede99aaccbe9ccb0008009c1e523c96b0ffb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "158686c4085cbd670ab71d98ce6390e4e428191fd0eb304efb6906464a73933a"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
-      "sha256": "fa6feb9421b9eca9f407cd597c447021044880cd046c9268d2f10163a959d122",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "405a6aa0b7a4af39efc3bb7230c1740b776236563172195e3b067c32f0fd2df2"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
-      "sha256": "687338396a0117cb6bf6b8d88c579dcf5974e47b997cb970ee19e993d9ab674b",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "687338396a0117cb6bf6b8d88c579dcf5974e47b997cb970ee19e993d9ab674b"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
-      "sha256": "78db2ae52aec41b589bfc68f5ccf06909705fafbbb14ec6fe1f1bead6ea0274f",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "cba5ccd2ce9f2af8af572ed1af93052f47c812659859e7efa25d85a64f1f560f"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
-      "sha256": "a4a1c8caa011c284d1bd9cb350b26122f3d92d7a3b9927e1169e4e119803072b",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "9cfd951f0090c1be664163c65d929ba0e771a42734cbade9326fb602e0615123"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
-      "sha256": "b8da545832c95d09269c498e33867af3a4c9f0b43511580b5ae86d0999015dfb",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "81cb2736dca26c4dad0d408a85ccf1a1cf8a0e2bb346db4f91f467873871d867"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs",
-      "sha256": "8a42b905cedf9e341fbfb3ec22ccd814703af3c409cd43a1ab679b69410b1a15",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "530f6aae2ac914ecc7e0466f8462824525bebd90d14435528e6129cdbcf3444b"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "68d8e3336f3575e860d8f20fb97c56dc596ce412a1ebf812cc9b16f39429a798",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "b7f1ea6f02e6340543d60af451e9fd110396c05a782191deb43ef5823d8df89c"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "3659df3afbf71368e11789fe1ec3a0424fb609d176ea41869e0fe8428148f185",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d34a123c57ad3a411da9f6178a48c2a539797a68dce6758bdaac85ae4c532a72"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
-      "sha256": "5e135add973b2cb0516bf2d1b38444b50fa96214caf6f72dd9e7f8a094a06887",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "5e135add973b2cb0516bf2d1b38444b50fa96214caf6f72dd9e7f8a094a06887"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🛂️peer-admission.json",
-      "sha256": "e3e0f1b622c3880d2456c2304e3a5492dee741d1307d9e4ea61b418e92ee0d37",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e3e0f1b622c3880d2456c2304e3a5492dee741d1307d9e4ea61b418e92ee0d37"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🧹️retirement.json",
-      "sha256": "e39f510c216875a1f544781dabcc0f61205919ab1f080cd0a680224ee450062b",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e39f510c216875a1f544781dabcc0f61205919ab1f080cd0a680224ee450062b"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
-      "sha256": "87aca987f52caa92aafbb2b75087ee6b47600e5b5dc8235666bc253a5a555764",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "87aca987f52caa92aafbb2b75087ee6b47600e5b5dc8235666bc253a5a555764"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
-      "sha256": "ac6cb5dee42ccc3964fa0a2da967d99d794fa5eae76fb29f7117d3ccd08e7454",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ac6cb5dee42ccc3964fa0a2da967d99d794fa5eae76fb29f7117d3ccd08e7454"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧫️fixtures/🔣️.json",
-      "sha256": "c7edbcc161433a0dd7dfc7008d9effa44864734ab96a6930a98c007d72482091",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "c7edbcc161433a0dd7dfc7008d9effa44864734ab96a6930a98c007d72482091"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs",
-      "sha256": "7a881aa6eff2604a4e7b1200d3a552c670041177408ce2e0ac3ac10a7f93f51e",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "7a881aa6eff2604a4e7b1200d3a552c670041177408ce2e0ac3ac10a7f93f51e"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "5cab50cd5e6e7f4485d87fec976d16d6aa3da395a36fcb118c643f4a8060ccbd",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "5cab50cd5e6e7f4485d87fec976d16d6aa3da395a36fcb118c643f4a8060ccbd"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
-      "sha256": "f08ed1a22c415594f778f1bd610cb4d145aa57804b764707371c6e4a98ead3b0",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "f08ed1a22c415594f778f1bd610cb4d145aa57804b764707371c6e4a98ead3b0"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
-      "sha256": "0dfc8684305c711194b963b97246e7d698253a4801b91e5cfd83351cff6a65ae",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "0dfc8684305c711194b963b97246e7d698253a4801b91e5cfd83351cff6a65ae"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
-      "sha256": "5ab8908edafee6c1198d49ae3da73bdaac91926febc16fd5991093f03133b279",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "5ab8908edafee6c1198d49ae3da73bdaac91926febc16fd5991093f03133b279"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
-      "sha256": "3ca1056203ae8b29ed479c99919d3420cc22a0a3b56fa44b68f68bce8381d9f8",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "078ae459e0b207f045bae68d933c32cdd93abcb531b00b386fc40bc756b35edd"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔗️backbone-detach/🟦️.ts",
-      "sha256": "1477bb54efed42676937a9bce3974fdddb93c378afb31cd68355216bcffeb4b1",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "1477bb54efed42676937a9bce3974fdddb93c378afb31cd68355216bcffeb4b1"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
-      "sha256": "1c8db1938ad0420f218a89239ce28432cd47750717794b7b77d8382faf89ea58",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "1c8db1938ad0420f218a89239ce28432cd47750717794b7b77d8382faf89ea58"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d1d38a73fc836be9316d7a7d6c865d4d81497f5af21585674e5ad9880e75723e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "a9b6791134183a6b810c785d6fcad937bb372e39e6ff1217a8aa71f3d718448f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e47611750e3a5146ffa41fd6367b6663e73f500f709813d4cb3fe8aa01e5920b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📡️actor-backbone/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "93aabe7d50993e260b7bb9ad1b6023a3c44e9e94d721415f42a6a07d504a3c24"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "bb3d84d7bf21d0753a44fcedf260d0745514d813bfc4ef730c21a3a1a6968155"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "4834ed414d9e9bc34db356bc612d5e5e70eb5dac9bcde2fad803b3d291b4c369"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
-      "sha256": "981c60ab467d3ca270aa4b10925e13426211a7416795276000998c0bfb494d40",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "b88967fdd412da1745a0c6b34b566c2627253ed96265014f11913c66204bcda6"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
-      "sha256": "50a0555b0d0f477a2a4acdd02a018717dfea886f9b8c4c25e6dc387ade3065ce",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "c60ddb16743eea22ffa5d455a658c38354f61628689eb6d6a03ee1436fc16c74"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
-      "sha256": "23d854a3d2e81cb262093535ce730194015e02c15e2efa2f03201a08422b6eaa",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "a7f8048817603d7e6f5ea595a2ab8970b82edefee22c43ae2b477b1f57dd3856"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "4bd9253c497ccba008d514c960a4f2186d50b843f3c3a9d12e79f1a05f679355"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "a10bab9cefc1d5684e582a5bf9b3712c8c65114393fc53c33a5bda9efb6e6602"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-close/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "b0dbe4479cf263d84b65f9694071e1aac9b6a2693a486c6e26e176fac873d94a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "3036fdbe905e5ee6ab6e05c23f4239287a7feb9001b65b30ac43192a6f752abc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧭️topology/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "0378ff97e679db65ffeee1d79d2e7df26667b12f95dae449430a7305566fe598"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧭️topology/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
-      "sha256": "886deb4d98e1883424cf8e9a524fc3d723c431fb885bf6ccb0c1015c4d6da86a",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "886deb4d98e1883424cf8e9a524fc3d723c431fb885bf6ccb0c1015c4d6da86a"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
-      "sha256": "115d3678498f1f8732074491d29f77c487f5840569ad03fbc2d47d49ee98af94",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "f4529f1252e97fe4315b7a69c43406839b73d45470955f3fe75d0c1aad671b0e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "28f16b3e449f847ae1c41ba5cee5cf5dd7b8c42470305b15842626d14cba5efd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "2ba6c56827d20c1a503df7ba4a9005fae83d3416ab30c9260dc92e430df82cd3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "cc42e1c48f437c44e38056e9b5fef2a1916257ff15c0048b61584638aedd254d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "8844f860a9a27225e5bd269f56385fcc874847b235b49ca0480af82c2751d6b2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "9909b4c359f2cfa40fd41831ea68f4a7d654a0b73fd97d27e10179ddc5180519"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "7a94f22e3b257c72c903cca6ade6a5521940ad9c5f27bbcaa565998f53f55325"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
-      "sha256": "81d9edfdc70f071e6215b922b652e75286616ac5f8b429bb7f8fae6d629ee360",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e66850d0292f6744a63bb45ef7d72c5b62159b5f67db47302958ef396d28070f"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
-      "sha256": "de5103407a7c451307e5b958b990b742fcd3619803e765caf0ef8e68fd58f2c7",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d8f019e430638782dc8db871ddc1f22efef2aa84c3c03ebf65ec636a3b477f4f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e7397e7cf6439a230d2bcbd980bbe52c7058e3b971501bb7719be0e926548ae7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "eb99033815dff326aa35bdae9fb0097f7836cdb88d1c8f578116c9b8c8633b7d"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
-      "sha256": "a2ec937477b67e217dc1d09d2165943f6b0ed4b624aaef8a36ec80d8452fc91e",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "0cb449d5a6974bfb8c693725477d56500d2a450e47ac26870d8571eb2ac7cbc2"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
-      "sha256": "6d4f3b4a9bce5cefe814360b247f6198a8549e26f55189be664de6050a40e3a8",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "6d4f3b4a9bce5cefe814360b247f6198a8549e26f55189be664de6050a40e3a8"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-      "sha256": "0e84b6cbcc1e820b8dbe6a45235e0556c59250817d12d26d33cfd0ae58ae07e1",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "6de95e5aed3175c6064ce2cc34e46fa9e5926fd3a22652108ef15032df419b94"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
-      "sha256": "cef118f35284abbfe0c2308d71f3431ab03c4f8bda909c76f32227d1545022d5",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ae8b2d9fd28a610f9a99e6b0632f058f5f040582076dc166857b3d789a1ad72d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "96c26d74052d681f36e2012e13ff3960f95396ff2b350e3f033b76d818c7f413"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "8235f32fd43104fdf76f579c018054b84f3ef7c0368310e8abdadf4d0e68d3c7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "fb791c3dfec3d053ddad9b5fd2f505f7530965fc4c2909812af7b2901d3e270d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧫️fixtures/📥️native-caller.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ed676c2c93558a11c9f95356d04ce68734958b6cd9f3fe12520ff25bddcffa58"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "61f1de0dcd7472626feaf807d9386d9318957e86f7549380be2e46249fff7490"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts",
-      "sha256": "31520c3fd62e7743ec83a6fbee439093c481eeee50150dd5246ea98e10babe82",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "31520c3fd62e7743ec83a6fbee439093c481eeee50150dd5246ea98e10babe82"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts",
-      "sha256": "1c3e02937571da407ed9c04ab3c5ef3a23bd6b45143c6e34cd73eedffc891e02",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "1c3e02937571da407ed9c04ab3c5ef3a23bd6b45143c6e34cd73eedffc891e02"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧫️fixtures/🔣️.json",
-      "sha256": "0a549522fc8771af54249e77b5c9b5bf9b7073e5fca0b1b494ba3a8c399af6de",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "0a549522fc8771af54249e77b5c9b5bf9b7073e5fca0b1b494ba3a8c399af6de"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
-      "sha256": "c0c60020d37999a75d4d49fbb969a4716d993ab43e5036b031679ceb9b374698",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "c0c60020d37999a75d4d49fbb969a4716d993ab43e5036b031679ceb9b374698"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
-      "sha256": "d269dd0f1ed955b68a62eda16f06d72381c3e11927215ad196b4587fdb76867b",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d269dd0f1ed955b68a62eda16f06d72381c3e11927215ad196b4587fdb76867b"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
-      "sha256": "228fdbc72c2c5c64aede9c29c68b19fea88231203c9721d65aacd983ff5f838d",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "228fdbc72c2c5c64aede9c29c68b19fea88231203c9721d65aacd983ff5f838d"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
-      "sha256": "2de0af73668999fd43ac7b85a5fb4efeec9d3f38d222cf91a6304f8da741427d",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "2de0af73668999fd43ac7b85a5fb4efeec9d3f38d222cf91a6304f8da741427d"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
-      "sha256": "76f46c4da5361fb9344dbbbb7c94b0dcdc0d1d4081155be6ab9e65974745faa5",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "76f46c4da5361fb9344dbbbb7c94b0dcdc0d1d4081155be6ab9e65974745faa5"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-      "sha256": "2d6d406e74a78f91948dd264323c8099b7b3c53a46ab5ddf76494da5dbc9ca78",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "8d16671f92401b15f34ecac71c4694a8d4bbfa2ee686a2672812e58550f1a4c0"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🟦️.ts",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧪️tests/🟦️.ts",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧫️fixtures/🔣️.json",
-      "sha256": null,
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "absent"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
-      "sha256": "de682b7fa47b32d84b7e1376538b0aeb1150da03a421f9553315c007167fd3e8",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "de682b7fa47b32d84b7e1376538b0aeb1150da03a421f9553315c007167fd3e8"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-      "sha256": "d64c6ec73a121486af383a9834166854f5f2cda57a9b7a10c9c64f1b0a76d5a8",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "6efacddff78759062b4c8f7c167fcd40ebcfd0b04e66f7c573a1f5a5bee9c01c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.cjs",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "8da02effab00ba72d908ad5c0e834425e4c1509f5e6ec8d83cd9c34c5cf7573a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "abc18179a0ae9292731d9cfd7a32271284e69da7feec17232a4c1ad42cd5c43d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e3096be5861766e0f8cdca63c717ed8d3ad580158225fc4434651c517a772649"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "8e648269f4ea1a1abca190eb15eba7474e9b51cc48e526dedb27cd43e3fb7acd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "a054d46493a8eba5b8f60a4cef7efe68b4a049bdc85d8b65b83fc0d43dfa3a9d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧫️fixtures/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "e25dadbc8a35a22df6a06ad1f396180a42e950f765fe80a30644030f15cbed80"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "889e59344ec007413c24183121d9f8ff83de630f1468ec6f3b0c3a4a133bcb10"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "c5136b651ad3b8d4212ae2fb9da6a736484295616a87375f6e7d66b21381c9fe"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "4509f6b6fddb76e12eefb3b92e4ef45dee09b5062d3ce82835f9fc8feb1e7ad7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧪️tests/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ce14eb8814c4411c1bb911847b445846f0cacc9184de4749b6173323e3fbfda8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "102c827f6c5923a9a75f00962ccd8c0d7a132aab3da18a03bab33a2f51fc198c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d0f261b7c31785b73191cf0c2e7c3837c33b711222ed475b5d32d66596da97fb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "cc790a7f74cc60eb13a515b25f51c73e16276bc8c5664f810ac3734b68390cdc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🎛️preparation/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "468b622140be3b4659d0140a5ed6b3587c2393c1f96b97003ef3f6c9f6312f01"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🧭️native-discovery/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "2239cc278c2c549f8973e2cac4abf0e468966c8d64babe41b6f9beff0cd00197"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/📇️discovery/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "aaf4b300c5d47fe32a8e1b7fc36c9c14d10ab505ffb528f9a6174862e443468a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️schema/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "6dc41ba0fcebb76f3f67f718b8be2d34afdf6ad261d1ee5cde977ed64cf5093f"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
-      "sha256": "baf20df1e55d3013a7a340e8838ae8b02af36cff56d310316f1b3691f283a127",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "f40540a8dc3ed347b61c067a589a0531de0d9f6996da3386e38f6fe3060a02e5"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
-      "sha256": "571a2357e7940a45e24e1cb07d63f478695feafd5ffbaa3f423a9529b8875978",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "ebe3b9cb01ac1f736537acaa2c87021c54b9972de2ca6d72380e90ba0387e9fc"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
-      "sha256": "0be94d9a55996153cfbb4ab87c0cf3480d7a3bb5238c5cd1857f8bf2e356b764",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "56f931e839c459c6ef194d81ee5b870a5409c52341229b207c0f1e15d794f9d4"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json",
-      "sha256": "d7a0c1b5903ad43aff6e626b34c22ea156f983cc47e6a6b03b88d92a8d961e6d",
-      "isDirectory": false,
-      "exclusiveAuthorshipClaim": false
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d7a0c1b5903ad43aff6e626b34c22ea156f983cc47e6a6b03b88d92a8d961e6d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",
+      "exclusive": false,
+      "kind": "file",
+      "sha256": "d5fd5441d042258c218a3dae68b6aa8c3d404081f1435afdb1010e5723edd8ab"
     }
   ],
   "wholeFileExclusivityClaim": false

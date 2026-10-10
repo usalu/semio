@@ -1,0 +1,29 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "646c3a976af7d84a278325ea7ae9217e02eabcb49718faacde2df44c27260b24",
+      "afterSha256": "4834ed414d9e9bc34db356bc612d5e5e70eb5dac9bcde2fad803b3d291b4c369",
+      "exclusive": false,
+      "scope": "Three complete trial definitions only; remaining domain definitions semantically identical"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx",
+      "action": "updated",
+      "beforeSha256": "fb5a97a68f52b44563c1d23eae10cbe8ab1867f006fff6c2360983df7ef4ae53",
+      "afterSha256": "bb3d84d7bf21d0753a44fcedf260d0745514d813bfc4ef730c21a3a1a6968155",
+      "exclusive": false,
+      "scope": "Four original worker behavior law heads retire only whole-trial validation/imports"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📡️actor-backbone/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "c00a6e13e7249e622c39cf286b6730d5136971d834eef1feba9f5ecb883935cf",
+      "afterSha256": "93aabe7d50993e260b7bb9ad1b6023a3c44e9e94d721415f42a6a07d504a3c24",
+      "exclusive": false,
+      "scope": "Meaningless Schema-with-only-defs whole fixture admission replaced by genuine per-command and receipt Ajv"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

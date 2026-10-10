@@ -1,0 +1,29 @@
+{
+  "actions": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "before": "4dcc67c081c30bcfd1d21051b7abbb97cc57913170b421523470bfca603af28a",
+      "after": "3924e10075ad1b384b1262601a09fd54761cc27986adeeafb52dab790361e01b",
+      "action": "implement required raw carrier through original supplied owner/typed slot"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "before": "8d51d7ace0915a8817d0ac37285111cf83e51eec2e7e0aba1bb96e028b080f7f",
+      "after": "7c8aaa9f38c357fc1f8c083c853b22f703386f8d14c9733841669f98bd449598",
+      "action": "expose only original raw binder; no duplicated parser/control/policy"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "before": "bc0d8742c4ae7eb15c379fdc6537827776ee9618cfa9cb91c34460cb3a5b43e8",
+      "after": "c4cc30c75d12c992295cc55727afb97723b6b9a4d652f6a0feb8ee6819d466d2",
+      "action": "avoid dumping original checked-in Source in failed assertion outputs"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs",
+      "before": "181344245d293c408d3c73a4822dc3a0265fe3867361738dfaac7df8526e40c2",
+      "after": "202d32855d3fe31205a80b56e1fb855e76f6196661d0d75cc340fca42ca13670",
+      "action": "author actual original System allocator/cancellation/raw-pointer conservation law under immutable existing policy"
+    }
+  ],
+  "native": "UNRUN; Publication owns Kernel slot"
+}

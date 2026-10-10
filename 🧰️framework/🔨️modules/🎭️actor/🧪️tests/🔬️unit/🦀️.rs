@@ -1,8 +1,13 @@
 
 mod quick {
     use crate::*;
+    use crate::component::JobPublicationOwner;
     use std::collections::VecDeque;
     use std::sync::Arc;
+    fn supplied_retained_turn() -> RetainedTurnInput {
+        RetainedTurnInput { operation: 71, generation: 3, epoch: 19, grant: protocol::value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 262144, maximum_depth: 64 } }
+    }
+
 
     //#region 🔖️ErrorContracts
     fn assert_error_contract(error: &(dyn std::error::Error + 'static), expected: &str) {
@@ -40,6 +45,7 @@ mod quick {
 
     async fn ok_turn() -> TurnResult {
         TurnResult {
+            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
             ui_patches: vec![],
             effects: vec![],
             command_ingress: vec![],
@@ -52,6 +58,14 @@ mod quick {
         }
     }
 
+    async fn complete_admitted(kernel: &mut Kernel, actor: ActorId, result: &TurnResult, now: u64) -> Result<FailureEscalation, KernelError> {
+        kernel.submit(&env(actor, Lane::Interactive, now).await).await;
+        let grant = kernel.tick(now).await.run.into_iter().find(|grant|grant.actor==actor).expect("fixture receives an actual issued turn");
+        let mut returned = result.clone();
+        returned.retained_receipt = grant.retained.return_original(Default::default()).unwrap();
+        kernel.complete(actor, &returned, now).await
+    }
+
     fn bridge_operation() -> job::Operation {
         job::Operation::new(job::OperationId(91), job::RevisionId(7), job::Generation(3), 0x5eed)
     }
@@ -62,6 +76,58 @@ mod quick {
         JobTurn { job: 44, operation: JobOperation::from_job(operation), step_sequence }
     }
 
+    fn declared_bridge_grant(field: &str) -> job::RetainedCloneGrant {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📄️checkpoint/🔣️.json")).unwrap();
+        let grant = &fixture[field];
+        job::RetainedCloneGrant { maximum_items: grant["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: grant["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: grant["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: grant["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: grant["maximumDepth"].as_u64().unwrap() as usize }
+    }
+
+    fn original_bridge_grant() -> job::RetainedCloneGrant { declared_bridge_grant("originalGrant") }
+
+    fn close_original_publication(publication: JobPublication) {
+        let original = declared_bridge_grant("destinationCloseGrant");
+        let mut receipt = job::RetainedCloneProgress::default();
+        let mut owner = JobPublicationOwner::try_new(publication).expect("fixture original publication shape");
+        while !owner.terminal_is_empty() {
+            let release = match (&owner.publication.outcome, owner.phase) {
+                (JobStepOutcome::PreviewReady { preview }, 0) => preview.capacity(),
+                (JobStepOutcome::CheckpointReady { checkpoint }, 0) => checkpoint.state.capacity(),
+                (JobStepOutcome::Complete { candidate }, 0) => candidate.state.capacity(),
+                (JobStepOutcome::Complete { candidate }, 1) => candidate.output.capacity(),
+                (JobStepOutcome::Fault { detail }, 0) => detail.capacity(),
+                _ => 0,
+            };
+            assert!(receipt.copied_items < original.maximum_items);
+            assert!(release <= original.maximum_release_bytes - receipt.released_bytes);
+            assert!(original.maximum_depth > 0);
+            let (_, items, released_bytes) = owner.close_one();
+            assert_eq!(release, released_bytes);
+            receipt = receipt.checked_add(job::RetainedCloneProgress { copied_items: items, released_bytes, ..Default::default() }).unwrap();
+        }
+        assert!(receipt.fits(original));
+    }
+
+    fn close_original_bridge_and_script(bridge: &mut JobTurnBridge, job: &mut ScriptJob) {
+        use job::InteractiveJob;
+        let original = declared_bridge_grant("producerCloseGrant");
+        let mut receipt = job::RetainedCloneProgress::default();
+        while !bridge.terminal_is_empty() {
+            let remaining = job::RetainedCloneGrant { maximum_items: original.maximum_items - receipt.copied_items, maximum_copy_bytes: original.maximum_copy_bytes - receipt.copied_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes - receipt.retained_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes - receipt.released_bytes, ..original };
+            let step = bridge.close_step(remaining).unwrap();
+            assert!(step.progress().fits(remaining));
+            receipt = receipt.checked_add(step.progress()).unwrap();
+        }
+        job.begin_close();
+        while !job.terminal_is_empty() {
+            let remaining = job::RetainedCloneGrant { maximum_items: original.maximum_items - receipt.copied_items, maximum_copy_bytes: original.maximum_copy_bytes - receipt.copied_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes - receipt.retained_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes - receipt.released_bytes, ..original };
+            let step = job.close_step(remaining);
+            assert!(!matches!(step, job::InteractiveJobCloseStep::Refused { .. } | job::InteractiveJobCloseStep::Blocked));
+            assert!(step.progress().fits(remaining));
+            receipt = receipt.checked_add(step.progress()).unwrap();
+        }
+        assert!(receipt.fits(original));
+    }
+
     const BRIDGE_NOW_US: fn() -> Option<u64> = || Some(10);
 
     #[derive(Default)]
@@ -70,39 +136,98 @@ mod quick {
         calls: usize,
         pending_state: Option<job::RetainedJobPayload>,
         pending_complete: Option<JobCommitCandidate>,
+        pending_output: Option<job::RetainedJobPayload>,
+        original_current: Option<JobStepOutcome>,
+        current_copied: bool,
+        published_kind: Option<job::JobOutcomeKind>,
         closing: bool,
     }
 
     impl job::InteractiveJob for ScriptJob {
-        fn step(&mut self, cx: &mut job::StepContext<'_>) -> job::StepOutcome {
+        fn step<'a>(&'a mut self, cx: &mut job::StepContext<'_>) -> Result<Option<job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
             self.calls += 1;
-            if let Some(candidate) = self.pending_complete.take() {
-                let output = cx.payload_from_bytes(job::JobPayloadStream::CommitOutput, &candidate.output).expect("scripted output payload");
-                let state = self.pending_state.take().expect("scripted state payload");
-                return job::StepOutcome::Complete(job::CommitCandidate { state, output });
+            if self.published_kind.is_some() {
+                for payload in [&mut self.pending_state, &mut self.pending_output] {
+                    if let Some(original) = payload.as_mut() {
+                        let step = original.close_step(cx.retained_grant())?;
+                        cx.consume_retained(step.progress())?;
+                        if !original.terminal_is_empty() { return Ok(None); }
+                        *payload = None;
+                    }
+                }
+                self.published_kind = None;
             }
-            let outcome = self.outcomes.pop_front().expect("scripted bridge outcome");
-            match outcome {
-                JobStepOutcome::Yield => job::StepOutcome::Yield,
-                JobStepOutcome::PreviewReady { preview } => {
-                    cx.next_preview_sequence().expect("fixture preview sequence has capacity");
-                    let preview = cx.payload_from_bytes(job::JobPayloadStream::Preview, &preview).expect("scripted preview payload");
-                    job::StepOutcome::PreviewReady(preview)
+            if let Some(original) = self.original_current.as_mut().filter(|_| self.current_copied) {
+                if let Some(bytes) = script_original_bytes(original) {
+                    let release = bytes.capacity();
+                    let grant = cx.retained_grant();
+                    if grant.maximum_items == 0 || grant.maximum_release_bytes < release || grant.maximum_depth == 0 { return Ok(None); }
+                    drop(std::mem::take(bytes));
+                    cx.consume_retained(job::RetainedCloneProgress { copied_items: 1, released_bytes: release, ..Default::default() })?;
+                    return Ok(None);
                 }
-                JobStepOutcome::CheckpointReady { checkpoint } => {
-                    let state = cx.payload_from_bytes(job::JobPayloadStream::CheckpointState, &checkpoint.state).expect("scripted checkpoint payload");
-                    job::StepOutcome::CheckpointReady(job::Checkpoint { state, applied_progress: checkpoint.applied_progress })
+                self.original_current = None;
+            }
+            if self.pending_complete.is_some() && self.pending_state.is_none() {
+                let candidate = self.pending_complete.as_mut().unwrap();
+                let bytes = if candidate.state.capacity() != 0 { &mut candidate.state } else { &mut candidate.output };
+                let release = bytes.capacity();
+                let grant = cx.retained_grant();
+                if grant.maximum_items == 0 || grant.maximum_release_bytes < release || grant.maximum_depth == 0 { return Ok(None); }
+                drop(std::mem::take(bytes));
+                cx.consume_retained(job::RetainedCloneProgress { copied_items: 1, released_bytes: release, ..Default::default() })?;
+                if candidate.state.capacity() == 0 && candidate.output.capacity() == 0 { self.pending_complete = None; }
+                return Ok(None);
+            }
+            if let Some(candidate) = self.pending_complete.as_ref() {
+                let bytes = &candidate.output;
+                let grant = cx.retained_grant();
+                if grant.maximum_items < 2 || grant.maximum_copy_bytes < bytes.len() || grant.maximum_capacity_bytes < job::JOB_PAYLOAD_PAGE_BYTES || grant.maximum_depth == 0 { return Ok(None); }
+                self.pending_output = Some(cx.payload_from_bytes(job::JobPayloadStream::CommitOutput, bytes).expect("fixture original page admission"));
+                cx.consume_retained(job::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: job::JOB_PAYLOAD_PAGE_BYTES, ..Default::default() })?;
+                self.published_kind = Some(job::JobOutcomeKind::Complete);
+                return job::JobOutcomeBorrow::admit_complete(cx, self.pending_state.as_ref(), self.pending_output.as_ref());
+            }
+            if self.original_current.is_none() { self.original_current = self.outcomes.pop_front(); self.current_copied = false; }
+            let original = self.original_current.as_ref().expect("scripted original bridge outcome");
+            let (kind, stream, bytes) = match original {
+                JobStepOutcome::Yield => { let outcome = job::JobOutcomeBorrow::admit_yield(cx)?; self.current_copied = outcome.is_some(); return Ok(outcome); },
+                JobStepOutcome::Cancelled => { let outcome = job::JobOutcomeBorrow::admit_cancelled(cx)?; self.current_copied = outcome.is_some(); return Ok(outcome); },
+                JobStepOutcome::PreviewReady { preview } => (job::JobOutcomeKind::PreviewReady, job::JobPayloadStream::Preview, preview.as_slice()),
+                JobStepOutcome::CheckpointReady { checkpoint } => (job::JobOutcomeKind::CheckpointReady { applied_progress: checkpoint.applied_progress }, job::JobPayloadStream::CheckpointState, checkpoint.state.as_slice()),
+                JobStepOutcome::Complete { candidate } => (job::JobOutcomeKind::Complete, job::JobPayloadStream::CommitState, candidate.state.as_slice()),
+                JobStepOutcome::Fault { detail } => (job::JobOutcomeKind::Fault, job::JobPayloadStream::Fault, detail.as_slice()),
+            };
+            let grant = cx.retained_grant();
+            if grant.maximum_items < 2 || grant.maximum_copy_bytes < bytes.len() || grant.maximum_capacity_bytes < job::JOB_PAYLOAD_PAGE_BYTES || grant.maximum_depth == 0 { return Ok(None); }
+            self.pending_state = Some(cx.payload_from_bytes(stream, bytes).expect("fixture original page admission"));
+            cx.consume_retained(job::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: job::JOB_PAYLOAD_PAGE_BYTES, ..Default::default() })?;
+            self.current_copied = true;
+            if kind == job::JobOutcomeKind::Complete {
+                let Some(JobStepOutcome::Complete { candidate }) = self.original_current.take() else { unreachable!() };
+                self.pending_complete = Some(candidate);
+                return job::JobOutcomeBorrow::admit_yield(cx);
+            }
+            self.published_kind = Some(kind);
+            match kind {
+                job::JobOutcomeKind::PreviewReady => {
+                    cx.next_preview_sequence().expect("fixture original preview sequence");
+                    job::JobOutcomeBorrow::admit_preview(cx, self.pending_state.as_ref().unwrap())
                 }
-                JobStepOutcome::Complete { candidate } => {
-                    self.pending_state = Some(cx.payload_from_bytes(job::JobPayloadStream::CommitState, &candidate.state).expect("scripted commit state"));
-                    self.pending_complete = Some(candidate);
-                    job::StepOutcome::Yield
-                }
-                JobStepOutcome::Cancelled => job::StepOutcome::Cancelled,
-                JobStepOutcome::Fault { detail } => {
-                    let detail = cx.payload_from_bytes(job::JobPayloadStream::Fault, &detail).expect("scripted fault payload");
-                    job::StepOutcome::Fault(job::JobFault { detail })
-                }
+                job::JobOutcomeKind::CheckpointReady { applied_progress } => job::JobOutcomeBorrow::admit_checkpoint(cx, self.pending_state.as_ref().unwrap(), applied_progress),
+                job::JobOutcomeKind::Fault => job::JobOutcomeBorrow::admit_fault(cx, self.pending_state.as_ref().unwrap()),
+                _ => unreachable!(),
+            }
+        }
+
+        fn borrow_outcome<'a>(&'a self, descriptor: &'a job::JobOutcomeDescriptor) -> Result<job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+            match descriptor.kind() {
+                job::JobOutcomeKind::Yield => descriptor.yielded(),
+                job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+                job::JobOutcomeKind::PreviewReady => descriptor.preview(self.pending_state.as_ref().expect("original preview")),
+                job::JobOutcomeKind::CheckpointReady { .. } => descriptor.checkpoint(self.pending_state.as_ref().expect("original checkpoint")),
+                job::JobOutcomeKind::Complete => descriptor.complete(self.pending_state.as_ref(), self.pending_output.as_ref()),
+                job::JobOutcomeKind::Fault => descriptor.fault(self.pending_state.as_ref().expect("original fault")),
             }
         }
 
@@ -118,14 +243,22 @@ mod quick {
             let release = self.next_close_release_byte_demand().expect("original script backing");
             let depth = self.next_close_depth_demand().expect("original script depth");
             if grant.maximum_release_bytes < release { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
-            if grant.maximum_depth < depth { return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit); }
+            if grant.maximum_depth < depth { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: Default::default() }; }
             if let Some(state) = self.pending_state.as_mut() {
                 let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                let step = match state.close_step(child) { Ok(step) => step, Err(error) => return InteractiveJobCloseStep::Refused(error.kind) };
+                let step = match state.close_step(child) { Ok(step) => step, Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() } };
                 if state.terminal_is_empty() { self.pending_state = None; }
                 return if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { InteractiveJobCloseStep::Pending { progress: step.progress() } };
             }
-            if let Some(candidate) = self.pending_complete.as_mut() {
+            if let Some(output) = self.pending_output.as_mut() {
+                let step = match output.close_step(grant) { Ok(step) => step, Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() } };
+                if output.terminal_is_empty() { self.pending_output = None; }
+                return if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { InteractiveJobCloseStep::Pending { progress: step.progress() } };
+            }
+            if let Some(original) = self.original_current.as_mut() {
+                if let Some(bytes) = script_original_bytes(original) { drop(std::mem::take(bytes)); }
+                else { self.original_current = None; }
+            } else if let Some(candidate) = self.pending_complete.as_mut() {
                 if candidate.state.capacity() != 0 { drop(std::mem::take(&mut candidate.state)); }
                 else if candidate.output.capacity() != 0 { drop(std::mem::take(&mut candidate.output)); }
                 else { self.pending_complete = None; }
@@ -137,18 +270,20 @@ mod quick {
             if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } }
         }
 
-        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.pending_state.as_ref().map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.copy_bytes)) }
-        fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.pending_state.as_ref().map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.capacity_bytes)) }
+        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.pending_state.as_ref().or(self.pending_output.as_ref()).map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.copy_bytes)) }
+        fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.pending_state.as_ref().or(self.pending_output.as_ref()).map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.capacity_bytes)) }
         fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
             if let Some(state) = self.pending_state.as_ref() { return Ok(state.retirement_demands()?.release_bytes); }
+            if let Some(output) = self.pending_output.as_ref() { return Ok(output.retirement_demands()?.release_bytes); }
+            if let Some(original) = self.original_current.as_ref() { return Ok(script_original_capacity(original)); }
             if let Some(candidate) = self.pending_complete.as_ref() { return Ok(if candidate.state.capacity() != 0 { candidate.state.capacity() } else { candidate.output.capacity() }); }
             if let Some(outcome) = self.outcomes.front() { return Ok(script_original_capacity(outcome)); }
             self.outcomes.capacity().checked_mul(std::mem::size_of::<JobStepOutcome>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original script queue extent overflow"))
         }
-        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(if let Some(state) = self.pending_state.as_ref() { state.retirement_demands()?.depth + 1 } else { usize::from(!self.terminal_is_empty()) }) }
+        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(if let Some(state) = self.pending_state.as_ref().or(self.pending_output.as_ref()) { state.retirement_demands()?.depth + 1 } else { usize::from(!self.terminal_is_empty()) }) }
 
         fn terminal_is_empty(&self) -> bool {
-            self.closing && self.outcomes.capacity() == 0 && self.pending_state.is_none() && self.pending_complete.is_none()
+            self.closing && self.outcomes.capacity() == 0 && self.pending_state.is_none() && self.pending_output.is_none() && self.original_current.is_none() && self.pending_complete.is_none()
         }
     }
 
@@ -172,12 +307,11 @@ mod quick {
         }
     }
 
-    struct UnsequencedPreviewJob;
+    struct UnsequencedPreviewJob { original: job::RetainedJobPayload }
 
     impl job::InteractiveJob for UnsequencedPreviewJob {
-        fn step(&mut self, _cx: &mut job::StepContext<'_>) -> job::StepOutcome {
-            job::StepOutcome::PreviewReady(job::RetainedJobPayload::empty(job::JobPayloadStream::Preview))
-        }
+        fn step<'a>(&'a mut self, cx: &mut job::StepContext<'_>) -> Result<Option<job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> { job::JobOutcomeBorrow::admit_preview(cx, &self.original) }
+        fn borrow_outcome<'a>(&'a self, descriptor: &'a job::JobOutcomeDescriptor) -> Result<job::JobOutcomeView<'a>, semio_framework_value::ValueError> { descriptor.preview(&self.original) }
 
         fn begin_close(&mut self) {}
 
@@ -195,42 +329,70 @@ mod quick {
     #[test]
     fn job_bridge_invokes_exactly_one_step_per_turn() {
         let operation = bridge_operation();
-        let mut bridge = JobTurnBridge::new(operation);
+        let mut bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield, JobStepOutcome::Yield]), calls: 0, ..Default::default() };
         let publication = bridge
-            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.one-step", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), BRIDGE_NOW_US)
+            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.one-step", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US)
             .expect("first job turn");
         assert_eq!(job.calls, 1);
         assert!(matches!(publication.outcome, JobStepOutcome::Yield));
+        close_original_bridge_and_script(&mut bridge, &mut job);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn original_actor_wire_producers_retain_invalid_original_input_and_output() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../📄️checkpoint/🔣️.json")).unwrap();
+        let mut original = supplied_retained_turn();
+        original.operation = fixture["invalidOriginalOperation"].as_u64().unwrap();
+        let budget = lane_defaults::budget_for(Lane::Interactive);
+        let grant = TurnGrant { retained: original, actor: ActorId(7), shard: ShardId(0), budget, envelopes: Vec::new() };
+        let decision = Decision { run: vec![grant.clone()], wake_at: None };
+        let mut output = Vec::with_capacity(256);
+        let sentinel: Vec<u8> = serde_json::from_value(fixture["wireOutputSentinel"].clone()).unwrap();
+        output.extend_from_slice(&sentinel);
+        let pointer = output.as_ptr();
+        for result in [grant.pack_encode(&mut output).await, decision.pack_encode(&mut output).await] {
+            let error = result.unwrap_err();
+            assert_eq!(error.to_string(), fixture["wireRefusal"].as_str().unwrap());
+            assert_eq!(output, sentinel);
+            assert_eq!(output.as_ptr(), pointer);
+            assert_eq!(grant.retained, original);
+        }
+        println!("[DEBUG] actual Actor TurnGrant/Decision wire producers reject original operation0 before output mutation with exact static typed refusal; caller header/grant and output backing unchanged");
     }
 
     #[test]
-    fn job_bridge_preserves_checkpoint_state_and_applied_progress() {
+    fn original_actor_bridge_preserves_checkpoint_state_and_applied_progress() {
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../📄️checkpoint/🔣️.json")).unwrap();
         let operation = bridge_operation();
-        let mut bridge = JobTurnBridge::new(operation);
+        let mut bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
         let checkpoint = JobCheckpoint { state: serde_json::from_value(fixture["state"].clone()).unwrap(), applied_progress: fixture["appliedProgress"].as_u64().unwrap() };
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() }]), calls: 0, ..Default::default() };
         let mut publication=None;
         for (sequence,expected) in fixture["publications"].as_array().unwrap().iter().enumerate(){
-            let current=bridge.step(&mut job,bridge_turn(sequence as u64,0),operation.operation,operation.base_revision,operation.generation,"actor.job.checkpoint",job::InteractiveStage::BackgroundStep,job::StepBudget::new(100,20),job::root_cancel_token(),BRIDGE_NOW_US).expect("checkpoint projection publication");
+            let current=bridge.step(&mut job,bridge_turn(sequence as u64,0),operation.operation,operation.base_revision,operation.generation,"actor.job.checkpoint",job::InteractiveStage::BackgroundStep,job::StepBudget::new(100, 20, original_bridge_grant()),job::root_cancel_token(),BRIDGE_NOW_US).expect("checkpoint projection publication");
             assert_eq!(job.calls,fixture["jobCalls"].as_u64().unwrap()as usize);
             if expected=="yield"{assert_eq!(current.outcome,JobStepOutcome::Yield);}else{assert_eq!(current.outcome,JobStepOutcome::CheckpointReady{checkpoint:checkpoint.clone()});}
             publication=Some(current);
         }
-        assert_eq!(publication.unwrap().turn_status(),TurnStatus::CheckpointReady{checkpoint});
-        println!("[DEBUG] actor checkpoint projection preserves original state040506/progress73 over job/page/ledger turns without another job call");
+        let publication = publication.unwrap();
+        assert!(matches!(&publication.outcome, JobStepOutcome::CheckpointReady { checkpoint: returned } if returned == &checkpoint));
+        let allocation: serde_json::Value = serde_json::from_str(include_str!("../📄️checkpoint/allocation.json")).unwrap();
+        if let JobStepOutcome::CheckpointReady { checkpoint } = &publication.outcome { assert_eq!(checkpoint.state.capacity(), allocation["declaredCapacityBytes"].as_u64().unwrap() as usize); }
+        close_original_publication(publication);
+        println!("[DEBUG] actor checkpoint projection preserves original state040506/progress73 over job/page/paid-descriptor-ack turns without another job call");
+        close_original_bridge_and_script(&mut bridge, &mut job);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn job_bridge_cancellation_is_terminal_and_skips_the_job() {
         let operation = bridge_operation();
-        let mut bridge = JobTurnBridge::new(operation);
+        let mut bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
         let cancel = job::root_cancel_token();
         cancel.cancel().await;
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0, ..Default::default() };
         let publication = bridge
-            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.cancel", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), cancel, BRIDGE_NOW_US)
+            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.cancel", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20, original_bridge_grant()), cancel, BRIDGE_NOW_US)
             .expect("cancel publication");
         assert_eq!(job.calls, 0);
         assert!(matches!(publication.outcome, JobStepOutcome::Cancelled));
@@ -243,29 +405,31 @@ mod quick {
                 operation.generation,
                 "actor.job.cancel",
                 job::InteractiveStage::InteractiveStep,
-                job::StepBudget::new(100, 20),
+                job::StepBudget::new(100, 20, original_bridge_grant()),
                 job::root_cancel_token(),
                 BRIDGE_NOW_US
             ),
             Err(JobPublicationError::Terminal)
         ));
+        close_original_bridge_and_script(&mut bridge, &mut job);
     }
 
     #[test]
     fn job_bridge_rejects_stale_commit_before_work_or_publication() {
         let operation = bridge_operation();
-        let mut bridge = JobTurnBridge::new(operation);
+        let mut bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![1], output: vec![2] } }]), calls: 0, ..Default::default() };
         let result =
-            bridge.step(&mut job, bridge_turn(0, 0), operation.operation, job::RevisionId(8), operation.generation, "actor.job.stale", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), BRIDGE_NOW_US);
+            bridge.step(&mut job, bridge_turn(0, 0), operation.operation, job::RevisionId(8), operation.generation, "actor.job.stale", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US);
         assert!(matches!(result, Err(JobPublicationError::Stale { live_revision: 8, live_generation: 3 })));
         assert_eq!(job.calls, 0);
+        close_original_bridge_and_script(&mut bridge, &mut job);
     }
 
     #[test]
     fn job_bridge_rejects_replayed_preview_identity_before_work() {
         let operation = bridge_operation();
-        let mut bridge = JobTurnBridge::new(operation);
+        let mut bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0, ..Default::default() };
         assert!(matches!(
             bridge.step(
@@ -276,41 +440,51 @@ mod quick {
                 operation.generation,
                 "actor.job.replayed-preview",
                 job::InteractiveStage::InteractiveStep,
-                job::StepBudget::new(100, 20),
+                job::StepBudget::new(100, 20, original_bridge_grant()),
                 job::root_cancel_token(),
                 BRIDGE_NOW_US,
             ),
             Err(JobPublicationError::Stale { .. })
         ));
         assert_eq!(job.calls, 0);
+        close_original_bridge_and_script(&mut bridge, &mut job);
     }
 
     #[test]
     fn job_bridge_rejects_a_preview_without_exactly_one_sequence_advance() {
         let operation = bridge_operation();
-        let mut bridge = JobTurnBridge::new(operation);
+        let mut bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
         assert!(matches!(
             bridge.step(
-                &mut UnsequencedPreviewJob,
+                &mut UnsequencedPreviewJob { original: job::RetainedJobPayload::empty(job::JobPayloadStream::Preview) },
                 bridge_turn(0, 0),
                 operation.operation,
                 operation.base_revision,
                 operation.generation,
                 "actor.job.preview-order",
                 job::InteractiveStage::InteractiveStep,
-                job::StepBudget::new(100, 20),
+                job::StepBudget::new(100, 20, original_bridge_grant()),
                 job::root_cancel_token(),
                 BRIDGE_NOW_US,
             ),
             Err(JobPublicationError::PreviewSequence { before: 0, after: 0 })
         ));
+        let original = declared_bridge_grant("producerCloseGrant");
+        let mut receipt = job::RetainedCloneProgress::default();
+        while !bridge.terminal_is_empty() {
+            let remaining = job::RetainedCloneGrant { maximum_items: original.maximum_items - receipt.copied_items, maximum_copy_bytes: original.maximum_copy_bytes - receipt.copied_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes - receipt.retained_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes - receipt.released_bytes, ..original };
+            let step = bridge.close_step(remaining).unwrap();
+            receipt = receipt.checked_add(step.progress()).unwrap();
+        }
+
     }
 
     #[test]
     fn mounted_fixed_replay_capture_is_deterministic_and_returns_the_exact_live_owner() {
         fn run(worker_count: u16, worker_slot: u16) -> [u64; 4] {
+            let mut original_recipient = job::RetainedCloneProgress::default();
             let operation = bridge_operation();
-            let mut bridge = JobTurnBridge::new(operation);
+            let mut bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
             let mut job = ScriptJob {
                 outcomes: VecDeque::from([
                     JobStepOutcome::Yield,
@@ -326,7 +500,7 @@ mod quick {
             let mut turn = bridge_turn(0, 0);
             loop {
                 let publication = bridge
-                    .step(&mut job, turn, operation.operation, operation.base_revision, operation.generation, "actor.job.replay", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), BRIDGE_NOW_US)
+                    .step(&mut job, turn, operation.operation, operation.base_revision, operation.generation, "actor.job.replay", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US)
                     .expect("replay publication");
                 let terminal = matches!(&publication.outcome, JobStepOutcome::Complete { .. });
                 turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
@@ -337,11 +511,11 @@ mod quick {
                     _ => std::ptr::null(),
                 };
                 let mut preview_sequence = publication.turn.operation.preview_sequence;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence, &mut original_recipient);
                 log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count, worker_slot, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("capture admission");
                 loop {
                     let mut preview_sequence = turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence, &mut original_recipient);
                     if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                         break;
                     }
@@ -355,23 +529,23 @@ mod quick {
                 };
                 assert_eq!(returned_identity, payload_identity);
                 drop(publication);
-                let now = job::default_now_us().expect("native test clock");
+                let now = BRIDGE_NOW_US().expect("original replay clock");
                 let mut sequence = 0;
                 let mut context = job::StepContext::new(
                     job::OperationId(operation.operation.0),
                     job::Generation(operation.generation.0),
-                    job::StepBudget::from_duration(1, now, 4_000).expect("test deadline"),
+                    job::StepBudget::from_duration(1, now, 4_000, original_bridge_grant()).expect("test deadline"),
                     job::root_cancel_token(),
-                    job::default_now_us,
-                    &mut sequence,
-                );
+                    BRIDGE_NOW_US,
+                    &mut sequence, &mut original_recipient);
                 log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("P2d ACK");
                 if terminal {
                     break;
                 }
             }
+            close_original_bridge_and_script(&mut bridge, &mut job);
             log.begin_replay(operation.generation.0).expect("sealed generation replay");
-            let mut replay_bridge = JobTurnBridge::new(operation);
+            let mut replay_bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
             let mut replay_job = ScriptJob {
                 outcomes: VecDeque::from([
                     JobStepOutcome::Yield,
@@ -393,7 +567,7 @@ mod quick {
                         operation.generation,
                         "actor.job.replay-live",
                         job::InteractiveStage::InteractiveStep,
-                        job::StepBudget::new(100, 20),
+                        job::StepBudget::new(100, 20, original_bridge_grant()),
                         job::root_cancel_token(),
                         BRIDGE_NOW_US,
                     )
@@ -402,34 +576,35 @@ mod quick {
                 let terminal = matches!(&publication.outcome, JobStepOutcome::Complete { .. });
                 replay_turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
                 let mut preview_sequence = publication.turn.operation.preview_sequence;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence, &mut original_recipient);
                 log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count, worker_slot, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("replay capture admission");
                 loop {
                     let mut preview_sequence = replay_turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence, &mut original_recipient);
                     if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                         break;
                     }
                 }
                 drop(log.take_captured_publication().expect("matched replay publication"));
                 let mut preview_sequence = replay_turn.operation.preview_sequence;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence, &mut original_recipient);
                 log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("matched replay policy");
                 while log.has_pending_work() {
                     let mut preview_sequence = replay_turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence, &mut original_recipient);
                     let _ = log.maintenance_step(&mut context);
                 }
                 if terminal {
                     break;
                 }
             }
+            close_original_bridge_and_script(&mut replay_bridge, &mut replay_job);
             assert!(log.expected_turn().is_none());
             let digests = std::array::from_fn(|index| log.record_header(index).expect("sealed record").prefix_digest);
             log.begin_close();
             while !log.terminal_is_empty() {
                 let mut preview_sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut preview_sequence, &mut original_recipient);
                 let _ = log.close_step(&mut context);
             }
             digests
@@ -443,6 +618,7 @@ mod quick {
 
     #[test]
     fn mounted_replay_records_and_replays_the_exact_cancelled_terminal_classification() {
+        let mut original_recipient = job::RetainedCloneProgress::default();
         let operation = bridge_operation();
         let route = JobReplayRoute { plugin: [11; 32], package: [13; 32], controller: [17; 32], tool: [19; 32], window: 23, artifact: [29; 32], request_schema: [31; 32], request_version: 1, request_digest: [37; 32] };
         let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
@@ -450,11 +626,11 @@ mod quick {
         for replaying in [false, true] {
             let publication = JobPublication { turn, outcome: JobStepOutcome::Cancelled };
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
             log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("cancel capture admission");
             loop {
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
                 if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                     break;
                 }
@@ -462,7 +638,7 @@ mod quick {
             assert!(log.record_header(0).expect("cancel record").cancellation_observed);
             assert!(matches!(log.take_captured_publication().expect("exact cancelled owner").outcome, JobStepOutcome::Cancelled));
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
             log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("cancel ACK");
             if !replaying {
                 log.begin_replay(operation.generation.0).expect("cancel replay generation");
@@ -472,13 +648,14 @@ mod quick {
         log.begin_close();
         while !log.terminal_is_empty() {
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
             let _ = log.close_step(&mut context);
         }
     }
 
     #[test]
     fn mounted_replay_cancel_deadline_and_stale_refuse_the_exact_publication_owner_unchanged() {
+        let mut original_recipient = job::RetainedCloneProgress::default();
         let operation = bridge_operation();
         let route = JobReplayRoute { plugin: [41; 32], package: [43; 32], controller: [47; 32], tool: [53; 32], window: 59, artifact: [61; 32], request_schema: [67; 32], request_version: 1, request_digest: [71; 32] };
         let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
@@ -492,7 +669,7 @@ mod quick {
         let cancel = job::root_cancel_token();
         cancel.cancel_now();
         let mut sequence = 0;
-        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), cancel, BRIDGE_NOW_US, &mut sequence);
+        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), cancel, BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
         let cancelled = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, cancelled).expect_err("cancelled capture refuses before transfer").into_publication();
         assert!(matches!(&cancelled.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == cancelled_identity));
 
@@ -502,7 +679,7 @@ mod quick {
             _ => unreachable!(),
         };
         let mut sequence = 0;
-        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 10), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 10, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
         let expired = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, expired).expect_err("expired capture refuses before transfer").into_publication();
         assert!(matches!(&expired.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == expired_identity));
 
@@ -512,7 +689,7 @@ mod quick {
             _ => unreachable!(),
         };
         let mut sequence = 0;
-        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
         let stale = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, stale).expect_err("stale capture refuses before transfer").into_publication();
         assert!(matches!(&stale.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == stale_identity));
         assert_eq!(log.sealed_records(), 0);
@@ -523,6 +700,7 @@ mod quick {
 
     #[test]
     fn mounted_replay_preserves_the_exact_fault_payload_and_prefix_across_replay() {
+        let mut original_recipient = job::RetainedCloneProgress::default();
         let operation = bridge_operation();
         let route = JobReplayRoute { plugin: [73; 32], package: [79; 32], controller: [83; 32], tool: [89; 32], window: 97, artifact: [101; 32], request_schema: [103; 32], request_version: 1, request_digest: [107; 32] };
         let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
@@ -534,11 +712,11 @@ mod quick {
                 _ => unreachable!(),
             };
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
             log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("fault capture admission");
             loop {
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
                 if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                     break;
                 }
@@ -546,7 +724,7 @@ mod quick {
             let publication = log.take_captured_publication().expect("exact fault owner");
             assert!(matches!(&publication.outcome, JobStepOutcome::Fault { detail } if detail.as_ptr() == payload_identity && detail.as_slice() == [109, 113, 127]));
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
             log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("fault ACK");
             if !replaying {
                 log.begin_replay(operation.generation.0).expect("fault replay generation");
@@ -556,7 +734,7 @@ mod quick {
         log.begin_close();
         while !log.terminal_is_empty() {
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20, original_bridge_grant()), job::root_cancel_token(), BRIDGE_NOW_US, &mut sequence, &mut original_recipient);
             let _ = log.close_step(&mut context);
         }
     }
@@ -624,11 +802,11 @@ mod quick {
     round_trip!(pack_round_trip_actor_status, ActorStatus, ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) });
     round_trip!(pack_round_trip_shard_id, ShardId, ShardId(3));
     round_trip!(pack_round_trip_shard_kind, ShardKind, ShardKind::WebWorker);
-    round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { actor: ActorId::new(1, 0, 0, 0).await, shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background), envelopes: vec![] }], wake_at: Some(10) });
+    round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { retained: supplied_retained_turn(), actor: ActorId::new(1, 0, 0, 0).await, shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background), envelopes: vec![] }], wake_at: Some(10) });
     round_trip!(
         pack_round_trip_turn_grant,
         TurnGrant,
-        TurnGrant { actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance), envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] }
+        TurnGrant { retained: supplied_retained_turn(), actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance), envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] }
     );
     round_trip!(pack_round_trip_scene_snapshot, SceneSnapshot, SceneSnapshot { revision: 3, committed_ms: 12, patches: vec![9, 9], node_count: 40 });
     round_trip!(pack_round_trip_shard_metrics, ShardMetrics, ShardMetrics { actors: 3, busy_ratio: 0.5, heartbeat_age_ms: 12 });
@@ -667,7 +845,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trip_actor_record() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
-        let id = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+        let id = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         let record = kernel.actor_record(id).await.unwrap();
         let mut bytes = Vec::new();
         record.pack_encode(&mut bytes).await;
@@ -735,7 +913,7 @@ mod quick {
         // the exact order, so this test stays correct even if that internal tie-break ever changes.
         let mut by_shard: std::collections::BTreeMap<u16, Vec<ActorId>> = std::collections::BTreeMap::new();
         for ordinal in 0..6u32 {
-            let id = kernel.activate(background_package.clone(), 1, ActorKind::PluginApp { plugin: background_package.clone(), app_id: "hog".into(), instance_id: ordinal }, Lane::Background, None, ActivationEvent::Manual).await;
+            let id = kernel.activate(background_package.clone(), 1, ActorKind::PluginApp { plugin: background_package.clone(), app_id: "hog".into(), instance_id: ordinal }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
             let shard = kernel.actor_record(id).await.unwrap().shard;
             by_shard.entry(shard.0).or_default().push(id);
         }
@@ -748,6 +926,7 @@ mod quick {
         let shard_ids: Vec<u16> = by_shard.keys().copied().collect();
         let (safe_shard, hot_shards) = shard_ids.split_last().unwrap();
         let hot_turn = TurnResult {
+            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
             ui_patches: vec![],
             effects: vec![],
             command_ingress: vec![],
@@ -760,12 +939,12 @@ mod quick {
         };
         for shard in hot_shards {
             for actor in &by_shard[shard] {
-                kernel.complete(*actor, &hot_turn, 0).await.unwrap();
-                kernel.complete(*actor, &hot_turn, 0).await.unwrap();
+                complete_admitted(&mut kernel, *actor, &hot_turn, 0).await.unwrap();
+                complete_admitted(&mut kernel, *actor, &hot_turn, 0).await.unwrap();
             }
         }
 
-        let interactive_id = kernel.activate(PackageId("editor".into()), 2, ActorKind::PluginApp { plugin: PackageId("editor".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+        let interactive_id = kernel.activate(PackageId("editor".into()), 2, ActorKind::PluginApp { plugin: PackageId("editor".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         let interactive_shard = kernel.actor_record(interactive_id).await.unwrap().shard;
         assert_eq!(interactive_shard.0, *safe_shard, "interactive actor must land on the one shard with no CPU-saturating co-resident, got {interactive_shard:?} (hot shards: {hot_shards:?})");
     }
@@ -959,38 +1138,38 @@ mod quick {
         // measured split reflects level-1 DRR's PLUGIN-level fairness, not which plugin happened
         // to have offered work left when the other ran out. Without level 1, `s.busy` (50 actors)
         // would swamp `s.quiet` (1 actor) roughly 50:1 — see design §Scheduler.
-        let mut scheduler = Scheduler::new(4).await;
+        let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let busy_package = PackageId("s.busy".into());
         let quiet_package = PackageId("s.quiet".into());
-        let budget = lane_defaults::budget_for(Lane::Background);
         let mut busy_actors = Vec::new();
         for i in 0..50u32 {
-            let id = ActorId::new(1, 0, i, 0).await;
-            scheduler.register_actor(id, busy_package.clone(), Lane::Background, budget, ShardId(0)).await;
+            let id = kernel.activate(busy_package.clone(), 1, ActorKind::PluginApp { plugin: busy_package.clone(), app_id: format!("busy-{i}"), instance_id: i }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
             busy_actors.push(id);
         }
-        let quiet_actor = ActorId::new(2, 0, 0, 0).await;
-        scheduler.register_actor(quiet_actor, quiet_package, Lane::Background, budget, ShardId(1)).await;
+        let quiet_actor = kernel.activate(quiet_package.clone(), 2, ActorKind::PluginApp { plugin: quiet_package, app_id: "quiet".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
 
         for &id in &busy_actors {
             for seq in 0..30u64 {
-                scheduler.submit(Envelope { to: id, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
+                kernel.submit(&Envelope { to: id, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
             }
         }
         for seq in 0..500u64 {
-            scheduler.submit(Envelope { to: quiet_actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
+            kernel.submit(&Envelope { to: quiet_actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
         }
 
         let mut busy_grants = 0u32;
         let mut quiet_grants = 0u32;
         for now in 0..100u64 {
-            let decision = scheduler.tick(now).await;
+            let decision = kernel.tick(now).await;
             for grant in &decision.run {
                 if grant.actor == quiet_actor {
                     quiet_grants += 1;
                 } else {
                     busy_grants += 1;
                 }
+                let mut result = ok_turn().await;
+                result.retained_receipt = grant.retained.return_original(Default::default()).unwrap();
+                kernel.complete(grant.actor, &result, now).await.unwrap();
             }
         }
         assert!(quiet_grants > 0, "the 1-actor plugin must never starve");
@@ -1006,8 +1185,8 @@ mod quick {
         let budget = lane_defaults::budget_for(Lane::Background);
         let bg_actor = ActorId::new(1, 0, 0, 0).await;
         let interactive_actor = ActorId::new(1, 0, 1, 0).await;
-        scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0)).await;
-        scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0)).await;
+        scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0), supplied_retained_turn()).await;
+        scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0), supplied_retained_turn()).await;
         scheduler.submit(Envelope { to: bg_actor, from: Origin::Kernel, lane: Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
         scheduler.submit(Envelope { to: interactive_actor, from: Origin::Kernel, lane: Lane::Interactive, seq: 2, deadline_ms: Some(5), coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
         let decision = scheduler.tick(10).await;
@@ -1044,11 +1223,12 @@ mod quick {
     async fn failure_ladder_trap_then_quarantine_is_package_wide() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
         let package = PackageId("s.flaky".into());
-        let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual).await;
-        let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
+        let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
 
         for i in 0..FAILURE_QUARANTINE_RESTART_THRESHOLD {
             let faulted = TurnResult {
+            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
                 ui_patches: vec![],
                 effects: vec![],
                 command_ingress: vec![],
@@ -1059,7 +1239,7 @@ mod quick {
                 status: TurnStatus::Faulted { detail: b"boom".to_vec() },
                 usage: Usage::default(),
             };
-            kernel.complete(a, &faulted, (i as u64) * 100).await.unwrap();
+            complete_admitted(&mut kernel, a, &faulted, (i as u64) * 100).await.unwrap();
         }
         assert_eq!(kernel.actor_status(a).await, Some(&ActorStatus::Quarantined));
         assert_eq!(kernel.actor_status(b).await, Some(&ActorStatus::Quarantined), "quarantine must be package-wide, not just the trapping actor");
@@ -1185,13 +1365,15 @@ mod quick {
     async fn kernel_activate_submit_tick_complete_round_trip() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
         let window = WindowId(1);
-        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window }).await;
+        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window }, supplied_retained_turn()).await;
         let bp = kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
         assert_eq!(bp, Backpressure::Accept);
         let decision = kernel.tick(0).await;
         assert_eq!(decision.run.len(), 1);
         assert_eq!(decision.run[0].actor, actor);
-        let escalation = kernel.complete(actor, &ok_turn().await, 1).await.unwrap();
+        let mut result = ok_turn().await;
+        result.retained_receipt = decision.run[0].retained.return_original(Default::default()).unwrap();
+        let escalation = kernel.complete(actor, &result, 1).await.unwrap();
         assert_eq!(escalation, FailureEscalation::None);
         assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Active));
     }
@@ -1199,7 +1381,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn kernel_suspend_resume_round_trip() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
-        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Extension { plugin: PackageId("s.cad".into()), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual).await;
+        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Extension { plugin: PackageId("s.cad".into()), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         kernel.suspend(actor, Some(vec![1, 2, 3])).await.unwrap();
         assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) }));
         kernel.resume(actor).await.unwrap();
@@ -1209,7 +1391,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn kernel_request_exclusive_then_release() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
-        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Job { owner: ActorId::new(0, 0, 0, 0).await, job_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
+        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Job { owner: ActorId::new(0, 0, 0, 0).await, job_id: 1 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         let shard = kernel.request_exclusive(actor).await.unwrap();
         assert!(shard.0 >= 3, "exclusive shards must come from the reserved tail of the pool");
         kernel.release_exclusive(actor).await;
@@ -1218,8 +1400,8 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn kernel_metrics_counts_actors_shards_packages() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
-        kernel.activate(PackageId("s.a".into()), 1, ActorKind::Extension { plugin: PackageId("s.a".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
-        kernel.activate(PackageId("s.b".into()), 2, ActorKind::Extension { plugin: PackageId("s.b".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
+        kernel.activate(PackageId("s.a".into()), 1, ActorKind::Extension { plugin: PackageId("s.a".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        kernel.activate(PackageId("s.b".into()), 2, ActorKind::Extension { plugin: PackageId("s.b".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         let metrics = kernel.metrics().await;
         assert_eq!(metrics.actors, 2);
         assert_eq!(metrics.packages, 2);
@@ -1235,11 +1417,11 @@ mod quick {
     async fn activate_pinned_places_extension_on_parents_shard() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         let parent_shard = kernel.shard_of(parent).await.expect("parent must be pinned by activate");
 
         let ext_pkg = PackageId("s.cad.aec-extension".into());
-        let extension = kernel.activate_pinned(ext_pkg, 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, parent_shard, Some(parent), vec![]).await;
+        let extension = kernel.activate_pinned(ext_pkg, 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, parent_shard, Some(parent), vec![], supplied_retained_turn()).await;
 
         assert_eq!(kernel.shard_of(extension).await, Some(parent_shard), "extension must land on the parent's exact shard, never wherever least-loaded would pick");
     }
@@ -1250,10 +1432,10 @@ mod quick {
     async fn deactivate_parent_cascades_leaves_first_with_zero_orphans() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         let shard = kernel.shard_of(parent).await.unwrap();
-        let e1 = kernel.activate_pinned(PackageId("s.cad.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
-        let e2 = kernel.activate_pinned(PackageId("s.cad.e2".into()), 3, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e2".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+        let e1 = kernel.activate_pinned(PackageId("s.cad.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
+        let e2 = kernel.activate_pinned(PackageId("s.cad.e2".into()), 3, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e2".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
         kernel.link_extension(parent, e1).await.unwrap();
         kernel.link_extension(parent, e2).await.unwrap();
         assert_eq!(kernel.metrics().await.actors, 3);
@@ -1275,9 +1457,9 @@ mod quick {
     async fn kill_parent_takes_extensions_down() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.flow".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "flow".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "flow".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         let shard = kernel.shard_of(parent).await.unwrap();
-        let e1 = kernel.activate_pinned(PackageId("s.flow.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+        let e1 = kernel.activate_pinned(PackageId("s.flow.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
         kernel.link_extension(parent, e1).await.unwrap();
 
         let removed = kernel.kill(parent).await.unwrap();
@@ -1296,15 +1478,16 @@ mod quick {
     async fn trapping_extension_never_faults_the_parent() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
-        kernel.complete(parent, &ok_turn().await, 0).await.unwrap();
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        complete_admitted(&mut kernel, parent, &ok_turn().await, 0).await.unwrap();
         assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active));
 
         let shard = kernel.shard_of(parent).await.unwrap();
-        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
         kernel.link_extension(parent, extension).await.unwrap();
 
         let faulted = TurnResult {
+            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
             ui_patches: vec![],
             effects: vec![],
             command_ingress: vec![],
@@ -1315,7 +1498,7 @@ mod quick {
             status: TurnStatus::Faulted { detail: b"boom".to_vec() },
             usage: Usage::default(),
         };
-        let escalation = kernel.complete(extension, &faulted, 10).await.unwrap();
+        let escalation = complete_admitted(&mut kernel, extension, &faulted, 10).await.unwrap();
         assert_eq!(escalation, FailureEscalation::Restart, "one trap must only Restart, never quarantine");
         assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Trapped));
         assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active), "the parent must be completely untouched by its extension's trap");
@@ -1324,6 +1507,7 @@ mod quick {
         // because this test gave the extension its own PackageId (distinct from the parent's).
         for i in 1..FAILURE_QUARANTINE_RESTART_THRESHOLD {
             let faulted = TurnResult {
+            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
                 ui_patches: vec![],
                 effects: vec![],
                 command_ingress: vec![],
@@ -1334,7 +1518,7 @@ mod quick {
                 status: TurnStatus::Faulted { detail: b"boom".to_vec() },
                 usage: Usage::default(),
             };
-            kernel.complete(extension, &faulted, 10 + i as u64).await.unwrap();
+            complete_admitted(&mut kernel, extension, &faulted, 10 + i as u64).await.unwrap();
         }
         assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Quarantined), "the extension itself does escalate to quarantine");
         assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active), "package isolation: the parent must still be untouched, even at quarantine");
@@ -1347,12 +1531,12 @@ mod quick {
     async fn extension_capability_grant_is_the_intersection_not_the_request() {
         let mut kernel = Kernel::new(ShardKind::Native, 2, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         kernel.set_capabilities(parent, vec![CapabilityGrant { capability: "fs.read".into(), scope: None }, CapabilityGrant { capability: "net.fetch".into(), scope: None }]).await.unwrap();
 
         let shard = kernel.shard_of(parent).await.unwrap();
         let requested = vec![CapabilityGrant { capability: "fs.read".into(), scope: None }, CapabilityGrant { capability: "fs.admin".into(), scope: None }];
-        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), requested).await;
+        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), requested, supplied_retained_turn()).await;
 
         let record = kernel.actor_record(extension).await.expect("extension must be live");
         assert_eq!(record.capabilities.len(), 1, "only the grant the parent ALSO held may survive");
@@ -1366,9 +1550,9 @@ mod quick {
     async fn suspend_cascade_leaves_first_resume_cascade_parent_first() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
         let shard = kernel.shard_of(parent).await.unwrap();
-        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
+        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
         kernel.link_extension(parent, extension).await.unwrap();
 
         let order = kernel.suspend_cascade(parent, Some(vec![9, 9])).await.unwrap();
@@ -1390,13 +1574,15 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn runtime_metrics_snapshot_reflects_real_kernel_activity() {
         let mut kernel = Kernel::new(ShardKind::Native, 2, 0, 8).await;
-        let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
-        let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
+        let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
 
         kernel.submit(&env(cad, Lane::Interactive, 1).await).await;
         let decision = kernel.tick(0).await;
         assert_eq!(decision.run.len(), 1, "only `cad` has a pending envelope this tick");
-        kernel.complete(cad, &ok_turn().await, 5).await.unwrap();
+        let mut result = ok_turn().await;
+        result.retained_receipt = decision.run[0].retained.return_original(Default::default()).unwrap();
+        kernel.complete(cad, &result, 5).await.unwrap();
 
         let snapshot = kernel.runtime_metrics_snapshot(5).await;
         assert_eq!(snapshot.sampled_at_ms, 5);
@@ -1444,8 +1630,9 @@ mod quick {
     const PROGRESS_NOW_US: fn() -> Option<u64> = || Some(0);
 
     fn with_progress_context<T>(operation: u64, generation: u64, cancel: job::CancelToken, run: impl FnOnce(&mut job::StepContext<'_>) -> T) -> T {
+        let mut original_recipient = job::RetainedCloneProgress::default();
         let mut preview_sequence = 0;
-        let mut context = job::StepContext::new(job::OperationId(operation), job::Generation(generation), job::StepBudget::new(8, 10), cancel, PROGRESS_NOW_US, &mut preview_sequence);
+        let mut context = job::StepContext::new(job::OperationId(operation), job::Generation(generation), job::StepBudget::new(8, 10, original_bridge_grant()), cancel, PROGRESS_NOW_US, &mut preview_sequence, &mut original_recipient);
         run(&mut context)
     }
 

@@ -15,15 +15,19 @@ use crate::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLim
 use semio_framework_diagnostic::Limits;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
+#[derive(semio_framework_value::RetireOwned)]
 struct MissingEncodingGuard {
     output_bytes: usize,
 }
+#[derive(semio_framework_value::RetireOwned)]
 struct MissingControlledEncoding {
     output_bytes: usize,
 }
+#[derive(semio_framework_value::RetireOwned)]
 struct GuardedEncoding {
     output_bytes: usize,
 }
+#[derive(semio_framework_value::RetireOwned)]
 struct EstimatedEncoding {
     output_bytes: usize,
 }
@@ -137,7 +141,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
         ENCODER_CALLS.with(|count| count.set(0));
-        let result = (EstimatedEncoding::sqlite_codec().import)("fixture.expansion/v1", &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut snapshot_encoding_owner).unwrap();
+        let result = (EstimatedEncoding::sqlite_codec().import)("fixture.expansion/v1", &dialect, &mut Some(database.clone()), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut snapshot_encoding_owner).unwrap();
         let actual = match result.value {
             crate::io_schema::IoPayload::Binary(bytes) => bytes,
             crate::io_schema::IoPayload::Text(text) => text.into_bytes(),
@@ -146,7 +150,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         ENCODER_CALLS.with(|count| assert_eq!(count.get(), 0));
         let mut short = limits;
         short.max_file_bytes -= 1;
-        assert!((EstimatedEncoding::sqlite_codec().import)("fixture.expansion/v1", &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, short),&mut snapshot_encoding_owner).is_err());
+        assert!((EstimatedEncoding::sqlite_codec().import)("fixture.expansion/v1", &dialect, &mut Some(database.clone()), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, short),&mut snapshot_encoding_owner).is_err());
     }
 
 drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
@@ -189,7 +193,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
             limits.max_file_bytes = limits.max_value_bytes;
             let cancel = case["cancelEncoding"].as_bool().unwrap();
             let mut callback = |event: crate::sqlite_snapshot::SqliteSnapshotProgress| !cancel || event.phase != SqliteSnapshotPhase::EncodeNative;
-            let result = (codec.import)("fixture.expansion/v1", &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut callback, limits),&mut snapshot_encoding_owner);
+            let result = (codec.import)("fixture.expansion/v1", &dialect, &mut Some(database.clone()), encoding, &mut SqliteSnapshotControl::new(&mut callback, limits),&mut snapshot_encoding_owner);
             let encoded = case["encoded"].as_bool().unwrap();
             assert_eq!(result.is_ok(), encoded, "{} {encoding:?}: {result:?}", case["id"]);
             ENCODER_CALLS.with(|count| assert_eq!(count.get(), 0, "ordinary encoders must never be used by SQLite import"));
@@ -244,7 +248,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
             true
         }
     };
-    let result = (GuardedEncoding::sqlite_codec().import)("fixture.expansion/v1", &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut callback, limits),&mut snapshot_encoding_owner);
+    let result = (GuardedEncoding::sqlite_codec().import)("fixture.expansion/v1", &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut callback, limits),&mut snapshot_encoding_owner);
     assert_eq!(result.is_err(), case["expectedCanceled"].as_bool().unwrap(), "{encoding:?} encoding must stop during real output ownership");
     assert!(reached, "expected an interior EncodeNative byte checkpoint");
     ENCODER_CALLS.with(|count| assert_eq!(count.get(), 0, "ordinary printer/packer must not be called"));

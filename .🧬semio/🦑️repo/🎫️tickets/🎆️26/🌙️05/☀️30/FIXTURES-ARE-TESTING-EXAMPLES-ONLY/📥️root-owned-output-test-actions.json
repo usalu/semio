@@ -1,0 +1,26 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json",
+      "action": "created",
+      "afterSha256": "826b1f70f7b7c6bf1b5fa99b24211b8fd0039537d8b8d4880dbe6d1f8b9b1828",
+      "exclusive": false,
+      "scope": "Genuine owned output API Schema and plain actual Node stream/Buffer/Ajv regression"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📬️output/🔣️.json",
+      "action": "created",
+      "afterSha256": "af87b46c50cfa7ab4134c9572fd8b286f24f6e21368664aa59082368d31a70ef",
+      "exclusive": false,
+      "scope": "Genuine owned output API Schema and plain actual Node stream/Buffer/Ajv regression"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📬️output/🟦️.ts",
+      "action": "created",
+      "afterSha256": "90444ae1536fbc4917131937af1faf3fe1d084c25ff011c5c26e9352f1616794",
+      "exclusive": false,
+      "scope": "Genuine owned output API Schema and plain actual Node stream/Buffer/Ajv regression"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

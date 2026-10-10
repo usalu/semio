@@ -1,0 +1,16 @@
+{
+  "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+  "beforeSha256": "7fee3bf98df2ed143b80021e9b07800a247c247e6e8d18bace76e43e655b146b",
+  "afterSha256": "ffacf1b817337697a9c959d3d83de66a960d256896b2d48be1e732b2fa71daf9",
+  "actions": [
+    {
+      "beforeBlock": "        if !self.elements.is_empty() {\n            self.elements.pop();\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));\n        }",
+      "afterBlock": "        if !self.elements.is_empty() {\n            let copy = size_of::<PathEl>();\n            if grant.maximum_copy_bytes < copy { return Ok(RetainedCloneStep::Progress(empty)); }\n            self.elements.pop();\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..empty }));\n        }"
+    },
+    {
+      "beforeBlock": "fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.elements.is_empty() && self.elements.capacity() != 0 { 2 * size_of::<Vec<PathEl>>() } else { 0 }) }",
+      "afterBlock": "fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if !self.elements.is_empty() { size_of::<PathEl>() } else if self.elements.capacity() != 0 { 2 * size_of::<Vec<PathEl>>() } else { 0 }) }"
+    }
+  ],
+  "authority": "Genuine current Value trivial Collection prices sizeofT before row retirement; independent positive policy unchanged; Source16828 actualRED/Lowconfirmation; native complete law UNRUN"
+}

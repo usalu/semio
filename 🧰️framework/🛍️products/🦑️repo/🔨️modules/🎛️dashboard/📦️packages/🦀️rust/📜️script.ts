@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 /** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (nx bridge for `repo/dashboard/rs`). */
@@ -54,7 +55,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "unit") {
       const { rest } = resolveTestLevel(segments.slice(1));
-      await runRepositoryCargoTests([crate], this.repoRoot, rest); return;
+      await runRepositoryCargoTests([crate], this.repoRoot, this.invocation.control, rest); return;
     }
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧭️authority/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
     if (segments[0] === "authority") return;
@@ -70,7 +71,7 @@ class TestScript extends BundleScript {
     const native = devToolingEnv({ SEMIO_DASHBOARD_BIN: await dashboardExecutable(this.root, this.repoRoot) });
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🎮️registry/🟦️.ts")], { cwd: this.repoRoot, env: native });
     runCmd("bun", ["test", "--timeout", "240000", join(this.root, "../../🧪️tests/🧭️cli/🟦️.ts")], { cwd: this.repoRoot, env: native });
-    await runRepositoryCargoTests([crate], this.repoRoot, rest);
+    await runRepositoryCargoTests([crate], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -140,5 +141,5 @@ export async function dashboardExecutable(packageRoot: string, workspace: string
 
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir).register("launch", LaunchScript).register("build", BuildScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript);
-  await runScriptMain(router);
+  await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

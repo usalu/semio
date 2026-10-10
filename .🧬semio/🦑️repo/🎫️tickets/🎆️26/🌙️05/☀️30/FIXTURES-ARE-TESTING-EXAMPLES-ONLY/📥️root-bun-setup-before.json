@@ -1,0 +1,32 @@
+[
+  {
+    "path": "package.json",
+    "sha256": "f562f40578fcd31e73e113a7d4f9f8a595f21c1bb41b715ac4045990334287b5",
+    "nativeEntries": 978
+  },
+  {
+    "path": "♻️mit-bestand/package.json",
+    "sha256": "4525b05c4cfc04a1190c4b8741edefc073abfdbe6e14a9b2150c5a1509d44d3d",
+    "nativeEntries": 1933
+  },
+  {
+    "path": "✏️s/package.json",
+    "sha256": "64946a298b5792266b54711159261d4f3c31ffb6d633ce62af63380f1debdbb6",
+    "nativeEntries": 1920
+  },
+  {
+    "path": "🌎️hub/package.json",
+    "sha256": "25bbbe2f72446e08e70308ca847aaf3edf3a4ceedbb7273a71cf40881d71b6bd",
+    "nativeEntries": 1969
+  },
+  {
+    "path": "🎓️teaching/package.json",
+    "sha256": "6935a545e6c98e4e1074c0a9d39d5127714f2fd6ed236efe7fa60692e451cb1e",
+    "nativeEntries": 991
+  },
+  {
+    "path": "🏢️semio-tech/package.json",
+    "sha256": "53c59762c06b3ac0df61373171be393406735512736ed0bab6276f3b77f5c2b8",
+    "nativeEntries": 1935
+  }
+]

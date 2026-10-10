@@ -1,0 +1,272 @@
+{
+  "selected": "app:test",
+  "dependencies": [
+    "value:generate",
+    "ui:generate"
+  ],
+  "foreign": "foreign:test",
+  "resources": {
+    "artifactDirectory": "/repo/artifacts",
+    "transport": {
+      "maximumBytes": 67108864,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 10000
+    },
+    "network": {
+      "offline": true
+    }
+  },
+  "commands": [
+    {
+      "task": "value:generate",
+      "manifest": "value/Cargo.toml",
+      "workingDirectory": "value",
+      "program": "bun",
+      "arguments": [
+        "/repo/value/📜️script.ts",
+        "generate"
+      ]
+    },
+    {
+      "task": "ui:generate",
+      "manifest": "ui/Cargo.toml",
+      "workingDirectory": "ui",
+      "program": "bun",
+      "arguments": [
+        "/repo/ui/📜️script.ts",
+        "generate"
+      ]
+    }
+  ],
+  "expectedCommands": [
+    [
+      "value/Cargo.toml",
+      "value",
+      "bun",
+      [
+        "/repo/value/📜️script.ts",
+        "generate"
+      ]
+    ],
+    [
+      "ui/Cargo.toml",
+      "ui",
+      "bun",
+      [
+        "/repo/ui/📜️script.ts",
+        "generate"
+      ]
+    ]
+  ],
+  "refusals": [
+    "foreign-task",
+    "changed-command",
+    "changed-request",
+    "missing-native",
+    "changed-artifacts",
+    "expired",
+    "capability-override",
+    "changed-forwarded-arguments"
+  ],
+  "pathCases": [
+    {
+      "input": "bun",
+      "accepted": true
+    },
+    {
+      "input": "0",
+      "accepted": true
+    },
+    {
+      "input": "C:\\Users\\owner",
+      "accepted": true
+    },
+    {
+      "input": "/Users/ueli",
+      "accepted": true
+    },
+    {
+      "input": "\u0000",
+      "accepted": false
+    }
+  ],
+  "graphRoots": [
+    "value:generate",
+    "ui:generate"
+  ],
+  "forwardedArguments": [
+    "-E",
+    "test(foo) | test(bar)",
+    "--",
+    "literal;$(stay)"
+  ],
+  "parentCases": [
+    {
+      "maximumElapsedMilliseconds": 0,
+      "remainingMilliseconds": null,
+      "accepted": true
+    },
+    {
+      "maximumElapsedMilliseconds": 10000,
+      "remainingMilliseconds": 10000,
+      "accepted": true
+    },
+    {
+      "maximumElapsedMilliseconds": 0,
+      "remainingMilliseconds": 10000,
+      "accepted": false
+    },
+    {
+      "maximumElapsedMilliseconds": 10000,
+      "remainingMilliseconds": null,
+      "accepted": false
+    }
+  ],
+  "producerCases": [
+    {
+      "original": [
+        "nx",
+        "run",
+        "workspace:test",
+        "--",
+        "long"
+      ],
+      "selected": [
+        "run",
+        "workspace:test-long"
+      ],
+      "environment": {},
+      "offline": false,
+      "artifact": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+      "native": {
+        "artifactDirectory": "/repo/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 3600000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    },
+    {
+      "original": [
+        "nx",
+        "run-many",
+        "--target=test",
+        "--projects=app"
+      ],
+      "selected": [
+        "run-many",
+        "--target=test",
+        "--projects=app"
+      ],
+      "environment": {
+        "CARGO_TARGET_DIR": "caller-artifacts",
+        "CARGO_NET_OFFLINE": "true"
+      },
+      "offline": true,
+      "artifact": "caller-artifacts",
+      "native": {
+        "artifactDirectory": "/repo/caller-artifacts",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 3600000
+        },
+        "network": {
+          "offline": true
+        }
+      }
+    }
+  ],
+  "launchCases": [
+    [
+      "run",
+      "workspace:deps-javascript",
+      "--output-style=stream"
+    ],
+    [
+      "run",
+      "workspace:test-long"
+    ],
+    [
+      "run-many",
+      "--target=test",
+      "--projects=app"
+    ],
+    [
+      "watch",
+      "--all",
+      "--includeGlobalWorkspaceFiles",
+      "--verbose",
+      "--",
+      "bun",
+      "nx",
+      "run",
+      "app:activate",
+      "--output-style=stream"
+    ]
+  ],
+  "callerReceivingCases": [
+    {
+      "kind": "missingNative",
+      "accepted": true,
+      "nativeIssued": false
+    },
+    {
+      "kind": "missingSelection",
+      "accepted": false,
+      "nativeIssued": false
+    },
+    {
+      "kind": "differentSelection",
+      "accepted": false,
+      "nativeIssued": false
+    },
+    {
+      "kind": "originalExplicit",
+      "accepted": true,
+      "nativeIssued": true
+    }
+  ],
+  "launchResources": {
+    "artifactDirectory": "/repo/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 3600000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "normalCallerCapabilities": [
+    {},
+    {
+      "owner": "original-normal-parent",
+      "command": [
+        "nx",
+        "run",
+        "normal:source"
+      ]
+    },
+    {
+      "workspaceRoot": "/repo",
+      "arguments": [
+        "nx",
+        "run",
+        "normal:source"
+      ]
+    }
+  ]
+}

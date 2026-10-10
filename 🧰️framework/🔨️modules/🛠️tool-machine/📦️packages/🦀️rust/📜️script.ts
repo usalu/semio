@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
@@ -37,4 +38,4 @@ class NodeGraphRowOwnershipScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-node-graph-row-ownership", NodeGraphRowOwnershipScript).register("check", CheckScript);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

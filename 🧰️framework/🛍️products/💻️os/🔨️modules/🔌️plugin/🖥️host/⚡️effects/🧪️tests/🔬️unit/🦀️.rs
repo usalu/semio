@@ -39,24 +39,31 @@ struct RecordingRouterJob {
     calls: Option<Arc<AtomicUsize>>,
     yielded: bool,
     closing: bool,
+    cancelled: bool,
+    completed: bool,
+    cursor: usize,
+    writer: Option<RetainedPayloadBuilder>,
 }
 
 impl InteractiveJob for RecordingRouterJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
-        }
-        if cx.should_yield() {
-            return StepOutcome::Yield;
-        }
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_value::ValueError>{
+        if cx.is_cancelled()||self.closing{let grant=cx.retained_grant();if grant.maximum_items<2||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Ok(None)}self.cancelled=true;cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<bool>(),..Default::default()})?;return JobOutcomeBorrow::admit_cancelled(cx)}
+        if cx.should_yield(){return Ok(None)}
         cx.consume_fuel(1);
         if !self.yielded {
+            let grant=cx.retained_grant();if grant.maximum_items<2||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Ok(None)}
             self.yielded = true;
-            return StepOutcome::Yield;
+            cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<bool>(),..Default::default()})?;
+            return JobOutcomeBorrow::admit_yield(cx);
         }
-        self.calls.as_ref().expect("recording router calls").fetch_add(1, Ordering::SeqCst);
-        let output = cx.payload_from_bytes(JobPayloadStream::CommitOutput, b"ok").unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::CommitOutput));
-        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output })
+        if self.writer.is_none(){let grant=cx.retained_grant();let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(None)}self.writer=Some(RetainedPayloadBuilder::new(JobPayloadStream::CommitOutput));cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;return Ok(None)}
+        let writer=self.writer.as_mut().unwrap();if !writer.is_initialized(){writer.advance_initialization(cx)?;return Ok(None)}if self.cursor<b"ok".len(){writer.append_original(cx,b"ok",&mut self.cursor)?;return Ok(None)}if writer.published().is_none(){writer.seal(cx)?;return Ok(None)}
+        if !self.completed{let grant=cx.retained_grant();let copied_bytes=std::mem::size_of::<usize>()+std::mem::size_of::<bool>();if grant.maximum_items<2||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(None)}self.calls.as_ref().expect("recording router calls").fetch_add(1,Ordering::SeqCst);self.completed=true;cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;}
+        JobOutcomeBorrow::admit_complete(cx,None,self.writer.as_ref().and_then(RetainedPayloadBuilder::published))
+    }
+
+    fn borrow_outcome<'a>(&'a self,original:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,semio_framework_value::ValueError>{
+        if self.cancelled&&original.kind()==JobOutcomeKind::Cancelled{return original.cancelled()}if self.yielded&&original.kind()==JobOutcomeKind::Yield{return original.yielded()}if self.completed{let output=self.writer.as_ref().and_then(RetainedPayloadBuilder::published).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"recording router original output remains producer-held"))?;return original.complete(None,Some(output))}Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"recording router descriptor has no original producer witness"))
     }
 
     fn begin_close(&mut self) {
@@ -66,6 +73,7 @@ impl InteractiveJob for RecordingRouterJob {
     fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
+        if let Some(writer)=self.writer.as_mut(){if writer.terminal_is_empty(){let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return InteractiveJobCloseStep::Blocked}drop(self.writer.take());return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}}}return match writer.close_step_granted(grant){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
         let demand=self.close_demands();
         let result=semio_framework_value::advance_retirement_turn(demand,grant,|_|{
             if self.calls.as_ref().is_some_and(|original|Arc::weak_count(original)!=0){return Ok((RetainedCloneStep::Progress(Default::default()),false));}
@@ -75,23 +83,24 @@ impl InteractiveJob for RecordingRouterJob {
         });
         match result{Ok(step)if self.calls.is_none()=>InteractiveJobCloseStep::Complete{progress:step.progress()},Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error))=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}.admit(grant,self.terminal_is_empty())
     }
-    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands().copy_bytes)}
-    fn next_close_capacity_byte_demand(&self,_body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands().release_bytes)}
-    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands().depth)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiving_close_demands()?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,_body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiving_close_demands()?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiving_close_demands()?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiving_close_demands()?.depth)}
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.calls.is_none()
+        self.closing && self.calls.is_none() && self.writer.is_none()
     }
 }
 
 impl RecordingRouterJob {
+    fn receiving_close_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(writer)=self.writer.as_ref(){return if writer.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<RetainedPayloadBuilder>>(),depth:1,..Default::default()})}else{writer.retirement_demands()}}Ok(self.close_demands())}
     fn close_demands(&self)->semio_framework_value::RetirementDemand{self.calls.as_ref().map_or(Default::default(), |_|semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<Arc<AtomicUsize>>>(),release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>(),depth:1,..Default::default()})}
 }
 
 impl RouterEffectHandler for RecordingRouterHandler {
     fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob + Send> {
-        Box::new(RecordingRouterJob { calls: Some(self.0.clone()), yielded: false, closing: false })
+        Box::new(RecordingRouterJob { calls: Some(self.0.clone()), yielded: false, closing: false, cancelled:false,completed:false,cursor:0,writer:None })
     }
 }
 

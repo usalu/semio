@@ -1,3 +1,22 @@
+
+fn adopt_fixture(publication: &mut PresencePeersPublication<i32>, actor: String, presence: i32, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, PresencePeerAdmissionRejected<i32>> {
+    let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
+    let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
+    let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let mut actor = Some(actor); let mut presence = Some(presence);
+    match publication.adopt(&mut actor, &mut presence, 0, &mut original) {
+        Ok(step) => { assert_eq!(step.progress(), original.progress()); Ok(step) },
+        Err(_) => Err(PresencePeerAdmissionRejected::new("original fixture publication refusal", actor.take().expect("refused original actor"), presence.take().expect("refused original presence"), publication.factory.as_ref().expect("original publication factory").clone())),
+    }
+}
+
+fn commit_fixture(publication: &mut PresencePeersPublication<i32>, grant: RetainedCloneGrant) -> PresencePeersCommit<i32> {
+    let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
+    let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
+    let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let (commit, receipt) = publication.take_commit(&mut original).unwrap();
+    assert_eq!(receipt, original.progress()); assert!(receipt.fits(grant)); commit
+}
 use super::*;
 
 use crate::os_store::component::presence_test_retirement::{Factory, CLOSE_GRANT, observed_step, observed_box_close, finish_box};
@@ -28,9 +47,9 @@ fn retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close
     let foreign = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let original_factory: Arc<dyn SnapshotRetirementFactory<i32>> = Arc::new(Factory(original.clone()));
     let foreign_factory: Arc<dyn SnapshotRetirementFactory<i32>> = Arc::new(Factory(foreign.clone()));
-    let mut source = PresencePeersPublication::<i32>::new(&Arc::new(PresencePeersRoot::empty()), original_factory.clone());
-    let mut other = PresencePeersPublication::<i32>::new(&Arc::new(PresencePeersRoot::empty()), foreign_factory.clone());
-    let rejected = source.adopt("exact-owner".into(), 41, 0).err().unwrap();
+    let mut source = PresencePeersPublication::<i32>::new(&Arc::new(PresencePeersRoot::empty()), &(original_factory.clone() as Arc<dyn SnapshotRetirementFactory<i32>>), CLOSE_GRANT).unwrap().0;
+    let mut other = PresencePeersPublication::<i32>::new(&Arc::new(PresencePeersRoot::empty()), &(foreign_factory.clone() as Arc<dyn SnapshotRetirementFactory<i32>>), CLOSE_GRANT).unwrap().0;
+    let rejected = adopt_fixture(&mut source, "exact-owner".into(), 41, CLOSE_GRANT).err().unwrap();
     assert!(Arc::ptr_eq(rejected.factory.as_ref().unwrap(), &original_factory));
     assert!(!Arc::ptr_eq(rejected.factory.as_ref().unwrap(), &foreign_factory));
     close_publication(&mut source);
@@ -52,13 +71,17 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
     for case in fixture["cases"].as_array().unwrap() {
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory = Arc::new(Factory(count.clone()));
-        let mut publication = PresencePeersPublication::<i32>::new(&Arc::new(PresencePeersRoot::empty()), factory.clone());
+        let mut publication = PresencePeersPublication::<i32>::new(&Arc::new(PresencePeersRoot::empty()), &(factory.clone() as Arc<dyn SnapshotRetirementFactory<i32>>), CLOSE_GRANT).unwrap().0;
         let state = case["state"].as_str().unwrap();
         if state != "pruning" {
-            while publication.prune_one(|_| true).unwrap() {}
+            while publication.prune_one(|_| true, CLOSE_GRANT).unwrap().0 {}
         }
         if state == "transferred" {
-            let mut transferred = publication.take_commit().unwrap().into_retirement();
+            let commit = commit_fixture(&mut publication, CLOSE_GRANT);
+            let (transfer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| commit.into_retirement(CLOSE_GRANT));
+            let (mut transferred, receipt) = transfer.ok().unwrap();
+            assert!(receipt.fits(CLOSE_GRANT));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
             for _ in 0..4096 {
                 if matches!(crate::os_store::component::presence_test_retirement::observed_close(&mut transferred, CLOSE_GRANT), RetainedCloneStep::Complete(_)) {
                     break;
@@ -73,7 +96,7 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
                 let actor = format!("seed-{index:02}");
                 seeded_bytes += actor.len();
                 seeded_capacity += actor.capacity();
-                assert!(publication.adopt(actor, 0, 0).is_ok());
+                assert!(adopt_fixture(&mut publication, actor, 0, CLOSE_GRANT).is_ok());
             }
         }
         let text = case["actor"]["unit"].as_str().unwrap().repeat(case["actor"]["repeat"].as_u64().unwrap() as usize);
@@ -86,8 +109,8 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
         let expected_bytes = case["expectedActorBytes"].as_u64().unwrap() as usize;
         assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&text).unwrap()).unwrap().len(), expected_bytes);
         let mut bytes = 0;
-        match publication.adopt(actor, 41, 0) {
-            Ok(()) => assert!(case["accepted"].as_bool().unwrap()),
+        match adopt_fixture(&mut publication, actor, 41, CLOSE_GRANT) {
+            Ok(_) => assert!(case["accepted"].as_bool().unwrap()),
             Err(mut rejected) => {
                 assert!(!case["accepted"].as_bool().unwrap());
                 assert_eq!(rejected.actor(), text);

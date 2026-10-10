@@ -83,7 +83,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let input = crate::sqlite_wire::SnapshotInput { dialect: dialect.to_coordinate(), encoding: encoding.as_str().into(), payload: Std1AnySnapshot { value: 7 }.encode_pack(), limits: limits.into(),native:grant.into() };
             let mut input = input;
             if encoding == SnapshotEncoding::Text { input.payload = b"{\"value\":7}".to_vec(); }
-            let exported = crate::plugin_runtime::plugin_snapshot_sqlite_export(input,&mut native,&mut snapshot).await.unwrap();
+            let exported = crate::plugin_runtime::plugin_snapshot_sqlite_export(&mut crate::sqlite_wire::SnapshotInputOwner{wire:Some(input),dialect:None,route:None,payload:None,hop:None},&mut native,&mut snapshot).await.unwrap();
             let crate::sqlite_wire::SnapshotFileResult::Rejected(rejection) = exported else { panic!("refused provider exported a file") };
             sqlite_guest_assert_refusal(&rejection, &expected);
             let mut database = SqliteDatabase::from_schema(<Std1AnySnapshot as store::ArtifactSqliteSnapshot>::SQLITE_SCHEMA).unwrap();
@@ -91,7 +91,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let mut control = SqliteSnapshotControl::new(&mut progress, limits);
             attach_sqlite_snapshot_metadata(&mut database, &dialect, encoding, &mut control).unwrap();
             let bytes = export_sqlite_database(&database, limits, &mut |_| true).unwrap();
-            let imported = crate::plugin_runtime::plugin_snapshot_sqlite_import(crate::sqlite_wire::SnapshotInput { dialect: dialect.to_coordinate(), encoding: encoding.as_str().into(), payload: bytes, limits: limits.into(),native:grant.into() },&mut native,&mut snapshot).await.unwrap();
+            let imported = crate::plugin_runtime::plugin_snapshot_sqlite_import(&mut crate::sqlite_wire::SnapshotInputOwner{wire:Some(crate::sqlite_wire::SnapshotInput { dialect: dialect.to_coordinate(), encoding: encoding.as_str().into(), payload: bytes, limits: limits.into(),native:grant.into() }),dialect:None,route:None,payload:None,hop:None},&mut native,&mut snapshot).await.unwrap();
             let crate::sqlite_wire::SnapshotPayloadResult::Rejected(rejection) = imported else { panic!("refused provider imported a snapshot") };
             sqlite_guest_assert_refusal(&rejection, &expected);
         }

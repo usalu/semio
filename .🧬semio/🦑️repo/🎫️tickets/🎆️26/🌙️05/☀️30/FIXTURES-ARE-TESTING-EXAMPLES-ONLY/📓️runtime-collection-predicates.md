@@ -1,0 +1,9 @@
+# Bounded Runtime Collection Predicates
+
+Read-only current Source hashes in 📥️runtime-collection-predicates.json. No graph acquisition/test/native execution.
+
+Schema catalog policy schemaScopeCollectionPath3045 checks exact original taxonomy collection-root patterns at every ancestor, exempting only immediate module-member predecessor. Runtime discovery runtimeFixturePathV1 34–36 checks the same four literal names and immediate 🔨️modules exception; actual runtime traversal213 refuses admitted source/resource paths classified as collections. Nx Source exampleCollectionPath782–785 uses genuine WorkspaceOwnershipPolicy names/moduleMember, and production input masks788–791 carry both root/direct and nested semantics. No current direct collection-admission breach was established in these bounded defining consumers; this is not runtime purity.
+
+Concrete authority-maintenance gap: Runtime predicate has hardcoded default four names and hardcoded module predecessor, while Nx/Bun/Cargo now consume genuine shared production policy and schema catalog consumes taxonomy. Current names/exception agree, but runtime default is duplicated authority. Extend existing runtime path plain vectors with shared-policy correspondence and nested genuine module cases; explicit context.fixtureCollections is actual caller input and must be admitted coherently, not silently narrowed. Do not claim discrepancy merely from duplication when current values match.
+
+Canonical Rust schema export binary is explicit genuine framework schema registration/serializer, with no filesystem discovery, fixture includes or recursive collection traversal in the inspected file. Test fixtures containing Schema-valued parser inputs remain testing role; catalog collector explicit inert specimens must remain supported. No new confirmed exclusive schema beyond Renderer/actual async Cargo from this bounded cohort.

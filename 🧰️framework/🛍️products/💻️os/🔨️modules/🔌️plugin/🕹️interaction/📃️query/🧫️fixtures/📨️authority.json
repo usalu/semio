@@ -1,0 +1,53 @@
+{
+  "originalGrants": [
+    {
+      "maximumItems": 1,
+      "maximumCopyBytes": 1,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 128
+    },
+    {
+      "maximumItems": 1,
+      "maximumCopyBytes": 64,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 128
+    },
+    {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 128
+    }
+  ],
+  "sourceCase": "sparse-anchor-comma-private-preserved",
+  "zeroByteProgressRetained": true,
+  "maximumTurns": 500000,
+  "terminalRequiresReadReturn": true,
+  "outputWidths": [
+    1,
+    64,
+    4096
+  ],
+  "wholeOperationGrant": {
+    "maximumItems": 1000000,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 8388608,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 128
+  },
+  "grantSource": "caller.request",
+  "widthPricesGrant": false,
+  "originalCopyOneAdmitsMetadataClose": false,
+  "pagePublicationRefusal": {
+    "physicalBytes": [
+      0,
+      0
+    ],
+    "originalPagePreserved": true,
+    "replyAdmitted": false,
+    "inputSource": "caller.request"
+  }
+}

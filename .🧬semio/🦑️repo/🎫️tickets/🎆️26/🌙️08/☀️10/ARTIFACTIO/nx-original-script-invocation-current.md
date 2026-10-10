@@ -1,0 +1,5 @@
+# Original Nx Script Invocation Receiving
+
+Actual unchanged Ei native2 failed before Nx/compiler: the new shared ScriptRouter requires an explicit ScriptInvocation; bootstrap still called run(args) without it. The strict shared validator is retained. Bootstrap now admits only an explicitly registered closed SEMIO_SCRIPT_POLICY at its physical process boundary, exposes the same process cancellation/deadline/progress/continuation to routing and actual bootstrap acquisition, and forwards its abort to only its owned Nx process tree. Native artifact IO launch policies explicitly derive their finite enclosing deadline from the already-authored original build budget plus that selected original assertion budget. Those native budgets/arguments/manifest/cache identities stay unchanged. No unlimited/default authority, bypass, old overload, or validator relaxation was added.
+
+This receiving change is based on an actual compiler-launch RED. Original registered gate runtime remains required; affected native commands can now be retried. Other product launch owners must supply their own explicit Script policy instead of inheriting an invented deadline.

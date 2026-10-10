@@ -22,9 +22,9 @@
   },
   "exports": {
     ".": "./🟦️.ts",
-    "./🖌️ui.css": "../../🖌️ui/🎨️.css",
-    "./🎨️palette.css": "../../🎨️palette/🎨️.css",
-    "./tokens.generated": "../../🤖️generated/🔤️tokens/🟦️.ts"
+    "./🖌️ui.css": "./🖌️ui.css",
+    "./🎨️palette.css": "./🎨️palette.css",
+    "./tokens": "./🔤️tokens/🟦️.ts"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

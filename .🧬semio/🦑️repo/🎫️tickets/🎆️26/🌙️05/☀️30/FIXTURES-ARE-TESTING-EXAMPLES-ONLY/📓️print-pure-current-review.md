@@ -1,0 +1,7 @@
+# Print Typed Validation Current Cut
+
+Fresh original validate_chart8–12 already uses OwnedJsonSchemaValidator::compile_intrinsic_with_documents and validate_intrinsic(&snapshot.chart). It no longer calls snapshot.to_value. Thus67663 projection Source failure is an earlier epoch and cannot justify overwriting current body. This audit authored nothing and ran no tests.
+
+Genuine ChartSnapshot holds its original DslValue chart; canonical chart schema plus snapshot/root documents supply production $refs. Defining validator validate_intrinsic328 borrows that DslValue; controlled form332 returns real validation progress. This is the correct individual domain boundary; no trial schema, JSON projection or copied payload needed. OnceLock caches compiled schema only, not caller snapshot.
+
+Preserve original native laws sqlite_snapshot_chart_full_domain_and_authored_default_are_independently_readable, sqlite_snapshot_chart_native_numeric_variants_and_float_words_are_exact, sqlite_snapshot_chart_control_and_closed_domain_refusals_are_real and sqlite_snapshot_chart_known_scalar_admission_refuses_norm_invalid_values. Existing per-row pureValidation compares actual chart equality before/after validation, while SQL/Buffer/Serde numeric and unchanged native/plain cases remain independent evidence. Current Source review does not prove these native tests executed or allocation-free validator internals; any fresh test must use this current body and genuine producer refs.

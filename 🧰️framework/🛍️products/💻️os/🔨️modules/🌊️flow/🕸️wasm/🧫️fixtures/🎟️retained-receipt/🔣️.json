@@ -6,6 +6,20 @@
     "retainedCapacityBytes",
     "releasedBytes"
   ],
+  "failureCauses": {
+    "text": "源🌊",
+    "repeat": 257,
+    "capacityBytes": 4096,
+    "utf8Bytes": 1799,
+    "copyGrants": [1, 3, 64],
+    "kinds": ["invalidValue", "canceled", "ownershipLimit", "allocationFailed", "workLimit", "depthLimit", "unsupportedOwner", "invariantViolated"],
+    "expected": {"sameOriginalProse": true, "sameOriginalKind": true, "sameActualReceipt": true, "conversionBirthBytes": 0, "conversionReleaseBytes": 0, "terminalDropBytes": 0}
+  },
+  "normalFailure": {
+    "progress": {"copiedItems": 1, "copiedBytes": 3, "retainedCapacityBytes": 5, "releasedBytes": 7},
+    "retainedBeforeReply": true,
+    "nextPollCleared": true
+  },
   "cases": [
     {
       "name": "pending",
@@ -28,6 +42,12 @@
         "retainedCapacityBytes": 64,
         "releasedBytes": 0
       }
+    },
+    {
+      "name": "permuted-axes",
+      "length": -1,
+      "terminal": false,
+      "progress": {"releasedBytes": 7, "retainedCapacityBytes": 5, "copiedBytes": 3, "copiedItems": 1}
     },
     {
       "name": "terminal",

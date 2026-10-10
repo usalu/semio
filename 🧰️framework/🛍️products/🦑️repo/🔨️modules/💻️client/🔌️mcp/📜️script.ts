@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🧭️ `repo-mcp` router: `bun ./📜️script.ts build|test`. The Go sources of this module are
@@ -33,4 +34,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript);
 
-await runScriptMain(router);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

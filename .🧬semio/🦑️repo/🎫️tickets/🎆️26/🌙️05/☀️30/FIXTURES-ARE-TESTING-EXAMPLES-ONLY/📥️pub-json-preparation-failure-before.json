@@ -1,0 +1,25 @@
+{
+  "scope": "Actual canonical preparation Value refusal retention TDD; Rust untouched during Kernel",
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/🚧️canonical-error-progress.json",
+      "sha256": "dda2ffb5995fe9fe782f6e06c8ad3d1d17d73191beef6bb78e50e79b4c8410f0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts",
+      "sha256": "cadf3284f00f9d00b75e1155ab1b58632c32c2b6aedd2d3f0c83a73e821624e6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "sha256": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧳️source/🦀️.rs",
+      "sha256": "5d5c63949ce50b3db2af121db2259dbfd19b8ab1a5f7de645f5778d1192d9694"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c"
+    }
+  ]
+}

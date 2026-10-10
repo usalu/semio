@@ -18,7 +18,7 @@ fn default_true() -> bool {
 /// quoting means whether a field WAS quoted is real information worth preserving losslessly,
 /// so re-serializing can reproduce the exact source bytes rather than a lossy normal form
 /// (https://www.rfc-editor.org/rfc/rfc4180#section-2, rule 5).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CsvField {
     #[value(default)]
@@ -32,7 +32,7 @@ pub struct CsvField {
 /// 📄 One RFC 4180 record (row) — a strong-like entity, index-keyed within
 /// `CsvSnapshot::records`. Field COUNT is real, per-record information (rfc4180 is a
 /// loosely-typed grid on the wire even though most producers keep it rectangular).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CsvRecord {
     #[value(default)]
@@ -44,7 +44,7 @@ pub struct CsvRecord {
 /// 📸️ Persisted `stdio.csv` snapshot (RFC 4180 table, with a header-row option). The
 /// header row (when present) is `records[0]` — RFC 4180 draws no structural distinction
 /// between a header record and a data record, only a convention of which one comes first.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
 pub struct CsvSnapshot {

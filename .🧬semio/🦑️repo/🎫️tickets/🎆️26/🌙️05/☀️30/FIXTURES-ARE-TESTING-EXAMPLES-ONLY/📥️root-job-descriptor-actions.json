@@ -1,0 +1,36 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "5395a28347796d4cac1a8ab4b1aafa591aa59ef47c144a0e7eab61fc23a9ef0c",
+      "afterSha256": "39adb13bc0989676f40e60ef9c73495bc1ed3446eef66c417adb50d2d6a66b58",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "4a509de3a370edad58624249da48d26f7692659b402e701139e77eebc6e01b39",
+      "afterSha256": null,
+      "exclusive": false
+    }
+  ],
+  "unchangedSourceObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧫️fixtures/🔣️.json",
+      "sha256": "b4abdddc3187ca5fe741ef35a88d49fbde2f64c8146c798d9567e53bf48058ab",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🦀️.rs",
+      "sha256": "3f5acff1b7430e3471dedae8e9553d945883fa03b77fb2c456509d6ea3053ec3",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🦀️.rs",
+      "sha256": "a0b094b278fc80c4b171894ea29278f63948029655a0ba0e4c0fef7c364fc6b5",
+      "authored": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

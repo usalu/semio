@@ -21,9 +21,12 @@ pub(crate) struct LocalInteractionPageView<'a> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum LocalInteractionQueryStep {
     Blocked,
-    Advanced { emitted_bytes: usize, retired_bytes: usize },
+    Advanced { emitted_bytes: usize, retired_bytes: usize, ownership: RetainedCloneProgress },
     PageReady,
     Closing,
+}
+impl LocalInteractionQueryStep {
+    pub(crate) fn progress(self)->RetainedCloneProgress{match self{Self::Advanced{ownership,..}=>ownership,_=>Default::default()}}
 }
 //#endregion 📃️PageAuthority
 
@@ -31,7 +34,7 @@ pub(crate) enum LocalInteractionQueryStep {
 /// 🔒️ Exact frozen source ownership; output bytes and close authority stay with the same owner.
 pub(crate) trait LocalInteractionQueryCapture {
     fn identity(&self) -> &LocalInteractionIdentity;
-    fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, store::ArtifactCanonicalJsonEncodeError>;
+    fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<store::ArtifactCanonicalJsonTreeStep, store::ArtifactCanonicalJsonEncodeError>;
     fn complete(&self) -> bool;
     fn completed_bytes(&self) -> u64;
     fn cancel(&mut self);
@@ -45,7 +48,7 @@ impl LocalInteractionQueryCapture for LocalInteractionCaptureCursor {
     fn identity(&self) -> &LocalInteractionIdentity {
         self.identity()
     }
-    fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, store::ArtifactCanonicalJsonEncodeError> {
+    fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<store::ArtifactCanonicalJsonTreeStep, store::ArtifactCanonicalJsonEncodeError> {
         self.write_chunk(grant, output)
     }
     fn complete(&self) -> bool {
@@ -132,11 +135,11 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         true
     }
 
-    pub(crate) fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<LocalInteractionQueryStep, String> {
+    pub(crate) fn advance(&mut self, grant: ArtifactStoreOneItemGrant, output_width: usize) -> Result<LocalInteractionQueryStep, ValueError> {
         if self.closing {
             return Ok(LocalInteractionQueryStep::Closing);
         }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 {
+        if !grant.permits_one() || grant.maximum_copy_bytes == 0 || output_width == 0 {
             return Ok(LocalInteractionQueryStep::Blocked);
         }
         if self.ready {
@@ -144,33 +147,35 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         }
         if self.retiring_page {
             if self.length != 0 {
-                let retired_bytes = self.retire_page(grant.maximum_copy_bytes);
-                return Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: 0, retired_bytes });
+                let retired_bytes = self.retire_page(grant.maximum_copy_bytes.min(output_width));
+                return Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: 0, retired_bytes, ownership:RetainedCloneProgress{copied_items:1,copied_bytes:retired_bytes,..Default::default()} });
             }
             let Some(ordinal) = self.token.ordinal.checked_add(1) else {
                 self.cancel();
-                return Err("local-interaction.query-ordinal-exhausted".into());
+                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"local-interaction.query-ordinal-exhausted"));
             };
             self.token.ordinal = ordinal;
             self.retiring_page = false;
-            return Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: 0, retired_bytes: 0 });
+            return Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: 0, retired_bytes: 0, ownership:RetainedCloneProgress{copied_items:1,..Default::default()} });
         }
-        let maximum = grant.maximum_copy_bytes.min(LOCAL_INTERACTION_QUERY_PAGE_BYTES);
-        match self.capture.write_chunk(grant, &mut self.page[..maximum]) {
-            Ok(count) => self.length = count,
+        let maximum = output_width.min(LOCAL_INTERACTION_QUERY_PAGE_BYTES);
+        if grant.maximum_depth<2{return Ok(LocalInteractionQueryStep::Blocked)}
+        let child=ArtifactStoreOneItemGrant{maximum_depth:grant.maximum_depth-1,..grant};
+        let ownership=match self.capture.write_chunk(child, &mut self.page[..maximum]) {
+            Ok(step) => {let progress=step.ownership.progress();self.length=step.written_bytes.min(maximum);if step.written_bytes>maximum||!progress.fits(grant.retained_grant()){self.cancel();return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"local-interaction.query-original-receipt").with_retained_progress(progress))}progress},
             Err(error) => {
                 if error.written_bytes > maximum {
                     self.cancel();
-                    return Err("local-interaction.query-error-byte-grant".into());
+                    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"local-interaction.query-error-byte-grant").with_retained_progress(error.reason.retained_progress()));
                 }
                 self.length = error.written_bytes;
                 self.cancel();
                 return Err(error.reason);
             }
-        }
+        };
         self.terminal_page = self.capture.complete();
         self.ready = self.length != 0 || self.terminal_page;
-        Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: self.length, retired_bytes: 0 })
+        Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: self.length, retired_bytes: 0, ownership })
     }
 
     pub(crate) fn cancel(&mut self) {

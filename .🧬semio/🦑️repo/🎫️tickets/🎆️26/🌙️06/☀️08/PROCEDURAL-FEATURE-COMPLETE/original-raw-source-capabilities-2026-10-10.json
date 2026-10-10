@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "repositoryRoot": "/Users/ueli/Documents/semio",
+  "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+  "command": {
+    "kind": "native-owner-command",
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "workingDirectory": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+    "program": "bun",
+    "arguments": [
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts",
+      "test-extension-invoke-source"
+    ]
+  },
+  "transport": {
+    "maximumBytes": 134217728,
+    "maximumLines": 1000000
+  },
+  "child": {
+    "maximumElapsedMilliseconds": 1800000
+  },
+  "network": {
+    "offline": true
+  }
+}

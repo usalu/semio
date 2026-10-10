@@ -11,6 +11,21 @@
 #[path = "🔁️fold/🦀️.rs"]
 mod retained_fold;
 pub use retained_fold::RetainedHistoryFold;
+#[path="🛬️decode/📋️records/🦀️.rs"]
+mod retained_history_records;
+pub use retained_history_records::{RetainedHistoryRecords,RetainedHistoryRecordsStep};
+#[path="🛬️decode/🧾️operation/🦀️.rs"]
+mod retained_history_operation;
+pub use retained_history_operation::{RetainedHistoryOpDecode,RetainedHistoryOpDecodeStep};
+#[path="🛬️decode/🪪️identity/🦀️.rs"]
+mod retained_history_id;
+pub use retained_history_id::{RetainedHistoryIdDecode,RetainedHistoryIdDecodeStep};
+#[path="🛬️decode/📨️message/🦀️.rs"]
+mod retained_history_message;
+pub use retained_history_message::{RetainedHistoryMessageDecode,RetainedHistoryMessageDecodeStep,RetainedHistoryMessagePartial};
+#[path="🛬️decode/🔀️origin/🦀️.rs"]
+mod retained_history_origin;
+pub use retained_history_origin::{RetainedHistoryOriginProjection,RetainedHistoryOriginPartial,RetainedHistoryOriginJsonDecode,RetainedHistoryOriginJsonStep};
 
 #[path = "🛂️identity/🦀️.rs"]
 pub(crate) mod identity;
@@ -33,7 +48,7 @@ use std::collections::{HashMap, HashSet};
 // they were authored on) and structural transitions are shared. `viewer_line` and `viewer_checkpoint`
 // are persisted local-only; absent, the head is the canonical trunk tip. Change/checkpoint/alternative
 // ledgers and the cursor stay derived by [`HistoryLog::fold`].
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetireOwned)]
 pub struct HistoryLog {
     pub doc_id: String,
     pub schema: String,
@@ -61,7 +76,7 @@ pub struct HistoryLog {
 /// `hlt` is `(actor, physical_ms, logical)` like [`HistoryConflict::hlt`]; `payload` is the encoded
 /// [`crate::os_spr::HistoryTransition`], opaque to this codec. `observed` is the newest foreign operation the author had
 /// seen (a `Supersede`'s grading frontier), kept so a reloaded, still unacknowledged transition is announced as authored.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct HistoryTransitionRecord {
     pub id: String,
     pub actor: semio_framework_value::SharedUtf8,
@@ -75,7 +90,7 @@ pub struct HistoryTransitionRecord {
 /// rather than as new fields on the format-frozen critical `REC_DOC`: an older/foreign reader must
 /// be able to skip it without failing the whole file. Checkpoint pins are not stored here — they
 /// are facts of `Repin` transitions, derived by [`HistoryLog::fold`].
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct HistoryComposition {
     /// 🏠️ `(parent_artifact_uri, slot, child_id)` — the child-side ownership stamp.
     pub owner: Option<(String, String, String)>,
@@ -91,7 +106,7 @@ pub struct HistoryComposition {
 /// as every other opaque payload here), `edit_ids` only for `Degraded`. No `policy` field: a merge
 /// policy is local/authority state per the frozen contract, never part of an artifact's shared
 /// history.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct HistoryConflict {
     pub id: String,
     pub kind: u8,
@@ -110,7 +125,7 @@ pub struct HistoryConflict {
 /// frozen nine `mutation.*` codes repeat heavily across one document's history — see
 /// `📋️contract-freeze.md` §C2), `message`/`target` are plain strings (English prose / element
 /// address, never interned — they vary per occurrence).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct HistoryMessage {
     pub level: u8,
     pub code: String,
@@ -119,7 +134,7 @@ pub struct HistoryMessage {
     pub op_index: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct HistoryEdit {
     pub id: String,
     pub actor: Option<semio_framework_value::SharedUtf8>,
@@ -155,13 +170,13 @@ pub struct HistoryEdit {
 /// only when a text-tooling caller supplied it (`.ops` compile, hand-authored logs). Invariant:
 /// at least one of `text`/`binary` is `Some` — both `None` is a construction bug, rejected by
 /// `write_op_payload`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct OpPayload {
     pub text: Option<String>,
     pub binary: Option<Vec<u8>>,
 }
 
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetireOwned)]
 pub struct HistoryOpMeta {
     pub op_id: Option<String>,
     pub dependencies: Vec<String>,

@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "a4973ab7e99e709890f65fd2f7ad776a5510991efde1352c834412b21f293c5f",
+      "afterSha256": "102c827f6c5923a9a75f00962ccd8c0d7a132aab3da18a03bab33a2f51fc198c",
+      "exclusive": false,
+      "scope": "Immediate physical original script+cwd+digest guards before capture and actual sync/controlled child acquisition"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

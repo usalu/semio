@@ -1,1 +1,12 @@
-{"values":["actor","🧑🏽‍💻\u0000é中\"\\"],"repeats":[1,8192],"copyBytes":4096,"capacityBytes":4096}
+{
+  "values": [
+    "actor",
+    "🧑🏽‍💻\u0000é中\"\\"
+  ],
+  "repeats": [
+    1,
+    8192
+  ],
+  "copyBytes": 0,
+  "capacityBytes": 4096
+}

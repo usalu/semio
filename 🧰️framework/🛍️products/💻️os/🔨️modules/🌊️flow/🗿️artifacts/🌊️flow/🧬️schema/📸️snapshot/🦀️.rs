@@ -156,6 +156,7 @@ pub struct FlowChannelRef {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CameraJson {
     pub x: f64,
     pub y: f64,

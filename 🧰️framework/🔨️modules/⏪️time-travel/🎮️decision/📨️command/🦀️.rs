@@ -9,7 +9,7 @@ pub struct TimeTravelCommandCustody {
     done:bool,
 }
 impl TimeTravelCommandCustody {
-    pub fn admission_copy_bytes()->usize{std::mem::size_of::<Option<TimeTravelEvent>>()+std::mem::size_of::<Self>()}
+    pub fn admission_copy_bytes()->usize{0}
     pub fn admit_original(original:&mut Option<TimeTravelEvent>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::admission_copy_bytes(){return Ok(None)}
         if original.is_none(){return Err(refusal("pending command original is absent"))}
@@ -20,7 +20,7 @@ impl TimeTravelCommandCustody {
     pub fn discard_admission_demand(&self,destination:&RetirementQueue)->Result<RetirementDemand,ValueError>{
         if !matches!(self.original,Some(TimeTravelEvent::Discard{..})){return Err(refusal("pending command has no Discard semantic authority"))}
         if !destination.has_reserved_slot(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"pending semantic frame requires an original reserved retirement slot"))}
-        Ok(RetirementDemand{copy_bytes:TimeTravelDiscardCursor::admission_copy_bytes()+std::mem::size_of::<Option<Box<TimeTravelDiscardCursor>>>(),capacity_bytes:std::mem::size_of::<TimeTravelDiscardCursor>(),depth:2,..Default::default()})
+        Ok(RetirementDemand{copy_bytes:TimeTravelDiscardCursor::admission_copy_bytes(),capacity_bytes:std::mem::size_of::<TimeTravelDiscardCursor>(),depth:2,..Default::default()})
     }
     /// 📦️ Transfers the same scalar event only after actual semantic-frame allocation is admitted.
     pub fn admit_discard(&mut self,destination:&RetirementQueue,grant:RetainedCloneGrant)->Result<Option<(Box<TimeTravelDiscardCursor>,RetainedCloneProgress)>,ValueError>{
@@ -29,7 +29,7 @@ impl TimeTravelCommandCustody {
         if grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes{return Ok(None)}
         let layout=std::alloc::Layout::new::<TimeTravelDiscardCursor>();
         let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<TimeTravelDiscardCursor>()) else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"pending semantic frame allocation failed"))};
-        let parent_copy=std::mem::size_of::<Option<Box<TimeTravelDiscardCursor>>>();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};
+        let parent_copy=0usize;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};
         let(owner,mut receipt)=TimeTravelDiscardCursor::admit_original(&mut self.original,child)?.expect("preflight retains the supported original command");
         assert!(receipt.fits(child));receipt.copied_bytes+=parent_copy;receipt.retained_capacity_bytes=layout.size();
         let owner=unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())};
@@ -38,7 +38,7 @@ impl TimeTravelCommandCustody {
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.done{return Ok(Default::default())}
         if let Some(owner)=self.retirement.as_ref().filter(|owner|!owner.terminal_is_empty()){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"pending event retirement depth overflow"))?})}
-        let copy_bytes=if self.original.is_some(){std::mem::size_of::<Option<TimeTravelEvent>>()+std::mem::size_of::<Option<ControlledRetirement<TimeTravelEvent>>>()}else if self.retirement.is_some(){std::mem::size_of::<Option<ControlledRetirement<TimeTravelEvent>>>()}else{std::mem::size_of::<bool>()};
+        let copy_bytes=0;
         Ok(RetirementDemand{copy_bytes,depth:1,..Default::default()})
     }
     /// ♻️ Cancellation retains every original owning event field through the declared native authority.

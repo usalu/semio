@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "e47611750e3a5146ffa41fd6367b6663e73f500f709813d4cb3fe8aa01e5920b",
+      "afterSha256": "ad3bc0349732d8c082709649bfc6d30fc583a88efd12b87a80041593c9314552",
+      "exclusive": false,
+      "scope": "Original behavioral Source tests require absent whole-test schema authority"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "693907e60aa3b8c5accadbf3dff324f4a8c29c93aed07c51d152323194b3cfda",
+      "afterSha256": "e110eab8457d0e162c09fb1fd56c099d63fb694bfe9dc21afe25cf8696cc34cd",
+      "exclusive": false,
+      "scope": "Original behavioral Source tests require absent whole-test schema authority"
+    }
+  ]
+}

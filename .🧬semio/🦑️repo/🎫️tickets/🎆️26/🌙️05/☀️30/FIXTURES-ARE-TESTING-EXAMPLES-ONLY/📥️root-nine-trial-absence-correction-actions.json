@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "89b0ca14c1686f86e6ac6dc8d760b34f83db08f26fed3e57ed9f8851df0d9c44",
+      "afterSha256": "660ff702c88f84b73fea7432b9d51847271dd2d68eb1a7cf838a138f368aef67",
+      "exclusive": false,
+      "scope": "Correct Root independent absence guard; genuine authored phase-policy/control assertions unchanged"
+    }
+  ]
+}

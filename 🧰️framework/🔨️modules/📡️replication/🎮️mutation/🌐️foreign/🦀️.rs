@@ -248,6 +248,79 @@ impl ErasedSnapshotRetirement for ForeignStepsOwner {
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
 }
 impl Drop for ForeignStepsOwner {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"foreign proposal sequence abandoned before paid close or transfer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.values);}}}}
+/// 🪜️ Keeps each indexed borrowed row and every paid partial field until transfer or cancellation.
+pub struct ForeignStepsPreparation {
+ index:usize,copy:Option<ForeignStepCopy>,copy_complete:bool,
+ pending:ManuallyDrop<Option<ForeignStep>>,retiring:Option<ForeignStepRetirement>,
+ values:ForeignStepsOwner,complete:bool,closing:bool,
+}
+impl ForeignStepsPreparation {
+ pub fn empty()->Self{Self{index:0,copy:None,copy_complete:false,pending:ManuallyDrop::new(None),retiring:None,values:ForeignStepsOwner::empty(),complete:false,closing:false}}
+ /// 🔀️ Begins the next original forward only after its entire indexed source has settled.
+ pub fn begin_next_source(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+  if self.closing||!self.complete||self.copy.is_some()||self.pending.is_some()||self.retiring.is_some(){return Err(refusal(ValueRefusalKind::InvariantViolated));}
+  let copied_bytes=std::mem::size_of::<usize>()+std::mem::size_of::<bool>();
+  if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes{return Ok(None);}
+  self.index=0;self.complete=false;
+  Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))
+ }
+ pub fn source_index(&self)->usize{self.index}
+ pub fn is_complete(&self)->bool{self.complete&&!self.closing}
+ pub fn len(&self)->usize{self.values.len()}
+ fn child_grant(grant:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{let maximum_depth=grant.maximum_depth.checked_sub(1).ok_or_else(||refusal(ValueRefusalKind::DepthLimit))?;Ok(RetainedCloneGrant{maximum_depth,..grant})}
+ pub fn preparation_demands(&self,source:Option<ForeignStepSource<'_>>)->Result<semio_framework_value::RetirementDemand,ValueError>{
+  use semio_framework_value::RetirementDemand;
+  if self.closing{return Err(refusal(ValueRefusalKind::InvariantViolated));}
+  if self.complete{return Ok(Default::default());}
+  if let Some(copy)=&self.copy{if self.copy_complete{return Ok(RetirementDemand{depth:2,..Default::default()});}let source=source.ok_or_else(||refusal(ValueRefusalKind::InvariantViolated))?;return Ok(RetirementDemand{copy_bytes:copy.next_copy_byte_demand(source)?,capacity_bytes:copy.next_capacity_byte_demand(source)?,depth:2,..Default::default()});}
+  if self.pending.is_some(){let mut d=self.values.append_demands()?;d.depth=d.depth.checked_add(1).ok_or_else(||refusal(ValueRefusalKind::DepthLimit))?;return Ok(d);}
+  Ok(RetirementDemand{depth:if source.is_some(){2}else{1},..Default::default()})
+ }
+ /// ⏭️ Performs one actual field, row admission or sequence-boundary turn under unchanged caller currencies.
+ pub fn advance_source(&mut self,source:Option<ForeignStepSource<'_>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  if self.closing{return Err(refusal(ValueRefusalKind::InvariantViolated));}
+  if self.complete{return Ok(RetainedCloneStep::Complete(Default::default()));}
+  let demand=self.preparation_demands(source)?;
+  if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
+  let child_grant=Self::child_grant(grant)?;
+  if let Some(copy)=self.copy.as_mut(){
+   if self.copy_complete{
+    if self.pending.is_none()&&copy.owner.output.is_some(){let(value,p)=copy.take(child_grant).ok_or_else(||refusal(ValueRefusalKind::InvariantViolated))?;*self.pending=Some(value);copy.begin_close();return Ok(RetainedCloneStep::Progress(p));}
+    let step=copy.close_step(child_grant)?;let mut progress=step.progress();if copy.terminal_is_empty(){self.copy=None;self.copy_complete=false;progress.copied_items=progress.copied_items.max(1);}return Ok(RetainedCloneStep::Progress(progress));
+   }
+   let step=copy.advance(source.ok_or_else(||refusal(ValueRefusalKind::InvariantViolated))?,child_grant)?;self.copy_complete=matches!(step,RetainedCloneStep::Complete(_));return Ok(RetainedCloneStep::Progress(step.progress()));
+  }
+  if self.pending.is_some(){
+   let next=self.index.checked_add(1).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?;
+   let value=self.pending.take().ok_or_else(||refusal(ValueRefusalKind::InvariantViolated))?;
+   return match self.values.try_append(value,child_grant){Ok(p)=>{self.index=next;Ok(RetainedCloneStep::Progress(p))},Err((e,value))=>{*self.pending=Some(value);Err(e)}};
+  }
+  if let Some(source)=source{let(copy,p)=ForeignStepCopy::admit(source,child_grant).map_err(|(e,_)|e)?;self.copy=Some(copy);return Ok(RetainedCloneStep::Progress(p));}
+  self.complete=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
+ }
+ /// 📬️ Transfers only an entirely prepared original sequence without allocating or encoding.
+ pub fn take_prepared(&mut self,grant:RetainedCloneGrant)->Option<(Vec<ForeignStep>,RetainedCloneProgress)>{if !self.is_complete()||self.copy.is_some()||self.pending.is_some(){return None;}let child=Self::child_grant(grant).ok()?;self.values.take(child)}
+ pub fn begin_close(&mut self){self.closing=true;if let Some(copy)=self.copy.as_mut(){copy.cancel();}self.values.begin_close();}
+ pub fn terminal_is_empty(&self)->bool{self.copy.is_none()&&self.pending.is_none()&&self.retiring.is_none()&&self.values.terminal_is_empty()}
+ fn close_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+  if !self.closing||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+  let child_grant=Self::child_grant(grant)?;
+  if let Some(copy)=self.copy.as_mut(){let step=copy.close_step(child_grant)?;let mut progress=step.progress();if copy.terminal_is_empty(){self.copy=None;progress.copied_items=progress.copied_items.max(1);}return Ok(RetainedCloneStep::Progress(progress));}
+  if let Some(retiring)=self.retiring.as_mut(){let step=retiring.close_step(child_grant)?;if retiring.terminal_is_empty(){self.retiring=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if self.pending.is_some(){if !permits(child_grant,0,0){return Ok(RetainedCloneStep::Progress(Default::default()));}let value=self.pending.take().ok_or_else(||refusal(ValueRefusalKind::InvariantViolated))?;return match ForeignStepRetirement::admit(value,child_grant){Ok((owner,p))=>{self.retiring=Some(owner);Ok(RetainedCloneStep::Progress(p))},Err((e,value))=>{*self.pending=Some(value);Err(e)}};}
+  let step=self.values.close_step(child_grant)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+ }
+}
+impl ErasedSnapshotRetirement for ForeignStepsPreparation {
+ fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_one(g)}
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(v)=&self.copy{v.next_close_copy_byte_demand()}else if let Some(v)=&self.retiring{v.next_copy_byte_demand()}else{self.values.next_copy_byte_demand()}}
+ fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{if let Some(v)=&self.copy{v.next_close_capacity_byte_demand(b)}else if let Some(v)=&self.retiring{v.next_capacity_byte_demand(b)}else{self.values.next_capacity_byte_demand(b)}}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(v)=&self.copy{v.next_release_byte_demand()}else if let Some(v)=&self.retiring{v.next_release_byte_demand()}else if self.pending.is_some(){Ok(0)}else{self.values.next_release_byte_demand()}}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{let depth=if let Some(v)=&self.copy{v.next_depth_demand()?}else if let Some(v)=&self.retiring{v.next_depth_demand()?}else if self.pending.is_some(){1}else{self.values.next_depth_demand()?};depth.checked_add(usize::from(!self.terminal_is_empty())).ok_or_else(||refusal(ValueRefusalKind::DepthLimit))}
+ fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
+}
+impl Drop for ForeignStepsPreparation {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"indexed foreign preparation abandoned an original partial backing");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.pending);}}}}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

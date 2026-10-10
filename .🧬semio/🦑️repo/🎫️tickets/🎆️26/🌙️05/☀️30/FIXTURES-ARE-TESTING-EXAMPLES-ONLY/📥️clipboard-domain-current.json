@@ -1,0 +1,25 @@
+{
+  "ownership": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/📋️ingress.json",
+      "sha256": "96e8ee8c384deb2696e9fe8b57859e333796a405d9e1d23715763f957d6e379e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🟦️.ts",
+      "sha256": "b5fb33f86a3b7a6cb805076b2b07a0aac62d4bf25d15884c00860aad83a5392e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs",
+      "sha256": "ad77a9de201f74585dde43dd481d232445130c17fed080e09ef7e905acbdfc62"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🪟️window/🦀️.rs",
+      "sha256": "6ee763ae4824370d6da6e4ceada191c1d0e29e88a31f2d501767ba7b6aca8f0e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
+      "sha256": "a501a80299ca63a64a9e858e66a7365b6cff64a2fad1a55207af9fdf3642c90e"
+    }
+  ]
+}

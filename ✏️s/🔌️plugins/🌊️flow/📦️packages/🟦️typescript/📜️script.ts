@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌊️ `@semio-tech/flow-js` router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
@@ -181,6 +182,12 @@ class ActionCohortAuditScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("action-cohort-audit", ActionCohortAuditScript);
+class CommandRetirementTestScript extends BundleScript {
+  async run(): Promise<void> {
+    runCmd(process.execPath, ["test", resolve(this.repoRoot, "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
+  }
+}
 
-await runScriptMain(router, { defaultCommand: "test" });
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("action-cohort-audit", ActionCohortAuditScript).register("test-command-retirement", CommandRetirementTestScript);
+
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -2008,6 +2008,14 @@
         "command": "bun ./📜️script.ts schema-read-inventory",
         "forwardAllArgs": true
       }
+    },
+    "test-nx-native-child-issuance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test nx-native-child-issuance",
+        "forwardAllArgs": false
+      }
     }
   }
 }

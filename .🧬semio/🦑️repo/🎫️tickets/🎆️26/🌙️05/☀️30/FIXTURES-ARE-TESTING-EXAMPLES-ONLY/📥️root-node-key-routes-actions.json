@@ -1,0 +1,36 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "11654f64f88e3d9db39d29f1a7cff507b289814af9d8d83d4a42fbf60880fdc7",
+      "afterSha256": "eabb723410793ba28623f83ce9f60f36b4e39847e780aec45d7407e3e13e598e",
+      "exclusive": false,
+      "scope": "Actual paired NodeKey Source/full-native-camera commands use same original control; existing complete package test unchanged"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/📋️project.json",
+      "action": "created",
+      "beforeSha256": null,
+      "afterSha256": "1849d1a8f5aff2ff830945ecd97ce727ab9688ddf41bf834f344b84aa2372534",
+      "exclusive": false,
+      "scope": "Genuine current camera package owns both Source/native selections; native command executes complete actual camera package"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "action": "updated",
+      "beforeSha256": "cf6b7a9615bb959a8e27de2352e3e9f22a63d4c1b84e59f0348c4a0dd9a4aabc",
+      "afterSha256": "43d0523f83b9420ce54fe7ee5f48cafff90ddad8718cefbb29cf0f72b22c3d53",
+      "exclusive": false,
+      "scope": "Register paired camera Source/native commands in canonical live/seed GUI ordering; existing configurations retained"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "action": "updated",
+      "beforeSha256": "8e1f34cfb0410bbb757ec98fbbcb9679040123dfbf63a7669857965b410dc588",
+      "afterSha256": "ac322f770c06866fbda1f88a518c750624680c3cd05acdfe028a3ef424113095",
+      "exclusive": false,
+      "scope": "Register paired camera Source/native commands in canonical live/seed GUI ordering; existing configurations retained"
+    }
+  ]
+}

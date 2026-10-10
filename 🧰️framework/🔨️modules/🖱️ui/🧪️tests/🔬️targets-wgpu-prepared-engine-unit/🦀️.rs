@@ -68,7 +68,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
             draw.push_scene_pass(ScenePass3d { viewport: [0.0, 0.0, width as f32, height as f32], view_proj: Mat4::identity().to_cols_array_m(), draws: vec![surface.clone()], translucent_draws: vec![surface], material_draws: vec![SceneMaterialDraw3d { mesh_key: key.into(), mesh_version: drawn_version, first_index: 0, index_count: 0, instances: vec![instance], material: SceneMaterialKind3d::Standard, translucent: false }], ..Default::default() });
             let mut job = PreparedRenderJob::new(PreparedRenderInput::new(revision, generation, draw, None, 0.0), 1);
             let outcome = drive_preparation_until_terminal(&mut job);
-            assert!(matches!(outcome, StepOutcome::Complete(_)));
+            assert!(matches!(outcome, Some(semio_framework_job::JobOutcomeKind::Complete)));
             let mut packet = job.take_packet().unwrap();
             let mut paths = [0; 3];
             for index in 0..packet.command_pages().len() { match packet.command_pages().get(index).and_then(|command| command.draw_cursor()) { Some(DrawMeasureCursor::PassInstance { translucent: false, .. }) => paths[0] += 1, Some(DrawMeasureCursor::PassInstance { translucent: true, .. }) => paths[1] += 1, Some(DrawMeasureCursor::PassMaterialInstance { .. }) => paths[2] += 1, _ => {} } }
@@ -162,7 +162,7 @@ fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
     }
 
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
-    assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
+    assert!(matches!(drive_preparation_until_terminal(&mut job), Some(semio_framework_job::JobOutcomeKind::Complete)));
     let mut packet = job.take_packet().expect("accepted packet");
     let mut order = Vec::new();
     for index in 0..packet.command_pages().len() {
@@ -227,7 +227,7 @@ fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() 
     }
 
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
-    assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
+    assert!(matches!(drive_preparation_until_terminal(&mut job), Some(semio_framework_job::JobOutcomeKind::Complete)));
     let mut packet = job.take_packet().expect("accepted packet");
     let mut order = Vec::new();
     for index in 0..packet.command_pages().len() {
@@ -306,7 +306,7 @@ fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
         }
     }
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
-    assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
+    assert!(matches!(drive_preparation_until_terminal(&mut job), Some(semio_framework_job::JobOutcomeKind::Complete)));
     let mut packet = job.take_packet().expect("accepted packet");
     let mut order = Vec::new();
     for index in 0..packet.command_pages().len() {

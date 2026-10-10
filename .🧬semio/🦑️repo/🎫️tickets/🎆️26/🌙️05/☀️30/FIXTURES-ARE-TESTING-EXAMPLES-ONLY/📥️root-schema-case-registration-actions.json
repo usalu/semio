@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "3da1ded88981c3aefe08bdc2a233763c99fcde7709b3056daa0d01c41614ae26",
+      "afterSha256": "475300f7a4b3e3258bfcb6e75ffbe9e0744392ad3b1698430042ab85916ad683",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import { testLevelBudgetMs, resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
@@ -53,4 +54,4 @@ class AssetTransportTestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("test", TestScript).register("test-geometry", ThemeGeometryTestScript).register("test-asset-transport", AssetTransportTestScript).register("twin", TwinScript);
 
-await runScriptMain(router);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

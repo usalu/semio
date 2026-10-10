@@ -1,0 +1,159 @@
+{
+  "text": "源🌊",
+  "repeat": 257,
+  "utf8Bytes": 1799,
+  "cancelCuts": [
+    0,
+    3,
+    17
+  ],
+  "caller": {
+    "operation": 71,
+    "generation": 3,
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 3,
+      "maximumCapacityBytes": 5,
+      "maximumReleaseBytes": 7,
+      "maximumDepth": 11
+    }
+  },
+  "replies": [
+    {
+      "name": "pending",
+      "payload": null,
+      "progress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    {
+      "name": "working",
+      "payload": "{\"done\":false}",
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      }
+    },
+    {
+      "name": "complete",
+      "payload": "{\"done\":true}",
+      "progress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    }
+  ],
+  "expected": {
+    "sameOriginalRequest": true,
+    "sameCallerContext": true,
+    "pendingResponses": 0,
+    "noEmptyPayloadFallback": true,
+    "debitOnce": true,
+    "preserveRefusedPayload": true,
+    "paidOriginalFailure": true,
+    "boundedJobOriginalContext": true,
+    "singleByteFailureEncoding": true,
+    "factoryOriginalInput": true,
+    "factoryOriginalAdmission": true,
+    "factoryOriginalDemands": true,
+    "prebornKindRegistry": true,
+    "boundedKindLookup": true,
+    "compactKindDirectory": true
+  },
+  "failureCopyGrants": [
+    1,
+    3,
+    64
+  ],
+  "admissionCases": [
+    {
+      "checkpoint": false,
+      "frameBytes": 41,
+      "demand": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 41,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 1
+      }
+    },
+    {
+      "checkpoint": true,
+      "frameBytes": 41,
+      "demand": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 41,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 1
+      }
+    }
+  ],
+  "registryGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 1
+  },
+  "executionGrant": {
+    "maximumItems": 16,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 262144,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 128
+  },
+  "lookupCases": [
+    {
+      "input": "semio.artifact-infer",
+      "candidates": [
+        "semio.io-run",
+        "semio.artifact-infer",
+        "semio.artifact-infer-long"
+      ],
+      "matched": 1,
+      "copyGrants": [
+        0,
+        1,
+        3,
+        64
+      ]
+    },
+    {
+      "input": "semio.artifact-infer-long",
+      "candidates": [
+        "semio.artifact-infer",
+        "semio.artifact-infer-long"
+      ],
+      "matched": 1,
+      "copyGrants": [
+        0,
+        1,
+        3,
+        64
+      ]
+    },
+    {
+      "input": "未知🌊",
+      "candidates": [
+        "semio.artifact-infer",
+        "未知",
+        "未知🌊x"
+      ],
+      "matched": null,
+      "copyGrants": [
+        0,
+        1,
+        3,
+        64
+      ]
+    }
+  ]
+}

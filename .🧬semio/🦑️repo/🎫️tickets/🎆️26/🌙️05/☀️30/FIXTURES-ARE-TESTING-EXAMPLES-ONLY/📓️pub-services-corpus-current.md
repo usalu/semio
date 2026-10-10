@@ -1,0 +1,5 @@
+# Services Example Corpus Authority Retirement
+
+Fresh physical schema inspection found compute-retained's exclusive whole example wrapper: contract/callerGrant/laws/scope/metadataTurn/nativeIoDenials. Its sole reader compiled the complete fixture. The original registered Source law was RED50050 (Nx1/4.4s, five passes, one physical absence failure,38assertions). The schema was deleted and only the whole-fixture compilation retired. The actual Value grant and progress schemas now validate only real per-value grant/receipt instances; independent missing/negative axis refusals, original SQLite numeric receipt, borrowed outcome lifecycle, existing router/source authority and three original Rust grammar parses remain.
+
+Original Source27021 is terminal Nx0/931ms, six laws/40assertions. All original plain compute fields and bytes are unchanged. No Rust production/test bytes changed in this retirement; its two narrow actions are pub-services-corpus-actions. Active complete Kernel33131 observes earlier TS bytes, so any TS observer drift is qualified separately; its finite Rust cut remains held. No native or global fixture pass is inferred.

@@ -1,0 +1,25 @@
+{
+  "name": "semio-framework-os-renderer-camera",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera",
+  "projectType": "library",
+  "targets": {
+    "test-node-key-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts node-key source",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust",
+        "forwardAllArgs": false
+      }
+    },
+    "test-node-key-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts node-key native",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust",
+        "forwardAllArgs": false
+      }
+    }
+  }
+}

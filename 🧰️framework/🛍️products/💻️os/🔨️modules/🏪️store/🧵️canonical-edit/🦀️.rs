@@ -39,28 +39,28 @@ const CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES: u64 = b"semio.artifact.cursor.v2".l
 #[derive(Debug, PartialEq, Eq)]
 pub struct ArtifactCanonicalJsonEncodeError {
     pub written_bytes: usize,
-    pub reason: String,
+    pub reason: ValueError,
 }
 
 /// 🧭️ Exact serde field order over an immutable typed owner. Each lookup must perform bounded
 /// indexed access; scanning, serialization, cloning, and collection inside these methods are forbidden.
 pub trait ArtifactCanonicalJson: Sync {
-    fn canonical_json_node(&self, _path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, _path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
         Err(invalid_path())
     }
-    fn canonical_json_key(&self, _object_path: &[usize], _index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
+    fn canonical_json_key(&self, _object_path: &[usize], _index: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
         Err(invalid_path())
     }
-    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, ValueError> {
         Ok(None)
     }
 }
 
-fn invalid_path() -> String {
-    "canonical-edit.invalid-typed-path".into()
+fn invalid_path() -> ValueError {
+    ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"canonical-edit.invalid-typed-path")
 }
 
-fn field_at(fields: &[(&'static str, bool)], index: usize) -> Result<(usize, &'static str), String> {
+fn field_at(fields: &[(&'static str, bool)], index: usize) -> Result<(usize, &'static str), ValueError> {
     fields.iter().enumerate().filter(|(_, (_, present))| *present).nth(index).map(|(ordinal, (name, _))| (ordinal, *name)).ok_or_else(invalid_path)
 }
 
@@ -130,7 +130,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         fields
     }
 
-    fn child(&self, index: usize) -> Result<Self, String> {
+    fn child(&self, index: usize) -> Result<Self, ValueError> {
         use ArtifactCanonicalJsonNode as N;
         Ok(match self {
             Self::Edit(edit) => match field_at(&self.fields(), index)?.0 {
@@ -201,7 +201,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         })
     }
 
-    fn node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'a>, String> {
+    fn node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'a>, ValueError> {
         if let Self::Mutation(value) = self {
             return value.canonical_json_node(path);
         }
@@ -219,7 +219,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         })
     }
 
-    fn key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'a>, String> {
+    fn key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'a>, ValueError> {
         if let Self::Mutation(value) = self {
             return value.canonical_json_key(path, index);
         }
@@ -229,37 +229,15 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         field_at(&self.fields(), index).map(|(_, name)| name.into())
     }
 
-    fn borrowed_value(self) -> ArtifactCanonicalJsonValue<'a> {
-        use ArtifactCanonicalJsonValue as V;
-        match self {
-            Self::Mutation(value) => V::Source(value),
-            Self::Mutations(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| V::Source(value)))),
-            Self::PagedMutations(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| V::Source(value)))),
-            Self::Metas(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| Self::Meta(value).borrowed_value()))),
-            Self::Dependencies(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| V::Scalar(ArtifactCanonicalJsonNode::String(&value.0))))),
-            Self::Hash(values) => V::Array(ArtifactCanonicalJsonArray::new(values.iter().map(|value| V::Scalar(ArtifactCanonicalJsonNode::U64(u64::from(*value)))))),
-            Self::Scalar(value) => V::Scalar(value),
-            node => {
-                let length = node.fields().iter().filter(|(_, present)| *present).count();
-                V::Object(ArtifactCanonicalJsonObject::new((0..length).map(move |index| {
-                    let key = field_at(&node.fields(), index).expect("fixed canonical metadata field").1;
-                    let value = node.child(index).expect("fixed canonical metadata child").borrowed_value();
-                    (key, value)
-                })))
-            }
-        }
-    }
+
 }
 
 impl<M: ArtifactCanonicalJson> ArtifactCanonicalJson for Edit<M> {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
         CanonicalEditNode::Edit(self).node(path)
     }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
         CanonicalEditNode::Edit(self).key(path, index)
-    }
-    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
-        Ok(Some(CanonicalEditNode::Edit(self).borrowed_value()))
     }
 }
 //#endregion 🧬️TypedCanonicalSource
@@ -306,167 +284,107 @@ impl Default for ArtifactCanonicalJsonCursor {
 }
 
 impl ArtifactCanonicalJsonCursor {
-    fn push(&mut self, index: usize) -> Result<(), String> {
-        if self.depth >= self.maximum_depth {
-            return Err("canonical-edit.depth-limit".into());
+    pub fn next_encode_demand(&self) -> RetirementDemand {
+        if self.is_complete() { return RetirementDemand::default(); }
+        let frame = self.frames[self.depth - 1];
+        let pushing = matches!((frame.kind, frame.phase), (2, 1) if frame.index != frame.length) || matches!((frame.kind, frame.phase), (3, 5));
+        let copy_bytes = match (frame.kind, frame.phase) {
+            (0, _) => 64,
+            (1, 1) | (3, 2) => 7,
+            _ => 1,
+        };
+        RetirementDemand { copy_bytes, depth: self.depth + usize::from(pushing), ..Default::default() }
+    }
+
+    pub fn next_encode_output_bound(&self) -> usize {
+        if self.is_complete() { return 0; }
+        let frame = self.frames[self.depth - 1];
+        usize::from(match (frame.kind, frame.phase) {
+            (0, _) | (3, 5) => false,
+            (2, 1) => frame.index == frame.length,
+            (4, _) => frame.offset < self.scalar.length,
+            _ => true,
+        })
+    }
+
+    pub fn encode_chunk_admitted(&mut self, source: &(impl ArtifactCanonicalJson + ?Sized), output: &mut [u8], grant: RetainedCloneGrant) -> Result<ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonEncodeError> {
+        if self.is_complete() { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Complete(Default::default()), written_bytes: 0 }); }
+        let demand = self.next_encode_demand();
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || output.is_empty() { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
+        if demand.depth > grant.maximum_depth || demand.depth > self.maximum_depth {
+            return Err(ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical-edit.depth-limit") });
         }
-        self.path[self.depth - 1] = index;
-        self.frames[self.depth] = JsonFrame::default();
-        self.depth += 1;
-        Ok(())
-    }
-
-    fn escaped_byte(&mut self, text: ArtifactCanonicalJsonText<'_>, frame: usize) -> Result<Option<u8>, String> {
-        if self.escape_offset < self.escape_length {
-            let byte = self.escape[self.escape_offset];
-            self.escape_offset += 1;
-            return Ok(Some(byte));
-        }
-        let state = &mut self.frames[frame];
-        let Some(byte) = text.next_byte(&mut state.chunk, &mut state.offset).map_err(str::to_owned)? else { return Ok(None); };
-        self.escape_offset = 0;
-        self.escape_length = canonical_escape(byte, &mut self.escape);
-        self.escape_offset = 1;
-        Ok(Some(self.escape[0]))
-    }
-
-    fn scalar_node(&mut self, node: ArtifactCanonicalJsonNode<'_>) -> Result<(), String> {
-        self.scalar = ScalarBytes::from_node(node)?;
-        Ok(())
-    }
-
-    fn next_byte(&mut self, source: &(impl ArtifactCanonicalJson + ?Sized)) -> Result<Option<u8>, String> {
-        loop {
-            if self.depth == 0 {
-                return Ok(None);
-            }
-            let top = self.depth - 1;
-            let frame = self.frames[top];
-            if frame.kind == 0 {
+        let top = self.depth - 1;
+        let kind = self.frames[top].kind;
+        let phase = self.frames[top].phase;
+        let mut copied = 0;
+        let result = (|| -> Result<Option<u8>, ValueError> {
+            if kind == 0 {
                 let node = source.canonical_json_node(&self.path[..top])?;
-                self.frames[top].kind = match node {
+                let tag = match node {
                     ArtifactCanonicalJsonNode::String(_) | ArtifactCanonicalJsonNode::Text(_) => 1,
-                    ArtifactCanonicalJsonNode::Array(length) => {
-                        self.frames[top].length = length;
-                        2
-                    }
-                    ArtifactCanonicalJsonNode::Object(length) => {
-                        self.frames[top].length = length;
-                        3
-                    }
+                    ArtifactCanonicalJsonNode::Array(length) => { self.frames[top].length = length; 2 }
+                    ArtifactCanonicalJsonNode::Object(length) => { self.frames[top].length = length; 3 }
                     value => {
-                        self.scalar_node(value)?;
+                        copied += self.scalar.write_node(value)?.copied_bytes;
                         4
                     }
                 };
-                continue;
+                self.frames[top].kind = tag;
+                return Ok(None);
             }
-            match (frame.kind, frame.phase) {
-                (1, 0) => {
-                    self.frames[top].phase = 1;
-                    return Ok(Some(b'"'));
-                }
-                (1, 1) => {
-                    let text = match source.canonical_json_node(&self.path[..top])? {
-                        ArtifactCanonicalJsonNode::String(text) => text.into(),
-                        ArtifactCanonicalJsonNode::Text(text) => text,
-                        _ => return Err("canonical-edit.source-shape-changed".into()),
-                    };
-                    if let Some(byte) = self.escaped_byte(text, top)? {
-                        return Ok(Some(byte));
+            match (kind, phase) {
+                (1, 0) => { self.frames[top].phase = 1; Ok(Some(b'"')) }
+                (1, 1) | (3, 2) => {
+                    if self.escape_offset < self.escape_length {
+                        let byte = self.escape[self.escape_offset]; self.escape_offset += 1; return Ok(Some(byte));
                     }
-                    self.frames[top].phase = 2;
-                }
-                (1, 2) => {
-                    self.depth -= 1;
-                    return Ok(Some(b'"'));
-                }
-                (2, 0) => {
-                    self.frames[top].phase = 1;
-                    return Ok(Some(b'['));
-                }
-                (2, 1) if frame.index == frame.length => {
-                    self.depth -= 1;
-                    return Ok(Some(b']'));
-                }
-                (2, 1) => {
-                    self.frames[top].phase = 2;
-                    self.push(frame.index)?;
-                }
-                (2, 2) => {
-                    self.frames[top].index += 1;
-                    self.frames[top].phase = 1;
-                    if self.frames[top].index < frame.length {
-                        return Ok(Some(b','));
+                    let text = if kind == 1 {
+                        match source.canonical_json_node(&self.path[..top])? {
+                            ArtifactCanonicalJsonNode::String(text) => text.into(),
+                            ArtifactCanonicalJsonNode::Text(text) => text,
+                            _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.source-shape-changed")),
+                        }
+                    } else { source.canonical_json_key(&self.path[..top], self.frames[top].index)? };
+                    let state = &mut self.frames[top];
+                    let byte = text.next_byte(&mut state.chunk, &mut state.offset).map_err(|reason| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, reason));
+                    match byte? {
+                        Some(byte) => { self.escape_length = canonical_escape(byte, &mut self.escape); self.escape_offset = 1; copied += self.escape_length; Ok(Some(self.escape[0])) }
+                        None => { state.phase = if kind == 1 { 2 } else { 3 }; Ok(None) }
                     }
                 }
-                (3, 0) => {
-                    self.frames[top].phase = 1;
-                    return Ok(Some(b'{'));
+                (1, 2) => { self.depth -= 1; Ok(Some(b'"')) }
+                (2, 0) => { self.frames[top].phase = 1; Ok(Some(b'[')) }
+                (2, 1) if self.frames[top].index == self.frames[top].length => { self.depth -= 1; Ok(Some(b']')) }
+                (2, 1) | (3, 5) => {
+                    self.path[top] = self.frames[top].index; self.frames[self.depth] = JsonFrame::default(); self.depth += 1; self.frames[top].phase = if kind == 2 { 2 } else { 6 };
+ Ok(None)
                 }
-                (3, 1) if frame.index == frame.length => {
-                    self.depth -= 1;
-                    return Ok(Some(b'}'));
+                (2, 2) | (3, 6) => {
+                    self.frames[top].index += 1; self.frames[top].phase = 1; 
+                    Ok((self.frames[top].index < self.frames[top].length).then_some(b','))
                 }
-                (3, 1) => {
-                    self.frames[top].phase = 2;
-                    self.frames[top].offset = 0;
-                    self.frames[top].chunk = 0;
-                    return Ok(Some(b'"'));
-                }
-                (3, 2) => {
-                    let text = source.canonical_json_key(&self.path[..top], frame.index)?;
-                    if let Some(byte) = self.escaped_byte(text, top)? {
-                        return Ok(Some(byte));
-                    }
-                    self.frames[top].phase = 3;
-                }
-                (3, 3) => {
-                    self.frames[top].phase = 4;
-                    return Ok(Some(b'"'));
-                }
-                (3, 4) => {
-                    self.frames[top].phase = 5;
-                    return Ok(Some(b':'));
-                }
-                (3, 5) => {
-                    self.frames[top].phase = 6;
-                    self.push(frame.index)?;
-                }
-                (3, 6) => {
-                    self.frames[top].index += 1;
-                    self.frames[top].phase = 1;
-                    if self.frames[top].index < frame.length {
-                        return Ok(Some(b','));
-                    }
-                }
-                (4, _) => {
-                    if frame.offset == self.scalar.length {
-                        self.depth -= 1;
-                        continue;
-                    }
-                    let byte = self.scalar.bytes[frame.offset];
-                    self.frames[top].offset += 1;
-                    return Ok(Some(byte));
-                }
-                _ => return Err("canonical-edit.encoder-state".into()),
+                (3, 0) => { self.frames[top].phase = 1; Ok(Some(b'{')) }
+                (3, 1) if self.frames[top].index == self.frames[top].length => { self.depth -= 1; Ok(Some(b'}')) }
+                (3, 1) => { self.frames[top].phase = 2; self.frames[top].offset = 0; self.frames[top].chunk = 0; copied += 1 + 2 * std::mem::size_of::<usize>(); Ok(Some(b'"')) }
+                (3, 3) => { self.frames[top].phase = 4; Ok(Some(b'"')) }
+                (3, 4) => { self.frames[top].phase = 5; Ok(Some(b':')) }
+                (4, _) if self.frames[top].offset == self.scalar.length => { self.depth -= 1; Ok(None) }
+                (4, _) => { let byte = self.scalar.bytes[self.frames[top].offset]; self.frames[top].offset += 1; Ok(Some(byte)) }
+                _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.encoder-state")),
             }
-        }
+        })();
+        let byte = result.map_err(|error| {
+            let original = error.retained_progress();
+            let progress = RetainedCloneProgress { copied_items: original.copied_items.max(usize::from(copied != 0)), copied_bytes: original.copied_bytes.checked_add(copied).expect("bounded canonical event copy receipt is representable"), ..original };
+            ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: error.with_retained_progress(progress) }
+        })?;
+        if let Some(byte) = byte { output[0] = byte; copied += 1; }
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copied, ..Default::default() };
+        Ok(ArtifactCanonicalJsonTreeStep { ownership: if self.is_complete() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }, written_bytes: usize::from(byte.is_some()) })
     }
 
-    pub fn encode_chunk(&mut self, source: &(impl ArtifactCanonicalJson + ?Sized), output: &mut [u8]) -> Result<usize, ArtifactCanonicalJsonEncodeError> {
-        let mut written = 0;
-        while written < output.len().min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES) {
-            let Some(byte) = self.next_byte(source).map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: written, reason })? else { break };
-            output[written] = byte;
-            written += 1;
-        }
-        Ok(written)
-    }
-
-    pub fn is_complete(&self) -> bool {
-        self.depth == 0
-    }
+    pub fn is_complete(&self) -> bool { self.depth == 0 }
 }
 //#endregion 🔣️ByteEncoder
 
@@ -756,36 +674,44 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
     }
     /// 🧾️ Returns every actual currency from the preceding canonical preparation turn.
     pub fn ownership_progress(&self)->RetainedCloneProgress{self.ownership}
-    pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         self.ownership=Default::default();self.last_length=0;self.last_canonical=false;
         if !grant.permits_one()||self.cancelled||self.closing{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-        if self.replay.is_some(){return Err("canonical-edit.native-checkpoint-unsupported".into());}
+        if self.replay.is_some(){self.cancelled=true;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.native-checkpoint-unsupported"));}
         if self.prepared.is_some(){return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),self.ownership));}
-        let demand=self.preparation_demands().map_err(ValueError::into_message)?;
+        let demand=match self.preparation_demands(){Ok(demand)=>demand,Err(error)=>{self.cancelled=true;self.ownership=error.retained_progress();return Err(error)}};
         if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         let retained=grant.retained_grant();
-        let progress=if let Some(owner)=self.native.as_mut(){
-            if owner.terminal_is_empty(){self.native=None;self.phase=5;RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}
-            else{
+        let result=(||->Result<RetainedCloneProgress,ValueError>{
+            if let Some(owner)=self.native.as_mut(){
+                if owner.terminal_is_empty(){self.native=None;self.phase=5;return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()});}
                 let child=RetainedCloneGrant{maximum_items:1,maximum_depth:retained.maximum_depth-1,..retained};
-                if owner.ready(){let(edit,identities,digest,receipt)=owner.take(child).map_err(ValueError::into_message)?.ok_or_else(||"canonical-edit.original-return-refused".to_string())?;self.edit=Some(edit);self.native_identities=Some(identities);self.prepared_digest=Some(digest);receipt}
-                else{owner.advance(child).map_err(ValueError::into_message)?.progress()}
+                if owner.ready(){
+                    let(edit,identities,digest,receipt)=owner.take(child)?.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.original-return-refused"))?;
+                    self.edit=Some(edit);self.native_identities=Some(identities);self.prepared_digest=Some(digest);return Ok(receipt);
+                }
+                return Ok(owner.advance(child)?.progress());
             }
-        }else{
-            let authority=self.authority.as_ref().ok_or_else(||"canonical-edit.authority-missing".to_string())?;
-            let edit=self.edit.take().ok_or_else(||"canonical-edit.original-edit-missing".to_string())?;
-            let post=self.post.take().ok_or_else(||"canonical-edit.original-post-missing".to_string())?;
-            let identities=self.native_identities.take().ok_or_else(||"canonical-edit.original-identities-missing".to_string())?;
-            let digest=self.prepared_digest.take().ok_or_else(||"canonical-edit.original-digest-missing".to_string())?;
+            if self.authority.is_none()||self.edit.is_none()||self.post.is_none()||self.native_identities.is_none()||self.prepared_digest.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.original-prepared-owners-missing"));}
+            let authority=self.authority.as_ref().expect("validated original publication authority");
+            let edit=self.edit.take().expect("validated original edit");
+            let post=self.post.take().expect("validated original post");
+            let identities=self.native_identities.take().expect("validated original identities");
+            let digest=self.prepared_digest.take().expect("validated original digest");
             self.prepared=Some(authority.seal_prepared_owned(edit,post,digest,identities));self.phase=6;
-            RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}
-        };
-        if !progress.fits(retained){return Err("canonical-edit.original-child-receipt-exceeds-grant".into());}
-        self.ownership=progress;if progress==RetainedCloneProgress::default(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-        let bytes=progress.copied_bytes.checked_add(progress.retained_capacity_bytes).and_then(|bytes|bytes.checked_add(progress.released_bytes)).and_then(|bytes|u64::try_from(bytes).ok()).ok_or_else(||"canonical-edit.work-overflow".to_string())?;
-        self.completed_bytes=self.completed_bytes.checked_add(bytes).ok_or_else(||"canonical-edit.work-overflow".to_string())?;
-        self.turns=self.turns.checked_add(1).ok_or_else(||"canonical-edit.turn-overflow".to_string())?;
-        Ok(if self.prepared.is_some(){ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),self.ownership)}else if progress==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(self.progress(),progress)})
+            Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})
+        })();
+        let (progress,error)=match result{Ok(progress)=>(progress,None),Err(error)=>(error.retained_progress(),Some(error))};
+        self.ownership=progress;
+        if error.is_some()||!progress.fits(retained){self.cancelled=true;}
+        let bytes=progress.copied_bytes.checked_add(progress.retained_capacity_bytes).and_then(|bytes|bytes.checked_add(progress.released_bytes)).and_then(|bytes|u64::try_from(bytes).ok());
+        if progress!=RetainedCloneProgress::default(){
+            let Some((completed,turns))=bytes.and_then(|bytes|self.completed_bytes.checked_add(bytes)).zip(self.turns.checked_add(1))else{self.cancelled=true;return Err(error.unwrap_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"canonical-edit.work-overflow").with_retained_progress(progress)));};
+            self.completed_bytes=completed;self.turns=turns;
+        }
+        if let Some(error)=error{return Err(error);}
+        if !progress.fits(retained){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"canonical-edit.original-child-receipt-exceeds-grant").with_retained_progress(progress));}
+        Ok(if self.prepared.is_some(){ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),progress)}else if progress==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(self.progress(),progress)})
     }
 }
 

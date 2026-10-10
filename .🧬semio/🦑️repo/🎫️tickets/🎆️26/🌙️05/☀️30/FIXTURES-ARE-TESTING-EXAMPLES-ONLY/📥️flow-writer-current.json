@@ -1,0 +1,21 @@
+{
+  "ownership": false,
+  "observations": [
+    {
+      "path": "📜️script.ts",
+      "sha256": "7c237a1b859e2d2068aec728b8a9e9be0ff48080d093e4ab4385fcbe8d69127b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "7c2ae2dec12a403de4adacb24aa13d7b49c9557aa0261f555191c478be588b04"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+      "sha256": "8806b614238c9f0ccd1e3cac7879554d90f01afba2213b103e250423fd9f5f31"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+      "sha256": "97d3a7dfa9a44f0b74f553480b032eb19bb7143839efa0bda77783906844060f"
+    }
+  ]
+}

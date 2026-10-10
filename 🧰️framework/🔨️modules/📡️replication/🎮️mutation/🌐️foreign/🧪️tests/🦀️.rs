@@ -58,3 +58,51 @@ fn original_foreign_collection_keeps_each_refused_row_and_real_backing_receipt()
  }
  eprintln!("[DEBUG] original foreign sequence2 fixed five-axis policy, denied original row identity, paid real contiguous transfers and every prefix System release conserved");
 }
+
+#[test]
+fn original_indexed_foreign_preparation_retains_every_cancelled_partial_and_sequence_receipt(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&serde_json::json!({"grant":law["collectionGrant"]}));
+ let originals:Vec<_>=law["cases"].as_array().unwrap().iter().map(original).collect();let identities:Vec<_>=originals.iter().map(|v|ForeignStepSource::borrowed(v).identity()).collect();
+ for cut in 0..120{
+  let(mut cursor,born,freed)=observe(ForeignStepsPreparation::empty);assert_eq!((born,freed),(0,0));let mut live=0;
+  for _ in 0..cut{
+   let source=originals.get(cursor.source_index()).map(ForeignStepSource::borrowed);
+   let(step,born,freed)=observe(||cursor.advance_source(source,RetainedCloneGrant::default()).unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());
+   let(step,born,freed)=observe(||cursor.advance_source(source,grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!(born,p.retained_capacity_bytes);assert_eq!(freed,p.released_bytes);live+=born;live-=freed;if matches!(step,RetainedCloneStep::Complete(_)){break;}
+  }
+  for(index,value)in originals.iter().enumerate(){assert_eq!(ForeignStepSource::borrowed(value).identity(),identities[index]);}
+  cursor.begin_close();assert!(cursor.take_prepared(grant).is_none());let mut released=0;
+  for _ in 0..64{if cursor.terminal_is_empty(){break;}let release=cursor.next_release_byte_demand().unwrap();if release>0{let(step,born,freed)=observe(||cursor.close_step(RetainedCloneGrant{maximum_release_bytes:release-1,..grant}).unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());}let(step,born,freed)=observe(||cursor.close_step(grant).unwrap());assert_eq!(born,0);assert!(step.progress().fits(grant));assert_eq!(freed,step.progress().released_bytes);released+=freed;}
+  assert!(cursor.terminal_is_empty());assert_eq!(released,live);let(_,born,freed)=observe(||drop(cursor));assert_eq!((born,freed),(0,0));
+ }
+ let mut cursor=ForeignStepsPreparation::empty();let mut live=0;
+ for _ in 0..160{let source=originals.get(cursor.source_index()).map(ForeignStepSource::borrowed);let(step,born,freed)=observe(||cursor.advance_source(source,grant).unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(freed,step.progress().released_bytes);live+=born;live-=freed;if matches!(step,RetainedCloneStep::Complete(_)){break;}}
+ assert!(cursor.is_complete());let((rows,p),born,freed)=observe(||cursor.take_prepared(grant).unwrap());assert_eq!((born,freed),(0,0));assert!(p.fits(grant));assert_eq!(rows,originals);let mut owner=ForeignStepsOwner{values:ManuallyDrop::new(rows),child:None,closing:false};owner.begin_close();let mut released=0;for _ in 0..64{if owner.terminal_is_empty(){break;}let(step,born,freed)=observe(||owner.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);released+=freed;}assert!(owner.terminal_is_empty());assert_eq!(released,live);
+ eprintln!("[DEBUG] original indexed foreign sequence2 immutable grant, independent Serde values,120 cancel cuts, original source identity and actual System birth/release conserved");
+}
+
+#[test]
+fn original_foreign_source_boundaries_preserve_paid_rows_and_every_cancel_cut(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant=policy(&serde_json::json!({"grant":law["collectionGrant"]}));
+ let batches:Vec<Vec<ForeignStep>>=law["sourceBatches"].as_array().unwrap().iter().map(|batch|batch["rows"].as_array().unwrap().iter().map(|id|original(law["cases"].as_array().unwrap().iter().find(|row|row["id"]==*id).unwrap())).collect()).collect();
+ let expected:Vec<ForeignStep>=batches.iter().flat_map(|batch|batch.iter().cloned()).collect();
+ let identities:Vec<Vec<_>>=batches.iter().map(|batch|batch.iter().map(|row|ForeignStepSource::borrowed(row).identity()).collect()).collect();
+ for cut in 0..180{
+  let(mut cursor,born,freed)=observe(ForeignStepsPreparation::empty);assert_eq!((born,freed),(0,0));let mut live=0;let mut source=0;
+  for _ in 0..cut{
+   if cursor.is_complete(){
+    if source+1==batches.len(){break;}
+    let index=cursor.source_index();let length=cursor.len();
+    for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,born,freed)=observe(||cursor.begin_next_source(denied).unwrap());assert!(result.is_none());assert_eq!((born,freed),(0,0));assert!(cursor.is_complete());assert_eq!(cursor.source_index(),index);assert_eq!(cursor.len(),length);}
+    let(progress,born,freed)=observe(||cursor.begin_next_source(grant).unwrap().unwrap());assert_eq!((born,freed),(0,0));assert!(progress.fits(grant));assert_eq!(progress.copied_bytes,std::mem::size_of::<usize>()+std::mem::size_of::<bool>());assert_eq!(cursor.source_index(),0);assert_eq!(cursor.len(),length);source+=1;
+   }else{
+    let original=batches[source].get(cursor.source_index()).map(ForeignStepSource::borrowed);
+    let(step,born,freed)=observe(||cursor.advance_source(original,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(born,progress.retained_capacity_bytes);assert_eq!(freed,progress.released_bytes);live+=born;live-=freed;
+   }
+  }
+  for (batch,originals)in batches.iter().enumerate(){for(index,row)in originals.iter().enumerate(){assert_eq!(ForeignStepSource::borrowed(row).identity(),identities[batch][index]);}}
+  if source+1==batches.len()&&cursor.is_complete(){let((rows,p),born,freed)=observe(||cursor.take_prepared(grant).unwrap());assert_eq!((born,freed),(0,0));assert!(p.fits(grant));assert_eq!(rows,expected);let mut rows=ForeignStepsOwner{values:ManuallyDrop::new(rows),child:None,closing:false};rows.begin_close();for _ in 0..80{if rows.terminal_is_empty(){break;}let(step,born,freed)=observe(||rows.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);live-=freed;}assert!(rows.terminal_is_empty());}
+  cursor.begin_close();for _ in 0..80{if cursor.terminal_is_empty(){break;}let(step,born,freed)=observe(||cursor.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);live-=freed;}assert!(cursor.terminal_is_empty());assert_eq!(live,0);let(_,born,freed)=observe(||drop(cursor));assert_eq!((born,freed),(0,0));
+ }
+ eprintln!("[DEBUG] original foreign3 source boundaries immutable caller policy, empty forward and order preserved,180 cancellation cuts and exact original System backings conserved");
+}

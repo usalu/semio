@@ -1,0 +1,70 @@
+{
+  "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+  "beforeSha": "c943ca9741c6c9f25b3ac72860d2f5a2445e3a9dbc9e5d0c542eeb18b6971fb7",
+  "afterSha": "6f4296000c73fa4d20b0526c180783f710d97defea201bfc940f8560eaeb059a",
+  "beforeOneOf": [
+    {
+      "properties": {
+        "policy": {
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "const": 0
+            }
+          }
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "properties": {
+        "policy": {
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "minimum": 1
+            }
+          }
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "integer"
+        }
+      }
+    }
+  ],
+  "afterOneOf": [
+    {
+      "properties": {
+        "policy": {
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "const": 0,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "properties": {
+        "policy": {
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "integer"
+        }
+      }
+    }
+  ],
+  "trueRed": "32960 independent Ajv strictTypes missing nested object at oneOf policy; semantic axes unchanged"
+}

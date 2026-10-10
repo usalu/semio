@@ -69,3 +69,32 @@ fn graph_parameter_intent_retirement_preserves_exact_bytes_and_worker_transfer()
     let owner = SetGraphParameter { widget_id: "guard".into(), value: 1.0, surface_id: None }.into_retirement();
     assert!(std::panic::catch_unwind(|| drop(owner)).is_err());
 }
+
+#[test]
+fn original_graph_intent_indexed_json_retains_exact_strings_and_system_receipts() {
+    use crate::os_store::ArtifactCanonicalJsonCursor;
+    use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let row = &fixture["canonicalPolicy"];
+    let grant = RetainedCloneGrant { maximum_items: row["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: row["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: row["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: row["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: row["maximumDepth"].as_u64().unwrap() as usize };
+    for row in fixture["cases"].as_array().unwrap() {
+        let source: SetGraphParameter = serde_json::from_value(row.clone()).unwrap();
+        let original = source.widget_id.as_ptr();
+        let expected = serde_json::to_vec(&source).unwrap();
+        let mut bytes = Vec::with_capacity(expected.len());
+        let mut encoder = ArtifactCanonicalJsonCursor::default();
+        for _ in 0..expected.len() * 4 + 64 {
+            let mut output = [0xa5; 8];
+            let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| encoder.encode_chunk_admitted(&source, &mut output, RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
+            assert_eq!(denied.ownership.progress(), RetainedCloneProgress::default()); assert_eq!(denied.written_bytes, 0); assert_eq!(output, [0xa5; 8]); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| encoder.encode_chunk_admitted(&source, &mut output, grant).unwrap());
+            let progress = step.ownership.progress();
+            assert!(progress.copied_items <= grant.maximum_items && progress.copied_bytes <= grant.maximum_copy_bytes);
+            assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (0, 0)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            assert!(output[step.written_bytes..].iter().all(|byte| *byte == 0xa5)); bytes.extend_from_slice(&output[..step.written_bytes]);
+            if encoder.is_complete() { break; }
+        }
+        assert!(encoder.is_complete()); assert_eq!(bytes, expected); assert_eq!(source.widget_id.as_ptr(), original);
+        println!("[DEBUG] original Graph intent indexed JSON exact serde bytes={} fixed64/System0 original string identity", bytes.len());
+    }
+}

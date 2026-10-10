@@ -883,7 +883,7 @@ fn bound_inference_row(required: bool, encoding: &str) -> semio_framework::Contr
 }
 
 fn bound_inference_command(document: Option<crate::actions::ArtifactDocumentBinding>, payload: &[u8]) -> crate::actions::InferCommand {
-    crate::actions::InferCommand { plugin_id: "wfc".into(), artifact_kind: "s.wfc.bitmap".into(), inference_schema: "s.wfc.bitmap.solve".into(), canonical_payload: payload.to_vec(), artifact_document: document, ..crate::actions::InferCommand::default() }
+    crate::actions::InferCommand { plugin_id: "wfc".into(), artifact_kind: "s.wfc.bitmap".into(), inference_schema: "s.wfc.bitmap.solve".into(), turn:semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},revision:7,cancellation_id:"original binding cancellation".into(),work_units:11,maximum_elapsed_milliseconds:13, canonical_payload: payload.to_vec(),artifact_id:String::new(), artifact_document: document,cancel:crate::actions::InferenceCancel::default() }
 }
 
 /// 🔗️ The artifact the caller named lands under the field the PLUGIN declared, base64, and nowhere
@@ -1019,4 +1019,27 @@ fn a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay()
     assert!(waiter.acknowledged, "a later live, fully acknowledged status wakes the waiting commit: {waiter:?}");
     assert_eq!(relay.report()["remote"], "live");
     assert_eq!(relay.report()["lastFault"], "document.link.expired: the link to the hub expired");
+}
+
+
+#[test]
+fn original_probe_pack_receiving_retains_every_cancelled_owner_and_exact_allocations(){
+ use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,retirement::ControlledRetirement};
+ use std::cell::Cell;
+ let vectors:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/📦️receiving.json")).unwrap();
+ let policy=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};
+ let mut successes=0;
+ for row in vectors["cases"].as_array().unwrap(){for cutoff in (0..=16).chain(std::iter::once(usize::MAX)){
+  let input=row["text"].as_str().unwrap().as_bytes();let pointer=input.as_ptr();let allowance=Cell::new(cutoff);let events=Cell::new(0);
+  let mut original=|_|{let next=events.get()+1;events.set(next);next<=allowance.get()};
+  let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1048576,&mut original);native.install_retirement_recipient(&mut recipient).unwrap();
+  let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,policy);
+  let(result,born,released)=crate::test_allocation::observe_backing(||<ProbeSnapshot as store::ArtifactPackReceiving>::receive_pack(input,&mut owner));let accepted=owner.progress();assert!(accepted.fits(policy));assert_eq!(born,accepted.retained_capacity_bytes);assert_eq!(released,accepted.released_bytes);drop(owner);assert_eq!(input.as_ptr(),pointer);allowance.set(usize::MAX);
+  let mut terminal_born=0;let mut terminal_released=0;
+  if let Ok(snapshot)=result{successes+=1;assert_eq!(serde_json::to_value(&snapshot.0).unwrap(),row["expected"]);let mut retained=ControlledRetirement::new(snapshot).ok().unwrap();let(_,born,released)=crate::test_allocation::observe_backing(||retained.step(RetainedCloneGrant::default()).unwrap());assert_eq!((born,released),(0,0));for _ in 0..4096{if retained.terminal_is_empty(){break}let(step,born,released)=crate::test_allocation::observe_backing(||retained.step(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((born,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));terminal_born+=born;terminal_released+=released;}assert!(retained.terminal_is_empty());}
+  for _ in 0..4096{if !native.has_retirement_owner(){break}let(step,born,released)=crate::test_allocation::observe_backing(||native.close_retirement_recipient(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((born,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));terminal_born+=born;terminal_released+=released;}assert!(!native.has_retirement_owner());assert_eq!(accepted.released_bytes+terminal_released,accepted.retained_capacity_bytes+terminal_born);
+ }}
+ assert!(successes>=vectors["cases"].as_array().unwrap().len());
+ for axis in ["items","capacity","depth"]{let mut denied=policy;match axis{"items"=>denied.maximum_items=0,"capacity"=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0};let mut yes=|_|true;let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1048576,&mut yes);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,denied);let(result,born,released)=crate::test_allocation::observe_backing(||<ProbeSnapshot as store::ArtifactPackReceiving>::receive_pack(b"null",&mut owner));assert!(result.is_err());assert_eq!((born,released,owner.progress()),(0,0,RetainedCloneProgress::default()));drop(owner);assert!(!native.has_retirement_owner());}
+ eprintln!("[DEBUG] Original Probe Pack receiving fixed five-axis policy conserved every System allocation/release across17 original callback cuts, same borrowed pointer and prebirth denied axes");
 }

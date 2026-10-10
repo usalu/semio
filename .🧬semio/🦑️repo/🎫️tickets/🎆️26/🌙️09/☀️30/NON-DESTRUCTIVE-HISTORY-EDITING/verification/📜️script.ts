@@ -14,10 +14,13 @@ if(segments[0]?.startsWith("managed-")){
   const read=()=>JSON.parse(readFileSync(statePath,"utf8"));
   const save=(state:Record<string,unknown>)=>{mkdirSync(directory,{recursive:true});writeFileSync(statePath+".next",JSON.stringify(state,null,2)+"\n");renameSync(statePath+".next",statePath);};
   if(mode==="managed-start"){
-    if(segments[2]!=="--"||segments[3]!=="nx")throw Error("Managed verification only runs an explicit Bun Nx invocation");
+    const boundary=segments[2]==="--capabilities"?4:2;
+    if(segments[boundary]!=="--"||segments[boundary+1]!=="nx")throw Error("Managed verification only runs an explicit Bun Nx invocation");
+    const capabilities=boundary===4?JSON.parse(readFileSync(resolve(root,segments[3]!),"utf8")):{};
+    if(boundary===4){const schema=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"),"utf8"));const {validateJsonSchemaSubset}=await import(join(root,"🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"));if(validateJsonSchemaSubset(schema,capabilities).length||capabilities.workspaceRoot!==root||JSON.stringify(capabilities.arguments)!==JSON.stringify(segments.slice(boundary+1)))throw Error("Managed verification requires its exact original Nx native caller capability");}
     if(existsSync(statePath))throw Error("Managed job name already exists; inspect it or select a fresh verification cohort");
     mkdirSync(dirname(directory),{recursive:true});mkdirSync(directory);
-    save({name,status:"scheduled",pid:process.pid,startedAt:new Date().toISOString(),args:segments.slice(3)});
+    save({name,status:"scheduled",pid:process.pid,startedAt:new Date().toISOString(),args:segments.slice(boundary+1),capabilities});
     const output=openSync(logPath,"wx");
     try{
       const runner=spawn(process.execPath,[import.meta.filename,"managed-execute",name],{cwd:root,env:{...process.env,NX_DAEMON:"false"},detached:true,stdio:["ignore",output,output],windowsHide:true});
@@ -41,12 +44,18 @@ if(segments[0]?.startsWith("managed-")){
     try{
       const {runOwnedCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"));
       const {TEST_LEVEL_BUDGET_MS}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"));
-      await runOwnedCommand(process.execPath,state.args,root,`verification:${name}`,TEST_LEVEL_BUDGET_MS.exhaustive,{signal:controller.signal,onLine(line){
+      const {createScriptProcessEnvelope,scriptProcessEnvironment}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"));
+      const invocation=createScriptProcessEnvelope({version:1,owner:`verification:${name}`,maximumElapsedMilliseconds:TEST_LEVEL_BUDGET_MS.exhaustive},state.capabilities,Date.now());
+      const artifactDirectory=join(import.meta.dir,"../🗑️generated",String(process.pid));mkdirSync(artifactDirectory,{recursive:true});
+      save({...state,status:"running",pid:process.pid,invocation,artifactDirectory});
+      const environment={...process.env,SEMIO_SCRIPT_POLICY:JSON.stringify(invocation.policy),SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(invocation.capabilities),SEMIO_TEST_ARTIFACT_DIR:artifactDirectory};
+      if(state.capabilities.native){environment.CARGO_TARGET_DIR=resolve(root,state.capabilities.native.artifactDirectory);environment.CARGO_NET_OFFLINE=String(state.capabilities.native.network.offline);}
+      await runOwnedCommand(process.execPath,state.args,root,`verification:${name}`,TEST_LEVEL_BUDGET_MS.exhaustive,{signal:controller.signal,env:scriptProcessEnvironment(invocation,environment),onLine(line){
         const text=line.replace(/\x1b\[[0-9;]*m/gu,"");
         if(text.length<=8192&&/^(?:\[DEBUG\]|test .+ \.\.\. (?:ok|FAILED)|test result:|\s*\d+ (?:pass|fail)|\s*(?:PASS|FAIL)\s+\[|\s*Summary\s*\[|Ran \d+ tests)/u.test(text)){evidence.push(text);if(evidence.length>256)evidence.shift();}
       }});
-      save({...state,pid:process.pid,status:"passed",completedAt:new Date().toISOString(),evidence});
-    }catch(error){save({...state,pid:process.pid,status:controller.signal.aborted?"cancelled":"failed",error:String(error),completedAt:new Date().toISOString(),evidence});process.exitCode=1;}
+      save({...read(),pid:process.pid,status:"passed",completedAt:new Date().toISOString(),evidence});
+    }catch(error){save({...read(),pid:process.pid,status:controller.signal.aborted?"cancelled":"failed",error:String(error),completedAt:new Date().toISOString(),evidence});process.exitCode=1;}
     finally{clearInterval(poll);process.off("SIGINT",stop);process.off("SIGTERM",stop);}
   }else throw Error("managed-start | managed-inspect | managed-cancel");
 }else
@@ -56,6 +65,16 @@ if(command==="checkpoint-oracle"){
 }else if(command==="plugin-oracle"){
   const {timeTravelScenarioOracle}=await import(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️time-travel/🟦️.ts"));
   console.log(`Validated ${timeTravelScenarioOracle(root)} plugin history scenarios`);
+}
+else if(command==="cargo-coverage-help"){
+  const {receiveScriptProcessInvocation}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"));
+  const {runOwnedCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"));
+  await receiveScriptProcessInvocation(process.env,async invocation=>{
+    for(const args of [["nextest","archive","--help"],["nextest","run","--help"],["llvm-cov","--help"]]){
+      const remaining=invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original coverage help deadline exhausted");
+      await runOwnedCommand("cargo",args,root,invocation.policy.owner,remaining??invocation.policy.maximumElapsedMilliseconds,{signal:invocation.control.signal});
+    }
+  });
 }
 else if(command==="history-oracles"){
   const base=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests");

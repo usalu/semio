@@ -8,9 +8,9 @@ use protocol::value::DslValueSource;
 mod admission;
 pub use admission::{ArtifactCanonicalValue, ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCheckpoint, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep};
 
-fn indexed_value<'a>(root: &'a DslValue, path: &[usize]) -> Result<&'a DslValue, String> {
+fn indexed_value<'a>(root: &'a DslValue, path: &[usize]) -> Result<&'a DslValue, semio_framework_value::ValueError> {
     if path.len() >= ARTIFACT_CANONICAL_JSON_DEPTH {
-        return Err("canonical-edit.depth-limit".into());
+        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"canonical-edit.depth-limit"));
     }
     let mut current = root;
     for index in path {
@@ -25,7 +25,7 @@ fn indexed_value<'a>(root: &'a DslValue, path: &[usize]) -> Result<&'a DslValue,
 }
 
 impl<R: DslValueSource + Sync> ArtifactCanonicalJson for ArtifactCanonicalValue<R> {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
         use ArtifactCanonicalJsonNode as N;
         use protocol::value::Number;
         if let Some((index, parent)) = path.split_last() {
@@ -46,7 +46,7 @@ impl<R: DslValueSource + Sync> ArtifactCanonicalJson for ArtifactCanonicalValue<
         })
     }
 
-    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
+    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
         let DslValue::Object(values) = indexed_value(self.value(), object_path)? else {
             return Err(super::invalid_path());
         };

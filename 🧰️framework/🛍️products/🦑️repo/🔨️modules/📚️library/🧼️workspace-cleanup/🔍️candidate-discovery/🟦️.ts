@@ -285,7 +285,7 @@ export function cleanGitignoredMapForTicketRoots(root: string, ticketRoots: read
 }
 
 export function cleanOversizedIgnoredRemovals(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  const probe = runProbe("git", ["ls-files", "--others", "-i", "--exclude-standard", "-z"], { cwd: root, budgetMs: 120_000 });
+  const probe = runProbe("git", ["ls-files", "--others", "-i", "--exclude-standard", "--directory", "-z"], { cwd: root, budgetMs: 900_000 });
   if ((probe.status ?? 1) !== 0) return [];
   const out: CleanRemoval[] = [];
   const seen = new Set<string>();

@@ -1,0 +1,17 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧬️schema/💰️wallet.json",
+      "action": "removed",
+      "beforeSha256": "e59f57e3db785b0540da0c3430ac6c221782b2ac9e0457dbd5ef8f8745985ada",
+      "exclusive": false
+    }
+  ],
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/nested-io.json",
+      "sha256": "31ff0ff20d23c975a29089db90384d8aad2514f7bfade2087f946b54a129f15c"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

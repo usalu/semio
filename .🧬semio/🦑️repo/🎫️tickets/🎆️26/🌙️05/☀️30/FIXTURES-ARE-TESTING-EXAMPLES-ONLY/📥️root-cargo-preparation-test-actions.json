@@ -1,0 +1,17 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🎛️preparation/🔣️.json",
+      "action": "created",
+      "afterSha256": "468b622140be3b4659d0140a5ed6b3587c2393c1f96b97003ef3f6c9f6312f01",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts",
+      "action": "created",
+      "afterSha256": "b21d153832d9acaa0b4ea1ed67278ed7bd3cdcbd3dd704750313d4d4edae6378",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

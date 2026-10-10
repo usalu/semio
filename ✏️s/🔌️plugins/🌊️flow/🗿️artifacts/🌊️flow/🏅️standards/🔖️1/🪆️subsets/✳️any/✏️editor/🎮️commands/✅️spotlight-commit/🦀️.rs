@@ -17,6 +17,7 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
 //#endregion 🔖️SharedDispatch
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct SpotlightCommit {
     #[dsl(statements)]
     pub operations: Vec<FlowNodeGraphEditOp>,

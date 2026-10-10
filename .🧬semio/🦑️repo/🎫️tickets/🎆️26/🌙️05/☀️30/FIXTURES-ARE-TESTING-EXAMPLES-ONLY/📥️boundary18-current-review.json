@@ -1,0 +1,26 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "09ca4e65a07528a2b4e36c25718995b82a19f596d81a6b3ef13dbf77fc8de7ae"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "ba3dc262c2f6c7f4a46f133b6af8edeab6367212a1746499e893816991168013"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "0b81b8dd5a815b7779633fc0e15e3be7c14d0a355d7fa505f8964e80c68b35ff"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "3c9d5aa6ddcacbc771fc100c2bc7cdec1dacef9ea83ff8ce049b1b7663f806c7"
+  }
+]

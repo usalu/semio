@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Canonical Preparation Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "body",
+    "metadata"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "body": {
+      "$ref": "#/$defs/Grant"
+    },
+    "metadata": {
+      "$ref": "#/$defs/Grant"
+    }
+  },
+  "$defs": {
+    "Grant": {
+      "$ref": "urn:semio:retained-clone-grant:v1"
+    }
+  }
+}

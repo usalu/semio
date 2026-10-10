@@ -19,7 +19,7 @@ async fn one_leaf_service_returns_its_id_bound_generic_envelope() {
     let snapshot_pack = <GltfSnapshot as store::ArtifactPack>::encode_pack(&GltfSnapshot::default());
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 };
     let dependencies = vec![("snapshot".into(), snapshot_pack.clone())];
-    let request = ArtifactInferenceExecutionRequest {
+    let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128},
         policy: b"gltf-test",
         budgets: &budgets,
         cancellation_id: "gltf-leaf",

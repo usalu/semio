@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 class CompositionScript extends BundleScript {
@@ -35,4 +36,4 @@ class PlaygroundSessionScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("composition-check", CompositionScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("playground-session", PlaygroundSessionScript);
-await runScriptMain(router);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

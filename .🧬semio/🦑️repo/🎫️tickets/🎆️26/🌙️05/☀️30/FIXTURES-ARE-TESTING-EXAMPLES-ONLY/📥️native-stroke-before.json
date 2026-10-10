@@ -1,0 +1,17 @@
+{
+  "observers": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\ud83e\udd80\ufe0f.rs",
+      "sha256": "1c1bfcbb18264a642a43060fa22afb8aed3ed44aa21caff5f2fcb2b151815838"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfae\ufe0fcontrolled/\ud83e\udd80\ufe0f.rs",
+      "sha256": "258773e22164374bc83a9e6f755bec48b8bd48cac9dde4a847f2830498efeb64"
+    }
+  ],
+  "newInputs": [
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\u267b\ufe0fretirement/\ud83d\udd8a\ufe0fstroke/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\u267b\ufe0fretirement/\ud83d\udd8a\ufe0fstroke/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts"
+  ],
+  "authority": "existing genuine Canvas Command and Value Grant; plain examples are not schema authority"
+}

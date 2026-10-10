@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+    "action": "update",
+    "beforeSha256": "7e9ccc5fb7ad7b3181edd750be0391d879a81c74b0602207b0a34a0e97508596",
+    "afterSha256": "bab0d1cae152cc479fc6b130d01264ec4debc2ddfeee56dae776d8a13185d051",
+    "qualification": "Hoist unchanged first-party wildcard grammar to one selector per declaration/exclusion recipe during each operation, avoiding millions of repeated constructions without persistent caches, source authority changes, glob extensions or budget overrides"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+    "action": "update",
+    "beforeSha256": "bab0d1cae152cc479fc6b130d01264ec4debc2ddfeee56dae776d8a13185d051",
+    "afterSha256": "4325d56dc0be091edd44aaf0f5a53498553debbcf1e5ec66182bf36bc6220aaf",
+    "qualification": "Remove now-unused eager matcher, retaining one canonical internal wildcard grammar selector"
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "78d38051509dfa9ce35fe50ef86c7133b8bbbc8319c7483e3db1d6e53612e6a1",
+      "afterSha256": "d1df5a90981a371cd98fef007201735728d466cf3b292eda9b568310313efbf6",
+      "exclusive": false,
+      "scope": "Only actual route whole-test schema load/compile/mirror mutants removed, canonical per-route/Grant and all original independent SQLite and native dispatch preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🛂️route/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "d5423c51d5b05fe87678326dac5ea09d5233282cd78cd4211b283c829994b9e8",
+      "exclusive": false,
+      "scope": "Five fixed refusal cases whole-test authority retired"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

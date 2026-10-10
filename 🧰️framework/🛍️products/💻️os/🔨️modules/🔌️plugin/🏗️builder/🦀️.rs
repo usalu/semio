@@ -771,7 +771,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             plugin = plugin.plugin_command(command, handler);
         }
         for (kind, factory) in jobs {
-            crate::reactor::jobs::register_bounded_job_kind(kind, factory);
+            if !crate::reactor::jobs::register_bounded_job_kind(kind, factory){return Err(PluginAssemblyError::new("plugin-assembly.job-capacity","original job kind registry has no free declaration slot"))}
         }
         for kind in artifact_kinds {
             plugin = plugin.artifact_kind(kind);

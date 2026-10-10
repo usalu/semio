@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `semio-framework-pack` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { resolve } from "node:path";
@@ -124,4 +125,4 @@ router.register("test-retained-intrinsic-native",RetainedIntrinsicNativeScript);
 router.register("test-intrinsic-schema-native",IntrinsicSchemaNativeScript);
 router.register("test-retained-intrinsic-source",RetainedIntrinsicSourceScript);
 router.register("test-occurrence-order-source",OccurrenceOrderSourceScript);
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

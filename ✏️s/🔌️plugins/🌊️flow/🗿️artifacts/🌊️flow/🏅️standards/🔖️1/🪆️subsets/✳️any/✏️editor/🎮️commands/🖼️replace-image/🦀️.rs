@@ -9,6 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🖼️ Opening the host file picker is renderer chrome; the picked media returns as a widget patch.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ReplaceImage {
     pub id: String,
 }

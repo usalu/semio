@@ -1,0 +1,11 @@
+# Immutable Trial Envelope Boundary
+
+Original neutral catalog extended with seven plain cases: immutable Grant paired input/result schedule, equivalent properties.const envelope, denied-axis/value/kind schedule, literal Grant configuration, produced literal record, variable runtime schedule, and inert parser input. No example schema authority was added: virtual schema values are parser inputs to the original catalog test.
+
+True RED55652 Nx1/1104 assertions admitted the first complete literal trial export. Defining detector now joins a supplied canonical Grant record with immutable input/expected observations or concrete denied-authority refusal schedules, independent of title. Literal configurations, produced records and variable schedules remain admitted. Raw const and equivalent fixed-property representation are handled by the same semantic predicate.
+
+First renewal31373 completed all133 example assertions but exceeded the original aggregate5000ms, remaining RED. Each original neutral example is now registered as its own test with exactly the same schema grammar, strict Ajv authority, path256 guards, exact catalog/diagnostics/placement and render idempotence. No timeout or verification budget changed. Current99071 Nx0/4.2s:136PASS,66skip,1168 assertions,133 neutral examples. Canonical CLI/native/runtime/publication not proved by this Source acquisition.
+
+Own actions: 📥️root-const-envelope-test-actions.json, 📥️root-const-envelope-actions.json, 📥️root-schema-case-registration-actions.json. Results: 📥️root-const-envelope-results.json. Full current inventory18 now acquiring original complete tree/filter/order/shared table, without scope narrowing.
+
+Precision review produced three additional original regression examples. Actual RED4240 Nx1/136PASS3FAIL1192 rejected immutable produced audits, fractional metadata and unrelated refusal words. The defining predicate now validates nonnegative integer authority fields, pairs denial axis/value to the actual supplied sibling authority, and distinguishes expectation-only schedules from produced actual observations. Current88619 Nx0/25.7s139PASS66skip1201 assertions over136 neutral examples, unchanged per-case5000ms and complete exact inventory/grammar/idempotence assertions. No title waiver or runtime/native closure claim. Source action ledgers root-const-precision-test/actions retained.

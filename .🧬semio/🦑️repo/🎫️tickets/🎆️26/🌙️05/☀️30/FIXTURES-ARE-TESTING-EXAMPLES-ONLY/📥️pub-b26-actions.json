@@ -1,0 +1,69 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🫴️receiving/🎟️turn/🧬️schema/🔣️.json",
+      "action": "delete",
+      "beforeSha256": "57bae08ed77686d968bb201cc5800aefdc402a4c547c83679e61338fd8ddc681",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial authority; no named genuine DTO exports"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/💰️limits/🧬️schema/🔣️.json",
+      "action": "delete",
+      "beforeSha256": "10fae1014dd49b280f8e71d120a763da01879bb38369ece14f9821b40dfd3a7c",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial authority; no named genuine DTO exports"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/♻️raw-allocation-close.json",
+      "action": "delete",
+      "beforeSha256": "a4b2dd4036917a1380826d48c459389f3bc8438290f220892d9fb811b07a4748",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial authority; no named genuine DTO exports"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/💰️limits/🧪️tests/🟦️.ts",
+      "action": "update",
+      "beforeSha256": "a01b917df4535ae1e4cf384d048da39d03e0e44b857c3892dbf3d54f1672ddcd",
+      "afterSha256": "8f6348edb1766216e6777dc5f09658ca7cae0b282b10255395156c5e9ed6a8ef",
+      "scope": "only whole-trial admission/mutants retired; SQLite/actual allocation ceiling/refusal semantics preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts",
+      "action": "update",
+      "beforeSha256": "100bf01c983a9e3cd4bb50c91d22eb06618c8cf6663f803fad6c072224cad126",
+      "afterSha256": "41e0852b26322920214fb20628f07fba0cfd0540b07e358317176e84cf55b1de",
+      "scope": "only raw whole-trial compile removed; actual Buffer/SQLite/source law preserved including genuine current RED"
+    }
+  ],
+  "preservedObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🫴️receiving/🎟️turn/🧫️fixtures/🔣️.json",
+      "sha256": "29352a2f769764015a54efa51b2ca5a9710632e3c63ff1b0d8abca295818d896"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🫴️receiving/🎟️turn/🧪️tests/🦀️.rs",
+      "sha256": "ea3b522c105eb452d621d6234059a59fd289077a0dca71f2bbb01b94f9caee7d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🫴️receiving/🎟️turn/🦀️.rs",
+      "sha256": "6c2efc0c31710e98ec41dad83aeff340e87b3624ab297e80809f68aaf03abd2e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/💰️limits/🧫️fixtures/🔣️.json",
+      "sha256": "c0657aabcb715174a8460e419f85cc7f84fb379e2d57b93a065eed401836f2ab"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/💰️limits/🧪️tests/🦀️.rs",
+      "sha256": "fbf7f01bdb2732a40368f2e0a52fb3d677a6163a12f5a73c95c84e05c1248d94"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+      "sha256": "43887ccc9947985bf7920a43e17a6e4412b942a71568a9f6f1bc3cce88569937"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧫️fixtures/🚪️raw-allocation-close.json",
+      "sha256": "01f70d5327d9440fd58a56afc19fac1783bb960e7c7c50fc76ef2965ad3e9a80"
+    }
+  ]
+}

@@ -130,11 +130,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
   let mut native_control=semio_framework_os_kernel::io::io_mechanism::IoRunControl::new(&mut decoder,&mut encoder,grant);
   let mut snapshot_control=SqliteSnapshotControl::new(&mut progress,limits);
   let native=payload(&source,encoding);let payload=match native{store::io::IoPayload::Binary(bytes)=>bytes,store::io::IoPayload::Text(text)=>text.into_bytes()};
-  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_export(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload,limits:SnapshotLimits::from(limits),native:grant.into()},&mut native_control,&mut snapshot_control)).unwrap();
+  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_export(&mut crate::sqlite_wire::SnapshotInputOwner{wire:Some(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload,limits:SnapshotLimits::from(limits),native:grant.into()}),dialect:None,route:None,payload:None,hop:None},&mut native_control,&mut snapshot_control)).unwrap();
   let SnapshotFileResult::Done(file)=output else{panic!("actual published Count export must succeed")};assert_eq!(&file.bytes[..16],b"SQLite format 3\0");
   let database=import_sqlite_database(&file.bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
   assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(),(dialect(),encoding));
-  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_import(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload:file.bytes,limits:SnapshotLimits::from(limits),native:grant.into()},&mut native_control,&mut snapshot_control)).unwrap();
+  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_import(&mut crate::sqlite_wire::SnapshotInputOwner{wire:Some(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload:file.bytes,limits:SnapshotLimits::from(limits),native:grant.into()}),dialect:None,route:None,payload:None,hop:None},&mut native_control,&mut snapshot_control)).unwrap();
   let SnapshotPayloadResult::Done(output)=output else{panic!("actual published Count import must succeed")};assert_eq!(output.encoding,encoding.as_str());
   assert_eq!(decode(match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(output.bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(output.bytes).unwrap())}),source);
  }}

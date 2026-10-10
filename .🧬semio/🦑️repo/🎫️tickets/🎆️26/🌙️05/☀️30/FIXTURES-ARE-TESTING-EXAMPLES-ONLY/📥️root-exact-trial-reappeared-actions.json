@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "2761d3b28d18b0cac85a9c3b2d4d508a28f8184a83c77732ac7ada21ea4e131b",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "Fresh current whole-test authority reappeared after earlier removal; preserve genuine phase policy schema and all original control assertions"
+    }
+  ]
+}

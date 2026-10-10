@@ -27,6 +27,7 @@ pub const FLOW_AUTOMATIONS: &[(&str, &str, &str, &str, &str)] =
 /// 🧩️ Dynamic extension-provided action — `action_id` is resolved at runtime against
 /// [`super::FLOW_AUTOMATIONS`]; declared `in_palette: false` in the manifest.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RunExtensionAction {
     pub action_id: String,
 }

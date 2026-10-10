@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { testLevelBudgetMs, resolveTestLevel } from "../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
@@ -163,6 +164,17 @@ class SnapshotSqliteTestScript extends BundleScript {
   }
 }
 
+/** 🧾️ Checks receiving child work and original IO results with independent neutral oracles. */
+class SnapshotReceivingSourceScript extends BundleScript{
+ private childBudget():number{const remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original receiving source deadline exhausted");return remaining===null?0:Math.floor(remaining);}
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-snapshot-receiving-source");
+  const {runOwnedCommand}=await import("../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");const tests=["🛫️snapshot/🧪️tests/🟦️.ts","🧪️tests/nested-io.ts"].map(test=>resolve(this.root,"../../🔨️modules/🚪️io/⏱️control",test));
+  await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...tests],this.repoRoot,"framework:snapshot:receiving:types",this.childBudget(),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test",...tests],this.repoRoot,"framework:snapshot:receiving:source",this.childBudget(),{signal:this.invocation.control.signal});
+ }
+}
+
 class PackageDescriptorValueCodecTestScript extends BundleScript {
   async run(): Promise<void> {
     const status = await captureCargo(this.repoRoot,["test","-p","semio-framework","--lib","manifest::package_descriptor_value_codec_tests::package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields","--","--exact"]);
@@ -266,4 +278,5 @@ const workspace=process.env.SEMIO_COMMAND_WORKSPACE;
 if(!workspace||!isAbsolute(workspace))throw Error("Explicit General command workspace required");
 const router = new ScriptRouter(import.meta.dir,workspace).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("test-argument-retirement-native",ArgumentRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
-await runScriptMain(router, { defaultCommand: "test" });
+router.register("test-snapshot-receiving-source",SnapshotReceivingSourceScript);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

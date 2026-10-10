@@ -51,9 +51,9 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
         if let Some(active) = self.active_local.as_ref() { return nested(artifact_retirement_box_demands(active, body)?); }
         if let Some(active) = self.active_peers.as_ref() { return nested(active.retirement_demands(body)?); }
         if let Some(local) = self.local.as_ref().or(self.terminal_local.as_ref()) { return Ok(RetirementDemand { capacity_bytes: self.local_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence local owner lacks its original factory"))?.retirement_birth_bytes(local), depth: 2, ..Default::default() }); }
-        if self.base_root.is_some() || self.peers.is_some() { return Ok(RetirementDemand { copy_bytes: if self.peer_factory.is_some() { std::mem::size_of::<Arc<dyn SnapshotRetirementFactory<P>>>() } else { 0 }, depth: 1, ..Default::default() }); }
+        if self.base_root.is_some() || self.peers.is_some() { return Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }); }
         if self.reads.is_some() { return snapshot_registry_alias_demands(&self.reads); }
-        if self.local_factory.is_some() || self.peer_factory.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.local_factory.is_some() || self.peer_factory.is_some() { return Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }); }
         if let Some(factory) = self.factory_close.iter().flatten().next() { return nested(factory.demands(body)?); }
         Ok(Default::default())
     }
@@ -106,8 +106,13 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresenceStoreRetirem
     fn terminal_is_empty(&self) -> bool { PresenceStoreRetirement::terminal_is_empty(self) }
 }
 impl<P: Send + Sync + 'static> PresencePeersCommit<P> {
-    pub fn into_retirement(self) -> PresenceStoreRetirement<P> {
-        PresenceStoreRetirement { base_root: std::mem::ManuallyDrop::new(Some(self.base_root)), local: std::mem::ManuallyDrop::new(None), terminal_local: std::mem::ManuallyDrop::new(None), peers: std::mem::ManuallyDrop::new(Some(self.root)), active_local: std::mem::ManuallyDrop::new(None), active_peers: std::mem::ManuallyDrop::new(self.retirement), reads: std::mem::ManuallyDrop::new(None), active_returned: std::mem::ManuallyDrop::new(None), local_factory: None, peer_factory: Some(self.factory), factory_close: Default::default() }
+    pub fn into_retirement(self, grant: RetainedCloneGrant) -> Result<(PresenceStoreRetirement<P>, RetainedCloneProgress), (ValueError, Self)> {
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, ..Default::default() };
+        if grant.maximum_items == 0 { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "peer commit retirement requires its original item grant"), self)); }
+        if grant.maximum_depth == 0 { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer commit retirement requires its original structural grant"), self)); }
+        if !progress.fits(grant) { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "peer commit retirement exceeds original transfer grant"), self)); }
+        let (base_root, root, retirement, factory) = self.into_parts();
+        Ok((PresenceStoreRetirement { base_root: std::mem::ManuallyDrop::new(Some(base_root)), local: std::mem::ManuallyDrop::new(None), terminal_local: std::mem::ManuallyDrop::new(None), peers: std::mem::ManuallyDrop::new(Some(root)), active_local: std::mem::ManuallyDrop::new(None), active_peers: std::mem::ManuallyDrop::new(retirement), reads: std::mem::ManuallyDrop::new(None), active_returned: std::mem::ManuallyDrop::new(None), local_factory: None, peer_factory: Some(factory), factory_close: Default::default() }, progress))
     }
 }
 //#endregion 🧹️StoreRetirement

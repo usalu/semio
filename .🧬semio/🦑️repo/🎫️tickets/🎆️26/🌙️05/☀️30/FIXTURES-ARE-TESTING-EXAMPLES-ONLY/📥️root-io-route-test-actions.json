@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "cf74ae6b098405e4ec709e2edb16277a6301fd7a0b31ad8418f9cbd202c7cec5",
+      "afterSha256": "296a1048521c8a33ad8e6939c55cfb25e0ecf22a4b0f8ea491cc288ccd326a4c",
+      "exclusive": false,
+      "scope": "Whole native route trial Schema absence regression; exact original mounted route and SQLite law census preserved"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

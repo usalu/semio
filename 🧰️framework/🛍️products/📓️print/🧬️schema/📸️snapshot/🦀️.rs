@@ -1,10 +1,8 @@
 //! 📸️ Authored chart snapshot shared by mutation replay and print inference.
 use semio_framework_value::DslValue;
-use semio_framework_value_derive::{FromValue,ToValue};
 
 
-#[derive(Clone, Debug, ToValue, FromValue,semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[value(deny_unknown_fields)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct ChartSnapshot {
     pub chart: DslValue,
 }

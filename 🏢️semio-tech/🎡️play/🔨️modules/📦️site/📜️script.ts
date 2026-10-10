@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { join, resolve } from "node:path";
 import { mkdir, mkdtemp } from "node:fs/promises";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -50,4 +51,4 @@ class BuildScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("build-fresh", FreshBuildScript).register("catalog", CatalogScript);
-if (import.meta.main) await router.run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

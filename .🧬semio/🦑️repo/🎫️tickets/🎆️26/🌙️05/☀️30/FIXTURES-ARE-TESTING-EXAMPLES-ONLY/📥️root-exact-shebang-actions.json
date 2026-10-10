@@ -1,0 +1,180 @@
+{
+  "actions": [
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "fcd5f122f419c17b8980b82871614effa2b46dfd53835fc1b51d9ae9b9f05871",
+      "afterSha256": "3abfe4fa9cb011eee6c82017634d72fbdd7b8cc65efc1b7c13ea972bec7dcd1d",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "f3a50a381a043a9ca90d80989e0d2da23d91d75bb4e9c807a7c6a07ab648e493",
+      "afterSha256": "4e32014014b4095c03fbe061d7d7f6b5b9763ed66325ba0d613102ad7c7dec7b",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "2169982bf6873aa79ac950ee1f89c4a898233eb9d78bb098fb9985d2eb5d6ee4",
+      "afterSha256": "0ab76b58fd2da5e4f434b26c64ef8e2d9b7c23da015dd3583c111f68534ef9c1",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "e9b6ae2073dd80a9d766aca4767e5e95072d3e49492de028078619e2c9b6e096",
+      "afterSha256": "1ffa8e1464ce9c81edb5208905d179398400f2e52966a86752253b95fe691122",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "2d5dea70ea86f507fa49b1e3035d21da5b4c70037a220c7027db6112f98bf2cb",
+      "afterSha256": "75fdf43e5e0ac2f0d0d9fb26d5cd64bf6addf4bbadf8c8726f9baaf64189514c",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "b80aaeda6d897427aa3a333df7de558ad286e97ede04de852d3306b5d30fc590",
+      "afterSha256": "afb87c36ddfbb287d827d54874d0b3a32d14d4c9d26863c8c0eaa6f118236f3a",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "65105bdb00e25b21ab1df51c1e84d2ff6024282c910282ca8e2a22dd09c875ab",
+      "afterSha256": "660aa689762b75daf52c76c13d6a22800af31d2ecc200fe077a137824d3ac246",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "d6e1ea456fe2d2afca5ffb60bfbd8658d09dc83f280b6510b13a3a1e5d1bdec0",
+      "afterSha256": "8707d7c855f0f8321674e5c28c22bf3042099cf8f98bb22d5cbcc00be12d7dda",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "169ffea953f2e2b174441ce4bf8257acba9eba06a44572ecfa7c323d36ee5177",
+      "afterSha256": "3feb69829a1bb427b08538fb201761cd021291f776103e20233b2cdfe301fd8a",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "48bc5bfb54ab9d11e9fce7dee92cb6ac71cb99dc95c66ef25eadd1e897446ad8",
+      "afterSha256": "c50a7bfc8e23034262d70ec338318c1343bdad00e1b427964ce3cc40a7b7040f",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "425a021b0fdcfc1b7cd4b09365d4e8f5636a84ac3c585b522613cc39ab973914",
+      "afterSha256": "81e3df005371ec95efa5109c66f452f8314fdd20cb3ce58f884e8c553d67c310",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "c89d6cde63518e4f24433e5dba24de347f7243f93680295560490b4a11ee5ee6",
+      "afterSha256": "0e0bd2ab074ed6a258202f9980c618deda0fc9fb370362f5e4dfc442863c6fbf",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "b757d3ace3a5e31ee19bdadbf9e06e42eaeab06a8befccd57bc12b70076fbf64",
+      "afterSha256": "094d9acb0b34793d4f019a0269ae59aaa29b188ef61e49b2cab0bfab1da59ac8",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "a64d3baf880247c3e6d860919cfc6910eccf88dfd3616d11810a94beed321d94",
+      "afterSha256": "7b733834762daa188f643b5d60d9a44d7ab3327b85d4b8277e48358715f7e13c",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "c10d0b44ff2a4a00bf009f85025eaba32a9393553bd4db37d5239e709c812b17",
+      "afterSha256": "3c320a5d91153e89653e4b9b4224ce50ddfe5780a7252c9b4c86f3ac7fd30d07",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "386696f9acd727a8847fc1940a21d6068683565d3575e3c605317db308d6bf56",
+      "afterSha256": "d3582a74f7ebdf81e3e0d1466f3edc57eb76af7e3b26e0c36c62094ab7b5bd70",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "0dc66d201b4d33fa1b0576eb0e3e9b8313e6391d370f0af09341b2ae7d4980b5",
+      "afterSha256": "c1b3da39377ec47dd657b88ceb51d8238b99c941966ad263eae2d912a7c9c67f",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "863b2e04ea27e90cd9cccc42e3abce1856d17e45d5d0b37ad9be38295cd45e55",
+      "afterSha256": "5d306d72841c969111c62c3adca7d189695626d567d9bd8c8b74ada893ce95fa",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "9cd93a7cdc812dd808093e7ce527b3fbee1563a51a4a223c19a47f584b80cdcd",
+      "afterSha256": "82941c440e6c58b794a9f91f9f7e64ffaeb3cb7c720bc4189563e73c9d757dac",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "8d37c749a167164f70dc5413c3af321bcd8e80fc4dac82cb28a33cdee8e05dfb",
+      "afterSha256": "de215fd842281bbec60f9357d2871a3fa6606858c4d43c5bef7a17836d3ab70e",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "cf3e335457c432a839bb79494fe6d1d73033fddda90e006afb082fdf10c5cb6f",
+      "afterSha256": "9d29dfc5b0a0f8089f4e6e242ace0a145a3c316f759e15959fad2dfd8aa66667",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "a14dc1ce0a07feefa99cbd28d30228a5562714661a0f96280c0baf90c8b50772",
+      "afterSha256": "f99d825d0193d986c1aa76b61cabaa88ad5dc6b163243ff272dafea05ad7637c",
+      "exclusive": false,
+      "scope": "Correct Root added policy import placement: executable shebang remains first line; all peer Source changes preserved"
+    }
+  ]
+}

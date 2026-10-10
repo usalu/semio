@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "296a1048521c8a33ad8e6939c55cfb25e0ecf22a4b0f8ea491cc288ccd326a4c",
+      "afterSha256": "46a0766755e36830f3ae2be24ee8867764fb1b1f3a9a49b302291aa1e86a44b2",
+      "exclusive": false,
+      "scope": "Remove sole whole test-route mirror import/admission; original native/SQLite/launch route, Grant admissions retained"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🦀️owner/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "0b1499a5833a943992ae0c2f471897d3e50207526a57fd16f04dcc6fa8c61b7e",
+      "exclusive": false,
+      "scope": "Exclusive seven-field test-route mirror Schema only"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

@@ -73,7 +73,8 @@
         "proposedCharge",
         "projectedRetirement",
         "actualRetirement",
-        "refusal"
+        "refusal",
+        "splitAdditionalCharge"
       ],
       "properties": {
         "originalMaximumBytes": {
@@ -93,6 +94,9 @@
         },
         "refusal": {
           "const": "InvalidValue"
+        },
+        "splitAdditionalCharge": {
+          "const": 1
         }
       }
     }

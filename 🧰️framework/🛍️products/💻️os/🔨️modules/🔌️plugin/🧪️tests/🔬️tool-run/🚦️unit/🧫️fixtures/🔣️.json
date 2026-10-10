@@ -1,0 +1,25 @@
+{
+  "policy": [
+    1,
+    17,
+    8192,
+    65536,
+    9
+  ],
+  "phases": [
+    "count-seed",
+    "count-codec",
+    "count-handoff",
+    "count-close",
+    "label-seed",
+    "label-codec",
+    "label-handoff",
+    "label-close",
+    "entity-seed",
+    "entity-handoff",
+    "trace-seed",
+    "trace-handoff",
+    "unit-completion"
+  ],
+  "metadataCopyBytes": 0
+}

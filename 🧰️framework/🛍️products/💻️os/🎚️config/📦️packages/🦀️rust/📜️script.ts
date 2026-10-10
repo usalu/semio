@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** ⚙️ Validates the canonical OS configuration owner. */
 import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -20,4 +21,4 @@ class CheckScript extends BundleScript {
   }
 }
 
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("check", CheckScript), { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("check", CheckScript), { invocation: original, ...({ defaultCommand: "test" }) }));

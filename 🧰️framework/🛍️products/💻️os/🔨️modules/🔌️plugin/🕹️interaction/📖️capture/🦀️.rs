@@ -55,8 +55,8 @@ impl CapturedRoot {
 }
 
 impl ArtifactCanonicalJson for CapturedRoot {
-    fn canonical_json_borrowed_root(&self) -> Result<Option<JsonValue<'_>>, String> {
-        let state = self.read.as_ref().ok_or_else(|| "local-interaction.capture-root-returned".to_string())?.get();
+    fn canonical_json_borrowed_root(&self) -> Result<Option<JsonValue<'_>>, semio_framework_value::ValueError> {
+        let state = self.read.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "local-interaction.capture-root-returned"))?.get();
         Ok(Some(JsonValue::Object(JsonObject::new([("identity", self.identity_json()), ("state", state_json(state))].into_iter()))))
     }
 }
@@ -198,7 +198,7 @@ impl LocalInteractionCaptureCursor {
     pub(crate) fn identity(&self) -> &LocalInteractionIdentity {
         &self.identity
     }
-    pub(crate) fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, store::ArtifactCanonicalJsonEncodeError> {
+    pub(crate) fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<store::ArtifactCanonicalJsonTreeStep, store::ArtifactCanonicalJsonEncodeError> {
         self.reader.encode_chunk(grant, output)
     }
     pub(crate) fn completed_bytes(&self) -> u64 {

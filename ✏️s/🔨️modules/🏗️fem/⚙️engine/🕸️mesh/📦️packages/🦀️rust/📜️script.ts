@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -25,4 +26,4 @@ class SurfaceTestScript extends BundleScript {
   await runRepositoryCommand("cargo",["test","--offline","--manifest-path",resolve(this.root,"Cargo.toml"),"--lib","surface_tests::complete_portable_region_surface_corpus","--","--exact","--nocapture"],this.root,"fem-mesh-surface-test",300000);
  }
 }
-await runScriptMain(new ScriptRouter(import.meta.dir).register("check",CheckScript).register("test",TestScript).register("test-surface",SurfaceTestScript));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("check",CheckScript).register("test",TestScript).register("test-surface",SurfaceTestScript), { invocation: original }));

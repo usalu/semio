@@ -44,8 +44,10 @@ impl ErasedSnapshotRetirement for CanvasPathRetirement {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "Canvas path retirement requires supplied depth")); }
         if !self.elements.is_empty() {
+            let copy = size_of::<PathEl>();
+            if grant.maximum_copy_bytes < copy { return Ok(RetainedCloneStep::Progress(empty)); }
             self.elements.pop();
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..empty }));
         }
         let release = self.next_release_byte_demand()?;
         let copy = self.next_copy_byte_demand()?;
@@ -55,7 +57,7 @@ impl ErasedSnapshotRetirement for CanvasPathRetirement {
     }
 
     fn terminal_is_empty(&self) -> bool { self.elements.is_empty() && self.elements.capacity() == 0 }
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.elements.is_empty() && self.elements.capacity() != 0 { 2 * size_of::<Vec<PathEl>>() } else { 0 }) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if !self.elements.is_empty() { size_of::<PathEl>() } else if self.elements.capacity() != 0 { 2 * size_of::<Vec<PathEl>>() } else { 0 }) }
     fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> {
         if !self.elements.is_empty() { return Ok(0); }

@@ -5,26 +5,75 @@
   "$defs": {
     "IntrinsicBodyRequest": {
       "type": "object",
-      "required": ["fieldId", "maximumDepth"],
+      "required": [
+        "fieldId",
+        "maximumDepth"
+      ],
       "properties": {
-        "fieldId": {"type": "integer", "minimum": 0, "maximum": 65535},
-        "maximumDepth": {"const": 64}
+        "fieldId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "maximumDepth": {
+          "const": 64
+        }
       },
       "additionalProperties": false,
       "description": "One immutable first-party ordinal source supplies a single intrinsic Body field. Arrays and ordered object members, including duplicates, retain source order. Object keys are inline UTF-8 bytes. Source identity and field identity remain fixed through terminal output or explicit close; original source backing is never a cursor allocation."
     },
     "Grant": {
       "type": "object",
-      "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
       "properties": {
-        "maximumItems": {"type": "integer", "minimum": 0},
-        "maximumCopyBytes": {"type": "integer", "minimum": 0},
-        "maximumCapacityBytes": {"type": "integer", "minimum": 0},
-        "maximumReleaseBytes": {"type": "integer", "minimum": 0},
-        "maximumDepth": {"type": "integer", "minimum": 0}
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
       },
       "additionalProperties": false,
-      "description": "One advance moves at most one structural event or one physical symbol-page birth and visits/copies at most 64 logical bytes. Text comparisons charge both input spans. Output storage belongs to the caller. Close uses independent whole physical release grants. Zero item or insufficient copy/capacity/release grants leave the corresponding ownership event inert."
+      "description": "One advance moves at most one structural event or one physical symbol-page birth and visits/copies at most 64 logical bytes. Text comparisons charge both input spans. Output storage belongs to the caller. Close uses independent whole physical release grants. Zero item or insufficient copy/capacity/release grants leave the corresponding ownership event inert. The original inline source bound remains 64; each turn requires its actual current path or symbol-page traversal depth, rather than granting that entire bound for a flat event."
+    },
+    "BorrowedProjectedPackFailure": {
+      "title": "BorrowedProjectedPackFailure",
+      "type": "object",
+      "required": [
+        "reason",
+        "writtenBytes"
+      ],
+      "properties": {
+        "reason": {
+          "$ref": "https://semio.tech/schema/value/refusal/codec"
+        },
+        "writtenBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "description": "One refused retained codec turn preserves the exact initialized output prefix. The original Value refusal alone carries its actual physical progress; symbol owners remain in the cursor until independently funded closure."
     }
   }
 }

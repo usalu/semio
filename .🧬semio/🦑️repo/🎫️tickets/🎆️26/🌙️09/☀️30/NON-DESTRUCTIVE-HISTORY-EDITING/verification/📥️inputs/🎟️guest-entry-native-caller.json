@@ -1,0 +1,56 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-actor-rs:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--test",
+    "original-retained-receiving",
+    "-E",
+    "test(original_public_actor_guest_entry_keeps_same_fault_and_raw_receipts_through_paid_native_publication)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-actor-rs:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "long",
+    "--test",
+    "original-retained-receiving",
+    "-E",
+    "test(original_public_actor_guest_entry_keeps_same_fault_and_raw_receipts_through_paid_native_publication)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ]
+}

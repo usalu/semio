@@ -1,0 +1,26 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧬️schema/🔣️.json",
+      "before": "f86df9c908e449e225ffb2da369e3a3a730ae6a16d2b8196bc9d3208367212ed",
+      "after": null,
+      "action": "retire exclusive whole-trial authority"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🟦️.ts",
+      "before": "61795579cc85b5ee46df722ff1ca4804e93eae46e9387b3b935fd3111018d544",
+      "after": "83e5f65f4b4c9ff2b0ec295af6f8b6623feaa2c76d3116dba55de8b8402301ee",
+      "action": "remove only whole-law validation; admit actual supplied Grant through genuine canonical schema; current generic defining Source signatures"
+    }
+  ],
+  "plainBefore": {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧫️fixtures/🔣️.json",
+    "sha256": "93e7c67e7090272bd615bf1dc410512f9739d25b930ef709ceb0eb49a3f8d845",
+    "bytes": 448
+  },
+  "nativeOriginalUnchanged": {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs",
+    "sha256": "9018902d4208677129e97b58824451c94b0f1c81ae0e4fd59ae18b95906512e5",
+    "bytes": 10587
+  }
+}

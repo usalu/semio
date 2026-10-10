@@ -1,5 +1,8 @@
 //! 💾️ Binary operation representation contracts and owned octets.
 
+#[path="🔗️causal/🦀️.rs"]
+pub mod causal;
+
 //#region 🔖️OpBinary
 #[path="📑️operation-sequence/🦀️.rs"]
 pub mod operation_sequence;

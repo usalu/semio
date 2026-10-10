@@ -1,0 +1,8 @@
+{
+  "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+  "beforeSha256": "ed111b8518b79a7fb30f343c7578d0e67d68063e7095b08c1ee0d578e6e33781",
+  "afterSha256": "796df77bad05af10705251aa778a52b62cc17fba780f48cdb204b8c8c095a099",
+  "beforeBlock": "  return remaining === null ? requestedMilliseconds : Math.floor(requestedMilliseconds === 0 ? remaining : Math.min(requestedMilliseconds, remaining));",
+  "afterBlock": "  if (remaining === null) return requestedMilliseconds;\n  const budget = Math.floor(requestedMilliseconds === 0 ? remaining : Math.min(requestedMilliseconds, remaining));\n  if (budget < 1) throw Error(\"Original child process deadline exhausted\");\n  return budget;",
+  "semantic": "finite sub-millisecond exhaustion never becomes ordinary zero/no cutoff"
+}

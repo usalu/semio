@@ -1,64 +1,18 @@
-//! 🫧️ Flow presence returns preview identifiers through the shared paged domain owner.
+//! 👥️ Original presence identifiers and camera retain their complete paid ownership.
+use super::{FlowPresence,FlowPresenceMutation};
+use std::sync::Arc;
+use semio_framework_value::{ValueError,RetainedCloneGrant,RetainedCloneProgress};
 
-use super::{FlowPresence, FlowPresenceMutation};
-use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
-use std::{mem::ManuallyDrop, sync::Arc};
-use store::{ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
+semio_framework_value::artifact_retire_struct!(FlowPresence{preview_off_node_ids,camera});
 
-const _: () = assert!(!std::mem::needs_drop::<semio_framework_artifact_flow_flow::CameraJson>());
-
-/// 🌊️ Exact local and peer snapshot ownership, including variable-length UTF-8 identifiers.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct FlowPresenceRetirementFactory;
-
-impl SnapshotRetirementFactory<FlowPresence> for FlowPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<FlowPresence>) -> usize { std::mem::size_of::<FlowPresenceRetirement>() }
-
-    fn retire(&self, root: Arc<FlowPresence>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(FlowPresenceRetirement { root: ManuallyDrop::new(Some(root)), domain: FlowRetirement::default(), debt: 0 })
-    }
+impl store::SnapshotRetirementFactory<FlowPresence> for FlowPresenceRetirementFactory{
+ fn retirement_birth_bytes(&self,_source:&Arc<FlowPresence>)->usize{semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<FlowPresence>()}
+ fn retire(&self,source:Arc<FlowPresence>,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowPresence>)>{semio_framework_value::retirement::shared::admit_shared_retirement(source,grant,true)}
 }
-
-struct FlowPresenceRetirement {
-    root: ManuallyDrop<Option<Arc<FlowPresence>>>,
-    domain: FlowRetirement,
-    /// 🎟️ Bytes already freed above the caller's page, still owed to the caller's accounting.
-    debt: usize,
-}
-
-impl ErasedSnapshotRetirement for FlowPresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(SnapshotRetirementStep::Blocked);
-        }
-        if self.debt == 0 {
-            if let Some(root) = self.root.take() {
-                if let Some(value) = Arc::into_inner(root) {
-                    self.domain.push(FlowOwner::Strings(value.preview_off_node_ids));
-                }
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-        }
-        crate::retirement::close_frontier_page(&mut self.domain, &mut self.debt, maximum_bytes)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.domain.is_empty() && self.debt == 0
-    }
-}
-
-impl Drop for FlowPresenceRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.terminal_is_empty(), "Flow presence must return every retained owner before drop");
-        }
-    }
-}
-
-pub fn store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<FlowPresence, FlowPresenceMutation>>> {
-    Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(Arc::new(FlowPresence::default()), |value| value.preview_off_node_ids.is_empty()).expect("default Flow presence is the empty domain terminal"))
-}
+pub fn store_disposer()->Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<FlowPresence,FlowPresenceMutation>>>{Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(Arc::new(FlowPresence::default()),|value|value.preview_off_node_ids.is_empty()).expect("default Flow presence has no dynamic identifier owner"))}
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

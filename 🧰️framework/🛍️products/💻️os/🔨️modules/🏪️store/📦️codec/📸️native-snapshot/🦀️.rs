@@ -17,12 +17,17 @@ pub trait ArtifactNativeSnapshot:Sized {
  fn encode_native_snapshot(&self,encoding:NativeSnapshotEncoding,control:&mut NativeEncodeControl<'_>)->Result<IoPayload,ValueError>;
 }
 
+/// 🫴️ Requires original native receiving custody instead of a stateless whole-pack decoder.
+pub trait ArtifactPackReceiving:super::ArtifactPack+semio_framework_value::retirement::RetireOwned {
+ fn receive_pack(bytes:&[u8],owner:&mut super::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>;
+}
+
 /// 🛬️ Borrows the envelope and binds every parsed field through the same decoder.
 pub fn decode_native_snapshot_record<T>(payload:NativeSnapshotInput<'_>,envelope_id:&str,spec:RecordSpecProducer,construct:impl FnOnce(&RecordValue,&mut NativeDecodeControl<'_>)->Result<T,ValueError>,control:&mut NativeDecodeControl<'_>)->Result<T,ValueError>{
  control.checkpoint()?;
  let spec=spec.decode(control)?;
  let record=match payload {
-  NativeSnapshotInput::Binary(bytes)=>{let body=super::semio_format::unwrap_binary_controlled(bytes,envelope_id,super::semio_format::Component::Pack,1,control).map_err(super::semio_format::SemioError::into_value_error)?;pack::record::decode_document_controlled(body,&spec,&pack::record::DecodeOptions::default(),control).map_err(super::PackRefusal::into_value_error)?.0}
+  NativeSnapshotInput::Binary(bytes)=>{let body=super::semio_format::unwrap_binary_controlled(bytes,envelope_id,super::semio_format::Component::Pack,1,control)?;pack::record::decode_document_controlled(body,&spec,&pack::record::DecodeOptions::default(),control).map_err(super::PackRefusal::into_value_error)?.0}
   NativeSnapshotInput::Text(text)=>{let body=super::semio_format::split_text_preamble_controlled(text,envelope_id,super::semio_format::Component::Dsl,1,control).map_err(super::semio_format::SemioError::into_value_error)?;semio_framework_dsl_record::parse_exact_controlled(body,&spec,&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits{max_bytes:control.maximum_bytes(),..Default::default()},mode:semio_framework_dsl_record::SourceMode::Document},control).map_err(|error|ValueError::new(error.kind,error.message))?}
  };
  let result=construct(&record,control)?;

@@ -282,7 +282,7 @@ fn evaluation_snapshot_and_channel_owners_preserve_payload_and_close_all_allocat
     assert_eq!(node.len()+2*payload.len()+"seednodelabel".len(),fixture["expectedBytes"].as_u64().unwrap()as usize);
     for page in [1,64,4096] {
         let (_,born,freed)=observe_ownership(|| {
-            let snapshot=TreeSnapshot {neurons:HistoryFoldIndex::from([(node.clone(),NeuronSnapshot {key:1,incoming:2,dependents:vec![payload.clone()]})]),seed_keys:HistoryFoldIndex::from([("seed".into(),3)])};
+            let snapshot=TreeSnapshot {tree:Arc::new(super::super::super::Tree {neurons:vec![super::super::super::Neuron{id:node.clone(),kind:"input".into(),params:Dictionary::new(),tree:None}],synapses:vec![super::super::super::Synapse{id:"seed".into(),from:String::new(),to:payload.clone(),from_port:String::new(),to_port:String::new()}]}),seeds:Arc::new(HistoryFoldIndex::new())};
             let channels=EvalChannels {outputs:HistoryFoldIndex::from([("node".into(),Dictionary::new().insert("label",Value::Atom(Atom::String(payload.clone()))))]),inputs:HistoryFoldIndex::new()};
             assert_eq!(serde_json::to_value(channels.outputs.get("node").unwrap()).unwrap(),serde_json::json!({"label":payload}));
             close(ValueRetirement::from_snapshot(snapshot),page);close(ValueRetirement::from_channels(channels),page)

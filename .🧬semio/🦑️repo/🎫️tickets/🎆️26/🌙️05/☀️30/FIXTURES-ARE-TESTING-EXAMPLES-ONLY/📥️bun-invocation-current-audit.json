@@ -1,0 +1,30 @@
+{
+  "owned": false,
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "sha256": "b0d2c30938f3bc41601c26fbb66e9be5ff7698dfa9339ab221d20332b42124cb",
+      "import": "../../../🧬️schema/✅️validator/🟦️.ts",
+      "resolved": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "exists": true,
+      "owned": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "sha256": "b99f85e9fd8f47993e555464b2c344ac07e961e06b79e6caa3b193dee1d558d9",
+      "import": "../../../🧬️schema/✅️validator/🟦️.ts",
+      "resolved": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "exists": true,
+      "owned": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "sha256": "ff25bfc8fe300a64450579fa350cbe5513591a2816cdbd1996fc6af43860abd0",
+      "import": "../../../../🧬️schema/✅️validator/🟦️.ts",
+      "resolved": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "exists": true,
+      "owned": false
+    }
+  ],
+  "ownerLoopGuardCurrent": true
+}

@@ -1,0 +1,36 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-replication-rs:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_retained_wire_field_native_receipts_keep_borrowed_payload_and_actual_backing) | test(original_prefixed_uuid_native_writes_only_funded_original_range_pieces) | test(original_dictionary_native_ranges_keep_original_input_and_exact_paged_receipts) | test(original_timestamp_native_derivation_keeps_fixed_grant_receipts_and_original_input) | test(original_json_string_native_escape_pieces_preserve_original_grants_and_paid_receivers)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": ["nx","run","@semio-tech/framework-replication-rs:test","--skip-nx-cache","--excludeTaskDependencies","--","long","--lib","-E","test(original_retained_wire_field_native_receipts_keep_borrowed_payload_and_actual_backing) | test(original_prefixed_uuid_native_writes_only_funded_original_range_pieces) | test(original_dictionary_native_ranges_keep_original_input_and_exact_paged_receipts) | test(original_timestamp_native_derivation_keeps_fixed_grant_receipts_and_original_input) | test(original_json_string_native_escape_pieces_preserve_original_grants_and_paid_receivers)","--no-fail-fast","--status-level","pass","--final-status-level","all","--","--nocapture"],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🖍️ Draw example twins plus the publication-authority law: every dispatchable route is declared once, in every place the framework joins. */
 import { join, resolve } from "node:path";
 import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
@@ -242,4 +243,4 @@ class UtilityActionPolicyScript extends BundleScript {
   async run(segments:string[]):Promise<void>{if(segments.length)throw Error("utility-action-policy accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🟦️.ts")],this.repoRoot,"draw-utility-action-policy",45000,{env:process.env});}
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", PublicationAuthorityAuditScript).register("utility-action-policy",UtilityActionPolicyScript);
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

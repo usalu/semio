@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "deadlineEpochMilliseconds",
+    "capabilities"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "$ref": "urn:semio:framework:process:script-policy"
+    },
+    "deadlineEpochMilliseconds": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "capabilities": {
+      "type": "object"
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "policy": {
+          "type": "object",
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "type": "integer",
+              "const": 0
+            }
+          }
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "properties": {
+        "policy": {
+          "type": "object",
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "deadlineEpochMilliseconds": {
+          "type": "integer"
+        }
+      }
+    }
+  ]
+}

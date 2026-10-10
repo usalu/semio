@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖼️ `@semio-tech/stdio-image-plugin` router: `bun ./📜️script.ts test [quick|long|exhaustive]`. */
 import { runRepositoryCargoTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -8,10 +9,10 @@ import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modu
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-stdio-image"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-stdio-image"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

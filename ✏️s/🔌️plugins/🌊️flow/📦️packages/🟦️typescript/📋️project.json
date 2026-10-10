@@ -5,6 +5,14 @@
     "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
+    "test-command-retirement": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-command-retirement",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

@@ -1,0 +1,44 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🟦️.ts",
+    "action": "retire whole-trial imports/admission and mirror-only negatives; retain real per-Grant oracle and independent laws",
+    "before": "dbd7e10ce686f5f75f93284e0583a6b192c9d15128d01bc3e1e4c45234baaccc",
+    "after": "c0e8d948a8f4eea94cb0251d3bdb88430583963f5014c086c58f022bb60f64d2"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧬️schema/🔣️.json",
+    "action": "delete exclusive whole-trial schema",
+    "before": "eb6a7eb4616cc13c81c4b84b13798c362d97dcb16646f838827533c77793219e",
+    "after": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🟦️.ts",
+    "action": "retire whole-trial imports/admission and mirror-only negatives; retain real per-Grant oracle and independent laws",
+    "before": "19db84d99ce1f9caa8b4b7b25e50474fa0dd33afada3797e94a1625ce3a78a76",
+    "after": "923d7ee9009cc5bff2960fd9d316699aa92c5aeb0e003aacabf543b598019c80"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧬️schema/🔣️.json",
+    "action": "delete exclusive whole-trial schema",
+    "before": "f97e0bf887f39e091963f8b6fa687ab098fa584a225e1e409890c7ab24aa8f05",
+    "after": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🟦️.ts",
+    "action": "retire whole-trial imports/admission and mirror-only negatives; retain real per-Grant oracle and independent laws",
+    "before": "e51719acdd4ed4b680bcb23a8b5bdc8673f7034dc9ec64456a1e0c623e245c41",
+    "after": "62a0a3e07e35306f4493cf912db4db6a78a638cb013154a1afe34c1c2d61490a"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧬️schema/🔣️.json",
+    "action": "delete exclusive whole-trial schema",
+    "before": "15e7343cfce137c7a55a603e19cf3bba16cfe7820cf21f56e89d42f336da20ca",
+    "after": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🟦️.ts",
+    "before": "923d7ee9009cc5bff2960fd9d316699aa92c5aeb0e003aacabf543b598019c80",
+    "after": "6fdb6622f1de7a8a61b64357986c0f0991ffd0f982a5119acc76644fcd7b36d6",
+    "action": "observe current separate TurnGrant retained/issued ownership alongside independently scaled scheduling Budget"
+  }
+]

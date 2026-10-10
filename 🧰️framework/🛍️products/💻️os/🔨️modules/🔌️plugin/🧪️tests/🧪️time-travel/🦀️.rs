@@ -237,7 +237,7 @@ async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool
         if done(app) {
             return;
         }
-        app.advance_typed_operation_publication(identity).await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        app.advance_typed_operation_publication(identity,mounted_policy.preparation).await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         collect_original_history_command_receipt(app);
         while app.take_typed_operation_ui_progress().is_some() {}
     }
@@ -1240,7 +1240,7 @@ async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status(
     let mut stages = Vec::new();
     let mut cursor = app.log_generation;
     for _ in 0..10_000 {
-        app.advance_typed_operation_publication(&mut identity).await.expect("driver turn");
+        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
         collect_original_history_command_receipt(&mut app);
         while let Some(progress) = app.take_typed_operation_ui_progress() {
             let Some(patch) = progress.history_patch else { continue };
@@ -1299,7 +1299,7 @@ async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped
     let deadline=std::time::Instant::now()+std::time::Duration::from_secs(30);
     let mut reviewing_progress=false;
     while std::time::Instant::now()<deadline {
-        app.advance_typed_operation_publication(&mut identity).await.expect("original Discard bounded publication");
+        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("original Discard bounded publication");
         collect_original_history_command_receipt(&mut app);
         while let Some(progress)=app.take_typed_operation_ui_progress(){reviewing_progress|=progress.history_patch.as_ref().and_then(status)==Some((semio_framework::kernel::HistoryTimeTravelStage::Reviewing,app.time_travel.session().generation));}
         if !app.time_travel.has_pending_work(){break}
@@ -1956,7 +1956,7 @@ async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() 
     assert_eq!(rejected(&cancelled), None, "{:?}", cancelled.output);
     assert!(remote.time_travel.reprojection_paused(), "the remote replay is paused");
     for _ in 0..4 {
-        remote.advance_typed_operation_publication(&mut identity).await.expect("driver turn");
+        remote.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
         collect_original_history_command_receipt(&mut remote);
         while remote.take_typed_operation_ui_progress().is_some() {}
     }
@@ -2099,7 +2099,7 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
             assert_eq!(rejected(&cancelled), None, "{:?}", cancelled.output);
             assert!(!app.store.local_step_pending() && app.reprojection_status().is_none(), "the step is gone");
             for _ in 0..4 {
-                app.advance_typed_operation_publication(&mut identity).await.expect("driver turn");
+                app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
                 collect_original_history_command_receipt(&mut app);
             }
             assert_eq!(history_trace(&mut app).await, before, "a cancelled step leaves zero trace");
@@ -2107,7 +2107,7 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
             let mut turns = 0;
             while app.store.local_step_pending() {
                 let done = app.store.reprojection_progress().map_or(0, |progress| progress.done);
-                app.advance_typed_operation_publication(&mut identity).await.expect("driver turn");
+                app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
                 collect_original_history_command_receipt(&mut app);
                 while app.take_typed_operation_ui_progress().is_some() {}
                 let after = app.store.reprojection_progress().map_or(u32::MAX, |progress| progress.done);
@@ -2317,7 +2317,7 @@ async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_opera
     let mut turns = 0usize;
     while app.store.local_step_pending() {
         let done = app.store.reprojection_progress().map_or(0, |progress| progress.done);
-        app.advance_typed_operation_publication(&mut identity).await.expect("driver turn");
+        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("driver turn");
         collect_original_history_command_receipt(&mut app);
         while app.take_typed_operation_ui_progress().is_some() {}
         let after = app.store.reprojection_progress().map_or(u32::MAX, |progress| progress.done);
@@ -2603,7 +2603,7 @@ async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
     app.detach_backbone().await.expect("the backbone detaches");
     assert!(app.store.generation() > store_generation && app.store.content_revision() == revision, "the port moved the store's local generation and no event");
     for _ in 0..4 {
-        app.advance_typed_operation_publication(&mut identity).await.expect("a driver turn");
+        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("a driver turn");
         collect_original_history_command_receipt(&mut app);
         while app.take_typed_operation_ui_progress().is_some() {}
     }
@@ -2641,7 +2641,7 @@ async fn a_replay_finished_before_a_backbone_attach_and_detach_still_commits() {
     app.detach_backbone().await.expect("the backbone detaches");
     assert!(app.store.generation() > store_generation && app.store.content_revision() == revision, "the port moved the store's local generation and no event");
     for _ in 0..4 {
-        app.advance_typed_operation_publication(&mut identity).await.expect("a driver turn");
+        app.advance_typed_operation_publication(&mut identity,mounted_policy.preparation).await.expect("a driver turn");
         collect_original_history_command_receipt(&mut app);
         while app.take_typed_operation_ui_progress().is_some() {}
     }

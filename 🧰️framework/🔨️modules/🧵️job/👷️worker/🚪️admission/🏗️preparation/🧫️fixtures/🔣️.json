@@ -1,0 +1,51 @@
+{
+  "contract": "framework.job.original-native-preparation.v1",
+  "grant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "stages": [
+    "birth",
+    "destination-slots",
+    "destination-page-publication",
+    "target-page",
+    "first-range",
+    "second-range",
+    "source-release",
+    "initialized",
+    "handoff"
+  ],
+  "copy": [
+    26,
+    0,
+    0,
+    0,
+    4096,
+    4096,
+    0,
+    0,
+    0
+  ],
+  "nativeCapacityLimit": 65536,
+  "sourcePresentUntilHandoff": true,
+  "partialDropCalls": 0,
+  "foreignInitializerWrites": 0,
+  "foreignParamsWrites": 0,
+  "denialWrites": 0,
+  "cancellationCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "terminalDropAllocations": 0,
+  "preparedHandoffCopy": 0
+}

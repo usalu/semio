@@ -585,7 +585,7 @@ pub fn ensure_gumball_node(editor: &mut crate::standards::v1::subsets::any::sche
         ("id".to_string(), semio_framework_value::DslValue::String(transform_id.clone())),
         ("neuronKind".to_string(), semio_framework_value::DslValue::String(transform_kind)),
     ]));
-    editor.add_widget(&descriptor, source_x + 220.0, source_y).map_err(GumballRefusal::HostEdit)?;
+    editor.add_widget_json(&descriptor, source_x + 220.0, source_y).map_err(GumballRefusal::HostEdit)?;
     editor.insert_between(selected_id, &source_port.name, &transform_id, if mesh { "mesh" } else { "geometry" }, &transform_output.name).map_err(GumballRefusal::HostEdit)?;
     editor.set_preview(&transform_id, true);
     editor.set_preview(selected_id, false);
@@ -596,3 +596,18 @@ pub use snapshot_codec::*;
 
 #[path = "🗂️catalogue/🦀️.rs"]
 pub mod catalogue;
+
+/// 🔎️ Projects the live widget at the gumball IO boundary.
+#[cfg(feature = "component-app-assembly")]
+pub fn gumball_widget_json(host: &semio_framework_os_flow::FlowHost, widget_id_str: &str) -> Option<semio_framework_value::DslValue> {
+    host.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_str).map(semio_framework_value::ToValue::to_value)
+}
+
+#[cfg(feature = "component-app-assembly")]
+impl crate::standards::v1::subsets::any::schema::GraphEditor<'_> {
+    /// 📥️ Admits a widget descriptor at the editor text boundary before recording native intent.
+    pub fn add_widget_json(&mut self, text: &str, x: f64, y: f64) -> Result<String, String> {
+        let descriptor = semio_framework_pack_json::from_json_str::<semio_framework_artifact_flow_flow::WidgetDescriptor>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+        self.add_widget(&descriptor, x, y)
+    }
+}

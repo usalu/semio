@@ -1,6 +1,7 @@
 //! 🧳️ Canonical Store preparation drives the genuine original semantic, identity and hash owners.
 use super::ArtifactStoreOneItemLiveAuthority;
-use crate::os_spr::{Edit,command::{ArtifactCanonicalEditAuthority,ArtifactCanonicalEditAuthorityCursor,ArtifactCanonicalEditIdentityCursor,ArtifactCanonicalEditSealCursor}};
+use crate::os_spr::{Edit,command::{ArtifactCanonicalEditAuthority,ArtifactCanonicalEditAuthorityCursor,ArtifactCanonicalEditIdentityCursor}};
+use protocol::io::text::canonical::ArtifactCanonicalEditSealCursor;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,paged::PagedUtf8,retirement::{RetireOwned,controlled::ControlledRetirement,shared::SharedControlledRetirement},retained_clone::{RetainedCloneSource,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::size_of,sync::Arc};
@@ -25,14 +26,18 @@ pub(super) trait ArtifactStoreCanonicalOwner<M>:Send{
  fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<Returned<M>>,ValueError>;
 }
 
+enum Traversal<M:RetireOwned+Sync+ArtifactCanonicalJsonTree>{
+ Semantic(ArtifactCanonicalEditAuthorityCursor<M>),
+ Identity(ArtifactCanonicalEditIdentityCursor<M>),
+ Hash(ArtifactCanonicalEditSealCursor<M>),
+}
+
 pub(super) struct ArtifactStoreCanonicalSource<M:RetireOwned+Sync+ArtifactCanonicalJsonTree>{
  pending_edit:Option<Box<Edit<M>>>,
  pending_authority:Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
  edit_source:Option<RetainedCloneSource<Box<Edit<M>>>>,
  authority_source:Option<RetainedCloneSource<ArtifactStoreOneItemLiveAuthority>>,
- semantic:Option<ArtifactCanonicalEditAuthorityCursor<M>>,
- identity:Option<ArtifactCanonicalEditIdentityCursor<M>>,
- hash:Option<ArtifactCanonicalEditSealCursor<M>>,
+ traversal:Option<Traversal<M>>,
  edit:Option<Box<Edit<M>>>,
  identities:Option<Identities>,
  digest:Option<[u8;32]>,
@@ -43,29 +48,29 @@ pub(super) struct ArtifactStoreCanonicalSource<M:RetireOwned+Sync+ArtifactCanoni
  closing:bool,
 }
 impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalSource<M>{
- pub(super) fn new(authority:Arc<ArtifactStoreOneItemLiveAuthority>,edit:Box<Edit<M>>)->Self{Self{pending_edit:Some(edit),pending_authority:Some(authority),edit_source:None,authority_source:None,semantic:None,identity:None,hash:None,edit:None,identities:None,digest:None,edit_close:None,identity_close:None,authority_close:None,phase:0,closing:false}}
+ pub(super) fn new(authority:Arc<ArtifactStoreOneItemLiveAuthority>,edit:Box<Edit<M>>)->Self{Self{pending_edit:Some(edit),pending_authority:Some(authority),edit_source:None,authority_source:None,traversal:None,edit:None,identities:None,digest:None,edit_close:None,identity_close:None,authority_close:None,phase:0,closing:false}}
  pub(super) fn source_constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<Box<Edit<M>>>(),capacity_bytes:size_of::<Self>()+size_of::<Edit<M>>(),depth:1,release_bytes:0}}
  fn projections(&self)->Result<(RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,RetainedOwnedProjection<Edit<M>>),ValueError>{let authority=self.authority_source.as_ref().ok_or_else(||refusal("canonical original authority source is absent"))?;let edit=self.edit_source.as_ref().ok_or_else(||refusal("canonical original edit source is absent"))?;authority.try_borrow()?;edit.try_borrow()?;Ok((authority.project_owned(0,|value|value as&dyn ArtifactCanonicalEditAuthority),edit.project_owned(0,|value|value.as_ref())))}
  fn advance_original(&mut self,g:RetainedCloneGrant,d:RetirementDemand)->Result<RetainedCloneProgress,ValueError>{
   let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
-  if let Some(o)=self.semantic.as_mut(){if o.terminal_is_empty(){if o.decision()!=Some(true){return Err(refusal("canonical original semantic edit disagrees with Store authority"));}self.semantic=None;self.phase=3;}else{p=o.advance(child(g))?.progress();}}
-  else if let Some(o)=self.identity.as_mut(){if o.is_ready(){let(output,receipt)=o.take(child(g))?.ok_or_else(||refusal("canonical preadmitted identity return refused"))?;self.identities=Some(output);p=receipt;}else if o.terminal_is_empty(){self.identity=None;self.phase=4;}else{p=o.advance(child(g))?.progress();}}
-  else if let Some(o)=self.hash.as_mut(){if o.is_ready(){let(edit,digest,receipt)=o.take_edit(child(g))?.ok_or_else(||refusal("canonical preadmitted hash return refused"))?;self.edit=Some(edit);self.digest=Some(digest);p=receipt;}else if o.terminal_is_empty(){self.hash=None;self.phase=5;}else{p=o.advance(child(g))?.progress();}}
+  if let Some(Traversal::Semantic(o))=self.traversal.as_mut(){if o.terminal_is_empty(){if o.decision()!=Some(true){return Err(refusal("canonical original semantic edit disagrees with Store authority"));}self.traversal=None;self.phase=3;}else{p=o.advance(child(g))?.progress();}}
+  else if let Some(Traversal::Identity(o))=self.traversal.as_mut(){if o.is_ready(){let(output,receipt)=o.take(child(g))?.ok_or_else(||refusal("canonical preadmitted identity return refused"))?;self.identities=Some(output);p=receipt;}else if o.terminal_is_empty(){self.traversal=None;self.phase=4;}else{p=o.advance(child(g))?.progress();}}
+  else if let Some(Traversal::Hash(o))=self.traversal.as_mut(){if o.is_ready(){let(edit,digest,receipt)=o.take_edit(child(g))?.ok_or_else(||refusal("canonical preadmitted hash return refused"))?;self.edit=Some(edit);self.digest=Some(digest);p=receipt;}else if o.terminal_is_empty(){self.traversal=None;self.phase=5;}else{p=o.advance(child(g))?.progress();}}
   else{match self.phase{
    0=>{let original=self.pending_edit.take().ok_or_else(||refusal("canonical pending original edit is absent"))?;match RetainedCloneSource::admit_owned(original,(),child(g)){Ok((owner,receipt))=>{self.edit_source=Some(owner);p=receipt;self.phase=1;},Err((error,original,_))=>{self.pending_edit=Some(original);return Err(error);}}},
    1=>{let original=self.pending_authority.take().ok_or_else(||refusal("canonical pending original authority is absent"))?;match RetainedCloneSource::admit(original,(),child(g)){Ok((owner,receipt))=>{self.authority_source=Some(owner);p=receipt;self.phase=2;},Err((error,original,_))=>{self.pending_authority=Some(original);return Err(error);}}},
-   2=>{let(authority,edit)=self.projections()?;let(owner,receipt)=ArtifactCanonicalEditAuthorityCursor::admit(authority,edit,child(g)).unwrap_or_else(|_|unreachable!("canonical paid semantic aliases"));self.semantic=Some(owner);p=RetainedCloneProgress{copied_bytes:receipt.copied_bytes+size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>>()+size_of::<RetainedOwnedProjection<Edit<M>>>(),..receipt};},
-   3=>{let(authority,edit)=self.projections()?;let(owner,receipt)=ArtifactCanonicalEditIdentityCursor::admit(authority,edit,child(g)).unwrap_or_else(|_|unreachable!("canonical paid identity aliases"));self.identity=Some(owner);p=RetainedCloneProgress{copied_bytes:receipt.copied_bytes+size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>>()+size_of::<RetainedOwnedProjection<Edit<M>>>(),..receipt};},
-   4=>{let(owner,receipt)=ArtifactCanonicalEditSealCursor::admit_source(&mut self.edit_source,child(g))?.ok_or_else(||refusal("canonical paid original hash source transfer refused"))?;self.hash=Some(owner);p=receipt;},
+   2=>{let(authority,edit)=self.projections()?;let(owner,receipt)=ArtifactCanonicalEditAuthorityCursor::admit(authority,edit,child(g)).unwrap_or_else(|_|unreachable!("canonical paid semantic aliases"));self.traversal=Some(Traversal::Semantic(owner));p=RetainedCloneProgress{copied_bytes:receipt.copied_bytes+size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>>()+size_of::<RetainedOwnedProjection<Edit<M>>>(),..receipt};},
+   3=>{let(authority,edit)=self.projections()?;let(owner,receipt)=ArtifactCanonicalEditIdentityCursor::admit(authority,edit,child(g)).unwrap_or_else(|_|unreachable!("canonical paid identity aliases"));self.traversal=Some(Traversal::Identity(owner));p=RetainedCloneProgress{copied_bytes:receipt.copied_bytes+size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>>()+size_of::<RetainedOwnedProjection<Edit<M>>>(),..receipt};},
+   4=>{let(owner,receipt)=ArtifactCanonicalEditSealCursor::admit_source(&mut self.edit_source,child(g))?.ok_or_else(||refusal("canonical paid original hash source transfer refused"))?;self.traversal=Some(Traversal::Hash(owner));p=receipt;},
    5=>{let o=self.authority_source.as_mut().ok_or_else(||refusal("canonical original authority close source is absent"))?;if o.terminal_is_empty(){self.authority_source=None;self.phase=6;}else{p=o.close_step(child(g))?.progress();}},
    _=>return Err(refusal("canonical original preparation phase cannot advance")),
   }}Ok(p)
  }
  fn advance_close(&mut self,g:RetainedCloneGrant,d:RetirementDemand)->Result<RetainedCloneProgress,ValueError>{
   let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
-  if let Some(o)=self.semantic.as_mut(){if o.terminal_is_empty(){self.semantic=None;}else{p=o.advance(child(g))?.progress();}}
-  else if let Some(o)=self.identity.as_mut(){if o.terminal_is_empty(){self.identity=None;}else{p=o.advance(child(g))?.progress();}}
-  else if let Some(o)=self.hash.as_mut(){if o.terminal_is_empty(){self.hash=None;}else{p=o.advance(child(g))?.progress();}}
+  if let Some(Traversal::Semantic(o))=self.traversal.as_mut(){if o.terminal_is_empty(){self.traversal=None;}else{p=o.advance(child(g))?.progress();}}
+  else if let Some(Traversal::Identity(o))=self.traversal.as_mut(){if o.terminal_is_empty(){self.traversal=None;}else{p=o.advance(child(g))?.progress();}}
+  else if let Some(Traversal::Hash(o))=self.traversal.as_mut(){if o.terminal_is_empty(){self.traversal=None;}else{p=o.advance(child(g))?.progress();}}
   else if let Some(o)=self.edit_source.as_mut(){if o.terminal_is_empty(){self.edit_source=None;}else{p=o.close_step(child(g))?.progress();}}
   else if let Some(o)=self.authority_source.as_mut(){if o.terminal_is_empty(){self.authority_source=None;}else{p=o.close_step(child(g))?.progress();}}
   else if self.pending_edit.is_some()||self.edit.is_some(){let original=if self.pending_edit.is_some(){self.pending_edit.take().unwrap()}else{self.edit.take().unwrap()};match ControlledRetirement::new(original){Ok(owner)=>self.edit_close=Some(owner),Err((error,original))=>{self.edit=Some(original);return Err(error);}}}
@@ -79,9 +84,9 @@ impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalSource<
 }
 impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalOwner<M> for ArtifactStoreCanonicalSource<M>{
  fn next_demand(&self)->Result<RetirementDemand,ValueError>{
-  if let Some(o)=self.semantic.as_ref(){return if o.terminal_is_empty(){Ok(copy(size_of::<Option<ArtifactCanonicalEditAuthorityCursor<M>>>()))}else{nested(o.next_demand()?)};}
-  if let Some(o)=self.identity.as_ref(){return if o.is_ready(){nested(o.next_take_demand())}else if o.terminal_is_empty(){Ok(copy(size_of::<Option<ArtifactCanonicalEditIdentityCursor<M>>>()))}else{nested(o.next_demand()?)};}
-  if let Some(o)=self.hash.as_ref(){return if o.is_ready(){nested(o.next_take_demand())}else if o.terminal_is_empty(){Ok(copy(size_of::<Option<ArtifactCanonicalEditSealCursor<M>>>()))}else{nested(o.next_demand()?)};}
+  if let Some(Traversal::Semantic(o))=self.traversal.as_ref(){return if o.terminal_is_empty(){Ok(copy(size_of::<Option<Traversal<M>>>()))}else{nested(o.next_demand()?)};}
+  if let Some(Traversal::Identity(o))=self.traversal.as_ref(){return if o.is_ready(){nested(o.next_take_demand())}else if o.terminal_is_empty(){Ok(copy(size_of::<Option<Traversal<M>>>()))}else{nested(o.next_demand()?)};}
+  if let Some(Traversal::Hash(o))=self.traversal.as_ref(){return if o.is_ready(){nested(o.next_take_demand())}else if o.terminal_is_empty(){Ok(copy(size_of::<Option<Traversal<M>>>()))}else{nested(o.next_demand()?)};}
   if self.closing{
    if let Some(o)=self.edit_source.as_ref(){return if o.terminal_is_empty(){Ok(copy(size_of::<Option<RetainedCloneSource<Box<Edit<M>>>>>()))}else{source(o)};}
    if let Some(o)=self.authority_source.as_ref(){return if o.terminal_is_empty(){Ok(copy(size_of::<Option<RetainedCloneSource<ArtifactStoreOneItemLiveAuthority>>>()))}else{source(o)};}
@@ -104,9 +109,9 @@ impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalOwner<M
    _=>return Err(refusal("canonical original source phase is invalid")),
   })
  }
- fn advance(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if self.ready()||g.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let d=self.next_demand()?;if !permits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let p=if self.closing{self.advance_close(g,d)?}else{self.advance_original(g,d)?};if !p.fits(g){return Err(refusal("canonical original child receipt exceeds caller grant"));}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
- fn begin_close(&mut self){self.closing=true;if let Some(o)=self.semantic.as_mut(){o.begin_close();}if let Some(o)=self.identity.as_mut(){o.begin_close();}if let Some(o)=self.hash.as_mut(){o.begin_close();}}
- fn terminal_is_empty(&self)->bool{self.pending_edit.is_none()&&self.pending_authority.is_none()&&self.edit_source.is_none()&&self.authority_source.is_none()&&self.semantic.is_none()&&self.identity.is_none()&&self.hash.is_none()&&self.edit.is_none()&&self.identities.is_none()&&self.edit_close.is_none()&&self.identity_close.is_none()&&self.authority_close.is_none()}
+ fn advance(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if self.ready()||g.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let d=self.next_demand()?;if !permits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let p=if self.closing{self.advance_close(g,d)?}else{self.advance_original(g,d)?};if !p.fits(g){self.begin_close();return Err(refusal("canonical original child receipt exceeds caller grant").with_retained_progress(p));}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
+ fn begin_close(&mut self){self.closing=true;if let Some(Traversal::Semantic(o))=self.traversal.as_mut(){o.begin_close();}if let Some(Traversal::Identity(o))=self.traversal.as_mut(){o.begin_close();}if let Some(Traversal::Hash(o))=self.traversal.as_mut(){o.begin_close();}}
+ fn terminal_is_empty(&self)->bool{self.pending_edit.is_none()&&self.pending_authority.is_none()&&self.edit_source.is_none()&&self.authority_source.is_none()&&self.traversal.is_none()&&self.edit.is_none()&&self.identities.is_none()&&self.edit_close.is_none()&&self.identity_close.is_none()&&self.authority_close.is_none()}
  fn ready(&self)->bool{!self.closing&&self.phase==6&&self.edit.is_some()&&self.identities.is_some()&&self.digest.is_some()}
  fn take(&mut self,g:RetainedCloneGrant)->Result<Option<Returned<M>>,ValueError>{if !self.ready(){return Ok(None);}let d=self.next_demand()?;if !permits(d,g){return Ok(None);}Ok(Some((self.edit.take().unwrap(),self.identities.take().unwrap(),self.digest.take().unwrap(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
 }

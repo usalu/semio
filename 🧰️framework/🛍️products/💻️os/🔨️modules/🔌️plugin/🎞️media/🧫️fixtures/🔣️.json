@@ -1,0 +1,107 @@
+{
+  "contract": "originalMediaProductionAuthority",
+  "originalNativeMaximumBytes": 1048576,
+  "grant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 32768,
+    "maximumCapacityBytes": 262144,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 128
+  },
+  "denials": [
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes",
+    "maximumDepth"
+  ],
+  "cancelAfterBytes": 3,
+  "deniedPhysicalEffect": {
+    "allocatedBytes": 0,
+    "releasedBytes": 0,
+    "copiedItems": 0,
+    "copiedBytes": 0
+  },
+  "cancelledPhysicalReleaseBytes": 0,
+  "sourcePointerPreserved": true,
+  "recipientDrained": true,
+  "payload": "雪",
+  "port": "value:out",
+  "schema": "fixture.intrinsic",
+  "maximumTurns": 4096,
+  "exporterFault": {
+    "port": "value:out",
+    "message": "original 雪 failure",
+    "display": "media payload error on port `value:out`: original 雪 failure",
+    "moveHeap": [
+      0,
+      0
+    ],
+    "sourcePointersPreserved": true,
+    "receivingCancellation": {
+      "releasedBeforeClose": 0,
+      "deniedCloseHeap": [
+        0,
+        0
+      ],
+      "terminalEmpty": true,
+      "originalBackingsConserved": true
+    },
+    "projection": {
+      "code": "plugin.internal",
+      "grantSource": "caller.media-request",
+      "deniedHeap": [
+        0,
+        0
+      ],
+      "deniedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "sourcePointersPreserved": true,
+      "sourceConsumedOnSuccess": true,
+      "physicalReceiptsExact": true,
+      "backingConserved": true,
+      "terminalDropHeap": [
+        0,
+        0
+      ],
+      "cancellation": {
+        "callbackCuts": [
+          1,
+          2,
+          3
+        ],
+        "releasedBeforeClose": 0,
+        "deniedCloseHeap": [
+          0,
+          0
+        ],
+        "originalSourceHeld": true,
+        "terminalEmpty": true
+      }
+    },
+    "wholeOperation": {
+      "grantSource": "caller.media-request",
+      "recipient": "original.native-encode-retirement",
+      "refusalType": "ValueError",
+      "exportCalledAfterAdmission": true,
+      "deniedHeap": [
+        0,
+        0
+      ],
+      "deniedExporterCalls": 0,
+      "sameSourcePointers": true,
+      "sameNativeControl": true,
+      "sameCumulativeWallet": true,
+      "exactFaultMessage": true,
+      "singleReceiptRecipient": true,
+      "terminalDropHeap": [
+        0,
+        0
+      ]
+    }
+  }
+}

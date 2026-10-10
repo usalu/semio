@@ -6,6 +6,13 @@
     "default": ["{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/**/*", "{projectRoot}/**/*"]
   },
   "targets": {
+    "test-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-source"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

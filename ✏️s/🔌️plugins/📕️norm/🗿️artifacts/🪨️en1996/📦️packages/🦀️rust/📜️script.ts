@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { startNativeProgress } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 📦️ norm artifact Rust package router + example-asset regeneration. */
 import { resolve } from "node:path";
@@ -36,7 +37,7 @@ class RegenerateExampleAssetsScript extends BundleScript {
 
 if (command === "regenerate-example-assets") {
   const router = new ScriptRouter(packageRoot).register("regenerate-example-assets", RegenerateExampleAssetsScript);
-  await router.run(["regenerate-example-assets"]);
+  await receiveScriptProcessInvocation(process.env, original => (router).run(["regenerate-example-assets"], original));
 } else {
   await runArtifactRustPackageMain(packageRoot, cargoName, {snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
 }

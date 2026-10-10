@@ -1,0 +1,42 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧬️schema/🔣️.json",
+      "before": "706a00bf2ac1e4230a5935d3fdbb42b681097f8413c3d8992edb4adf9f9672be",
+      "after": null,
+      "action": "remove exclusive whole-trial authority; actual Grant/read limits remain defining owners"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧬️schema/🔣️.json",
+      "before": "d6065b01a8b09728b96f511ed67fa0c1e0f47ab7c40bcf0d04686563074cfeb0",
+      "after": null,
+      "action": "remove exclusive whole-trial authority; actual Grant/read limits remain defining owners"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🟦️.ts",
+      "beforeGuard": "91508f5496a3c2b5254ec6462ea35b12726cc6cec71a5a6bd6f6c91e609bfa64",
+      "beforeMutation": "f67777c10e0cbcd09d64a3aa911c09a136d59f85ca7a666d79d1d80c0661d1b6",
+      "after": "9f8981cf7c6ec5d377d32ef097eefb6270b0b244b1f721445e2ad51df1be0720",
+      "action": "remove whole-law admission; validate only actual Grant values and missing-axis refusals with genuine authority, retain original semantic/native laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧪️tests/🟦️.ts",
+      "beforeGuard": "28e7e9da89807bdcaf6254decda8cd66a307564ffad16383904719144b6843ae",
+      "beforeMutation": "146b8891b52bbdc711727dbeaab48366fda8afea9ec0eeef79a71234600f64a4",
+      "after": "1840a99695eef9da43c96dd9d90ae811d2de714ea1a6db74afe4677e0730a2fe",
+      "action": "remove whole-law admission; validate only actual Grant values and missing-axis refusals with genuine authority, retain original semantic/native laws"
+    }
+  ],
+  "plainObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧫️fixtures/🔣️.json",
+      "before": "9fc561293f0d8839a0c3eb4f6e02fa8e0560cf4db2af0606491870cc1042554d",
+      "after": "9fc561293f0d8839a0c3eb4f6e02fa8e0560cf4db2af0606491870cc1042554d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧫️fixtures/🔣️.json",
+      "before": "74ae6c30f5e203045219796785ae9bad7872464961ac810f4cf996011ed55320",
+      "after": "74ae6c30f5e203045219796785ae9bad7872464961ac810f4cf996011ed55320"
+    }
+  ]
+}

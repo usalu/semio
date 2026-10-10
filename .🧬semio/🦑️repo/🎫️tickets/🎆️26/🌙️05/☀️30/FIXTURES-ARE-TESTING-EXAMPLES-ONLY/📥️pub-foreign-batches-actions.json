@@ -1,0 +1,18 @@
+{
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0freplication/\ud83c\udfae\ufe0fmutation/\ud83c\udf10\ufe0fforeign/\ud83e\udd80\ufe0f.rs",
+      "action": "updated",
+      "beforeSha256": "c3d582bf89f18597dd7619c84724f4bf2052153cabea8652c766c5bbc5951533",
+      "afterSha256": "df1b4d748671739ce6fd43ae19f4a50de2ebd8f1e28a457dcf24735a3099f2bf",
+      "scope": "funded multi-forward source-index boundary preserves original accumulated ForeignStepsOwner and every pending owner"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0freplication/\ud83c\udfae\ufe0fmutation/\ud83c\udf10\ufe0fforeign/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "action": "updated",
+      "beforeSha256": "95bd53ec39e46a4817e78ec9cdc597e142aa3bb815145933a4917a3171949b8e",
+      "afterSha256": "919a0546215798a53a9cac9652af7d0ab628c591e95798bd498b11a9ffa5686f",
+      "scope": "actual native original three-forward identity/denied-boundary/cancel-cut/System law authored unrun"
+    }
+  ]
+}

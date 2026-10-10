@@ -3,6 +3,7 @@
 use std::collections::{HashMap,HashSet,VecDeque};
 use protocol::causal::transition::HistoryFoldIndex;
 use std::mem::ManuallyDrop;
+use std::sync::Arc;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -20,6 +21,7 @@ pub mod retirement;
 pub mod topology;
 #[path = "📥️input/🦀️.rs"]
 pub mod input;
+pub use input::{BudgetedInputMerge,BudgetedOwnedEntry};
 #[path = "⏱️evaluation/🦀️.rs"]
 pub mod evaluation;
 pub use evaluation::{BudgetedEvalState,BudgetedEvalStep};
@@ -1119,8 +1121,15 @@ impl std::error::Error for EvalError {}
 impl From<ValueError> for EvalError{fn from(error:ValueError)->Self{Self::Retained(error)}}
 
 /// 📥️ Returns the same original input when an implementation declares no resumable plan.
-pub enum OperatorPlanAdmission {Job(Box<dyn OperatorJob>),Immediate(Dictionary)}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct PendingOperatorMetadata{pub extension_id:String,pub operator_id:String}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct OperatorPendingPlan{pub metadata:protocol::value::ordered::SharedOwner<PendingOperatorMetadata>,pub input:Dictionary}
+pub enum OperatorPlanAdmission {Job(Box<dyn OperatorJob>),Immediate(Dictionary),Pending(OperatorPendingPlan)}
 impl OperatorPlanAdmission {
+    /// 🌊️ Leases original contribution metadata and moves its input without payload work.
+    pub fn pending(metadata:&protocol::value::ordered::SharedOwner<PendingOperatorMetadata>,input:Dictionary,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(EvalError,Dictionary)>{if grant.maximum_items==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original pending plan requires an admitted item").into(),input))}if grant.maximum_depth==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original pending plan requires admitted depth").into(),input))}Ok((Self::Pending(OperatorPendingPlan{metadata:metadata.clone(),input}),RetainedCloneProgress{copied_items:1,..Default::default()}))}
+
     /// 📤️ Hands back the exact original no-plan input with one admitted ownership event and no physical effects.
     pub fn immediate(input:Dictionary,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(EvalError,Dictionary)>{if grant.maximum_items==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original immediate plan requires one item").into(),input))}if grant.maximum_depth==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original immediate plan requires admitted depth").into(),input))}Ok((Self::Immediate(input),RetainedCloneProgress{copied_items:1,..Default::default()}))}
 }
@@ -2031,99 +2040,38 @@ fn incoming_edges_signature(tree: &Tree, neuron_id: &str) -> u64 {
     hasher.finish()
 }
 
-/// 🧬️ Per-neuron structural/adjacency fingerprint, keyed once by id in [`TreeSnapshot`] instead
-/// of duplicated across parallel maps — cuts id clones on [`TreeSnapshot::capture`] from four
-/// per neuron down to one.
-#[derive(Clone, Debug, Default, PartialEq)]
-struct NeuronSnapshot {
-    key: u64,
-    incoming: u64,
-    /// `[to, ...]` — who reads this neuron's output, used for forward dirty propagation.
-    dependents: Vec<String>,
-}
-
-/// 📸️ Structural fingerprint of a tree+seeds pair, used by [`compute_dirty_set`] to diff two
-/// evaluations without re-hashing or re-walking neurons that provably didn't change.
-#[derive(Clone, Debug, Default, PartialEq)]
+/// 📸️ Retains the exact original tree and seed source allocations of an evaluation.
+#[derive(Clone, Debug, PartialEq)]
 pub struct TreeSnapshot {
-    neurons: HistoryFoldIndex<String, NeuronSnapshot>,
-    seed_keys: HistoryFoldIndex<String, u64>,
+    pub(crate) tree: Arc<Tree>,
+    pub(crate) seeds: Arc<HistoryFoldIndex<String,Dictionary>>,
 }
-
+impl Default for TreeSnapshot{fn default()->Self{Self{tree:Arc::new(Tree::default()),seeds:Arc::new(HistoryFoldIndex::new())}}}
 impl TreeSnapshot {
-    pub fn capture(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Self {
-        let mut neurons: HistoryFoldIndex<String, NeuronSnapshot> = tree.neurons.iter().map(|neuron| (neuron.id.clone(), NeuronSnapshot { key: neuron_key_hash(neuron), incoming: incoming_edges_signature(tree, &neuron.id), dependents: Vec::new() })).collect();
-        for syn in &tree.synapses {
-            if !neurons.contains_key(&syn.to) {
-                continue;
-            }
-            if let Some(source) = neurons.get_mut(&syn.from) {
-                source.dependents.push(syn.to.clone());
-            }
-        }
-        let mut seed_keys = HistoryFoldIndex::new();
-        for (id, dict) in seeds {
-            let mut hasher = std::collections::hash_map::DefaultHasher::new();
-            hash_dictionary(&mut hasher, dict);
-            seed_keys.insert(id.clone(), hasher.finish());
-        }
-        Self { neurons, seed_keys }
+    /// 🧊️ Captures synchronous diagnostic inputs within their existing cold caller scope.
+    pub fn capture(tree:&Tree,seeds:&HashMap<String,Dictionary>)->Self{Self{tree:Arc::new(tree.clone()),seeds:Arc::new(seeds.iter().map(|(key,value)|(key.clone(),value.clone())).collect())}}
+    /// 🔗️ Moves the exact preborn immutable sources under the original admitted handoff.
+    pub fn capture_retained(tree:Arc<Tree>,seeds:Arc<HistoryFoldIndex<String,Dictionary>>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,Arc<Tree>,Arc<HistoryFoldIndex<String,Dictionary>>)>{
+        if grant.maximum_items==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original snapshot handoff requires admitted item"),tree,seeds))}
+        if grant.maximum_depth==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original snapshot handoff requires admitted depth"),tree,seeds))}
+        Ok((Self{tree,seeds},RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
+    pub fn tree_source(&self)->&Tree{&self.tree}
+    pub fn seed_source(&self)->&HistoryFoldIndex<String,Dictionary>{&self.seeds}
 }
-
-/// 🧭️ Forward-propagates dirtiness from directly-changed neurons to all descendants.
-///
-/// `previous == None` means "first evaluation ever" — everything is dirty. Otherwise a neuron
-/// is directly dirty if it's new, its structural key (kind/params/subtree) changed, its incoming
-/// synapse set changed, or its seed value changed; a surviving dependent of a *removed* neuron
-/// (looked up via `previous`'s adjacency, since removed neurons vanish from `current`) is also
-/// directly dirty. Every neuron reachable from the directly-dirty set via `current`'s `from -> to`
-/// adjacency is dirty too — everything else is provably unaffected.
-pub fn compute_dirty_set(previous: Option<&TreeSnapshot>, current: &TreeSnapshot) -> HashSet<String> {
-    let Some(previous) = previous else {
-        return current.neurons.keys().cloned().collect();
-    };
-    let mut direct: HashSet<String> = HashSet::new();
-    for (id, snapshot) in &current.neurons {
-        let prev = previous.neurons.get(id);
-        let is_new = prev.is_none();
-        let structurally_changed = prev.map(|p| p.key) != Some(snapshot.key);
-        let rewired = prev.map(|p| p.incoming) != Some(snapshot.incoming);
-        if is_new || structurally_changed || rewired {
-            direct.insert(id.clone());
-        }
+/// 🧭️ Diagnoses original structural, wiring, seed, removal, and downstream changes synchronously.
+pub fn compute_dirty_set(previous:Option<&TreeSnapshot>,current:&TreeSnapshot)->HashSet<String>{
+    let Some(previous)=previous else{return current.tree.neurons.iter().map(|node|node.id.clone()).collect()};
+    let contains=|id:&str|current.tree.neurons.iter().any(|node|node.id==id);
+    let mut direct=HashSet::new();
+    for node in &current.tree.neurons{
+        let original=previous.tree.neurons.iter().find(|old|old.id==node.id);
+        let changed=original.is_none_or(|old|neuron_key_hash(old)!=neuron_key_hash(node)||incoming_edges_signature(&previous.tree,&old.id)!=incoming_edges_signature(&current.tree,&node.id));
+        if changed||previous.seeds.get(&node.id)!=current.seeds.get(&node.id){direct.insert(node.id.clone());}
     }
-    let mut seed_ids: HashSet<&String> = previous.seed_keys.keys().collect();
-    seed_ids.extend(current.seed_keys.keys());
-    for id in seed_ids {
-        if current.neurons.contains_key(id) && previous.seed_keys.get(id) != current.seed_keys.get(id) {
-            direct.insert(id.clone());
-        }
-    }
-    for (removed_id, removed_snapshot) in &previous.neurons {
-        if current.neurons.contains_key(removed_id) {
-            continue;
-        }
-        for dependent in &removed_snapshot.dependents {
-            if current.neurons.contains_key(dependent) {
-                direct.insert(dependent.clone());
-            }
-        }
-    }
-    let mut dirty: HashSet<String> = HashSet::new();
-    let mut queue: VecDeque<String> = direct.into_iter().collect();
-    while let Some(id) = queue.pop_front() {
-        if !dirty.insert(id.clone()) {
-            continue;
-        }
-        if let Some(snapshot) = current.neurons.get(&id) {
-            for dep in &snapshot.dependents {
-                if !dirty.contains(dep) {
-                    queue.push_back(dep.clone());
-                }
-            }
-        }
-    }
+    for removed in &previous.tree.neurons{if !contains(&removed.id){for edge in &previous.tree.synapses{if edge.from==removed.id&&contains(&edge.to){direct.insert(edge.to.clone());}}}}
+    let mut dirty=HashSet::new();let mut queue:VecDeque<String>=direct.into_iter().collect();
+    while let Some(id)=queue.pop_front(){if !dirty.insert(id.clone()){continue}for edge in &current.tree.synapses{if edge.from==id&&contains(&edge.to)&&!dirty.contains(&edge.to){queue.push_back(edge.to.clone());}}}
     dirty
 }
 // #endregion 🔖️DirtyPropagation
@@ -2256,7 +2204,7 @@ impl EvalStepBudget {
 ///
 /// 🪪️ `neuron_id` names the node the request BELONGS to, so a census can say which nodes of a wave
 /// are actually outstanding at their plugin instead of guessing from the head of a remaining list.
-#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub struct PendingExtensionEval {
     pub neuron_id: String,
     pub extension_id: String,

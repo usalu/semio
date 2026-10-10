@@ -1,5 +1,7 @@
 use super::*;
 use std::cell::Cell;
+#[path="../📏️depth/🧪️tests/🦀️.rs"]
+mod original_container_depth;
 
 #[derive(Clone,Copy)]
 struct ObservedSource<'source>{bytes:&'source [u8],reads:&'source Cell<usize>}

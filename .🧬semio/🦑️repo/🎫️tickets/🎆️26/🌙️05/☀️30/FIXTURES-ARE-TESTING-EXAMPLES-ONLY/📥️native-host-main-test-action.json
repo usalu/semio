@@ -1,0 +1,16 @@
+{
+  "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+  "beforeSha": "5bd50a402df179bbb166fb809a1c772fad77435ff79ec5c29c37cb2dd2bdbc17",
+  "afterSha": "899b1d85f8f0e0f27268eb0b4ee93820284d902ff0a61b46892f2fa244754121",
+  "actions": [
+    {
+      "beforeBlock": "await runScriptMain(router, [\"owned\"], { invocation });",
+      "afterBlock": "await runScriptMain(router, { argv: [\"owned\"], invocation });"
+    },
+    {
+      "beforeBlock": "expect(new OriginalCommand(\"/original-owner\", \"/original-workspace\", invocation).invocation).toBe(invocation);",
+      "afterBlock": "expect(() => new OriginalCommand(\"/original-owner\", \"/original-workspace\", invocation)).not.toThrow();"
+    }
+  ],
+  "trueRed": "25465 test invoked actual two-argument entrypoint with stale three-arg shape; runtime unchanged; corrected actual caller not compatibility API"
+}

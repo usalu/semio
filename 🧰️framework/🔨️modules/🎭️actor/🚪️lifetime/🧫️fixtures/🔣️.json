@@ -1,47 +1,273 @@
 {
   "version": 1,
   "vectors": [
-    {"value": {"kind": "open", "activationGeneration": "1", "instanceId": 7, "requestSequence": 8}, "hex": "00010708"},
-    {"value": {"kind": "captured", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 8}, "hex": "0101070d08"},
-    {"value": {"kind": "close", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9}, "hex": "0201070d09"},
-    {"value": {"kind": "accepted", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9, "closeGeneration": "41"}, "hex": "0301070d0929"},
-    {"value": {"kind": "retired", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9, "closeGeneration": "41"}, "hex": "0401070d0929"},
-    {"value": {"kind": "ack", "receipt": {"kind": "captured", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 8}}, "hex": "0501070d08"},
-    {"value": {"kind": "ack", "receipt": {"kind": "accepted", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9, "closeGeneration": "41"}}, "hex": "0601070d0929"},
-    {"value": {"kind": "ack", "receipt": {"kind": "retired", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9, "closeGeneration": "41"}}, "hex": "0701070d0929"},
-    {"value": {"kind": "retired", "lifetime": {"activationGeneration": "18446744073709551615", "instanceId": 4294967295, "guestLifetime": "18446744073709551615"}, "requestSequence": 9007199254740991, "closeGeneration": "18446744073709551615"}, "hex": "04ffffffffffffffffff01ffffffff0fffffffffffffffffff01ffffffffffffff0fffffffffffffffffff01"}
+    {
+      "value": {
+        "kind": "open",
+        "activationGeneration": "1",
+        "instanceId": 7,
+        "requestSequence": 8
+      },
+      "hex": "00010708"
+    },
+    {
+      "value": {
+        "kind": "captured",
+        "lifetime": {
+          "activationGeneration": "1",
+          "instanceId": 7,
+          "guestLifetime": "13"
+        },
+        "requestSequence": 8
+      },
+      "hex": "0101070d08"
+    },
+    {
+      "value": {
+        "kind": "close",
+        "lifetime": {
+          "activationGeneration": "1",
+          "instanceId": 7,
+          "guestLifetime": "13"
+        },
+        "requestSequence": 9
+      },
+      "hex": "0201070d09"
+    },
+    {
+      "value": {
+        "kind": "accepted",
+        "lifetime": {
+          "activationGeneration": "1",
+          "instanceId": 7,
+          "guestLifetime": "13"
+        },
+        "requestSequence": 9,
+        "closeGeneration": "41"
+      },
+      "hex": "0301070d0929"
+    },
+    {
+      "value": {
+        "kind": "retired",
+        "lifetime": {
+          "activationGeneration": "1",
+          "instanceId": 7,
+          "guestLifetime": "13"
+        },
+        "requestSequence": 9,
+        "closeGeneration": "41"
+      },
+      "hex": "0401070d0929"
+    },
+    {
+      "value": {
+        "kind": "ack",
+        "receipt": {
+          "kind": "captured",
+          "lifetime": {
+            "activationGeneration": "1",
+            "instanceId": 7,
+            "guestLifetime": "13"
+          },
+          "requestSequence": 8
+        }
+      },
+      "hex": "0501070d08"
+    },
+    {
+      "value": {
+        "kind": "ack",
+        "receipt": {
+          "kind": "accepted",
+          "lifetime": {
+            "activationGeneration": "1",
+            "instanceId": 7,
+            "guestLifetime": "13"
+          },
+          "requestSequence": 9,
+          "closeGeneration": "41"
+        }
+      },
+      "hex": "0601070d0929"
+    },
+    {
+      "value": {
+        "kind": "ack",
+        "receipt": {
+          "kind": "retired",
+          "lifetime": {
+            "activationGeneration": "1",
+            "instanceId": 7,
+            "guestLifetime": "13"
+          },
+          "requestSequence": 9,
+          "closeGeneration": "41"
+        }
+      },
+      "hex": "0701070d0929"
+    },
+    {
+      "value": {
+        "kind": "retired",
+        "lifetime": {
+          "activationGeneration": "18446744073709551615",
+          "instanceId": 4294967295,
+          "guestLifetime": "18446744073709551615"
+        },
+        "requestSequence": 9007199254740991,
+        "closeGeneration": "18446744073709551615"
+      },
+      "hex": "04ffffffffffffffffff01ffffffff0fffffffffffffffffff01ffffffffffffff0fffffffffffffffffff01"
+    }
   ],
   "turnResults": [
-    { "vector": null, "hex": "0000000000000000000000000000000000000000000000000000000000000000" },
-    { "vector": 1, "hex": "00000000050101070d08000000000000000000000000000000000000000000000000000000" },
-    { "vector": 4, "hex": "00000000060401070d0929000000000000000000000000000000000000000000000000000000" },
-    { "vector": 8, "hex": "000000002c04ffffffffffffffffff01ffffffff0fffffffffffffffffff01ffffffffffffff0fffffffffffffffffff01000000000000000000000000000000000000000000000000000000" }
+    {
+      "vector": null,
+      "hex": "4700000000000000030000000000000013000000000000000100000000000000001000000000000000000100000000000000040000000000400000000000000001000000000000000000000000000000800000000000000000000000000000000000000000000000001000000000000080ff000000000000000004000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "vector": 1,
+      "hex": "4700000000000000030000000000000013000000000000000100000000000000001000000000000000000100000000000000040000000000400000000000000001000000000000000000000000000000800000000000000000000000000000000000000000000000001000000000000080ff0000000000000000040000000000400000000000000000000000050101070d08000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "vector": 4,
+      "hex": "4700000000000000030000000000000013000000000000000100000000000000001000000000000000000100000000000000040000000000400000000000000001000000000000000000000000000000800000000000000000000000000000000000000000000000001000000000000080ff0000000000000000040000000000400000000000000000000000060401070d0929000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "vector": 8,
+      "hex": "4700000000000000030000000000000013000000000000000100000000000000001000000000000000000100000000000000040000000000400000000000000001000000000000000000000000000000800000000000000000000000000000000000000000000000001000000000000080ff00000000000000000400000000004000000000000000000000002c04ffffffffffffffffff01ffffffff0fffffffffffffffffff01ffffffffffffff0fffffffffffffffffff01000000000000000000000000000000000000000000000000000000"
+    }
   ],
   "reopen": {
-    "prior": {"activationGeneration": "41", "instanceId": 7, "guestLifetime": "13"},
-    "current": {"activationGeneration": "41", "instanceId": 7, "guestLifetime": "14"},
+    "prior": {
+      "activationGeneration": "41",
+      "instanceId": 7,
+      "guestLifetime": "13"
+    },
+    "current": {
+      "activationGeneration": "41",
+      "instanceId": 7,
+      "guestLifetime": "14"
+    },
     "oldRequestAccepted": false,
     "oldReceiptAccepted": false
   },
   "completion": {
-    "participants": ["app", "reactor", "nativeUi", "hostUi", "ingress", "publication", "transport"],
+    "participants": [
+      "app",
+      "reactor",
+      "nativeUi",
+      "hostUi",
+      "ingress",
+      "publication",
+      "transport"
+    ],
     "acceptedIsTerminal": false,
     "idleIsTerminal": false,
     "mapRemovalIsTerminal": false,
     "allExactOwnersRetiredIsTerminal": true
   },
-  "nativeCases": {"sameIdReplacementRejected": true, "overflowPreservesLiveOwner": true, "quarantineRemovalPreservesTerminalWitness": true,
-    "contendedWitnessStaysTerminal": true, "repeatCloseKeepsReplacement": true, "scopeAfterSurfaceClear": true},
-  "leaseFailures": ["postMessage-throw", "worker-error"],
-  "publishedClose": {"granularity":"owner-transition", "owners": ["metadata", "credit", "handback"], "remaining": [["credit", "handback"], ["handback"], [], []], "complete": [false, false, false, true]},
+  "nativeCases": {
+    "sameIdReplacementRejected": true,
+    "overflowPreservesLiveOwner": true,
+    "quarantineRemovalPreservesTerminalWitness": true,
+    "contendedWitnessStaysTerminal": true,
+    "repeatCloseKeepsReplacement": true,
+    "scopeAfterSurfaceClear": true
+  },
+  "leaseFailures": [
+    "postMessage-throw",
+    "worker-error"
+  ],
+  "publishedClose": {
+    "granularity": "owner-transition",
+    "owners": [
+      "metadata",
+      "credit",
+      "handback"
+    ],
+    "remaining": [
+      [
+        "credit",
+        "handback"
+      ],
+      [
+        "handback"
+      ],
+      [],
+      []
+    ],
+    "complete": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
   "leaseReceipts": [
-    {"name": "accepted-is-not-terminal", "events": ["accepted"], "settled": false},
-    {"name": "terminal-needs-acceptance", "events": ["retired"], "settled": false},
-    {"name": "exact-joined-terminal", "events": ["accepted", "retired"], "settled": true},
-    {"name": "wrong-worker", "events": ["foreign-worker-accepted", "retired"], "settled": false},
-    {"name": "old-activation", "events": ["old-activation-accepted", "retired"], "settled": false},
-    {"name": "wrong-request", "events": ["wrong-request-accepted", "retired"], "settled": false},
-    {"name": "wrong-close-generation", "events": ["accepted", "wrong-generation-retired"], "settled": false},
-    {"name": "duplicate-accepted", "events": ["accepted", "accepted", "retired"], "settled": true}
+    {
+      "name": "accepted-is-not-terminal",
+      "events": [
+        "accepted"
+      ],
+      "settled": false
+    },
+    {
+      "name": "terminal-needs-acceptance",
+      "events": [
+        "retired"
+      ],
+      "settled": false
+    },
+    {
+      "name": "exact-joined-terminal",
+      "events": [
+        "accepted",
+        "retired"
+      ],
+      "settled": true
+    },
+    {
+      "name": "wrong-worker",
+      "events": [
+        "foreign-worker-accepted",
+        "retired"
+      ],
+      "settled": false
+    },
+    {
+      "name": "old-activation",
+      "events": [
+        "old-activation-accepted",
+        "retired"
+      ],
+      "settled": false
+    },
+    {
+      "name": "wrong-request",
+      "events": [
+        "wrong-request-accepted",
+        "retired"
+      ],
+      "settled": false
+    },
+    {
+      "name": "wrong-close-generation",
+      "events": [
+        "accepted",
+        "wrong-generation-retired"
+      ],
+      "settled": false
+    },
+    {
+      "name": "duplicate-accepted",
+      "events": [
+        "accepted",
+        "accepted",
+        "retired"
+      ],
+      "settled": true
+    }
   ]
 }

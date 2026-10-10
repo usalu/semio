@@ -1,0 +1,5 @@
+# Pack JSON Byte and Operation Trial Retirement
+
+Both current documents bind a complete trial to limits/policy, turn bounds, expected outcomes and metadata-copy schedules. Operation nested grant/quantity duplicate the genuine canonical Value grant rather than establishing a new produced record. No projected production fragment consumers established. Preserve actual ReadLimits Rust owner, canonical Grant per-value admission, original policies and every JSON/SQLite/Buffer/native identity/refusal/cancel law. Source hashes only, no copies. True absence RED pending; Rust remains held for Publication.
+
+Actual absence41319 terminal Nx1/2.3s2fails proves both fresh physical authorities. After exact retirement, original Source21027 terminal Nx0/2.0s6laws62assertions plus depth1/612. Five original supplied authority records now admit directly against real canonical Grant; all25 genuine missing-axis negatives remain. Original JSON.parse/SQLite json_extract/Buffer chunks and duplicate-member UTF8 outcomes ran. Both plain inputs unchanged. No Rust or native policy changes, no native allocator assertion credit.

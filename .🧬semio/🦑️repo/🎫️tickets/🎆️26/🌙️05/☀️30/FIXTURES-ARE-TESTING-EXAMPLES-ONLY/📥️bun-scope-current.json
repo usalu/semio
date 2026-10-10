@@ -1,0 +1,142 @@
+{
+  "owned": false,
+  "scopes": [
+    {
+      "path": "package.json",
+      "sha256": "adecfcc3b54b3ed00cc159f3d7512647f3efe8c77e9291afb999753c5b065943",
+      "members": [
+        "🧰️framework/**",
+        "!**/🧫️fixtures/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/storybook-static/**",
+        "!**/temp/**",
+        "!**/coverage/**",
+        "!**/🔌️plugin-modules/**",
+        "!**/compose/**",
+        "!**/.*",
+        "!**/🗑️generated/**"
+      ],
+      "owners": [
+        "*/package.json"
+      ],
+      "owned": false
+    },
+    {
+      "path": "🎓️teaching/package.json",
+      "sha256": "0274b6082d069c5af0e30686fe26c226de490b84e0cff9884afa2cadeca92dc2",
+      "members": [
+        "**",
+        "../🧰️framework/**",
+        "!**/🧫️fixtures/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/storybook-static/**",
+        "!**/temp/**",
+        "!**/coverage/**",
+        "!**/🔌️plugin-modules/**",
+        "!**/compose/**",
+        "!**/.*",
+        "!**/🗑️generated/**"
+      ],
+      "owners": [],
+      "owned": false
+    },
+    {
+      "path": "✏️s/package.json",
+      "sha256": "6e25a763521b3df1f5821fcec1357fa2a18839f79bd3490e005c1290c6e3c41f",
+      "members": [
+        "**",
+        "../🧰️framework/**",
+        "!**/🧫️fixtures/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/storybook-static/**",
+        "!**/temp/**",
+        "!**/coverage/**",
+        "!**/🔌️plugin-modules/**",
+        "!**/compose/**",
+        "!**/.*",
+        "!**/🗑️generated/**"
+      ],
+      "owners": [],
+      "owned": false
+    },
+    {
+      "path": "🏢️semio-tech/package.json",
+      "sha256": "5142dfb2467865d1b07a281564f836a2b8033037bfd9fea8b9bb44c095efa63c",
+      "members": [
+        "**",
+        "../🧰️framework/**",
+        "../✏️s/**",
+        "!**/🧫️fixtures/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/storybook-static/**",
+        "!**/temp/**",
+        "!**/coverage/**",
+        "!**/🔌️plugin-modules/**",
+        "!**/compose/**",
+        "!**/.*",
+        "!**/🗑️generated/**"
+      ],
+      "owners": [],
+      "owned": false
+    },
+    {
+      "path": "🌎️hub/package.json",
+      "sha256": "2798fe17f07070cbd807f6d6a33446ebd021213f0e14e82a31260dbfca0401bd",
+      "members": [
+        "**",
+        "../🧰️framework/**",
+        "../✏️s/**",
+        "!**/🧫️fixtures/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/storybook-static/**",
+        "!**/temp/**",
+        "!**/coverage/**",
+        "!**/🔌️plugin-modules/**",
+        "!**/compose/**",
+        "!**/.*",
+        "!**/🗑️generated/**"
+      ],
+      "owners": [],
+      "owned": false
+    },
+    {
+      "path": "♻️mit-bestand/package.json",
+      "sha256": "2a5801181296be646da6708183a9cc414dfd9425c3b3a706ca983adbd09ddad4",
+      "members": [
+        "**",
+        "../🧰️framework/**",
+        "../✏️s/**",
+        "!**/🧫️fixtures/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/storybook-static/**",
+        "!**/temp/**",
+        "!**/coverage/**",
+        "!**/🔌️plugin-modules/**",
+        "!**/compose/**",
+        "!**/.*",
+        "!**/🗑️generated/**"
+      ],
+      "owners": [],
+      "owned": false
+    }
+  ],
+  "dedicatedLowerTestRoute": "not established by bounded local/script/project/launch inspection"
+}

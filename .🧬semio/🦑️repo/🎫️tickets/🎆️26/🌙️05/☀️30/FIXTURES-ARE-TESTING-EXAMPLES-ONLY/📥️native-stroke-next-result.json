@@ -1,0 +1,135 @@
+{
+  "observedAt": "2026-10-09T22:46:36.938561+00:00",
+  "session": 74290,
+  "exit": 0,
+  "originalArgv": [
+    "bun",
+    "nx",
+    "run",
+    "semio-framework-canvas:test",
+    "--skip-nx-cache",
+    "--outputStyle=static",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt)",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "nxTaskDuration": "1m26s",
+  "native": {
+    "name": "original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 52,
+    "duration": "0.020s Nextest",
+    "debugRows": 18
+  },
+  "log": "🗑️generated/native-stroke-next.log",
+  "logSha256": "6ec2e6e8f16de1c04ae8dab9295b3d0369c5b72748355f1b6f8a2e15709016e4",
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "before": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "after": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "bytes": 143861,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🦀️.rs",
+      "before": "8c274d0584ec6281fcafa315c299c7cd26835972d69ca34a06cc4093f69c3429",
+      "after": "8c274d0584ec6281fcafa315c299c7cd26835972d69ca34a06cc4093f69c3429",
+      "bytes": 6479,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🟦️.ts",
+      "before": "bf741eb04920a859a70407c4ebcff871de9fda0d4ca2d5f40dc9f8d5cfc7440d",
+      "after": "bf741eb04920a859a70407c4ebcff871de9fda0d4ca2d5f40dc9f8d5cfc7440d",
+      "bytes": 3673,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🦀️.rs",
+      "before": "5f6453f6b857fd81ae5693d0495e18e3f9330fcb784160574756aa32f0214bbb",
+      "after": "5f6453f6b857fd81ae5693d0495e18e3f9330fcb784160574756aa32f0214bbb",
+      "bytes": 7454,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🧫️fixtures/🔣️.json",
+      "before": "e432d5d083be49db63642e3e9685778b11eb82988f3e9b2e563be2916d4c57bd",
+      "after": "e432d5d083be49db63642e3e9685778b11eb82988f3e9b2e563be2916d4c57bd",
+      "bytes": 591,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "before": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750",
+      "after": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750",
+      "bytes": 20519,
+      "matches": true
+    }
+  ],
+  "knownOwnProcesses": [
+    {
+      "pid": 39664,
+      "absent": true
+    },
+    {
+      "pid": 39665,
+      "absent": true
+    },
+    {
+      "pid": 40507,
+      "absent": true
+    },
+    {
+      "pid": 42958,
+      "absent": true
+    },
+    {
+      "pid": 43187,
+      "absent": true
+    },
+    {
+      "pid": 43365,
+      "absent": true
+    },
+    {
+      "pid": 43415,
+      "absent": true
+    },
+    {
+      "pid": 43837,
+      "absent": true
+    },
+    {
+      "pid": 43844,
+      "absent": true
+    }
+  ],
+  "actualNativeBinary": {
+    "metadata": "🗑️generated/cs-out/semio-nextest-cPO7Gm/binaries-metadata.json",
+    "metadataSha256": "eab93643f43d0a823eb8b3448a5dcb5f21ff516209ae1da1168ecd7f5a07b3fe",
+    "binaryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/debug/build/semio-framework-canvas/dfc35f158a8a7e10/out/semio_framework_canvas-dfc35f158a8a7e10",
+    "binarySha256": "97dadd2bc5f5f92d709b1dbbb3384c4fb7ca91a3d8d7e81c05310e73b8df34ff",
+    "bytes": 16285200,
+    "pathChars": 186,
+    "packageId": "path+file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%BC%EF%B8%8Fcanvas/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust#semio-framework-canvas@0.1.0",
+    "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
+    "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build",
+    "targetPlatforms": [
+      {
+        "triple": "aarch64-apple-darwin",
+        "target-features": "unknown"
+      }
+    ]
+  },
+  "qualification": "Current original funded Stroke leaf native System/Kurbo/pointer/cancellation proof. Scene/Frame/Vello/fullruntime fixture closure excluded. Shared whole Source observers are not authorship."
+}

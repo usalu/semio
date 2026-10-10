@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { stagePrintFonts } from "./🟦️.ts";
 
@@ -111,4 +112,4 @@ class MetricsScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("metrics", MetricsScript);
-if (import.meta.main) await router.run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

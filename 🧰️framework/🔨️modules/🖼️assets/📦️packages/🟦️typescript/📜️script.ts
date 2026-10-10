@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { createChromiumSvgVideoRuntimeV1 } from "../../../🖌️raster/🎥️video/🖋️svg-export/🌐️browser/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import { testLevelBudgetMs } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
@@ -114,4 +115,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-generated", CheckGeneratedScript);
 
-if (import.meta.main) await runScriptMain(router, { defaultCommand: "build" });
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "build" }) }));

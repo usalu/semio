@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replication Binary Primitive Corpus",
+  "type": "object",
+  "required": [
+    "contract",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "replication.binary.primitives.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "value",
+          "hex"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "u64",
+              "u64Exact",
+              "text",
+              "bytes",
+              "hash",
+              "bool",
+              "f64",
+              "vectorBytes"
+            ]
+          },
+          "value": {},
+          "hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          }
+        }
+      }
+    }
+  }
+}

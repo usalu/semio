@@ -15,13 +15,12 @@
   "borrowedWitness": "same-original-strong-allocation-held-through-turn",
   "receipt": {
     "copiedItems": 1,
-    "copiedBytes": 8,
+    "copiedBytes": 0,
     "retainedCapacityBytes": 0,
     "releasedBytes": 0
   },
   "denied": [
     "items",
-    "copy",
     "depth"
   ],
   "foreignWitness": "InvariantViolated",
@@ -36,5 +35,6 @@
     "WeakAlias",
     "RegisteredWaiter"
   ],
-  "waiterCapacity": 8
+  "waiterCapacity": 8,
+  "metadataCopyCurrency": 0
 }

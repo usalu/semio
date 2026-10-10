@@ -1,11 +1,273 @@
 {
   "traits": [
-    {"name": "OpText", "owner": "🚪️io/📝️text/🦀️.rs"},
-    {"name": "OpBinary", "owner": "🚪️io/💾️binary/🦀️.rs"},
-    {"name": "DiffText", "owner": "🚪️io/📝️text/🦀️.rs"},
-    {"name": "DiffBinary", "owner": "🚪️io/💾️binary/🦀️.rs"},
-    {"name": "DiffCodec", "owner": "🚪️io/🦀️.rs"}
+    {
+      "name": "OpText",
+      "owner": "🚪️io/📝️text/🦀️.rs"
+    },
+    {
+      "name": "OpBinary",
+      "owner": "🚪️io/💾️binary/🦀️.rs"
+    },
+    {
+      "name": "DiffText",
+      "owner": "🚪️io/📝️text/🦀️.rs"
+    },
+    {
+      "name": "DiffBinary",
+      "owner": "🚪️io/💾️binary/🦀️.rs"
+    },
+    {
+      "name": "DiffCodec",
+      "owner": "🚪️io/🦀️.rs"
+    }
   ],
   "binaryOwner": "🚪️io/💾️binary/📦️bytes/🦀️.rs",
-  "semanticOwner": "🎮️mutation/🦀️.rs"
+  "semanticOwner": "🎮️mutation/🦀️.rs",
+  "canonical": {
+    "semanticOwner": "🎮️mutation/🧵️canonical/🦀️.rs",
+    "textOwner": "🚪️io/📝️text/🧵️canonical/🦀️.rs",
+    "sealOwner": "🚪️io/📝️text/🧵️canonical/🔏️seal/🦀️.rs",
+    "oldSealOwner": "🎮️mutation/🧵️canonical/🔏️seal/🦀️.rs",
+    "borrowedTrees": [
+      "Edit",
+      "MutationMeta",
+      "HybridLogicalTimestamp",
+      "ForeignTarget",
+      "TransactionRef",
+      "MutationId",
+      "ActorId",
+      "ArtifactId",
+      "SchemaId",
+      "PayloadHash",
+      "UndoPolicy",
+      "MutationOrigin"
+    ]
+  },
+  "causal": {
+    "semanticOwner": "🔗️causal/🦀️.rs",
+    "binaryOwner": "🚪️io/💾️binary/🔗️causal/🦀️.rs",
+    "functions": [
+      "encode_hlc",
+      "decode_hlc",
+      "encode_envelope",
+      "decode_envelope",
+      "encode_frontier",
+      "decode_frontier",
+      "encode_envelopes",
+      "decode_envelopes",
+      "decode_document_backbone_envelopes_exact_with_limits",
+      "decode_document_backbone_envelopes_exact",
+      "encode_ops_vec",
+      "decode_ops_vec"
+    ],
+    "semanticTypes": [
+      "MutationEnvelope",
+      "ArtifactDiff",
+      "InverseMutation",
+      "FrontierSummary"
+    ],
+    "consumers": [
+      "📡️wire/🦀️.rs"
+    ],
+    "textOwner": "🚪️io/📝️text/🔗️causal/🦀️.rs",
+    "valueTypes": [
+      "MutationEnvelope",
+      "ArtifactDiff",
+      "InverseMutation",
+      "FrontierSummary",
+      "FrontierComparison"
+    ]
+  },
+  "primitives": {
+    "semanticOwner": "🟦️.ts",
+    "binaryOwner": "🚪️io/💾️binary/🟦️.ts",
+    "functions": [
+      "writeVarintU64",
+      "readVarintU64",
+      "writeVarintU64Exact",
+      "readVarintU64Exact",
+      "writeStr",
+      "readStr",
+      "writeBytes",
+      "readBytes",
+      "writeHash32",
+      "readHash32",
+      "writeBool",
+      "readBool",
+      "writeF64",
+      "readF64",
+      "writeVecBytes",
+      "readVecBytes"
+    ]
+  },
+  "presence": {
+    "semanticOwner": "🟦️.ts",
+    "binaryOwner": "🚪️io/💾️binary/👥️presence/🟦️.ts",
+    "functions": [
+      "encodePresencePeer",
+      "decodePresencePeer",
+      "encodePresenceToolRun",
+      "decodePresenceToolRun",
+      "encodePresenceHistoryEdit",
+      "decodePresenceHistoryEdit",
+      "encodePresenceInteraction",
+      "decodePresenceInteraction",
+      "readU8"
+    ],
+    "semanticTypes": [
+      "ArtifactPresencePeer",
+      "ArtifactPresenceTyping",
+      "ArtifactPresenceHistoryEdit",
+      "ArtifactPresenceToolRun",
+      "ArtifactPresenceWindowView",
+      "ArtifactPresenceViewKind",
+      "ArtifactPresenceUi",
+      "ArtifactPresenceInteraction",
+      "ArtifactPresenceDomain"
+    ]
+  },
+  "typescriptCausal": {
+    "semanticOwner": "🟦️.ts",
+    "binaryOwner": "🚪️io/💾️binary/🔗️causal/🟦️.ts",
+    "functions": [
+      "writeOptStr",
+      "readOptStr",
+      "writeOptBytes",
+      "readOptBytes",
+      "writeOptFrontier",
+      "readOptFrontier",
+      "writeVecStr",
+      "readVecStr",
+      "writeVecEnvelope",
+      "readVecEnvelope",
+      "encodeHlc",
+      "decodeHlc",
+      "encodeEnvelope",
+      "encodeExactEnvelope",
+      "encodeEnvelopeFields",
+      "decodeEnvelope",
+      "encodeFrontier",
+      "decodeFrontier",
+      "decodeCausalEnvelopeBatch",
+      "encodeCausalEnvelopeBatch",
+      "mutationEnvelopeToWire",
+      "mutationEnvelopeFromWire"
+    ],
+    "semanticTypes": [
+      "MutationEnvelope",
+      "WireMutationEnvelope",
+      "ExactWireMutationEnvelope",
+      "WireFrontierSummary"
+    ],
+    "codecInterface": "ReplicationPackCodec"
+  },
+  "typescriptBackbone": {
+    "semanticOwner": "🟦️.ts",
+    "binaryOwner": "🚪️io/💾️binary/🔗️causal/🧮️backbone/🟦️.ts",
+    "functions": [
+      "documentBackboneBatchLimit",
+      "normalizedDocumentBackboneBatchLimits",
+      "documentBackboneWriteU64",
+      "documentBackboneWriteBytes",
+      "documentBackboneWriteText",
+      "encodeDocumentBackboneEnvelopeBatchExact",
+      "readDocumentBackboneEnvelopeBatchAtExact",
+      "decodeDocumentBackboneEnvelopeBatchExact",
+      "readDocumentBackboneEnvelopeBatchExact"
+    ],
+    "semanticTypes": [
+      "ExactWireMutationEnvelope"
+    ],
+    "codecTypes": [
+      "DocumentBackboneBatchLimits"
+    ],
+    "codecErrors": [
+      "DocumentBackboneBatchError"
+    ],
+    "codecConstants": [
+      "DOCUMENT_BACKBONE_BATCH_LIMITS"
+    ],
+    "semanticConstants": [
+      "DOCUMENT_BACKBONE_RETENTION_LIMITS"
+    ]
+  },
+  "typescriptBootstrap": {
+    "semanticOwner": "🟦️.ts",
+    "owner": "🚪️io/📥️bootstrap/🟦️.ts",
+    "functions": [
+      "artifactBootstrapError",
+      "equalBytes",
+      "validateBytes",
+      "validateHash",
+      "validateNatural",
+      "validateLimits",
+      "artifactBootstrapTotal",
+      "validateArtifactBootstrapHeader",
+      "validateArtifactBootstrap",
+      "artifactBootstrapSha256",
+      "artifactBootstrapAggregateHash"
+    ],
+    "classes": [
+      "ArtifactBootstrapAssembler"
+    ],
+    "types": [
+      "ArtifactBootstrapLimits",
+      "ArtifactBootstrapProgress"
+    ],
+    "interfaces": [
+      "ArtifactBootstrapControl"
+    ],
+    "constants": [
+      "ARTIFACT_BOOTSTRAP_FORMAT_VERSION",
+      "ARTIFACT_BOOTSTRAP_CHUNK_BYTES",
+      "ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES",
+      "ARTIFACT_BOOTSTRAP_MAX_CHUNKS",
+      "DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS"
+    ],
+    "semanticTypes": [
+      "ArtifactBootstrapPair",
+      "WireArtifactBootstrap"
+    ]
+  },
+  "typescriptWire": {
+    "semanticOwner": "🟦️.ts",
+    "owner": "🚪️io/💾️binary/📡️wire/🟦️.ts",
+    "functions": [
+      "encodeArtifactBootstrap",
+      "readArtifactBootstrapString",
+      "readArtifactBootstrapBytes",
+      "readArtifactBootstrapChunkBytes",
+      "decodeArtifactBootstrap",
+      "encodeBootstrap",
+      "decodeBootstrap",
+      "encodeApplyOutcome",
+      "decodeApplyOutcome",
+      "encodeAckStage",
+      "decodeAckStage",
+      "writeVecAckStage",
+      "readVecAckStage",
+      "encodeClientFrame",
+      "encodeClientCommandsFrameExact",
+      "decodeClientFrame",
+      "encodeServerFrame",
+      "decodeServerFrame",
+      "extractServerCommandsDocumentBackboneBatchExact"
+    ],
+    "constants": [
+      "WIRE_LANE_BYTES",
+      "WIRE_BYTE_LANES"
+    ],
+    "semanticTypes": [
+      "WireLane",
+      "WireBootstrap",
+      "WireApplyOutcome",
+      "WireAckStage",
+      "ClientFrame",
+      "ServerFrame"
+    ]
+  },
+  "typescriptInputs": {
+    "projectOwner": "📦️packages/🟦️typescript/📋️project.json",
+    "requiredSourceInput": "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/**/*.ts"
+  }
 }

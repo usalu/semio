@@ -1,0 +1,93 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/🟦️.ts",
+    "ownership": false,
+    "exists": true,
+    "sha256": "940f2a97e2e13bd63de62512c31f5262b3dd05d3bf5fb16aab4d0f2988aa24e4",
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+    "ownership": false,
+    "exists": true,
+    "sha256": "fe0aea1c39d0bd30808f312a60e91af56854ab8bda98a13aa445e1c2c5b80355",
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+    "ownership": false,
+    "exists": true,
+    "sha256": "b1cd9cd0915a1e66ec1c8b3ee6c2547912382bc411f6c2746ea91560c1527a58",
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+    "ownership": false,
+    "exists": true,
+    "sha256": "66f77674969f60a9977ab3280369212586002634bc43e70d4a9ecaca2697628e",
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧪️tests/🟦️.ts",
+    "ownership": false,
+    "exists": true,
+    "sha256": "3036fdbe905e5ee6ab6e05c23f4239287a7feb9001b65b30ac43192a6f752abc",
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null,
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null,
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null,
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null,
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null,
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null,
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🫴️semantic/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null,
+    "matchesAction": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🫴️native/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": false,
+    "sha256": null,
+    "matchesAction": true
+  }
+]

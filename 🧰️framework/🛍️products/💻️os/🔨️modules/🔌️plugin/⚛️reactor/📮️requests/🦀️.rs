@@ -47,7 +47,7 @@ enum Slot {
     },
 }
 
-const REQUEST_SLOTS: usize = 1_024;
+pub(crate) const REQUEST_SLOTS: usize = 1_024;
 const REQUEST_OUTBOUND_SLOTS: usize = 1_024;
 const REQUEST_SLOT_WORDS: usize = REQUEST_SLOTS / u64::BITS as usize;
 

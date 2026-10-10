@@ -220,6 +220,20 @@
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts installed-service-source"
       }
+    },
+    "test-pack-wire-materialization-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎒️pack-wire-materialization/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-pack-wire-materialization-source"
+      }
     }
   }
 }

@@ -134,35 +134,36 @@ pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {
 /// id is known — raising `manifest.id` instead made every browser evaluation fault
 /// `extension.missing` and stall the tick chain (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 struct ContributedExtensionStub {
-    invocation_address: String,
-    operator_id: String,
+    metadata:Option<protocol::value::ordered::SharedOwner<neural::PendingOperatorMetadata>>,
     retirement:semio_framework_value::retirement::controlled::RetainedOwnerGate<Option<ControlledRetirement<ContributedStubSource>>>,
 }
 #[derive(semio_framework_value::RetireOwned)]
-struct ContributedStubSource{invocation_address:String,operator_id:String}
+struct ContributedStubSource{metadata:Option<protocol::value::ordered::SharedOwner<neural::PendingOperatorMetadata>>}
 
 impl neural::Operator for ContributedExtensionStub {
+    /// 🧊️ Keeps synchronous diagnostics on the same declared contribution closure.
+    fn retire_cold(mut self:Box<Self>){let mut values=neural::ValueRetirement::default();for _ in 0..1000000{if self.retirement_is_empty(){return}let copy=self.next_retire_copy_byte_demand().unwrap().max(4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_retire_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:self.next_retire_release_byte_demand().unwrap(),maximum_depth:self.next_retire_depth_demand().unwrap()};self.retire_step(grant,&mut values).unwrap();}assert!(self.retirement_is_empty(),"original cold contribution closure did not reach terminal ownership");}
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let node_hash = neural::node_hash(&self.operator_id, input);
-        Err(EvalError::PendingExtension { extension_id: self.invocation_address.clone(), operator_id: self.operator_id.clone(), node_hash })
+        let node_hash = neural::node_hash(&self.metadata.as_ref().unwrap().operator_id, input);
+        Err(EvalError::PendingExtension { extension_id: self.metadata.as_ref().unwrap().extension_id.clone(), operator_id: self.metadata.as_ref().unwrap().operator_id.clone(), node_hash })
     }
 
-    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(neural::OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{neural::OperatorPlanAdmission::immediate(input,grant)}
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(neural::OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{let Some(metadata)=self.metadata.as_ref()else{return Err((ValueError::literal(ValueRefusalKind::Canceled,"original contribution metadata is closing").into(),input))};neural::OperatorPlanAdmission::pending(metadata,input,grant)}
     fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
     fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
     fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
     fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
-    fn retirement_is_empty(&self)->bool{self.invocation_address.capacity()==0&&self.operator_id.capacity()==0&&self.retirement.try_lock().is_ok_and(|owner|owner.is_none())}
+    fn retirement_is_empty(&self)->bool{self.metadata.is_none()&&self.retirement.try_lock().is_ok_and(|owner|owner.is_none())}
     fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}
     fn next_retire_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
     fn next_retire_release_byte_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
-    fn next_retire_depth_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(usize::from(self.invocation_address.capacity()!=0||self.operator_id.capacity()!=0)),ControlledRetirement::next_depth_demand)}
+    fn next_retire_depth_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(usize::from(self.metadata.is_some())),ControlledRetirement::next_depth_demand)}
     fn retire_step(&mut self,grant:RetainedCloneGrant,_values:&mut neural::ValueRetirement)->Result<RetainedCloneStep,ValueError>{
         if self.retirement_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let retirement=self.retirement.get_mut();
-        if let Some(owner)=retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){*retirement=None}return Ok(if self.invocation_address.capacity()==0&&self.operator_id.capacity()==0&&retirement.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+        if let Some(owner)=retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){*retirement=None}return Ok(if self.metadata.is_none()&&retirement.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original contributed stub handoff requires depth"))}
-        *retirement=Some(ControlledRetirement::new(ContributedStubSource{invocation_address:std::mem::take(&mut self.invocation_address),operator_id:std::mem::take(&mut self.operator_id)}).unwrap_or_else(|_|unreachable!("original contributed stub source is typed")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+        *retirement=Some(ControlledRetirement::new(ContributedStubSource{metadata:self.metadata.take()}).unwrap_or_else(|_|unreachable!("original contributed stub source is typed")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 }
 
@@ -211,7 +212,7 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
         }
         let invocation_address = plugin_id.to_string();
         let operator_id = info.id.clone();
-        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { invocation_address, operator_id,retirement:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(None) }) }], &[]);
+        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { metadata:Some(protocol::value::ordered::SharedOwner::from_cold(neural::PendingOperatorMetadata{extension_id:invocation_address,operator_id})),retirement:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(None) }) }], &[]);
     }
     registry.finalize();
     Ok(())

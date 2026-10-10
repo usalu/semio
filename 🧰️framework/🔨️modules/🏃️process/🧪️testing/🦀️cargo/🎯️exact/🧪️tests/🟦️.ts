@@ -6,7 +6,14 @@ import glob from "fast-glob";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 
-import { runExactCargoLaws } from "../🟦️.ts";
+import { runExactCargoLaws, configuredExactCargoLawPolicyV1 } from "../🟦️.ts";
+import { type ScriptInvocation } from "../../../../🧭️routing/📥️invocation/🟦️.ts";
+
+/** 🎛️ Supplies the exact original test caller control independently of examples. */
+function originalInvocation(): ScriptInvocation {
+ const controller = new AbortController();
+ return { policy: { version: 1, owner: "exact-original-caller", maximumElapsedMilliseconds: 0 }, capabilities: {}, control: { signal: controller.signal, remainingMilliseconds: () => null, publish: () => {}, yieldContinuation: async () => {} } };
+}
 
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
@@ -52,7 +59,7 @@ test("exact executable fingerprint retains identity, exposes progress and refuse
   expect(replaced).toBe(true);
 });
 
-test("exact Cargo law fixture has independent strict schema and dual SHA-256 identity", async () => {
+test("exact Cargo law examples preserve independent dual SHA-256 identity", async () => {
   const bytes = Buffer.from(fixture.executableBytesHex, "hex");
   expect(createHash("sha256").update(bytes).digest("hex")).toBe(fixture.executableSha256);
   expect(Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex")).toBe(fixture.executableSha256);
@@ -119,7 +126,7 @@ for (const row of fixture.cases) {
     let outcome = "denied";
     try {
       const env = { ...process.env, RUST_MIN_STACK: fixture.stageEnvironment.buildStack, SEMIO_STAGE_ENV_LAW: fixture.stageEnvironment.sharedValue, CARGO_TARGET_DIR: row.mutation === "source-cargo-target" ? root : undefined, ...(row.mutation === "native-output-override" ? { RUST_TEST_NOCAPTURE: "1" } : {}) };
-      const receipts = await runExactCargoLaws({ cwd: root, artifactDir: root, manifestPaths:{[fixture.package]:join(root,"Cargo.toml")}, cargoTargetDir:row.mutation === "source-cargo-target" ? root : join(artifactRoot,fixture.compilerStorageDirectory), env, nativeEnv: { RUST_MIN_STACK: fixture.stageEnvironment.nativeStack, ...(row.mutation === "native-output-override" ? { RUST_TEST_NOCAPTURE: "1" } : {}) }, groups: [{ package: fixture.package, target: fixture.target, laws: fixture.laws }], cancelled: () => cancelled }, port);
+      const receipts = await runExactCargoLaws({ invocation: originalInvocation(), policy: configuredExactCargoLawPolicyV1(), cwd: root, artifactDir: root, manifestPaths:{[fixture.package]:join(root,"Cargo.toml")}, cargoTargetDir:row.mutation === "source-cargo-target" ? root : join(artifactRoot,fixture.compilerStorageDirectory), env, nativeEnv: { RUST_MIN_STACK: fixture.stageEnvironment.nativeStack, ...(row.mutation === "native-output-override" ? { RUST_TEST_NOCAPTURE: "1" } : {}) }, groups: [{ package: fixture.package, target: fixture.target, laws: fixture.laws }], cancelled: () => cancelled }, port);
       assertions = receipts.reduce((sum, receipt) => sum + receipt.assertions, 0);
       expect(receipts[0]?.laws).toEqual(fixture.laws);
       expect(receipts[0]?.sha256).toBe(fixture.executableSha256);
@@ -153,7 +160,7 @@ test("exact Cargo law counts match the portable schema before any compiler admis
       },
     };
     try {
-      await runExactCargoLaws({ cwd: root, artifactDir: root, manifestPaths:{[fixture.package]:join(root,"Cargo.toml")}, cargoTargetDir:join(process.env.SEMIO_TEST_ARTIFACT_DIR!,fixture.compilerStorageDirectory), groups: [{ package: fixture.package, target: fixture.target, laws }] }, port);
+      await runExactCargoLaws({ invocation: originalInvocation(), policy: configuredExactCargoLawPolicyV1(), cwd: root, artifactDir: root, manifestPaths:{[fixture.package]:join(root,"Cargo.toml")}, cargoTargetDir:join(process.env.SEMIO_TEST_ARTIFACT_DIR!,fixture.compilerStorageDirectory), groups: [{ package: fixture.package, target: fixture.target, laws }] }, port);
       throw new Error("Controlled compiler refusal must terminate");
     } catch (error) {
       if (vector.accepted) expect(error).toBeInstanceOf(ExactCargoLawError);

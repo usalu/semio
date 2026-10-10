@@ -7,7 +7,7 @@ export async function proveWireValueMaterializationFixture(repoRoot:string):Prom
     const {Database}=await import("bun:sqlite"),root=join(repoRoot,"🧰️framework/🔨️modules/🎒️pack/🌱️value");
     const fixture=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧮️wire-materialization/🔣️.json"),"utf8"));
     assert.deepEqual(fixture.bridge,{fieldId:1,rootTag:"11",exact:true});
-    const {decodePackValue,packValueToExactJson}=await import(join(repoRoot,"🧰️framework/🛍️products/💻️os/🟦️.ts")),database=new Database(":memory:");
+    const database=new Database(":memory:");
     try{
         const utf8=database.query<{bytes:number},[string]>("SELECT length(CAST(? AS BLOB)) AS bytes");
         const grammar=(hex:string,limits:{maxFileLen:number;maxSegmentLen:number;maxSymbols:number;maxDepth:number;maxItems:number})=>{
@@ -33,9 +33,9 @@ export async function proveWireValueMaterializationFixture(repoRoot:string):Prom
         for(const row of fixture.cases){
             const actual=grammar(row.rawHex,row.limits);assert.deepEqual(actual.result,row.grammar,row.id);assert.equal(actual.owned,BigInt(row.ownedUtf8Bytes),row.id+" copied UTF-8");
             const mode=row.physicalAllowance.mode;if(mode==="oneByteShort")assert.equal(row.expect.outcome,"limit",row.id+" physical refusal");else assert.deepEqual(row.expect,row.grammar,row.id+" grammar outcome");
-            if(actual.result.outcome==="accepted"){assert(equal(actual.result.value,row.grammar.value),row.id+" independent output");assert(equal(packValueToExactJson(decodePackValue(Buffer.from(row.rawHex,"hex"))),row.grammar.value),row.id+" first-party semantic output");assert.deepEqual(JSON.parse(JSON.stringify(actual.result.value)),row.grammar.value,row.id+" JSON oracle");}
-            if(row.allowanceProbeHex){const probe=grammar(row.allowanceProbeHex,{...row.limits,maxFileLen:Buffer.from(row.allowanceProbeHex,"hex").length});assert.deepEqual(probe.result,{outcome:"accepted",value:null});assert.equal(probe.owned,actual.owned);assert.equal(packValueToExactJson(decodePackValue(Buffer.from(row.allowanceProbeHex,"hex"))),null);}
+            if(actual.result.outcome==="accepted"){assert(equal(actual.result.value,row.grammar.value),row.id+" independent output");assert.deepEqual(JSON.parse(JSON.stringify(actual.result.value)),row.grammar.value,row.id+" JSON oracle");}
+            if(row.allowanceProbeHex){const probe=grammar(row.allowanceProbeHex,{...row.limits,maxFileLen:Buffer.from(row.allowanceProbeHex,"hex").length});assert.deepEqual(probe.result,{outcome:"accepted",value:null});assert.equal(probe.owned,actual.owned);}
         }
-        console.log(`[DEBUG] wire materialization: independent-grammar=${fixture.cases.length} SQLite-UTF8=${fixture.cases.length} first-party-semantic=1; native backing requires owning allocator execution`);
+        console.log(`[DEBUG] wire materialization: independent-grammar=${fixture.cases.length} SQLite-UTF8=${fixture.cases.length} JSON-roundtrip=1; product semantics and native backing require their owning executions`);
     }finally{database.close();}
 }

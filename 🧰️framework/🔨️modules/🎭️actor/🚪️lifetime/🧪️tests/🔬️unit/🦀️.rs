@@ -98,7 +98,7 @@ fn actor_instance_lifecycle_wire_requires_exact_accepted_identity_before_termina
 }
 
 fn turn(lifecycle_receipt: Option<ActorInstanceLifecycleReceipt>) -> crate::TurnResult {
-    crate::TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], cold_pair_ingress: Default::default(), lifecycle_receipt, ui_patch_receipt: None, next_wake: None, status: crate::TurnStatus::Idle, usage: crate::Usage::default() }
+    crate::TurnResult { retained_receipt: serde_json::from_str(include_str!("../../../🎟️retained-turn/🧫️fixtures/🔣️.json")).unwrap(), ui_patches: vec![], effects: vec![], command_ingress: vec![], cold_pair_ingress: Default::default(), lifecycle_receipt, ui_patch_receipt: None, next_wake: None, status: crate::TurnStatus::Idle, usage: crate::Usage::default() }
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,92 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧬️schema/🔣️.json",
+      "before": "46184dae885dd014c3fe588b570eec98a4419fdd7528f09495be29aa09d81df6",
+      "after": null,
+      "action": "remove exclusive trial schedule authority"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧬️schema/🔣️.json",
+      "before": "331a1ba0abf67e3fea201101c65b7bb1652a353171af3056ce68b4e9cb2ed848",
+      "after": null,
+      "action": "remove exclusive trial schedule authority"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧬️schema/🔣️.json",
+      "before": "fc0e55da42abf78a4ac0d12cf9d561f952a04689c96da40c0e651934db863321",
+      "after": null,
+      "action": "remove exclusive trial schedule authority"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🟦️.ts",
+      "beforeGuard": "909399a7a8e3ba0c58dc8c4ec0e930d3a6fe71c4d27afe67f46eb5a79d84f5da",
+      "beforeMutation": "40d8c82ec74f63bd9fee0958340a045a32c4e94f25163dc5d3a55d4a87376db3",
+      "after": "f517dcdfb435799f91793446c18af1b54b16388249c27ee2a5366b59871b6a9a",
+      "action": "remove whole-law admission/import; preserve original actual independent JSON/Date/SQLite/Buffer laws and canonical per-Grant Ajv"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🟦️.ts",
+      "beforeGuard": "548b76a5cc1540ca020e9312bc0cf3b584a4287623629e7bf284837258de25cf",
+      "beforeMutation": "a56225f9b52ff972477de757ee3e0cd96558ef54a76e6bfe9e4a8039d9cd1fd5",
+      "after": "12999da7b748c50860053778ab30ae4d6461cf1b5ce50da1396050f2a6949add",
+      "action": "remove whole-law admission/import; preserve original actual independent JSON/Date/SQLite/Buffer laws and canonical per-Grant Ajv"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧪️tests/🟦️.ts",
+      "beforeGuard": "1f84a9e275d1365f5a13a489542a539419c5b491d8b7e29b9d0237e8f55444bf",
+      "beforeMutation": "e8eee5e874727de8eb9959a07db26d9c2b19c2a60080f36e8c94c8f51635ba44",
+      "after": "e4f9768cb27fb6675c3aa91041987467ecdea01ac82d66bb49f360358ee5f331",
+      "action": "remove whole-law admission/import; preserve original actual independent JSON/Date/SQLite/Buffer laws and canonical per-Grant Ajv"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🟦️.ts",
+      "before": "f517dcdfb435799f91793446c18af1b54b16388249c27ee2a5366b59871b6a9a",
+      "after": "0b9c1323022a24707720dd24f2926a1457bf4db537e21b3d89ad5fcbdb7382c1",
+      "action": "align source-only constructor literal guard to genuine current generic borrowed signature; preserve semantic and physical laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🟦️.ts",
+      "before": "12999da7b748c50860053778ab30ae4d6461cf1b5ce50da1396050f2a6949add",
+      "after": "f380ac8475763a4d7f5b21e5fdd80b55c9ba0db5d0394886aa8346a5e2b4713c",
+      "action": "align source-only constructor literal guard to genuine current generic borrowed signature; preserve semantic and physical laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧪️tests/🟦️.ts",
+      "before": "e4f9768cb27fb6675c3aa91041987467ecdea01ac82d66bb49f360358ee5f331",
+      "after": "6d882668b849bfdb7301a7d75897e4b2094c0620c060ec7cb41cd0fbcf822649",
+      "action": "align source-only constructor literal guard to genuine current generic borrowed signature; preserve semantic and physical laws"
+    }
+  ],
+  "plainObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧫️fixtures/🔣️.json",
+      "before": "95ae5f1ee321dbdb96fca12a81cfb6985ef1648625ca48fbf067cd582cce328f",
+      "after": "95ae5f1ee321dbdb96fca12a81cfb6985ef1648625ca48fbf067cd582cce328f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧫️fixtures/🔣️.json",
+      "before": "8bae287e568fd365db5c1056fca3ee631a1172bbe62314d3d49033de57f66187",
+      "after": "8bae287e568fd365db5c1056fca3ee631a1172bbe62314d3d49033de57f66187"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧫️fixtures/🔣️.json",
+      "before": "33423d1d2476d4d0557dc63436a758c464dbaf5f635cca1433db440d9db72cc4",
+      "after": "33423d1d2476d4d0557dc63436a758c464dbaf5f635cca1433db440d9db72cc4"
+    }
+  ],
+  "currentAbsence": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧬️schema/🔣️.json",
+      "absent": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧬️schema/🔣️.json",
+      "absent": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧬️schema/🔣️.json",
+      "absent": true
+    }
+  ]
+}

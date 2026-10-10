@@ -1,0 +1,9 @@
+# Watcher Original Output Type
+
+Read-only two-file Source review, no typecheck/native proof. nxWatcherEnvironment123–129 always returns actual NX_WORKSPACE_DATA_DIRECTORY:string and NX_SOCKET_DIR:string, and explicitly clears NX_DAEMON_SOCKET_DIR:undefined while preserving arbitrary incoming optional environment keys. A first-party neutral output type should be `Record<string,string|undefined> & { NX_WORKSPACE_DATA_DIRECTORY:string; NX_SOCKET_DIR:string; NX_DAEMON_SOCKET_DIR:undefined }`. This describes actual mandatory output without exporting NodeJS.ProcessEnv or making every input field mandatory. No new schema fixture or compatibility shape is needed.
+
+Capture `const watchTarget=invocation.watch` inside the admitted if branch281 and use that immutable original value in callbacks287/294. This preserves descriptor source identity and avoids a non-null assertion or default target. Do not synthesize missing invocation/capabilities. Original invocation.control still owns launcher abort/budget and current source watcher context.
+
+Existing neutral tests use EventEmitter objects cast as never39/59/141/149 and string-as-never registration165; these are not actual ChildProcess instances. Root can use real unspawned Node ChildProcess + PassThrough stdout witnesses for the callback/event interface and compare exact returned witness identity, preserving independent Node EventEmitter ordering oracle. Do not return a string or null as fake production registration. Watcher environment assertions then legally read required graph/socket strings from the first-party return type.
+
+Current direct input tests also compute identity regex separately; preserve exact defining locked locale/terminology keys and bytes. Current source hashes in companion. Any successful compile or runtime result must come from Root original normal route after changes, not this observation.

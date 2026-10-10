@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { wasmBuildArguments } from "../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
@@ -15,7 +17,8 @@ import { CacheVerifyScript } from "./🔁️verification/📋️orchestration/�
 import { CachePruneScript, CacheReportScript } from "./🧹️pruning/📋️orchestration/🟦️.ts";
 import { CargoProvenanceScript } from "./🦀️cargo/🧾️provenance/🟦️.ts";
 import { devToolingEnv, getWorkspaceRoot, orchestratorBudgetOpts, runCmd, wasmBindgenVersion, wasmBuildEnvironment } from "../📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import plugin, { cacheInternals } from "../🟨️.mjs";
 import { stageRepositoryArtifacts } from "./📦️artifacts/🟦️.ts";
@@ -60,6 +63,28 @@ export async function testCacheContracts(): Promise<void> {
   await tests.testCacheContracts();
 }
 
+/** 🧪️ Runs the native workspace laws inside the same original command cancellation and deadline. */
+async function testWorkspaceOwnership(invocation: ScriptInvocation, root: string, artifacts: string): Promise<void> {
+  checkScriptInvocation(invocation);
+  const options = orchestratorBudgetOpts({ SEMIO_TEST_ARTIFACT_DIR: artifacts }), budget = scriptInvocationBudget(invocation, options.budgetMs!), child = spawn(process.execPath, ["test", join(SCRIPT_ROOT, "../🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts")], { cwd: root, env: options.env, stdio: "inherit", detached: process.platform !== "win32" });
+  let stopped: unknown;
+  const stop = (reason: unknown): void => { stopped ??= reason; terminateOwnedChildTree(child); }, abort = (): void => stop(invocation.control.signal.reason);
+  const closed = new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code, signal) => signal ? reject(Error("Original workspace tests stopped: " + signal)) : accept(code ?? 1)); });
+  invocation.control.signal.addEventListener("abort", abort, { once: true });
+  const timeout = budget === 0 ? undefined : setTimeout(() => stop(Error("Original workspace test deadline exhausted")), budget);
+  try {
+    if (invocation.control.signal.aborted) abort();
+    const status = await closed;
+    if (stopped) throw stopped;
+    checkScriptInvocation(invocation);
+    if (status !== 0) throw Error("Original workspace tests exited with status " + status);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+    invocation.control.signal.removeEventListener("abort", abort);
+    terminateOwnedChildTree(child);
+  }
+}
+
 /** 🧪️ Routes the full cache suite, the focused portable command-source contract or the build-dir provenance laws. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -95,6 +120,28 @@ class TestScript extends BundleScript {
     if (args[0] === "artifact-source") {
       if (args.length !== 1) throw new Error("Expected test artifact-source");
       runCmd(process.execPath, ["test", join(SCRIPT_ROOT, "🧪️tests", "🗿️artifact-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (args[0] === "workspace-ownership") {
+      if (args.length !== 1) throw Error("Expected test workspace-ownership");
+      const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/tests/bun-workspace");
+      mkdirSync(artifacts, { recursive: true });
+      await testWorkspaceOwnership(this.invocation, this.repoRoot, artifacts);
+      const ownership = await import("../🗂️workspaces/🟦️bun/🟦️.ts");
+      const report = await ownership.inspectBunWorkspaceOwnership(this.repoRoot, {
+        signal: this.invocation.control.signal,
+        advance: async progress => {
+          checkScriptInvocation(this.invocation);
+          if (progress.completedOperations % 128 === 0) {
+            await this.invocation.control.publish({ owner: this.invocation.policy.owner, command: "workspace-ownership " + progress.operation + " " + progress.completedOperations, stage: "running" });
+            await this.invocation.control.yieldContinuation();
+          }
+          checkScriptInvocation(this.invocation);
+        },
+      });
+      checkScriptInvocation(this.invocation);
+      writeFileSync(join(artifacts, "bun-workspace-ownership.json"), JSON.stringify(report, null, 2) + "\n");
+      console.log("[DEBUG] Original current Bun publication and source ownership verified " + report.scopes.length + " installation scopes");
       return;
     }
     if (args[0] === "native-input-vocabulary") {
@@ -161,4 +208,4 @@ const router = new ScriptRouter(SCRIPT_ROOT)
   .register("cache-prune", CachePruneScript)
   .register("cargo-provenance", CargoProvenanceScript);
 
-if (import.meta.main) await runScriptMain(router);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

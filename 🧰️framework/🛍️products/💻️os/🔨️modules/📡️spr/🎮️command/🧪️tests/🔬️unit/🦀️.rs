@@ -853,7 +853,7 @@ fn foreign_steps_are_excluded_from_fold_plan_diff() {
     assert_eq!(foreign.len(), 2);
     for (index, expected) in foreign.iter().enumerate() {
         let (source, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| CompositeMutationKind::<i64, CounterMutation>::foreign_step_source(&kind, &base, index).expect("original borrowed source").expect("original declared hop"));
-        assert_eq!(heap.allocated_bytes, 0);
+        assert_eq!(heap.requested_bytes, 0);
         assert_eq!(heap.released_bytes, 0);
         assert_eq!(source.artifact_id, expected.target.artifact_id);
         assert_eq!(source.artifact_kind, expected.target.artifact_kind);
@@ -880,7 +880,7 @@ fn derive_composite_mutation_wires_delegating_mutation_kind() {
     }
     assert_eq!(restored, base);
     assert_eq!(<AddCounterTwice as MutationKind<i64, CounterMutation>>::SEMANTICS.kind, "add-counter-twice");
-    assert!(MutationKind::<i64, CounterMutation>::foreign_steps(&kind, &base).is_empty());
+    assert!(<AddCounterTwice as CompositeMutationKind<i64, CounterMutation>>::foreign_step_source(&kind,&base,0).expect("original composite without foreign steps").is_none());
 }
 //#endregion 🧪️CompositeLaws
 

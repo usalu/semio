@@ -1,0 +1,341 @@
+{
+  "stage": true,
+  "native": "UNRUN",
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🌱️value/🦀️.rs",
+      "beforeSha256": "c145492f1a36e28d8dfa8ca0fab6ec8d19e3277ed5495488db86c0a86bd49eb6",
+      "afterSha256": "10ac79c079d88886beb0d37c9a754608984643e938798d745c8c90627142dffa",
+      "blocks": [
+        {
+          "beforeSha256": "ea5bcf448cfcf82c651a526d2320ec01748d05004acfad865d09b76a69712e08",
+          "afterSha256": "b903d7c5af16536b808453b81adf789311b302957f46e90522b56bf9eafef6b6",
+          "signature": "fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String>"
+        },
+        {
+          "beforeSha256": "c01babf230f254e5ff65e29bf3d2210a698b655d23df6c04e53f97c7ac81ab8b",
+          "afterSha256": "8812db5cb7ec5cea2e29ac88fa188307e22cb8eb9824906364ef2f2c55e8f48d",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "6a24d5f28c116bd8702c28673ec039d853e3973b4c9d0e28b820094c1a310f7b",
+      "afterSha256": "dac4fbd72567a6f47716436cc2c1ed43a81a7305bdf995efacaace835b5e8e76",
+      "blocks": [
+        {
+          "beforeSha256": "c862c8c778ce07edba921d0d13e3770352d6810bb9637ce935b656c670e4e76e",
+          "afterSha256": "971026eea331aadb82a409e35101c64ea6f1b1b81e5d46e2290b61ace87b6170",
+          "signature": "fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String>"
+        },
+        {
+          "beforeSha256": "e5396ebf0fbe807ad5459c278fd6330d1267cd0c283a85db7608082bf54831e3",
+          "afterSha256": "801749d6ac15fbe5b78144fa385ec10ecae7344f175ac5e51fa2cd8290d607ac",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+      "beforeSha256": "0ae4e27cde1bb26956d4fc5e7fa3aba6265f2ef87bf6b2d8835b569390cb0353",
+      "afterSha256": "8f31cbf3f697a24a721a2610bf92169320f166c7abd2debb48cc633a9d15b50e",
+      "blocks": [
+        {
+          "beforeSha256": "cbcda34f071da91ad5b215e9ca6664eb5b7baba75958f84d046456bf8fa8c27b",
+          "afterSha256": "1a59d1667f39b3237c21c1ed1e1585750ccbd70c05222a8de721c90d27c7834f",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String>"
+        },
+        {
+          "beforeSha256": "3d05f3f7deb7e74693383c3bb7f3fe32fb352d4fd0221d293a837209dfe664ae",
+          "afterSha256": "233f6dcab43d9b0182890a5f2a0abc407186e886bcbdab76d63344385d2ad390",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧪️tests/🦀️.rs",
+      "beforeSha256": "6a923707ba1fec273f9a0f8a93677787f0b0a2c945625166f58affd0385b2e24",
+      "afterSha256": "56edf41077726487ae87030ba0418eca72ed09d1e50e9fd8fac93a58d7ea322f",
+      "blocks": [
+        {
+          "beforeSha256": "fdfc692f728ce1c36d2c135a9602c416219193653cfc3403ee584e231f2625a1",
+          "afterSha256": "ad3136dade62fb84624bc74bd4ac1f5db1c8437aba0b724b85c83a7e1fa307e8",
+          "signature": "fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String>"
+        },
+        {
+          "beforeSha256": "183a543c28db7f6feab90e24750bb5fc841d3f88ff0274c10fe6d1e9359b5e04",
+          "afterSha256": "212204e9701e29c34fc2eba85e91f836a01750c16c393c51b888ea5ec4fc3411",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<super::ArtifactCanonicalJsonNode<'_>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+      "beforeSha256": "1d1b653bc40c81fd060530b8fcfb260dd979d9aab860c58698d8949c336fc469",
+      "afterSha256": "603e850e2d3aa1808af7b69522d2f07d14b9d09b85cdfadd6b115334a31aa7ed",
+      "blocks": [
+        {
+          "beforeSha256": "6906874abda2f74ae1e4b1399970963537d35424315f0144aca44da4987ee62a",
+          "afterSha256": "e58452d3b02ec922be02614f0653f1c3a1f9c85c4aff21129d04694083bf8e0d",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String>"
+        },
+        {
+          "beforeSha256": "06e8cb97fae78227799247115e60e4eb2d762e2d35eb73d0fc1bd6c35545a118",
+          "afterSha256": "e5ee1bf04359e65fcdacc50dc700573348cb76f5563d30d246ec787a4c1ebc97",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String>"
+        },
+        {
+          "beforeSha256": "53ec0d61d6fa980443e75912c74846b5a994e28cbabc4da8fe1adb8432b2bd65",
+          "afterSha256": "ba12643078dda10b587ad03d6dba41714aa8c54fa460fea96e49246b0335d177",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "d6e45208e84ebdf349d2a729184626b16466b23d8eadfd20d070d72fa0063c97",
+      "afterSha256": "458f59395e28546616a3a83890b71f0018737f4a5bd441f8bc61b37fc32320f9",
+      "blocks": [
+        {
+          "beforeSha256": "5a6aa32ac866467002b9b53a3ecc9fc41590014a14467d161ae8bab9dc259ba4",
+          "afterSha256": "5362201a90d41fb5052f20cd728f234bd80c2346b3e3ccf17b84c07eb6651ad7",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String>"
+        },
+        {
+          "beforeSha256": "c1fb2a3e559dd30facd8f5be84aef6bfb2dbcea25a7fc3304a4843a083f8ab4b",
+          "afterSha256": "66be3972425f98aa0add4fefcb517481dacb15afd6a88302fbe87faeda6f3422",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs",
+      "beforeSha256": "8e09543c619c346eff8284425520c66541f6f86d25cbca7e17652252a8fcbe89",
+      "afterSha256": "05f93e72b6de2c8c282960ef199ca622c267ea2dab8c90dfeb638011bb69c00f",
+      "blocks": [
+        {
+          "beforeSha256": "04d1b938a711bd93a50bd819a5520ff96edfa420ae1bbb5b860819d4cce18fbb",
+          "afterSha256": "3219a5cb141a4db5976d876262b3fa4b27c72f21ac49c9895a39e6168ffabba7",
+          "signature": "fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<crate::os_store::ArtifactCanonicalJsonText<'_>, String>"
+        },
+        {
+          "beforeSha256": "c0748099649fbc4fc7bb33d656685003d7c6d6d403ad0a3d1067dab32c49eccf",
+          "afterSha256": "2328f4b8535643cda28331a5ccce49eae6be00f70ad64e9b684222d098d91edd",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📖️capture/🦀️.rs",
+      "beforeSha256": "c9d2fb84dbc6cad315342299991fe017ebb21b0b9325210751c97d6af1e8b34f",
+      "afterSha256": "f005d2067624c248064a6c5328ca847a7cc5919768be72e1d2fa363e58e98807",
+      "blocks": [
+        {
+          "beforeSha256": "73c4ad4938f58463ded21cc2937616d1e930a6ce1d61eac21feab7ab1dfba573",
+          "afterSha256": "733df5f359b145ee7774c8b5f9814d56fe553e05de0c5f5c703c99ca03e26d47",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<JsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs",
+      "beforeSha256": "1c6d078fa36b9087dc71cfbe735c7af680508096eddbccaaa3c62472b52ae794",
+      "afterSha256": "2f6844517caae3772ca473d835853e3c35118092326452aee6b53a6cab4b862e",
+      "blocks": [
+        {
+          "beforeSha256": "a98f0c1da0e7615c49427015fd7007f29158d23055f24e686af0051a649d3da0",
+          "afterSha256": "8551d5506fb7b1090fe2ef05cd4541e02cb01004d938496366da68e29eec9856",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<store::ArtifactCanonicalJsonValue<'_>>, String>"
+        },
+        {
+          "beforeSha256": "37bd2a2cd9df92ed3296d0ba2f4ea488ab8a15120b81b2675dce0a28164f9091",
+          "afterSha256": "1c9e60de4676ada1c355292136ebd9e3977e3727eea447e38307d7bbf00ad987",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<store::ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🧪️tests/🦀️.rs",
+      "beforeSha256": "e7345d8ca995e7cf64c5390ecde75c21c3f6b838d4e02ec8690453c4630096b9",
+      "afterSha256": "e3510f8282cf2ef9820e46ffb16d7f8b9f39577fb152c760c127c0a24435faa6",
+      "blocks": [
+        {
+          "beforeSha256": "64f72c994f896d3f1e2dece2e6b243895f4b084f6f1a4bfb7f163ec7b90d741a",
+          "afterSha256": "a21e619413e397126dc43999062c2c7af1781ebcebc2e5c5283b906d3a0aada6",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs",
+      "beforeSha256": "6f6da8d76446c9c960be0903227566392f3534fd89d2cd04a87828d4a80652b4",
+      "afterSha256": "1ad564de6c6f51b93579bbd3897399c7445c1e84e2c132884296231a50a9662d",
+      "blocks": [
+        {
+          "beforeSha256": "0d09db6e80069d88e317f16350016246238d776f1ffcc61c2b50db5a6a835d38",
+          "afterSha256": "51af0ff6889da496403be9e80cfa61c3148f373ed4f4f1ed46e755ec270034a6",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🦀️.rs",
+      "beforeSha256": "230eb5aa9313e24fb8a3b81f8d2fa576f8e93e4edb5a01e4b1574669388657dc",
+      "afterSha256": "f27e30e7da7061e1158ccee89a3d0a7abae53b08555c98e116df0f060a873505",
+      "blocks": [
+        {
+          "beforeSha256": "09801535f61234b638c71c288d77c4c41ff56fd3bacc1605474d867da1e99e00",
+          "afterSha256": "9f71fe570f33cd91cfa243078bb7f2cdfd6cb71ae17c1bf1af254c1407b00d44",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<crate::os_store::ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/📦️codec/🫳️borrowed/🦀️.rs",
+      "beforeSha256": "e3330ae1a5c763f8bf4ad6771aa921e2ea2cb6a2aa53c37a5cd736f15d938e15",
+      "afterSha256": "b0074b8b7d6776fe64475fca752fbe300110e6ecb9d125b50100b8fd39a01a32",
+      "blocks": [
+        {
+          "beforeSha256": "bcde434a6d1b75a9751a1535f97b203032798e3f32a303a6e7333cae2212890d",
+          "afterSha256": "a90aa84453943d280b33b33fe3c10e13e77bdc6691d241870724a7ecc831ea51",
+          "signature": "fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, String>"
+        },
+        {
+          "beforeSha256": "c067cbb12a3440682c377aedd45f8e70fd0cd562a409d2ec6402422dd93879fd",
+          "afterSha256": "77af10a15ee772119d977ec6f571481d7ee608040a097eb068fd4d1e79beabdc",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode<'_>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔏️canonical/🦀️.rs",
+      "beforeSha256": "f5a5e628e3dc50fc5bc1f2b05c55b487bbbbd20290cac11e3d9a777c36fedc48",
+      "afterSha256": "6e25b3e3483a94005b59c4cba6c5af66156925f03db4e630b76b32c9e38ec806",
+      "blocks": [
+        {
+          "beforeSha256": "b0a0e1c9b80a539446ad13ff19ea37085acf999a6b6cd4f8801aba37e533d99a",
+          "afterSha256": "f9e9fc0625fd9f654e627d826bf1eaf31eb0da0b5b5c4845ab38d6d7ca7920f8",
+          "signature": "fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>"
+        },
+        {
+          "beforeSha256": "83d8350a6f75f6a952f8afbb1f81f5a7ac23ed529c191d5d45dcabeef546619a",
+          "afterSha256": "55df038f1b1c1523b811456777e43e77721ed8329483b5adca96dfbf04aae4dc",
+          "signature": "fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>"
+        },
+        {
+          "beforeSha256": "23bec0ae1fec81ca2323b6889ceae8adc958197e53caf566a6675d8f828450a1",
+          "afterSha256": "0610052d19fe715d18d7c1db65588f7891c8456d2bc00d9b83fa9af62e6cc65f",
+          "signature": "fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔏️canonical/🦀️.rs",
+      "beforeSha256": "95ac9ceac3f8bd1cbc136ca696ec1313f5caae5bd26fcb1b7a6079774512e21e",
+      "afterSha256": "f481c1adc3795b530022f9149ef90d2d21d866649d0512ed33d6dcd783cd2dac",
+      "blocks": [
+        {
+          "beforeSha256": "3be58d1296d095bedf36023e3ec0c9d5c0262cf15a0cf6c62a2959d8ef2c933b",
+          "afterSha256": "ddaf8bc12b7e66d4a70a11e07435f08059c952e3c553f1a1dda46bd90f3943f3",
+          "signature": "fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>"
+        },
+        {
+          "beforeSha256": "83d8350a6f75f6a952f8afbb1f81f5a7ac23ed529c191d5d45dcabeef546619a",
+          "afterSha256": "55df038f1b1c1523b811456777e43e77721ed8329483b5adca96dfbf04aae4dc",
+          "signature": "fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>"
+        },
+        {
+          "beforeSha256": "d390edec251cd75ca535e44e4f0ebe88451e3b9000d058fe9af8757d4cbf3eb4",
+          "afterSha256": "a6993bc9e538d44e24e6a2cae16330b6f98cc75570b6e5211d497a9f42663a5f",
+          "signature": "fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "beforeSha256": "c9bd2d9098069c1a7a46262bd6fa15fd446b6063c5c9314034de73011b799811",
+      "afterSha256": "d1dfac23a277c46ecf6b6c35a10713d576e2c0bdd8f89813bbb40db942c04da2",
+      "blocks": [
+        {
+          "beforeSha256": "2db4d033deb0898393a408655862d9ed4719aaa9f58c66cd0899eeb05fc889f7",
+          "afterSha256": "ca5bd041847f632e48ed9a030ba33c9f0d55dc3dfe1da868e299acabcf55f2eb",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "beforeSha256": "d6a4c3a229c824627bccb21dd377beb3850f1ce9ed721e774e7a62a89d25fd54",
+      "afterSha256": "3be61430667c4e820ce4816136d011e6fee1accf614a73785da37e72f8760647",
+      "blocks": [
+        {
+          "beforeSha256": "a733bd73d0f4e36212b1b972d7a38702c460917889604a17946ead42aae643ef",
+          "afterSha256": "c6eb8819542a8f51364ce0ae6c94ff8235bb7e31fe0801e1552eee25d38383ec",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/📬️preparation/🦀️.rs",
+      "beforeSha256": "891ce092d8a5a29ff3a8b8e32af3109e678da4017a9bd1c9d5a9cb4e0a6acfed",
+      "afterSha256": "cfe1476fa7a1fe8b0f1cf53f09853236f3a04e5d67b17e7d431ef4822ec82c5d",
+      "blocks": [
+        {
+          "beforeSha256": "970213d8ee16575dd80896073075e2650323f590391c2b1749847ae362cbd998",
+          "afterSha256": "0c1d8d4e5b91d64c4e1e5005b8078acfc6ae06d06539a8f9c1ebb5f36c11425b",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🦀️.rs",
+      "beforeSha256": "45504864c7dd1347ee2549d84e49bd119ce56761d107d04aca767708c6bb956e",
+      "afterSha256": "8d10e42a9375f1acb1e428c8983585cdd099d4e89341bfc8aaa4db6e0cdf63a5",
+      "blocks": [
+        {
+          "beforeSha256": "21f9cd0fa7f3f459af87f6a575c7e37ef380d8190845a01b1957af86c203ef2a",
+          "afterSha256": "15ae7d013a737a48f14d40edb2ce5566993e2d7a463c97cda413328751806dd3",
+          "signature": "fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, String>"
+        },
+        {
+          "beforeSha256": "02631df83952c9d3acf5d0cc584edb2cd3484007b0d16375a8232bf48e66af05",
+          "afterSha256": "57f084fb32369ce513ca72a206ff0502195d3ff71922bc653779b13c719ea2c8",
+          "signature": "fn canonical_json_node(&self, path: &[usize]) -> Result<Node<'_>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📬️preparation/🦀️.rs",
+      "beforeSha256": "9c8e6e223100813edf911a2aece6fd7a0f6ada756e6387de5b9d8caa43556e77",
+      "afterSha256": "fb3e028bf84924522bd1645ade40d41f764b347401515318d31166aa4f2bee17",
+      "blocks": [
+        {
+          "beforeSha256": "ee6c76b5d2cc0810e0675432c6af2620f1f26511d9eac82d18d162f4d64b5b34",
+          "afterSha256": "df9e5cdf7eadf5c1d0b9c9e4f6dfc9740fbbd1cde8083274b1de443cdb80ecb4",
+          "signature": "fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, String>"
+        }
+      ],
+      "scope": "actual canonical JSON callback and exact literal original error producer; no payload/ownership conversion"
+    }
+  ]
+}

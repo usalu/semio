@@ -1,0 +1,60 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "sha256": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+      "chars": 75,
+      "role": "current observer; narrow authored blocks in actions"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+      "sha256": "ffacf1b817337697a9c959d3d83de66a960d256896b2d48be1e732b2fa71daf9",
+      "chars": 84,
+      "role": "current observer; narrow authored blocks in actions"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "sha256": "1c1bfcbb18264a642a43060fa22afb8aed3ed44aa21caff5f2fcb2b151815838",
+      "chars": 64,
+      "role": "current observer; narrow authored blocks in actions"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+      "chars": 82,
+      "role": "current observer; narrow authored blocks in actions"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+      "chars": 87,
+      "role": "current observer; narrow authored blocks in actions"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+      "sha256": "a442c34719ba19de66a5b505ee811a5ab354ceb7c0f14e923698ea283ad6bd54",
+      "chars": 92,
+      "role": "current observer; narrow authored blocks in actions"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🟦️.ts",
+      "sha256": "783309d7c3a885a3f73cad4a0379c2ec2eb6e8cb2a8590506c572fbe3d298147",
+      "chars": 92,
+      "role": "current observer; narrow authored blocks in actions"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0046af23407c8848732c63c45cf4ccdfcda86a459dd5117b323788b58f08962a",
+      "chars": 105,
+      "role": "current observer; narrow authored blocks in actions"
+    }
+  ],
+  "sourceLog": "native-canvas-source-green.log",
+  "sourceResult": "64312 Nx0/1.9s1law168assertions+independentdepth612",
+  "nativeResult": "Historical14034 actual1PASS51skipped proves old path heap/Box/Kurbo cut epoch; current element-copy-undergrant native UNRUN",
+  "grammar": "Original leaf and native grammar actual rustfmt exit0, no compiler/type credit for current copy epoch",
+  "sourceRED": "16828 Nx1/7.0s112assertions missing actual copy preflight",
+  "nativeCurrentAttempt": "26391 Nx130/6.9s genuine normal prerequisite invocation-object refusal beforeCanvas/Cargo",
+  "copyContract": "Original PathEl sizeof56 quoted and supplied copy preflight before pop; exact copied_bytes56; independent4096policy unchanged",
+  "openQualification": "Root owns genuine Script invocation finite authority host integration; no budget0 coercion/fake MAX/route bypass"
+}

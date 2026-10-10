@@ -1,0 +1,530 @@
+{
+  "at": "2026-10-09T22:48:05.878839+00:00",
+  "argv": [
+    "bun",
+    "nx",
+    "run",
+    "semio-framework-canvas:test",
+    "--skip-nx-cache",
+    "--outputStyle=static",
+    "--",
+    "long",
+    "--lib",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750",
+      "bytes": 20519,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "sha256": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "bytes": 1247,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "sha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "bytes": 550,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "sha256": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+      "bytes": 60261,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+      "sha256": "ffacf1b817337697a9c959d3d83de66a960d256896b2d48be1e732b2fa71daf9",
+      "bytes": 5153,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🟦️.ts",
+      "sha256": "783309d7c3a885a3f73cad4a0379c2ec2eb6e8cb2a8590506c572fbe3d298147",
+      "bytes": 3572,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+      "sha256": "a442c34719ba19de66a5b505ee811a5ab354ceb7c0f14e923698ea283ad6bd54",
+      "bytes": 8417,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0046af23407c8848732c63c45cf4ccdfcda86a459dd5117b323788b58f08962a",
+      "bytes": 895,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🦀️.rs",
+      "sha256": "8c274d0584ec6281fcafa315c299c7cd26835972d69ca34a06cc4093f69c3429",
+      "bytes": 6479,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🟦️.ts",
+      "sha256": "bf741eb04920a859a70407c4ebcff871de9fda0d4ca2d5f40dc9f8d5cfc7440d",
+      "bytes": 3673,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🦀️.rs",
+      "sha256": "5f6453f6b857fd81ae5693d0495e18e3f9330fcb784160574756aa32f0214bbb",
+      "bytes": 7454,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e432d5d083be49db63642e3e9685778b11eb82988f3e9b2e563be2916d4c57bd",
+      "bytes": 591,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+      "bytes": 1882,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "e9fd7c3930750dc04742e4ce4e902c6ef826d2c06a7d5afda36883c8c1242eb5",
+      "bytes": 1290,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+      "bytes": 485,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "sha256": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "bytes": 143861,
+      "role": "actual current whole-file observation, authored blocks separately recorded"
+    }
+  ],
+  "ownDurableProcessRows": [],
+  "leaseFileObservations": [
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/lock_api/d7c6ddfffd8fc8b9/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/lock_api/821c84324cfad25a/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/foldhash/a4fa1f9127ee874a/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/foldhash/68ceab710ae80197/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/foldhash/444a8f4597912ea3/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/foldhash/d8b13ae88b06e148/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/adler2/b64dbe155fba8421/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/adler2/4bde50535bc72200/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/core_maths/58699c2918be33f5/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/core_maths/ff2ee62c6bb4bb7d/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/unicode-bidi-mirroring/4b0e70f059fe8f72/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/unicode-bidi-mirroring/2704707debf44504/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/vello/3e3e7a2646de5925/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/vello/392672bf9b6c26c7/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-schema-state/0de83568dc9d86bf/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-schema-state/b3921e7446ef7d43/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-schema-state/38b235b025bcc456/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/moxcms/9cd99fda9e2796f5/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/moxcms/ca6e1052fee2b3c8/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-pack-error/4c93dc157f71e2ae/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-pack-error/6d884976a78f4eb7/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-pack-error/7bad63413436b77e/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/tracing/d7709d41fff0b984/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/tracing/0d87759cb71a0c16/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/cfg-if/bfbfb0970b4043b5/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/cfg-if/6288f46a3c111cef/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/num-traits/55b0e3615ab1ec45/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/num-traits/ccddc80a33f1562c/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/num-traits/b6bc093cd23a3352/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/libm/eb19a01cd995ef38/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/libm/ba1fc9bebba1d90a/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/libm/170affee02389256/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/read-fonts/14af7e845f69f72e/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/read-fonts/a0c251babc5f0d63/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/read-fonts/5e8868c5043722be/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/read-fonts/09bdf99b8f576057/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/futures-task/952fc42aeca4c603/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/futures-task/cb09788c5b7e6ebe/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/image-webp/e9cf918f6b16c6bf/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/image-webp/cacb1bfded157417/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-schema-validator/7c98eae50098ccaf/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-schema-validator/d2494c7153dd7390/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-schema-validator/c419b6cb5c80e7ef/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/pxfm/175975cf15178833/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/pxfm/55408159776d8b08/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-ui-contract/cad4e5a83815200a/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-ui-contract/7bd7f7c4fdc7d58a/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-os-config/8f3a8c2a22ed24a6/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-os-config/4417305261bfbd47/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/bytemuck/805bff05ec4ec695/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/bytemuck/a3dbd51345c3e093/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-ui-host/5f87c5bf172fb114/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-ui-host/e1f649b84a30a2d4/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/tracing-core/5b06e02445afded7/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/tracing-core/c08ac0cb9cde235e/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-trace/dcc362326b0f5657/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-trace/5dddcb0d1238abfc/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-canvas/14a48e2d36b7f7bb/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/pin-project/bf3fb6c26017a5b2/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/pin-project/9e61d568e70b7840/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-ui-viewport/6815efbb9e5f4663/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-ui-viewport/a55735eef7d9dd85/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-ui-viewport/caae413c13901202/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/schemars/2a14dd9a7586abbf/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/schemars/277e93513d0ebd5e/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/schemars/29651490769f8194/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-number/f9fb2b1ab8858658/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-number/9bb94c15d0fb0c3c/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/svg_fmt/b2e6c6c8efeadfb4/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/svg_fmt/5f95340bcc1b69f0/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/unicode-properties/213331e189c68b70/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/unicode-properties/a3726a0319f36353/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/arrayvec/bfa41f2794f48a61/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/arrayvec/7507a73a82e2cf19/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-schema/01571fcf5c566c59/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/semio-framework-schema/5011121a0bbff768/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/icu_locid/cd702bb398d363b7/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/icu_locid/2435b7ce09c8caa5/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/futures-intrusive/3fab1b106f83908a/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/futures-intrusive/fb7ba3dfa1cd3a16/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/unicode-ident/90bf04dfc551d98d/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/unicode-ident/5b90805f7dca5549/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/tinyvec_macros/8409d5c3462aa14c/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/tinyvec_macros/f3007436b015b5de/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/guillotiere/9b5e64ebf1a7e1e7/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/guillotiere/a1ee74280f85c055/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/slab/ed916f01ca06771b/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/slab/dd3e504fb0904115/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/pin-project-lite/01131dc927642742/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/pin-project-lite/2321f5d86e50bdf4/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/vello_shaders/a9e7e84bbdad352b/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/vello_shaders/0722b73ddde41d07/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/vello_shaders/b3a24e25e00fe24c/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/itoa/9dab85e0e142c34c/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/itoa/4d9b8fc5b6fc2b75/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/quick-error/c1bbc49b052e9c02/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/quick-error/4b02e42aa1df5fe5/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/tiny-skia-path/c293f8546e7a5ad9/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/tiny-skia-path/f68eb9ec77b83ad8/.lock",
+      "bytes": 0
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/wasm32-unknown-unknown/debug/build/xmlwriter/daf4b932c6aeba5c/.lock",
+      "bytes": 0
+    }
+  ],
+  "qualification": "No source copy, lock mutation, foreign process alteration, subset or policy override. Lease file observation is not ownership or stale-lease inference.",
+  "launchSession": 12293,
+  "leaseObservationQualification": "Source hashes and own durable Cargo process census were captured before launch. The read-only lease-file enumeration completed while original graph discovery was already running; no lock ownership/cleanup claim or mutation follows from enumeration.",
+  "observedOriginalNextestConfiguration": {
+    "path": "🧰️framework/.config/nextest.toml",
+    "sha256": "3a2acc02872da1c97b3c3db75a16c56c4ad8faa09ffe2e4ecd77e8c25ad37849",
+    "longSlowTimeout": "900s/terminate-after1",
+    "qualification": "Original existing per-test profile unchanged, separate from ordinary parent command no-deadline policy0. No fail-fast override added."
+  }
+}

@@ -6,7 +6,24 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./process/routing": "./🏃️process/🧭️routing/🟦️.ts",
+    "./process/execution": "./🏃️process/🎛️execution/🟦️.ts",
+    "./process/budget": "./🏃️process/⏱️budget/🟦️.ts",
+    "./process/test-budget": "./🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+    "./process/test-execution": "./🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+    "./process/vitest": "./🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+    "./process/cargo-test": "./🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+    "./process/cargo-laws": "./🏃️process/🧪️testing/🦀️laws/🟦️.ts",
+    "./process/artifact-files": "./🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+    "./process/artifact-publication": "./🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+    "./process/native-build": "./🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+    "./process/wasm-build": "./🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+    "./process/leases": "./🏃️process/🔒️leases/🟦️.ts",
+    "./process/context": "./🏃️process/📋️context/🟦️.ts",
+    "./process/command": "./🏃️process/🎛️command/🟦️.ts",
+    "./schema": "./🧬️schema/🟦️.ts",
+    "./filesystem": "./📁️filesystem/🟦️.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/framework:test",

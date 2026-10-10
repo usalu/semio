@@ -54,6 +54,33 @@ pub fn derive_from_value(input: TokenStream) -> TokenStream {
     component::expand_from_value(&derive_input).unwrap_or_else(|e| e.to_compile_error()).into()
 }
 
+/// 🚪️ Emits value implementations for an existing native type from its IO-owned representation declaration.
+#[proc_macro]
+pub fn value_codec(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let mut projection = true;
+    let mut admission = true;
+    for attribute in &input.attrs {
+        if attribute.path().is_ident("derive") {
+            projection = false;
+            admission = false;
+            if let Err(error) = attribute.parse_nested_meta(|meta| {
+                if meta.path.is_ident("ToValue") { projection = true; }
+                else if meta.path.is_ident("FromValue") { admission = true; }
+                else { return Err(meta.error("value_codec supports ToValue and FromValue")); }
+                Ok(())
+            }) { return error.to_compile_error().into(); }
+        }
+    }
+    let expanded = (|| -> syn::Result<proc_macro2::TokenStream> {
+        let mut output = proc_macro2::TokenStream::new();
+        if projection { output.extend(component::expand_to_value(&input)?); }
+        if admission { output.extend(component::expand_from_value(&input)?); }
+        Ok(output)
+    })();
+    expanded.unwrap_or_else(|error| error.to_compile_error()).into()
+}
+
 /// 🧬️ Implements bounded native-owner cloning for a struct or enum.
 #[proc_macro_derive(RetainedClone)]
 pub fn derive_retained_clone(input: TokenStream) -> TokenStream {

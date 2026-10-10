@@ -10,7 +10,12 @@
     "childMemberCustody",
     "snapshotReturnCustody",
     "constructorGrant",
-    "constructorCustody"
+    "constructorCustody",
+    "constructorFailureCustody",
+    "constructorCopySemantics",
+    "snapshotCustody",
+    "codecCustody",
+    "constructorCursorDrop"
   ],
   "properties": {
     "actorHeaderCustody": {
@@ -397,6 +402,178 @@
             "type": "boolean"
           },
           "installed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "constructorFailureCustody": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "original",
+          "error",
+          "terminal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "sourceRefused",
+              "ticketRefused",
+              "errorCursor",
+              "errorClosed"
+            ]
+          },
+          "original": {
+            "enum": [
+              "catalog",
+              "ticket",
+              "cursor",
+              "none"
+            ]
+          },
+          "error": {
+            "enum": [
+              "retained",
+              "none"
+            ]
+          },
+          "terminal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "constructorCopySemantics": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "transfer",
+          "kind",
+          "copyBytes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "transfer": {
+            "enum": [
+              "source",
+              "ticket",
+              "installation",
+              "recipient"
+            ]
+          },
+          "kind": {
+            "const": "metadata"
+          },
+          "copyBytes": {
+            "const": 0
+          }
+        }
+      }
+    },
+    "snapshotCustody": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "source",
+          "frame"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "retained",
+              "denied",
+              "admitted",
+              "closed"
+            ]
+          },
+          "source": {
+            "enum": [
+              "original",
+              "none"
+            ]
+          },
+          "frame": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "codecCustody": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "pack",
+          "spr",
+          "ops",
+          "reduced"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "borrowed",
+              "unfunded"
+            ]
+          },
+          "pack": {
+            "const": "original"
+          },
+          "spr": {
+            "const": "original"
+          },
+          "ops": {
+            "const": "original"
+          },
+          "reduced": {
+            "const": false
+          }
+        }
+      }
+    },
+    "constructorCursorDrop": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "original",
+          "error",
+          "ticket",
+          "done",
+          "mayDrop"
+        ],
+        "properties": {
+          "original": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "boolean"
+          },
+          "ticket": {
+            "type": "boolean"
+          },
+          "done": {
+            "type": "boolean"
+          },
+          "mayDrop": {
             "type": "boolean"
           }
         }

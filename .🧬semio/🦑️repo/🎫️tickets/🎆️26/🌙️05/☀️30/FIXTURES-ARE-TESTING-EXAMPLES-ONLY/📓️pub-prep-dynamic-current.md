@@ -1,0 +1,7 @@
+# Original Preparation And Dynamic Examples
+
+Job preparation whole-trial schema mirrors seven paid stages, fixed grant/cancellation expectations, source-presence and drop counters. Dynamic clone whole-trial schema joins fixed policy, cancellation/depth vectors and tagged test values. The nested tagged representation has no established production reader; it was not promoted to domain grammar. Both schemas and only whole-trial validators/mutants were removed.
+
+Actual original Source absence RED19124 is Nx1/686ms (one behavior pass, one absence fail,33expectations); RED75247 is Nx1/535ms (two behavior passes, one absence fail,50expectations). Current original dynamic GREEN43927 is Nx0/200ms,3laws45expectations, retaining JSON Patch/structuredClone/UTF8/numeric bits/duplicate-key/depth comparisons. Preparation GREEN77261 is Nx0/1.0s,2laws34expectations, canonical Grant-only Ajv plus unchanged SQLite stage-prefix/cancellation oracle. Intermediate preparation oracle renewals failed due my draft/field projection choices; they were corrected to actual draft07 and five maximum-field identities and are not credited as passes.
+
+Six original plain/native/production hashes are unchanged in pub-prep-dynamic-actions.json. No native assertion credit is inferred; actual complete Kernel is independently active. Narrow actions are pub-prep-dynamic-test-actions.json, pub-prep-dynamic-actions.json, pub-prep-oracle-action.json and pub-prep-fields-action.json; preimage hashes are pub-prep-dynamic-before.json.

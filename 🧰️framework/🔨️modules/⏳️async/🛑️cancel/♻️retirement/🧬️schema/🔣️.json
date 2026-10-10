@@ -12,7 +12,8 @@
     "metadata",
     "denied",
     "waiterGate",
-    "gateContended"
+    "gateContended",
+    "metadataCopyCurrency"
   ],
   "properties": {
     "schema": {
@@ -57,7 +58,6 @@
     "denied": {
       "const": [
         "items",
-        "copy",
         "release",
         "depth"
       ]
@@ -67,6 +67,9 @@
     },
     "gateContended": {
       "const": "blocked-original-retained"
+    },
+    "metadataCopyCurrency": {
+      "const": 0
     }
   }
 }

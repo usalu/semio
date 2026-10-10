@@ -10,7 +10,7 @@ import {acquireCargoBuildLeaseV1,cargoBuildLeaseIdentityV1,type CargoBuildLeaseI
 /** 🦀️ Binds a Cargo invocation to its exact caller-owned execution policy. */
 export type CargoTestPolicyV1 = Readonly<{version:1;manifestPath:string;targetDirectory:string;buildDirectory:string;leaseDirectory:string;nextest:boolean;configPath:string;level:TestLevel;assertionBudgets:Readonly<Record<TestLevel,number>>;buildBudgetMs:number;assertionThreads:number;artifactDirectory:string;retainArtifacts:boolean;coverageEnabled:boolean;coveragePath:string|null;rustMinStack:string}>;
 /** 📋️ Selects an exact manifest and package inventory without repository discovery. */
-export type CargoTestRequestV1 = Readonly<{manifestPath:string;packages:readonly string[];cwd:string;extraArgs?:readonly string[];environment?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal}>;
+export type CargoTestRequestV1 = Readonly<{manifestPath:string;packages:readonly string[];cwd:string;extraArgs?:readonly string[];environment?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal;remainingMilliseconds?:()=>number|null}>;
 /** 🎬️ Describes a compiler, assertion, or report invocation under an explicit budget. */
 export type CargoTestStepV1 = Readonly<{phase:"build"|"assert"|"report";args:string[];budgetMs:number;capture:boolean}>;
 const policySchema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
@@ -122,8 +122,12 @@ export function cargoTestPlanV1(request:CargoTestRequestV1, input:CargoTestPolic
   const step=(phase:CargoTestStepV1["phase"],args:string[],capture=false):CargoTestStepV1=>({phase,args,budgetMs:phase==="assert"?policy.assertionBudgets[policy.level]:policy.buildBudgetMs,capture});
   if(policy.coverageEnabled){
     if(!policy.coveragePath)throw Error("Coverage requires an explicit owner report path");
-    const operation=policy.nextest?"nextest":"test", args=["--release","--no-report",...(policy.nextest?["--no-tests","fail",...profile]:[]),...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip];
-    return [step("build",policy.nextest?["llvm-cov",operation,"--no-run",...args]:["llvm-cov",operation,...args,"--list"]),step("assert",["llvm-cov",operation,"--no-clean",...args]),step("report",["llvm-cov","report","--release","--lcov",...packages,"--output-path",policy.coveragePath])];
+    const report=step("report",["llvm-cov","report","--release","--lcov",...packages,"--output-path",policy.coveragePath]);
+    if(policy.nextest){
+      const archive=metadataPath+".tar.zst",reporters=["--status-level","--final-status-level"].flatMap(option=>split.executionArgs.some(arg=>arg.split("=",1)[0]===option)?[]:[option,"fail"]);
+      return [step("build",["llvm-cov","nextest-archive","--release",...profile,...packages,...split.buildArgs,"--archive-file",archive]),step("assert",["llvm-cov","nextest","--release","--no-report","--archive-file",archive,"--extract-overwrite","--no-tests","fail",...reporters,...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip]),report];
+    }
+    return [step("build",["llvm-cov","test","--release","--no-report",...packages,...split.buildArgs,"--","--list"]),step("assert",["llvm-cov","test","--release","--no-report",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip]),report];
   }
   if(policy.nextest) return [step("build",["nextest","list","--list-type","binaries-only","--message-format","json",...profile,...packages,...split.buildArgs],true),step("assert",["nextest","run","--binaries-metadata",metadataPath,"--no-tests","fail",...["--status-level","--final-status-level"].flatMap(option=>split.executionArgs.some(arg=>arg.split("=",1)[0]===option)?[]:[option,"fail"]),...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip])];
   return [step("build",["build","--tests",...packages,...split.buildArgs]),step("assert",["test",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip])];
@@ -157,7 +161,7 @@ export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTest
    try{lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal:controller.signal});}finally{stop();}
    for(const step of plan){
     const stop=startNativeProgress(`cargo:${step.phase}`), decoder=new StringDecoder("utf8");let output="";
-    try {await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env,signal:controller.signal,budgetMs:step.budgetMs,throwOnFailure:true,...(step.capture?{captureStdout:{limitBytes:536870912,onChunk:(bytes:Uint8Array)=>{output+=decoder.write(Buffer.from(bytes));}}}:{})});if(step.capture)writeFileSync(metadata,output+decoder.end());}
+    try {const remaining=request.remainingMilliseconds?.();if(remaining!==undefined&&remaining!==null&&(!Number.isFinite(remaining)||remaining<1))throw Error("Original Cargo deadline exhausted");const budgetMs=remaining===undefined||remaining===null?step.budgetMs:Math.floor(step.budgetMs>0?Math.min(step.budgetMs,remaining):remaining);await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env,signal:controller.signal,budgetMs,throwOnFailure:true,...(step.capture?{captureStdout:{limitBytes:536870912,onChunk:(bytes:Uint8Array)=>{output+=decoder.write(Buffer.from(bytes));}}}:{})});if(step.capture)writeFileSync(metadata,output+decoder.end());}
     catch(error){if(step.capture)writeFileSync(join(directory,`${step.phase}-failure.stdout.txt`),output+decoder.end());throw error;}
     finally {stop();}
   }} finally {lease?.release();request.signal?.removeEventListener("abort",abort);process.off("SIGINT",abort);process.off("SIGTERM",abort);if(policy.retainArtifacts)console.error(`[TRACE] Nextest artifacts retained at ${directory}`);else rmSync(directory,{recursive:true,force:true});}

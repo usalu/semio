@@ -1,0 +1,122 @@
+{
+  "trueRed": {
+    "session": 69589,
+    "exit": 1,
+    "duration": "7.0s",
+    "failure": "independent Ajv rejects ordinary zero policy before defining changes"
+  },
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "beforeSha256": "b4ad88fdf6aca0decd4ca80a39c97bd65b27b482c2224d7c50b97796c21d0407",
+      "afterSha256": "a3f0d3e25ae938582a810b1d6fb60cb34fef8c9a84e32735d94d97656a110a7a",
+      "beforeBlock": "\"minimum\": 1, \"maximum\": 86400000",
+      "afterBlock": "\"minimum\": 0, \"maximum\": 86400000"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "b0d2c30938f3bc41601c26fbb66e9be5ff7698dfa9339ab221d20332b42124cb",
+      "afterSha256": "8296a758384bb4ff3afcf26adc7af3308ea2780c50b6bf6237c1e77921476f24",
+      "beforeBlock": "Names the original caller's finite command authority.",
+      "afterBlock": "Names the original caller's finite or ordinary no-deadline command authority."
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "8296a758384bb4ff3afcf26adc7af3308ea2780c50b6bf6237c1e77921476f24",
+      "afterSha256": "65ada18c4f270e089fbbc57b6d4a820f2fbb1745222994882b4d8a547eba5164",
+      "beforeBlock": "remainingMilliseconds(): number;",
+      "afterBlock": "remainingMilliseconds(): number | null;"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "65ada18c4f270e089fbbc57b6d4a820f2fbb1745222994882b4d8a547eba5164",
+      "afterSha256": "ee5dcd5c43f0026f47319f52667fd1388ac276a964fe66e3652744e23984cfbf",
+      "beforeBlock": "Admits a complete authored wire policy without defaults or grants.",
+      "afterBlock": "Admits a complete authored wire policy including explicit zero for no deadline."
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "ee5dcd5c43f0026f47319f52667fd1388ac276a964fe66e3652744e23984cfbf",
+      "afterSha256": "84c705f7d7eb617d5f47f9ec2938d88999db5aeb5c459e1ac3bc088a8e89bffb",
+      "beforeBlock": "if (validateJsonSchemaSubset(schema, value).length) throw Error(\"Complete finite Script policy required\");",
+      "afterBlock": "if (validateJsonSchemaSubset(schema, value).length) throw Error(\"Complete Script policy required\");"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "84c705f7d7eb617d5f47f9ec2938d88999db5aeb5c459e1ac3bc088a8e89bffb",
+      "afterSha256": "5ef99b8ad5b158b6965606afbfcf902b37b07a3427465015a0af5eb37ac6e062",
+      "beforeBlock": "  if (!Number.isFinite(remaining) || remaining <= 0 || remaining > policy.maximumElapsedMilliseconds) throw Error(\"Original finite Script deadline refused\");",
+      "afterBlock": "  if (policy.maximumElapsedMilliseconds === 0 ? remaining !== null : remaining === null || !Number.isSafeInteger(remaining) || remaining <= 0 || remaining > policy.maximumElapsedMilliseconds) throw Error(\"Original Script deadline refused\");"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "beforeSha256": "0430d1212c3ac9553f11e6494bd6c76e1b8313ab993371e27a9184ad0188c42a",
+      "afterSha256": "fae593f1228ab6569170b95438d4267dc2722517545869225db650d2741ad835",
+      "logicalAction": "nullable original deadline only with explicitly authored zero policy; canonical ScriptPolicy reference preserved"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "fbef068254ac78369063f3abd8c6bf45089adea0b07a46c0faf5748659620321",
+      "afterSha256": "28151c9ea86256c297fb26032627b7d62cfaefc4a937314ef30d3f6a930ad15d",
+      "beforeBlock": "deadlineEpochMilliseconds: number;",
+      "afterBlock": "deadlineEpochMilliseconds: number | null;"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "28151c9ea86256c297fb26032627b7d62cfaefc4a937314ef30d3f6a930ad15d",
+      "afterSha256": "c3ef26b19e38344f7fce1f1bd79840f99e8828ce1000fb037e118c0ec66447fa",
+      "beforeBlock": "  const envelope = value as ScriptProcessEnvelope, remaining = envelope.deadlineEpochMilliseconds - now;\n  if (!Number.isFinite(now) || remaining <= 0 || remaining > envelope.policy.maximumElapsedMilliseconds) throw Error(\"Original Script process deadline refused\");",
+      "afterBlock": "  const envelope = value as ScriptProcessEnvelope;\n  if (!Number.isFinite(now)) throw Error(\"Original Script process clock refused\");\n  if (envelope.deadlineEpochMilliseconds !== null) {\n    const remaining = envelope.deadlineEpochMilliseconds - now;\n    if (remaining <= 0 || remaining > envelope.policy.maximumElapsedMilliseconds) throw Error(\"Original Script process deadline refused\");\n  }"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "c3ef26b19e38344f7fce1f1bd79840f99e8828ce1000fb037e118c0ec66447fa",
+      "afterSha256": "d1b199884f34c64cd6cb8816454f6959e5d692737eb2402eb92111093e3235b6",
+      "beforeBlock": "deadlineEpochMilliseconds: now + original.maximumElapsedMilliseconds",
+      "afterBlock": "deadlineEpochMilliseconds: original.maximumElapsedMilliseconds === 0 ? null : now + original.maximumElapsedMilliseconds"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "d1b199884f34c64cd6cb8816454f6959e5d692737eb2402eb92111093e3235b6",
+      "afterSha256": "30eb1ddbd0888d984229db3e2ce97f37b8aea2dd410d197cbfd72ffae1900be6",
+      "beforeBlock": "  const admitted = readScriptProcessEnvelope(envelope, Date.now()), started = performance.now(), initial = admitted.deadlineEpochMilliseconds - Date.now();",
+      "afterBlock": "  const admitted = readScriptProcessEnvelope(envelope, Date.now()), started = performance.now(), deadline = admitted.deadlineEpochMilliseconds, initial = deadline === null ? null : deadline - Date.now();"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "30eb1ddbd0888d984229db3e2ce97f37b8aea2dd410d197cbfd72ffae1900be6",
+      "afterSha256": "abea7b332982b036cca092f0655d0756cc3af992682b4fe1f4090294bc02db49",
+      "beforeBlock": "const timeout = setTimeout(() => controller.abort(Error(\"Original Script process deadline exhausted\")), initial);\n  timeout.unref();",
+      "afterBlock": "const timeout = initial === null ? undefined : setTimeout(() => controller.abort(Error(\"Original Script process deadline exhausted\")), initial);\n  timeout?.unref();"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "abea7b332982b036cca092f0655d0756cc3af992682b4fe1f4090294bc02db49",
+      "afterSha256": "2780ce46a27ae22ee5f995f7b28e0b095fb37719313edc3024bbca1a7ca80833",
+      "beforeBlock": "remainingMilliseconds: () => Math.max(0, Math.floor(Math.min(admitted.deadlineEpochMilliseconds - Date.now(), initial - (performance.now() - started)))),",
+      "afterBlock": "remainingMilliseconds: () => deadline === null || initial === null ? null : Math.max(0, Math.floor(Math.min(deadline - Date.now(), initial - (performance.now() - started)))),"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83c\udfc3\ufe0fprocess/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "2780ce46a27ae22ee5f995f7b28e0b095fb37719313edc3024bbca1a7ca80833",
+      "afterSha256": "4132defc09c273fb8713ad2817582b35b4dd3c523879e586efa6b7150128d852",
+      "beforeBlock": "finally { clearTimeout(timeout);",
+      "afterBlock": "finally { if (timeout) clearTimeout(timeout);"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "bc876837a0c3aa748f44a3296d39c2f4fd8b2692e40ce87ad19a0aa47b77de08",
+      "afterSha256": "283c76fdb8b0da19a0506b010a0fd44d33287a20cf7297abc3deebb2427c8eea",
+      "beforeBlock": "export { readScriptPolicy, checkScriptInvocation,",
+      "afterBlock": "export { readScriptPolicy, checkScriptInvocation, scriptInvocationBudget,"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "beforeSha256": "d43304b31d4c87819a34d4f836cee4452f4c48d181054efe00182f8392dc4499",
+      "afterSha256": "1bc6c0f764d245eff74c2ef1407e8fbd09298e90cbc913d64e0baf03e7cf1d6c",
+      "beforeBlock": "{ \"id\": \"zero-deadline\", \"value\": { \"version\": 1, \"owner\": \"routing-original-receiver\", \"maximumElapsedMilliseconds\": 0 }, \"accepted\": false }",
+      "afterBlock": "{ \"id\": \"original-no-deadline\", \"value\": { \"version\": 1, \"owner\": \"routing-original-receiver\", \"maximumElapsedMilliseconds\": 0 }, \"accepted\": true }"
+    }
+  ],
+  "notEdited": "native grants/features/profiles/default budgets; original finite policies and canonical policy reference preserved"
+}

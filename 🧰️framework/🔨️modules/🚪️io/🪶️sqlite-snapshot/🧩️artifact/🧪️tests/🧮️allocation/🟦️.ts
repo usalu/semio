@@ -9,13 +9,6 @@ function payloads(): { text: string; blob: Uint8Array } {
   return { text: fixture.textUnit.repeat(fixture.textRepeats), blob: Uint8Array.from({ length: fixture.blobBytes }, (_, index) => fixture.blobUnit[index % fixture.blobUnit.length]!) };
 }
 
-test("shared provider allocation corpus is closed against independent Ajv", () => {
-  
-  
-  
-  
-  console.log("[DEBUG] Shared provider closed fixture: 25 required fields, seven independent hostile cases");
-});
 
 test("shared provider authored SQLite tables preserve IEEE bits and ordered relations independently", () => {
   const database = new Database(":memory:", { safeIntegers: true });
@@ -84,8 +77,8 @@ test("shared provider semantic bytes and late copy frontiers have independent SQ
   console.log("[DEBUG] Independent UTF-8/octet authority: 100000 bytes each, 65536 interior frontier, repeated retired admission 8 bytes");
 });
 
-function cancellationDiagnosticLedger(corpus:typeof fixture.cancellationDiagnostics){const bytes=(text:string)=>new TextEncoder().encode(text).byteLength;return corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,requestedBytes:row.parent*bytes(corpus.parentMessage)+row.child*bytes(corpus.childMessage)}));}
-test("shared cancellation diagnostic ledger has one exact declaring owner",()=>{const corpus=fixture.cancellationDiagnostics,own=cancellationDiagnosticLedger(corpus),database=new Database(":memory:");try{const oracle=corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,...database.query("SELECT ?*length(CAST(? AS BLOB))+?*length(CAST(? AS BLOB)) AS requestedBytes").get(row.parent,corpus.parentMessage,row.child,corpus.childMessage) as {requestedBytes:number}}));expect(own).toEqual(corpus.cases);expect(oracle).toEqual(corpus.cases);console.log("[DEBUG] Five cancellation diagnostic ledgers match actual UTF8 bytes and independent SQLite; parent rejection one parent, interior child cancellation zero parent plus one child");}finally{database.close();}});
+function cancellationDiagnosticLedger(corpus:typeof fixture.cancellationDiagnostics){const backing=(kind:string,text:string)=>kind==="borrowed"?0:new TextEncoder().encode(text).length;return corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,requestedBytes:row.parent*backing(corpus.parentBacking,corpus.parentMessage)+row.child*backing(corpus.childBacking,corpus.childMessage)}));}
+test("shared cancellation diagnostic ledger has one exact borrowed owner",()=>{const corpus=fixture.cancellationDiagnostics,own=cancellationDiagnosticLedger(corpus),database=new Database(":memory:");try{const oracle=corpus.cases.map(row=>({id:row.id,parent:row.parent,child:row.child,...database.query("SELECT ?*(CASE WHEN ?='borrowed' THEN 0 ELSE length(CAST(? AS BLOB)) END)+?*(CASE WHEN ?='borrowed' THEN 0 ELSE length(CAST(? AS BLOB)) END) AS requestedBytes").get(row.parent,corpus.parentBacking,corpus.parentMessage,row.child,corpus.childBacking,corpus.childMessage) as {requestedBytes:number}}));expect(own).toEqual(corpus.cases);expect(oracle).toEqual(corpus.cases);expect(database.query("SELECT length(CAST(? AS BLOB)) AS parent,length(CAST(? AS BLOB)) AS child").get(corpus.parentMessage,corpus.childMessage)).toEqual({parent:new TextEncoder().encode(corpus.parentMessage).length,child:new TextEncoder().encode(corpus.childMessage).length});console.log("[DEBUG] Five cancellation diagnostic ledgers have borrowed backing0 and unchanged UTF8 messages; independent SQLite/UTF8 agree; native heap observation remains required");}finally{database.close();}});
 
 import fileBoundFixture from "../../🧫️fixtures/📏️file-bound/🔣️.json";
 
@@ -101,3 +94,5 @@ test("independent SQLite semantic census preserves the authored zero-byte NULL p
  
  const db=new Database(":memory:");try{db.exec(extentFixture.sql);db.run("INSERT INTO cell_payload VALUES(?,?,?,?,?,?,?)",[1,null,"","雪",7,0.5,new Uint8Array([0,255])]);const value=independentSqliteExtent(db.serialize());expect(value.rows).toBe(extentFixture.rows);expect(value.valueBytes).toBe(extentFixture.valueBytes);expect(value.tableWidths).toEqual({cell_payload:extentFixture.width});expect(db.query("SELECT typeof(missing) AS storage,length(CAST(label AS BLOB)) AS labelBytes,length(octets) AS octetBytes FROM cell_payload").get()).toEqual({storage:"null",labelBytes:3,octetBytes:2});}finally{db.close();}
 });
+
+test("current cancellation examples have no whole-trial schema authority", async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../../🧬️schema/⚠️cancellation/🔣️.json",import.meta.url))).toBe(false);});

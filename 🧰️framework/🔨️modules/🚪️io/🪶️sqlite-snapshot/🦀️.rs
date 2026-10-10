@@ -59,17 +59,17 @@ pub struct SqliteDatabase { pub tables: Vec<SqliteTable> }
 
 /// 🏛️ Validates one declared table without cloning its rows or requiring a single-table database.
 pub fn validate_sqlite_table_schema(table: &SqliteTable, sql: &str, limits: SqliteDatabaseLimits) -> Result<()> {
-    limit(sql.len(), limits.max_schema_bytes, ValueRefusalKind::OwnershipLimit, "schema bytes")?;
-    limit(table.sql.len().checked_add(table.name.len()).ok_or(ownership_limit("schema bytes"))?, limits.max_schema_bytes, ValueRefusalKind::OwnershipLimit, "schema bytes")?;
-    let actual = parse_table(&table.sql)?; let expected = parse_table(sql)?; limit(actual.columns.len(), limits.max_columns, ValueRefusalKind::WorkLimit, "columns")?;
+    limit(sql.len(), limits.max_schema_bytes, ValueRefusalKind::OwnershipLimit, "relational SQLite resource limit: schema bytes")?;
+    limit(table.sql.len().checked_add(table.name.len()).ok_or(ownership_limit("relational SQLite resource limit: schema bytes"))?, limits.max_schema_bytes, ValueRefusalKind::OwnershipLimit, "relational SQLite resource limit: schema bytes")?;
+    let actual = parse_table(&table.sql)?; let expected = parse_table(sql)?; limit(actual.columns.len(), limits.max_columns, ValueRefusalKind::WorkLimit, "relational SQLite resource limit: columns")?;
     if !table.name.eq_ignore_ascii_case(&actual.name) || !table.name.eq_ignore_ascii_case(&expected.name) || !schema_matches(&table.sql, sql)? { return Err(invalid("artifact table schema")); }
     Ok(())
 }
 
 /// 🏛️ Validates an artifact's declared relational contract without normalizing quoted syntax into keywords.
 pub fn validate_sqlite_database_schema(database: &SqliteDatabase, sql: &str, limits: SqliteDatabaseLimits) -> Result<()> {
-    limit(sql.len(), limits.max_schema_bytes, ValueRefusalKind::OwnershipLimit, "schema bytes")?; limit(database.tables.len(), limits.max_tables, ValueRefusalKind::WorkLimit, "tables")?;
-    let mut bytes = 0usize; for table in &database.tables { bytes = bytes.checked_add(table.sql.len()).and_then(|sum| sum.checked_add(table.name.len())).ok_or(ownership_limit("schema bytes"))?; limit(bytes, limits.max_schema_bytes, ValueRefusalKind::OwnershipLimit, "schema bytes")?; }
+    limit(sql.len(), limits.max_schema_bytes, ValueRefusalKind::OwnershipLimit, "relational SQLite resource limit: schema bytes")?; limit(database.tables.len(), limits.max_tables, ValueRefusalKind::WorkLimit, "relational SQLite resource limit: tables")?;
+    let mut bytes = 0usize; for table in &database.tables { bytes = bytes.checked_add(table.sql.len()).and_then(|sum| sum.checked_add(table.name.len())).ok_or(ownership_limit("relational SQLite resource limit: schema bytes"))?; limit(bytes, limits.max_schema_bytes, ValueRefusalKind::OwnershipLimit, "relational SQLite resource limit: schema bytes")?; }
     let expected = SqliteDatabase::from_schema(sql)?;
     if database.tables.len() != expected.tables.len() { return Err(invalid("artifact table count")); }
     let mut names = BTreeSet::new();
@@ -148,18 +148,18 @@ impl<'a> SqliteSnapshotControl<'a> {
     /// 📊️ Reports physical SQL admission independently of native bytes settled to the secondary domain ceiling.
     pub fn forwarded_owned_bytes(&self)->usize{self.forwarded_bytes}
     /// 🫴️ Settles native ownership already charged through its original allocation port.
-    pub fn admit_native_allocation_bytes(&mut self,count:usize)->std::result::Result<(),ValueError>{self.allocation_bytes=self.allocation_bytes.checked_add(count).filter(|next|*next<=self.limits.max_allocation_bytes).ok_or_else(||ownership_limit("allocation bytes"))?;Ok(())}
+    pub fn admit_native_allocation_bytes(&mut self,count:usize)->std::result::Result<(),ValueError>{self.allocation_bytes=self.allocation_bytes.checked_add(count).filter(|next|*next<=self.limits.max_allocation_bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: allocation bytes"))?;Ok(())}
     /// 📐️ Narrows declarative input ceilings without replacing original allocation or progress authority.
-    pub fn restrict_limits(&mut self,limits:SqliteDatabaseLimits)->std::result::Result<(),ValueError>{let next=SqliteDatabaseLimits{max_file_bytes:self.limits.max_file_bytes.min(limits.max_file_bytes),max_value_bytes:self.limits.max_value_bytes.min(limits.max_value_bytes),max_allocation_bytes:self.limits.max_allocation_bytes.min(limits.max_allocation_bytes),max_schema_bytes:self.limits.max_schema_bytes.min(limits.max_schema_bytes),max_rows:self.limits.max_rows.min(limits.max_rows),max_columns:self.limits.max_columns.min(limits.max_columns),max_tables:self.limits.max_tables.min(limits.max_tables),max_pages:self.limits.max_pages.min(limits.max_pages)};if self.allocation_bytes>next.max_allocation_bytes||self.reconstruction_bytes.checked_add(self.reconstruction_scalar_bytes).is_none_or(|owned|owned>next.max_value_bytes){return Err(ownership_limit("narrowed original snapshot allowance"))}self.limits=next;Ok(())}
+    pub fn restrict_limits(&mut self,limits:SqliteDatabaseLimits)->std::result::Result<(),ValueError>{let next=SqliteDatabaseLimits{max_file_bytes:self.limits.max_file_bytes.min(limits.max_file_bytes),max_value_bytes:self.limits.max_value_bytes.min(limits.max_value_bytes),max_allocation_bytes:self.limits.max_allocation_bytes.min(limits.max_allocation_bytes),max_schema_bytes:self.limits.max_schema_bytes.min(limits.max_schema_bytes),max_rows:self.limits.max_rows.min(limits.max_rows),max_columns:self.limits.max_columns.min(limits.max_columns),max_tables:self.limits.max_tables.min(limits.max_tables),max_pages:self.limits.max_pages.min(limits.max_pages)};if self.allocation_bytes>next.max_allocation_bytes||self.reconstruction_bytes.checked_add(self.reconstruction_scalar_bytes).is_none_or(|owned|owned>next.max_value_bytes){return Err(ownership_limit("relational SQLite resource limit: narrowed original snapshot allowance"))}self.limits=next;Ok(())}
 
     /// 📏️ Remaining cumulative backing admission, independent of semantic payload bytes.
     pub fn allocation_remaining_bytes(&self) -> usize { self.limits.max_allocation_bytes - self.allocation_bytes }
     /// 🏗️ Admits one concrete owned backing allocation before construction; retirement never refunds it.
     pub fn admit_allocation_bytes(&mut self, count: usize) -> std::result::Result<(), ValueError> {
-        let next = self.allocation_bytes.checked_add(count).filter(|next| *next <= self.limits.max_allocation_bytes).ok_or_else(|| ownership_limit("allocation bytes"))?;
-        let forwarded_maximum=self.forwarded_bytes.checked_add(self.allocation_remaining_bytes()).ok_or_else(||ownership_limit("forwarded allocation ceiling"))?;
-        if let Some(port)=&mut self.allocation{port(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes:count,owned_bytes:self.forwarded_bytes,next_owned_bytes:self.forwarded_bytes.checked_add(count).ok_or_else(||ownership_limit("forwarded allocation bytes"))?,maximum_bytes:forwarded_maximum})?;}
-        self.forwarded_bytes=self.forwarded_bytes.checked_add(count).ok_or_else(||ownership_limit("forwarded allocation bytes"))?;
+        let next = self.allocation_bytes.checked_add(count).filter(|next| *next <= self.limits.max_allocation_bytes).ok_or_else(|| ownership_limit("relational SQLite resource limit: allocation bytes"))?;
+        let forwarded_maximum=self.forwarded_bytes.checked_add(self.allocation_remaining_bytes()).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation ceiling"))?;
+        if let Some(port)=&mut self.allocation{port(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes:count,owned_bytes:self.forwarded_bytes,next_owned_bytes:self.forwarded_bytes.checked_add(count).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?,maximum_bytes:forwarded_maximum})?;}
+        self.forwarded_bytes=self.forwarded_bytes.checked_add(count).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?;
         self.allocation_bytes = next;
         Ok(())
     }
@@ -169,44 +169,45 @@ impl<'a> SqliteSnapshotControl<'a> {
         let remaining=self.allocation_remaining_bytes();let before=self.allocation_bytes;let maximum=self.limits.max_allocation_bytes;let physical=self.physical_read_progress;
         let callback=&mut self.callback;let owned=&mut self.allocation_bytes;let forwarded=&mut self.forwarded_bytes;let original=&mut self.allocation;
         let mut progress=|completed,total|callback(if phase==SqliteSnapshotPhase::ReadPages{physical.unwrap_or(SqliteSnapshotProgress{phase,completed,total})}else{SqliteSnapshotProgress{phase,completed,total}});
-        let mut allocation=|bytes:usize|{let next=owned.checked_add(bytes).filter(|next|*next<=maximum).ok_or_else(||ownership_limit("allocation bytes"))?;if let Some(port)=original{port(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes,owned_bytes:*forwarded,next_owned_bytes:forwarded.checked_add(bytes).ok_or_else(||ownership_limit("forwarded allocation bytes"))?,maximum_bytes:forwarded.checked_add(maximum-*owned).ok_or_else(||ownership_limit("forwarded allocation ceiling"))?})?;}*forwarded=forwarded.checked_add(bytes).ok_or_else(||ownership_limit("forwarded allocation bytes"))?;*owned=next;Ok(())};
+        let mut allocation=|bytes:usize|{let next=owned.checked_add(bytes).filter(|next|*next<=maximum).ok_or_else(||ownership_limit("relational SQLite resource limit: allocation bytes"))?;if let Some(port)=original{port(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes,owned_bytes:*forwarded,next_owned_bytes:forwarded.checked_add(bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?,maximum_bytes:forwarded.checked_add(maximum-*owned).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation ceiling"))?})?;}*forwarded=forwarded.checked_add(bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?;*owned=next;Ok(())};
         let(result,declared)=operation(remaining,&mut progress,&mut allocation);
         if self.allocation_bytes.checked_sub(before)!=Some(declared){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite stage reservation ledger differs from actual admitted allocations"));}Ok(result)
     }
     /// 🫴️ Settles the secondary SQL ceiling after an original native controller admitted every allocation.
-    pub fn allocation_stage_native<T,E>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool)->(std::result::Result<T,E>,usize))->std::result::Result<std::result::Result<T,E>,ValueError>{self.checkpoint(phase,0,0)?;let remaining=self.allocation_remaining_bytes();let(result,owned)={let mut progress=|completed,total|self.accept_progress(phase,completed,total);operation(remaining,&mut progress)};let next=self.allocation_bytes.checked_add(owned).filter(|next|*next<=self.limits.max_allocation_bytes).ok_or_else(||ownership_limit("allocation bytes"))?;self.allocation_bytes=next;Ok(result)}
-    pub fn check_rows(&self, count: usize) -> std::result::Result<(), ValueError> { limit(count, self.limits.max_rows, ValueRefusalKind::WorkLimit, "rows") }
-    pub fn check_value_bytes(&self, count: usize) -> std::result::Result<(), ValueError> { limit(count, self.limits.max_value_bytes, ValueRefusalKind::OwnershipLimit, "value bytes") }
+    pub fn allocation_stage_native<T,E>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool)->(std::result::Result<T,E>,usize))->std::result::Result<std::result::Result<T,E>,ValueError>{self.checkpoint(phase,0,0)?;let remaining=self.allocation_remaining_bytes();let(result,owned)={let mut progress=|completed,total|self.accept_progress(phase,completed,total);operation(remaining,&mut progress)};let next=self.allocation_bytes.checked_add(owned).filter(|next|*next<=self.limits.max_allocation_bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: allocation bytes"))?;self.allocation_bytes=next;Ok(result)}
+    pub fn check_rows(&self, count: usize) -> std::result::Result<(), ValueError> { limit(count, self.limits.max_rows, ValueRefusalKind::WorkLimit, "relational SQLite resource limit: rows") }
+    pub fn check_value_bytes(&self, count: usize) -> std::result::Result<(), ValueError> { limit(count, self.limits.max_value_bytes, ValueRefusalKind::OwnershipLimit, "relational SQLite resource limit: value bytes") }
     /// 📏️ Exposes remaining reconstruction ownership before a native allocator starts.
     pub fn reconstruction_remaining_bytes(&self) -> std::result::Result<usize,ValueError> {
-        let used=self.reconstruction_bytes.checked_add(self.reconstruction_scalar_bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native reconstruction aggregate byte count overflow"))?;
-        self.limits.max_value_bytes.checked_sub(used).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit, "native reconstruction ownership exceeds caller limit"))
+        let used=self.reconstruction_bytes.checked_add(self.reconstruction_scalar_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native reconstruction aggregate byte count overflow"))?;
+        self.limits.max_value_bytes.checked_sub(used).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit, "native reconstruction ownership exceeds caller limit"))
     }
     /// 📥️ Retains the actual admitted native allocator ledger across domain constructions.
     pub fn admit_reconstruction_bytes(&mut self,count:usize) -> std::result::Result<(),ValueError> {
-        if count>self.reconstruction_remaining_bytes()?{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native reconstruction ownership exceeds caller limit"))}
-        self.reconstruction_bytes=self.reconstruction_bytes.checked_add(count).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native reconstruction value byte count overflow"))?;
+        if count>self.reconstruction_remaining_bytes()?{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "native reconstruction ownership exceeds caller limit"))}
+        self.reconstruction_bytes=self.reconstruction_bytes.checked_add(count).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native reconstruction value byte count overflow"))?;
         Ok(())
     }
+    /// 🔢️ Retains original borrowed scalar admission without allocating an error cause.
+    pub fn admit_reconstruction_scalar_bytes(&mut self,count:usize)->std::result::Result<(),ValueError>{if count>self.limits.max_value_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"SQLite original scalar values exceed their ceiling"))}self.reconstruction_scalar_bytes=self.reconstruction_scalar_bytes.max(count);Ok(())}
     pub fn check_database(&mut self, database: &SqliteDatabase, phase: SqliteSnapshotPhase) -> std::result::Result<(), ValueError> {
-        self.checkpoint(phase, 0, 0)?; let total = database.tables.iter().try_fold(0usize, |count, table| count.checked_add(table.rows.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "SQLite row count overflow")))?; self.check_rows(total)?; let mut rows = 0usize; let mut bytes = 0usize; let mut scalar_bytes = 0usize;
-        for table in &database.tables { for row in &table.rows { rows = rows.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "SQLite row count overflow"))?; self.check_rows(rows)?; for value in &row.values { let size = value_size(value); bytes = bytes.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "SQLite value byte count overflow"))?; if matches!(value, SqliteValue::Integer(_) | SqliteValue::Real(_)) { scalar_bytes = scalar_bytes.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "SQLite scalar byte count overflow"))?; } self.check_value_bytes(bytes)?; } if rows % 256 == 0 { self.checkpoint(phase, rows, total)?; } } }
+        self.checkpoint(phase, 0, 0)?; let total = database.tables.iter().try_fold(0usize, |count, table| count.checked_add(table.rows.len()).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "SQLite row count overflow")))?; self.check_rows(total)?; let mut rows = 0usize; let mut bytes = 0usize; let mut scalar_bytes = 0usize;
+        for table in &database.tables { for row in &table.rows { rows = rows.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "SQLite row count overflow"))?; self.check_rows(rows)?; for value in &row.values { let size = value_size(value); bytes = bytes.checked_add(size).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "SQLite value byte count overflow"))?; if matches!(value, SqliteValue::Integer(_) | SqliteValue::Real(_)) { scalar_bytes = scalar_bytes.checked_add(size).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "SQLite scalar byte count overflow"))?; } self.check_value_bytes(bytes)?; } if rows % 256 == 0 { self.checkpoint(phase, rows, total)?; } } }
         if phase == SqliteSnapshotPhase::ReconstructSnapshot { self.reconstruction_scalar_bytes = self.reconstruction_scalar_bytes.max(scalar_bytes); }
         self.checkpoint(phase, rows, total)
     }
     fn accept_progress(&mut self, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> bool { let progress=if phase==SqliteSnapshotPhase::ReadPages{self.physical_read_progress.unwrap_or(SqliteSnapshotProgress { phase, completed, total })}else{SqliteSnapshotProgress { phase, completed, total }};(self.callback)(progress) }
     /// 👁️ Observes an original native prefix without constructing a second cancellation diagnostic.
     pub fn observe_progress(&mut self,phase:SqliteSnapshotPhase,completed:usize,total:usize)->bool{self.accept_progress(phase,completed,total)}
-    pub fn checkpoint(&mut self, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> std::result::Result<(), ValueError> { if self.accept_progress(phase,completed,total) { Ok(()) } else { Err(ValueError::new(ValueRefusalKind::Canceled, "relational SQLite transfer cancelled")) } }
+    pub fn checkpoint(&mut self, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> std::result::Result<(), ValueError> { if self.accept_progress(phase,completed,total) { Ok(()) } else { Err(ValueError::literal(ValueRefusalKind::Canceled, "relational SQLite transfer cancelled")) } }
 }
 
 type Result<T> = std::result::Result<T, ValueError>;
 
 fn invalid(reason: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, format!("invalid relational SQLite: {reason}")) }
-fn ownership_limit(reason: &str) -> ValueError { ValueError::new(ValueRefusalKind::OwnershipLimit, format!("relational SQLite resource limit: {reason}")) }
-fn work_limit(reason: &str) -> ValueError { ValueError::new(ValueRefusalKind::WorkLimit, format!("relational SQLite resource limit: {reason}")) }
-fn limit(value: usize, maximum: usize, kind: ValueRefusalKind, name: &str) -> Result<()> { if value > maximum { Err(ValueError::new(kind, format!("relational SQLite resource limit: {name}"))) } else { Ok(()) } }
-fn checkpoint(callback: &mut dyn FnMut(SqliteSnapshotProgress) -> bool, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> Result<()> { if callback(SqliteSnapshotProgress { phase, completed, total }) { Ok(()) } else { Err(ValueError::new(ValueRefusalKind::Canceled, "relational SQLite transfer cancelled")) } }
+fn ownership_limit(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::OwnershipLimit, message) }
+fn limit(value: usize, maximum: usize, kind: ValueRefusalKind, message: &'static str) -> Result<()> { if value > maximum { Err(ValueError::literal(kind, message)) } else { Ok(()) } }
+fn checkpoint(callback: &mut dyn FnMut(SqliteSnapshotProgress) -> bool, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> Result<()> { if callback(SqliteSnapshotProgress { phase, completed, total }) { Ok(()) } else { Err(ValueError::literal(ValueRefusalKind::Canceled, "relational SQLite transfer cancelled")) } }
 fn put_u16(bytes: &mut [u8], at: usize, value: usize) { bytes[at..at + 2].copy_from_slice(&(value as u16).to_be_bytes()); }
 fn put_u32(bytes: &mut [u8], at: usize, value: u32) { bytes[at..at + 4].copy_from_slice(&value.to_be_bytes()); }
 fn u16_at(bytes: &[u8], at: usize) -> Result<usize> { let value = bytes.get(at..at + 2).ok_or(invalid("truncated integer"))?; Ok(u16::from_be_bytes([value[0], value[1]]) as usize) }
@@ -335,3 +336,7 @@ mod typed_refusal_tests;
 #[cfg(test)]
 #[path="♻️retirement/🧪️tests/🦀️.rs"]
 mod original_field_retirement_tests;
+
+#[cfg(test)]
+#[path="⚠️refusal/💰️limits/🧪️tests/🦀️.rs"]
+mod original_fixed_limit_tests;

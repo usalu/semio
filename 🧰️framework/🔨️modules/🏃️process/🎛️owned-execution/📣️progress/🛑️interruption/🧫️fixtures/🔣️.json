@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "callerCeilingMilliseconds": 15000,
+  "progressIntervalMilliseconds": 10000,
+  "childMilliseconds": 10100,
+  "publicationMilliseconds": 2000,
+  "interruptionMilliseconds": 11000,
+  "cases": [
+    {
+      "id": "original cancellation remains effective during pending progress",
+      "interruption": "cancelled",
+      "terminal": "rejected",
+      "publishedBeforeTerminal": false,
+      "childClosedBeforeTerminal": true
+    },
+    {
+      "id": "original deadline remains effective during pending progress",
+      "interruption": "deadline",
+      "terminal": "rejected",
+      "publishedBeforeTerminal": false,
+      "childClosedBeforeTerminal": true
+    }
+  ]
+}

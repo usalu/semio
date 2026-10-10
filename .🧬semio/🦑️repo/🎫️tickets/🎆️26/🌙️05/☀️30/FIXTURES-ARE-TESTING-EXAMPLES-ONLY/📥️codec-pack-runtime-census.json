@@ -1,0 +1,41 @@
+{
+  "observedOnly": true,
+  "execution": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json",
+      "sha256": "45d63da5837e17187d6a2485f065054482fbed8cdac7c4e4aa0bac88e513ed3f",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "95a4e6015b5681a0cfb391e54ca639f3882a25ebd35d0e4e6b8de57840de1d7d",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧬️schema/🔣️.json",
+      "sha256": "706a00bf2ac1e4230a5935d3fdbb42b681097f8413c3d8992edb4adf9f9672be",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🟦️.ts",
+      "sha256": "91508f5496a3c2b5254ec6462ea35b12726cc6cec71a5a6bd6f6c91e609bfa64",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧬️schema/🔣️.json",
+      "sha256": "d6065b01a8b09728b96f511ed67fa0c1e0f47ab7c40bcf0d04686563074cfeb0",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧪️tests/🟦️.ts",
+      "sha256": "28e7e9da89807bdcaf6254decda8cd66a307564ffad16383904719144b6843ae",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+      "sha256": "8360fbbc193b46a673eea4a5797ff74c1038b88013c4e5667cdb31fe6a395b17",
+      "ownership": false
+    }
+  ]
+}

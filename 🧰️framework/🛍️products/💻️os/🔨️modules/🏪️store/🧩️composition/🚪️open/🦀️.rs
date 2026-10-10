@@ -413,15 +413,6 @@ pub struct MemberOpenAdmissionError {
     pub request: MemberOpenRequest,
 }
 
-semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryLog { doc_id, schema, edits, transitions, composition, conflicts, viewer_line, viewer_checkpoint });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryComposition { owner, dialect });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed, payload });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::history::HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, code, message, target, op_index });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, line, started_at, finished_at, verb, ops, inverse, meta, lane });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction });
-
 pub(super) struct MemberStoreOpenRetained<P, M>
 where
     P: Clone + super::ToValue + super::FromValue,

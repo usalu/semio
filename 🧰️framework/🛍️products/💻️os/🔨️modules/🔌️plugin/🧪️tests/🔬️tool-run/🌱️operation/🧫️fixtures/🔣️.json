@@ -1,0 +1,31 @@
+{
+  "schema": "original-toy-operation-source.v1",
+  "policy": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "cases": [
+    {
+      "count": -17,
+      "unit": 1,
+      "label": "unit-1"
+    },
+    {
+      "count": 19,
+      "unit": 4294967295,
+      "label": "unit-4294967295"
+    }
+  ],
+  "owners": [
+    "inline-original-source",
+    "original-codec",
+    "original-wire-backing",
+    "same-writer-admission"
+  ],
+  "metadataCopyBytes": 0,
+  "wireCapacityBytes": 64,
+  "denied": "preserve-original-fields-and-native-pointers"
+}

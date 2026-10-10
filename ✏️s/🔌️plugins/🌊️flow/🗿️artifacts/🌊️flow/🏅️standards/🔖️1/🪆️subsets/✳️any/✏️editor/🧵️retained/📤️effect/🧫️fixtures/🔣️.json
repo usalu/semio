@@ -1,0 +1,47 @@
+{
+  "schema": "semio.flow.host-effect-retirement.v1",
+  "fields": [
+    "command",
+    "snapshot",
+    "config",
+    "history",
+    "children",
+    "instance_owner",
+    "completion"
+  ],
+  "sharedLeases": [
+    "snapshot",
+    "config",
+    "history",
+    "children"
+  ],
+  "originalHeadersCopyBytes": 0,
+  "decoderRootSameArc": true,
+  "instanceFaultOriginalSource": true,
+  "completeStateAbsent": true,
+  "completeOutputAbsent": true,
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "terminalDropBytes": 0,
+  "jobFields": [
+    "payload",
+    "payload_close",
+    "decoder_close",
+    "completion_refusal",
+    "input",
+    "decoder",
+    "page",
+    "byte",
+    "validated",
+    "completed",
+    "closing"
+  ],
+  "completionRefusalFields": [
+    "emit",
+    "ephemeral",
+    "fault"
+  ]
+}

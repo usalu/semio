@@ -28,13 +28,17 @@ impl LocalInteractionQueryGeneration {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum LocalInteractionLiveStep {
     Blocked,
-    Advanced { emitted_bytes: usize, retired_bytes: usize },
+    Advanced { emitted_bytes: usize, retired_bytes: usize, ownership: RetainedCloneProgress },
+}
+impl LocalInteractionLiveStep{
+    pub(crate) fn progress(self)->RetainedCloneProgress{match self{Self::Advanced{ownership,..}=>ownership,Self::Blocked=>Default::default()}}
 }
 
 struct LiveState<D, C, Q: LocalInteractionQueryCapture> {
     query: Option<LocalInteractionQuery<Q>>,
     inputs: LocalInteractionInputReads<D, C>,
-    error_bytes: Option<Vec<u8>>,
+    error: Option<ValueError>,
+    error_close: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
 /// 🔒️ The app captures these roots under one exclusive owner; transport receives fixed pages only.
@@ -54,7 +58,7 @@ impl<D, C> LocalInteractionLiveQuery<D, C> {
         let failed = document.is_none() || config.is_none() || interaction.is_none();
         let inputs = LocalInteractionInputReads::from_optional(document, config);
         let query = interaction.map(|read| LocalInteractionQuery::new(LocalInteractionCaptureCursor::new(read, identity), request_id, query_generation));
-        let mut owner = Self { owned: ManuallyDrop::new(LiveState { query, inputs, error_bytes: None }), request_id, started: false, page_sent: false, closing: false, cancelled: false, failed, terminal_sent: false };
+        let mut owner = Self { owned: ManuallyDrop::new(LiveState { query, inputs, error: None, error_close:None }), request_id, started: false, page_sent: false, closing: false, cancelled: false, failed, terminal_sent: false };
         if failed {
             owner.begin_close();
         }
@@ -100,8 +104,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         self.owned.inputs.begin_close();
     }
 
-    pub(crate) fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<LocalInteractionLiveStep, String> {
-        if grant.maximum_items == 0 || self.closing {
+    pub(crate) fn advance(&mut self, grant: ArtifactStoreOneItemGrant, output_width: usize) -> Result<LocalInteractionLiveStep, ValueError> {
+        if grant.maximum_items == 0 || grant.maximum_depth<2 || self.closing {
             return Ok(LocalInteractionLiveStep::Blocked);
         }
         if !self.started {
@@ -110,19 +114,24 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         let query = self.owned.query.as_mut().expect("admitted query has its immutable interaction lease");
         let before_emitted = query.completed_bytes();
         let before_retired = query.retired_bytes();
-        match query.advance(grant) {
+        match query.advance(ArtifactStoreOneItemGrant{maximum_depth:grant.maximum_depth-1,..grant}, output_width) {
             Ok(LocalInteractionQueryStep::Blocked | LocalInteractionQueryStep::PageReady) => Ok(LocalInteractionLiveStep::Blocked),
-            Ok(LocalInteractionQueryStep::Advanced { emitted_bytes, retired_bytes }) => Ok(LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes }),
+            Ok(LocalInteractionQueryStep::Advanced { emitted_bytes, retired_bytes, ownership }) => Ok(LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes, ownership }),
             Ok(LocalInteractionQueryStep::Closing) => Ok(LocalInteractionLiveStep::Blocked),
             Err(reason) => {
                 let emitted_bytes = (query.completed_bytes() - before_emitted) as usize;
                 let retired_bytes = (query.retired_bytes() - before_retired) as usize;
-                self.owned.error_bytes = Some(reason.into_bytes());
+                let ownership=reason.retained_progress();
+                self.owned.error=Some(reason);
                 self.failed = true;
                 self.begin_close();
-                Ok(LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes })
+                Ok(LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes, ownership })
             }
         }
+    }
+
+    pub(crate) fn retired_bytes(&self)->u64 {
+        self.owned.query.as_ref().map_or(0,LocalInteractionQuery::retired_bytes)
     }
 
     pub(crate) fn is_closing(&self) -> bool {
@@ -135,9 +144,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "live local interaction depth overflow"))?;
             Ok(demand)
         };
-        if let Some(bytes) = self.owned.error_bytes.as_ref() {
-            return Ok(if bytes.is_empty() { RetirementDemand { release_bytes: bytes.capacity(), depth: 1, ..Default::default() } } else { RetirementDemand { copy_bytes: 1, depth: 1, ..Default::default() } });
-        }
+        if let Some(owner)=self.owned.error_close.as_ref(){return nested(store::artifact_retirement_box_demands(owner,body)?)}
+        if self.owned.error.is_some(){return nested(store::artifact_retirement_owned_birth_demands(&self.owned.error)?)}
         if let Some(query) = self.owned.query.as_ref().filter(|query| !query.terminal_is_empty()) {
             return nested(query.retirement_demands(body)?);
         }
@@ -161,17 +169,9 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
             return Ok(RetainedCloneStep::Progress(idle));
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = if let Some(bytes) = self.owned.error_bytes.as_mut() {
-            if bytes.is_empty() {
-                let released_bytes = bytes.capacity();
-                self.owned.error_bytes = None;
-                RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..idle })
-            } else {
-                let copied_bytes = bytes.len().min(grant.maximum_copy_bytes);
-                bytes.truncate(bytes.len() - copied_bytes);
-                RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..idle })
-            }
-        } else if let Some(query) = self.owned.query.as_mut().filter(|query| !query.terminal_is_empty()) {
+        let step = if self.owned.error_close.is_some(){store::artifact_retirement_box_close_step(&mut self.owned.error_close,child)?}
+        else if self.owned.error.is_some(){let owned=&mut *self.owned;store::artifact_retirement_admit_owned(&mut owned.error,&mut owned.error_close,child)?}
+        else if let Some(query) = self.owned.query.as_mut().filter(|query| !query.terminal_is_empty()) {
             semio_framework_value::retained_clone::admit_retained_clone_close(child, query.close_step(child)?, query.terminal_is_empty(), "live local interaction query")?
         } else {
             let inputs = &mut self.owned.inputs;
@@ -238,7 +238,7 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
     }
 
     pub(crate) fn owners_are_empty(&self) -> bool {
-        self.closing && self.owned.error_bytes.is_none() && self.owned.query.as_ref().is_none_or(LocalInteractionQuery::terminal_is_empty) && self.owned.inputs.terminal_is_empty()
+        self.closing && self.owned.error.is_none() && self.owned.error_close.is_none() && self.owned.query.as_ref().is_none_or(LocalInteractionQuery::terminal_is_empty) && self.owned.inputs.terminal_is_empty()
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {

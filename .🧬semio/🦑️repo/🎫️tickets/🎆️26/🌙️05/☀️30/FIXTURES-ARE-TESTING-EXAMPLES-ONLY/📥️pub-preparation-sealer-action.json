@@ -1,0 +1,9 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+  "beforeSha256": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589",
+  "beforeOwnedBlockSha256": "db6e883f4abbed0886eaad6ec0129a13a6c680f639899a2a36d833ff67ac58f3",
+  "afterSha256": "fb3a9c0f956b81d0674b7cb419ae3cb4bd18eeab725203e01ae58ff94ab17110",
+  "afterOwnedBlockSha256": "47a3d56f17b85a03851e7f11a4bbaee5927e7ef9e136e981a168b975d73a1c0f",
+  "action": "Canonical ValueError sole retained-progress authority and original preparation custody",
+  "ownedBlock": "ArtifactStoreOneItemSealer.advance only"
+}

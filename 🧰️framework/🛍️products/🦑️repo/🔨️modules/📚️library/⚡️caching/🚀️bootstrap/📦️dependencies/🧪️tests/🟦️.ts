@@ -7,10 +7,12 @@ import Ajv from "ajv";
 import { build } from "esbuild";
 import { createSourceFile, isFunctionDeclaration, parseConfigFileTextToJson, ScriptTarget } from "typescript";
 import { prepareJavascriptDependencies, SyncScript, RefreshLockScript } from "../📜️script.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/📜️script.ts";
 import { zipSync, unzipSync } from "fflate";
 import { activateWhenNxWatcherReady, waitForNxTargetStart, nxChildEnvironment, nxWatcherEnvironment } from "../../📜️script.ts";
 import { EventEmitter } from "node:events";
+import { ChildProcess } from "node:child_process";
 
 const owner = resolve(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as { operations: { mode: "sync" | "lock"; arguments: string[] }[]; platforms: string[]; rejections: string[][] };
@@ -90,7 +92,9 @@ test("selects exact Bun arguments across all supported hosts and rejects install
     await prepareJavascriptDependencies(operation.mode, platform, signal, async (args, cwd, actualSignal) => { calls.push({ args, cwd, identicalSignal: actualSignal === signal }); });
     expect(calls).toEqual([{ args: operation.arguments, cwd: platform, identicalSignal: true }]);
   }
-  for (const args of fixture.rejections) for (const Constructor of [SyncScript, RefreshLockScript]) await expect(new Constructor(owner, owner).run(args)).rejects.toThrow("accepts --all or --scope <owner>");
+  await receiveScriptProcessInvocation(process.env, async original => {
+    for (const args of fixture.rejections) for (const Constructor of [SyncScript, RefreshLockScript]) await expect(new Constructor(owner, owner, original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");
+  });
   const aborted = new AbortController(); aborted.abort();
   let called = false;
   await expect(prepareJavascriptDependencies("lock", owner, aborted.signal, async () => { called = true; })).rejects.toThrow();
@@ -159,14 +163,14 @@ test("initial preparation waits for an exact complete serving target and release
 test("automatic watcher callbacks register only after initial preparation and honour cancellation", async () => {
   const {startNxWatcherAfterPreparation}=await import("../../\u{1f4dc}\uFE0Fscript.ts");
   let complete!:()=>void;const prepared=new Promise<void>(accept=>{complete=accept;}),events=["initial"];
-  const watcher=startNxWatcherAfterPreparation(prepared,()=>true,()=>{events.push("watcher");return "registered" as never;});
-  await new Promise(accept=>setImmediate(accept));expect(events).toEqual(["initial"]);complete();expect(await watcher).toBe("registered");expect(events).toEqual(["initial","watcher"]);
-  let started=false;expect(await startNxWatcherAfterPreparation(Promise.resolve(),()=>false,()=>{started=true;return null as never;})).toBeUndefined();expect(started).toBe(false);
-  await expect(startNxWatcherAfterPreparation(Promise.reject(Error("initial failure")),()=>true,()=>{started=true;return null as never;})).rejects.toThrow("initial failure");expect(started).toBe(false);
+  const registered=new ChildProcess(),watcher=startNxWatcherAfterPreparation(prepared,()=>true,()=>{events.push("watcher");return registered;});
+  await new Promise(accept=>setImmediate(accept));expect(events).toEqual(["initial"]);complete();expect(await watcher).toBe(registered);expect(events).toEqual(["initial","watcher"]);
+  let started=false;expect(await startNxWatcherAfterPreparation(Promise.resolve(),()=>false,()=>{started=true;throw Error("Cancelled watcher callback must not start");})).toBeUndefined();expect(started).toBe(false);
+  await expect(startNxWatcherAfterPreparation(Promise.reject(Error("initial failure")),()=>true,()=>{started=true;throw Error("Cancelled watcher callback must not start");})).rejects.toThrow("initial failure");expect(started).toBe(false);
   const source=createSourceFile("bootstrap.ts",readFileSync(resolve(owner,"../\u{1f4dc}\uFE0Fscript.ts"),"utf8"),ScriptTarget.Latest),operation=source.statements.find(statement=>isFunctionDeclaration(statement)&&statement.name?.text==="startNxWatcherAfterPreparation")!;
   const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"watcher-registration-")),module=join(directory,"watcher.mjs");
   await build({stdin:{contents:operation.getText(source),loader:"ts"},outfile:module,platform:"node",format:"esm"});
-  const reference="import {startNxWatcherAfterPreparation} from "+JSON.stringify(pathToFileURL(module).href)+";let complete;const prepared=new Promise(accept=>complete=accept),events=['initial'];const watcher=startNxWatcherAfterPreparation(prepared,()=>true,()=>events.push('watcher'));await new Promise(setImmediate);if(events.length!==1)throw Error('premature registration');complete();await watcher;console.log(JSON.stringify(events));";
+  const reference="import {startNxWatcherAfterPreparation} from "+JSON.stringify(pathToFileURL(module).href)+";import {ChildProcess} from 'node:child_process';let complete;const registered=new ChildProcess(),prepared=new Promise(accept=>complete=accept),events=['initial'];const watcher=startNxWatcherAfterPreparation(prepared,()=>true,()=>{events.push('watcher');return registered;});await new Promise(setImmediate);if(events.length!==1)throw Error('premature registration');complete();if(await watcher!==registered)throw Error('Watcher owner identity changed');console.log(JSON.stringify(events));";
   const oracle=Bun.spawn(["node","--input-type=module","-e",reference],{stdout:"pipe",stderr:"pipe"});
   const [output,errors,code]=await Promise.all([new Response(oracle.stdout).text(),new Response(oracle.stderr).text(),oracle.exited]);expect(code,errors).toBe(0);expect(JSON.parse(output)).toEqual(events);
 });
@@ -182,7 +186,7 @@ test("Nx producers and watchers inherit the pinned Bun runtime on every host", a
   const [stdout,stderr,status]=await Promise.all([new Response(oracle.stdout).text(),new Response(oracle.stderr).text(),oracle.exited]);
   expect(status,stderr).toBe(0);
   const observed=rows.map((row:any)=>bootstrap.pinnedNxRuntimeEnvironment(row.environment,row.bun,row.platform));expect(observed).toEqual(rows.map((row:any)=>row.expected));expect(JSON.parse(stdout)).toEqual(observed);
-  for(const platform of ["win32","linux","darwin"])expect(()=>bootstrap.pinnedNxRuntimeEnvironment({},"relative/bun",platform)).toThrow("absolute");
+  for(const platform of ["win32","linux","darwin"] as const)expect(()=>bootstrap.pinnedNxRuntimeEnvironment({},"relative/bun",platform)).toThrow("absolute");
   console.log("[DEBUG] pinned Nx Bun environment checked against esbuild/Node on three hosts");
 });
 

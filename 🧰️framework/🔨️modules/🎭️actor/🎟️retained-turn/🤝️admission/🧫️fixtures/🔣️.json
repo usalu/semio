@@ -1,0 +1,93 @@
+{
+  "contract": "actor.original-paired-admission/v1",
+  "operation": 71,
+  "generation": 3,
+  "firstEpoch": 19,
+  "originalGrant": [
+    32,
+    32,
+    4096,
+    4096,
+    8
+  ],
+  "guestPolicy": [
+    1,
+    0,
+    512,
+    512,
+    8
+  ],
+  "hostInputBytes": 97,
+  "phases": [
+    "denied-root",
+    "root",
+    "payload",
+    "ready",
+    "dispatch"
+  ],
+  "spent": [
+    {
+      "items": 0,
+      "copy": 0,
+      "capacity": 0,
+      "release": 0
+    },
+    {
+      "items": 1,
+      "copy": 0,
+      "capacity": 64,
+      "release": 0
+    },
+    {
+      "items": 1,
+      "copy": 0,
+      "capacity": 128,
+      "release": 0
+    },
+    {
+      "items": 0,
+      "copy": 0,
+      "capacity": 0,
+      "release": 0
+    },
+    {
+      "items": 1,
+      "copy": 7,
+      "capacity": 0,
+      "release": 0
+    }
+  ],
+  "remaining": [
+    29,
+    25,
+    3904,
+    4096,
+    8
+  ],
+  "epochs": [
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "inputHeldUntilDispatch": true,
+  "failedReceiptHeld": true,
+  "duplicateRefused": true,
+  "oneGuestCheckout": true,
+  "oneActorReturn": true,
+  "bodyPolicy": [
+    1,
+    7,
+    512,
+    512,
+    8
+  ],
+  "closePolicy": [
+    1,
+    0,
+    512,
+    512,
+    8
+  ]
+}

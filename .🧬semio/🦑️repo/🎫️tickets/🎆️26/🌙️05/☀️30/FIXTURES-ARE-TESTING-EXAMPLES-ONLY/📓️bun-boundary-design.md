@@ -1,0 +1,11 @@
+# Bun Defining Membership Seam
+
+Physical authority is 🗂️workspaces/🟦️bun/🟨️.cjs: parse declaration7–16, custom matcher17–20, physical candidates27–52, payload ownership54–68, multi-scope admission74–92 and native pattern producer112. TS facade explicitly exposes these first-party APIs. Bootstrap dependencies permanent script83 publishes its generated workspaces before actual dependency preparation. Root semio.workspace.members is the schema-first original declaration; root workspaces must retain its exact prefix.
+
+Current matcher supports literal components, *, ? and ** only; it escapes extglob/braces. Do not put minimatch's negative-predecessor extglob into declaration and claim it means the same thing to Bun or this parser. Current opaque fixture skip needs replacement by normalized full collection ancestry with modules-member exception, while ordinary opaque vendor/output rules remain.
+
+A clean finite discovery representation can retain broad authored source positives, collect each actual true collection root at the first forbidden ancestor, prune its subtree and emit literal native negative subtree patterns relative to each real installation scope. Genuine module-named segments remain traversable; a later nested collection produces its own negative root. This is a collection-root exclusion inventory, not a full admitted package allowlist. Escape literal wildcard/bracket/brace characters; scope-relative traversal and source currentness must remain checked. Remove unconditional old fixture mask from original declaration only through its genuine owner after proving fresh native output equivalence.
+
+Existing lower Bun tests already use language-neutral accepted/rejected/removal vectors, canonical production declaration Ajv, actual Bun install --ignore-scripts and independent fast-glob. Extend with all four collection roots, genuine modules, nested true collection, Unicode/literal glob characters, owner payloads and separate scopes. The installed Bun workspace semantics must be checked by actual native route before claiming extglob or negation equivalence; no such execution occurred here under current hold. Pure Bun.Glob membership alone would not prove package-install workspace admission.
+
+No Source writes, copies, package install, build or Cargo. Companion hashes are observations only.

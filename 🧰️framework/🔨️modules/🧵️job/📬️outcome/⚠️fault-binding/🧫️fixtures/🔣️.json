@@ -1,0 +1,151 @@
+{
+  "contract": "semio.job.original-fault-binding.v1",
+  "source": "same-pre-admitted-fault-page",
+  "clock": "absent-or-unusable-does-not-mint-a-deadline",
+  "cases": [
+    {
+      "id": "funded",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "prior": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "admitted": true,
+      "refused": false,
+      "receipt": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "no-items",
+      "grant": [
+        0,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "prior": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "admitted": false,
+      "refused": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "no-depth",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        0
+      ],
+      "prior": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "admitted": false,
+      "refused": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "spent-item",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "prior": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "admitted": false,
+      "refused": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "original-birth",
+      "grant": [
+        3,
+        23,
+        64,
+        65536,
+        3
+      ],
+      "prior": [
+        1,
+        0,
+        64,
+        0
+      ],
+      "admitted": true,
+      "refused": false,
+      "receipt": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "excess-birth",
+      "grant": [
+        3,
+        23,
+        0,
+        65536,
+        3
+      ],
+      "prior": [
+        1,
+        0,
+        64,
+        0
+      ],
+      "admitted": false,
+      "refused": true,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

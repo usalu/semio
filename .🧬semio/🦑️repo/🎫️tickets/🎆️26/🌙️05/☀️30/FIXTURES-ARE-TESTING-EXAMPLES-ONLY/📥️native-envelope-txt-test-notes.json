@@ -1,0 +1,18 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "currentSha256": "2da068a38aba257df504e9fc81f6ce88ce2ee99bc3efd4c9c898032699742faf",
+    "qualification": "Intermediate test corrections were executed and logged but each correction hash was not independently persisted. This current whole hash is observational, not an invented mutation preimage.",
+    "corrections": [
+      "original relative paths and actual annotation keyword admission"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🔬️unit/🦀️.rs",
+    "currentSha256": "4d448609505c7a73446940a237707b8f25a734c7acfd78496e39b4a43d08cea0",
+    "qualification": "Intermediate test corrections were executed and logged but each correction hash was not independently persisted. This current whole hash is observational, not an invented mutation preimage.",
+    "corrections": [
+      "actual ValueError.kind field access"
+    ]
+  }
+]

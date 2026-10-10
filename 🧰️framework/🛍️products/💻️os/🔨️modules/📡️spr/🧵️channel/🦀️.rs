@@ -2143,7 +2143,7 @@ async fn write_presence_roster(out: &mut Vec<u8>, roster: &PresenceRosterWire) {
 async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::MutationEnvelope]) {
     crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::os_spr::causal::encode_envelope(value, out);
+        crate::os_spr::io::binary::causal::encode_envelope(value, out);
     }
 }
 
@@ -2153,7 +2153,7 @@ async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::o
     // hoisted into a plain loop so each element can be awaited.
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(crate::os_spr::causal::decode_envelope(bytes, pos)?);
+        out.push(crate::os_spr::io::binary::causal::decode_envelope(bytes, pos)?);
     }
     Ok(out)
 }

@@ -13,7 +13,7 @@ extern crate semio_framework_value_derive as value_derive;
 pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
 use semio_framework_plugin::{
-    ArtifactInference, ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactKindSpec, MediaClass, MediaForm, MediaType,
+    ArtifactInference, ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactKindSpec, MediaClass, MediaForm, MediaType,
     OsMediaCapability,
 };
 
@@ -204,12 +204,11 @@ fn gltf_inference_leaf_service(inference_schema: &'static str, infer: ArtifactIn
             policy_version: GLTF_INFERENCE_POLICY_VERSION,
             payload: None,
         },
-        infer,
-    )
+        infer,gltf_inference_demands)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let descriptor = schema::inferences::gltf_inference_leaf_service_descriptor(id).ok_or_else(|| ArtifactInferenceExecutionError::new("stdio.gltf.inference.unknown-leaf", id))?;
     let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
     let assembly = <schema::inferences::GltfInference as protocol::Inference<GltfSnapshot>>::infer(&snapshot).map_err(|error|ArtifactInferenceExecutionError::new("stdio.gltf.inference.owner-refused",error.into_message()))?;
@@ -233,7 +232,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
         value,
     };
     let canonical_payload = standards::v2_0::subsets::any::io::binary::inferences::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
-    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload, diagnostics: Vec::new(), validity, quality: envelope.quality, complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
+    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload:Some(canonical_payload), diagnostics: Vec::new(), validity, quality: envelope.quality, complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -242,337 +241,337 @@ fn stable_hash(bytes: &[u8]) -> u64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_overall_size(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_overall_size(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.overall-size.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_axis_aligned_bounds(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_axis_aligned_bounds(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.axis-aligned-bounds.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_oriented_bounds(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_oriented_bounds(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.oriented-bounds.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_bounding_box_dimensions(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_bounding_box_dimensions(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.bounding-box-dimensions.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_characteristic_length(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_characteristic_length(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.characteristic-length.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_footprint_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_footprint_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.footprint-area.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_projected_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_projected_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.projected-area.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_surface_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_surface_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.surface-area.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_total_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_total_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.total-area.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_exposed_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_exposed_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.exposed-area.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_contact_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_contact_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.contact-area.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.volume.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_enclosed_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_enclosed_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.enclosed-volume.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_material_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_material_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.material-volume.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_void_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_void_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.void-volume.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_compactness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_compactness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.compactness.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_surface_to_volume_ratio(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_surface_to_volume_ratio(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.surface-to-volume-ratio.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_sphericity(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_sphericity(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.sphericity.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_compactness_index(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_compactness_index(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.compactness-index.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_hull_fill_ratio(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_hull_fill_ratio(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.hull-fill-ratio.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_aspect_ratios(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_aspect_ratios(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.aspect-ratios.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_slenderness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_slenderness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.slenderness.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_flatness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_flatness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.flatness.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_elongation(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_elongation(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.elongation.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_centroid(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_centroid(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.centroid.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_principal_frame(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_principal_frame(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.principal-frame.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_principal_axes(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_principal_axes(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.principal-axes.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_moments_of_inertia(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_moments_of_inertia(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.moments-of-inertia.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_inertia_tensor(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_inertia_tensor(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.inertia-tensor.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_mean_curvature(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_mean_curvature(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.mean-curvature.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_gaussian_curvature(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_gaussian_curvature(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.gaussian-curvature.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_curvature_histogram(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_curvature_histogram(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.curvature-histogram.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_sharp_feature_proportion(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_sharp_feature_proportion(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.sharp-feature-proportion.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_mean_thickness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_mean_thickness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.mean-thickness.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_minimum_thickness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_minimum_thickness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.minimum-thickness.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_thickness_variability(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_thickness_variability(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.thickness-variability.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_thickness_distribution(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_thickness_distribution(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.thickness-distribution.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_convex_hull_gap(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_convex_hull_gap(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.convex-hull-gap.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_reentrant_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_reentrant_area(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.reentrant-area.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_reentrant_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_reentrant_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.reentrant-volume.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_concavity_index(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_concavity_index(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.concavity-index.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_minimum_distance_to_neighbors(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_minimum_distance_to_neighbors(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.minimum-distance-to-neighbors.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_clearance_distribution(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_clearance_distribution(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.clearance-distribution.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_interference_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_interference_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.interference-volume.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_overlap_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_overlap_volume(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.overlap-volume.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_number_of_contacts(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_number_of_contacts(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.number-of-contacts.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_contact_graph_degree(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_contact_graph_degree(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.contact-graph-degree.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_connected_components(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_connected_components(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.connected-components.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_main_axis_direction(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_main_axis_direction(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.main-axis-direction.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_face_normal_distribution(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_face_normal_distribution(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.face-normal-distribution.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_orientation_consistency(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_orientation_consistency(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.orientation-consistency.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_reflection_symmetry_score(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_reflection_symmetry_score(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.reflection-symmetry-score.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_rotational_symmetry_score(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_rotational_symmetry_score(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.rotational-symmetry-score.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_reflection_symmetries(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_reflection_symmetries(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.reflection-symmetries.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_rotational_symmetries(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_rotational_symmetries(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.rotational-symmetries.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_repetition_ratio(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_repetition_ratio(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.repetition-ratio.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_modularity_ratio(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_modularity_ratio(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.modularity-ratio.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_deviation_from_ideal(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_deviation_from_ideal(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.deviation-from-ideal.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_deviation_from_smoothed_geometry(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_deviation_from_smoothed_geometry(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_normal_variation(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_normal_variation(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.normal-variation.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_surface_waviness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_surface_waviness(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.surface-waviness.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_irregularity(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_irregularity(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.irregularity.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_holes(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_holes(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.holes.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_handles(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_handles(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.handles.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_boundary_loops(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_boundary_loops(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.boundary-loops.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_euler_characteristic(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_euler_characteristic(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.euler-characteristic.v1", request)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn infer_gltf_leaf_genus(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_gltf_leaf_genus(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     infer_gltf_leaf_cold("s.stdio.gltf.inference.genus.v1", request)
 }
 
@@ -1208,3 +1207,6 @@ pub mod viewer {
 }
 
 pub use crate::standards::v2_0::subsets::any::io::{GltfBuilderConstruction, GltfAccessorSpec, GltfParts, GltfAnalyzerAnalysis, GltfBuilderFacets, GltfBuilder, GltfAnalyzer, GltfComposer};
+
+/// ♻️ This synchronous executable retains no callback child between invocations.
+fn gltf_inference_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}

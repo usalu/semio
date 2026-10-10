@@ -1,7 +1,6 @@
 //! 🗑️ Original Discard ownership commits separately from admitted displaced-session retirement.
 use crate::{TimeTravelBase,TimeTravelEvent,TimeTravelPending,TimeTravelRefusal,TimeTravelSession,TimeTravelStage};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
-use std::mem::size_of;
 
 /// 🎟️ Keeps the original command and displaced native fields until each granted frontier empties.
 pub struct TimeTravelDiscardCursor {
@@ -16,7 +15,7 @@ pub struct TimeTravelDiscardCursor {
     done:bool,
 }
 impl TimeTravelDiscardCursor {
-    pub fn admission_copy_bytes()->usize{size_of::<Option<TimeTravelEvent>>()+size_of::<Self>()}
+    pub fn admission_copy_bytes()->usize{0}
     /// 📨️ Transfers only a supported original scalar event after item and depth admission.
     pub fn admit_original(event:&mut Option<TimeTravelEvent>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::admission_copy_bytes(){return Ok(None)}
@@ -33,23 +32,20 @@ impl TimeTravelDiscardCursor {
     }
     pub fn is_validating(&self)->bool{!self.closing&&!self.done&&self.phase==0}
     pub fn prepared_stage(&self)->Option<TimeTravelStage>{if !self.closing&&self.phase==1{self.planned_stage}else{None}}
-    fn validation_copy_bytes(&self,session:&TimeTravelSession)->usize{
-        if !matches!(self.event.as_ref(),Some(TimeTravelEvent::Discard{generation})if *generation==session.generation)||session.stage!=TimeTravelStage::Editing||session.pending.is_none(){size_of::<Option<Result<TimeTravelStage,TimeTravelRefusal>>>()+size_of::<u8>()}else{size_of::<Option<(usize,u64,u32,TimeTravelBase)>>()+size_of::<Option<TimeTravelStage>>()+size_of::<u8>()}
-    }
+    fn validation_copy_bytes(&self,_session:&TimeTravelSession)->usize{0}
     pub fn validation_demands(&self,session:&TimeTravelSession)->RetirementDemand{RetirementDemand{copy_bytes:self.validation_copy_bytes(session),depth:1,..Default::default()}}
     pub fn commit_demands(&self,session:&TimeTravelSession)->Result<RetirementDemand,ValueError>{
         if self.closing||self.phase!=1{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Discard requires its validated original before explicit commit"))}
         if self.bound!=Some((session as *const _ as usize,session.id,session.generation,session.base))||session.stage!=TimeTravelStage::Editing{return Err(unsupported("Discard session authority changed before ownership transfer"))}
-        let pending=session.pending.as_ref().ok_or_else(||unsupported("Discard pending original is absent"))?;
-        let fields=if pending.return_stage==TimeTravelStage::Reviewing{size_of::<Option<TimeTravelPending>>()+size_of::<Option<ControlledRetirement<TimeTravelPending>>>()+size_of::<TimeTravelStage>()}else{2*size_of::<TimeTravelSession>()+size_of::<Option<ControlledRetirement<TimeTravelSession>>>()};
-        Ok(RetirementDemand{copy_bytes:fields+size_of::<Option<Result<TimeTravelStage,TimeTravelRefusal>>>()+size_of::<u8>(),depth:1,..Default::default()})
+        session.pending.as_ref().ok_or_else(||unsupported("Discard pending original is absent"))?;
+        Ok(RetirementDemand{depth:1,..Default::default()})
     }
     fn close_header_copy_bytes(&self)->Option<usize>{
         if self.done{return Some(0)}
-        if !self.closing{return Some(size_of::<bool>()+if self.phase<2{size_of::<u8>()}else{0})}
-        if let Some(owner)=self.session.as_ref(){return owner.terminal_is_empty().then_some(size_of::<Option<ControlledRetirement<TimeTravelSession>>>())}
-        if let Some(owner)=self.pending.as_ref(){return owner.terminal_is_empty().then_some(size_of::<Option<ControlledRetirement<TimeTravelPending>>>())}
-        Some(size_of::<Option<TimeTravelEvent>>()+size_of::<Option<(usize,u64,u32,TimeTravelBase)>>()+size_of::<Option<TimeTravelStage>>()+size_of::<bool>())
+        if !self.closing{return Some(0)}
+        if let Some(owner)=self.session.as_ref(){return owner.terminal_is_empty().then_some(0)}
+        if let Some(owner)=self.pending.as_ref(){return owner.terminal_is_empty().then_some(0)}
+        Some(0)
     }
     /// 🪪️ Leaves the original Session unchanged while its Store effects are separately admitted.
     pub fn validate(&mut self,session:&TimeTravelSession,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{

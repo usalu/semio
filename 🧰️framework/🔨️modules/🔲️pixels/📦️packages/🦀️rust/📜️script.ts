@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🔲️ The canonical native Pixels task owner retains the complete original package workload. */
 import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -11,4 +12,4 @@ class TestScript extends BundleScript {
   }
 }
 
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript),{defaultCommand:"test"});
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript), { invocation: original, ...({defaultCommand:"test"}) }));

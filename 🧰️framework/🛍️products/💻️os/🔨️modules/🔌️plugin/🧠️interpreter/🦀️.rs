@@ -528,6 +528,8 @@ pub const SEMIO_OWNED_CANCEL_JOB_EXPORT: &str = "semio_owned_cancel_job_v1";
 pub const SEMIO_OWNED_START_JOB_EXPORT: &str = "semio_owned_start_job_v1";
 pub const SEMIO_OWNED_STEP_JOB_EXPORT: &str = "semio_owned_step_job_v1";
 pub const SEMIO_OWNED_POLL_EXPORT: &str = "semio_owned_poll_v1";
+pub const SEMIO_OWNED_ADMIT_ACTOR_CONTEXT_EXPORT:&str="semio_owned_admit_actor_context_v1";
+pub const SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT:&str="semio_owned_close_actor_context_v1";
 /// 🤝️ The owned twin of `reactor.channel-version`: the guest's compiled app-channel version, which a host admits before any frame.
 pub const SEMIO_OWNED_CHANNEL_VERSION_EXPORT: &str = "semio_owned_channel_version_v1";
 /// 🧬️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): the owned twin of `world actor`'s `codec`
@@ -600,6 +602,8 @@ pub enum OwnedSemioExport {
     StartJob,
     StepJob,
     Poll,
+    AdmitActorContext,
+    CloseActorContext,
     PackSchemaHash,
     Genesis,
     PrintMirror,
@@ -615,7 +619,7 @@ pub enum OwnedSemioExport {
 }
 
 impl OwnedSemioExport {
-    pub const ALL: [Self; 22] = [
+    pub const ALL: [Self; 24] = [
         Self::Allocate,
         Self::Deallocate,
         Self::Checkpoint,
@@ -626,6 +630,8 @@ impl OwnedSemioExport {
         Self::StartJob,
         Self::StepJob,
         Self::Poll,
+        Self::AdmitActorContext,
+        Self::CloseActorContext,
         Self::PackSchemaHash,
         Self::Genesis,
         Self::PrintMirror,
@@ -652,6 +658,8 @@ impl OwnedSemioExport {
             Self::StartJob => SEMIO_OWNED_START_JOB_EXPORT,
             Self::StepJob => SEMIO_OWNED_STEP_JOB_EXPORT,
             Self::Poll => SEMIO_OWNED_POLL_EXPORT,
+            Self::AdmitActorContext=>SEMIO_OWNED_ADMIT_ACTOR_CONTEXT_EXPORT,
+            Self::CloseActorContext=>SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT,
             Self::PackSchemaHash => SEMIO_OWNED_PACK_SCHEMA_HASH_EXPORT,
             Self::Genesis => SEMIO_OWNED_GENESIS_EXPORT,
             Self::PrintMirror => SEMIO_OWNED_PRINT_MIRROR_EXPORT,
@@ -673,7 +681,7 @@ impl OwnedSemioExport {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
             Self::Checkpoint | Self::Describe | Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
-            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
+            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
                 FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
             }
         }

@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "mode": "inherit",
+      "stdout": [
+        "stdout Ω"
+      ],
+      "stderr": [
+        "stderr 😀"
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "stderr",
+      "stdout": [],
+      "stderr": [
+        "stdout Ω",
+        "stderr 😀"
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "ignore",
+      "stdout": [],
+      "stderr": [
+        "stderr 😀"
+      ],
+      "accepted": true
+    },
+    {
+      "mode": "foreign",
+      "accepted": false
+    }
+  ],
+  "policy": {
+    "maximumElapsedMilliseconds": 30000
+  }
+}

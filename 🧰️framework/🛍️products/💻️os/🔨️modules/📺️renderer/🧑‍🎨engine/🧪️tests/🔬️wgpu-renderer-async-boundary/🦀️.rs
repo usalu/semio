@@ -765,6 +765,35 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     close_owned_decoder_fixture(authority, probe);
 }
 
+/// 🪪️ Denied original authority preserves the decoder's exact input and empty receipt.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn decoder_denied_original_invocation_preserves_exact_owner_and_receipt() {
+    use semio_framework_job::InteractiveJob;
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖌️wgpu-document-owner-move/🔣️.json")).unwrap();
+    let (authority, probe) = owned_decoder_fixture();
+    let token = probe.owner().owner().token();
+    let mut job = RendererAssetDecodeJob::new(probe, Arc::new(AtomicBool::new(false)));
+    let original = crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT;
+    let denied = semio_framework_job::RetainedCloneGrant { maximum_items: 0, ..original };
+    let mut sequence = 0;
+    let mut receipt = semio_framework_job::RetainedCloneProgress::default();
+    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(72), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, denied), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+    let (pending, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.step(&mut cx).unwrap().is_none());
+    assert!(pending);
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    assert_eq!(serde_json::to_value(cx.retained_progress()).unwrap(), law["workerInvocation"]["expectedDeniedReceipt"]);
+    assert_eq!(job.probe.borrow().as_ref().unwrap().owner().owner().token(), token);
+    assert_eq!(job.probe.borrow().as_ref().unwrap().observed_bytes, 0);
+    assert_eq!(job.steps, 0);
+    assert!(job.result.is_none());
+    let recovered = job.take_probe().expect("denied original job returns its exact unchanged response");
+    job.begin_close();
+    assert!(matches!(job.close_step(original), semio_framework_job::InteractiveJobCloseStep::Complete { .. }));
+    assert!(job.terminal_is_empty());
+    close_owned_decoder_fixture(authority, recovered);
+}
+
 /// 🛑️ One worker grant decodes one page, and cancellation returns that exact owner before disposal.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]

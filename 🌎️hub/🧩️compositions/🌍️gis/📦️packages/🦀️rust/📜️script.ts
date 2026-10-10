@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🌍️ GIS plugin package command router. */
@@ -28,7 +29,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await proveGisNativeCodecReceipts(this.repoRoot);
-    await runRepositoryCargoTests(["semio-hub-gis"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-gis"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -77,4 +78,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("component-cold-map-patch-check", ComponentColdMapPatchCheckScript)
   .register("component-cold-map-patch-native-check", ComponentColdMapPatchNativeCheckScript);
 registerPlaygroundSiteBuildCommands(router);
-if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

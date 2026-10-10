@@ -21,6 +21,17 @@
         "command": "bun ./📜️script.ts test-refusal"
       }
     },
+    "test-receiving-schema-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-receiving-schema"
+      }
+    },
     "test-native": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -52,6 +63,28 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-ownership"
+      }
+    },
+    "test-original-fixed-limits-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-fixed-limits source"
+      }
+    },
+    "test-original-fixed-limits-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-fixed-limits native"
       }
     }
   }

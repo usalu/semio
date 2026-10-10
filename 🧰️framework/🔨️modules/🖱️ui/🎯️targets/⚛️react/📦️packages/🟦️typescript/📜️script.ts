@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🧭️ Owns generic React lint, test, typecheck and canonical architecture routes. */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -42,4 +43,4 @@ const router = new ScriptRouter(import.meta.dir ?? dirname(fileURLToPath(import.
   .register("canonical-architecture", CanonicalArchitectureScript)
   .register("typecheck", TypecheckScript);
 
-await runScriptMain(router);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

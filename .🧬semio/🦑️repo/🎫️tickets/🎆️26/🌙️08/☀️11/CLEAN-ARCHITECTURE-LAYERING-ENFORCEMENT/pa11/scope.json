@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "roots": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+    "🧰️framework/🔨️modules/🏃️process",
+    "🧰️framework/🔨️modules/🧬️schema"
+  ],
+  "files": [
+    "package.json",
+    "bun.lock",
+    "nx.json",
+    "tsconfig.json",
+    "📋️project.json",
+    "📜️script.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/parent.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/scope.json"
+  ],
+  "extensions": [
+    ".ts",
+    ".tsx",
+    ".json",
+    ".cjs",
+    ".mjs",
+    ".toml"
+  ],
+  "excludeDirectories": [
+    "node_modules",
+    "target",
+    "dist",
+    "🗑️generated",
+    ".git"
+  ],
+  "qualification": "SHA-only complete selected Library, General Process and Schema producers plus root metadata; excludes unrelated product runtime and third-party source bodies; no physical deletion acceptance"
+}

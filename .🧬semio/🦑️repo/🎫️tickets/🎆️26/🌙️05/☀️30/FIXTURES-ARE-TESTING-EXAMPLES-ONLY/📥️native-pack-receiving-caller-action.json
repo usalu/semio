@@ -1,0 +1,11 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🦀️.rs",
+  "beforeSha256": "ccc7d1c6f79a7752d7929a91cf3d6c6afe57b81c4d2faaac604e7529b1e12825",
+  "oldBlockSha256": "b08a2d52d1757bb956c5c2af7e6ceebd6eb3b286c925b9d0c14b3671228548d3",
+  "action": "replace only original scoped native decoder callback with required paid receiving provider",
+  "redSession": 20681,
+  "redLog": "🗑️generated/native-pack-receiving-caller-red.log",
+  "originalControlAndMaximum": "unchanged",
+  "afterSha256": "e67a8557af7ea6d4ddd169862f5a92c407723a860936c971f835b3be1e6a1144",
+  "newBlockSha256": "24fa13aa9b1c9918a45406c4f0573251f2b44aa070f0db23f5236b70f5b8408f"
+}

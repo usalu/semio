@@ -241,6 +241,14 @@ impl store::ArtifactPack for ProbeSnapshot {
     }
 }
 
+impl store::ArtifactPackReceiving for ProbeSnapshot {
+ fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,semio_framework_value::ValueError>{
+  owner.native().checkpoint()?;
+  let text=std::str::from_utf8(bytes).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Probe receiving JSON input is not UTF8"))?;
+  probe_json::receive_snapshot(text,owner)
+ }
+}
+
 /// 🌉️ Projects the first-party tree through its original controlled value implementation.
 impl semio_framework_value::ToValue for ProbeSnapshot {
     fn to_value(&self) -> semio_framework_value::DslValue {
@@ -588,6 +596,8 @@ pub fn activate_plugin_instance(
 /// never a fabricated result.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PluginArtifactChannel {
+    host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    host_driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,
     /// 🐎️ The process-wide compiled runtime ([`shared_plugin_runtime`]), held as the `GuestRuntimes`
     /// enum rather than a bare `WasmtimeRuntime` because the inference lane's
     /// `PluginInstanceHandle` takes exactly that `Arc` — and it MUST be the same one: a
@@ -1313,25 +1323,25 @@ impl PluginArtifactChannel {
         self.pending_command_closes.terminal_is_empty()
     }
 
-    pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
+    pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
         let wasm_path = resolve_plugin_wasm_path(&repo_root, &entry)?;
         let runtime = shared_plugin_runtime()?;
         let compiled = scoped_compiled_component(runtime.as_ref(), &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
-        Ok(Self::from_compiled(runtime, compiled, entry.plugin_id, descriptor, app_ref, actor_label))
+        Ok(Self::from_compiled(runtime, compiled, entry.plugin_id, descriptor, app_ref, actor_label, host_driver_policy))
     }
 
     /// 🧩️ Opens a channel over component bytes the caller already holds, whatever their provenance —
     /// a repo build read from disk, or the execution-target component a Hub authorized and served.
     /// Everything past the bytes is identical, which is exactly the point: a hub-bound agent's guest
     /// is the SAME guest a local one gets, not a second code path with its own behaviour.
-    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
+    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
         let runtime = shared_plugin_runtime()?;
         let compiled = shared_compiled_component(runtime.as_ref(), &plugin_id, bytes)?;
-        Ok(Self::from_compiled(runtime, compiled, plugin_id, descriptor, app_ref, actor_label))
+        Ok(Self::from_compiled(runtime, compiled, plugin_id, descriptor, app_ref, actor_label, host_driver_policy))
     }
 
     /// 🧩️ A channel over a component this process already compiled — see [`scoped_compiled_component`].
-    fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_framework_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Self {
+    fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_framework_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
         Self {
             runtime,
             compiled,
@@ -1339,6 +1349,8 @@ impl PluginArtifactChannel {
             descriptor,
             app_ref,
             actor_label,
+            host_driver_policy,
+            host_driver:Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy)),
             instances: HashMap::new(),
             pending_exchanges: PendingExchangeRegistry::new(),
             pending_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
@@ -1596,7 +1608,7 @@ impl PluginArtifactChannel {
             let runtimes = Arc::clone(&self.runtime);
             let budget = headless_inference_budget();
             let instance = semio_framework_async::block_on(semio_framework_plugin_host::GuestRuntime::instantiate(runtimes.as_ref(), &self.compiled, actor, &caps, &budget)).map_err(|error| Self::not_wired("inference instantiate", error))?;
-            let handle = Arc::new(semio_framework_async::block_on(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), instance)));
+            let handle = Arc::new(semio_framework_async::block_on(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), instance,semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:self.host_driver_policy.drive,policy:self.host_driver_policy.wake,issuer:semio_framework_job::admit_original_thread_worker_wake,receiver:self.host_driver.clone()})));
             let router = semio_framework_plugin_host::ArtifactInferenceRouter::new();
             semio_framework_async::block_on(router.register_plugin(&self.plugin_id, &self.descriptor.manifest.dependencies, handle, &roster_bytes)).map_err(|error| Self::not_wired("inference route registration", error))?;
             self.inference = Some(PluginInferenceRoute { router });
@@ -1643,11 +1655,11 @@ impl PluginArtifactChannel {
             algorithm_version: declared.algorithm_version,
             policy_version: declared.policy_version,
             revision: command.revision,
-            generation: command.generation,
+            generation: command.turn.generation,
             source_dialect: declared.artifact_schema.clone(),
             policy: Vec::new(),
-            budgets: crate::schema::ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units.max(1), recursion_depth: INFERENCE_RECURSION_DEPTH },
-            retained: command.retained,
+            budgets: crate::schema::ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units, recursion_depth: INFERENCE_RECURSION_DEPTH },
+            retained: command.turn.grant,
             cancellation_id: command.cancellation_id.clone(),
             previous_state: None,
             requested_cache_mode: crate::schema::ArtifactInferenceCacheModeV1::Cold,
@@ -2485,7 +2497,7 @@ fn ops_pack_lane(bytes: Vec<u8>) -> Result<Vec<Vec<u8>>, Fault> {
     if bytes.is_empty() {
         return Ok(Vec::new());
     }
-    store::causal::decode_ops_vec(&bytes).map_err(|error| PluginArtifactChannel::not_wired("decoding the guest's emitted ops", format!("{error:?}")))
+    store::os_spr::io::binary::causal::decode_ops_vec(&bytes).map_err(|error| PluginArtifactChannel::not_wired("decoding the guest's emitted ops", format!("{error:?}")))
 }
 
 /// 📤️ Every OUT port one editor app can actually be exported through, in the order an export picks
@@ -2873,14 +2885,14 @@ fn routing_fault(error: GatewayError) -> Fault {
 /// → committed descriptor → editor app → real `PluginArtifactChannel`) for a bare `plugin_id`,
 /// differing only in where `repo_root`/`actor_label` come from.
 #[cfg(not(target_arch = "wasm32"))]
-fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str) -> Result<PluginArtifactChannel, GatewayError> {
-    open_plugin_artifact_channel_scoped(source, plugin_id, app_id, actor_label, &ActivationScope::detached())
+fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<PluginArtifactChannel, GatewayError> {
+    open_plugin_artifact_channel_scoped(source, plugin_id, app_id, actor_label, &ActivationScope::detached(), host_driver_policy)
 }
 
 /// 🔌️ [`open_plugin_artifact_channel`] under a caller's progress and cancel. `app_id` names the app
 /// the guest instance hosts; `None` is the plugin's first editor app.
 #[cfg(not(target_arch = "wasm32"))]
-fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, scope: &ActivationScope) -> Result<PluginArtifactChannel, GatewayError> {
+fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, scope: &ActivationScope, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<PluginArtifactChannel, GatewayError> {
     scope.enter(ActivationPhase::ResolvingComponent).map_err(activation_fault)?;
     let runtime = shared_plugin_runtime()?;
     let (compiled, descriptor) = match source.ok_or_else(|| {
@@ -2903,7 +2915,7 @@ fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, p
         None => descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?,
     };
     let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app.id.clone() };
-    Ok(PluginArtifactChannel::from_compiled(runtime, compiled, plugin_id.to_string(), descriptor, app_ref, actor_label.to_string()))
+    Ok(PluginArtifactChannel::from_compiled(runtime, compiled, plugin_id.to_string(), descriptor, app_ref, actor_label.to_string(), host_driver_policy))
 }
 
 //#region 🗂️GuestDocumentCodec
@@ -3158,29 +3170,84 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, mut database: semio_framework::sqlite_snapshot::SqliteDatabase, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+#[derive(semio_framework_value::RetireOwned)]
+struct GuestSqliteImportFrame {
+    database: Option<semio_framework::sqlite_snapshot::SqliteDatabase>,
+    bytes: Vec<u8>,
+    coordinate: String,
+    wire: Option<semio_framework_plugin_host::sqlite_wire::SnapshotPayloadResult>,
+    diagnostics: Vec<semio_framework::Diagnostic>,
+}
 
-    use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SqliteSnapshotPhase}};
-    use semio_framework_os_kernel::io::{self};
-    use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
-    control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).map_err(IoError::from_value_error)?;
-    let route = guest_sqlite_route(schema, dialect)?;
-    let limits = control.limits();
-    io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control).map_err(IoError::from_value_error)?;
-    let bytes = sqlite_snapshot::export_sqlite_database_controlled(&database, control).map_err(IoError::from_value_error)?;
-    let cancel = GuestCallCancellation::default();
-    let _reactor = hub_socket_reactor().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string())))?.enter();
-    let mut progress_refusal = None;
-    let grant=native.grant();
-    let result=native.native().with_encoding_receiver(|remaining,observer,allocate|{
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
-        semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled,&dialect.to_coordinate(),&bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
-    })?;
-    let payload = match result { sqlite_wire::SnapshotPayloadResult::Done(payload) => payload, sqlite_wire::SnapshotPayloadResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?) };
-    if payload.encoding != encoding.as_str() { return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "guest SQLite import returned a different native encoding"))); }
-    let value = match encoding { sqlite_snapshot::SnapshotEncoding::Binary => IoPayload::Binary(payload.bytes), sqlite_snapshot::SnapshotEncoding::Text => IoPayload::Text(String::from_utf8(payload.bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))?) };
-    Ok(IoOutcome { value, diagnostics: sqlite_wire::decode_diagnostics(&payload.diagnostics).map_err(IoError::from_value_error)? })
+#[cfg(test)]
+#[path="🪶️sqlite/🧪️tests/guest-input-slot.rs"]
+mod guest_sqlite_original;
+
+/// 🪶️ Quotes the exact original coordinate allocation before its caller slot adopts it.
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_import_coordinate(dialect:&semio_framework_artifact_reference::ArtifactDialect,coordinate:&mut String,native:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->Result<(),semio_framework_value::ValueError>{
+    use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+    if !coordinate.is_empty()||coordinate.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"guest coordinate original slot is occupied"))}
+    let extent=dialect.artifact_kind.len().checked_add(dialect.standard.len()).and_then(|n|n.checked_add(dialect.subset.len())).and_then(|n|n.checked_add(2)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest dialect coordinate extent overflow"))?;
+    let remaining=native.remaining_grant();
+    if remaining.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"guest coordinate requires original work authority"))}
+    if remaining.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"guest coordinate requires original depth authority"))}
+    if remaining.maximum_copy_bytes<extent||remaining.maximum_capacity_bytes<extent{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest coordinate requires original physical authority"))}
+    let layout=std::alloc::Layout::array::<u8>(extent).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest dialect coordinate allocation extent overflow"))?;
+    let result=native.native().scoped_stage(|native|{
+        native.begin_stage(extent)?;native.charge(extent)?;
+        let pointer=unsafe{std::alloc::alloc(layout)};
+        if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"guest coordinate allocation failed"))}
+        *coordinate=unsafe{String::from_raw_parts(pointer,0,extent)};
+        for part in [dialect.artifact_kind.as_str(),"@",dialect.standard.as_str(),"/",dialect.subset.as_str()]{coordinate.push_str(part);native.advance(part.len())?;native.checkpoint()?;}
+        Ok(())
+    });
+    let progress=RetainedCloneProgress{copied_items:usize::from(coordinate.capacity()!=0),copied_bytes:coordinate.len(),retained_capacity_bytes:if coordinate.capacity()!=0{extent}else{0},released_bytes:0};
+    native.record_progress(progress).map_err(|error|error.with_retained_progress(progress))?;
+    result.map_err(|error|error.with_retained_progress(progress))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+    use semio_framework::{io_schema::{IoError,IoOutcome,IoPayload},sqlite_snapshot::{self,SqliteSnapshotPhase}};
+    use semio_framework_plugin_host::{sqlite_wire,GuestCallCancellation};
+    use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant};
+    if database.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"guest SQLite import original database is absent")))}
+    native.receive_nested::<GuestSqliteImportFrame,semio_framework::io_schema::IoResult<IoPayload>>(|slot,native|{
+        *slot=Some(GuestSqliteImportFrame{database:database.take(),bytes:Vec::new(),coordinate:String::new(),wire:None,diagnostics:Vec::new()});
+        let frame=slot.as_mut().unwrap();
+        Ok((||{
+            control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0).map_err(IoError::from_value_error)?;
+            let route=guest_sqlite_route(schema,dialect)?;
+            let limits=control.limits();
+            semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(frame.database.as_mut().unwrap(),dialect,encoding,control).map_err(IoError::from_value_error)?;
+            frame.bytes=sqlite_snapshot::export_sqlite_database_controlled(frame.database.as_ref().unwrap(),control).map_err(IoError::from_value_error)?;
+            guest_sqlite_import_coordinate(dialect,&mut frame.coordinate,native).map_err(IoError::from_value_error)?;
+            let cancel=GuestCallCancellation::default();
+            let _reactor=hub_socket_reactor().map_err(|error|IoError::from_value_error(ValueError::new(ValueRefusalKind::InvariantViolated,error.to_string())))?.enter();
+            let mut progress_refusal=None;
+            let grant:RetainedCloneGrant=native.remaining_grant();
+            frame.wire=Some(native.native().with_encoding_receiver(|remaining,observer,allocate|{
+                let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
+                semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled,&frame.coordinate,&frame.bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
+            })?);
+            match frame.wire.as_mut().unwrap(){
+                sqlite_wire::SnapshotPayloadResult::Rejected(rejection)=>{
+                    frame.diagnostics=sqlite_wire::decode_diagnostics(&rejection.diagnostics).map_err(IoError::from_value_error)?;
+                    Err(IoError{cause:ValueError::new(rejection.kind,std::mem::take(&mut rejection.message)),diagnostics:std::mem::take(&mut frame.diagnostics)})
+                },
+                sqlite_wire::SnapshotPayloadResult::Pending(_)=>Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest SQLite import retains its original component ticket"))),
+                sqlite_wire::SnapshotPayloadResult::Done(payload)=>{
+                    if payload.encoding.as_str()!=encoding.as_str(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue,"guest SQLite import returned a different native encoding")))}
+                    if matches!(encoding,sqlite_snapshot::SnapshotEncoding::Text)&&std::str::from_utf8(&payload.bytes).is_err(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue,"guest SQLite import returned invalid UTF8")))}
+                    frame.diagnostics=sqlite_wire::decode_diagnostics(&payload.diagnostics).map_err(IoError::from_value_error)?;
+                    let bytes=std::mem::take(&mut payload.bytes);
+                    let value=match encoding{sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(bytes),sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(String::from_utf8(bytes).unwrap())};
+                    Ok(IoOutcome{value,diagnostics:std::mem::take(&mut frame.diagnostics)})
+                },
+            }
+        })())
+    }).map_err(IoError::from_value_error)?
 }
 
 /// 🗂️ Registers `artifact_schema`'s document codec from the component's OWN `codec` export, and
@@ -3354,6 +3421,7 @@ fn selected_package_key(snapshot: &AuthorizedCatalogSnapshot) -> String {
 /// `open_probes`/`action_adapter`'s mutexes, which this struct never touches).
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RoutingArtifactChannel {
+    host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
     catalog: Arc<WorkspaceCatalog>,
     components: Option<PluginComponentSource>,
     actor_label: String,
@@ -3373,8 +3441,8 @@ pub struct RoutingArtifactChannel {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RoutingArtifactChannel {
-    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>) -> Self {
-        Self { catalog, components, actor_label, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts, hub }
+    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
+        Self { catalog, components, actor_label, host_driver_policy, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts, hub }
     }
 
     /// 🧭️ `route` with its app named: a plugin-scope route resolves to the plugin's first editor app,
@@ -3386,7 +3454,7 @@ impl RoutingArtifactChannel {
         if let Some(app_id) = self.default_apps.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&route.plugin_id).cloned() {
             return Ok(AppRoute { plugin_id: route.plugin_id, app_id: Some(app_id) });
         }
-        let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, None, &self.actor_label, scope).map_err(routing_fault)?;
+        let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, None, &self.actor_label, scope, self.host_driver_policy).map_err(routing_fault)?;
         let resolved = AppRoute { plugin_id: route.plugin_id.clone(), app_id: Some(channel.app_ref.app_id.clone()) };
         self.default_apps.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(route.plugin_id, channel.app_ref.app_id.clone());
         self.channels.lock().expect("routing channel cache lock poisoned").entry(resolved.clone()).or_insert(channel);
@@ -3599,7 +3667,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         let hub_bound = self.hub.is_some() && session_document.is_some();
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&route) {
-            let channel = open_plugin_artifact_channel(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label).map_err(routing_fault)?;
+            let channel = open_plugin_artifact_channel(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, self.host_driver_policy).map_err(routing_fault)?;
             channels.insert(route.clone(), channel);
         }
         let channel = channels.get_mut(&route).expect("just inserted above");
@@ -3639,7 +3707,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         let session_document = self.session_document_for(&route);
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&route) {
-            let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, scope).map_err(routing_fault)?;
+            let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &route.plugin_id, route.app_id.as_deref(), &self.actor_label, scope, self.host_driver_policy).map_err(routing_fault)?;
             channels.insert(route.clone(), channel);
         }
         let channel = channels.get_mut(&route).expect("just inserted above");
@@ -3757,6 +3825,7 @@ impl ArtifactChannel for ShellRoutedArtifactChannel {
 //#region 🔖️HeadlessWorkspace
 /// 🏠️ The real `GatewayBackend` — see this file's module doc for the shape and the honest gaps.
 pub struct HeadlessWorkspace {
+    host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
     #[cfg(test)]
     pub(crate) test_discovery:Option<Vec<semio_framework::PackageDescriptor>>,
     artifact_host: store::sync::ArtifactHost,
@@ -4240,12 +4309,13 @@ impl Drop for HeadlessWorkspace {
 }
 
 impl HeadlessWorkspace {
-    fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Self {
+    fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
         ensure_probe_codec_registered();
         let session_id = crate::mint_session_id(&principal, 0);
         Self {
             #[cfg(test)]
             test_discovery:None,
+            host_driver_policy,
             artifact_host: store::sync::ArtifactHost::new(workspace_worker_pool()),
             origin,
             principal,
@@ -4275,17 +4345,17 @@ impl HeadlessWorkspace {
         Ok(())
     }
 
-    pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
+    pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
         if !path.is_dir() {
             std::fs::create_dir_all(&path).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("--folder `{}` does not exist and could not be created: {error}", path.display())))?;
         }
         Self::reject_repository_root_workspace(&path)?;
-        Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog))
+        Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog, host_driver_policy))
     }
 
     /// 🧩️ A hub-bound workspace runs the HUB's components, never a build tree that happens to
     /// sit on the same disk: the hub is the authority over what code opens its documents.
-    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>) -> Result<Self, GatewayError> {
+    pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<Self, GatewayError> {
         remote::validate_hub_origin(&base_url, &space_id)?;
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -4293,7 +4363,7 @@ impl HeadlessWorkspace {
             binding.await_settled(remote::HUB_AUTHORITY_SETTLE_WAIT_MS);
             let catalog = WorkspaceCatalog::following(Arc::clone(&binding))?;
             let driver = Arc::new(driver);
-            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog.current());
+            let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog.current(), host_driver_policy);
             workspace.catalog = Arc::new(catalog);
             workspace.repo_root = None;
             workspace.plugin_components = Some(PluginComponentSource::Hub(Arc::new(HubPluginComponents::new(Arc::clone(&binding), Arc::clone(&driver)))));
@@ -4614,7 +4684,7 @@ impl HeadlessWorkspace {
     /// and any caller that already knows exactly which plugin it wants (never duplicated).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_artifact_channel(&self, plugin_id: &str) -> Result<PluginArtifactChannel, GatewayError> {
-        open_plugin_artifact_channel(self.plugin_components().as_ref(), plugin_id, None, &self.actor_label())
+        open_plugin_artifact_channel(self.plugin_components().as_ref(), plugin_id, None, &self.actor_label(), self.host_driver_policy)
     }
 
     /// 🐚️ Publishes this session's channel decision into the workspace. Called once, by
@@ -4642,7 +4712,7 @@ impl HeadlessWorkspace {
                 return Ok(ArtifactChannels::ShellDirect(crate::shell_channel::ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id)));
             }
         }
-        Ok(ArtifactChannels::Plugin(open_plugin_artifact_channel_scoped(self.plugin_components().as_ref(), plugin_id, app_id, &self.actor_label(), scope)?))
+        Ok(ArtifactChannels::Plugin(open_plugin_artifact_channel_scoped(self.plugin_components().as_ref(), plugin_id, app_id, &self.actor_label(), scope, self.host_driver_policy)?))
     }
 
     /// 🔌️ Binds the root-owned `ActionAdapter` once, before the server serves. Idempotent: a second
@@ -5109,7 +5179,7 @@ impl HeadlessWorkspace {
     /// its ONLY call site that names this method).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_routing_channel(&self) -> RoutingArtifactChannel {
-        RoutingArtifactChannel::new(Arc::clone(&self.catalog), self.plugin_components(), self.actor_label(), Arc::clone(&self.plugin_artifacts), self.hub_binding.clone())
+        RoutingArtifactChannel::new(Arc::clone(&self.catalog), self.plugin_components(), self.actor_label(), Arc::clone(&self.plugin_artifacts), self.hub_binding.clone(), self.host_driver_policy)
     }
 
     /// 🎬️ Lazily builds (and caches) the real `ActionAdapter` `prepare_action`/`invoke_action`

@@ -1,0 +1,25 @@
+{
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "88670158f7035080d79bc2473dd236d3155c5cea404f21c51cef21821cd595ac",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "ada2b2febb165792872a9172b6ff35107361dcb6fc121dcdb28d094e523ce2db",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "434e2d2f6bfcadca65e0135a454766d936c61f6a866e75fe47e848ac2ae4caa1",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "5c7b30a04d796e5903fb52af5349d25f6d320bf7331b8e864ea36a95727694ac",
+      "authored": false
+    }
+  ]
+}

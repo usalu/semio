@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "b21d153832d9acaa0b4ea1ed67278ed7bd3cdcbd3dd704750313d4d4edae6378",
+      "afterSha256": "cc790a7f74cc60eb13a515b25f51c73e16276bc8c5664f810ac3734b68390cdc",
+      "exclusive": false,
+      "scope": "Real observer-replaced recipe symlink refuses before source or child"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

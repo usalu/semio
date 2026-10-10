@@ -1,9 +1,0 @@
-  for(const[index,entry]of optionFixture.optionSyntax.cases.entries()){
-   const reference=entry.reference.pdfStroke;if(!reference)continue;
-   const isolated=join(root,entry.id);
-   await compileVizProbeDocument({case:"canonical-options",scenario:entry.id,documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Paint Bindings}","\\author{Semio}","\\date{}"],body:[{raw:`\\SemioVizProbeBegin{canonical-options}{${entry.id}}${sources[index]}\\SemioVizProbeValues{canonical/paint-owner}{1}`} ]},{workDir:isolated,keepWorkDir:true});
-   const directory=join(isolated,"🧪️probe-out"),document=await getDocument({data:new Uint8Array(readFileSync(join(directory,readdirSync(directory).find(name=>name.endsWith(".pdf"))!)))}).promise;
-   const painted:{paint:string,delta:number[]}[]=[];try{for(let page=1;page<=document.numPages;page++){const ownerPage=await document.getPage(page),text=(await ownerPage.getTextContent()).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${implementation}/${theme}/${entry.id}/page${page}: invalid glyph`);painted.push(...canonicalStrokeSegments(await ownerPage.getOperatorList()));pages++;}}finally{await document.destroy();}
-   const sx=scaleLinear(reference.domain,[0,entry.reference.canvas[0]!]),sy=scaleLinear(reference.range,[0,entry.reference.canvas[1]!]),expected=[Math.abs(sx(reference.domain[1]!)-sx(reference.domain[0]!)),Math.abs(sy(reference.range[1]!)-sy(reference.range[0]!))],matches=painted.filter(stroke=>stroke.paint===d3Rgb(reference.paint).formatHex());
-   if(matches.length!==1||matches[0]!.delta.some((value,axis)=>Math.abs(value-expected[axis]!)>=.002))failures.push(`${implementation}/${theme}/${entry.id}: exact owned painted PDF segment differs from independent D3 (${JSON.stringify(matches)})`);projections+=2;
-  }

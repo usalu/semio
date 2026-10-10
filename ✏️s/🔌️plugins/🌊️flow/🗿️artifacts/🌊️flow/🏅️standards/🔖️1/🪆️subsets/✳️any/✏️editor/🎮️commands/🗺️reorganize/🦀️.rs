@@ -31,6 +31,7 @@ pub fn reorganize_edit(composed: &FlowSnapshot, config: &FlowMainWindowConfig, s
 //#endregion 🔖️Reorganize
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Reorganize {}
 
 pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {

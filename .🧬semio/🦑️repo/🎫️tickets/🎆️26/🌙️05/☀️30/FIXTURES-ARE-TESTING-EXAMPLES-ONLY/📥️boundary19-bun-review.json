@@ -1,0 +1,26 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "0bd65a5e98aa00e3827c2479375ad534bd2664fe0c161e9fc96bb488cf2fd814"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "a6bdca18142efc5abeee392989df5e33339b6d61c29df3ba25f6b0ed9ba6be95"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "be69428384b76728878c9f68c7bc11800100b7faddcb8dffd612c1e4ede478a6"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+    "ownership": false,
+    "exists": true,
+    "sha256": "1645682b2060e95bc70ecfa433f1948fdfbdbbf4b97650ff4f2e334feeff126e"
+  }
+]

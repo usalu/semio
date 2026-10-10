@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "neuronId",
+    "operatorId",
+    "inputJson",
+    "retained"
+  ],
+  "properties": {
+    "neuronId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operatorId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputJson": {
+      "type": "string"
+    },
+    "dependencyJson": {
+      "type": "string"
+    },
+    "operatorVersion": {
+      "type": "string"
+    },
+    "cancellationId": {
+      "type": "string"
+    },
+    "nodeHash": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "budget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "wallMicros": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "roundUnits": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "resume": {
+      "type": "boolean"
+    },
+    "retained": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "externalResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "neuronId",
+        "extensionId",
+        "operatorId",
+        "nodeHash",
+        "outputJson"
+      ],
+      "properties": {
+        "neuronId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "extensionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operatorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outputJson": {
+          "type": "string"
+        },
+        "nodeHash": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

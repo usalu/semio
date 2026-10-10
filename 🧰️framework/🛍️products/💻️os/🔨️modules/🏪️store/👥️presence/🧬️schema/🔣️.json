@@ -159,6 +159,65 @@
         "missing-surface",
         "mismatched-surface"
       ]
+    },
+    "OriginalPublicationLaw": {
+      "type": "object",
+      "required": [
+        "peer",
+        "grant",
+        "prebirthRefusals",
+        "zeroSemanticCopyAccepted"
+      ],
+      "properties": {
+        "peer": {
+          "$ref": "#/$defs/PresenceRetirementPeer"
+        },
+        "grant": {
+          "type": "object",
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumCopyBytes": {
+              "const": 0
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "prebirthRefusals": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "items",
+              "capacity",
+              "depth",
+              "nativeCancellation"
+            ]
+          }
+        },
+        "zeroSemanticCopyAccepted": {
+          "const": true
+        }
+      }
     }
   }
 }

@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
+import Ajv from "ajv";
+import exitSchema from "../🧬️schema/📪️exit.json";
+import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
 
@@ -49,7 +52,7 @@ test("owned command cancellation and UTF-8 reports match independent Node execut
   const root = mkdtempSync(resolve(artifactParent, "owned-reports-")), module = resolve(root, "owner.mjs");
   const { createRequire } = await import("node:module"), { spawnSync } = await import("node:child_process");
   const bundled = await createRequire(import.meta.url)("esbuild").build({entryPoints:[owner],bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent"});
-  expect(Object.keys(bundled.metafile.inputs).every((path:string)=>path.startsWith("🧰️framework/🔨️modules/🏃️process/"))).toBe(true);
+  const neutralValidator="🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";expect(Object.keys(bundled.metafile.inputs)).toContain(neutralValidator);expect(Object.keys(bundled.metafile.inputs).every((path:string)=>path.startsWith("🧰️framework/🔨️modules/🏃️process/")||path===neutralValidator)).toBe(true);
   writeFileSync(module, bundled.outputFiles[0].text);
   const run = async (api: any, executable: string, row: any): Promise<any> => {
     const marker = resolve(root, row.mode + ".txt"), controller = new AbortController(), lines: string[] = [];
@@ -138,3 +141,27 @@ test("owned timeout and stop drain descendant-created groups and inherited pipes
     unrelated.kill("SIGKILL"); await unrelatedExited; rmSync(root, { recursive: true, force: true });
   }
 }, 60_000);
+
+
+test("original owned child close preserves exact status signal and drained output", async () => {
+  const corpus=JSON.parse(readFileSync(resolve(import.meta.dir,"../🧫️fixtures/📪️exit.json"),"utf8")),rows=corpus.cases;
+  expect(new Ajv({strict:true}).compile(exitSchema)(corpus)).toBe(true);
+  expect(validateJsonSchemaSubset(exitSchema,corpus)).toEqual([]);
+  const {spawnSync}=await import("node:child_process"),{runOwnedCommand}=await import("../🟦️.ts");
+  const artifactParent=process.env.SEMIO_TEST_ARTIFACT_DIR!;expect(artifactParent).toBeTruthy();
+  const root=mkdtempSync(resolve(artifactParent,"owned-exit-"));
+  const child="const row=JSON.parse(process.argv[1]);process.stdout.write(row.stdout+'\\n');process.stderr.write(row.stderr+'\\n',()=>{if(row.signal)process.kill(process.pid,row.signal);else process.exit(row.code)})";
+  const oracle="const{spawn}=require('node:child_process');const row=JSON.parse(process.argv[1]);const child=spawn(process.execPath,['-e',process.argv[2],JSON.stringify(row)],{stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',bytes=>stdout+=bytes);child.stderr.on('data',bytes=>stderr+=bytes);child.once('close',(code,signal)=>console.log(JSON.stringify({code,signal,stdout,stderr})))";
+  try {
+    for(const row of rows){
+      const independent=spawnSync("node",["-e",oracle,JSON.stringify(row),child],{encoding:"utf8",timeout:10000});expect(independent.status).toBe(0);
+      const expected=JSON.parse(independent.stdout),lines:string[]=[];let failure:string|null=null;
+      try{await runOwnedCommand("node",["-e",child,JSON.stringify(row)],root,"original-exit",10000,{onLine:line=>lines.push(line)});}catch(error){failure=String(error);}
+      expect(lines).toContain(row.stdout);expect(lines).toContain(row.stderr);
+      expect(expected.stdout).toBe(row.stdout+"\n");expect(expected.stderr).toBe(row.stderr+"\n");
+      if(expected.signal!==null)expect(failure).toContain("was killed by "+expected.signal);
+      else if(expected.code!==0)expect(failure).toContain("failed ("+expected.code+")");else expect(failure).toBeNull();
+      console.log("[DEBUG] Original owned child case="+row.name+" code="+expected.code+" signal="+expected.signal+" completeUtf8Output=true refusedSignalSuccess=true");
+    }
+  }finally{rmSync(root,{recursive:true,force:true});}
+},30000);

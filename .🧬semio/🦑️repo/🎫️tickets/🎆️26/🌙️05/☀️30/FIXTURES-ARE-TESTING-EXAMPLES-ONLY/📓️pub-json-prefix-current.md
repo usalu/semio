@@ -1,0 +1,9 @@
+# Current Original Canonical JSON Integration
+
+The production failure contract uses canonical ValueError retained_progress as the sole physical authority and the actual initialized byte prefix. True source RED80898 preceded the defining implementation. Twenty direct callback producers now preserve original Value refusals or literal reasons rather than allocating owned String errors; payload ordering and original ownership remain unchanged.
+
+The indexed encoder now performs one supplied-grant structural or output event, prices its next actual depth rather than demanding inline64 for every flat value, retains failed initialized prefixes, and reports real scalar scratch/format/state/output work. Bounded Source38598 terminated Nx0/5.4s,1pass/0fail/17assertions with independent JSON/TextEncoder/Ajv and three original Rust parses. This is not compiler or native proof. A genuine indexed native depth/prefix/System/pointer law is authored but unrun.
+
+The direct owned borrowed encoder, reader/sealer and wire consumers are still being integrated. Their existing boxed iterator and indexed child constructors require genuine supplied admission before birth; no cold alternative, String refusal adapter, fabricated receipt or widened grant is credited. The previous aggregate source linkage remains unresolved until those actual consumers are complete. No source freeze or production pass is claimed.
+
+Original wire Source10463 also terminated Nx0/2.4s,8pass/0fail/129assertions after the real JSON wire forwarding changes. JSON wire retains an independent original64-byte copy policy, separating sampled output size from physical authority. In-place scalar formatting avoids a whole72-byte returned scratch-buffer movement. Actual initialized scalar, escape and output bytes are charged; each source/state event is one bounded item. The genuine per-call refusal keeps the original Value receipt. No native or owned reader/sealer completion is inferred.

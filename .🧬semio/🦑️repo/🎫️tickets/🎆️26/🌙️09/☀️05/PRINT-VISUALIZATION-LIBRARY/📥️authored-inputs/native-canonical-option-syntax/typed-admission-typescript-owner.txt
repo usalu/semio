@@ -1,7 +1,0 @@
-/** 🧯️ Declared primitive contracts adjudicate literal values before source-owned grammar projection. */
-function validateOptionValue(value:OptionValue,descriptor:VizOptionSyntaxDescriptor):void{
- const contract=Object.fromEntries(Object.entries(descriptor).filter(([key])=>["type","enum","minimum"].includes(key)));if(!Object.keys(contract).length)return;
- const types=Array.isArray(descriptor.type)?descriptor.type:[descriptor.type];let candidate:unknown=value;
- if(descriptor.syntax==="expression"&&typeof value==="string"&&(types.includes("number")||types.includes("integer"))){const literal=value.trim();if(/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(literal))candidate=Number(literal);else if(!types.includes("string")&&literal!==""){contract.type="string";}}
- const failures=validateJsonSchemaSubset(contract,candidate);if(failures.length)throw Error(`Invalid declared native option value: ${failures.join("; ")}`);
-}

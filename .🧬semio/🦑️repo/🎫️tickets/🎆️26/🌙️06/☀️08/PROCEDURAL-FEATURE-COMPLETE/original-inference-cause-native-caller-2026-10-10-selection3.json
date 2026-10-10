@@ -1,0 +1,42 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--verbose",
+    "--",
+    "long",
+    "--offline",
+    "--lib",
+    "-E",
+    "test(original_inference_gateway_failure_all_owned_causes) | test(original_inference_job_close_keeps_raw_checkpoint_system_receipts_and_drop_zero) | test(original_inference_job_admission_preserves_owned_input_and_checkpoint_before_birth) | test(original_inference_service_demand_keeps_same_child_and_actual_source)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 3600000
+    },
+    "network": {
+      "offline": true
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-plugin:test"
+  ]
+}

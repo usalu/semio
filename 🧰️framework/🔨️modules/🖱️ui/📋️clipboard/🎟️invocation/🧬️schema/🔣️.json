@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:ui:clipboard:original-invocation",
+  "title": "Original Clipboard Invocation",
+  "description": "The shell supplies an original operation turn and an already admitted recipient. The native producer, its result loan, acknowledgement and physical retirement preserve this identity. Cancellation remains the original caller control rather than a serialized replacement token. Worker effects return exactly once to the original turn before the recipient borrows any payload.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["turn", "recipient"],
+  "properties": {
+    "turn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "generation", "epoch", "grant"],
+      "properties": {
+        "operation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "epoch": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "grant": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant" }
+      }
+    },
+    "recipient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot", "generation", "capability"],
+      "properties": {
+        "slot": { "type": "integer", "minimum": 0, "maximum": 31 },
+        "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "capability": { "enum": ["write", "window-paste", "text-paste", "ink-paste"] }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "buildMilliseconds", "listMilliseconds", "lawMilliseconds", "transport"],
+  "properties": {
+    "version": { "const": 1 },
+    "buildMilliseconds": { "type": "integer", "minimum": 0, "maximum": 86400000 },
+    "listMilliseconds": { "type": "integer", "minimum": 1, "maximum": 86400000 },
+    "lawMilliseconds": { "type": "integer", "minimum": 1, "maximum": 86400000 },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumBuildOutputBytes", "maximumNativeOutputBytes"],
+      "properties": {
+        "maximumBuildOutputBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+        "maximumNativeOutputBytes": { "type": "integer", "minimum": 1, "maximum": 8388608 }
+      }
+    }
+  }
+}

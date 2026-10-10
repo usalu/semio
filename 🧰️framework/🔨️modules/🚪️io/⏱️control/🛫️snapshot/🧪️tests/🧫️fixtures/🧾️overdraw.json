@@ -1,0 +1,55 @@
+{
+  "grant": {
+    "maximumItems": 4,
+    "maximumCopyBytes": 8,
+    "maximumCapacityBytes": 16,
+    "maximumReleaseBytes": 32,
+    "maximumDepth": 8
+  },
+  "axes": [
+    [
+      "maximumItems",
+      "copiedItems"
+    ],
+    [
+      "maximumCopyBytes",
+      "copiedBytes"
+    ],
+    [
+      "maximumCapacityBytes",
+      "retainedCapacityBytes"
+    ],
+    [
+      "maximumReleaseBytes",
+      "releasedBytes"
+    ]
+  ],
+  "cases": [
+    {
+      "axis": "maximumItems",
+      "performed": 5,
+      "expectedRemaining": 0,
+      "error": "ownershipLimit"
+    },
+    {
+      "axis": "maximumCopyBytes",
+      "performed": 9,
+      "expectedRemaining": 0,
+      "error": "ownershipLimit"
+    },
+    {
+      "axis": "maximumCapacityBytes",
+      "performed": 17,
+      "expectedRemaining": 0,
+      "error": "ownershipLimit"
+    },
+    {
+      "axis": "maximumReleaseBytes",
+      "performed": 33,
+      "expectedRemaining": 0,
+      "error": "ownershipLimit"
+    }
+  ],
+  "originalGrant": "unchanged",
+  "receipt": "performedSpanRetainedBeforeRefusal"
+}

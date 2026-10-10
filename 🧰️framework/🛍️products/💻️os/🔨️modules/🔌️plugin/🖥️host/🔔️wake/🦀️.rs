@@ -1,6 +1,9 @@
 //! 🧾️ Original Host turn currency has one exclusive checked-out wake and no implicit renewal.
 use super::{GuestRelayWakeReceipt,GuestRelayWakeReceiptReceiver};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::RetainedOwnerGate};
+#[path="📃️policy/🦀️.rs"]
+mod driver_policy;
+pub use driver_policy::{GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRelayDriverTurnGrant,GuestRelayWakeDriver};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct GuestRelayWakeTurnGrant{pub epoch:u64,pub grant:RetainedCloneGrant}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -8,6 +11,22 @@ pub struct GuestRelayWakeTurnReceipt{pub epoch:u64,pub original:RetainedCloneGra
 struct OriginalTurn{epoch:u64,original:RetainedCloneGrant,remaining:RetainedCloneGrant,spent:RetainedCloneProgress,checkout:Option<(usize,u64,RetainedCloneGrant)>}
 struct DriverState{last_epoch:u64,turn:Option<OriginalTurn>}
 pub struct GuestRelayWakeReceiptLedger{original:RetainedOwnerGate<DriverState>}
+/// 🤝️ Holds the genuine caller context exclusively until its original cumulative receipt is acknowledged.
+pub struct GuestRelayWakeContextTurn<'turn,'context>{ledger:&'turn GuestRelayWakeReceiptLedger,context:Option<&'turn mut semio_framework_job::StepContext<'context>>,epoch:u64,pending:Option<GuestRelayWakeTurnReceipt>}
+impl<'turn,'context> GuestRelayWakeContextTurn<'turn,'context>{
+ pub fn admit(ledger:&'turn GuestRelayWakeReceiptLedger,epoch:u64,context:&'turn mut semio_framework_job::StepContext<'context>)->Result<Option<Self>,ValueError>{if !ledger.begin_turn(epoch,context.retained_grant())?{return Ok(None)}Ok(Some(Self{ledger,context:Some(context),epoch,pending:None}))}
+ pub fn acknowledge(&mut self)->Result<bool,ValueError>{
+  let Some(context)=self.context.as_deref_mut()else{return Ok(true)};
+  if self.pending.is_none(){self.pending=self.ledger.take_turn(self.epoch)?;}
+  let Some(receipt)=self.pending.as_ref()else{return Ok(false)};
+  if receipt.epoch!=self.epoch||receipt.original!=context.retained_grant()||!receipt.spent.fits(receipt.original){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Host context receipt no longer matches its exclusively lent authority"))}
+  context.consume_retained(receipt.spent)?;
+  if context.retained_grant()!=receipt.remaining{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Host context cumulative remaining currencies do not match returned receipt"))}
+  self.pending=None;self.context=None;Ok(true)
+ }
+ pub fn terminal_is_empty(&self)->bool{self.context.is_none()&&self.pending.is_none()}
+}
+impl Drop for GuestRelayWakeContextTurn<'_,'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Host context loan reached Drop before cumulative receipt acknowledgement");}}
 impl Drop for GuestRelayWakeReceiptLedger{fn drop(&mut self){assert!(std::thread::panicking()||self.original.get_mut().turn.is_none(),"original Host wake turn or receipt was not returned to its driver");}}
 impl GuestRelayWakeReceiptLedger{
  pub const fn new()->Self{Self{original:RetainedOwnerGate::new(DriverState{last_epoch:0,turn:None})}}

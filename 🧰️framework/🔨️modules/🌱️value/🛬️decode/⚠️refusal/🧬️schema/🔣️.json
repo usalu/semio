@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "contractId",
+    "maximumBytes",
+    "allocatedBytes",
+    "releasedBytes",
+    "ownedBytes",
+    "causeStorage",
+    "forwardedRefusal",
+    "forwarded",
+    "cases"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "contractId": {
+      "const": "native.original-literal-refusal/v1"
+    },
+    "maximumBytes": {
+      "const": 0
+    },
+    "allocatedBytes": {
+      "const": 0
+    },
+    "releasedBytes": {
+      "const": 0
+    },
+    "ownedBytes": {
+      "const": 0
+    },
+    "causeStorage": {
+      "const": "borrowedLiteral"
+    },
+    "forwardedRefusal": {
+      "const": "preserveOriginal"
+    },
+    "forwarded": {
+      "const": {"maximumBytes":1,"chargeBytes":1,"kind":"invalidValue","message":"original forwarded refusal λ","allocatedBytes":0,"releasedBytes":0,"ownedBytes":0}
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "direction",
+          "operation",
+          "kind",
+          "message"
+        ],
+        "properties": {
+          "direction": {
+            "enum": [
+              "decoding",
+              "encoding"
+            ]
+          },
+          "operation": {
+            "enum": [
+              "charge",
+              "vectorOverflow",
+              "text",
+              "depth",
+              "noRecipient",
+              "invalidUtf8",
+              "checkpoint",
+              "appendBytes"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "ownershipLimit",
+              "depthLimit",
+              "invalidValue",
+              "canceled"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        }
+      }
+    }
+  }
+}

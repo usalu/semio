@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "neuronId",
+    "extensionId",
+    "operatorId",
+    "nodeHash",
+    "inputJson"
+  ],
+  "properties": {
+    "neuronId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "extensionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operatorId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodeHash": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "inputJson": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

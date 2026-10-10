@@ -46,7 +46,34 @@
       2,
       1,
       3
-    ]
+    ],
+    "retainedReceipt": {
+      "input": {
+        "operation": 29,
+        "generation": 31,
+        "epoch": 37,
+        "grant": {
+          "maximumItems": 5,
+          "maximumCopyBytes": 0,
+          "maximumCapacityBytes": 11,
+          "maximumReleaseBytes": 13,
+          "maximumDepth": 7
+        }
+      },
+      "spent": {
+        "copiedItems": 2,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 3,
+        "releasedBytes": 5
+      },
+      "remaining": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 8,
+        "maximumReleaseBytes": 8,
+        "maximumDepth": 7
+      }
+    }
   },
   "reservation": {
     "prior": 7,

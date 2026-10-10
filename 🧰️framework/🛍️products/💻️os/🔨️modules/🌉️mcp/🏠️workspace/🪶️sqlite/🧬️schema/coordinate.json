@@ -1,0 +1,13 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"object","additionalProperties":false,
+ "required":["coordinate","originalBytes","oneShortBytes","allocation","recipient","canceledPrefix","canceledCopyBytes","closeAuthority","bodyGrant","deniedCloseGrant","closeGrant"],
+ "properties":{
+  "coordinate":{"const":"s.guest-input-fixture@1/strict"},"originalBytes":{"const":30},"oneShortBytes":{"const":29},
+  "allocation":{"const":"exactOriginalExtentBeforeCopy"},"recipient":{"const":"originalCallerCoordinateSlot"},"closeAuthority":{"const":"independentCallerWallet"},
+  "canceledPrefix":{"const":"s.guest-input-fixture"},"canceledCopyBytes":{"const":21},
+  "bodyGrant":{"type":"object","additionalProperties":false,"required":["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],"properties":{"maximumItems":{"const":1},"maximumCopyBytes":{"const":30},"maximumCapacityBytes":{"const":30},"maximumReleaseBytes":{"const":0},"maximumDepth":{"const":1}}},
+  "deniedCloseGrant":{"type":"object","additionalProperties":false,"required":["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],"properties":{"maximumItems":{"const":0},"maximumCopyBytes":{"const":0},"maximumCapacityBytes":{"const":0},"maximumReleaseBytes":{"const":0},"maximumDepth":{"const":0}}},
+  "closeGrant":{"type":"object","additionalProperties":false,"required":["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],"properties":{"maximumItems":{"const":4096},"maximumCopyBytes":{"const":1048576},"maximumCapacityBytes":{"const":1048576},"maximumReleaseBytes":{"const":1048576},"maximumDepth":{"const":64}}}
+ }
+}

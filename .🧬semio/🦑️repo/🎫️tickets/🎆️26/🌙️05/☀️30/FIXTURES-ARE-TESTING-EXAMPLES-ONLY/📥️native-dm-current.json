@@ -1,0 +1,82 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧬️schema/🔣️.json",
+    "exists": false,
+    "beforeSha256": "2c21198397cc5b14a63f840ba4c0fec67c708d0260ee19afed44940cd77c6a74",
+    "afterSha256": null,
+    "unchanged": false,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧬️schema/⚠️kind/🔣️.json",
+    "exists": false,
+    "beforeSha256": "2c4e73c2bdd2637411ce9ba7b017040c2a40100e1d7249e4849b2964b7d0a6cc",
+    "afterSha256": null,
+    "unchanged": false,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧬️schema/🔣️.json",
+    "exists": false,
+    "beforeSha256": "35e2afb3d7659626292a71c4dd2fad7585380843ea003100d9c781543e21388c",
+    "afterSha256": null,
+    "unchanged": false,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+    "exists": true,
+    "beforeSha256": "2c1c71ef6658863bc1b2cacbd6ce6688712957a205198d121ea9b2b856fec1bd",
+    "afterSha256": "6b7145ed766dfd18e34c0259a1a0d866ffbb345ceb826e290fe40acb396dc2a6",
+    "unchanged": false,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧪️tests/🟦️.ts",
+    "exists": true,
+    "beforeSha256": "9845b384074fed4e37b894fe37a7428de2fd2e2df42b82b9016dea95208e9e60",
+    "afterSha256": "1ae582892973bf36c7a9aa2fab3ab0580fe7305476df358a2c7fc589d1f1a333",
+    "unchanged": false,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🟦️.ts",
+    "exists": true,
+    "beforeSha256": "191922054754498defb6dfccb5d14e812b6ad5736812a279554989d4b8ed3d45",
+    "afterSha256": "af1e6c7a06484714a9a0e4d58d8cb17fc62db587f0096d244351595feeee1d49",
+    "unchanged": false,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "beforeSha256": "423f420db5e56655a773f0018edcf99ab3c69d5fc16c07dea19b72ff33f6e6bc",
+    "afterSha256": "423f420db5e56655a773f0018edcf99ab3c69d5fc16c07dea19b72ff33f6e6bc",
+    "unchanged": true,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧫️fixtures/⚠️kind/🔣️.json",
+    "exists": true,
+    "beforeSha256": "4b9bf391172b36e16e58da95a5ffda70e23cd42bfb299fdda35a216d52577ee7",
+    "afterSha256": "4b9bf391172b36e16e58da95a5ffda70e23cd42bfb299fdda35a216d52577ee7",
+    "unchanged": true,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧫️fixtures/🔣️.json",
+    "exists": true,
+    "beforeSha256": "bbbaf47bd57cb0677197a6a45556fdd2a0de89a608d7350ac48f8a00de773d62",
+    "afterSha256": "bbbaf47bd57cb0677197a6a45556fdd2a0de89a608d7350ac48f8a00de773d62",
+    "unchanged": true,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🦀️.rs",
+    "exists": true,
+    "beforeSha256": "e9572517bf30def2b60de00b4ecbc40ae20234f1a572001255f2ab4bb852cd15",
+    "afterSha256": "e9572517bf30def2b60de00b4ecbc40ae20234f1a572001255f2ab4bb852cd15",
+    "unchanged": true,
+    "authorship": "only exact actions in native-dm-actions.json; observations are nonexclusive"
+  }
+]

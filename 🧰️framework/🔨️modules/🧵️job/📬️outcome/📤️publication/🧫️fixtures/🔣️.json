@@ -1,0 +1,42 @@
+{
+  "contract": "framework.job.original-source-publication",
+  "originalGrant": [
+    1,
+    17,
+    8192,
+    65536,
+    9
+  ],
+  "sourceBytes": [
+    0,
+    3,
+    20,
+    321,
+    8193
+  ],
+  "kinds": [
+    "preview",
+    "checkpoint",
+    "fault"
+  ],
+  "sourceIdentity": [
+    "address",
+    "extent"
+  ],
+  "metadataCopyBytes": 0,
+  "copyCurrency": "actual-source-octets",
+  "wholePayloadTransfer": false,
+  "borrowBeforePhysicalClose": true,
+  "retireBeforeReplacement": true,
+  "phases": [
+    "bind-original-source",
+    "select-stream",
+    "initialize-original-bindings",
+    "append-original-slice",
+    "seal-original",
+    "borrow-original",
+    "acknowledge-original-descriptor",
+    "close-original-pages",
+    "remove-original-publication"
+  ]
+}

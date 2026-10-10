@@ -1,0 +1,30 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟨️.cjs",
+      "sha256": "c5136b651ad3b8d4212ae2fb9da6a736484295616a87375f6e7d66b21381c9fe"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+      "sha256": "abc18179a0ae9292731d9cfd7a32271284e69da7feec17232a4c1ad42cd5c43d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "sha256": "8e648269f4ea1a1abca190eb15eba7474e9b51cc48e526dedb27cd43e3fb7acd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "sha256": "b18516f70e4350d0f06e4ce0f156845ddfda7883511b8fd9b4bde2c569af6d7a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts",
+      "sha256": "b95f7ef3a9e35438cf6afcbbfebf61d7f07a49ab477a82f21ffca215e9a26fa1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🧭️native-discovery/🔣️.json",
+      "sha256": "2239cc278c2c549f8973e2cac4abf0e468966c8d64babe41b6f9beff0cd00197"
+    }
+  ]
+}

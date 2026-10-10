@@ -1436,6 +1436,17 @@
         "exports": [
           ".",
           "./schema"
+        ],
+        "sourceOwner": "🧰️framework",
+        "exportTargets": [
+          {
+            "subpath": ".",
+            "target": "./🟦️.ts"
+          },
+          {
+            "subpath": "./schema",
+            "target": "./schema.json"
+          }
         ]
       },
       {
@@ -1444,6 +1455,17 @@
         "exports": [
           ".",
           "./schema"
+        ],
+        "sourceOwner": "🌎️hub",
+        "exportTargets": [
+          {
+            "subpath": ".",
+            "target": "./🟦️.ts"
+          },
+          {
+            "subpath": "./schema",
+            "target": "./schema.json"
+          }
         ]
       }
     ]
@@ -2784,6 +2806,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         }
       ],
@@ -2797,6 +2826,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         },
         {
@@ -2804,6 +2840,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         }
       ],
@@ -2817,6 +2860,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         },
         {
@@ -2824,6 +2874,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️two",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         }
       ],
@@ -2837,6 +2894,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         },
         {
@@ -2844,6 +2908,13 @@
           "name": "@semio-test/two",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         }
       ],
@@ -2857,6 +2928,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         },
         {
@@ -2865,6 +2943,17 @@
           "exports": [
             ".",
             "./private"
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            },
+            {
+              "subpath": "./private",
+              "target": "./private.ts"
+            }
           ]
         }
       ],
@@ -2878,6 +2967,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         },
         {
@@ -2886,7 +2982,14 @@
           "exports": [
             "."
           ],
-          "dependencyRole": "ui"
+          "dependencyRole": "ui",
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
+          ]
         }
       ],
       "accept": false
@@ -2899,6 +3002,13 @@
           "name": "@semio-test/one",
           "exports": [
             "."
+          ],
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
           ]
         },
         {
@@ -2906,10 +3016,1154 @@
             "."
           ],
           "name": "@semio-test/one",
-          "owner": "🧰️framework/🔨️modules/🧪️one"
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "sourceOwner": "🧰️framework/🔨️modules/🧪️one",
+          "exportTargets": [
+            {
+              "subpath": ".",
+              "target": "./index.ts"
+            }
+          ]
         }
       ],
       "accept": true
+    }
+  ],
+  "publicOwnerCases": [
+    {
+      "id": "private-static",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "relative-exported-entry",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/index.ts",
+      "syntax": "static",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "private-type",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "type",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "private-dynamic",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "dynamic",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "private-export",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "export",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "private-export-all",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "export-all",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "private-require",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "require",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "private-schema-json",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.json",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "public-schema-json",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/schema.json",
+      "syntax": "static",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public/schema"
+    },
+    {
+      "id": "wildcard-semio-source",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/features/widget.ts",
+      "syntax": "static",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public/feature/widget"
+    },
+    {
+      "id": "conditional-default-target",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/built/widget.js",
+      "syntax": "static",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public/feature/widget"
+    },
+    {
+      "id": "executable-private-target",
+      "from": "🧰️framework/📜️script.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "same-owner-private-target",
+      "from": "🧰️framework/example/deep/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "static",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "parent-cannot-enter-nested-private",
+      "from": "🧰️framework/example/consumer.ts",
+      "target": "🧰️framework/example/nested/private.ts",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        },
+        {
+          "owner": "🧰️framework/example/nested",
+          "name": "@test/nested",
+          "exports": {
+            ".": "./index.ts"
+          },
+          "sourceOwner": "🧰️framework/example/nested"
+        }
+      ],
+      "oracleSpecifier": "@test/nested"
+    },
+    {
+      "id": "nested-cannot-enter-parent-private",
+      "from": "🧰️framework/example/nested/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        },
+        {
+          "owner": "🧰️framework/example/nested",
+          "name": "@test/nested",
+          "exports": {
+            ".": "./index.ts"
+          },
+          "sourceOwner": "🧰️framework/example/nested"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "nested-own-private",
+      "from": "🧰️framework/example/nested/consumer.ts",
+      "target": "🧰️framework/example/nested/private.ts",
+      "syntax": "static",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./schema": "./schema.json",
+            "./feature/*": {
+              "semio-source": "./features/*.ts",
+              "default": "./built/*.js"
+            },
+            "./blocked": null
+          },
+          "sourceOwner": "🧰️framework/example"
+        },
+        {
+          "owner": "🧰️framework/example/nested",
+          "name": "@test/nested",
+          "exports": {
+            ".": "./index.ts"
+          },
+          "sourceOwner": "🧰️framework/example/nested"
+        }
+      ],
+      "oracleSpecifier": "@test/nested"
+    },
+    {
+      "id": "registry-catalog-public",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+      "syntax": "static",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+          "name": "@semio-tech/plugin-registry",
+          "exports": {
+            ".": "./📜️script.ts",
+            "./catalog": "./🟦️.ts"
+          },
+          "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry"
+        }
+      ],
+      "oracleSpecifier": "@semio-tech/plugin-registry/catalog"
+    },
+    {
+      "id": "registry-authored-schema-private",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+          "name": "@semio-tech/plugin-registry",
+          "exports": {
+            ".": "./📜️script.ts",
+            "./catalog": "./🟦️.ts"
+          },
+          "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry"
+        }
+      ],
+      "oracleSpecifier": "@semio-tech/plugin-registry/catalog"
+    },
+    {
+      "id": "owner-without-public-exports",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": null,
+          "sourceOwner": "🧰️framework/example"
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "package-layout-private-is-covered",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "export-all",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example/📦️packages/🟦️typescript",
+          "sourceOwner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts"
+          }
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "package-layout-own-private-is-internal",
+      "from": "🧰️framework/example/📦️packages/🟦️typescript/index.ts",
+      "target": "🧰️framework/example/private.ts",
+      "syntax": "export-all",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/example/📦️packages/🟦️typescript",
+          "sourceOwner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts"
+          }
+        }
+      ],
+      "oracleSpecifier": "@test/public"
+    },
+    {
+      "id": "wildcard-null-relative-private",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/features/blocked.ts",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "sourceOwner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./feature/*": "./features/*.ts",
+            "./feature/blocked": null,
+            "./feature/changed": "./other.ts"
+          }
+        }
+      ],
+      "oracleSpecifier": "@test/public/feature/blocked"
+    },
+    {
+      "id": "wildcard-specific-target-displaced",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/features/changed.ts",
+      "syntax": "static",
+      "accept": false,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "sourceOwner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./feature/*": "./features/*.ts",
+            "./feature/blocked": null,
+            "./feature/changed": "./other.ts"
+          }
+        }
+      ],
+      "oracleSpecifier": "@test/public/feature/changed"
+    },
+    {
+      "id": "wildcard-specific-public-target",
+      "from": "🧰️framework/consumer.ts",
+      "target": "🧰️framework/example/other.ts",
+      "syntax": "static",
+      "accept": true,
+      "packages": [
+        {
+          "owner": "🧰️framework/example",
+          "sourceOwner": "🧰️framework/example",
+          "name": "@test/public",
+          "exports": {
+            ".": "./index.ts",
+            "./feature/*": "./features/*.ts",
+            "./feature/blocked": null,
+            "./feature/changed": "./other.ts"
+          }
+        }
+      ],
+      "oracleSpecifier": "@test/public/feature/changed"
+    }
+  ],
+  "actualPublicPackageCases": [
+    {
+      "id": "actual-2d-local-root",
+      "owner": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework-2d-js",
+      "subpath": ".",
+      "target": "./🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-routing",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./routing",
+      "target": "./🧭️routing/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-routing",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/routing",
+      "target": "./🏃️process/🧭️routing/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-execution",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./execution",
+      "target": "./🎛️execution/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-execution",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/execution",
+      "target": "./🏃️process/🎛️execution/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-budget",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./budget",
+      "target": "./⏱️budget/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-budget",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/budget",
+      "target": "./🏃️process/⏱️budget/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-test-budget",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./test-budget",
+      "target": "./🧪️testing/🎚️budget/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-test-budget",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/test-budget",
+      "target": "./🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-test-execution",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./test-execution",
+      "target": "./🧪️testing/🎛️execution/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-test-execution",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/test-execution",
+      "target": "./🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-vitest",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./vitest",
+      "target": "./🧪️testing/🧪️vitest/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-vitest",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/vitest",
+      "target": "./🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-cargo-test",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./cargo-test",
+      "target": "./🧪️testing/🦀️cargo/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-cargo-test",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/cargo-test",
+      "target": "./🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-cargo-laws",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./cargo-laws",
+      "target": "./🧪️testing/🦀️laws/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-cargo-laws",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/cargo-laws",
+      "target": "./🏃️process/🧪️testing/🦀️laws/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-artifact-files",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./artifact-files",
+      "target": "./📦️artifacts/🗂️files/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-artifact-files",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/artifact-files",
+      "target": "./🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-artifact-publication",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./artifact-publication",
+      "target": "./📦️artifacts/📤️publication/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-artifact-publication",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/artifact-publication",
+      "target": "./🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-native-build",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./native-build",
+      "target": "./📦️artifacts/🏗️native-build/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-native-build",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/native-build",
+      "target": "./🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-wasm-build",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./wasm-build",
+      "target": "./📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-wasm-build",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/wasm-build",
+      "target": "./🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-leases",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./leases",
+      "target": "./🔒️leases/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-leases",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/leases",
+      "target": "./🏃️process/🔒️leases/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-context",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./context",
+      "target": "./📋️context/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-context",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/context",
+      "target": "./🏃️process/📋️context/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-process-command",
+      "owner": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript",
+      "name": "@semio-tech/process",
+      "subpath": "./command",
+      "target": "./🎛️command/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-process-command",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./process/command",
+      "target": "./🏃️process/🎛️command/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-schema",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./schema",
+      "target": "./🧬️schema/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-sdk-filesystem",
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework",
+      "subpath": "./filesystem",
+      "target": "./📁️filesystem/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-quiz-react-.-🎨️.css",
+      "owner": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "name": "@semio-tech/quiz-react",
+      "subpath": "./🎨️.css",
+      "target": "./🎨️.css",
+      "accept": true
+    },
+    {
+      "id": "actual-pets-react-.-🎨️.css",
+      "owner": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "name": "@semio-tech/pets-react",
+      "subpath": "./🎨️.css",
+      "target": "./🎨️.css",
+      "accept": true
+    },
+    {
+      "id": "actual-flow-core-build-.",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+      "name": "@semio-tech/flow-core-build",
+      "subpath": ".",
+      "target": "./🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-ui-styling-.-🖌️ui.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
+      "name": "@semio-tech/ui-styling",
+      "subpath": "./🖌️ui.css",
+      "target": "./🖌️ui.css",
+      "accept": true
+    },
+    {
+      "id": "actual-ui-styling-.-🎨️palette.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
+      "name": "@semio-tech/ui-styling",
+      "subpath": "./🎨️palette.css",
+      "target": "./🎨️palette.css",
+      "accept": true
+    },
+    {
+      "id": "actual-ui-styling-.-tokens",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
+      "name": "@semio-tech/ui-styling",
+      "subpath": "./tokens",
+      "target": "./🔤️tokens/🟦️.ts",
+      "accept": true
+    },
+    {
+      "id": "actual-ui-react-.-🧵️.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "name": "@semio-tech/ui-react",
+      "subpath": "./🧵️.css",
+      "target": "./🧵️.css",
+      "accept": true
+    },
+    {
+      "id": "actual-ui-react-.-🌐️globals-ui.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "name": "@semio-tech/ui-react",
+      "subpath": "./🌐️globals-ui.css",
+      "target": "./🌐️globals-ui.css",
+      "accept": true
+    },
+    {
+      "id": "actual-ui-react-.-🌓️theme.css",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "name": "@semio-tech/ui-react",
+      "subpath": "./🌓️theme.css",
+      "target": "./🌓️theme.css",
+      "accept": true
+    }
+  ],
+  "ownershipPatternCases": [
+    {
+      "id": "shared-domain-prefix",
+      "root": "🧰️framework",
+      "descendants": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-00",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-01",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-02",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-03",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-04",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-05",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-06",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-07",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-08",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-09",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-10",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-11",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-12",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-13",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-14",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-15"
+      ],
+      "subjects": [
+        {
+          "path": "🧰️framework/inside/private.ts",
+          "accept": true
+        },
+        {
+          "path": "🧰️framework/node_modules/pkg/index.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/deep/node_modules/pkg/index.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/node_modules-extra/index.ts",
+          "accept": true
+        },
+        {
+          "path": "🧰️framework-sibling/main.ts",
+          "accept": false
+        },
+        {
+          "path": "elsewhere/main.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-unlisted/main.ts",
+          "accept": true
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-00/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-01/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-02/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-03/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-04/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-05/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-06/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-07/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-08/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-09/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-10/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-11/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-12/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-13/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-14/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/shared.literal+[area]/domain-15/private.ts",
+          "accept": false
+        }
+      ],
+      "maximumPatternBytes": 850
+    },
+    {
+      "id": "unicode-and-punctuation",
+      "root": "🧰️framework/🔨️modules/🧩️mechanism",
+      "descendants": [
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-00",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-01",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-02",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-03",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-04",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-05",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-06",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-07",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-08",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-09",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-10",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-11",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-12",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-13",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-14",
+        "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-15"
+      ],
+      "subjects": [
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/inside/private.ts",
+          "accept": true
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/node_modules/pkg/index.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/deep/node_modules/pkg/index.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/node_modules-extra/index.ts",
+          "accept": true
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism-sibling/main.ts",
+          "accept": false
+        },
+        {
+          "path": "elsewhere/main.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-unlisted/main.ts",
+          "accept": true
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-00/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-01/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-02/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-03/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-04/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-05/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-06/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-07/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-08/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-09/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-10/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-11/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-12/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-13/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-14/private.ts",
+          "accept": false
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧩️mechanism/👩‍👩‍👧‍👦familie/αβ.german+[tree]/owner-15/private.ts",
+          "accept": false
+        }
+      ],
+      "maximumPatternBytes": 850
     }
   ]
 }

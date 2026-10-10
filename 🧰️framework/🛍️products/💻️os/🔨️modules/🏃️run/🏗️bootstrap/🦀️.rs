@@ -147,6 +147,7 @@ fn resolve_descriptor_paths(repo_root: &Path) -> Result<HashMap<String, PathBuf>
 const RUN_ID: &str = "default";
 
 struct Args {
+    host_driver_policy: PathBuf,
     bundle: PathBuf,
     dry: bool,
     watch: bool,
@@ -173,6 +174,7 @@ fn parse_merge_policy(raw: &str) -> Result<protocol::MergePolicy, String> {
 }
 
 fn parse_args() -> Result<Args, String> {
+    let mut host_driver_policy: Option<PathBuf> = None;
     let mut bundle: Option<PathBuf> = None;
     let mut dry = false;
     let mut watch = false;
@@ -182,6 +184,7 @@ fn parse_args() -> Result<Args, String> {
     let mut argv = std::env::args().skip(1);
     while let Some(arg) = argv.next() {
         match arg.as_str() {
+            "--host-driver-policy" => host_driver_policy = Some(PathBuf::from(argv.next().ok_or("--host-driver-policy requires an original full-policy JSON path")?)),
             "--dry" => dry = true,
             "--watch" => watch = true,
             "--node" => only_node = Some(argv.next().ok_or("--node requires a value")?),
@@ -199,7 +202,8 @@ fn parse_args() -> Result<Args, String> {
         }
     }
     let bundle = bundle.ok_or_else(|| "usage: os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param <parameter_id>=<value>]* [--policy <laissez-faire|normal|vigilant>]".to_string())?;
-    Ok(Args { bundle, dry, watch, only_node, params, policy })
+    let host_driver_policy = host_driver_policy.ok_or("--host-driver-policy is required")?;
+    Ok(Args { host_driver_policy, bundle, dry, watch, only_node, params, policy })
 }
 
 fn main() {
@@ -313,7 +317,8 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let identity_policy=semio_framework_pack_json::from_json_str(include_str!("../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
     let identity_cancel=semio_framework_async::CancelToken::root_now();
     let identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=identity_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
-    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity).await;
+    let host_driver_policy = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(&args.host_driver_policy)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
+    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity,host_driver_policy).await;
     let mut runner = SpaceRunner::new(host, blob_store, args.policy).with_document_load_progress(document_load_reporter());
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 

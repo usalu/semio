@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:framework:process:owned-command-outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "status", "signal"],
+  "properties": {
+    "version": {"const": 1},
+    "status": {"type": ["integer", "null"], "minimum": -2147483648, "maximum": 4294967295},
+    "signal": {"type": ["string", "null"], "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000]+$"}
+  },
+  "oneOf": [
+    {"properties": {"status": {"type": "integer"}}},
+    {"properties": {"status": {"const": null}, "signal": {"type": "string"}}}
+  ]
+}

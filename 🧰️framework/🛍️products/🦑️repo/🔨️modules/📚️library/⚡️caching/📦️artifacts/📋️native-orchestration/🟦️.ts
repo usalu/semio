@@ -4,7 +4,9 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { advanceScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { readNativeOwnerCapabilities } from "./📥️invocation/🟦️.ts";
 import { CARGO_RELAY_BUDGET_ENV, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
 import { repositoryProcessOwnerContextV1, repositoryVitestPolicyV1, repositoryCargoTestPolicyV1, repositoryWasmBuildPolicyV1 } from "../../../🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
@@ -25,7 +27,7 @@ export class CargoRelayScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const budgetMs = Number(process.env[CARGO_RELAY_BUDGET_ENV] ?? 0);
     try {
-      process.exitCode = await cargoStreamingStatus(args, process.cwd(), process.env, Number.isFinite(budgetMs) ? budgetMs : 0);
+      process.exitCode = await cargoStreamingStatus(args, process.cwd(), process.env, scriptInvocationBudget(this.invocation, budgetMs));
     } catch (error) {
       console.error(error instanceof Error ? error.message : String(error));
       process.exitCode = 1;
@@ -40,10 +42,11 @@ export class NativeScript extends BundleScript {
     const index = args.indexOf("--manifest");
     const manifest = index >= 0 ? args[index + 1] : undefined;
     if(tool==="owner-command"){
-      const request=nativeOwnerTestManifestRequestV1(args.slice(1)),path=resolve(this.repoRoot,request.manifest),cwd=resolve(this.repoRoot,request.cwd);
+      const original=readNativeOwnerCapabilities(this.invocation.capabilities),request=nativeOwnerTestManifestRequestV1(args.slice(1)),path=resolve(this.repoRoot,request.manifest),cwd=resolve(this.repoRoot,request.cwd),transported=consumeOwnerArgumentsV1(process.env),arguments_=[...request.args,...transported.arguments];
+      if(original.repositoryRoot!==this.repoRoot||resolve(this.repoRoot,original.command.manifest)!==path||resolve(this.repoRoot,original.command.workingDirectory)!==cwd||original.command.program!==request.command||original.command.arguments.length!==arguments_.length||original.command.arguments.some((argument,index)=>argument!==arguments_[index])||typeof transported.environment.CARGO_TARGET_DIR!=="string"||resolve(this.repoRoot,original.artifactDirectory)!==resolve(this.repoRoot,transported.environment.CARGO_TARGET_DIR))throw Error("Original native caller command refused");
+      await advanceScriptInvocation(this.invocation,"native:owner-command","running");
       const cargo = Bun.TOML.parse(readFileSync(path, "utf8")) as { package?: { name?: string }; workspace?: object };
       if (!cargo.package?.name && !cargo.workspace) throw Error(`Native owner requires a package or workspace manifest: ${manifest}`);
-      const transported=consumeOwnerArgumentsV1(process.env);
       const env: Record<string,string|undefined>={...transported.environment,SEMIO_VITEST_POLICY:JSON.stringify(repositoryVitestPolicyV1(cwd)),SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(repositoryProcessOwnerContextV1(cwd)),SEMIO_CARGO_ARTIFACT_POLICY:JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd))};
       delete env.SEMIO_CARGO_TEST_POLICY;
       if (cargo.package?.name) Object.assign(env, { SEMIO_CARGO_TEST_POLICY: JSON.stringify(repositoryCargoTestPolicyV1(path,cwd)) });
@@ -54,7 +57,9 @@ export class NativeScript extends BundleScript {
       if(new Set(policies.map(policy=>policy.manifestPath)).size!==policies.length)throw Error("Duplicate native test manifest authority");
       env.SEMIO_CARGO_TEST_POLICIES=JSON.stringify(policies);
       if (process.env.SEMIO_WASM_BUILD_REQUIRED === "1") Object.assign(env,{SEMIO_WASM_BUILD_POLICY:JSON.stringify(repositoryWasmBuildPolicyV1(cwd))});
-      await runOwnedCommand(request.command,[...request.args,...transported.arguments],cwd,"native:owner-command",0,{env,onProgress:env.SEMIO_NATIVE_OWNER_PROGRESS==="delegated"?()=>{}:line=>process.stderr.write(`${line}\n`)});
+      const remaining=this.invocation.control.remainingMilliseconds(),budget=remaining===null?original.child.maximumElapsedMilliseconds:Math.min(original.child.maximumElapsedMilliseconds,remaining);
+      if(!Number.isFinite(budget)||budget<=0)throw Error("Original native child deadline exhausted");
+      await runOwnedCommand(request.command,arguments_,cwd,"native:owner-command",budget,{env,output:original.transport,signal:this.invocation.control.signal,onProgress:async line=>{await advanceScriptInvocation(this.invocation,"native:owner-command","running");if(env.SEMIO_NATIVE_OWNER_PROGRESS!=="delegated")process.stderr.write(`${line}\n`);}});
       return;
     }
     if (tool === "cargo" && operation === "metadata") {

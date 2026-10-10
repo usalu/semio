@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "94882501d73bd739cc1ace0992f714bf50f817ad9fd6437c48eda2d125d512e8",
+      "afterSha256": "78d38051509dfa9ce35fe50ef86c7133b8bbbc8319c7483e3db1d6e53612e6a1",
+      "exclusive": false,
+      "scope": "Exact original SnapshotRouteAdmissionScript staged absence guard, retain actual source/native route for true RED"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import Ajv from "ajv";
+import { validateJsonSchemaSubset } from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import * as toml from "@iarna/toml";
 import { getWorkspaceRoot, repositoryCargoTestPolicyV1 } from "../../../../../🟦️.ts";
 
@@ -11,6 +12,11 @@ const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📋️owner
 const neutralCargo = join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo");
 const validatePolicy = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(neutralCargo, "🧬️schema/🔣️.json"), "utf8")));
 const foreignPolicy = JSON.parse(readFileSync(join(neutralCargo, "🧫️fixtures/🔣️.json"), "utf8")).policies[0];
+/** 📨️ Authors each original test operation before its selected owner is inspected. */
+function ownerInvocation(manifest: string, cwd: string, program: string, args: string[], artifactDirectory: string, maximumElapsedMilliseconds: number, started: number): string {
+  return JSON.stringify({ version: 1, policy: { version: 1, owner: "native-owner-command-original-law", maximumElapsedMilliseconds }, deadlineEpochMilliseconds: started + maximumElapsedMilliseconds, capabilities: { version: 1, repositoryRoot: root, artifactDirectory, command: { kind: "native-owner-command", manifest, workingDirectory: cwd, program, arguments: args }, transport: { maximumBytes: 67108864, maximumLines: 65536 }, child: { maximumElapsedMilliseconds }, network: { offline: true } } });
+}
+
 const child = 'await Bun.write(process.env.SEMIO_OWNER_POLICY_RECEIPT, JSON.stringify({policy: process.env.SEMIO_CARGO_TEST_POLICY ? JSON.parse(process.env.SEMIO_CARGO_TEST_POLICY) : null, context: JSON.parse(process.env.SEMIO_PROCESS_OWNER_CONTEXT)})); console.log("[native-owner-command-policy] child=" + (process.env.SEMIO_CARGO_TEST_POLICY ? "owned" : "absent"));';
 
 test("native owner command portable corpus admits independent Ajv", () => {
@@ -19,6 +25,7 @@ test("native owner command portable corpus admits independent Ajv", () => {
 });
 
 for (const row of corpus.cases) test(row.id, () => {
+  const started = Date.now();
   const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifacts) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
   mkdirSync(artifacts, { recursive: true });
@@ -34,7 +41,7 @@ for (const row of corpus.cases) test(row.id, () => {
   const document = toml.parse(readFileSync(resolve(root, manifest!), "utf8")) as { package?: { name?: string }; workspace?: object };
   const classification = document.package?.name ? "package" : document.workspace ? "workspace" : "invalid";
   expect(classification).toBe(row.classification);
-  const env = { ...process.env, SEMIO_CARGO_TEST_POLICY: JSON.stringify(foreignPolicy), SEMIO_TEST_LEVEL: "fundamental", SEMIO_OWNER_POLICY_RECEIPT: receiptPath, SEMIO_TEST_ARTIFACT_DIR: output };
+  const env = { ...process.env, SEMIO_SCRIPT_PROCESS_INVOCATION: ownerInvocation(manifest!, cwd!, process.execPath, ["--eval", child], output, 15000, started), CARGO_TARGET_DIR: output, SEMIO_CARGO_TEST_POLICY: JSON.stringify(foreignPolicy), SEMIO_TEST_LEVEL: "fundamental", SEMIO_OWNER_POLICY_RECEIPT: receiptPath, SEMIO_TEST_ARTIFACT_DIR: output };
   const command = [process.execPath, join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"), "native", "owner-command", "--manifest", manifest!, "--cwd", cwd!, "--", process.execPath, "--eval", child];
   const result = Bun.spawnSync(command, { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   writeFileSync(join(output, "stdout.log"), result.stdout);
@@ -64,6 +71,7 @@ test("interactive dashboard delegates its native owner progress", () => {
 });
 
 test("native progress follows the declared owner and preserves independent child output", async () => {
+  const started = Date.now();
   const corpus=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📣️progress/🔣️.json"),"utf8"));
   const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
   if(!artifacts)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
@@ -79,7 +87,7 @@ test("native progress follows the declared owner and preserves independent child
     return {stdout,stderr,status};
   };
   const wrapper=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts");
-  const [oracle,...observed]=await Promise.all([collect(["node","--eval",code],process.env),...corpus.cases.map((row:{mode:string})=>collect([process.execPath,wrapper,"native","owner-command","--manifest",relative(root,manifest),"--cwd",relative(root,cwd)||".","--","node","--eval",code],{...process.env,SEMIO_NATIVE_OWNER_PROGRESS:row.mode,SEMIO_TEST_ARTIFACT_DIR:output}))]);
+  const [oracle,...observed]=await Promise.all([collect(["node","--eval",code],process.env),...corpus.cases.map((row:{mode:string})=>collect([process.execPath,wrapper,"native","owner-command","--manifest",relative(root,manifest),"--cwd",relative(root,cwd)||".","--","node","--eval",code],{...process.env,SEMIO_NATIVE_OWNER_PROGRESS:row.mode,SEMIO_TEST_ARTIFACT_DIR:output,CARGO_TARGET_DIR:output,SEMIO_SCRIPT_PROCESS_INVOCATION:ownerInvocation(relative(root,manifest),relative(root,cwd)||".","node",["--eval",code],output,180000,started)}))]);
   expect(oracle.status,oracle.stderr).toBe(0);
   for(let index=0;index<corpus.cases.length;index++){
     const row=corpus.cases[index],result=observed[index]!;
@@ -105,3 +113,34 @@ test("dashboard-selected owner tests allocate their output without manual enviro
   }
   console.log("[DEBUG] dashboard-selected owner test output checked through Bun and TypeScript compilers");
 });
+
+
+test("native caller capability corpus agrees with independent strict Ajv", async () => {
+  const schema = (await import("../../📥️invocation/🧬️schema/🔣️.json")).default, corpus = (await import("../../📥️invocation/🧫️fixtures/🔣️.json")).default;
+  const admits = new Ajv({ strict: true }).compile(schema);
+  for (const row of corpus.cases) { expect(admits(row.value), row.id).toBe(row.accepted); expect(validateJsonSchemaSubset(schema, row.value).length === 0, row.id).toBe(row.accepted); }
+});
+
+test("actual native receiving command refuses a different original caller command before child acquisition", () => {
+  const started = Date.now(), artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifacts) throw Error("Caller-owned ticket output required");
+  const output = mkdtempSync(join(artifacts, "native-capability-")), row = corpus.cases.find(row => row.classification === "workspace")!;
+  const manifest = row.manifest!, cwd = row.cwd!, requestedManifest = relative(root, join(output, "unacquired", "Cargo.toml")), code = 'console.log("[DEBUG] foreign acquisition occurred")';
+  const wire = ownerInvocation(manifest, cwd, process.execPath, ["--eval", 'console.log("[DEBUG] original command")'], output, 15000, started);
+  const oracle = Bun.spawnSync(["node", "--eval", 'console.log(JSON.stringify(JSON.stringify(JSON.parse(process.argv[1]).capabilities.command.arguments) === JSON.stringify(["--eval",process.argv[2]])))', wire, code]);
+  expect(oracle.exitCode).toBe(0); expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toBe(false);
+  const observations = ["different-command", "missing-child", "zero-child"].map(id => {
+    const original = JSON.parse(id === "different-command" ? wire : ownerInvocation(manifest, cwd, process.execPath, ["--eval", code], output, 15000, started));
+    if (id === "missing-child") delete original.capabilities.child;
+    if (id === "zero-child") original.capabilities.child.maximumElapsedMilliseconds = 0;
+    const actual = Bun.spawnSync([process.execPath, join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"), "native", "owner-command", "--manifest", id === "different-command" ? requestedManifest : manifest, "--cwd", cwd, "--", process.execPath, "--eval", code], { cwd: root, env: { ...process.env, SEMIO_SCRIPT_PROCESS_INVOCATION: JSON.stringify(original), CARGO_TARGET_DIR: output }, stdout: "pipe", stderr: "pipe" });
+    writeFileSync(join(output, `${id}.stdout.log`), actual.stdout); writeFileSync(join(output, `${id}.stderr.log`), actual.stderr);
+    return { id, code: actual.exitCode, stderr: new TextDecoder().decode(actual.stderr), stdout: new TextDecoder().decode(actual.stdout) };
+  });
+  console.log("[DEBUG] " + JSON.stringify(observations.map(row => ({ id: row.id, code: row.code, acquisition: row.stdout.includes("foreign acquisition occurred") }))));
+  for (const actual of observations) {
+    expect(actual.code, actual.id).not.toBe(0);
+    expect(actual.stderr, actual.id).toContain(actual.id === "different-command" ? "Original native caller command refused" : "Original native caller capabilities required");
+    expect(actual.stdout, actual.id).not.toContain("foreign acquisition occurred");
+  }
+}, 15000);

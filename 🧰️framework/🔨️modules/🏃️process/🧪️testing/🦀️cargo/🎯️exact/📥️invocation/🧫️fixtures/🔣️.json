@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "callerCeilingMilliseconds": 15000,
+  "policy": { "version": 1, "buildMilliseconds": 500, "listMilliseconds": 500, "lawMilliseconds": 500, "transport": { "maximumBuildOutputBytes": 268435456, "maximumNativeOutputBytes": 8388608 } },
+  "cases": [
+    { "id": "remaining after awaited publication", "mutation": "remaining-after-publication", "maximumElapsedMilliseconds": 1000, "remainingMilliseconds": 1000, "expectedBudgetMilliseconds": 125.5, "expectedProbes": 1, "expectedAcquisition": true },
+    { "id": "original cancellation before acquisition", "mutation": "cancel-before", "maximumElapsedMilliseconds": 1000, "remainingMilliseconds": 1000, "expectedBudgetMilliseconds": null, "expectedProbes": 0, "expectedAcquisition": false },
+    { "id": "original exhaustion before acquisition", "mutation": "exhaust-before", "maximumElapsedMilliseconds": 1000, "remainingMilliseconds": 0, "expectedBudgetMilliseconds": null, "expectedProbes": 0, "expectedAcquisition": false },
+    { "id": "publication refusal before acquisition", "mutation": "publication-refused", "maximumElapsedMilliseconds": 1000, "remainingMilliseconds": 1000, "expectedBudgetMilliseconds": null, "expectedProbes": 0, "expectedAcquisition": false },
+    { "id": "finite owner cannot inherit zero build authority", "mutation": "finite-zero-build", "maximumElapsedMilliseconds": 1000, "remainingMilliseconds": 1000, "expectedBudgetMilliseconds": null, "expectedProbes": 0, "expectedAcquisition": false },
+    { "id": "ordinary caller explicitly declares zero build authority", "mutation": "ordinary-zero-build", "maximumElapsedMilliseconds": 0, "remainingMilliseconds": null, "expectedBudgetMilliseconds": 0, "expectedProbes": 1, "expectedAcquisition": true },
+    { "id": "missing authored phase policy refuses before acquisition", "mutation": "missing-policy", "maximumElapsedMilliseconds": 1000, "remainingMilliseconds": 1000, "expectedBudgetMilliseconds": null, "expectedProbes": 0, "expectedAcquisition": false }
+  ]
+}

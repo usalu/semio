@@ -8,6 +8,24 @@
     ]
   },
   "targets": {
+    "test-native-literal-refusal-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-literal-refusal-source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-native-literal-refusal-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test long --lib original_native_refusal_ --success-output immediate -- --nocapture",
+        "forwardAllArgs": true
+      }
+    },
     "test-native-recipient-source": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -1410,3 +1410,21 @@ test("native SQLite binding transfers each original octet backing under unchange
  expect(producer).toContain("construct(record.as_mut().unwrap()");
  console.log("[DEBUG] SQLite binding original Buffer allocation identity, unchanged65536 caller copy authority, paid structural move before original slot transfer");
 });
+
+test("original history mutation ordinals preserve the full unsigned64 domain across JSON",async()=>{
+ const {default:Decimal}=await import("decimal.js");const OrdinalDecimal=Decimal.clone({precision:40});
+ const root="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/";
+ const schema=await Bun.file(root+"📜️history/🆔️ordinal/🧬️schema/🔣️.json").json(),validate=new Ajv({strict:false}).compile(schema);
+ const backing=await Bun.file(root+"♻️retirement/📦️backing/🧫️fixtures/🔣️.json").json();
+ const maximum=18446744073709551615n;
+ expect(backing.vcsRetirement.forwards).toEqual(["0",maximum.toString()]);
+ expect(backing.vcsRetirement.inverse).toEqual(["9","7"]);
+ for(const text of [...backing.vcsRetirement.forwards,...backing.vcsRetirement.inverse]){
+  expect(validate(text)).toBe(true);const original=BigInt(text),oracle=new OrdinalDecimal(text);
+  expect(oracle.toFixed(0)).toBe(original.toString());expect(oracle.gte(0)&&oracle.lte(new OrdinalDecimal(maximum.toString()))).toBe(true);
+  const bytes=Buffer.alloc(8);bytes.writeBigUInt64BE(original);expect(bytes.readBigUInt64BE()).toBe(original);
+  expect(JSON.parse(JSON.stringify(text))).toBe(text);
+ }
+ for(const invalid of ["-1","01","18446744073709551616",18446744073709551615])expect(validate(invalid)).toBe(false);
+ console.log("[DEBUG] exact u64 history ordinals BigInt/decimal.js/Ajv/native-width independent receiving proof");
+});

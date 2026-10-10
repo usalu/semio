@@ -1,0 +1,206 @@
+{
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "9f0793f8487a42983b8943b272ee1c14fd340bf5f5766f54bc017080b40e77bc",
+      "afterSha256": "b9463b161eca6a568cb24f432471a69b3a0c18a131d000155c83f4fca7d82e20",
+      "count": 1,
+      "beforeBlock": "!Number.isSafeInteger(remaining)",
+      "afterBlock": "!Number.isFinite(remaining)"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\udded\ufe0frouting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "b9463b161eca6a568cb24f432471a69b3a0c18a131d000155c83f4fca7d82e20",
+      "afterSha256": "ed111b8518b79a7fb30f343c7578d0e67d68063e7095b08c1ee0d578e6e33781",
+      "count": 1,
+      "beforeBlock": "return remaining === null ? requestedMilliseconds : requestedMilliseconds === 0 ? remaining : Math.min(requestedMilliseconds, remaining);",
+      "afterBlock": "return remaining === null ? requestedMilliseconds : Math.floor(requestedMilliseconds === 0 ? remaining : Math.min(requestedMilliseconds, remaining));"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\ude80\ufe0fbootstrap/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "d91487c6a307e5d723c1def2d44fe24a422d1e5f36d046cdcd6e138e8b8e1f62",
+      "afterSha256": "b05763da6628406b44760ce9a5814763850cce9555702187d5e84a2e6e8bcf74",
+      "count": 1,
+      "beforeBlock": "import { Script, ScriptRouter, readScriptPolicy }",
+      "afterBlock": "import { Script, ScriptRouter, readScriptPolicy, scriptInvocationBudget }"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\ude80\ufe0fbootstrap/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "b05763da6628406b44760ce9a5814763850cce9555702187d5e84a2e6e8bcf74",
+      "afterSha256": "d94cfc5c7827940b49993131b3349efac9ec725b926347bc301220bb0eb76e3d",
+      "count": 1,
+      "beforeBlock": "const budget = Math.min(this.invocation.control.remainingMilliseconds(), requestedBudget && requestedBudget > 0 ? requestedBudget : this.invocation.policy.maximumElapsedMilliseconds);",
+      "afterBlock": "const budget = scriptInvocationBudget(this.invocation, requestedBudget ?? 0);"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\ude80\ufe0fbootstrap/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "d94cfc5c7827940b49993131b3349efac9ec725b926347bc301220bb0eb76e3d",
+      "afterSha256": "dbc310ee4f66c3a8455c10239e69f2b854b4219ecf2104e6b014d986e020b038",
+      "count": 1,
+      "beforeBlock": "    const encoded = process.env.SEMIO_SCRIPT_POLICY;\n    if (!encoded) throw Error(\"Registered Nx launch requires original SEMIO_SCRIPT_POLICY\");\n    const capabilityWire = process.env.SEMIO_SCRIPT_CAPABILITIES;\n    if (capabilityWire === undefined) throw Error(\"Registered Nx launch requires original SEMIO_SCRIPT_CAPABILITIES\");\n    const capabilities = JSON.parse(capabilityWire), policy = readScriptPolicy(JSON.parse(encoded)), inherited = process.env[SCRIPT_PROCESS_INVOCATION_ENV];\n    const envelope = inherited === undefined ? createScriptProcessEnvelope(policy, capabilities, Date.now()) : readScriptProcessEnvelope(JSON.parse(inherited), Date.now());\n    if (envelope.policy.version !== policy.version || envelope.policy.owner !== policy.owner || envelope.policy.maximumElapsedMilliseconds !== policy.maximumElapsedMilliseconds) throw Error(\"Original Nx process policy changed across handoff\");\n    if (JSON.stringify(envelope.capabilities) !== JSON.stringify(capabilities)) throw Error(\"Original Nx process capabilities changed across handoff\");",
+      "afterBlock": "    const encoded = process.env.SEMIO_SCRIPT_POLICY, capabilityWire = process.env.SEMIO_SCRIPT_CAPABILITIES, inherited = process.env[SCRIPT_PROCESS_INVOCATION_ENV];\n    const incoming = inherited === undefined ? undefined : readScriptProcessEnvelope(JSON.parse(inherited), Date.now());\n    const policy = encoded === undefined ? incoming?.policy ?? readScriptPolicy({ version: 1, owner: \"repository:nx\", maximumElapsedMilliseconds: orchestratorBudgetOpts().budgetMs ?? 0 }) : readScriptPolicy(JSON.parse(encoded));\n    const capabilities = capabilityWire === undefined ? incoming?.capabilities ?? { workspaceRoot: WORKSPACE_ROOT, arguments: [...args] } : JSON.parse(capabilityWire);\n    const envelope = incoming ?? createScriptProcessEnvelope(policy, capabilities, Date.now());\n    if (envelope.policy.version !== policy.version || envelope.policy.owner !== policy.owner || envelope.policy.maximumElapsedMilliseconds !== policy.maximumElapsedMilliseconds) throw Error(\"Original Nx process policy changed across handoff\");\n    if (JSON.stringify(envelope.capabilities) !== JSON.stringify(capabilities)) throw Error(\"Original Nx process capabilities changed across handoff\");"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83d\udccb\ufe0fnative-orchestration/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "54140f458555c923f9b47d1260d72dfcd0deac655c7fc1fbba230fe9738fc199",
+      "afterSha256": "e376a39c539dbcb04d68b225e5abdd4a0b94414412d2c295d9e5ef8a16c2670f",
+      "count": 1,
+      "beforeBlock": "import { BundleScript }",
+      "afterBlock": "import { BundleScript, scriptInvocationBudget }"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83d\udccb\ufe0fnative-orchestration/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "e376a39c539dbcb04d68b225e5abdd4a0b94414412d2c295d9e5ef8a16c2670f",
+      "afterSha256": "0c2cee7a4b709786dec543f5716b484c93347ef18881f3002e2e297f586dbcc1",
+      "count": 1,
+      "beforeBlock": "Math.min(this.invocation.control.remainingMilliseconds(), Number.isFinite(budgetMs) && budgetMs > 0 ? budgetMs : this.invocation.policy.maximumElapsedMilliseconds)",
+      "afterBlock": "scriptInvocationBudget(this.invocation, budgetMs)"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83d\udccb\ufe0fnative-orchestration/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "0c2cee7a4b709786dec543f5716b484c93347ef18881f3002e2e297f586dbcc1",
+      "afterSha256": "9694d46070270ff32ba6f99d43affdd8e3e6bdce5bbdb83f7013b125cffc27f6",
+      "count": 1,
+      "beforeBlock": "this.invocation.control.remainingMilliseconds(),{env,signal:",
+      "afterBlock": "scriptInvocationBudget(this.invocation, 0),{env,signal:"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "2b0682eeacb25418ea36035f639979b291ce19fe536b4ca716e7e19099f8b33f",
+      "afterSha256": "18c3cfd2fc8822d78e65d1f0458fd2f3333909f3b9b4ff763b5c3d0da3645f04",
+      "count": 1,
+      "beforeBlock": "import { BundleScript, ScriptRouter }",
+      "afterBlock": "import { BundleScript, ScriptRouter, scriptInvocationBudget }"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "18c3cfd2fc8822d78e65d1f0458fd2f3333909f3b9b4ff763b5c3d0da3645f04",
+      "afterSha256": "3cac3795abb485485c6421d31c475ada94d8f9c033807829c7f2a3f9993e8af3",
+      "count": 1,
+      "beforeBlock": "this.invocation.control.remainingMilliseconds(),{env,signal:",
+      "afterBlock": "scriptInvocationBudget(this.invocation, 0),{env,signal:"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83e\udd80\ufe0frust/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "6d67f32efcea24f40b644113fd7053ffe8c3334eabdfbac002e786c9275fe865",
+      "afterSha256": "4114c34470831957fa9c0bb5850f2438a5ed3c5101e260fc0018fb55a6de78f0",
+      "count": 1,
+      "beforeBlock": "import { BundleScript, ScriptRouter, type ScriptCommand }",
+      "afterBlock": "import { BundleScript, ScriptRouter, scriptInvocationBudget, type ScriptCommand }"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83e\udd80\ufe0frust/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "4114c34470831957fa9c0bb5850f2438a5ed3c5101e260fc0018fb55a6de78f0",
+      "afterSha256": "bcb73924cc594c1ec51d8ad114c9e7fe015593d3afff8033196518565558dc5c",
+      "count": 1,
+      "beforeBlock": "this.invocation.control.remainingMilliseconds(), { signal:",
+      "afterBlock": "scriptInvocationBudget(this.invocation, 0), { signal:"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udce6\ufe0fartifacts/\ud83e\udd80\ufe0frust/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "bcb73924cc594c1ec51d8ad114c9e7fe015593d3afff8033196518565558dc5c",
+      "afterSha256": "8ad0c1a98423071ba6eb6130a34729ab34cb0e1ff76ed56cfde0e973fd24b708",
+      "count": 1,
+      "beforeBlock": "Math.floor(Math.min(options.snapshotSqliteTestBudgetMs ?? this.invocation.policy.maximumElapsedMilliseconds, this.invocation.control.remainingMilliseconds()))",
+      "afterBlock": "scriptInvocationBudget(this.invocation, options.snapshotSqliteTestBudgetMs ?? 0)"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "3a70f1c0035bb8a0d05582943d734ff9592f0a20376957cebe53104153ff925d",
+      "afterSha256": "15e0788481b34c126f2a92cf03d782e684dea6258da730cbbbac38a51c7df2e0",
+      "count": 1,
+      "beforeBlock": "remainingMilliseconds?:()=>number",
+      "afterBlock": "remainingMilliseconds?:()=>number|null"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "15e0788481b34c126f2a92cf03d782e684dea6258da730cbbbac38a51c7df2e0",
+      "afterSha256": "027bb0eb2eed5b6ac04686df3d47b59eb9f74f0d0ed0e94de74be25a9941b0e4",
+      "count": 1,
+      "beforeBlock": "remaining!==undefined&&(!Number.isFinite(remaining)||remaining<1)",
+      "afterBlock": "remaining!==undefined&&remaining!==null&&(!Number.isFinite(remaining)||remaining<1)"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "027bb0eb2eed5b6ac04686df3d47b59eb9f74f0d0ed0e94de74be25a9941b0e4",
+      "afterSha256": "1179ac3e6614f92d7d0cc408423e614baed701da3767197c3036632362e0c272",
+      "count": 1,
+      "beforeBlock": "remaining===undefined?step.budgetMs:",
+      "afterBlock": "remaining===undefined||remaining===null?step.budgetMs:"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "70ec290b8b40a8285234f2b7dfe870136cf05617e2854e54114a46d15b229c21",
+      "afterSha256": "a438f3e6a66f7dcf1d98771b0d7d9014ab02164d5fbed8f662babc7073b8bec4",
+      "count": 1,
+      "beforeBlock": "if(control.remainingMilliseconds()<1)throw Error(\"Original repository Cargo deadline exhausted\");",
+      "afterBlock": "{const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error(\"Original repository Cargo deadline exhausted\");}"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "a438f3e6a66f7dcf1d98771b0d7d9014ab02164d5fbed8f662babc7073b8bec4",
+      "afterSha256": "bd4df5730707d269fd9f90576706f11be53fb7e443915317d8b37f0eaeea8580",
+      "count": 1,
+      "beforeBlock": "if(control.remainingMilliseconds()<1)throw Error(\"Original repository Cargo preparation deadline exhausted\");",
+      "afterBlock": "{const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error(\"Original repository Cargo preparation deadline exhausted\");}"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "15e380496955b5ae680ea00b062f4b298313b1eb05c8b6573369cc33a16aeffa",
+      "afterSha256": "e9fd7c3930750dc04742e4ce4e902c6ef826d2c06a7d5afda36883c8c1242eb5",
+      "count": 1,
+      "beforeBlock": "extraArgs:rest},readCargoTestPolicyV1",
+      "afterBlock": "extraArgs:rest,signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "2f47190522c667b7a7aa9a7e9ed88ce43b2d4dc4f311181aac33ffe74a56bd93",
+      "afterSha256": "4e8f360417572f2f6e1e7e50294cfa0cd8133f62d1b1eb24be1f49cebaf26b5a",
+      "count": 1,
+      "beforeBlock": "import { BundleScript, ScriptRouter }",
+      "afterBlock": "import { BundleScript, ScriptRouter, scriptInvocationBudget }"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "4e8f360417572f2f6e1e7e50294cfa0cd8133f62d1b1eb24be1f49cebaf26b5a",
+      "afterSha256": "5f8239672d7ad687f4b7d5441eab0bdbbe20c58f53418bfdd06deb6e753283dd",
+      "count": 2,
+      "beforeBlock": "Math.min(suite.budgetMs, this.invocation.control.remainingMilliseconds())",
+      "afterBlock": "scriptInvocationBudget(this.invocation, suite.budgetMs)"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "74a7537de266bec52cd7ba3b60139c2522f0bcd46db459a894b2a033e7cde3d5",
+      "afterSha256": "5c9bf9ed4217714de0a727693e5f41d5f00e94f71f753a60309993426570190f",
+      "count": 1,
+      "beforeBlock": "import { BundleScript, ScriptRouter }",
+      "afterBlock": "import { BundleScript, ScriptRouter, scriptInvocationBudget }"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "5c9bf9ed4217714de0a727693e5f41d5f00e94f71f753a60309993426570190f",
+      "afterSha256": "bcf2a006e907c521b3471e45a5a977ea4f3b2351fb3c31f2dbfe7c611f0884f1",
+      "count": 13,
+      "beforeBlock": "Math.min(30000, this.invocation.control.remainingMilliseconds())",
+      "afterBlock": "scriptInvocationBudget(this.invocation, 30000)"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf92\ufe0fpack/\ud83d\udd24\ufe0fjson/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "89c3bf9bd10a57291672fbc8a88290bf0d9a3d453c02a99c1b0c02adb60f887a",
+      "afterSha256": "16e32ed60859b92cd815fd31852a00384a03b6aa434575510b14d10ff5310e75",
+      "count": 1,
+      "beforeBlock": "import { BundleScript, ScriptRouter }",
+      "afterBlock": "import { BundleScript, ScriptRouter, scriptInvocationBudget }"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf92\ufe0fpack/\ud83d\udd24\ufe0fjson/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udcdc\ufe0fscript.ts",
+      "beforeSha256": "16e32ed60859b92cd815fd31852a00384a03b6aa434575510b14d10ff5310e75",
+      "afterSha256": "977e3207cc98c6380fb3825466478285f2955cde6ec7f62f8dc3dcf2b84e2052",
+      "count": 1,
+      "beforeBlock": "const budget=()=>{this.invocation.control.signal.throwIfAborted();const remaining=Math.floor(this.invocation.control.remainingMilliseconds());if(remaining<1)throw Error(\"Original parent Script deadline exhausted\");return remaining;};",
+      "afterBlock": "const budget=()=>scriptInvocationBudget(this.invocation, 0);"
+    }
+  ],
+  "originalAuthority": "canonical orchestratorBudgetOpts at actual root host; inherited identity and explicit finite policies preserved; child own budgets remain independent",
+  "native": "not dispatched"
+}

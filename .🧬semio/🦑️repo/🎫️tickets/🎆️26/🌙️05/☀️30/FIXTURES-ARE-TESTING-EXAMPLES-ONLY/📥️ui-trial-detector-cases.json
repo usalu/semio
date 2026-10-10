@@ -1,0 +1,149 @@
+{
+  "observedOnly": true,
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": "47e9182a231a774cc070409a21635b5c987ea88ef92ff2ad9d1ed530603f7deb",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🟦️.ts",
+      "sha256": "693907e60aa3b8c5accadbf3dff324f4a8c29c93aed07c51d152323194b3cfda",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🖼️atlas/🧬️schema/🔣️.json",
+      "sha256": "8c1f13360359c5cf6af717139b1a9ea65671d03f2bb1734c4c18ab2736d0627e",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🖼️atlas/🧪️tests/🦀️.rs",
+      "sha256": "8b17be7d82bcec1499547c62a5f1cdfd93306b3d7217d103015611e945060e65",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "sha256": "e47611750e3a5146ffa41fd6367b6663e73f500f709813d4cb3fe8aa01e5920b",
+      "ownership": false
+    }
+  ],
+  "portableSemanticCases": [
+    {
+      "id": "paired_fixed_authority_outcome",
+      "role": "trial",
+      "structure": {
+        "supplied": {
+          "const": {
+            "items": 1,
+            "copyBytes": 64,
+            "capacityBytes": 4096,
+            "releaseBytes": 4096,
+            "depth": 8
+          }
+        },
+        "observations": {
+          "const": [
+            {
+              "refused": true,
+              "pointerUnchanged": true,
+              "requestedBytes": 0
+            },
+            {
+              "terminal": true,
+              "releasedBytes": 4096
+            }
+          ]
+        }
+      },
+      "reader": "whole envelope plus independent executed-outcome equality"
+    },
+    {
+      "id": "current_state_precondition",
+      "role": "domain",
+      "structure": {
+        "command": "variable mutation discriminator",
+        "expected": "variable current lock state",
+        "next": "variable requested lock state"
+      },
+      "reader": "production command compares expected before applying next"
+    },
+    {
+      "id": "grant_alone",
+      "role": "domain",
+      "structure": {
+        "items": "nonnegative integer",
+        "copyBytes": "nonnegative integer",
+        "capacityBytes": "nonnegative integer",
+        "releaseBytes": "nonnegative integer",
+        "depth": "nonnegative integer"
+      },
+      "reader": "actual single supplied grant"
+    },
+    {
+      "id": "produced_progress",
+      "role": "domain",
+      "structure": {
+        "input": "variable original identity",
+        "spent": "variable progress",
+        "remaining": "variable authority"
+      },
+      "reader": "actual producer output"
+    },
+    {
+      "id": "schema_parser_input",
+      "role": "inert",
+      "structure": {
+        "type": "object",
+        "properties": {
+          "sample": {
+            "type": "integer"
+          }
+        }
+      },
+      "reader": "explicit parser fixture role; parsed schema is the tested value, not case validator"
+    },
+    {
+      "id": "module_named_examples",
+      "role": "domain-owner",
+      "path": "framework/modules/🧪️examples/schema/document.json",
+      "reader": "genuine immediate module member, no collection ancestry"
+    },
+    {
+      "id": "nested_collection",
+      "role": "testing-owner",
+      "path": "framework/modules/example-owner/🧪️examples/schema/document.json",
+      "reader": "actual collection ancestry"
+    },
+    {
+      "id": "whole_unjoined",
+      "role": "unresolved",
+      "structure": {
+        "input": "variable",
+        "expected": "variable"
+      },
+      "reader": "whole read without executed-test or production-role relation"
+    }
+  ],
+  "additionalSources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/🧬️schema/🔣️.json",
+      "sha256": "edfab8837f40d4cf53727ba07feab10008ffbf2b2d4a68f87df73c2dc89f27ab",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "sha256": "e47611750e3a5146ffa41fd6367b6663e73f500f709813d4cb3fe8aa01e5920b",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔢️integer-carriers.json",
+      "sha256": "165686b77d33f899442004b22b1621d30a10e433ef7d0a2fe552adaacd9095a5",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json",
+      "sha256": "e084c53cc29fde63416fe5f7459b61e9611f2c71d2a9da38654a1c499a3a1324",
+      "ownership": false
+    }
+  ]
+}

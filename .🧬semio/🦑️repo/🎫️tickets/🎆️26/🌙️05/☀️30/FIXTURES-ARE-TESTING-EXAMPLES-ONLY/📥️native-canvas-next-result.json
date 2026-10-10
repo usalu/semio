@@ -1,0 +1,173 @@
+{
+  "observedAt": "2026-10-09T22:39:30.519154+00:00",
+  "session": 17880,
+  "exit": 0,
+  "originalArgv": [
+    "bun",
+    "nx",
+    "run",
+    "semio-framework-canvas:test",
+    "--skip-nx-cache",
+    "--outputStyle=static",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts)",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "nxTaskDuration": "1m31s",
+  "native": {
+    "name": "original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 52,
+    "duration": "0.027s Nextest",
+    "debugRows": 12
+  },
+  "log": "🗑️generated/native-canvas-next.log",
+  "logSha256": "31afd11c8931d6730634232b74e767cd242735f546e7b4aed3885b72ecca4c02",
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "before": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+      "after": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+      "bytes": 60261,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+      "before": "ffacf1b817337697a9c959d3d83de66a960d256896b2d48be1e732b2fa71daf9",
+      "after": "ffacf1b817337697a9c959d3d83de66a960d256896b2d48be1e732b2fa71daf9",
+      "bytes": 5153,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "before": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "after": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "bytes": 143861,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🦀️.rs",
+      "before": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+      "after": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+      "bytes": 485,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+      "before": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+      "after": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+      "bytes": 1882,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+      "before": "a442c34719ba19de66a5b505ee811a5ab354ceb7c0f14e923698ea283ad6bd54",
+      "after": "a442c34719ba19de66a5b505ee811a5ab354ceb7c0f14e923698ea283ad6bd54",
+      "bytes": 8417,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🟦️.ts",
+      "before": "783309d7c3a885a3f73cad4a0379c2ec2eb6e8cb2a8590506c572fbe3d298147",
+      "after": "783309d7c3a885a3f73cad4a0379c2ec2eb6e8cb2a8590506c572fbe3d298147",
+      "bytes": 3572,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🧫️fixtures/🔣️.json",
+      "before": "0046af23407c8848732c63c45cf4ccdfcda86a459dd5117b323788b58f08962a",
+      "after": "0046af23407c8848732c63c45cf4ccdfcda86a459dd5117b323788b58f08962a",
+      "bytes": 895,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+      "before": "e9fd7c3930750dc04742e4ce4e902c6ef826d2c06a7d5afda36883c8c1242eb5",
+      "after": "e9fd7c3930750dc04742e4ce4e902c6ef826d2c06a7d5afda36883c8c1242eb5",
+      "bytes": 1290,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "before": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "after": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "bytes": 550,
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "before": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "after": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "bytes": 1247,
+      "matches": true
+    }
+  ],
+  "knownOwnProcesses": [
+    {
+      "pid": 33426,
+      "absent": true
+    },
+    {
+      "pid": 33427,
+      "absent": true
+    },
+    {
+      "pid": 34841,
+      "absent": true
+    },
+    {
+      "pid": 38211,
+      "absent": true
+    },
+    {
+      "pid": 38254,
+      "absent": true
+    },
+    {
+      "pid": 38278,
+      "absent": true
+    },
+    {
+      "pid": 38279,
+      "absent": true
+    },
+    {
+      "pid": 38308,
+      "absent": true
+    },
+    {
+      "pid": 38351,
+      "absent": true
+    }
+  ],
+  "qualification": "Current copy-axis native assertion exercised. Whole shared roots are observers only; no backend/Frame/Vello/E2E claim. No source copied.",
+  "actualNativeBinary": {
+    "metadata": "🗑️generated/cp-out/semio-nextest-VRbgCO/binaries-metadata.json",
+    "metadataSha256": "eab93643f43d0a823eb8b3448a5dcb5f21ff516209ae1da1168ecd7f5a07b3fe",
+    "binaryPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/debug/build/semio-framework-canvas/dfc35f158a8a7e10/out/semio_framework_canvas-dfc35f158a8a7e10",
+    "binarySha256": "cc0b9f3ab04396f37fc2d84b805f2024b03faaf2e51a561713b3fcf3eb6e9eb5",
+    "bytes": 16285232,
+    "pathChars": 186,
+    "packageId": "path+file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%BC%EF%B8%8Fcanvas/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust#semio-framework-canvas@0.1.0",
+    "kind": "lib",
+    "buildPlatform": "target",
+    "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
+    "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build",
+    "targetPlatform": [
+      {
+        "triple": "aarch64-apple-darwin",
+        "target-features": "unknown"
+      }
+    ],
+    "qualification": "Actual Nextest-produced/current selected test-binary witness, not WGPU production/staged artifact proof."
+  }
+}

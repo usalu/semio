@@ -48,9 +48,9 @@ impl JsonWriteSource for SnapshotPatch{
 }
 
 impl semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson for SnapshotPatch {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
         use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode as N;
-        Ok(match self.node_at_path(path).map_err(|error| error.to_string())? {
+        Ok(match self.node_at_path(path)? {
             JsonWriteNode::Null => N::Null,
             JsonWriteNode::Bool(value) => N::Bool(value),
             JsonWriteNode::Number(Number::Int(value)) => N::I64(value),
@@ -61,7 +61,7 @@ impl semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJ
             JsonWriteNode::Object(length) => N::Object(length),
         })
     }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, String> { self.object_key_at_path(path, index).map(Into::into).map_err(|error| error.to_string()) }
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> { self.object_key_at_path(path, index).map(Into::into) }
 }
 
 #[path="../📥️decode/🫳️borrowed/🦀️.rs"]

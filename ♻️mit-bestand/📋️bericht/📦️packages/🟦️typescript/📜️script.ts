@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🏚️ Validates report sources, Nx contracts and produced PDF documents. */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -114,4 +115,4 @@ class PreviewScript extends ActorNetworkScript {
 }
 
 const router = new ScriptRouter(packageRoot).register("test", TestScript).register("preview-generated", PreviewScript);
-if (import.meta.main) await router.run(process.argv.length > 2 ? process.argv.slice(2) : ["test"]);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.length > 2 ? process.argv.slice(2) : ["test"], original));

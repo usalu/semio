@@ -5,11 +5,11 @@ use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactCanonicalJ
 
 trait Borrowed {
     fn node(&self) -> Node<'_>;
-    fn child(&self, _index: usize) -> Result<&dyn Borrowed, String> { Err(invalid()) }
-    fn key(&self, _index: usize) -> Result<&str, String> { Err(invalid()) }
+    fn child(&self, _index: usize) -> Result<&dyn Borrowed, semio_framework_value::ValueError> { Err(invalid()) }
+    fn key(&self, _index: usize) -> Result<&str, semio_framework_value::ValueError> { Err(invalid()) }
 }
 
-fn invalid() -> String { "brep.borrowed-json.invalid-ordinal".into() }
+fn invalid() -> semio_framework_value::ValueError { semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "brep.borrowed-json.invalid-ordinal") }
 
 macro_rules! scalar {
     ($ty:ty, $variant:ident) => {
@@ -24,27 +24,27 @@ impl Borrowed for String { fn node(&self) -> Node<'_> { Node::String(self.as_str
 impl Borrowed for &'static str { fn node(&self) -> Node<'_> { Node::String(self) } }
 impl<T: Borrowed> Borrowed for Vec<T> {
     fn node(&self) -> Node<'_> { Node::Array(self.len()) }
-    fn child(&self, index: usize) -> Result<&dyn Borrowed, String> { self.get(index).map(|value| value as &dyn Borrowed).ok_or_else(invalid) }
+    fn child(&self, index: usize) -> Result<&dyn Borrowed, semio_framework_value::ValueError> { self.get(index).map(|value| value as &dyn Borrowed).ok_or_else(invalid) }
 }
 impl<T: Borrowed> Borrowed for Option<T> {
     fn node(&self) -> Node<'_> { self.as_ref().map_or(Node::Null, Borrowed::node) }
-    fn child(&self, index: usize) -> Result<&dyn Borrowed, String> { self.as_ref().ok_or_else(invalid)?.child(index) }
-    fn key(&self, index: usize) -> Result<&str, String> { self.as_ref().ok_or_else(invalid)?.key(index) }
+    fn child(&self, index: usize) -> Result<&dyn Borrowed, semio_framework_value::ValueError> { self.as_ref().ok_or_else(invalid)?.child(index) }
+    fn key(&self, index: usize) -> Result<&str, semio_framework_value::ValueError> { self.as_ref().ok_or_else(invalid)?.key(index) }
 }
 impl Borrowed for (f64, f64) {
     fn node(&self) -> Node<'_> { Node::Array(2) }
-    fn child(&self, index: usize) -> Result<&dyn Borrowed, String> { match index { 0 => Ok(&self.0), 1 => Ok(&self.1), _ => Err(invalid()) } }
+    fn child(&self, index: usize) -> Result<&dyn Borrowed, semio_framework_value::ValueError> { match index { 0 => Ok(&self.0), 1 => Ok(&self.1), _ => Err(invalid()) } }
 }
 
 macro_rules! object {
     ($ty:ty, $($field:ident => $key:literal),+ $(,)?) => {
         impl Borrowed for $ty {
             fn node(&self) -> Node<'_> { Node::Object([$($key),+].len()) }
-            fn child(&self, index: usize) -> Result<&dyn Borrowed, String> {
+            fn child(&self, index: usize) -> Result<&dyn Borrowed, semio_framework_value::ValueError> {
                 let fields: &[&dyn Borrowed] = &[$(&self.$field),+];
                 fields.get(index).copied().ok_or_else(invalid)
             }
-            fn key(&self, index: usize) -> Result<&str, String> { [$($key),+].get(index).copied().ok_or_else(invalid) }
+            fn key(&self, index: usize) -> Result<&str, semio_framework_value::ValueError> { [$($key),+].get(index).copied().ok_or_else(invalid) }
         }
     };
 }
@@ -66,13 +66,13 @@ macro_rules! tagged {
     ($ty:ident, $($variant:ident => $kind:literal { $($field:ident => $key:literal),+ }),+ $(,)?) => {
         impl Borrowed for $ty {
             fn node(&self) -> Node<'_> { match self { $(Self::$variant { .. } => Node::Object(["kind", $($key),+].len())),+ } }
-            fn child(&self, index: usize) -> Result<&dyn Borrowed, String> {
+            fn child(&self, index: usize) -> Result<&dyn Borrowed, semio_framework_value::ValueError> {
                 match self { $(Self::$variant { $($field),+ } => {
                     let fields: &[&dyn Borrowed] = &[&$kind, $($field),+];
                     fields.get(index).copied().ok_or_else(invalid)
                 }),+ }
             }
-            fn key(&self, index: usize) -> Result<&str, String> { match self { $(Self::$variant { .. } => ["kind", $($key),+].get(index).copied().ok_or_else(invalid)),+ } }
+            fn key(&self, index: usize) -> Result<&str, semio_framework_value::ValueError> { match self { $(Self::$variant { .. } => ["kind", $($key),+].get(index).copied().ok_or_else(invalid)),+ } }
         }
     };
 }
@@ -97,7 +97,7 @@ tagged!(BrepSurface,
     Nurbs => "nurbs" { control_points => "controlPoints", weights => "weights", u_count => "uCount", v_count => "vCount", degree_u => "degreeU", degree_v => "degreeV", knots_u => "knotsU", knots_v => "knotsV" },
 );
 
-fn at<'a>(root: &'a dyn Borrowed, path: &[usize]) -> Result<&'a dyn Borrowed, String> {
+fn at<'a>(root: &'a dyn Borrowed, path: &[usize]) -> Result<&'a dyn Borrowed, semio_framework_value::ValueError> {
     if path.len() > ARTIFACT_CANONICAL_JSON_DEPTH { return Err(invalid()); }
     let mut value = root;
     for index in path { value = value.child(*index)?; }
@@ -105,6 +105,6 @@ fn at<'a>(root: &'a dyn Borrowed, path: &[usize]) -> Result<&'a dyn Borrowed, St
 }
 
 impl ArtifactCanonicalJson for SemioBrepSnapshot {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<Node<'_>, String> { Ok(at(self, path)?.node()) }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, String> { at(self, path)?.key(index).map(Into::into) }
+    fn canonical_json_node(&self, path: &[usize]) -> Result<Node<'_>, semio_framework_value::ValueError> { Ok(at(self, path)?.node()) }
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> { at(self, path)?.key(index).map(Into::into) }
 }

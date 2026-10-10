@@ -1,0 +1,13 @@
+# Actor Original Payload Authority Current Audit
+
+Read-only source audit, no test/build launch.
+
+Current JobTurnBridge constructor1811 admits JobPayloadAuthority exactly once using original operation/generation/grant and stores its actual admission progress as the same cumulative progress. Every step1880 creates StepContext::with_payload_authority with that same borrowed original authority, grant and progress; no per-page fresh ledger is created. Pending projection1753 now checks cancellation, fuel zero and current deadline before borrowed producer view/copy/ack. Cancelled descriptor deliberately bypasses this temporal gate to publish the original terminal cancellation under remaining retained authority. Other pending outputs remain held on temporal refusal.
+
+Constructor admission denial returns literal WorkLimit without a fabricated authority. Original close_step retains descriptor until funded acknowledgement, retained Vec capacity until explicit release grant, and JobPayloadAuthority until its actual close; release receipts report actual capacity. Existing unit close helper447–451 subtracts accumulated progress from explicit producerCloseGrant on each bridge turn. Fixture now declares source wallet, independent destination-close wallet and independent producer-close wallet with distinct ids and renewsOriginalSource=false; equal numeric ceilings no longer imply renewal. Caller publication Vec remains separate destination obligation.
+
+Remaining allocation concern: pending projection still preflights required Vec capacity, calls try_reserve_exact, then charges actual capacity delta. Allocator excess can exceed original remaining authority before receipt refusal; original custody remains pending but birth already occurred. A genuinely constrained allocator/pre-admitted destination is needed for strict prebirth authority. Close_step sets terminal=true before zero-grant refusal; pending/output custody remains intact, but if law requires absolutely no state mutation on denied close, this terminal transition needs explicit close-begin policy.
+
+Fresh wire repair now changes Budget::pack_encode to Result and calls retained.pack_encode before writing resource fields; TurnGrant::pack_encode validates budget.retained before actor/shard writes. This closes earlier direct wire admission gap in current source. Sole Budget.retained convention preserved, no duplicate authority carrier.
+
+Selected mounts are already documented as eight closed launch/seed rows; parent reports actual sixteen-case Source first-party+Ajv exit0 DEBUG. This audit did not independently read that new execution log and does not grant child runtime success based on parent status or mounted shape.

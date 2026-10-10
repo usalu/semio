@@ -1,0 +1,21 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧫️fixtures/📥️native-caller.json",
+      "action": "updated",
+      "beforeSha256": "e9e99c9c041164a849844f3402b07bd6343a4fdf768042d41ddede44063a6edc",
+      "afterSha256": "b3a55cac672675bc90153b8dd95e0941f91b0c5b46f1647d812772ea9f766d87",
+      "exclusive": false,
+      "scope": "Plain original parent policy cases only, no test authority Schema"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "69eedc7d07b7e2d54bf76b86c0c81e1a65e99aeca387e7bd4a5d4de9e45d8f3b",
+      "afterSha256": "c2389b17cb2b4cc16b9e5731c428d0fbcf6247c72063b95d5d1ece0df8e21c8f",
+      "exclusive": false,
+      "scope": "Actual installed Nx graph/delegate original zero-null parent law with genuine per-capability Ajv"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

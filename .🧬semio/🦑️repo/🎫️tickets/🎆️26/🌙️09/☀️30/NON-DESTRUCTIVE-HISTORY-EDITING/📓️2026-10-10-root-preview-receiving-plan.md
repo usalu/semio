@@ -1,0 +1,15 @@
+# Original Preview and Command Receiving Plan
+
+The current agent preview is still a synchronous whole run around removed Batch::try_new/StepOutcome APIs. Its preview_typed_command_job captures a whole app-owned ErasedToolJob and clones params before two whole drivers. This cannot be adapted by rebuilding an actor context for every loop iteration or by cold wrapping an already assembled job.
+
+The required preview driver now operates on an already admitted original Batch session plus a borrowed caller StepContext. The actual producer callback receipt is transferred once before a semantic loan, explicit Fault input acceptance precedes ACK, and the final verdict follows physical source closure. Its five-case native law is pending in root-preview-driver-native-20261010-a; source successor is root-preview-driver-source-20261010-b. Native admission and native callback policies are independently caller-authored fixture inputs, so this law does not claim 17-byte Session source birth.
+
+Installed receiving must become a persistent operation: caller input/admission and app roots remain original owners; the concrete factory supplies a required field initializer; WorkerJobSessionPreparation writes directly to its final native storage; the same prepared session advances on subsequent caller contexts; a required paged diagnostic decoder consumes a borrowed Fault while the native producer remains held; accepted diagnostics permit ACK and paid close; the producer completion and child completion retain their original issuers until publication or paid abandonment. There is no whole-J compatibility adapter and no retained-turn budget derived from demand.
+
+The ActionBus currently erases a fully assembled concrete J into Box<dyn InteractiveJob + Send>, and ToolJobFactory returns J from whole create_job/create_job_from_wire_pages_with_payload calls. Clean Session erasure must preserve the one native concrete preparation/session owner and its original cancellation root; an outer Session around an erased inner prepared Session would duplicate roots and authority. Required factory source and Session erasure are therefore explicit remaining work, not solved by the new driver export.
+
+UI supplies OriginalActorGuestEntry::dispatch_step(input,budget,externalRecipient,originalClock,closure) and a borrowed StepContext within that closure. The current async whole preview API has no such caller parameter and must be converted to incremental receiving before it is certified. Root owns that receiving scope; Tools owns direct native preparation and Toy/ToolRun source consumers.
+
+The shared ArtifactCommandWork still has whole restore and permissive close defaults. Its seven installed checkpoint byte writers are already indexed, but native checkpoint restoration and physical Work issuers remain required. Process3D is a scalar work owner; Flow, CAD, Equation and Norm contain distinct retained children and must keep their existing original issuers rather than report synthetic Complete.
+
+Every editor and all 24 browser paths remain unexecuted. Source and isolated native receipts do not establish editor acceptance.

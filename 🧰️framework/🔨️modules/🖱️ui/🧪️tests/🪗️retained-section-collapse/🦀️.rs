@@ -85,7 +85,7 @@ fn advance_to_checked_out_layout(ui: &mut Ui, atlas: &mut FontAtlas, pool: &semi
 fn assert_layout_terminal(ui: &Ui) {
     let window = ui.windows.get("fixture").expect("fixture window");
     assert!(!ui.layout_is_dirty("fixture"), "the final disclosure state has no dirty layout root");
-    assert!(window.layout_job.is_none() && window.layout_session.is_none() && window.layout_rejected.is_none() && !window.layout_closing && !window.queued, "no superseded disclosure layout owner remains queued or checked out");
+    assert!(window.layout_job.is_none() && window.layout_session.is_none() && window.layout_admission.terminal_is_empty() && !window.layout_closing && !window.queued, "no superseded disclosure layout owner remains queued or checked out");
 }
 
 fn drive_frame(ui: &mut Ui, atlas: &mut FontAtlas) {

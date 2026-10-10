@@ -1,0 +1,38 @@
+{
+  "ownership": false,
+  "testsExecuted": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "sha256": "dd3fb433a643e0497a75208b96f9acae9be07796d50a492b7eca40301077ead0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "sha256": "897b3a0a481c6787d3549c4e5c86ad7f002ecdd6354967d5d50b622b162a6de8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "sha256": "5c7c019b1cba89f104279a150e914d0fe073e483cc1c60bce03fa23e796b3d0c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧫️fixtures/📥️native-caller.json",
+      "sha256": "db725951498ba2ebfa279068edac84537c68e6b2f0fc01726a82f4f28ad43946"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "715f2d906b03e842b8e5ff66fbbf4811e1e31de26810e2db6b8c5e005be3e3f1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "3cd6a2ec951fd0892fd3ad99d206c6bcb4fcbb983dce6a1981772048297ce682"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🗺️owner-test-manifests/🟦️.ts",
+      "sha256": "276742758aeee91f857cb32b8974dffab54662c68f5101e85ae6cb3431d0cd2a"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "909880a02d88e5651afa8332aff482c79bbc506eecd3809031ac9694c7261520"
+    }
+  ]
+}

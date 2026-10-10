@@ -1,0 +1,7 @@
+# Kernel Whole Native Receiving Retry Ten
+
+The unchanged registered whole Kernel row ran as child 16195/session 87811. Both streams shared `🗑️generated/k/original-peer-erased-red10.log`. It terminated launcher 1/Cargo 101 with two actual compiler errors and no native assertions: duplicated IO snapshot `tests` module registration, and the Presence mounted capture test's removed `MountedWorkerJobSession::try_new` call. All earlier graph, Actor and Store initializer errors cleared in this actual compiled snapshot.
+
+Root reconciled the duplicate identical IO test registration while preserving both tests once. The original Presence caller now retains job/params Option slots and supplies a `WorkerJobAdmissionContext` with the actual original params identity, clock, fuel/deadline and unchanged explicit fixture CLOSE_GRANT. It receives the returned admission receipt in the original caller recipient before mounting, asserts source slots consumed only on success, and compares actual trace-observed native allocation/release with that same receipt. It does not use config.retained to fund birth. Original pump/ACK/cancellation/root-factory identity/close assertions, grants and loop limits remain unchanged.
+
+A new full registered retry is required to determine actual runtime behavior under these original grants. Clipboard admission laws compiled in Gen's distinct whole UI snapshot, but that gate stopped at two Root-owned removed constructor callers before native assertions. No missing-method RED or native admission acceptance is inferred.

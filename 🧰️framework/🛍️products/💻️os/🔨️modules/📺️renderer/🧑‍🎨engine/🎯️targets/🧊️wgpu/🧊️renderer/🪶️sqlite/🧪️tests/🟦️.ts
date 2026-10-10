@@ -1,9 +1,10 @@
+import {existsSync as testingSchemaExists} from "node:fs";
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv/dist/2020.js";
+import AjvDraft7 from "ajv";
 import {readFileSync} from "node:fs";
 import fixture from "../🧫️fixtures/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
 import identityFixture from "../🧫️fixtures/🪪️identity/🔣️.json";
 import identitySchema from "../../../../../../../🏪️store/🧬️schema/📸️native-identity/🔣️.json";
 import bindingFixture from "../../../../../../../🚪️io/🪪️bindings/🧫️fixtures/🔣️.json";
@@ -59,8 +60,8 @@ test("native_socket_sqlite_snapshot_closed_native_identity_policy",()=>{
  expect(validate({kind:"guest",pluginId:"schema-specimen",packageHash:"00".repeat(32),schema:fixture.artifactSchema})).toBe(true);
  for(const field of identityFixture.guestFields){const row:Record<string,string>={kind:"guest",pluginId:"schema-specimen",packageHash:"00".repeat(32),schema:fixture.artifactSchema};delete row[field];expect(validate(row)).toBe(false);}
 });
-test("native_socket_sqlite_snapshot_closed_raw_text_policy",()=>{
- const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,extra:1})).toBe(false);for(const name of Object.keys(fixture.callerGrant)){const changed=structuredClone(fixture);delete (changed.callerGrant as Record<string,number>)[name];expect(validate(changed)).toBe(false);}expect(readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8")).toBe(fixture.sql);
+test("native_socket_sqlite_snapshot_closed_raw_text_policy",()=>{expect(testingSchemaExists(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);
+ const grantSchema=JSON.parse(readFileSync(new URL("../../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",import.meta.url),"utf8")),validate=new AjvDraft7({strict:true,allErrors:true}).compile(grantSchema);expect(validate(fixture.callerGrant)).toBe(true);expect(validate({...fixture.callerGrant,extra:1})).toBe(false);for(const name of Object.keys(fixture.callerGrant)){const changed=structuredClone(fixture.callerGrant);delete (changed as Record<string,number>)[name];expect(validate(changed)).toBe(false);}expect(readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8")).toBe(fixture.sql);
  expect(SOCKET_PROBE_NATIVE_DIALECT).toBe(fixture.dialect);
  for(const row of fixture.cases){expect(new TextEncoder().encode(row.text).length).toBe(row.utf8Bytes);expect(row.valueBytes).toBe(row.utf8Bytes+8);}expect(new TextEncoder().encode(large).length).toBe(fixture.large.utf8Bytes);
 });

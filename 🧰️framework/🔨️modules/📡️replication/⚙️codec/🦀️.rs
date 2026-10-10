@@ -4,6 +4,11 @@ use crate::codec::ids::{ByteRange, ChunkId, CodecId, ContentHash};
 use semio_framework_pack_error::PackRefusal;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
+#[path="🛬️retained/🦀️.rs"]
+mod retained_wire_field;
+pub use retained_wire_field::{RetainedWireFieldDecode,RetainedWireFieldStep,RetainedWireByteSource,OriginalWireSourceIdentity};
+pub(crate) use retained_wire_field::RetainedWireUtf8Validation;
+
 //#region 🔖️Errors
 //#endregion 🔖️Errors
 

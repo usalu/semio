@@ -1,0 +1,60 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "semio-framework-os-flow-core:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--skip-remote-cache",
+    "--output-style=stream",
+    "--",
+    "long",
+    "--offline",
+    "--lib",
+    "-E",
+    "test(original_sdk_failed_normal_turn_retains_actual_codec_receipt) | test(original_sdk_roundtrip_wallet_preserves_actual_child_source_when_exhausted) | test(original_sdk_binding_failure_preserves_same_original_child) | test(original_sdk_request_admission_keeps_same_source_under_copy_one_three_and_sixty_four) | test(original_sdk_response_source_moves_same_output_and_accounts_actual_codec) | test(original_sdk_initial_owner_keeps_request_through_paid_metadata_and_full_close) | test(original_sdk_registry_close_keeps_unrelated_original_owner) | test(original_sdk_raw_request_keeps_same_caller_source_and_actual_receipt) | test(original_inference_gateway_keeps_same_request_and_actual_receipt) | test(original_sdk_external_completion_preserves_source_system_receipts_and_finish_input) | test(original_sdk_continuation_identity_keeps_same_source_under_bounded_copy) | test(original_sdk_raw_recipient_keeps_whole_request_and_cause) | test(original_sdk_slot_lookup_keeps_same_request_under_fixed_copy) | test(original_sdk_indexed_refusal_keeps_source_cause_and_actual_receipt)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 3600000
+    },
+    "network": {
+      "offline": true
+    }
+  },
+  "selection": [
+    "nx",
+    "run",
+    "semio-framework-os-flow-core:test",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--skip-remote-cache",
+    "--output-style=stream",
+    "--",
+    "long",
+    "--offline",
+    "--lib",
+    "-E",
+    "test(original_sdk_failed_normal_turn_retains_actual_codec_receipt) | test(original_sdk_roundtrip_wallet_preserves_actual_child_source_when_exhausted) | test(original_sdk_binding_failure_preserves_same_original_child) | test(original_sdk_request_admission_keeps_same_source_under_copy_one_three_and_sixty_four) | test(original_sdk_response_source_moves_same_output_and_accounts_actual_codec) | test(original_sdk_initial_owner_keeps_request_through_paid_metadata_and_full_close) | test(original_sdk_registry_close_keeps_unrelated_original_owner) | test(original_sdk_raw_request_keeps_same_caller_source_and_actual_receipt) | test(original_inference_gateway_keeps_same_request_and_actual_receipt) | test(original_sdk_external_completion_preserves_source_system_receipts_and_finish_input) | test(original_sdk_continuation_identity_keeps_same_source_under_bounded_copy) | test(original_sdk_raw_recipient_keeps_whole_request_and_cause) | test(original_sdk_slot_lookup_keeps_same_request_under_fixed_copy) | test(original_sdk_indexed_refusal_keeps_source_cause_and_actual_receipt)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "8d16671f92401b15f34ecac71c4694a8d4bbfa2ee686a2672812e58550f1a4c0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+      "sha256": "fca92734b6f53cff2379fb0bac6e45129019317e16fd108d2a4baebb04ba78fc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "f40540a8dc3ed347b61c067a589a0531de0d9f6996da3386e38f6fe3060a02e5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📤️exports/🦀️.rs",
+      "sha256": "487934f3a501ecf255089a2114074adfed1c6d608a2dcd8eb732c0688b12c41f"
+    }
+  ]
+}

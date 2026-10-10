@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "5acd46eecc7cf1fb6f3146bc21edaae08f08e6392208787e88dc93ee0714a6bf",
+      "afterSha256": "39866cbf58dfabaa175555b3d8fd4910aee08f7c6b1985bf367945999d763279",
+      "exclusive": false,
+      "scope": "Current actual capture requires original invocation exclusively; preserve peer mandatory control receiver and original exact pre-acquisition check"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "e42af42993b7ba2aadf6fdafd96b41f4423b5feaef368f57ea5d4b8a096ebb83",
+      "afterSha256": "7246c69ebd558ffa2713859b5c421d6eafdf6f653b4c64ab171b06e34d3e128f",
+      "exclusive": false,
+      "scope": "Specify true observed result type for async callback-mutated budget; actual oracle assertions unchanged"
+    }
+  ]
+}

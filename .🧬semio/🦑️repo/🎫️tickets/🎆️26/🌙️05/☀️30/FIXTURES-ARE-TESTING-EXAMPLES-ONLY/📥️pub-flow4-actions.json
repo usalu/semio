@@ -1,0 +1,67 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/📡️invocation/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "2781d5572e1d9cc98260b38640b8c2298ef23cb5111766afb4943c784c11ab2f",
+      "afterSha256": null,
+      "scope": "exclusive whole testing collection root; actual payload contracts preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "98ddd12293a1e2aac9e5642e585a64be1e96cb42b5abb85eb16b8148eba028df",
+      "afterSha256": null,
+      "scope": "exclusive whole testing collection root; actual payload contracts preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "4194ecaf2f79c6be79eca32bc824b199da4ab8b9f9f4fd84b7093d1236203f91",
+      "afterSha256": null,
+      "scope": "exclusive whole testing collection root; actual payload contracts preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "4c228ef6ea2450d3384768dffb3a62190cafe101bf924e9b54c6ad4bc5958ee3",
+      "afterSha256": null,
+      "scope": "exclusive whole testing collection root; actual payload contracts preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/📡️invocation/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "6c51d19c09fddae71ab53bce7e4d24a169c5cbe41f4a613b5cdcd3771e41096a",
+      "afterSha256": "edbda85d8adb06dfb4d27f8b1b29d111b85908f619680c2b4b403273514ea028",
+      "scope": "only whole-trial import/compile/mutant removed; original JSONPatch/Decimal/retry identities unchanged"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "657092975defd7420b95017446e8143d57a67a41162621430fc5d69fc3694a8d",
+      "afterSha256": "0b441c9e834a562748a1ec646d2224bfb1baff1a51feab0974623734eb3b765e",
+      "scope": "whole-trial validators retired; actual Widget/FlowDictionary per-value Ajv and JSONPatch projection retained"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "18e3454c9658ca9434e07ff7aa7fb08508a8d0cf236ab2f37c7f386253be5003",
+      "afterSha256": "709b2f51f0b99ebc46a37b8a3cecaf300972ba609cf3ff219fcc32a5f59883b8",
+      "scope": "only whole-trial admission removed; actual Widget/Synapse contracts/Graphlib/RFC6902 laws retained"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "6015e576fbd8c2f6fe3ab84c26b421242000926d0894b399f2ef1805de0f511d",
+      "afterSha256": "b67cc9a8d33766efdb6204c1b856d8793c7bf69549835bd22ad48bb284f1e792",
+      "scope": "only whole-trial admission removed; actual Tree per-value/JSONPatch/UTF8 seeds retained"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "32cee995eb8f9667fa5b1f7dbb6eede99aaccbe9ccb0008009c1e523c96b0ffb",
+      "afterSha256": "37b9cf3b589a90c74bd9b27eea1cc27fad4c6533a855b25ff5694f6575a3a0ef",
+      "scope": "narrow actual secondary source/seed whole-trial reader removed; Root-owned work wrapper untouched"
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
 import { brepExtensionRetirementOracle, geometryInferenceOracle, channelIdentityOracle } from "../../🧪️tests/🔬️extension-guest-standalone/🟦️.ts";
@@ -12,7 +14,7 @@ class TestScript extends BundleScript {
     console.log(`geometry-inference-oracle cases=${geometryInferenceOracle(import.meta.dir)}`);
     console.log(`channel-identity-oracle cases=${channelIdentityOracle(import.meta.dir)}`);
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-plugin-flow-extension-brep"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-s-plugin-flow-extension-brep"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -37,11 +39,7 @@ class CanonicalArchitectureScript extends BundleScript {
     console.log(`geometry-inference-oracle cases=${geometryInferenceOracle(import.meta.dir)}`);
     console.log(`channel-identity-oracle cases=${channelIdentityOracle(import.meta.dir)}`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
-      nativeEnv: { RUST_MIN_STACK: "268435456" },
-      groups: [{ package: "semio-s-plugin-flow-extension-brep", target: { kind: "lib" }, laws: [
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3600000), lawMilliseconds: 600000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-s-plugin-flow-extension-brep", target: { kind: "lib" }, laws: [
         "bundle_identity_matches_catalogue_fixture",
         "extension_guest_retires_actual_session_geometry_and_inflight_tessellation",
         "extension_bundle_extends_flow_and_evaluates_box",
@@ -62,15 +60,10 @@ class CanonicalArchitectureScript extends BundleScript {
         "mesh_output_metadata_retains_bounded_values_and_cancellation",
         "mesh_json_export_retains_polygon_metadata_without_preview_work",
         "mesh_affine_operator_owns_matrix_contract_and_retained_output",
-      ] }],
-      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
-      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3600000),
-      lawBudgetMs: 600000,
-      progress(event) { console.log(`brep-extension-retirement ${event.stage}: ${event.law ?? ""}`); },
-    });
+      ] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`brep-extension-retirement ${event.stage}: ${event.law ?? ""}`); } });
     console.log(`brep-extension-retirement receipts=${receipts.length}`);
   }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("canonical-architecture", CanonicalArchitectureScript).register("test", TestScript).register("test-mesh-oracle", MeshOracleScript).register("package", PackageScript);
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

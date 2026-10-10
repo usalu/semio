@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌿️ VCS plugin package command router. */
 import { registerPlaygroundSiteBuildCommands, runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -17,7 +18,7 @@ class NativeCodecOracleScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-vcs"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-vcs"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -27,4 +28,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("native-openable-identity-check", NativeOpenableIdentityCheckScript)
   .register("native-codec-check", NativeCodecCheckScript);
 registerPlaygroundSiteBuildCommands(router);
-if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

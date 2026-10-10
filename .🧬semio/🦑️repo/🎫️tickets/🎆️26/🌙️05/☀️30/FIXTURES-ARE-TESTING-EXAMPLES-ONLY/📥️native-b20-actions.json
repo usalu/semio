@@ -1,0 +1,27 @@
+{
+  "redSession": 93794,
+  "redLog": "🗑️generated/native-b20-red.log",
+  "actions": [
+    {
+      "consumer": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts",
+      "mutationBeforeSha256": "0a83c1d471b689c2fcb462c998143579c090aa0ad82ce54df18af605ceb3596d",
+      "afterSha256": "330cf8389e9da497248795563389c37c0ff7ee01158b5fe90b1bdb1aff160470",
+      "removedSchema": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/⏱️finite.json",
+      "removedSha256": "5f536f0b992dd7a6a3babece5fd4adfa2bc9c633256a334709a84780dabd5eb9"
+    },
+    {
+      "consumer": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧪️tests/🟦️.ts",
+      "mutationBeforeSha256": "34779e6e5cf87bce8672438f2c6a453e3ee639803632e4c61c5b969dbb632607",
+      "afterSha256": "ec8db5fd64ad5a940812ee231349d818a77a0fa178886fef6ea22a2247de58a3",
+      "removedSchema": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧬️schema/🔣️.json",
+      "removedSha256": "b050cbe26257e27c229ea36b14c3a264b9a3769a68263a9378c9d1e5cd2a6607"
+    },
+    {
+      "consumer": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "mutationBeforeSha256": "1174bb462cef1acce51787e3c3bca1b66b652d0a4b2fe7ea05109f2362561535",
+      "afterSha256": "f38df3389d27397891cafeefa51d10a8cedd32abb901234fb6b60e54de8fcdc5",
+      "removedSchema": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📪️exit.json",
+      "removedSha256": "ca243d09bb7d1160ca9d54bcd6fa8a8038b6ce52626b5f316cfe310f28b182cf"
+    }
+  ]
+}

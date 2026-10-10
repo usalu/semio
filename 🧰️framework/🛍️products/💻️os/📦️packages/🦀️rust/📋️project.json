@@ -537,6 +537,11 @@
         "forwardAllArgs": true
       }
     },
+    "test-snapshot-receiving-native": {"executor":"nx:run-commands","cache":false,"options":{"command":"bun ./📜️script.ts test-snapshot-receiving-native","cwd":"{projectRoot}","forwardAllArgs":true}},
+    "test-snapshot-codec-receiving-source": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-snapshot-codec-receiving source","cwd":"{projectRoot}","forwardAllArgs":true}},
+    "test-snapshot-codec-receiving-native": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-snapshot-codec-receiving native","cwd":"{projectRoot}","forwardAllArgs":true}},
+    "test-snapshot-route-admission-source": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-snapshot-route-admission source","cwd":"{projectRoot}","forwardAllArgs":true}},
+    "test-snapshot-route-admission-native": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-snapshot-route-admission native","cwd":"{projectRoot}","forwardAllArgs":true}},
     "test-snapshot-native-admission": {
       "executor": "nx:run-commands",
       "options": {
@@ -802,6 +807,15 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-directory-descriptor-digest-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-canonical-preparation-control-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-canonical-preparation-control-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }

@@ -1,0 +1,295 @@
+{
+  "version": 1,
+  "scope": "originalNumericCeilingAndBorrowedDatabaseRefusal",
+  "cases": [
+    {
+      "id": "rows-zero",
+      "operation": "rows",
+      "count": 1,
+      "maximum": 0,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "workLimit",
+      "expectedMessage": "relational SQLite resource limit: rows",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "rows-exact",
+      "operation": "rows",
+      "count": 4,
+      "maximum": 4,
+      "initial": 0,
+      "accepted": true,
+      "expectedKind": null,
+      "expectedMessage": null,
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "rows-short",
+      "operation": "rows",
+      "count": 4,
+      "maximum": 3,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "workLimit",
+      "expectedMessage": "relational SQLite resource limit: rows",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "value-zero",
+      "operation": "value",
+      "count": 1,
+      "maximum": 0,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: value bytes",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "value-exact",
+      "operation": "value",
+      "count": 4,
+      "maximum": 4,
+      "initial": 0,
+      "accepted": true,
+      "expectedKind": null,
+      "expectedMessage": null,
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "value-short",
+      "operation": "value",
+      "count": 4,
+      "maximum": 3,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: value bytes",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "allocation-zero",
+      "operation": "allocation",
+      "count": 1,
+      "maximum": 0,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: allocation bytes",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "allocation-exact",
+      "operation": "allocation",
+      "count": 4,
+      "maximum": 4,
+      "initial": 0,
+      "accepted": true,
+      "expectedKind": null,
+      "expectedMessage": null,
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "allocation-short",
+      "operation": "allocation",
+      "count": 4,
+      "maximum": 3,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: allocation bytes",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "nativeAllocation-zero",
+      "operation": "nativeAllocation",
+      "count": 1,
+      "maximum": 0,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: allocation bytes",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "nativeAllocation-exact",
+      "operation": "nativeAllocation",
+      "count": 4,
+      "maximum": 4,
+      "initial": 0,
+      "accepted": true,
+      "expectedKind": null,
+      "expectedMessage": null,
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "nativeAllocation-short",
+      "operation": "nativeAllocation",
+      "count": 4,
+      "maximum": 3,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: allocation bytes",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "reconstruction-zero",
+      "operation": "reconstruction",
+      "count": 1,
+      "maximum": 0,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "native reconstruction ownership exceeds caller limit",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "reconstruction-exact",
+      "operation": "reconstruction",
+      "count": 4,
+      "maximum": 4,
+      "initial": 0,
+      "accepted": true,
+      "expectedKind": null,
+      "expectedMessage": null,
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "scalar-zero",
+      "operation": "scalar",
+      "count": 1,
+      "maximum": 0,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "SQLite original scalar values exceed their ceiling",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "scalar-exact",
+      "operation": "scalar",
+      "count": 4,
+      "maximum": 4,
+      "initial": 0,
+      "accepted": true,
+      "expectedKind": null,
+      "expectedMessage": null,
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "narrow-allocation",
+      "operation": "narrowAllocation",
+      "count": 0,
+      "maximum": 8,
+      "initial": 4,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: narrowed original snapshot allowance",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0,
+      "narrowedMaximum": 3
+    },
+    {
+      "id": "narrow-reconstruction",
+      "operation": "narrowReconstruction",
+      "count": 0,
+      "maximum": 8,
+      "initial": 4,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: narrowed original snapshot allowance",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0,
+      "narrowedMaximum": 3
+    },
+    {
+      "id": "database-rows",
+      "operation": "databaseRows",
+      "count": 1,
+      "maximum": 0,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "workLimit",
+      "expectedMessage": "relational SQLite resource limit: rows",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "database-values",
+      "operation": "databaseValues",
+      "count": 14,
+      "maximum": 13,
+      "initial": 0,
+      "accepted": false,
+      "expectedKind": "ownershipLimit",
+      "expectedMessage": "relational SQLite resource limit: value bytes",
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    },
+    {
+      "id": "database-exact",
+      "operation": "databaseValues",
+      "count": 14,
+      "maximum": 14,
+      "initial": 0,
+      "accepted": true,
+      "expectedKind": null,
+      "expectedMessage": null,
+      "expectedAllocationBytes": 0,
+      "expectedReleaseBytes": 0
+    }
+  ],
+  "database": {
+    "sql": "CREATE TABLE original_value (id INTEGER PRIMARY KEY, value TEXT)",
+    "name": "original_value",
+    "id": 1,
+    "value": "é界x",
+    "expectedValueBytes": 14
+  },
+  "overflowProfiles": [
+    {
+      "pointerBits": 32,
+      "maximum": "4294967295"
+    },
+    {
+      "pointerBits": 64,
+      "maximum": "18446744073709551615"
+    }
+  ],
+  "aggregateOverflow": {
+    "expectedKind": "ownershipLimit",
+    "expectedMessage": "native reconstruction aggregate byte count overflow",
+    "expectedAllocationBytes": 0,
+    "expectedReleaseBytes": 0
+  },
+  "forwardedCause": {
+    "message": "Original SQL native port cause ! é",
+    "expectedKind": "ownershipLimit",
+    "expectedAllocationBytes": 0,
+    "expectedReleaseBytes": 0
+  },
+  "cancelled": {
+    "expectedKind": "canceled",
+    "expectedMessage": "relational SQLite transfer cancelled",
+    "expectedAllocationBytes": 0,
+    "expectedReleaseBytes": 0
+  }
+}

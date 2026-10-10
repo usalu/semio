@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
 import { runRepositoryCargoTests, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -6,7 +7,7 @@ import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modu
 
 class TestScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
-    await runRepositoryCargoTests(["semio-s-plugin-process-concrete"], this.repoRoot);
+    await runRepositoryCargoTests(["semio-s-plugin-process-concrete"], this.repoRoot, this.invocation.control);
   }
 }
 
@@ -18,4 +19,4 @@ class PackageScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("package", PackageScript);
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

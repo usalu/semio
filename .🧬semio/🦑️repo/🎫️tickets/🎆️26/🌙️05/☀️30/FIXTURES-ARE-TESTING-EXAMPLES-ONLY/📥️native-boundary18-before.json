@@ -1,0 +1,80 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧬️schema/🔣️.json",
+      "sha256": "ba3dc262c2f6c7f4a46f133b6af8edeab6367212a1746499e893816991168013",
+      "bytes": 1712,
+      "required": [
+        "format",
+        "custody",
+        "replacement",
+        "initialBytes",
+        "text",
+        "textBytes",
+        "maximumNativeBytes",
+        "maximumTurns",
+        "closeGrant",
+        "deniedGrant",
+        "rejectedWork",
+        "invalidReceipt",
+        "recipientRelease",
+        "recipientReleaseRefusals"
+      ],
+      "definitions": [],
+      "classification": "Whole original test trial authority; no named produced-domain definitions. IO error is oracle projection cause/code/message, not genuine runtime IoError wire."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧬️schema/🔣️.json",
+      "sha256": "0b81b8dd5a815b7779633fc0e15e3be7c14d0a355d7fa505f8964e80c68b35ff",
+      "bytes": 3331,
+      "required": [
+        "format",
+        "nativeMaximumBytes",
+        "maximumTurns",
+        "originalInput",
+        "originalError",
+        "finalPublication",
+        "terminalChild",
+        "error",
+        "grant",
+        "deniedGrant"
+      ],
+      "definitions": [],
+      "classification": "Whole original test trial authority; no named produced-domain definitions. IO error is oracle projection cause/code/message, not genuine runtime IoError wire."
+    }
+  ],
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🟦️.ts",
+      "beforeSha": "400c94fb2d00ae2943e4cf60797e19a86c9145ea27bc63659849782e48a964bc",
+      "afterSha": "9ada8c99cc4814661c61baad065c69e980ee107c30f2e80dd57993eef13cbdf0",
+      "addedImports": "import {existsSync} from \"node:fs\";\nimport {resolve} from \"node:path\";\n",
+      "addedAbsenceGuard": " expect(existsSync(resolve(import.meta.dir,\"../🧬️schema/🔣️.json\"))).toBe(false);\n"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "beforeSha": "e2b5b1c2e6a9fd3bb2a7f7ec922fadc6a3f2d5f407cb266ba43c00a27fe02e31",
+      "afterSha": "50e06f292bfcc828aced97158abfb0e1ef20ccaf3e0ab0815d065badc475b8f7",
+      "addedImports": "import {existsSync} from \"node:fs\";\nimport {resolve} from \"node:path\";\n",
+      "addedAbsenceGuard": " expect(existsSync(resolve(import.meta.dir,\"./🧬️schema/🔣️.json\"))).toBe(false);\n"
+    }
+  ],
+  "plainAndRust": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🦀️.rs",
+      "sha256": "ae999804d304714d3cd25b1390d9602fa297e45e40d9407e2fb621d530e7d238"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧫️fixtures/🔣️.json",
+      "sha256": "0d63493d8c42d5c0b299324c2483806ac223d07ff2d669fea389976659c3d2b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "cf36ad22fc8f058e4d52095f66f8e6f7e6f2c200357be42179e6fa683668b8c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "182846cd60348f80095d6ba9bd199c3f95ac1e0585aa1a81a136ec09822ce070"
+    }
+  ]
+}

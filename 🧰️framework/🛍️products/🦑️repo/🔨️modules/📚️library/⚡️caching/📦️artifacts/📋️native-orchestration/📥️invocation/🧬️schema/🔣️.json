@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "repositoryRoot",
+    "artifactDirectory",
+    "command",
+    "transport",
+    "child",
+    "network"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "repositoryRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000]+$"
+    },
+    "artifactDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000]+$"
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "manifest",
+        "workingDirectory",
+        "program",
+        "arguments"
+      ],
+      "properties": {
+        "kind": {
+          "const": "native-owner-command"
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "workingDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "program": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 65536
+        }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumBytes",
+        "maximumLines"
+      ],
+      "properties": {
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumElapsedMilliseconds"
+      ],
+      "properties": {
+        "maximumElapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "offline"
+      ],
+      "properties": {
+        "offline": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "NativeOwnerExecutionPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "version",
+        "transport",
+        "child"
+      ],
+      "properties": {
+        "$schema": {
+          "const": "./📥️invocation/🧬️schema/🔣️.json#/$defs/NativeOwnerExecutionPolicyV1"
+        },
+        "version": {
+          "const": 1
+        },
+        "transport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumBytes",
+            "maximumLines"
+          ],
+          "properties": {
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maximumLines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "child": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumElapsedMilliseconds"
+          ],
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            }
+          }
+        }
+      }
+    }
+  }
+}

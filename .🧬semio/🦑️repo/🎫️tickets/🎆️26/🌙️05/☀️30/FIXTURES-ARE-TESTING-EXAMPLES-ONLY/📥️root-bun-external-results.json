@@ -1,0 +1,35 @@
+{
+  "red": {
+    "session": 48201,
+    "exitCode": 1,
+    "pass": 5,
+    "fail": 5,
+    "expect": 152,
+    "realFeatureFailures": [
+      "external-root-zero-descendants",
+      "external-negative-fast-glob-vendor-and-target"
+    ],
+    "additionalFailures": "three pre-existing installation test 5000ms timeouts"
+  },
+  "renewal": {
+    "session": 45070,
+    "exitCode": 1,
+    "pass": 9,
+    "fail": 1,
+    "expect": 197,
+    "newExternalLawsPassed": 2,
+    "additionalFailure": "pre-existing removal [] native installation test 5000ms timeout"
+  },
+  "nativeInstallationOfNeutralExamples": true,
+  "normalCliRoute": false,
+  "currentRenewal": {
+    "session": 47337,
+    "exitCode": 0,
+    "pass": 10,
+    "fail": 0,
+    "expect": 197,
+    "normalCli": false,
+    "budgetChanges": false,
+    "log": "🗑️generated/root-bun-external-current.log"
+  }
+}

@@ -23,7 +23,7 @@ fn image(value:&BmpImage)->V<'_>{object([
 ("xPixelsPerMeter",signed(value.x_pixels_per_meter)),("yPixelsPerMeter",signed(value.y_pixels_per_meter)),("colorsUsed",number(value.colors_used)),("colorsImportant",number(value.colors_important)),("reserved1",number(value.reserved_1)),("reserved2",number(value.reserved_2)),("opaqueGap",array(&value.opaque_gap,|v|number(*v))),("opaqueTrailer",array(&value.opaque_trailer,|v|number(*v)))
 ])}
 impl store::ArtifactCanonicalJson for BmpMutation {
-    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{
+    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>, semio_framework_value::ValueError>{
         let (kind,payload)=match self {
             Self::ReplaceImage(v)=>("replace-image",object([("image",image(&v.image))])),
             Self::ReplaceSamples(v)=>("replace-samples",rect_parts(&v.region,&v.indices,&v.samples)),
@@ -33,10 +33,10 @@ impl store::ArtifactCanonicalJson for BmpMutation {
     }
 }
 impl store::ArtifactCanonicalJson for BmpSnapshot {
-    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{Ok(Some(snapshot(self)))}
+    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>, semio_framework_value::ValueError>{Ok(Some(snapshot(self)))}
 }
 impl store::ArtifactCanonicalJson for BmpDiff {
-    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{Ok(Some(V::Object(O::new(self.image.as_ref().map(|value|("image",image(value))).into_iter().chain((!self.rects.is_empty()).then(||("rects",array(&self.rects,rect))))))))}
+    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>, semio_framework_value::ValueError>{Ok(Some(V::Object(O::new(self.image.as_ref().map(|value|("image",image(value))).into_iter().chain((!self.rects.is_empty()).then(||("rects",array(&self.rects,rect))))))))}
 }
 
 #[cfg(test)]

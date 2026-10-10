@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+  "beforeSha": "129be91e82ab86296137a5a88a6d07e895034e82f5e8ffffa1f6215d12283d14",
+  "afterSha": "a461606c82ad4113d25b45d7df4a51febc47ce0b472c32ae5caac7149a9f7a5c",
+  "beforeBlock": "expect(row.value).toBe(api.readScriptProcessEnvelope(row.value, row.now));",
+  "afterBlock": "expect(Object.is(api.readScriptProcessEnvelope(row.value, row.now),row.value)).toBe(true);",
+  "trueRed": "Original normal61413 strictTSC1 remaining heterogeneous capabilities comparison; Object.is retains exact original identity without a cast."
+}

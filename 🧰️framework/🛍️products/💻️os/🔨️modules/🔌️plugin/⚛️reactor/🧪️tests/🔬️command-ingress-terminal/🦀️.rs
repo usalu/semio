@@ -27,8 +27,8 @@ fn async_actor_poll_awaits_exchange_and_render_work() {
     let end = source[start..].find("fn route_exchange_output").map(|offset| start + offset).expect("poll implementation boundary");
     let poll = &source[start..end];
     assert!(poll.contains("pub async fn poll_kernel<"));
-    assert!(poll.contains("plugin_exchange_boxed(runtime, cursor.instance, None).await"));
-    assert!(poll.contains("plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, command))).await"));
+    assert!(poll.contains("plugin_exchange_boxed(runtime, cursor.instance, None, identity,cx).await"));
+    assert!(poll.contains("plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, command)), identity,cx).await"));
     assert!(poll.contains("crate::plugin_runtime::plugin_render_surface(runtime, instance, &surface_key).await"));
     assert!(!poll.contains("resolve_ready(crate::plugin_runtime::plugin_exchange"));
     assert!(!poll.contains("resolve_ready(crate::plugin_runtime::plugin_render"));

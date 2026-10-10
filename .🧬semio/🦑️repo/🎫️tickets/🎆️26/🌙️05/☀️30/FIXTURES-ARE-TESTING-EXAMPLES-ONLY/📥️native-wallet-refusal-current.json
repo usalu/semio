@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+    "sha256": "12cff19ccc1788f8b3ae7e0cf19d8c6c638a3d5df86d665752dbf0e57f587a18",
+    "bytes": 23576,
+    "authorship": "narrow listed logical blocks only; whole file observer nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+    "sha256": "396782f0b4e021f9789d7465eeaf837b48d3c025fab12727aa75e0fe19fd3730",
+    "bytes": 22093,
+    "authorship": "narrow listed logical blocks only; whole file observer nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/nested-io.rs",
+    "sha256": "641574da5d7703e9e77b249d908b22c06f9bf24176fe14ff6e470a3fa49ebe1b",
+    "bytes": 9468,
+    "authorship": "narrow listed logical blocks only; whole file observer nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+    "sha256": "cff77f75ea829c6ad518177ffd7da68c7d8dbda5adc32e9eadc1c29a2316f83a",
+    "bytes": 16949,
+    "authorship": "narrow listed logical blocks only; whole file observer nonexclusive"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🧾️overdraw.json",
+    "sha256": "ae8c088f14dec84e2f939c923d69884c263201536d0c3856653a7bc475843323",
+    "bytes": 1052,
+    "authorship": "narrow listed logical blocks only; whole file observer nonexclusive"
+  }
+]

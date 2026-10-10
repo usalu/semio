@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧫️fixtures/🔣️.json",
+    "action": "update",
+    "beforeSha256": "ab68e42965e68f45fe819c880eca30139ab1985da3ab5736295e1c6118846150",
+    "afterSha256": "6e0c3518506b36a1b1772541e65f0d6a0c238cec11c0a80a17c4c794c907f52c",
+    "qualification": "Plain top-level installation owner vectors: canonical collections refused, ordinary unrelated owner names retained"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "1cfb523a7a90ec37404c7f97ac314f207e1d08b34d360f19317bbbba9343b4e6",
+    "afterSha256": "3cbfa14e4563718e6a9527c9eb1163d6cd13f3df29b668209429c8cf03775cb3",
+    "qualification": "Original neutral/native/fast-glob top-level scope admission regression, separate from package traversal"
+  }
+]

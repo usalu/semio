@@ -1,0 +1,22 @@
+{
+  "owned": false,
+  "logSha256": "332bb46c71913c149fb6f98d8df121ab5d502633d683220b9865f51b4fac7cc3",
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "590caa7f0b6c49c19d7bbcb2224c9ca6d6f6c6aaa8cc80db3e85f35672eef2f0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "d64c6ec73a121486af383a9834166854f5f2cda57a9b7a10c9c64f1b0a76d5a8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "sha256": "f479f2ae459474df68b1c15da4ad2de4fbb7e517ed3b7496ac2bae9f32075ae1"
+    },
+    {
+      "path": "package.json",
+      "sha256": "adecfcc3b54b3ed00cc159f3d7512647f3efe8c77e9291afb999753c5b065943"
+    }
+  ]
+}

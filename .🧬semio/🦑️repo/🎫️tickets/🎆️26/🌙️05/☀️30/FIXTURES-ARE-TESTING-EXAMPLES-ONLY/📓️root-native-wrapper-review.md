@@ -1,0 +1,11 @@
+# Root Native Wrapper Selection
+
+Read-only current sources; hashes in 📥️root-native-wrapper-review.json. No normal graph/target execution.
+
+Root declared schema-generate1616/schema-fixture-boundary1655/deps-js-lock3304 use nx:run-commands and their genuine 📜️script command. This raw metadata is not final inferred executable identity. Library inferer nativeProject905 sees Root Cargo.toml; nativePolicyTarget934 resolves actual script closure for Cargo test/build/wasm owner modules. Only this branch937–950 rewrites to owner-command executor and now emits structured nativeOwnerCommand944–945. nativeTarget935 alone changes inputs at961–965 but does not issue a wrapper. Root command routes inferred1285 are merged before explicit Root targets907.
+
+Fresh Source structured request now exists, superseding earlier omission. The issuer is invoked only if final executor options.nativeOwnerCommand exists. If a failing normal graph's rendered command includes native owner-command but lacks that option, source inference now rejects at executor; inspect the exact retained final task options/source epoch rather than raw Root project absence. If native command bypasses custom executor entirely, the NativeScript receives unchanged generic bootstrap capabilities and produces the reported capabilities refusal. Actual failed task name/final executor/options were not supplied in this review, so no specific cached target attribution is asserted.
+
+Installed Nx run-many uses splitArgsIntoNxArgsAndOverrides(args,"run-many",...,nxJson)22, projectsToRun(nxArgs,projectGraph)27 and runCommand with resolved projects/nxArgs.targets/overrides45. Use those real selection semantics in independent staged tests, not taskGraph.roots user selection. Current issuer only accepts original nx run, while dependency leaves are graph roots. Ordinary bootstrap still needs genuine production caller native resource config; adding structured command alone cannot fix generic original capabilities.
+
+Smallest fresh evidence needed: exact failing task id, final inferred executor/options/nativeOwnerCommand and original envelope capabilities. Check current inference epoch/normal graph before modifying Root targets. Preserve original selected command argv and actual typed policy authority; no fake invocation environment or graph bypass.

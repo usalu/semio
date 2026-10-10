@@ -1,0 +1,97 @@
+{
+  "format": 1,
+  "contractId": "native.original-literal-refusal/v1",
+  "maximumBytes": 0,
+  "allocatedBytes": 0,
+  "releasedBytes": 0,
+  "ownedBytes": 0,
+  "causeStorage": "borrowedLiteral",
+  "forwardedRefusal": "preserveOriginal",
+  "forwarded": {"maximumBytes":1,"chargeBytes":1,"kind":"invalidValue","message":"original forwarded refusal λ","allocatedBytes":0,"releasedBytes":0,"ownedBytes":0},
+  "cases": [
+    {
+      "direction": "decoding",
+      "operation": "charge",
+      "kind": "ownershipLimit",
+      "message": "native decoding ownership exceeds caller limit"
+    },
+    {
+      "direction": "decoding",
+      "operation": "vectorOverflow",
+      "kind": "ownershipLimit",
+      "message": "native decoding collection size overflow"
+    },
+    {
+      "direction": "decoding",
+      "operation": "text",
+      "kind": "ownershipLimit",
+      "message": "native decoding ownership exceeds caller limit"
+    },
+    {
+      "direction": "decoding",
+      "operation": "depth",
+      "kind": "depthLimit",
+      "message": "native typed construction exceeds depth limit"
+    },
+    {
+      "direction": "decoding",
+      "operation": "noRecipient",
+      "kind": "ownershipLimit",
+      "message": "native decode has no available explicit retirement slot"
+    },
+    {
+      "direction": "decoding",
+      "operation": "invalidUtf8",
+      "kind": "invalidValue",
+      "message": "invalid native UTF-8"
+    },
+    {
+      "direction": "decoding",
+      "operation": "checkpoint",
+      "kind": "canceled",
+      "message": "native decoding canceled"
+    },
+    {
+      "direction": "encoding",
+      "operation": "charge",
+      "kind": "ownershipLimit",
+      "message": "native encoding ownership exceeds caller limit"
+    },
+    {
+      "direction": "encoding",
+      "operation": "vectorOverflow",
+      "kind": "ownershipLimit",
+      "message": "native encoding collection size overflow"
+    },
+    {
+      "direction": "encoding",
+      "operation": "text",
+      "kind": "ownershipLimit",
+      "message": "native encoding ownership exceeds caller limit"
+    },
+    {
+      "direction": "encoding",
+      "operation": "depth",
+      "kind": "depthLimit",
+      "message": "native encoding exceeds depth limit"
+    },
+    {
+      "direction": "encoding",
+      "operation": "noRecipient",
+      "kind": "ownershipLimit",
+      "message": "native encode has no available explicit retirement slot"
+    },
+    {
+      "direction": "encoding",
+      "operation": "appendBytes",
+      "kind": "ownershipLimit",
+      "message": "native encoding ownership exceeds caller limit"
+    },
+    {
+      "direction": "encoding",
+      "operation": "checkpoint",
+      "kind": "canceled",
+      "message": "native encoding canceled"
+    }
+  ]
+}

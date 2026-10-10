@@ -590,7 +590,7 @@ pub async fn history_envelope_id_controlled(bytes: &[u8], control: &HistoryFoldC
         pos = usize::try_from(length).ok().and_then(|length| pos.checked_add(length)).filter(|end| *end <= bytes.len()).ok_or_else(|| malformed(pos, "truncated envelope payload"))?;
     }
     control.pulse().await?;
-    super::super::decode_hlc(bytes, &mut pos)?;
+    crate::io::binary::causal::decode_hlc(bytes, &mut pos)?;
     let flags = crate::wire::read_varint_u64(bytes, &mut pos)?;
     if flags > 0b111 { return Err(malformed(pos, "invalid envelope flags")); }
     if flags & 1 != 0 { control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; }
@@ -629,7 +629,7 @@ pub async fn decode_history_envelope_controlled(bytes: &[u8], control: &HistoryF
     let inverse_schema = control.track(SchemaId(read_fold_string(bytes, &mut position, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let inverse_payload = control.track(read_fold_blob(bytes, &mut position, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     control.pulse().await?;
-    let timestamp = super::super::decode_hlc(bytes, &mut position)?;
+    let timestamp = crate::io::binary::causal::decode_hlc(bytes, &mut position)?;
     let flags = crate::wire::read_varint_u64(bytes, &mut position)?;
     if flags > 0b111 { return Err(malformed(position, "invalid envelope flags")); }
     let transaction = control.track(if flags & 1 != 0 {

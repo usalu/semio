@@ -79,3 +79,15 @@ The corrected p schema gate actually passed both first-party validation and inde
 The dedicated original Plugin gate terminated before compiling Plugin with one actual shared Value E0119: duplicate Debug implementations on FactoryRetirementAdmissionError. This is the same compiler frontier as Draw Ei2. Draw removed only the duplicate implementation after its genuine compiler RED; Root did not edit the producer. No metadata actor, peer retirement, borrowed peer metadata, or Plugin runtime law executed in P3. Original native policies remain unchanged.
 
 Raw terminal evidence: `🗑️generated/p/plugin-receiving-red3.log`.
+
+
+## Plugin Native Receiving Attempt P4
+
+Actual dedicated Plugin gate terminates1 before Plugin, with3 current Kernel compiler errors:2 old namespace spellings for the first-party RetirementDemand in Store original owner source demands, and1 missing Result error type inference in NativeSnapshotBodyWallet encoder text-copy receiving. Fresh Store source already has both namespace references corrected by a concurrent owner; Root preserved that source and does not claim authorship or acceptance. Root added only an explicit `Result<(), ValueError>` annotation to the already existing encoder scoped result, preserving original wallet, callback, copy/capacity/release receipt and partial String custody. No original grant or native policy changed. This is a compiler receiving port after actual E0282, not runtime acceptance.
+
+Raw full native compiler output `🗑️generated/p/plugin-receiving-red4.log`. Metadata actor, borrowed peer metadata, and peer native factory laws still have not reached their intended RED or native runtime.
+
+
+## Plugin Native Receiving Attempt P5
+
+Actual dedicated Plugin gate terminates1 at3 Tool-run encoder Rust borrow errors before Plugin. Fresh source already fixes the two branch-temporary header borrows and the overlapping columns mutation in tick/encode; Root preserved the concurrent receiving source and claims neither authorship nor native acceptance. The canonical IO production crate compiled during the earlier P4 receiving attempt, but only its dedicated full native run mounts its tests. Raw `🗑️generated/p/plugin-receiving-red5.log`. Metadata actor and Presence missing APIs remain genuinely unobserved at their Plugin test-first frontier.

@@ -11,7 +11,7 @@ pub(crate) fn decode<T:semio_framework_value::retirement::RetireOwned>(payload:&
     let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
 
  let result=(||->Result<T,ValueError>{let result=match payload{
- store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,id,store::semio_format::Component::Pack,1,native).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,native,limits)?},
+ store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,id,store::semio_format::Component::Pack,1,native)?;binary(body,native,limits)?},
  store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,id,store::semio_format::Component::Dsl,1,native).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native,limits)?}
  };let result=Owned::new(result);native.checkpoint()?;Ok(result.take())})();
  result
@@ -76,7 +76,7 @@ fn binary_snapshot(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:Sqlite
  use crate::standards::v1::subsets::base::schema::snapshot::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;
  let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio envelope native format"))}let ordinal=reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;let schema=control.borrow_text(bytes(&mut reader)?)?;let limits=super::semantic::subset_limits(limits,schema.len(),super::semantic::tag(ordinal)?)?;let schema=Owned::new(control.copy_text(schema)?);let payload=reader.read_bytes(reader.remaining()).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;
  let id=match ordinal{0=>"stdio.semio.brep",1=>"stdio.semio.mesh",2=>"stdio.semio.model",3=>"stdio.semio.value",4=>"s.stdio.semio.document",5=>"stdio.semio.cad",6=>"stdio.semio.drawing",7=>"s.stdio.semio.image",8=>"stdio.semio.video",9=>"stdio.semio.audio",10=>"s.stdio.semio.animation",11=>"s.stdio.semio.presentation",12=>"stdio.semio.flow",13=>"s.stdio.semio.text",14=>"s.stdio.semio.table",15=>"s.stdio.semio.graph",16=>"stdio.semio.object",17=>"stdio.semio.kit",_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio native envelope subset ordinal"))};
- let body=store::semio_format::unwrap_binary_controlled(payload,id,store::semio_format::Component::Pack,1,control).map_err(store::semio_format::SemioError::into_value_error)?;
+ let body=store::semio_format::unwrap_binary_controlled(payload,id,store::semio_format::Component::Pack,1,control)?;
  let subset=Owned::new(match ordinal{
  0=>S::Brep(owners::brep::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  1=>S::Mesh(owners::mesh::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),

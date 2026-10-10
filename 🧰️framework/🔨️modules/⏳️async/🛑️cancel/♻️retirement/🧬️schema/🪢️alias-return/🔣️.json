@@ -12,7 +12,8 @@
     "foreignWitness",
     "rootRetains",
     "genericRefusals",
-    "waiterCapacity"
+    "waiterCapacity",
+    "metadataCopyCurrency"
   ],
   "properties": {
     "contract": {
@@ -40,7 +41,7 @@
     "receipt": {
       "const": {
         "copiedItems": 1,
-        "copiedBytes": 8,
+        "copiedBytes": 0,
         "retainedCapacityBytes": 0,
         "releasedBytes": 0
       }
@@ -48,7 +49,6 @@
     "denied": {
       "const": [
         "items",
-        "copy",
         "depth"
       ]
     },
@@ -72,6 +72,9 @@
     },
     "waiterCapacity": {
       "const": 8
+    },
+    "metadataCopyCurrency": {
+      "const": 0
     }
   }
 }

@@ -1,3 +1,4 @@
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -148,9 +149,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
             const descriptor = readFileSync(join(stage, "descriptor.semio"));
             const descriptorSha256 = createHash("sha256").update(descriptor).digest("hex");
             if (createHash("sha256").update(stagedComponent).digest("hex") !== componentSha256) throw new Error("leased GIS component differs from staged component");
-            const receipts = await runRepositoryExactCargoLaws({
-              cwd: this.repoRoot,
-              groups: [
+            const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000), listMilliseconds: 120_000, lawMilliseconds: 300_000 }, cwd: this.repoRoot, groups: [
                 {
                   package: "semio-hub-gis",
                   target: { kind: "test", name: "component_cold_map_patch" },
@@ -160,23 +159,14 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
                     "genuine_gis_component_rejects_stale_cold_authority_before_loading",
                   ],
                 },
-              ],
-              artifactDir: join(artifactRoot, "exact"),
-              env: {
+              ], artifactDir: join(artifactRoot, "exact"), env: {
                 ...process.env,
                 SEMIO_GIS_COMPONENT_WASM: join(stage, "component.wasm"),
                 SEMIO_GIS_COMPONENT_SHA256: componentSha256,
                 SEMIO_GIS_DESCRIPTOR_SHA256: descriptorSha256,
-              },
-              nativeEnv: { RUST_MIN_STACK: process.env.SEMIO_TEST_NATIVE_RUST_MIN_STACK ?? "268435456" },
-              buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000),
-              listBudgetMs: 120_000,
-              lawBudgetMs: 300_000,
-              cancelled: control.cancelled,
-              progress(event) {
+              }, nativeEnv: { RUST_MIN_STACK: process.env.SEMIO_TEST_NATIVE_RUST_MIN_STACK ?? "268435456" }, cancelled: control.cancelled, progress(event) {
                 console.log(`gis-component-cold-map-patch ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`);
-              },
-            });
+              } });
             return { componentSha256, descriptorSha256, receipts };
           }),
       );

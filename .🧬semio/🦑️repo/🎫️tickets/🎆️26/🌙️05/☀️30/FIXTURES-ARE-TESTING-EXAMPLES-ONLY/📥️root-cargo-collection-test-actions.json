@@ -1,0 +1,18 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🧭️native-discovery/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "a080e98783805f9d5fdb13cf7949b95d4a329fc315bc260edf54e53865829459",
+      "afterSha256": "2239cc278c2c549f8973e2cac4abf0e468966c8d64babe41b6f9beff0cd00197",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts",
+      "action": "created",
+      "afterSha256": "d862ebc463a128fd0d539a7d122be74b8b472dda746dc97f884875cb1b599ca6",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

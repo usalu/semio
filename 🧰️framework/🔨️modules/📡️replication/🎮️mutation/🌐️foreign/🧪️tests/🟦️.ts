@@ -37,3 +37,30 @@ assert.match(source,/pub struct ForeignStepsOwner/,"real proposal sequence backi
 console.log("[DEBUG] genuine foreign sequence Ajv/JSON oracle; fixed independent collection grant; real retained output backing/source only");
 
 assert.equal(parseForeignSteps(sequence),sequence);for(const invalid of [new Array(1),[...sequence,{...sequence[0],payload:[256]}],{}]){assert.equal(admitSequence(invalid),false);assert.throws(()=>parseForeignSteps(invalid));}
+
+assert.match(source,/pub struct ForeignStepsPreparation/,"actual borrowed proposal rows require retained indexed preparation");
+for(const method of ["source_index","advance_source","preparation_demands","take_prepared"])assert.ok(source.includes(method),method);
+console.log("[DEBUG] indexed original ForeignSteps preparation retains every partial row and immutable sequence policy; native receipt pending");
+
+const storePath=resolve(workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs");
+const store=readFileSync(storePath,"utf8");
+assert.match(store,/pub fn advance_prepared_foreign_steps/,"proposal source must come from its actual domain-prepared candidate and original prebase");
+
+const preparedStart=store.indexOf("fn original_proposal_forward");
+const preparedEnd=store.indexOf("/// ⏭️ Advances at most one preparation",preparedStart);
+assert.ok(preparedEnd>preparedStart);const prepared=store.slice(preparedStart,preparedEnd);
+for(const required of ["owner.prepared()","candidate.edit.forwards[0]","stage.post.as_ref()","self.current.as_ref()","original.may_emit_foreign_steps()","original.foreign_step_source(prebase,output.source_index())?","output.advance_source(source,grant)?","admit_retained_clone_progress(grant,step.progress()"] )assert.ok(prepared.includes(required),required);
+assert.doesNotMatch(prepared,/\.snapshot\(|\.clone\(|\.diff\(|apply_diff|encode_op|unwrap_or_default|usize::MAX/);
+const storeGrammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true",storePath],{stdio:["ignore","ignore","pipe"],timeout:5000});assert.equal(storeGrammar.status,0,storeGrammar.stderr?.toString());
+console.log("[DEBUG] original Store candidate/prebase borrowed boundary, conservative bypass and exact supplied receipt; no cloned snapshot/cold diff/codec; native collector proof pending");
+
+assert.match(store,/pub fn advance_prepared_operation_wire/,"local proposal bytes must use the original installed typed codec source and retained cursor");
+
+for(const required of ["owner.operation_wire_source(original)","cursor.advance(source,output,grant)","ArtifactPreparedOperationError"])assert.ok(prepared.includes(required),required);
+console.log("[DEBUG] local proposal wire port borrows actual typed issuer, retained codec and supplied output; no eager encode fallback, original prefix/error contract preserved");
+
+let accumulated:any[]=[];for(const batch of examples.sourceBatches){const originalRows=batch.rows.map((id:string)=>{const row=examples.cases.find((row:any)=>row.id===id);assert.ok(row,id);const {id:_,...payload}=row;return payload;});assert.equal(admitSequence(originalRows),true);accumulated=accumulated.concat(originalRows);const expected=batch.expected.map((id:string)=>{const {id:_,...payload}=examples.cases.find((row:any)=>row.id===id);return payload;});assert.deepEqual(JSON.parse(JSON.stringify(accumulated)),expected);assert.deepEqual(Buffer.from(JSON.stringify(accumulated)),Buffer.from(new TextEncoder().encode(JSON.stringify(expected))));}
+assert.match(source,/pub fn begin_next_source\(/,"each prepared forward needs a funded original source-boundary turn without discarding accumulated rows");
+const begin=source.slice(source.indexOf("pub fn begin_next_source("),source.indexOf("pub fn source_index",source.indexOf("pub fn begin_next_source(")));
+for(const required of ["self.complete","self.copy.is_some()","self.pending.is_some()","grant.maximum_copy_bytes<copied_bytes","self.index=0","self.complete=false","copied_bytes"])assert.ok(begin.includes(required),required);assert.doesNotMatch(begin,/self\.values\s*=|take_prepared|drop\(|\.clear\(|alloc\(/);
+console.log("[DEBUG] original multi-forward foreign sequence3 JSON/Buffer oracle; funded source-boundary resets preserve paid original row order; native System proof pending");

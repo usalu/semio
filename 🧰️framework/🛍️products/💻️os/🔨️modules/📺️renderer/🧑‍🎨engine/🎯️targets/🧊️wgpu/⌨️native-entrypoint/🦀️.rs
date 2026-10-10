@@ -141,7 +141,13 @@ pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directo
             std::process::exit(1);
         };
         let shard_count: u16 = arg_value("--shards").and_then(|v| v.parse().ok()).unwrap_or(8);
-        std::process::exit(drive_native_entrypoint(crate::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))));
+        match drive_native_entrypoint(crate::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))) {
+            Ok(status) => std::process::exit(status),
+            Err(refusal) => {
+                eprintln!("scale-bench: original frame publication refused: {refusal}");
+                std::process::exit(1);
+            }
+        }
     }
     let modules_root = match env::var("SEMIO_PLUGIN_MODULES") {
         Ok(value) if !value.trim().is_empty() => PathBuf::from(value),

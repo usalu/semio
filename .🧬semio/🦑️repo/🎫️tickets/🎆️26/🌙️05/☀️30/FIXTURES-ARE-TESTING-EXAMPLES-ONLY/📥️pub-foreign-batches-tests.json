@@ -1,0 +1,18 @@
+{
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0freplication/\ud83c\udfae\ufe0fmutation/\ud83c\udf10\ufe0fforeign/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "action": "updated",
+      "beforeSha256": "f3f69f6d41e87ff1ccbb5f8fe75400f9633e51ab3fe9a04f53226c6a9a980281",
+      "afterSha256": "37de90baed7b2b3abc72574a9b0a02970b8482ed55f747f1bed4c342cd712a22",
+      "scope": "plain original multi-forward row order/empty-source examples; immutable existing collectionGrant"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0freplication/\ud83c\udfae\ufe0fmutation/\ud83c\udf10\ufe0fforeign/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "action": "updated",
+      "beforeSha256": "c9b290e0058e8d44484691b9be3761aead846e202cde07a3e6ed925384ade7b9",
+      "afterSha256": "1bbe1858657fa10e62eccf507ab9be982f9336bda0f9897d53dfa45d214e1ad4",
+      "scope": "independent multi-forward accumulated payload oracle and actual bounded source transition law"
+    }
+  ]
+}

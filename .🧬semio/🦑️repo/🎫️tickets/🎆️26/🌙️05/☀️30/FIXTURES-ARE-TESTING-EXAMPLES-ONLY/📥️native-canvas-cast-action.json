@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+  "beforeSha256": "5e05c16a904302369fb2b7cf36bab5b46ee1836e10e3c0a8b798ae7ffbcdc426",
+  "afterSha256": "00e21de5f18a2caa2e8ec6e6f66f83c6a17bc62163bf6bd93575e58ab772df9d",
+  "beforeBlock": "let shell_pointer = owner as *const CanvasPathRetirement;",
+  "afterBlock": "let shell_pointer = owner.as_ref() as *const CanvasPathRetirement;",
+  "actualRED": "12251 one E0606; genuine borrowed pointee observer corrected, no pointer/extent/System assertion relaxed"
+}

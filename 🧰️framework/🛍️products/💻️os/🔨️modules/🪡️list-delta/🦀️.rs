@@ -470,34 +470,42 @@ pub type ApplyError = MutationApplyError;
 /// spellings: `key: id` (a `String` field of the row, the list a `Vec<$row>`), `list: $list, key: $key_ty = |row| expr`, or
 /// `list: $list, key: $key_ty = keyed` for a row whose [`Keyed`] impl exists already (a `(key, value)` pair, or a row shared by several deltas), or
 /// `list: $list, key: $key_ty = by Marker` for a FOREIGN row type that cannot implement [`Keyed`] here: the local `Marker` implements [`KeyOf`] (key extractor and
-/// cold-disposal hook). Each spelling takes a trailing `, values_only` to skip the `DslRecord` derive. Extra
+/// cold-disposal hook). Each spelling takes a trailing `, values_only` to skip the `DslRecord` derive;
+/// the `by Marker` spelling takes `, native` to leave all representation implementations to an IO owner. Extra
 /// derives and attributes go on every generated type through the leading `#[…]` attributes. The generic algebra is [`Parts`]; the
 /// methods here only convert.
 #[macro_export]
 macro_rules! list_delta {
+    ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty = by $keyer:ty , native $(,)? }) => {
+        $crate::list_delta! { @native_types [] [] [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $keyer } }
+    };
+
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, key: $key:ident $(,)? }) => {
         $crate::list_delta! { $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: Vec<$row>, key: String = |row| row.$key.clone() } }
     };
     (@types [$($dsl:path),*] $(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty, keyer: $keyer:ty $(,)? }) => {
+        $crate::list_delta! { @native_types [$crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*] [#[value(rename_all = "camelCase")]] [#[value(rename_all = "camelCase", default)]] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $keyer } }
+    };
+    (@native_types [$($codec:path),*] [$($record_attrs:tt)*] [$($delta_attrs:tt)*] $(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty, keyer: $keyer:ty $(,)? }) => {
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
-        #[value(rename_all = "camelCase")]
+        #[derive(Clone, Debug, PartialEq $(, $codec)*)]
+        $($record_attrs)*
         $vis struct $removal {
             pub id: $key_ty,
             pub index: usize,
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
-        #[value(rename_all = "camelCase")]
+        #[derive(Clone, Debug, PartialEq $(, $codec)*)]
+        $($record_attrs)*
         $vis struct $insertion {
             pub index: usize,
             pub row: $row,
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
-        #[value(rename_all = "camelCase")]
+        #[derive(Clone, Debug, PartialEq $(, $codec)*)]
+        $($record_attrs)*
         $vis struct $relocation {
             pub id: $key_ty,
             pub from: usize,
@@ -505,16 +513,16 @@ macro_rules! list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
-        #[value(rename_all = "camelCase")]
+        #[derive(Clone, Debug, PartialEq $(, $codec)*)]
+        $($record_attrs)*
         $vis struct $modification {
             pub id: $key_ty,
             pub patch: $patch,
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, Default, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
-        #[value(rename_all = "camelCase", default)]
+        #[derive(Clone, Debug, Default, PartialEq $(, $codec)*)]
+        $($delta_attrs)*
         $vis struct $delta {
             pub removed: Vec<$removal>,
             pub inserted: Vec<$insertion>,

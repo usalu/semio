@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -31,11 +32,7 @@ class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const {rest} = resolveTestLevel(segments);
     const manifestPath=resolve(this.root,"../../../📦️packages/🦀️rust/Cargo.toml");
-    if(!process.env.SEMIO_CARGO_TEST_POLICY){
-      await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"),"native","owner-command","--manifest",manifestPath,"--cwd",resolve(this.root,"../../../📦️packages/🦀️rust"),"--",process.execPath,resolve(this.root,"📜️script.ts"),"test-native",...segments],{cwd:this.repoRoot,budgetMs:0,throwOnFailure:true});
-      return;
-    }
-    await runCargoTestsV1({manifestPath,packages:["semio-framework-pack"],cwd:resolve(this.root,"../../../📦️packages/🦀️rust"),extraArgs:["--lib","record::",...rest]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath,packages:["semio-framework-pack"],cwd:resolve(this.root,"../../../📦️packages/🦀️rust"),extraArgs:["--lib","record::",...rest]},readCargoTestPolicyV1(process.env),{command:"cargo",args:[]});
   }
 }
 
@@ -49,4 +46,4 @@ class SchemaStorageScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test-ownership", OwnershipScript).register("test-native", NativeScript).register("test-refusals",RefusalsScript).register("test-schema-storage-source",SchemaStorageScript);
-await runScriptMain(router, {defaultCommand: "test-ownership"});
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand: "test-ownership"}) }));

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs",
+    "sha256": "c5d03a31e94d433a6e7edd35b2f86453c7a6f34470ab7fd633813ee8a4862962",
+    "role": "read-only defining dependency observer"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+    "sha256": "3c3303ba15d26372a56214152f875725cb3f1c94ed9416f971643cc8b1d5cde6",
+    "role": "read-only defining dependency observer"
+  }
+]

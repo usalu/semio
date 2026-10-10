@@ -104,5 +104,24 @@
       "maximumReleaseBytes": 16777216,
       "maximumDepth": 4096
     }
-  }
+  },
+  "retainedCloseGrant": {
+    "maximumItems": 3,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 64,
+    "maximumDepth": 2
+  },
+  "retainedCloseHeaders": [
+    {
+      "nativeWordBytes": 4,
+      "optionalByteHeaderBytes": 12,
+      "ownerSlotHeaderBytes": 8
+    },
+    {
+      "nativeWordBytes": 8,
+      "optionalByteHeaderBytes": 24,
+      "ownerSlotHeaderBytes": 16
+    }
+  ]
 }

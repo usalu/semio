@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/flow-core` router: `bun ./📜️script.ts <wasm|test>` — wasm-bindgen package for the flow engine session. */
 import { readFileSync } from "node:fs";
@@ -62,7 +63,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-flow"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-framework-os-flow"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -78,6 +79,12 @@ class EvaluationSourceTestScript extends BundleScript {
     await runRepositoryTestCommand(process.execPath, ["test", join(import.meta.dir, "../../../🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.quick });
   }
 }
+
+/** 🌱️ Verifies original builtin seeds with independent immutable source oracles. */
+class EvaluationSeedsTestScript extends BundleScript {async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dir,"../../../🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
+
+/** 🧵️ Validates original source/snapshot/Work custody with independent semantic oracles. */
+class EvaluationWorkTestScript extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",... ["../../../🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts","../../../🖥️host/📥️evaluation-source/🌱️seeds/🧪️tests/🟦️.ts","../../../🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts","../../../🖥️host/📤️publication/🖼️display/🧪️tests/🟦️.ts","../../../🖥️host/📤️publication/📡️invocation/🧪️tests/🟦️.ts","../../../../🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts"].map(path=>join(import.meta.dir,path))],{cwd:this.repoRoot,budgetMs:TEST_LEVEL_BUDGET_MS.quick});}}
 
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
@@ -128,6 +135,6 @@ class HostSourceCustodyScript extends BundleScript{async run():Promise<void>{con
 
 class OriginalVcsClosureScript extends BundleScript{async run():Promise<void>{const {testOriginalVcsClosure}=await import("../../../🌿️vcs/♻️retirement/🧪️tests/🟦️.ts");testOriginalVcsClosure();}}
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-session-source", SessionSourceTestScript).register("test-evaluation-source",EvaluationSourceTestScript).register("test-geometry-ownership", GeometryOwnershipTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-retained-grant-source", RetainedGrantSourceScript).register("test-retained-receipt-source",RetainedReceiptSourceScript).register("test-vcs-source",OriginalVcsClosureScript).register("test-host-source",HostSourceCustodyScript).register("test-dag-source",DagSourceCustodyScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-session-source", SessionSourceTestScript).register("test-evaluation-source",EvaluationSourceTestScript).register("test-evaluation-seeds",EvaluationSeedsTestScript).register("test-evaluation-work",EvaluationWorkTestScript).register("test-geometry-ownership", GeometryOwnershipTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-retained-grant-source", RetainedGrantSourceScript).register("test-retained-receipt-source",RetainedReceiptSourceScript).register("test-vcs-source",OriginalVcsClosureScript).register("test-host-source",HostSourceCustodyScript).register("test-dag-source",DagSourceCustodyScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
 
-await runScriptMain(router, { defaultCommand: "wasm" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "wasm" }) }));

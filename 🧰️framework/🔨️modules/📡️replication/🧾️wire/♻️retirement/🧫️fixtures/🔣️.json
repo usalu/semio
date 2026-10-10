@@ -1,4 +1,5 @@
 {
+  "policy":{"maximumItems":1,"copyBytes":0,"capacityBytes":0,"releaseBytes":65536,"depth":2},
   "cases": [
     {
       "kind": "io",

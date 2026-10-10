@@ -1,0 +1,257 @@
+{
+  "at": "2026-10-09T23:31:46.249174+00:00",
+  "session": 24982,
+  "exit": 1,
+  "nxTaskDuration": "1m46s",
+  "cargoExit": 101,
+  "nativeAssertions": 0,
+  "compilerBinary": null,
+  "error": {
+    "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs",
+    "line": 69,
+    "column": 767,
+    "kind": "grammar",
+    "message": "expected pattern delimiter, found depth",
+    "currentSha256": "26be8911d76afc79bb4e62c0bef5289fec07e6944a83cd6ae333299d89c05b97",
+    "currentOffendingTokenPresent": true
+  },
+  "afterObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "before": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589",
+      "after": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔣️scalar/🦀️.rs",
+      "before": "7632cd4a05d08f6ee92ac9880b64ddf9bc21a3493865183e42825e0ca715fe43",
+      "after": "7632cd4a05d08f6ee92ac9880b64ddf9bc21a3493865183e42825e0ca715fe43",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
+      "before": "42fe8bb4d526c7ab2e26874855ae6c972961db311a9495a845c932298b4ae77a",
+      "after": "42fe8bb4d526c7ab2e26874855ae6c972961db311a9495a845c932298b4ae77a",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "7364ed9f0768002ac4b329950742307bbb22c16913e1dccd4bf430f4e05726fb",
+      "after": "7364ed9f0768002ac4b329950742307bbb22c16913e1dccd4bf430f4e05726fb",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "before": "dd4cfc96dafdd0abd220606bbae57a1dd9344b3e4c0e8936fc6e200adf68e7c2",
+      "after": "dd4cfc96dafdd0abd220606bbae57a1dd9344b3e4c0e8936fc6e200adf68e7c2",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs",
+      "before": "9d915ad3ffb2d919f6caf8770c4f5f9bb264fdb637c5a13d3d9956b4c35375f4",
+      "after": "9d915ad3ffb2d919f6caf8770c4f5f9bb264fdb637c5a13d3d9956b4c35375f4",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🦀️.rs",
+      "before": "7e844efe15079e528cc8e566f44e6fba958212e4f30079c4e6d23f939e513a58",
+      "after": "7e844efe15079e528cc8e566f44e6fba958212e4f30079c4e6d23f939e513a58",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "2cb3dd4541a6535a3cf627b3d6928f864ef152b817de674a1a031919805cc06e",
+      "after": "2cb3dd4541a6535a3cf627b3d6928f864ef152b817de674a1a031919805cc06e",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🌱️value/🦀️.rs",
+      "before": "7b4d49a0fe132ef97c702a406b560d56d346fa66ac0e01f52b410a4b8a02dcde",
+      "after": "7b4d49a0fe132ef97c702a406b560d56d346fa66ac0e01f52b410a4b8a02dcde",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+      "before": "fdfa5b0e6210f7b41a31bb107c754f3d31c6d190f56894d7cd37e02377382f4d",
+      "after": "fdfa5b0e6210f7b41a31bb107c754f3d31c6d190f56894d7cd37e02377382f4d",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧪️tests/🦀️.rs",
+      "before": "bcf763cf13276f44bb5330ef6e26d352206ebcf6a15a95a0caf6aaa11e419cd7",
+      "after": "bcf763cf13276f44bb5330ef6e26d352206ebcf6a15a95a0caf6aaa11e419cd7",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+      "before": "98415366d3515473e1ed7e649168e3eaa416e525383c5bff9e5d6307eec665a5",
+      "after": "98415366d3515473e1ed7e649168e3eaa416e525383c5bff9e5d6307eec665a5",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "after": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📖️capture/🦀️.rs",
+      "before": "442127ea4c223640a13d435bda673b35fa2206e43a02c6ca328f01e02db9907b",
+      "after": "442127ea4c223640a13d435bda673b35fa2206e43a02c6ca328f01e02db9907b",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs",
+      "before": "859ef256ce8f496958e01d5c589b56867e27e1981bf0ab188d8c41a150d27b55",
+      "after": "859ef256ce8f496958e01d5c589b56867e27e1981bf0ab188d8c41a150d27b55",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🧪️tests/🦀️.rs",
+      "before": "e3510f8282cf2ef9820e46ffb16d7f8b9f39577fb152c760c127c0a24435faa6",
+      "after": "e3510f8282cf2ef9820e46ffb16d7f8b9f39577fb152c760c127c0a24435faa6",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs",
+      "before": "1ad564de6c6f51b93579bbd3897399c7445c1e84e2c132884296231a50a9662d",
+      "after": "1ad564de6c6f51b93579bbd3897399c7445c1e84e2c132884296231a50a9662d",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/📦️codec/🫳️borrowed/🦀️.rs",
+      "before": "b0074b8b7d6776fe64475fca752fbe300110e6ecb9d125b50100b8fd39a01a32",
+      "after": "b0074b8b7d6776fe64475fca752fbe300110e6ecb9d125b50100b8fd39a01a32",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔏️canonical/🦀️.rs",
+      "before": "6e25b3e3483a94005b59c4cba6c5af66156925f03db4e630b76b32c9e38ec806",
+      "after": "6e25b3e3483a94005b59c4cba6c5af66156925f03db4e630b76b32c9e38ec806",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔏️canonical/🦀️.rs",
+      "before": "f481c1adc3795b530022f9149ef90d2d21d866649d0512ed33d6dcd783cd2dac",
+      "after": "f481c1adc3795b530022f9149ef90d2d21d866649d0512ed33d6dcd783cd2dac",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "before": "d1dfac23a277c46ecf6b6c35a10713d576e2c0bdd8f89813bbb40db942c04da2",
+      "after": "d1dfac23a277c46ecf6b6c35a10713d576e2c0bdd8f89813bbb40db942c04da2",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "before": "3be61430667c4e820ce4816136d011e6fee1accf614a73785da37e72f8760647",
+      "after": "3be61430667c4e820ce4816136d011e6fee1accf614a73785da37e72f8760647",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/📬️preparation/🦀️.rs",
+      "before": "cfe1476fa7a1fe8b0f1cf53f09853236f3a04e5d67b17e7d431ef4822ec82c5d",
+      "after": "cfe1476fa7a1fe8b0f1cf53f09853236f3a04e5d67b17e7d431ef4822ec82c5d",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🦀️.rs",
+      "before": "8d10e42a9375f1acb1e428c8983585cdd099d4e89341bfc8aaa4db6e0cdf63a5",
+      "after": "8d10e42a9375f1acb1e428c8983585cdd099d4e89341bfc8aaa4db6e0cdf63a5",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📬️preparation/🦀️.rs",
+      "before": "fb3e028bf84924522bd1645ade40d41f764b347401515318d31166aa4f2bee17",
+      "after": "fb3e028bf84924522bd1645ade40d41f764b347401515318d31166aa4f2bee17",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs",
+      "before": "bceb956a80ed45dcba20e50a1d5a8146ce043fdf780ac7e41e4eb7db1b62f4f2",
+      "after": "bceb956a80ed45dcba20e50a1d5a8146ce043fdf780ac7e41e4eb7db1b62f4f2",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "before": "a3aa8f0dda8b7bf3fd3308a1389841e83617e9fd75255573f5f2bc1c520728db",
+      "after": "a3aa8f0dda8b7bf3fd3308a1389841e83617e9fd75255573f5f2bc1c520728db",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+      "before": "72df8f0c515b4776ccd765e80f048675bccc1b0d279975a116141bdd7b7d90e2",
+      "after": "72df8f0c515b4776ccd765e80f048675bccc1b0d279975a116141bdd7b7d90e2",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "before": "b4f156fff4f577c372b6d1aaf1f15a7ad05959a5915a2fe13dafb08383e59fd9",
+      "after": "b4f156fff4f577c372b6d1aaf1f15a7ad05959a5915a2fe13dafb08383e59fd9",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "before": "47c53a660360cf7787cc66111f0496dfaa68a09f31f1f76976fd97ef1de9a374",
+      "after": "47c53a660360cf7787cc66111f0496dfaa68a09f31f1f76976fd97ef1de9a374",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧫️fixtures/🔣️.json",
+      "before": "f9a83cfe5422a4199b5d0c85a852d123650397b228c31c33eac889b1e84d48a1",
+      "after": "f9a83cfe5422a4199b5d0c85a852d123650397b228c31c33eac889b1e84d48a1",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "before": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "after": "2454060edbe57ffb02cf7e0d4e8b7eefbf8928e4367930a273b43d5e60e4388c",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "before": "3958f1cbf696314420f097b4ebfc2b4db8b9c5a267d29d137ea2f00bfe486c96",
+      "after": "3958f1cbf696314420f097b4ebfc2b4db8b9c5a267d29d137ea2f00bfe486c96",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "before": "5515420cce470e08df88513d00396ee218762f251eb3965d7a09e8d58b8172a7",
+      "after": "5515420cce470e08df88513d00396ee218762f251eb3965d7a09e8d58b8172a7",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "before": "476880e142d101da0d5724da4366c463707fc5b6b13e47a3486ea26033b9ddea",
+      "after": "476880e142d101da0d5724da4366c463707fc5b6b13e47a3486ea26033b9ddea",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/Cargo.toml",
+      "before": "07df0297d745b7635a5a718caabf13ec50785fe72f197c5ed113251d2a6c7e07",
+      "after": "07df0297d745b7635a5a718caabf13ec50785fe72f197c5ed113251d2a6c7e07",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/Cargo.lock",
+      "before": "14d10ca05170a3b1dd8ccc73ac8d391fa4608ce5dbd0ed69b605ea7b907ce332",
+      "after": "14d10ca05170a3b1dd8ccc73ac8d391fa4608ce5dbd0ed69b605ea7b907ce332",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "before": "f2b14f58ef66b1d3d7d126029d760d3e095d4a50519df9a9ee27adda259fa704",
+      "after": "f2b14f58ef66b1d3d7d126029d760d3e095d4a50519df9a9ee27adda259fa704",
+      "matches": true
+    }
+  ],
+  "knownOwnRootsAbsent": [
+    69612,
+    69613,
+    69647,
+    70011,
+    70022,
+    70025
+  ],
+  "rawLog": "🗑️generated/native-kernel-full.log"
+}

@@ -121,6 +121,7 @@ pub(crate) trait ErasedWindowTransientPublication: Send {
     fn document_generation(&self) -> u64;
     fn phase(&self) -> store::ArtifactStoreOneItemPublicationPhase;
     fn fault(&self) -> Option<&str>;
+    fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
     fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError>;
@@ -157,6 +158,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
     fn fault(&self) -> Option<&str> {
         self.publication.fault()
     }
+    fn preparation_refusal(&self) -> Option<&ValueError> { self.publication.preparation_refusal() }
 
     fn acknowledge(&mut self) -> bool {
         self.publication.acknowledge()

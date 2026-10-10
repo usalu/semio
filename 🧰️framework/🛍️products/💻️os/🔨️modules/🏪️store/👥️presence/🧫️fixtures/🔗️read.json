@@ -1,0 +1,25 @@
+{
+  "peer": {
+    "actor": "älice",
+    "value": 41
+  },
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "refusals": [
+    "items",
+    "copy",
+    "depth"
+  ],
+  "expectedCaptureRequestedBytes": 0,
+  "expectedCaptureReleasedBytes": 0,
+  "expectedTransferRequestedBytes": 0,
+  "expectedTransferReleasedBytes": 0,
+  "expectedOriginalRootPointerPreserved": true,
+  "expectedOriginalFactoryPointerPreserved": true,
+  "expectedSemanticMetadataCopyBytes": 0
+}

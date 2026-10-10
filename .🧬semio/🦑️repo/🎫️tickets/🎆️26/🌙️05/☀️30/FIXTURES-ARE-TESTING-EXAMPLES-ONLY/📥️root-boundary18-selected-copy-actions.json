@@ -1,0 +1,18 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "45cb0a6ae96090049175876e6f051e9f0d5e6485ddd10fa1d69e5182f729cd4c",
+      "afterSha256": "cba5ccd2ce9f2af8af572ed1af93052f47c812659859e7efa25d85a64f1f560f",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "3c9d5aa6ddcacbc771fc100c2bc7cdec1dacef9ea83ff8ce049b1b7663f806c7",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

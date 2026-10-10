@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {runOwnedCommand} from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🧱️ Block source, schema, and publication-authority laws. */
 import { resolve } from "node:path";
@@ -100,4 +101,4 @@ class SharedSchemaScript extends BundleScript {
   async run(segments:string[]):Promise<void>{if(segments.length)throw Error("shared-schema accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🧬️schema/🧱️shared/🧪️tests/🟦️.ts")],this.repoRoot,"block-shared-schema",45000,{env:process.env});}
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", TestScript).register("shared-schema",SharedSchemaScript);
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

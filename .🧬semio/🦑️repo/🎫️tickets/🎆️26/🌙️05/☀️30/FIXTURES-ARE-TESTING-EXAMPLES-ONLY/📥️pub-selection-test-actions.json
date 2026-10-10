@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/🚧️canonical-error-progress.json",
+    "action": "update",
+    "scope": "plain null/empty/Unicode/escaping selection values with independent JSON bytes; no corpus schema",
+    "beforeSha256": "abf3ed3fd3789f2425defd6173eb703b6104cd8ddda3c518f50c0c2acdbe166a",
+    "afterSha256": "2572321d2d8547595fc53e6996eef7db1857fcdf58c4188bb030a1c2fe1aa2bb"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts",
+    "action": "update",
+    "scope": "actual original selection cursor regression plus Node JSON/Buffer/TextEncoder oracle and Rust grammar",
+    "beforeSha256": "c0f5f32328420dc613ceafd1952b94c273bdfb584f21664a2f73f948be3e1f2f",
+    "afterSha256": "c12931ea826975756dfd829e42780a0aa0f8e06f274918de43b122bb475cfb2d"
+  }
+]

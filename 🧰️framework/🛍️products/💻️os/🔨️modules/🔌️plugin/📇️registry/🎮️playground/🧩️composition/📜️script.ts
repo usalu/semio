@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {resolve} from "node:path";
 import {mkdir} from "node:fs/promises";
 import {BundleScript,ScriptRouter} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -23,4 +24,4 @@ class WorkerScript extends BundleScript{
   const {provePlaygroundCompositionV1}=await import("./🧪️tests/🟦️.ts");await provePlaygroundCompositionV1(this.repoRoot,output,true);
  }
 }
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript).register("test-worker",WorkerScript),{defaultCommand:"test"});
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript).register("test-worker",WorkerScript), { invocation: original, ...({defaultCommand:"test"}) }));

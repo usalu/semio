@@ -1,0 +1,7 @@
+# Genuine Editor Preparation Refusal Propagation
+
+Publication assigns the current 34 editor source files from its preparation-error census to this execution lane. The final defining preparation advance and retained edit cursor contracts return canonical ValueError with retained_progress as their sole physical receipt. The current before observation is recorded in native-preparation-editor-before.json, with no copied Source.
+
+The fresh actual preparation bodies distinguish two concrete seams: generic mutation inverse/apply_diff already produce ValueError but stringify it; several domain-specific preparation helpers genuinely return String and must be refactored at their owning refusal sites rather than wrapped by a String conversion. Many bodies take the original mutation before fallible inverse/application and need its original slot restored on refusal. The current shared LiveAuthority.prepare_one_item/prepared_edit_digest/validate_semantic_edit still return String; canonical defining propagation is coordinated with Publication before these callers can cleanly compile. Structural Semio has a separate StructuralMutationCopy String trait with multiple actual sibling implementations, not an isolated preparation signature edit.
+
+This is current source classification only. No Rust caller was mutated by this observation and no native result is inferred. The new genuine IO decoder cursor cut remains separately ready for its original Kernel System law; preparation coordination must settle a genuine compiling cut or explicitly acquire natural diagnostics.

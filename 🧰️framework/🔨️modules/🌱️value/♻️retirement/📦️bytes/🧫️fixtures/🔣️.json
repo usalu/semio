@@ -1,0 +1,19 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 0,
+    "capacityBytes": 262144,
+    "releaseBytes": 65536,
+    "depth": 64
+  },
+  "cases": [
+    {
+      "text": "héllo😀\u0000",
+      "capacity": 8192
+    },
+    {
+      "text": "0123456789",
+      "capacity": 36000
+    }
+  ]
+}

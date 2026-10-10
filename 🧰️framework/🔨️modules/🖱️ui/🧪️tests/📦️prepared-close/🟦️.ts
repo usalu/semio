@@ -53,3 +53,20 @@ test("moved raster admission preserves separately admitted original backing",()=
  }
  console.log("[DEBUG] moved raster originalPointer=true callerCapacity=true logicalBytesIndependent=true refusalAllocation=0");
 });
+
+import Ajv from "ajv";
+import {readFileSync} from "node:fs";
+test("prepared outcome fixture admits paid loans with independent closed schema",()=>{
+ const expectedSchema={type:"object",additionalProperties:false,required:["deniedReceipt","completeStateAbsent","completeOutputAbsent","faultLoanIdentity","acknowledgementItems"],properties:{deniedReceipt:{type:"object",additionalProperties:false,required:["copiedItems","copiedBytes","retainedCapacityBytes","releasedBytes"],properties:{copiedItems:{const:0},copiedBytes:{const:0},retainedCapacityBytes:{const:0},releasedBytes:{const:0}}},completeStateAbsent:{const:true},completeOutputAbsent:{const:true},faultLoanIdentity:{const:true},acknowledgementItems:{const:1}}};
+ const admitted=new Ajv({strict:true}).compile(expectedSchema);
+ expect(admitted(physical.preparedOutcome.expected)).toBe(true);
+ expect(applyPatch(structuredClone(physical.preparedOutcome.expected),[],true).newDocument).toEqual(physical.preparedOutcome.expected);
+ const source=readFileSync(new URL("../../🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs",import.meta.url),"utf8");
+ const implementation=source.slice(source.indexOf("impl InteractiveJob for PreparedRenderJob"),source.indexOf("//#endregion ⚙️PreparationJob"));
+ expect(implementation.includes("Result<Option<JobOutcomeBorrow<'a>>, ValueError>")).toBe(true);
+ expect(implementation.includes("fn borrow_outcome")).toBe(true);
+ expect(implementation.includes("StepOutcome")).toBe(false);
+ expect(source.includes("fault_payload.close_step_granted(grant)")).toBe(true);
+ expect(source.includes("JobOutcomeBorrow::admit_fault(cx, self.fault_payload.published()")).toBe(true);
+ console.log("[DEBUG] prepared outcome closed Ajv/RFC6902 fixture; canonical native borrowed trait and original funded fault owner source");
+});

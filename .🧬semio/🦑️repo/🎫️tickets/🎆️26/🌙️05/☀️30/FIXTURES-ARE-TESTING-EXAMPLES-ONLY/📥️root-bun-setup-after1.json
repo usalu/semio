@@ -1,0 +1,50 @@
+[
+  {
+    "path": "package.json",
+    "beforeSha256": "f562f40578fcd31e73e113a7d4f9f8a595f21c1bb41b715ac4045990334287b5",
+    "afterSha256": "ab40f1de5d5d3b21437f5408d6e72eba70569cd06dda62675e024c775ff2dacc",
+    "beforeEntries": 978,
+    "afterEntries": 93,
+    "qualification": "Shared-file postcommand observation; authored fields cannot be inferred from whole file hash"
+  },
+  {
+    "path": "♻️mit-bestand/package.json",
+    "beforeSha256": "4525b05c4cfc04a1190c4b8741edefc073abfdbe6e14a9b2150c5a1509d44d3d",
+    "afterSha256": "590c99402b511a867f6dad8467241f6aa918d4f6621963dd8d8baa639f4ebd2a",
+    "beforeEntries": 1933,
+    "afterEntries": 257,
+    "qualification": "Shared-file postcommand observation; authored fields cannot be inferred from whole file hash"
+  },
+  {
+    "path": "✏️s/package.json",
+    "beforeSha256": "64946a298b5792266b54711159261d4f3c31ffb6d633ce62af63380f1debdbb6",
+    "afterSha256": "b2251e6f0afebf01daa648cff2f8123ee08a581f70408e29868a7313c97e113f",
+    "beforeEntries": 1920,
+    "afterEntries": 253,
+    "qualification": "Shared-file postcommand observation; authored fields cannot be inferred from whole file hash"
+  },
+  {
+    "path": "🌎️hub/package.json",
+    "beforeSha256": "25bbbe2f72446e08e70308ca847aaf3edf3a4ceedbb7273a71cf40881d71b6bd",
+    "afterSha256": "7dd4206d5c642d8955521900a04df50ee987252b8f977ee3ac4f89af23b1e376",
+    "beforeEntries": 1969,
+    "afterEntries": 261,
+    "qualification": "Shared-file postcommand observation; authored fields cannot be inferred from whole file hash"
+  },
+  {
+    "path": "🎓️teaching/package.json",
+    "beforeSha256": "6935a545e6c98e4e1074c0a9d39d5127714f2fd6ed236efe7fa60692e451cb1e",
+    "afterSha256": "ad3aac59b796f9b82d6e5e7584d3cffc3278f5a5e9b190e1ec3d6404d13ab490",
+    "beforeEntries": 991,
+    "afterEntries": 94,
+    "qualification": "Shared-file postcommand observation; authored fields cannot be inferred from whole file hash"
+  },
+  {
+    "path": "🏢️semio-tech/package.json",
+    "beforeSha256": "53c59762c06b3ac0df61373171be393406735512736ed0bab6276f3b77f5c2b8",
+    "afterSha256": "e4b5291929d35c3ef81d30f28e7ff9bb2705b330978bb7fdb6a8dcc3b74c7f7c",
+    "beforeEntries": 1935,
+    "afterEntries": 255,
+    "qualification": "Shared-file postcommand observation; authored fields cannot be inferred from whole file hash"
+  }
+]

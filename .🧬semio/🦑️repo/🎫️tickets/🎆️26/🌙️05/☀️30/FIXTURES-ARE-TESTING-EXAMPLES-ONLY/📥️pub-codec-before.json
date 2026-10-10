@@ -1,0 +1,20 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json",
+      "sha256": "45d63da5837e17187d6a2485f065054482fbed8cdac7c4e4aa0bac88e513ed3f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🗄️.sql",
+      "sha256": "d85842e05542cf99a2218da3d8277543ba6f52c034caaa8905a15f44d85c6305"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧫️fixtures/🔣️.json",
+      "sha256": "c97b73be6f69a7fdc8453d4926ab63ee32862c94364952e4cca69a0662af0392"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs",
+      "sha256": "e9bbec9f5e0b1f58a67894a34b5e9f3fa81152b8ac03b2c6fb24f8a2fa4e3f39"
+    }
+  ]
+}

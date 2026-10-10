@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -25,4 +26,4 @@ class NativeScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test-ownership", OwnershipScript).register("test-native", NativeScript);
-await runScriptMain(router, {defaultCommand: "test-ownership"});
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand: "test-ownership"}) }));

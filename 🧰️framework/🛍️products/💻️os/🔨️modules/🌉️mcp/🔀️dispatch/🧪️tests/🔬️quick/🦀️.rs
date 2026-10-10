@@ -679,15 +679,16 @@ fn transaction_begin_requires_at_least_one_prepared_handle() {
 #[test]
 fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    for _ in 0..3{channel.bump_generation(3);}
     let command = InferCommand {
         plugin_id: "wfc".into(),
         artifact_kind: "s.wfc.wfc3d".into(),
         inference_schema: "s.wfc.wfc3d.solve".into(),
         revision: 4,
-        generation: 0,
+        turn: semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},
         cancellation_id: "cancel-1".into(),
         work_units: 64,
-        retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 },
+        maximum_elapsed_milliseconds: 13,
         canonical_payload: b"{\"seed\":7}".to_vec(),
         artifact_id: String::new(),
         artifact_document: None,
@@ -696,7 +697,7 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
     let outcome = adapter.run_inference(3, command.clone()).expect("the mock channel answers a real Inferred frame");
     assert_eq!(outcome.inference_schema, "s.wfc.wfc3d.solve");
     assert!(outcome.complete);
-    assert_eq!(outcome.payload, b"{\"seed\":7}".to_vec());
+    assert_eq!(outcome.payload, Some(b"{\"seed\":7}".to_vec()));
     assert_eq!(channel.frame_log(), vec![(3, AppCommand::Infer(command))], "exactly one Infer command, on the instance the caller named");
 }
 
@@ -705,8 +706,8 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
 #[test]
 fn run_inference_maps_a_stale_generation_to_a_revision_conflict() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
-    channel.bump_generation(0);
-    let command = InferCommand { plugin_id: "neutral".into(), artifact_kind: "test.neutral.record".into(), inference_schema: "test.neutral.record.compute".into(), generation: 0, work_units: 1, ..InferCommand::default() };
+    for _ in 0..4{channel.bump_generation(0);}
+    let command = InferCommand { plugin_id: "neutral".into(), artifact_kind: "test.neutral.record".into(), inference_schema: "test.neutral.record.compute".into(), turn: semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}}, revision:7,cancellation_id:"original stale cancellation".into(),work_units:1,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:crate::actions::InferenceCancel::default() };
     let error = adapter.run_inference(0, command).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
 }

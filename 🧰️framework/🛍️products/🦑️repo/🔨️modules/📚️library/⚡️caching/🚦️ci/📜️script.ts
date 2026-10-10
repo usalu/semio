@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { appendFileSync, readFileSync, statSync } from "node:fs";
 import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
@@ -36,4 +37,4 @@ export class BaselineScript extends Script {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("baseline", BaselineScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(getWorkspaceRoot()).register("baseline", BaselineScript)).run(process.argv.slice(2), original));

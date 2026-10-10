@@ -1,0 +1,9 @@
+{
+  "exitCode": 1,
+  "tests": 4,
+  "passed": 3,
+  "failed": 1,
+  "skipped": 66,
+  "logSha256": "fe7d2e8ecf93ec3b3ed1d0d4123521492cebf1a63606394981c971a26909f14b",
+  "qualification": "Actual original scope-catalog test with real <=256 path assertions: first added 🧫examples collection incorrectly admitted as Hub module before taxonomy correction"
+}

@@ -4,7 +4,39 @@
   "pendingBirthDepth": 1,
   "terminalDepth": 0,
   "copyDemandRefusal": "UnsupportedOwner",
-  "refusedBirth": { "maximumItems": 1, "maximumDepth": 0, "expectedKind": "DepthLimit" },
-  "fundedBirth": { "maximumItems": 1, "maximumDepth": 1 },
-  "maximumTurns": 64
+  "refusedBirth": {
+    "maximumItems": 1,
+    "maximumDepth": 0,
+    "expectedKind": "DepthLimit"
+  },
+  "fundedBirth": {
+    "maximumItems": 1,
+    "maximumDepth": 1
+  },
+  "maximumTurns": 64,
+  "terminalTicket": {
+    "copyWords": 2,
+    "items": 1,
+    "depth": 1,
+    "capacityBytes": 0,
+    "headerWidths": [
+      {
+        "wordBytes": 4,
+        "copyBytes": 8
+      },
+      {
+        "wordBytes": 8,
+        "copyBytes": 16
+      }
+    ],
+    "refused": [
+      "items",
+      "copy",
+      "release",
+      "depth"
+    ],
+    "retainsOriginalTicket": true,
+    "deniedHeapBytes": 0,
+    "terminalHeapBytes": 0
+  }
 }

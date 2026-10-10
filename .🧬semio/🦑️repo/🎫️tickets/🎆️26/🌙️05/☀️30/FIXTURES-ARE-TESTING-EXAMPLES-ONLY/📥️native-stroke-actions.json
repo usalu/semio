@@ -1,0 +1,14 @@
+{
+  "rootAction": {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\ud83e\udd80\ufe0f.rs",
+    "beforeSha256": "1c1bfcbb18264a642a43060fa22afb8aed3ed44aa21caff5f2fcb2b151815838",
+    "afterSha256": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+    "beforeBlock": "        pub fn set_dash_pattern(&mut self, pattern: Vec<f64>) {\n            self.dash_pattern = pattern;\n        }",
+    "afterBlock": "        pub fn set_dash_pattern(&mut self, pattern: Vec<f64>) {\n            self.dash_pattern = pattern;\n        }\n        /// \ud83d\udc41\ufe0f Borrows the original dash sequence without allocating or transferring it.\n        pub fn dash_pattern(&self) -> &[f64] { &self.dash_pattern }\n        /// \ud83d\udce6\ufe0f Observes the original dash allocation extent before custody transfers.\n        pub fn dash_capacity(&self) -> usize { self.dash_pattern.capacity() }\n        /// \ud83c\udf81\ufe0f Transfers only the original dash buffer while retaining the scalar style.\n        pub(crate) fn take_dash_pattern(&mut self) -> Vec<f64> { std::mem::take(&mut self.dash_pattern) }",
+    "exportBlock": "\n#[path = \"\u267b\ufe0fretirement/\ud83d\udd8a\ufe0fstroke/\ud83e\udd80\ufe0f.rs\"]\nmod stroke_retirement;\npub use stroke_retirement::CanvasStrokeRetirement;"
+  },
+  "created": [
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\u267b\ufe0fretirement/\ud83d\udd8a\ufe0fstroke/\ud83e\udd80\ufe0f.rs"
+  ],
+  "boundary": "original scalar APIs and bool Frame/Scene callers unchanged; new independent canonical leaf"
+}

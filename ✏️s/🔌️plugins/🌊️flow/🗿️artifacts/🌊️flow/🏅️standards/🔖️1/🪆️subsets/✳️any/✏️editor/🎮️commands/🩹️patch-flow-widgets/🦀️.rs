@@ -15,6 +15,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutation
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PatchFlowWidgets {
     pub widget_ids: Vec<String>,
     pub field: String,

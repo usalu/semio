@@ -1,0 +1,47 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧬️schema/🔣️.json",
+    "sha256": "46184dae885dd014c3fe588b570eec98a4419fdd7528f09495be29aa09d81df6",
+    "bytes": 1214
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🟦️.ts",
+    "sha256": "909399a7a8e3ba0c58dc8c4ec0e930d3a6fe71c4d27afe67f46eb5a79d84f5da",
+    "bytes": 1499
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧫️fixtures/🔣️.json",
+    "sha256": "95ae5f1ee321dbdb96fca12a81cfb6985ef1648625ca48fbf067cd582cce328f",
+    "bytes": 631
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧬️schema/🔣️.json",
+    "sha256": "331a1ba0abf67e3fea201101c65b7bb1652a353171af3056ce68b4e9cb2ed848",
+    "bytes": 601
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🟦️.ts",
+    "sha256": "548b76a5cc1540ca020e9312bc0cf3b584a4287623629e7bf284837258de25cf",
+    "bytes": 1401
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧫️fixtures/🔣️.json",
+    "sha256": "8bae287e568fd365db5c1056fca3ee631a1172bbe62314d3d49033de57f66187",
+    "bytes": 352
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧬️schema/🔣️.json",
+    "sha256": "fc0e55da42abf78a4ac0d12cf9d561f952a04689c96da40c0e651934db863321",
+    "bytes": 463
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧪️tests/🟦️.ts",
+    "sha256": "1f84a9e275d1365f5a13a489542a539419c5b491d8b7e29b9d0237e8f55444bf",
+    "bytes": 1191
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧫️fixtures/🔣️.json",
+    "sha256": "33423d1d2476d4d0557dc63436a758c464dbaf5f635cca1433db440d9db72cc4",
+    "bytes": 190
+  }
+]

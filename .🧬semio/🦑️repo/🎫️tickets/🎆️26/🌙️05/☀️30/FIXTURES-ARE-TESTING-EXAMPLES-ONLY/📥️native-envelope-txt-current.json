@@ -1,0 +1,235 @@
+{
+  "sourceOnly": true,
+  "nativeSystem": "UNRUN",
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs",
+      "sha256": "53a87598d90d037b836bdfbdb41e30c720b355ebbf692e930bd064f87d907844",
+      "absolutePathCharacters": 79
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs",
+      "sha256": "c8bf11e34363a474c314386946dcd719c4abddfa06de00e1f444f2667d8422d4",
+      "absolutePathCharacters": 105
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+      "sha256": "c532420a2a8379916e8d4ea0d298ba707269ab2f06b5364f0aa8a3f92485366d",
+      "absolutePathCharacters": 127
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "9b8e75af0d54a8e8cf870868dac94828f707fd443092178c1cfb71fbb389ad73",
+      "absolutePathCharacters": 140
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "eba5ede9eed166b267f1a78514243fcbdcb86bd40481569aead0c6b187f8fbe5",
+      "absolutePathCharacters": 142
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "079a994502e50e42bf21007aa9e16b021fcc3bd40721bbc4be4f8944217cdc8d",
+      "absolutePathCharacters": 142
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "49954dc17044177294d8bc834709f637b7ded49dd6d71a33975f3b1b64d4c2fd",
+      "absolutePathCharacters": 146
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "c979474b87c490c5b1c10fa4dc384a8622e0bd2824e1743fa9d9534f93bc53d0",
+      "absolutePathCharacters": 148
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "2546e3ca1ca49dc6993674c0ea83a3e706399c24331160a055f607da6ff87e1c",
+      "absolutePathCharacters": 143
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "fea4a3e635045d0e44bf9794a2fc44cece522867e24b2d367e67c6c2d08f3059",
+      "absolutePathCharacters": 143
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "7c2a0236e98766850d1e14765181654c7cad1c97fcf377d29cda117d37002f86",
+      "absolutePathCharacters": 142
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "5386df5a76840b1cca864de7e7881dfbc4ec8b26a45478c8e2c2a432befeef3e",
+      "absolutePathCharacters": 144
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "e7bf20506e4556623ac547d84fe605c5e69647ee264848751922a23e743096e8",
+      "absolutePathCharacters": 143
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "6285d7c5456f8942873c8f4d5ba35b02d54c93df9c5c2e077d7d9b8360071e0a",
+      "absolutePathCharacters": 145
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "99cdeceb2fa034c27b49090c4d9abab4f6c550c80ddcd49cb770196146fe0025",
+      "absolutePathCharacters": 151
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "d84438b78f2b8d3120355917596e25ee37a4e4bdda9f5b8aec6e2d5de8e1e544",
+      "absolutePathCharacters": 144
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "b1e03f452300749df1b6e548be75dc47e18fce8a4fa21b891d368bd439ab4683",
+      "absolutePathCharacters": 144
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "81fdd27ec75c914fd289274635a14d35e9ce75ca49129051c20554dbbed025eb",
+      "absolutePathCharacters": 142
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "1ee61f30a50f4d30be6431c689f3d3df9998a54a3eb804b58e0293317cac84d1",
+      "absolutePathCharacters": 143
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "82598e5aabdde98fd63d86a3fa0f51ad8b58f6c1ccf083cfa2e5e006578b4c99",
+      "absolutePathCharacters": 144
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "9283db8fe80799842116d37e947209ab6bd20f1473d5c3873f4cad6c5da2f81e",
+      "absolutePathCharacters": 143
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "115ceac9cc9c0bb8f0b1ddc1c5394e86371414ab595e6fd2d3861015ccd2c833",
+      "absolutePathCharacters": 144
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "cad4c5697d435a7ad496094c8dc8d4e3966928a80cde40e26532dd0d1cd484d6",
+      "absolutePathCharacters": 147
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "caf39e21512cefc68866d2721dca9fbdd6a7b4a6532901d196596dc00e9a5c2e",
+      "absolutePathCharacters": 144
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "2f645ff05f3121cbd04cd67145237c6d51f36ab9b479e5628560c9bf4be17e75",
+      "absolutePathCharacters": 144
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "8018027473cf9c9d54e7d90bfb8872fb80e9dea02ba61e4d6afd93bc1b76c43c",
+      "absolutePathCharacters": 140
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "0a7e87f300c7bc4610f65ede4a98dd2a008d67a7a9c845de580b20cd2bf4e52e",
+      "absolutePathCharacters": 149
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "c1c555e95a2b31eeb9eb67898f2f57ab956aac86021bb008dc2982821b2af0fe",
+      "absolutePathCharacters": 145
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🧩️native/💰️backing/🦀️.rs",
+      "sha256": "3ad80df7edce5a734c9bffa18c97854f9520ecad3cb662db431bfd49ce3b8e50",
+      "absolutePathCharacters": 158
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "sha256": "95fae5712aa387b8d485c6941cc82e53e5fe860c8b4b2a96082a0f4b3e1815dc",
+      "absolutePathCharacters": 134
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🧩️native/💰️backing/🦀️.rs",
+      "sha256": "3e0c10284d2f4729997cb60312690bb4c90746aeb4fb1fbb4f81968902180466",
+      "absolutePathCharacters": 158
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🧩️native/💰️backing/🦀️.rs",
+      "sha256": "ae5e4008a8742c401d8fb8e9a6ef005dccd3abd9e86a9d8e685af0576bbf31cb",
+      "absolutePathCharacters": 158
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "4259c91577fa76cea494498665d4123a2a70d03ca8ae6a2d9b6b0dc9adf615ad",
+      "absolutePathCharacters": 142
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+      "sha256": "e070bf3fcaa37694fdf32a67988739c2d5d087a3e97635c9a980dd6ea13a1167",
+      "absolutePathCharacters": 142
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧫️fixtures/🚦️controlled/🔣️.json",
+      "sha256": "f0add77989312f3e5f1499aca221d222da14f075c8132b62084b20ce7bec1e5f",
+      "absolutePathCharacters": 105
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts",
+      "sha256": "44e55f6f7de798ee2dc8e736662e04ecd55a253dcec2113247a64c6d1af83e7b",
+      "absolutePathCharacters": 100
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "4d448609505c7a73446940a237707b8f25a734c7acfd78496e39b4a43d08cea0",
+      "absolutePathCharacters": 94
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "sha256": "b637f684bc319c6205349ef54f00ab32220efcbf399a330f6172c3c4efbf4394",
+      "absolutePathCharacters": 134
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "sha256": "a41da8c1b4e0b14639c0f8cbf1e052a999fa4f2b1cd348eb8ab77204fa83cdd9",
+      "absolutePathCharacters": 129
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "d413de329e2349d81b6b9c82cec6119d4e73cc69af18b3db836406ff5d2575f3",
+      "absolutePathCharacters": 96
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🫴️receiving.json",
+      "sha256": "c84d53dca571d43025f4a0151f0b19ba8da783d7149572ccaadfcf3dd316b257",
+      "absolutePathCharacters": 156
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "sha256": "d1a9b18ce5a1d44afd2aaa4cba263a0f9c11a7b611e24ce089f412eeeb61aa80",
+      "absolutePathCharacters": 142
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "2c4bfdd3dc870d46288022bc7db5f442411e33e7742bbe1e39f0518ed28a2ed0",
+      "absolutePathCharacters": 142
+    }
+  ],
+  "actualSourceLogs": [
+    "native-envelope-red.log",
+    "native-envelope-green.log",
+    "native-txt-red3.log",
+    "native-txt-green.log",
+    "native-txt-caller-red.log",
+    "native-txt-final-source.log",
+    "native-txt-all-source.log",
+    "native-txt-test-callers-red.log",
+    "native-txt-test-callers-green.log"
+  ],
+  "grammar": "native-envelope-txt-grammar.json",
+  "nativeLiteral": "sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and_actual_line_receipt",
+  "nativeStatus": "UNRUN"
+}

@@ -1,5 +1,0 @@
-{
-  "path": "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/✏️editor-catalog/🦀️.rs",
-  "before": "    if E::Snapshot::sqlite_snapshot_codec().is_none() {\n        assert!(!entries.iter().any(|entry| (entry.from == native && entry.into == sqlite) || (entry.from == sqlite && entry.into == native)), \"undeclared relational capability must publish no SQLite route\");\n        return;\n    }",
-  "after": "    assert!(E::Snapshot::sqlite_snapshot_codec().is_some(), \"every shipped artifact snapshot must declare a semantic SQLite owner: {}\", native.to_coordinate());"
-}

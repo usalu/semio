@@ -1,0 +1,11 @@
+# Store Original Outcome Custody
+
+The exact full Kernel red4 and Plugin retry6 compiler evidence required ArtifactEnvelopeDecodeAuthority to implement the current borrowed InteractiveJob outcome port. Fresh source already contained a simultaneous migration when this resumed turn inspected it. That source is preserved: the original record and installed field lease close through their existing owners; the original StepContext records physical close receipts; fault text stays in an in-place RetainedPayloadBuilder and borrow_outcome lends its published payload.
+
+The original step-wallet native assertions remain unchanged. In particular, the fixture permits 65536 items but the failed physical field turn must retain precisely its one-item, copy23, birth64, release32 receipt. Current step may admit a Yield after physical progress and add a semantic item; only the forthcoming unchanged full native gate can establish that failure. No producer adjustment has been made on this source inference.
+
+A new schema-first neutral fault outcome law and native test now require repeated descriptor borrows to preserve the exact payload and admission pointers, compare original diagnostic bytes to the Serde fixture oracle, allocate and release zero bytes during borrowing, acknowledge the descriptor under the original supplied grant before close, include the enclosing job depth around its fault builder, and preserve payload custody on item/depth refusal. Actual closure must match the measured physical receipt before the original StepContextOwner ledger closes separately. The grant is read from the existing step-wallet fixture; no currency or native ceiling is increased.
+
+Current fault close forwards the job grant directly to its builder and reports the builder's depth without the enclosing job depth. The new law retains that assertion for genuine runtime RED before a narrow producer repair. No full runtime result is claimed yet. Actor/UI/IO shared compiler floors must be ready before the next exact full Kernel gate.
+
+Files authored this turn: store/refusal/outcome neutral schema and fixture, and the final decode_fault_descriptor_borrows_original_payload_until_paid_nested_close test in the canonical Store unit roster. Existing owner/receipt assertions and turn ceilings remain intact.

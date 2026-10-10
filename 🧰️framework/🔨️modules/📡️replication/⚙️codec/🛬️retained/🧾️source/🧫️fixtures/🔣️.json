@@ -1,0 +1,38 @@
+{
+  "grant": {
+    "items": 1,
+    "copy": 2,
+    "capacity": 65536,
+    "release": 65536,
+    "depth": 8
+  },
+  "identity": {
+    "owner": 77,
+    "operation": 9,
+    "generation": 3
+  },
+  "pages": [
+    [
+      104,
+      195
+    ],
+    [
+      169,
+      240
+    ],
+    [
+      159,
+      152
+    ],
+    [
+      128,
+      0
+    ]
+  ],
+  "expectedHex": "68c3a9f09f988000",
+  "metadataCopy": 0,
+  "json": {
+    "source": "\"p\\u00e9\\ud83d\\ude00\\n\"",
+    "expected": "pé😀\n"
+  }
+}

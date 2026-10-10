@@ -1,0 +1,291 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Completion Refusal Retirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "rejectionFields",
+    "emitFields",
+    "ephemeralFields",
+    "extensionFields",
+    "taskFields",
+    "childFields",
+    "ownedChildFields",
+    "effects",
+    "taskSourceOriginal",
+    "childSourceOriginal",
+    "faultSourceOriginal",
+    "bodyCopyGrantUnchanged",
+    "headerCopyBytes",
+    "copies",
+    "terminalDropBytes",
+    "preparationFields",
+    "preparationRetirementFields",
+    "ownedChildRetirementFields",
+    "factoryAliasOriginal",
+    "taskConstructorGrant",
+    "ephemeralRetirementBounds",
+    "appRetirementTraits",
+    "naturalFileRejectionRecipient",
+    "receivingCases",
+    "naturalFileFields"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.plugin.completion-refusal-retirement.v1"
+    },
+    "rejectionFields": {
+      "const": [
+        "emit",
+        "ephemeral",
+        "fault"
+      ]
+    },
+    "emitFields": {
+      "const": [
+        "artifact_mutations",
+        "config_mutations",
+        "window_config_mutations",
+        "draft_mutations",
+        "transaction",
+        "transaction_phase",
+        "effects",
+        "extension_invocations",
+        "events",
+        "ui_scope",
+        "child_emits",
+        "owned_child_emits",
+        "child_preparations",
+        "interaction_writes",
+        "tasks"
+      ]
+    },
+    "ephemeralFields": {
+      "const": [
+        "presence",
+        "transient",
+        "window_transient"
+      ]
+    },
+    "extensionFields": {
+      "const": [
+        "extension_id",
+        "capability",
+        "request_json",
+        "response_action"
+      ]
+    },
+    "taskFields": {
+      "const": [
+        "label",
+        "key",
+        "restart",
+        "run"
+      ]
+    },
+    "childFields": {
+      "const": [
+        "genesis",
+        "owner",
+        "slot",
+        "child_id",
+        "ops",
+        "op_schema",
+        "labels"
+      ]
+    },
+    "ownedChildFields": {
+      "const": [
+        "metadata",
+        "mutations"
+      ]
+    },
+    "effects": {
+      "const": [
+        "OpenWindow",
+        "CloseWindow",
+        "Notify",
+        "ClipboardWrite",
+        "RequestSync",
+        "Navigate",
+        "LoadDocument",
+        "OpenExternalUrl",
+        "SetPanel",
+        "DownloadMediaExport",
+        "IconRenderExport",
+        "VideoRenderExport",
+        "RequestFileOpen",
+        "RequestMediaFrames",
+        "SpawnPluginInstance",
+        "OpenPluginInstance",
+        "SetActiveUtility",
+        "SetActiveTool",
+        "OpenDialog",
+        "DispatchAction",
+        "ReplayShellCommand",
+        "InvokeExtension",
+        "SendMessage",
+        "PublishEvent",
+        "BlobWrite",
+        "BlobLoad",
+        "HttpRequest",
+        "DocumentRead",
+        "DocumentWrite",
+        "LinkResolve",
+        "RegistryQuery",
+        "IoCompose",
+        "CacheDerive",
+        "CacheRead",
+        "SetTimer",
+        "SpawnJob",
+        "CancelJob",
+        "Respond",
+        "StorageRead",
+        "StorageWrite",
+        "StorageDelete",
+        "RequestCapability",
+        "ReleaseCapability",
+        "Subscribe",
+        "Unsubscribe",
+        "RequestServiceOperation"
+      ]
+    },
+    "taskSourceOriginal": {
+      "const": true
+    },
+    "childSourceOriginal": {
+      "const": true
+    },
+    "faultSourceOriginal": {
+      "const": true
+    },
+    "bodyCopyGrantUnchanged": {
+      "const": true
+    },
+    "headerCopyBytes": {
+      "const": 0
+    },
+    "copies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "preparationFields": {
+      "const": [
+        "owner"
+      ]
+    },
+    "preparationRetirementFields": {
+      "const": [
+        "original",
+        "fault"
+      ]
+    },
+    "ownedChildRetirementFields": {
+      "const": [
+        "original"
+      ]
+    },
+    "factoryAliasOriginal": {
+      "const": true
+    },
+    "taskConstructorGrant": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 1,
+        "maximumCapacityBytes": 1048576,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 256
+      }
+    },
+    "ephemeralRetirementBounds": {
+      "const": [
+        "PresenceMutation",
+        "TransientMutation"
+      ]
+    },
+    "appRetirementTraits": {
+      "const": [
+        "ArtifactApp",
+        "ArtifactEditor",
+        "ArtifactViewer"
+      ]
+    },
+    "naturalFileRejectionRecipient": {
+      "const": {
+        "source": "originalWholeRejection",
+        "admission": "ownedRetirementFullGrant",
+        "headerCopyBytes": 0,
+        "faultReshaping": false,
+        "refusedSourceReturned": true
+      }
+    },
+    "receivingCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "extension",
+          "input",
+          "message",
+          "scope",
+          "parameter"
+        ],
+        "properties": {
+          "outcome": {
+            "enum": [
+              "emit",
+              "fault"
+            ]
+          },
+          "extension": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parameter": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "naturalFileFields": {
+      "const": [
+        "port",
+        "media",
+        "decoder",
+        "completion",
+        "emit",
+        "pending_completion_rejection",
+        "retirement",
+        "contract",
+        "byte_cursor",
+        "byte_length",
+        "decode_progress",
+        "stage",
+        "completed",
+        "closing"
+      ]
+    }
+  }
+}

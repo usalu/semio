@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-09T23:23:41.695270+00:00",
+  "red": {
+    "session": 93794,
+    "exit": 1,
+    "duration": "772ms",
+    "failedAbsenceGuards": 3
+  },
+  "green": {
+    "session": 24587,
+    "exit": 0,
+    "duration": "17.2s",
+    "laws": 7,
+    "assertions": 95,
+    "extraDepthLawAssertions": 612
+  },
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts",
+      "sha256": "330cf8389e9da497248795563389c37c0ff7ee01158b5fe90b1bdb1aff160470",
+      "matchesAuthoredEndpoint": true,
+      "schemaAbsent": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧪️tests/🟦️.ts",
+      "sha256": "ec8db5fd64ad5a940812ee231349d818a77a0fa178886fef6ea22a2247de58a3",
+      "matchesAuthoredEndpoint": true,
+      "schemaAbsent": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "sha256": "f38df3389d27397891cafeefa51d10a8cedd32abb901234fb6b60e54de8fcdc5",
+      "matchesAuthoredEndpoint": true,
+      "schemaAbsent": true
+    }
+  ],
+  "currentExcludedObservations": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧫️fixtures/⏱️finite.json",
+      "sha256": "6bafa41c37903b74d77faa1f83a54a8887da37cfa76db4149fce7bb97a7a59cc",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧫️fixtures/🔣️.json",
+      "sha256": "39e9ded87dd7e51be25ce344361cc582331c3a2f2da23c35be74c9cf6f88fe3f",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📪️exit.json",
+      "sha256": "853b9b3d771428f476cf059875178e784e53305b649ab8d13dd699625ba5caa2",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "sha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "sha256": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",
+      "sha256": "55312df9ab0aa4830de3151722210e27b161cff0d67db066444164b09bf4da7f",
+      "authored": false
+    }
+  ]
+}

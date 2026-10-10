@@ -64,7 +64,7 @@ impl<'a> BorrowedString<'a> {
         Self { text, offset: 0, chunk: 0, phase: 0, escape: [0; 6], escape_length: 0, escape_offset: 0 }
     }
 
-    fn next_byte(&mut self) -> Result<Option<u8>, String> {
+    fn next_byte(&mut self) -> Result<Option<u8>, ValueError> {
         if self.phase == 0 {
             self.phase = 1;
             return Ok(Some(b'"'));
@@ -77,7 +77,7 @@ impl<'a> BorrowedString<'a> {
             self.escape_offset += 1;
             return Ok(Some(byte));
         }
-        let Some(byte) = self.text.next_byte(&mut self.chunk, &mut self.offset).map_err(str::to_owned)? else {
+        let Some(byte) = self.text.next_byte(&mut self.chunk, &mut self.offset).map_err(|message|ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,message))? else {
             self.phase = 2;
             return Ok(Some(b'"'));
         };
@@ -120,11 +120,11 @@ impl ArtifactCanonicalEditEncoder {
 
     /// 🪪️ Extends only references obtained from the exact privately owned immutable root.
     /// Private callers retain its Box or Arc until every frame is empty, including unwind.
-    fn bind<T: ArtifactCanonicalJson>(&mut self, root: &T) -> Result<(), String> {
+    fn bind<T: ArtifactCanonicalJson>(&mut self, root: &T) -> Result<(), ValueError> {
         let address = root as *const T as usize;
         if self.started {
             if self.root_address != address {
-                return Err("canonical-edit.borrowed-root-rebound".into());
+                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.borrowed-root-rebound"));
             }
             return Ok(());
         }
@@ -141,9 +141,9 @@ impl ArtifactCanonicalEditEncoder {
         Ok(())
     }
 
-    fn push(&mut self, value: BorrowedFrame<'static>) -> Result<(), String> {
+    fn push(&mut self, value: BorrowedFrame<'static>) -> Result<(), ValueError> {
         if self.depth == ARTIFACT_CANONICAL_JSON_DEPTH {
-            return Err("canonical-edit.depth-limit".into());
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.depth-limit"));
         }
         if self.depth == self.frames.len() {
             self.frames.push(Some(value));
@@ -154,13 +154,13 @@ impl ArtifactCanonicalEditEncoder {
         Ok(())
     }
 
-    fn next_byte(&mut self) -> Result<Option<u8>, String> {
-        for _ in 0..ARTIFACT_CANONICAL_JSON_DEPTH * 8 {
+    fn next_byte(&mut self) -> Result<Option<u8>, ValueError> {
+        for _ in 0..1 {
             if self.depth == 0 {
                 return Ok(None);
             }
             let top = self.depth - 1;
-            let frame = self.frames[top].take().ok_or_else(|| "canonical-edit.borrowed-frame-missing".to_string())?;
+            let frame = self.frames[top].take().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.borrowed-frame-missing"))?;
             match frame {
                 BorrowedFrame::Pending(value) => {
                     self.frames[top] = Some(match value {
@@ -191,12 +191,9 @@ impl ArtifactCanonicalEditEncoder {
                     self.frames[top] = Some(BorrowedFrame::Scalar { bytes, offset: offset + 1 });
                     return Ok(Some(byte));
                 }
-                BorrowedFrame::Indexed { source, mut cursor } => {
-                    if let Some(byte) = cursor.next_byte(source)? {
-                        self.frames[top] = Some(BorrowedFrame::Indexed { source, cursor });
-                        return Ok(Some(byte));
-                    }
-                    self.depth -= 1;
+                BorrowedFrame::Indexed { source, cursor } => {
+                    self.frames[top] = Some(BorrowedFrame::Indexed { source, cursor });
+                    return Ok(None);
                 }
                 BorrowedFrame::Array { mut values, started, emitted } => {
                     if !started {
@@ -234,26 +231,35 @@ impl ArtifactCanonicalEditEncoder {
                         return Ok(Some(b':'));
                     }
                     3 => {
-                        let value = current.take().ok_or_else(|| "canonical-edit.borrowed-value-missing".to_string())?;
+                        let value = current.take().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.borrowed-value-missing"))?;
                         self.frames[top] = Some(BorrowedFrame::Object { values, phase: 1, emitted, current });
                         self.push(BorrowedFrame::Pending(value))?;
                     }
-                    _ => return Err("canonical-edit.borrowed-object-phase".into()),
+                    _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.borrowed-object-phase")),
                 },
             }
         }
-        Err("canonical-edit.borrowed-expansion-limit".into())
+        Ok(None)
     }
 
-    pub(super) fn encode_chunk<T: ArtifactCanonicalJson>(&mut self, root: &T, output: &mut [u8]) -> Result<usize, ArtifactCanonicalJsonEncodeError> {
-        self.bind(root).map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason })?;
-        let mut written = 0;
-        while written < output.len().min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES) {
-            let Some(byte) = self.next_byte().map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: written, reason })? else { break };
-            output[written] = byte;
-            written += 1;
+    pub(super) fn encode_chunk<T: ArtifactCanonicalJson>(&mut self, root: &T, output: &mut [u8], grant: RetainedCloneGrant) -> Result<ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonEncodeError> {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes == 0 || output.is_empty() {
+            return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 });
         }
-        Ok(written)
+        self.bind(root).map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason })?;
+        if self.depth != 0 {
+            let top = self.depth - 1;
+            if let Some(BorrowedFrame::Indexed { source, cursor }) = self.frames[top].as_mut() {
+                let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(top), ..grant };
+                let step = cursor.encode_chunk_admitted(*source, output, child)?;
+                if cursor.is_complete() { self.frames[top] = None; self.depth -= 1; }
+                return Ok(ArtifactCanonicalJsonTreeStep { ownership: if self.is_complete() { RetainedCloneStep::Complete(step.ownership.progress()) } else { RetainedCloneStep::Progress(step.ownership.progress()) }, written_bytes: step.written_bytes });
+            }
+        }
+        let byte = self.next_byte().map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason })?;
+        if let Some(byte) = byte { output[0] = byte; }
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: usize::from(byte.is_some()), ..Default::default() };
+        Ok(ArtifactCanonicalJsonTreeStep { ownership: if self.is_complete() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }, written_bytes: usize::from(byte.is_some()) })
     }
 
     pub(super) fn is_complete(&self) -> bool {
@@ -262,7 +268,7 @@ impl ArtifactCanonicalEditEncoder {
 
     pub(super) fn reset(&mut self) -> Result<(), semio_framework_value::ValueError> {
         if self.depth != 0 {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.borrowed-reset-before-retirement"));
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.borrowed-reset-before-retirement"));
         }
         self.root_address = 0;
         self.started = false;

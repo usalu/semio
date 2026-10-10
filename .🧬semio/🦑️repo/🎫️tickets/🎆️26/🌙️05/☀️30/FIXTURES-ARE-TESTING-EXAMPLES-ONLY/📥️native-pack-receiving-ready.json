@@ -1,0 +1,50 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs",
+    "sha256": "318bcc18686d13e7c49ed522ad67c54a6643d54dd5876904f077c75ce399a443",
+    "bytes": 6656,
+    "qualification": "whole file observation; narrow action attribution only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "sha256": "2b9271cbf3dcc11dbce09d1d8350bb0a9ce5e0e2745f98d3bb5955920a07e793",
+    "bytes": 1992033,
+    "qualification": "whole file observation; narrow action attribution only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+    "sha256": "12a543e5e20656a0e806c8587e14bc0a064d980d2bf26bc6653f369c49259fb9",
+    "bytes": 385814,
+    "qualification": "whole file observation; narrow action attribution only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🚪️io/🔤️json/🦀️.rs",
+    "sha256": "6ceba9ffa337b9699f546542c16728294cbfffcc76b6e1234bce2fb476ae318a",
+    "bytes": 9260,
+    "qualification": "whole file observation; narrow action attribution only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs",
+    "sha256": "1c6c2dba30916d5ec8b594dc36f9b873f4e0b9057b023809344994c091841ddf",
+    "bytes": 79087,
+    "qualification": "whole file observation; narrow action attribution only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+    "sha256": "cf74ae6b098405e4ec709e2edb16277a6301fd7a0b31ad8418f9cbd202c7cec5",
+    "bytes": 14502,
+    "qualification": "whole file observation; narrow action attribution only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/📦️receiving.json",
+    "sha256": "47104966abc3c4044b1057f1c866c4a0e14128a3338c75ad77208ee3b14c840a",
+    "bytes": 685,
+    "qualification": "whole file observation; narrow action attribution only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🦀️.rs",
+    "sha256": "e67a8557af7ea6d4ddd169862f5a92c407723a860936c971f835b3be1e6a1144",
+    "bytes": 9670,
+    "qualification": "whole file observation; narrow action attribution only"
+  }
+]

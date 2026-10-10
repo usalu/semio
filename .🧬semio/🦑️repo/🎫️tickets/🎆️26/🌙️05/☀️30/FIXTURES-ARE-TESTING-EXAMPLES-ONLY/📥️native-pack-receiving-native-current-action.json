@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs",
+  "beforeSha256": "84b5d8343704dc4389335bba94334d4c965a2713800e61f8fe7cb83bdc683a48",
+  "afterSha256": "1c6c2dba30916d5ec8b594dc36f9b873f4e0b9057b023809344994c091841ddf",
+  "action": "correct caller to canonical native_decoding recipient namespace and add actual accepted callback case in addition to17 cuts; nativeUNRUN"
+}

@@ -6,6 +6,8 @@
     "includedScripts": []
   },
   "scripts": {
+    "test-native-literal-refusal-source": "nx run @semio-tech/value-rs:test-native-literal-refusal-source",
+    "test-native-literal-refusal-native": "nx run @semio-tech/value-rs:test-native-literal-refusal-native",
     "test-native-recipient-source": "nx run @semio-tech/value-rs:test-native-recipient-source",
     "test-native-recipient": "nx run @semio-tech/value-rs:test-native-recipient",
     "test-portable": "nx run @semio-tech/value-rs:test-portable",

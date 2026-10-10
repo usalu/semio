@@ -1,0 +1,56 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddec\ufe0fsnapshot-clone/\ud83e\udd80\ufe0f.rs",
+    "currentSHA256": "a7e393a2b8b9805b7a568a58182e3b2e64e886651f60be610c78ee29960624ea",
+    "ownedActions": [
+      "three explicit request type parameters",
+      "installed original issuer handoff where actual constructor present"
+    ],
+    "qualification": "narrow guarded action executed before later window-body guard refusal; no source rollback; complete before-file hash was not persisted by aborted aggregate writer, so current whole hash is observation only"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddf5\ufe0foperation-wire/\ud83e\udd80\ufe0f.rs",
+    "currentSHA256": "d83d1b847fc405c1c59fc44c1c5dedbfe831f300476c12aa3838ee2e9877f104",
+    "ownedActions": [
+      "three explicit request type parameters",
+      "installed original issuer handoff where actual constructor present"
+    ],
+    "qualification": "narrow guarded action executed before later window-body guard refusal; no source rollback; complete before-file hash was not persisted by aborted aggregate writer, so current whole hash is observation only"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+    "currentSHA256": "d7cfbd38ee20702935ca76828b541d5688a56d02ffcf8cf07133c35476248e2e",
+    "ownedActions": [
+      "three explicit request type parameters",
+      "installed original issuer handoff where actual constructor present"
+    ],
+    "qualification": "narrow guarded action executed before later window-body guard refusal; no source rollback; complete before-file hash was not persisted by aborted aggregate writer, so current whole hash is observation only"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\udd80\ufe0f.rs",
+    "currentSHA256": "3011744fb52bb1ebad69d7f48fc5d72bca595fb7025b1c9fdf0b01830a052aa1",
+    "ownedActions": [
+      "three explicit request type parameters",
+      "installed original issuer handoff where actual constructor present"
+    ],
+    "qualification": "narrow guarded action executed before later window-body guard refusal; no source rollback; complete before-file hash was not persisted by aborted aggregate writer, so current whole hash is observation only"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0fplugin-runtime-plugin-builder-contract/\ud83e\udd80\ufe0f.rs",
+    "currentSHA256": "4484e5455040e7ab3a3920102ac73a4f9af6dd4b677ea04d7ea508e79fb2a451",
+    "ownedActions": [
+      "three explicit request type parameters",
+      "installed original issuer handoff where actual constructor present"
+    ],
+    "qualification": "narrow guarded action executed before later window-body guard refusal; no source rollback; complete before-file hash was not persisted by aborted aggregate writer, so current whole hash is observation only"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddec\ufe0fsnapshot-clone/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+    "currentSHA256": "543983f5bb72f00ba670ac02d15b74cd5e422355c52eaa566c10f29867b40ca8",
+    "ownedActions": [
+      "three explicit request type parameters",
+      "installed original issuer handoff where actual constructor present"
+    ],
+    "qualification": "narrow guarded action executed before later window-body guard refusal; no source rollback; complete before-file hash was not persisted by aborted aggregate writer, so current whole hash is observation only"
+  }
+]

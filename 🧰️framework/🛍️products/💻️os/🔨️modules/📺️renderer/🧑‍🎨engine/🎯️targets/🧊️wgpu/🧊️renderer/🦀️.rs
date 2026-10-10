@@ -3710,37 +3710,43 @@ impl RendererAssetDecodeJob {
         self.probe.try_borrow_mut().ok()?.take()
     }
 
-    fn complete(&mut self, result: RendererAssetDecodeResult) -> semio_framework_job::StepOutcome {
-        use semio_framework_job::{CommitCandidate, JobPayloadStream, RetainedJobPayload, StepOutcome};
-        self.result = Some(result);
-        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+    fn complete<'a>(&'a mut self, result: RendererAssetDecodeResult, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let loan = semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)?;
+        if loan.is_some() { self.result = Some(result); }
+        Ok(loan)
     }
 }
 
 impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
-    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        use semio_framework_job::StepOutcome;
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let grant = context.retained_grant();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         if self.cancelled.load(Ordering::Acquire) || context.is_cancelled() {
-            return self.complete(RendererAssetDecodeResult::Cancelled);
+            return self.complete(RendererAssetDecodeResult::Cancelled, context);
         }
-        if context.should_yield() {
-            return StepOutcome::Yield;
-        }
+        if let Some(result) = self.result { return self.complete(result, context); }
+        if context.should_yield() { return Ok(None); }
         let Some(steps) = self.steps.checked_add(1) else {
-            return self.complete(RendererAssetDecodeResult::Fault("asset decode step sequence exhausted"));
+            return self.complete(RendererAssetDecodeResult::Fault("asset decode step sequence exhausted"), context);
         };
         let Some(probe) = self.probe.get_mut().as_mut() else {
-            return self.complete(RendererAssetDecodeResult::Fault("asset decode lost its exact response owner"));
+            return self.complete(RendererAssetDecodeResult::Fault("asset decode lost its exact response owner"), context);
         };
         let result = probe.step();
         self.steps = steps;
         context.consume_fuel(1);
-        match result {
-            RendererAssetProbeStep::Pending => StepOutcome::Yield,
-            RendererAssetProbeStep::Ready => self.complete(RendererAssetDecodeResult::Ready),
-            RendererAssetProbeStep::Reject(detail) => self.complete(RendererAssetDecodeResult::Rejected(detail)),
-            RendererAssetProbeStep::Fault(detail) => self.complete(RendererAssetDecodeResult::Fault(detail)),
-        }
+        self.result = match result {
+            RendererAssetProbeStep::Pending => None,
+            RendererAssetProbeStep::Ready => Some(RendererAssetDecodeResult::Ready),
+            RendererAssetProbeStep::Reject(detail) => Some(RendererAssetDecodeResult::Rejected(detail)),
+            RendererAssetProbeStep::Fault(detail) => Some(RendererAssetDecodeResult::Fault(detail)),
+        };
+        Ok(None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        if self.result.is_none() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoder completion requires its original held typed result")); }
+        descriptor.complete(None, None)
     }
 
     fn begin_close(&mut self) {
@@ -3754,11 +3760,11 @@ impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
         let empty = semio_framework_job::RetainedCloneProgress::default();
         if self.probe.get_mut().is_none() { return InteractiveJobCloseStep::Complete { progress: empty }; }
         if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: empty }; }
-        if grant.maximum_depth == 0 { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }; }
+        if grant.maximum_depth == 0 { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: empty }; }
         let mut handback = match self.handback.try_lock() {
             Ok(handback) => handback,
             Err(std::sync::TryLockError::WouldBlock) => return InteractiveJobCloseStep::Blocked,
-            Err(std::sync::TryLockError::Poisoned(_)) => return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::InvariantViolated),
+            Err(std::sync::TryLockError::Poisoned(_)) => return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: empty },
         };
         if handback.is_some() { return InteractiveJobCloseStep::Blocked; }
         *handback = self.probe.get_mut().take();
@@ -6439,8 +6445,8 @@ pub(crate) mod kernel_runtime {
     }
 
     pub(crate) enum KernelOutcome {
-        Created(Result<u32, String>),
-        Exchanged(Result<ExchangeOutcome, String>),
+        Created(Result<u32, crate::program_bridge::ProgramFault>),
+        Exchanged(Result<ExchangeOutcome, crate::program_bridge::ProgramFault>),
         ProductReplayMounted(Result<(), MountedProductReplayRequest>),
     }
     //#endregion
@@ -6565,7 +6571,7 @@ pub(crate) mod kernel_runtime {
         /// instance. `artifact_schema` is the document schema the app edits, empty for an app that edits
         /// none: the mounted component becomes that kind's codec in this process
         /// ([`semio_framework_os_kernel::os_store::register_component_document_codec`]).
-        pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, String> {
+        pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, crate::program_bridge::ProgramFault> {
             match self.submit(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(wasm_path, plugin_id, app_id, artifact_schema) }).await {
                 KernelOutcome::Created(result) => result,
                 KernelOutcome::Exchanged(_) => Err("kernel: unexpected Exchanged response for create_app".into()),
@@ -6617,9 +6623,9 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        pub(crate) async fn exchange_commands(&self, instance: u32, commands: Vec<protocol::AppCommand>) -> Result<ExchangeOutcome, String> {
+        pub(crate) async fn exchange_commands(&self, instance: u32, commands: Vec<protocol::AppCommand>) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             if !persistent_command_completion_port_ready() {
-                return Err("persistent command completion submit/poll/cancel authority is not admitted".to_string());
+                return Err(("persistent command completion submit/poll/cancel authority is not admitted".to_string()).into());
             }
             let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| fault.describe())?;
             for command in commands {
@@ -6627,7 +6633,7 @@ pub(crate) mod kernel_runtime {
                 let command = protocol::encode_app_command(&command).await.map_err(|fault| fault.describe())?;
                 if let Err((fault, rejected)) = envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance, seq, command }) {
                     self.queue.enqueue_retained(KernelRequest::CloseRejectedCommandBuild { key: u64::from(instance), owner: semio_framework::kernel::RejectedCommandBuild::new(envelopes, rejected) }, Arc::new(ResponseSlot::default())).await;
-                    return Err(fault.describe());
+                    return Err((fault.describe()).into());
                 }
             }
             let reservation = reserve_seq()?;
@@ -6639,7 +6645,7 @@ pub(crate) mod kernel_runtime {
                 }
                 Err((fault, owners)) => {
                     self.queue.enqueue_retained(KernelRequest::CloseRejectedCommandBuild { key: u64::from(instance), owner: semio_framework::kernel::RejectedCommandBuild::from_admitted(owners) }, Arc::new(ResponseSlot::default())).await;
-                    return Err(fault.describe());
+                    return Err((fault.describe()).into());
                 }
             };
             let driver = semio_framework::kernel::CommandBatchDriver::new(generation, batch);
@@ -6650,12 +6656,12 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        pub(crate) async fn exchange_events(&self, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+        pub(crate) async fn exchange_events(&self, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             let event = match QueuedKernelEvent::try_from_events(events) {
                 Ok(event) => event,
                 Err(owner) => {
                     self.queue.enqueue_retained(KernelRequest::CloseRejectedEvents { owner }, Arc::new(ResponseSlot::default())).await;
-                    return Err("only one bounded SurfaceVisible or document-backbone Message event is admitted per kernel request turn".to_string());
+                    return Err(("only one bounded SurfaceVisible or document-backbone Message event is admitted per kernel request turn".to_string()).into());
                 }
             };
             match self.submit(KernelRequest::Exchange { instance, event }).await {
@@ -6665,7 +6671,7 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        pub(crate) async fn advance_retained(&self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, String> {
+        pub(crate) async fn advance_retained(&self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             match self.submit(KernelRequest::AdvanceRetained { instance, surface }).await {
                 KernelOutcome::Exchanged(result) => result,
                 KernelOutcome::Created(_) => Err("kernel: unexpected Created response for retained advance".into()),
@@ -6701,7 +6707,7 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        pub(crate) async fn advance_product_replay(&self, instance: u32) -> Result<(), String> {
+        pub(crate) async fn advance_product_replay(&self, instance: u32) -> Result<(), crate::program_bridge::ProgramFault> {
             match self.submit(KernelRequest::AdvanceProductReplay { instance }).await {
                 KernelOutcome::Exchanged(result) => result.map(|_| ()),
                 KernelOutcome::Created(_) => Err("kernel: unexpected Created response for product replay advance".into()),
@@ -7425,6 +7431,7 @@ pub(crate) mod kernel_runtime {
         replay_begin_cursor: usize,
         begin_cursor: usize,
         unregister_cursor: usize,
+        unregister_refusal: Option<semio_framework_actor::pack::PackError>,
         route_cursor: usize,
     }
 
@@ -7730,7 +7737,7 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        async fn advance_product_replay(&mut self, instance: u32) -> Result<ExchangeOutcome, String> {
+        async fn advance_product_replay(&mut self, instance: u32) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             let idle = || ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() };
             if let Some(index) = self.product_replay_authorities.iter().position(|authority| authority.as_ref().is_some_and(|authority| authority.instance() == instance)) {
                 let (actor, job, profile_cursor, profile_started) = {
@@ -7788,7 +7795,7 @@ pub(crate) mod kernel_runtime {
                     Ok(authority) => self.product_replay_authorities[index] = Some(authority),
                     Err(authority) => {
                         self.product_replay_authorities[index] = Some(authority);
-                        return Err("kernel: mounted product replay authority became stale; exact owner remains mounted".to_string());
+                        return Err(("kernel: mounted product replay authority became stale; exact owner remains mounted".to_string()).into());
                     }
                 }
                 if profile_started {
@@ -7823,7 +7830,7 @@ pub(crate) mod kernel_runtime {
                     (authority.worker_count, authority.worker_slot, authority.begin, authority.restore_start_ordinal)
                 };
                 if !begin {
-                    return Err("kernel: product replay start lost its qualified begin authority".to_string());
+                    return Err(("kernel: product replay start lost its qualified begin authority".to_string()).into());
                 }
                 self.request_job_replay(actor, job, worker_count, worker_slot, restore_start_ordinal).await?;
                 let authority = self.product_replay_authorities[index].as_mut().expect("starting product replay authority");
@@ -7850,7 +7857,7 @@ pub(crate) mod kernel_runtime {
             };
             let entry = self.job_replays[entry_index].as_ref().expect("selected mounted replay log");
             if entry.request != request {
-                return Err("kernel: product replay request digest does not match the mounted session".to_string());
+                return Err(("kernel: product replay request digest does not match the mounted session".to_string()).into());
             }
             if entry.log.has_pending_work() || entry.captured.is_some() || entry.policy.is_some() {
                 return Ok(idle());
@@ -7871,10 +7878,10 @@ pub(crate) mod kernel_runtime {
             }
             let terminal = entry.log.record_header(entry.log.sealed_records().checked_sub(1).ok_or_else(|| "kernel: product replay log is empty".to_string())?).ok_or_else(|| "kernel: product replay terminal record is missing".to_string())?;
             if !matches!(terminal.kind, JobReplayPublicationKind::Commit | JobReplayPublicationKind::Cancelled | JobReplayPublicationKind::Fault) {
-                return Err("kernel: product replay log has no typed terminal publication".to_string());
+                return Err(("kernel: product replay log has no typed terminal publication".to_string()).into());
             }
             if terminal.prefix_digest != entry.log.prefix_digest() {
-                return Err("kernel: product replay terminal prefix does not cover the retained log".to_string());
+                return Err(("kernel: product replay terminal prefix does not cover the retained log".to_string()).into());
             }
             let expected_checkpoint = entry.log.last_checkpoint_header().map(|header| MountedProductReplayCheckpoint {
                 ordinal: header.ordinal,
@@ -7883,13 +7890,13 @@ pub(crate) mod kernel_runtime {
                 applied_progress: header.applied_progress,
             });
             if self.product_replay_claims[index].as_ref().expect("qualified product replay claim").checkpoint != expected_checkpoint {
-                return Err("kernel: product replay checkpoint witness does not match the retained log".to_string());
+                return Err(("kernel: product replay checkpoint witness does not match the retained log".to_string()).into());
             }
             let route = entry.log.route();
             let operation = entry.authority.operation;
             let process_slot = self.runtime.kernel().actor_record(actor).await.map_or(u16::MAX, |record| record.shard.0);
             if terminal.worker_count != self.worker_count || terminal.worker_slot != process_slot {
-                return Err("kernel: product replay physical process identity changed before qualification".to_string());
+                return Err(("kernel: product replay physical process identity changed before qualification".to_string()).into());
             }
             let worker_count = mounted_product_replay_profile(self.worker_count, 0).ok_or_else(|| "kernel: first product replay profile is invalid".to_string())?;
             let worker_slot = mounted_product_replay_worker_slot(process_slot, worker_count).ok_or_else(|| "kernel: first product replay slot is invalid".to_string())?;
@@ -8341,7 +8348,7 @@ pub(crate) mod kernel_runtime {
         /// extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
         /// (`program_bridge::load_wasm_plugins`'s own layout convention), so the extensions' own
         /// wasm artifacts live as siblings under the same `modules_root`.
-        async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, String> {
+        async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, crate::program_bridge::ProgramFault> {
             let replay_route_index = self.replay_routes.iter().position(Option::is_none).ok_or_else(|| "kernel: fixed replay route registry is full".to_string())?;
             let component = read_native_component(&wasm_path).await?;
             let bytes = component.as_slice();
@@ -8531,7 +8538,7 @@ pub(crate) mod kernel_runtime {
                     let mut actors = [ActorId(0); JOB_PROGRESS_ACTIVE_CAPACITY];
                     let actor_count = removed.len();
                     actors[..actor_count].copy_from_slice(&removed);
-                    self.closing_apps[index] = Some(ClosingKernelApp { instance, actors, actor_count, replay_begin_cursor: 0, begin_cursor: 0, unregister_cursor: 0, route_cursor: 0 });
+                    self.closing_apps[index] = Some(ClosingKernelApp { instance, actors, actor_count, replay_begin_cursor: 0, begin_cursor: 0, unregister_cursor: 0, unregister_refusal: None, route_cursor: 0 });
                     return false;
                 }
             };
@@ -8569,7 +8576,11 @@ pub(crate) mod kernel_runtime {
                 return false;
             }
             if closing.unregister_cursor < closing.actor_count {
-                self.runtime.unregister(closing.actors[closing.unregister_cursor]).await;
+                if let Err(error) = self.runtime.unregister(closing.actors[closing.unregister_cursor]).await {
+                    closing.unregister_refusal = Some(error);
+                    self.closing_apps[close_index] = Some(closing);
+                    return false;
+                }
                 closing.unregister_cursor += 1;
                 self.closing_apps[close_index] = Some(closing);
                 return false;
@@ -8676,9 +8687,9 @@ pub(crate) mod kernel_runtime {
         /// patch. A rejection with no authority behind it (a surface the registry could not admit
         /// at all, so no turn ever reached a slot) has nothing to reject back and stays a local
         /// registry entry rather than a fabricated receipt.
-        async fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+        async fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             let Some(&actor) = self.instances.get(&instance) else {
-                return Err(format!("kernel: instance {instance} is not registered"));
+                return Err((format!("kernel: instance {instance} is not registered")).into());
             };
             if let Some(rejection) = self.pending_rejections.take_instance_one(instance) {
                 if let Some(receipt) = rejection.receipt {
@@ -8690,26 +8701,26 @@ pub(crate) mod kernel_runtime {
             Ok(outcome)
         }
 
-        async fn exchange_commands(&mut self, instance: u32, driver: semio_framework::kernel::CommandBatchDriver) -> Result<ExchangeOutcome, String> {
+        async fn exchange_commands(&mut self, instance: u32, driver: semio_framework::kernel::CommandBatchDriver) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             let key = u64::from(instance);
             let generation = driver.generation();
             if !self.retained_command_closes.terminal_is_empty() {
                 if !self.queued_command_closes.can_insert(key) {
-                    return Err("kernel: retained and queued command close registries are saturated; caller owner remains in the queue close lane".to_string());
+                    return Err(("kernel: retained and queued command close registries are saturated; caller owner remains in the queue close lane".to_string()).into());
                 }
                 self.queued_command_closes.insert_admitted(key, generation, driver);
                 self.queued_command_closes.begin_close(key, generation).map_err(|fault| fault.describe())?;
                 let _ = self.command_maintenance_step();
-                return Err("kernel: previous cancelled command owner is closing; incoming exact batch moved to the queued close lane".to_string());
+                return Err(("kernel: previous cancelled command owner is closing; incoming exact batch moved to the queued close lane".to_string()).into());
             }
             if !self.retained_command_closes.can_insert(key) {
-                return Err("kernel: retained command close registry is saturated or collided".to_string());
+                return Err(("kernel: retained command close registry is saturated or collided".to_string()).into());
             }
             self.retained_command_closes.insert_admitted(key, generation, driver);
             let Some(&actor) = self.instances.get(&instance) else {
                 self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.describe())?;
                 let _ = self.command_maintenance_step();
-                return Err(format!("kernel: instance {instance} is not registered; exact command owner entered bounded close"));
+                return Err((format!("kernel: instance {instance} is not registered; exact command owner entered bounded close")).into());
             };
             let mut combined = ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() };
             loop {
@@ -8719,7 +8730,7 @@ pub(crate) mod kernel_runtime {
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err("kernel: command document destinations saturated before the next turn; retained batch and exact documents entered bounded close".to_string());
+                        return Err(("kernel: command document destinations saturated before the next turn; retained batch and exact documents entered bounded close".to_string()).into());
                     }
                 };
                 let page = self.retained_command_closes.with_driver_mut(key, generation, |driver| driver.next_page());
@@ -8730,14 +8741,14 @@ pub(crate) mod kernel_runtime {
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault.describe());
+                        return Err((fault.describe()).into());
                     }
                     Err(fault) => {
                         self.command_document_closes.release(&mut destinations);
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault.describe());
+                        return Err((fault.describe()).into());
                     }
                 };
                 let events = match page {
@@ -8749,7 +8760,7 @@ pub(crate) mod kernel_runtime {
                     self.command_document_closes.begin_close_batch(key, generation);
                     let _ = self.retained_command_closes.begin_close(key, generation);
                     let _ = self.command_maintenance_step();
-                    return Err(fault.describe());
+                    return Err((fault.describe()).into());
                 }
                 let outcome = match self.run_turn(actor, instance, events).await {
                     Ok(outcome) => outcome,
@@ -8759,7 +8770,7 @@ pub(crate) mod kernel_runtime {
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault);
+                        return Err((fault).into());
                     }
                 };
                 let ExchangeOutcome { frames, surfaces, effects, command_ingress, typed_results } = outcome;
@@ -8771,7 +8782,7 @@ pub(crate) mod kernel_runtime {
                     self.command_document_closes.begin_close_batch(key, generation);
                     let _ = self.retained_command_closes.begin_close(key, generation);
                     let _ = self.command_maintenance_step();
-                    return Err(fault.describe());
+                    return Err((fault.describe()).into());
                 }
                 let progress = match self.retained_command_closes.with_driver_mut(key, generation, |driver| driver.observe(&command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)) {
                     Ok(Ok(progress)) => progress,
@@ -8779,13 +8790,13 @@ pub(crate) mod kernel_runtime {
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault.describe());
+                        return Err((fault.describe()).into());
                     }
                     Err(fault) => {
                         self.command_document_closes.begin_close_batch(key, generation);
                         let _ = self.retained_command_closes.begin_close(key, generation);
                         let _ = self.command_maintenance_step();
-                        return Err(fault.describe());
+                        return Err((fault.describe()).into());
                     }
                 };
                 combined.frames.extend(frames);
@@ -8798,7 +8809,7 @@ pub(crate) mod kernel_runtime {
                             self.command_document_closes.begin_close_batch(key, generation);
                             let _ = self.retained_command_closes.begin_close(key, generation);
                             let _ = self.command_maintenance_step();
-                            return Err(fault.describe());
+                            return Err((fault.describe()).into());
                         }
                         self.command_document_closes.publish_batch(key, generation, &mut combined.surfaces);
                         self.settle_reserved_jobs(actor, instance, &mut combined).await?;
@@ -8808,7 +8819,7 @@ pub(crate) mod kernel_runtime {
                         self.command_document_closes.begin_close_batch(key, generation);
                         self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.describe())?;
                         let _ = self.command_maintenance_step();
-                        return Err("kernel: command ingress faulted; exact driver and surface-document owners entered incremental close".to_string());
+                        return Err(("kernel: command ingress faulted; exact driver and surface-document owners entered incremental close".to_string()).into());
                     }
                     semio_framework::kernel::CommandBatchProgress::PageReady | semio_framework::kernel::CommandBatchProgress::Waiting => {}
                 }
@@ -8835,7 +8846,7 @@ pub(crate) mod kernel_runtime {
         /// 🧵️ Events cross ONE per granted turn and each settles before the next is submitted: the shard
         /// executes one event per guest turn anyway, and a batch's later envelopes must not reach a guest
         /// the first one left owning ingress. [`RUN_TURN_SETTLE_BUDGET`] bounds the whole request.
-        async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+        async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             let deadline = std::time::Instant::now() + RUN_TURN_SETTLE_BUDGET;
             let mut batches = events.into_iter().map(|event| vec![event]).collect::<std::collections::VecDeque<_>>();
             if batches.is_empty() {
@@ -8850,12 +8861,12 @@ pub(crate) mod kernel_runtime {
                     None => settled = Some(outcome),
                 }
             }
-            settled.ok_or_else(|| "kernel: a turn with no batch produced no outcome".to_string())
+            settled.ok_or_else(|| crate::program_bridge::ProgramFault::from("kernel: a turn with no batch produced no outcome"))
         }
 
         /// 🔁️ Continues one granted turn with what it still owes (see [`Self::run_turn`]) until it settled,
         /// [`run_turn_quiescent_continuations`] continuations in a row carried nothing, or `deadline` passed.
-        async fn settle_turn(&mut self, actor: ActorId, instance: u32, (mut outcome, continuation): (ExchangeOutcome, Option<Vec<Event>>), deadline: std::time::Instant) -> Result<ExchangeOutcome, String> {
+        async fn settle_turn(&mut self, actor: ActorId, instance: u32, (mut outcome, continuation): (ExchangeOutcome, Option<Vec<Event>>), deadline: std::time::Instant) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             let mut owed = run_turn_continuation_turns(continuation);
             let mut quiet = 0usize;
             while let Some(events) = owed.pop_front() {
@@ -8881,10 +8892,10 @@ pub(crate) mod kernel_runtime {
         /// - The shard then runs the guest's deferred `Event::JobCompleted` turn by itself; this host waits
         ///   for it and settles it like any turn, so the guest commits the job one unit per `MoreWork`
         ///   continuation and answers the verb (`Invocation { in_reply_to: 0 }`, `OperationCompleted`).
-        async fn settle_reserved_jobs(&mut self, actor: ActorId, instance: u32, outcome: &mut ExchangeOutcome) -> Result<(), String> {
+        async fn settle_reserved_jobs(&mut self, actor: ActorId, instance: u32, outcome: &mut ExchangeOutcome) -> Result<(), crate::program_bridge::ProgramFault> {
             while self.reserved_jobs.iter().flatten().any(|job| job.actor == actor) {
                 if self.turn_cancelled() {
-                    return Err(self.retire_cancelled_turn(actor).await);
+                    return Err((self.retire_cancelled_turn(actor).await).into());
                 }
                 let first = self.run_reserved_job_once(actor, instance).await?;
                 let later = self.settle_turn(actor, instance, first, std::time::Instant::now() + RUN_TURN_SETTLE_BUDGET).await?;
@@ -8906,9 +8917,9 @@ pub(crate) mod kernel_runtime {
         /// ✂️ Retires an actor whose turn was cancelled mid-call: a mid-flight guest can never be handed back,
         /// so its shard instance is dropped, the scheduler stops granting it, and every host record of it goes.
         /// Answers the error its request reports.
-        async fn retire_cancelled_turn(&mut self, actor: ActorId) -> String {
+        async fn retire_cancelled_turn(&mut self, actor: ActorId) -> crate::program_bridge::ProgramFault {
             let _ = self.runtime.kernel_mut().suspend(actor, None).await;
-            self.runtime.unregister(actor).await;
+            if let Err(error) = self.runtime.unregister(actor).await { return error.into(); }
             self.instances.retain(|_, instance_actor| *instance_actor != actor);
             for route in self.replay_routes.iter_mut().filter(|route| route.is_some_and(|route| route.actor == actor)) {
                 *route = None;
@@ -8919,7 +8930,7 @@ pub(crate) mod kernel_runtime {
             self.begin_fault_close(actor);
             #[cfg(test)]
             CANCELLED_KERNEL_TURNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            format!("kernel: actor {}'s turn was cancelled by its owner", actor.0)
+            format!("kernel: actor {}'s turn was cancelled by its owner", actor.0).into()
         }
 
         /// 🧩️ Compiles `bytes` on the worker pool while this loop keeps serving the other instances' requests — a
@@ -9050,7 +9061,7 @@ pub(crate) mod kernel_runtime {
         /// keeps granting it until its turn returns — after each of OUR actor's slices the request at the
         /// head of the queue may run first ([`Self::yield_slice`]), and only an explicit cancel ends the turn
         /// ([`Self::turn_cancelled`]).
-        async fn run_turn_once(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
+        async fn run_turn_once(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), crate::program_bridge::ProgramFault> {
             let mut envelopes = Vec::with_capacity(events.len().max(1));
             let mut replay_start_index = None;
             if events.is_empty() {
@@ -9093,7 +9104,7 @@ pub(crate) mod kernel_runtime {
         /// 🧰️ One turn of `actor`'s oldest live [`ReservedToolJob`]: its next `Payload::JobStep`, or, once
         /// the job ended, no envelope at all and only the wait for the deferred `Event::JobCompleted` turn
         /// [`Self::dispatch_turn`] counts as owed.
-        async fn run_reserved_job_once(&mut self, actor: ActorId, instance: u32) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
+        async fn run_reserved_job_once(&mut self, actor: ActorId, instance: u32) -> Result<(ExchangeOutcome, Option<Vec<Event>>), crate::program_bridge::ProgramFault> {
             let Some(oldest) = self.reserved_jobs.iter().flatten().filter(|job| job.actor == actor).min_by_key(|job| job.job).copied() else {
                 return Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None));
             };
@@ -9125,7 +9136,7 @@ pub(crate) mod kernel_runtime {
         /// ignored rather than aborting an otherwise-successful turn; unlike the
         /// ORIGINAL `Fault`/`Job` handling this replaces, this loop may observe outcomes
         /// for actors OTHER than `actor` (DRR is global), so those must not error out.
-        async fn dispatch_turn(&mut self, actor: ActorId, instance: u32, envelopes: Vec<Envelope>, replay_start_index: Option<usize>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
+        async fn dispatch_turn(&mut self, actor: ActorId, instance: u32, envelopes: Vec<Envelope>, replay_start_index: Option<usize>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), crate::program_bridge::ProgramFault> {
             let stepped_reserved_job = envelopes.iter().find_map(|envelope| match &envelope.payload {
                 Payload::JobStep { turn } => self.reserved_jobs.iter().flatten().any(|job| job.actor == actor && job.job == turn.job).then_some(turn.job),
                 _ => None,
@@ -9161,7 +9172,7 @@ pub(crate) mod kernel_runtime {
             let mut reserved_step_published = false;
             loop {
                 self.now_ms += 1;
-                let decision = self.runtime.tick_and_dispatch(self.now_ms, |_actor| crate::actor_budget_from_turn_budget(TURN_BUDGET, Lane::Interactive)).await;
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |_actor, original| crate::actor_budget_from_turn_budget(TURN_BUDGET, original)).await?;
                 let mut granted: Vec<u64> = decision.run.iter().map(|grant| grant.actor.0).collect();
                 let expected = granted.len() + self.reserved_jobs.iter().flatten().filter(|job| job.actor == actor && job.step.is_none()).count();
                 if expected == 0 {
@@ -9169,10 +9180,10 @@ pub(crate) mod kernel_runtime {
                 }
                 let outcomes = self.runtime.wait_for_outcomes(expected, RUN_TURN_OUTCOME_TIMEOUT);
                 if outcomes.len() < granted.len() {
-                    return Err("kernel: shard produced no outcome for this turn".to_string());
+                    return Err(("kernel: shard produced no outcome for this turn".to_string()).into());
                 }
                 if outcomes.len() < expected {
-                    return Err(format!("kernel: actor {}'s deferred reserved-job completion turn never arrived", actor.0));
+                    return Err((format!("kernel: actor {}'s deferred reserved-job completion turn never arrived", actor.0)).into());
                 }
                 for outcome in outcomes {
                     let reported = outcome.actor();
@@ -9213,7 +9224,7 @@ pub(crate) mod kernel_runtime {
                         ShardOutcome::Preempted { actor: reported } => {
                             if reported == actor.0 {
                                 if self.turn_cancelled() {
-                                    return Err(self.retire_cancelled_turn(actor).await);
+                                    return Err((self.retire_cancelled_turn(actor).await).into());
                                 }
                                 self.yield_slice(actor, instance).await;
                             }
@@ -9228,7 +9239,7 @@ pub(crate) mod kernel_runtime {
                                 payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? },
                             };
                             if !matches!(self.runtime.submit(&resume).await, Backpressure::Accept) {
-                                return Err(format!("kernel: preempted actor {reported} refused its resume envelope"));
+                                return Err((format!("kernel: preempted actor {reported} refused its resume envelope")).into());
                             }
                         }
                         ShardOutcome::Resumed { actor: reported, operation } if reported == actor.0 => {
@@ -9241,7 +9252,7 @@ pub(crate) mod kernel_runtime {
                                     && entry.authority.operation.seed == operation.seed
                             });
                             if !valid {
-                                return Err("kernel: replay restart returned stale operation identity".to_string());
+                                return Err(("kernel: replay restart returned stale operation identity".to_string()).into());
                             }
                             replay_capture_started = true;
                         }
@@ -9277,13 +9288,13 @@ pub(crate) mod kernel_runtime {
                 }
             }
             if let Some(message) = fault {
-                return Err(message);
+                return Err((message).into());
             }
             if turn_results.is_empty() {
                 return if replay_capture_started || reserved_step_published {
                     Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None))
                 } else {
-                    Err("kernel: shard produced no outcome for this turn".to_string())
+                    Err(crate::program_bridge::ProgramFault::from("kernel: shard produced no outcome for this turn"))
                 };
             }
             let mut settled: Option<ExchangeOutcome> = None;
@@ -9392,7 +9403,7 @@ pub(crate) mod kernel_runtime {
             Ok(())
         }
 
-        fn advance_retained_surface_one(&mut self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, String> {
+        fn advance_retained_surface_one(&mut self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
             let mut surfaces = UiFixedList::default();
             self.advance_retained_one(instance, Some(&surface), &mut surfaces)?;
             Ok(ExchangeOutcome { frames: Vec::new(), surfaces, effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() })
@@ -9905,9 +9916,8 @@ pub(crate) mod kernel_runtime {
 /// `🖥️host/🧵️shard/🦀️.rs`'s own `BudgetBridge` region already uses for the REVERSE
 /// direction (`GRANT_BUDGET_DEFAULT_MAX_FRAMES`).
 #[cfg(not(target_arch = "wasm32"))]
-fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, lane: semio_framework_actor::Lane) -> semio_framework_actor::Budget {
-    let base = semio_framework_actor::lane_defaults::budget_for(lane);
-    semio_framework_actor::Budget { fuel: budget.fuel, wall_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, ..base }
+fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, original: semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> semio_framework_plugin_host::shard::grant::ShardResourceBudget {
+    semio_framework_plugin_host::shard::grant::ShardResourceBudget { fuel: budget.fuel, wall_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, ..original }
 }
 //#endregion 🔖️ActorBudgetBridge
 
@@ -10164,13 +10174,13 @@ pub mod scale_bench {
         /// `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
         /// failure ladder never sees the SAME "hang"/"crash" profiles budgets 2/3/6
         /// deliberately exercise.
-        async fn pump(&mut self) -> Result<usize, String> {
+        async fn pump(&mut self) -> Result<usize, crate::program_bridge::ProgramFault> {
             let mut total = 0usize;
             loop {
                 self.now_ms += 1;
                 let budgets = self.budgets.clone();
                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)).await;
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor, original| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), original)).await?;
                 if decision.run.is_empty() {
                     break;
                 }
@@ -10178,7 +10188,7 @@ pub mod scale_bench {
                 if outcomes.len() < decision.run.len() {
                     let missing = decision.run.len() - outcomes.len();
                     self.pending.extend(outcomes);
-                    return Err(format!("Env::pump: {missing} of {} granted turns produced no ShardOutcome within {PUMP_OUTCOME_TIMEOUT:?}", decision.run.len()));
+                    return Err((format!("Env::pump: {missing} of {} granted turns produced no ShardOutcome within {PUMP_OUTCOME_TIMEOUT:?}", decision.run.len())).into());
                 }
                 for outcome in &outcomes {
                     match outcome {
@@ -10221,13 +10231,13 @@ pub mod scale_bench {
         /// whichever arrives) is among them. That stamp, not this call's own return, is budget 5's
         /// actual measurement: see its round loop for why the interval is `send -> this stamp`, not
         /// `send -> this call returning`.
-        async fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, String> {
+        async fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, crate::program_bridge::ProgramFault> {
             let mut target_seen: Option<Instant> = None;
             loop {
                 self.now_ms += 1;
                 let budgets = self.budgets.clone();
                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)).await;
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor, original| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), original)).await?;
                 if decision.run.is_empty() {
                     break;
                 }
@@ -10235,7 +10245,7 @@ pub mod scale_bench {
                 while remaining > 0 {
                     let outcomes = self.runtime.wait_for_outcomes(1, PUMP_OUTCOME_TIMEOUT);
                     if outcomes.is_empty() {
-                        return Err(format!("Env::pump_tracking: {remaining} granted turns produced no ShardOutcome within {PUMP_OUTCOME_TIMEOUT:?}"));
+                        return Err((format!("Env::pump_tracking: {remaining} granted turns produced no ShardOutcome within {PUMP_OUTCOME_TIMEOUT:?}")).into());
                     }
                     remaining = remaining.saturating_sub(outcomes.len());
                     for outcome in &outcomes {
@@ -10276,8 +10286,9 @@ pub mod scale_bench {
             std::mem::take(&mut self.pending)
         }
 
-        async fn unregister(&mut self, actor: ActorId) {
-            self.runtime.unregister(actor).await;
+        async fn unregister(&mut self, actor: ActorId) -> Result<(), crate::program_bridge::ProgramFault> {
+            self.runtime.unregister(actor).await?;
+            Ok(())
         }
     }
     //#endregion 🔖️Env
@@ -10528,20 +10539,20 @@ pub mod scale_bench {
     /// fails with "cannot enter component instance" — that message is CONFIRMING evidence of an
     /// earlier kill, not a different failure. Checked here first; falls back to an explicit `Wake`
     /// only if the InstanceOpen turn happened not to trigger it.
-    async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+    async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, crate::program_bridge::ProgramFault> {
         let Some(hang_record) = records.iter().find(|r| profile_of(r) == "hang") else {
-            return skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no hang-profile record in registry");
+            return Ok(skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no hang-profile record in registry"));
         };
         let sibling_records: Vec<&RegistryRecord> = records.iter().filter(|r| profile_of(r) == "idle").take(3).collect();
         if sibling_records.is_empty() {
-            return skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no idle-profile sibling records in registry");
+            return Ok(skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no idle-profile sibling records in registry"));
         }
         let mut env = Env::new(runtime.clone(), 1).await;
         let deadline_ms = hang_record.quotas.deadline_ms;
         let pause_start = Instant::now();
         let hang_actor = match env.activate(compiled, hang_record).await {
             Ok(actor) => actor,
-            Err(error) => return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "hang actor activate/instantiate failed"),
+            Err(error) => return Ok(row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "hang actor activate/instantiate failed")),
         };
         env.send(hang_actor, &instance_open_event(hang_record, 1)).await;
         let mut siblings = Vec::new();
@@ -10551,11 +10562,11 @@ pub mod scale_bench {
                     env.send(actor, &instance_open_event(record, index as u32 + 2)).await;
                     siblings.push(actor);
                 }
-                Err(error) => return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "sibling activate/instantiate failed"),
+                Err(error) => return Ok(row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "sibling activate/instantiate failed")),
             }
         }
         if env.pump().await.is_err() {
-            return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!(null), json!(null), "ShardLoop::pump failed on InstanceOpen phase");
+            return Ok(row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!(null), json!(null), "ShardLoop::pump failed on InstanceOpen phase"));
         }
         let open_outcomes = env.drain();
         let hang_fault_on_open = open_outcomes.iter().find_map(|o| match o {
@@ -10582,7 +10593,7 @@ pub mod scale_bench {
                 .unwrap_or(false);
             (killed, message)
         };
-        env.unregister(hang_actor).await;
+        env.unregister(hang_actor).await?;
         for actor in &siblings {
             env.send(*actor, &Event::Wake).await;
         }
@@ -10591,16 +10602,17 @@ pub mod scale_bench {
         let siblings_ok = siblings.iter().all(|actor| sibling_outcomes.iter().any(|o| matches!(o, ShardOutcome::Turn { actor: a, .. } if *a == actor.0)));
         let pause_ms = pause_start.elapsed().as_millis() as u64;
         let pass = killed && siblings_pumped && siblings_ok && pause_ms <= 250;
-        row(
+        Ok(row(
             6,
             "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms",
             if pass { "pass" } else { "fail" },
             json!({ "declaredDeadlineMs": deadline_ms, "faultMessage": hang_fault, "killed": killed, "killedOnInstanceOpenTurn": killed_on_open, "siblingCount": siblings.len(), "siblingsRestored": siblings_ok, "totalPauseMs": pause_ms }),
             json!({ "killWithinMs": 2 * deadline_ms, "totalPauseMs": 250 }),
             "\"shard rebuilt\" is approximated as unregister+drop of the faulted GuestInstance on the same physical ShardLoop, then a successful next turn for its siblings — no separate OS thread is torn down/recreated in this single-shard-loop harness. Pause is measured from activation, since the hang overrun typically fires on the InstanceOpen turn itself (see note above), not a dedicated follow-up turn.",
-        )
+        ))
     }
-    //#endregion 🔖️Budget6Hang
+    
+//#endregion 🔖️Budget6Hang
 
     //#region 🔖️Budget7Stateful
     /// 📸️ K1 landed mid-session (design-workforce.md's own blocker note is now stale): `ShardLoop::
@@ -10617,73 +10629,74 @@ pub mod scale_bench {
     /// 💤️ The "evicted" half of LRU-suspend: drop A's live instance from this shard.
     ///
     /// The "resumed elsewhere" half: a FRESH instance, resumed from the captured checkpoint bytes.
-    async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+    async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, crate::program_bridge::ProgramFault> {
         let Some(record) = records.iter().find(|r| profile_of(r) == "stateful") else {
-            return skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry");
+            return Ok(skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry"));
         };
         let mut env = Env::new(runtime.clone(), 1).await;
         let actor_a = match env.activate(compiled, record).await {
             Ok(actor) => actor,
-            Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "activate/instantiate failed"),
+            Err(error) => return Ok(row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "activate/instantiate failed")),
         };
         env.send(actor_a, &instance_open_event(record, 1)).await;
         for _ in 0..5 {
             env.send(actor_a, &Event::Wake).await;
         }
         if env.pump().await.is_err() {
-            return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed while accumulating state");
+            return Ok(row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed while accumulating state"));
         }
         env.drain();
 
         let operation = JobOperation { operation: actor_a.0, base_revision: 0, generation: actor_a.generation() as u64, preview_sequence: 0, seed: actor_a.0 };
         env.send_payload(actor_a, Payload::Suspend { operation, applied_progress: 0 }).await;
         if env.pump().await.is_err() {
-            return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Suspend");
+            return Ok(row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Suspend"));
         }
         let suspend_outcomes = env.drain();
         let Some(state) = suspend_outcomes.iter().find_map(|o| match o {
             ShardOutcome::Checkpoint { actor, checkpoint, .. } if *actor == actor_a.0 => Some(checkpoint.state.clone()),
             _ => None,
         }) else {
-            return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "outcomes": format!("{suspend_outcomes:?}") }), json!(null), "no ShardOutcome::Checkpoint for Suspend");
+            return Ok(row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "outcomes": format!("{suspend_outcomes:?}") }), json!(null), "no ShardOutcome::Checkpoint for Suspend"));
         };
 
-        env.unregister(actor_a).await;
+        env.unregister(actor_a).await?;
 
         let actor_b = match env.activate(compiled, record).await {
             Ok(actor) => actor,
-            Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "re-activate/instantiate failed"),
+            Err(error) => return Ok(row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "re-activate/instantiate failed")),
         };
         env.send_payload(actor_b, Payload::Resume { operation, checkpoint: JobCheckpoint { state: state.clone(), applied_progress: 0 } }).await;
         if env.pump().await.is_err() {
-            return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Resume");
+            return Ok(row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Resume"));
         }
         let resume_outcomes = env.drain();
         let resumed = resume_outcomes.iter().any(|o| matches!(o, ShardOutcome::Resumed { actor, .. } if *actor == actor_b.0));
 
         env.send_payload(actor_b, Payload::Suspend { operation, applied_progress: 0 }).await;
         if env.pump().await.is_err() {
-            return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "resumed": resumed }), json!(null), "pump failed on post-resume re-Suspend");
+            return Ok(row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "resumed": resumed }), json!(null), "pump failed on post-resume re-Suspend"));
         }
         let recheck_outcomes = env.drain();
         let Some(state_after_resume) = recheck_outcomes.iter().find_map(|o| match o {
             ShardOutcome::Checkpoint { actor, checkpoint, .. } if *actor == actor_b.0 => Some(checkpoint.state.clone()),
             _ => None,
         }) else {
-            return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "resumed": resumed }), json!(null), "no ShardOutcome::Checkpoint after resume");
+            return Ok(row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "resumed": resumed }), json!(null), "no ShardOutcome::Checkpoint after resume"));
         };
         let identical = state == state_after_resume;
         let pass = resumed && identical;
-        row(
+        Ok(row(
             7,
             BUDGET_7_DESCRIPTION,
             if pass { "pass" } else { "fail" },
             json!({ "resumed": resumed, "checkpointHash": semio_framework_hash::hash(&state).to_hex().to_string(), "resumedCheckpointHash": semio_framework_hash::hash(&state_after_resume).to_hex().to_string(), "identical": identical }),
             json!("Resumed outcome received and identical checkpoint bytes before suspend vs. after resume+re-checkpoint"),
             "measured through the REAL production dispatch path (K1, unblocked mid-session): ShardLoop::pump's Payload::Suspend/Resume -> GuestRuntime::checkpoint/restore -> ShardOutcome::Checkpoint/Resumed. The LRU-eviction TRIGGER (the policy deciding WHEN to suspend) is still not exercised here — this proves the suspend/resume/checkpoint wire path end-to-end, which is exactly what was blocked before K1 landed.",
-        )
+        ))
     }
-    //#endregion 🔖️Budget7Stateful
+    
+//#endregion 🔖️Budget7Stateful
 
     //#region 🔖️Budget8CapabilityRevoke
     /// 🐛️ `🎭️profile::turn()` runs unconditionally on EVERY `poll` (see budget 6's identical note) —
@@ -10737,22 +10750,22 @@ pub mod scale_bench {
     /// writes one JSON report. Returns `0` on a clean harness run (regardless of individual budget
     /// pass/fail — a real measured FAIL is a valid, non-error outcome), `1` if the harness itself could
     /// not set up (bad registry/wasm/report path).
-    pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf) -> i32 {
+    pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf) -> Result<i32, crate::program_bridge::ProgramFault> {
         let process_start = Instant::now();
         let mut registry_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(registry_path.clone())).await {
             Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
             Ok(_) => {
                 eprintln!("scale-bench: native I/O returned the wrong value for {}", registry_path.display());
-                return 1;
+                return Ok(1);
             }
             Err(error) => {
                 eprintln!("scale-bench: failed to read {}: {error}", registry_path.display());
-                return 1;
+                return Ok(1);
             }
         };
         let Some(registry_page) = registry_bytes.single_page() else {
             eprintln!("scale-bench: registry exceeds the mounted single-page retained parser authority");
-            return 1;
+            return Ok(1);
         };
         let registry = serde_json::from_slice(registry_page);
         let _ = registry_bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -10760,23 +10773,23 @@ pub mod scale_bench {
             Ok(value) => value,
             Err(error) => {
                 eprintln!("scale-bench: failed to parse {}: {error}", registry_path.display());
-                return 1;
+                return Ok(1);
             }
         };
         let mut wasm_bytes_owner = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await {
             Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
             Ok(_) => {
                 eprintln!("scale-bench: native I/O returned the wrong value for {}", wasm_path.display());
-                return 1;
+                return Ok(1);
             }
             Err(error) => {
                 eprintln!("scale-bench: failed to read {}: {error}", wasm_path.display());
-                return 1;
+                return Ok(1);
             }
         };
         let Some(wasm_bytes) = wasm_bytes_owner.single_page() else {
             eprintln!("scale-bench: Wasm exceeds the mounted single-page retained compiler authority");
-            return 1;
+            return Ok(1);
         };
         let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
         let package_ref = PackageRef { package: PackageId("scale-fixture".to_string()), hash: PackageHash(*semio_framework_hash::hash(wasm_bytes).as_bytes()) };
@@ -10786,20 +10799,20 @@ pub mod scale_bench {
             Ok(handle) => handle,
             Err(error) => {
                 eprintln!("scale-bench: compile failed: {error}");
-                return 1;
+                return Ok(1);
             }
         };
 
         let row_2 = budget_2_cold_boot(process_start, &runtime, &compiled, &registry.records, shard_count, 1500).await;
         let row_3 = budget_3_activate_100(&runtime, &compiled, &registry.records, shard_count).await;
         let (row_4, row_5) = budget_4_and_5(&runtime, &compiled, &registry.records, shard_count, shard_count as u64 * 512 * 1024 * 1024 + 256 * 1024 * 1024).await;
-        let row_6 = budget_6_hang(&runtime, &compiled, &registry.records).await;
-        let row_7 = budget_7_stateful(&runtime, &compiled, &registry.records).await;
+        let row_6 = budget_6_hang(&runtime, &compiled, &registry.records).await?;
+        let row_7 = budget_7_stateful(&runtime, &compiled, &registry.records).await?;
         let row_8 = budget_8_capability_revoke(&runtime, &compiled, &registry.records).await;
 
         drop((row_2, row_3, row_4, row_5, row_6, row_7, row_8));
         eprintln!("scale-bench: refusing to write populated report {} until its retained page encoder is mounted (renderer=native, shards={shard_count}, records={}, wasm={})", report_path.display(), registry.records.len(), wasm_path.display());
-        1
+        Ok(1)
     }
 }
 //#endregion 🔖️ScaleBench
@@ -15276,126 +15289,15 @@ impl FrameBuildCursor {
         }
     }
 
-    fn close_step(&mut self) -> bool {
-        if let Some(rejected) = self.input_rejected.as_mut() {
-            if !rejected.close_step() {
-                return false;
-            }
-            self.input_rejected = None;
-            return false;
-        }
-        if let Some(packet) = self.engine_rejected.as_mut() {
-            if !packet.close_step() {
-                return false;
-            }
-            self.engine_rejected = None;
-            return false;
-        }
-        if let Some(retirement) = self.retirement.as_mut() {
-            if !matches!(retirement.close_step(self.retained), InteractiveJobCloseStep::Complete { .. }) || !retirement.terminal_is_empty() {
-                return false;
-            }
-            self.retirement = None;
-            return false;
-        }
-        if let Some(rejected) = self.world_rejected.as_mut() {
-            if !rejected.close_step() {
-                return false;
-            }
-            self.world_rejected = None;
-            return false;
-        }
-        if let Some(draw) = self.previous_draw.as_mut() {
-            if !draw.retire_step() {
-                return false;
-            }
-            self.previous_draw = None;
-            return false;
-        }
-        if let Some(overlay) = self.previous_overlay.as_mut() {
-            if !overlay.retire_step() {
-                return false;
-            }
-            self.previous_overlay = None;
-            return false;
-        }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         if let Some(pages) = self.icon_pages.as_mut() {
-            if !pages.close_step() || !pages.terminal_is_empty() {
-                return false;
-            }
+            if !pages.terminal_is_empty() { return frame_child_step(pages.close_original_step(grant), grant, pages.terminal_is_empty()); }
+            let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedAtlasPages>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
             self.icon_pages = None;
-            return false;
+            return frame_inline_progress(bytes);
         }
-        if let Some(packet) = self.engine_packets.last_mut() {
-            if !packet.close_step() {
-                return false;
-            }
-            self.engine_packets.pop();
-            return false;
-        }
-        if let Some(resources) = self.engine_resources.as_mut() {
-            match resources.take_packet_step() {
-                Ok(Some(packet)) | Err(packet) => {
-                    if let Err(rejected) = self.engine_packets.try_push(packet) {
-                        self.engine_rejected = Some(rejected);
-                    }
-                }
-                Ok(None) => self.engine_resources = None,
-            }
-            return false;
-        }
-        if self.resource_input.is_none() && (self.world_resources.is_some() || self.icon_upload.is_some()) {
-            match ui_wgpu::wgpu::PreparedRenderInput::try_new(self.presentation_witness.scene_revision, self.presentation_witness.input_generation, DrawList::empty(), None, 0.0) {
-                Ok(input) => self.resource_input = Some(input),
-                Err(rejected) => self.input_rejected = Some(rejected),
-            }
-            return false;
-        }
-        if let Some(resources) = self.world_resources.as_mut() {
-            let Some(input) = self.resource_input.as_mut() else { return false };
-            match resources.append_step(input) {
-                Ok(true) => match resources.take_cursor_wake() {
-                    Ok(token) => {
-                        self.cursor_wake = token;
-                        self.world_resources = None;
-                    }
-                    Err(_) => return false,
-                },
-                Ok(false) => {}
-                Err(rejected) => self.world_rejected = Some(rejected),
-            }
-            return false;
-        }
-        if let Some(upload) = self.icon_upload.take() {
-            let Some(input) = self.resource_input.as_mut() else {
-                self.icon_upload = Some(upload);
-                return false;
-            };
-            if let Err(upload) = input.try_push_upload(upload) {
-                self.world_rejected = Some(infinite_world::world::World3dBuildRejected::Upload(upload));
-            }
-            return false;
-        }
-        if let Some(input) = self.resource_input.take() {
-            self.retirement = Some(
-                AppFrameBuild {
-                    retained: self.retained,                    generation: semio_framework_trace::Generation(input.preview_generation),
-                    input,
-                    input_candidate: self.input_candidate.take(),
-                    engine_packets: std::mem::take(&mut self.engine_packets),
-                    cursor: SemioCursor::Default,
-                    theme_dark: false,
-                    fullscreen: self.fullscreen.take(),
-                    cursor_wake: self.cursor_wake.take(),
-                    #[cfg(not(target_arch = "wasm32"))]
-                    job_progress: self.job_progress.take(),
-                }
-                .into_preparation(),
-            );
-            return false;
-        }
-        self.cursor_wake.take();
-        true
+        frame_unpriced_child()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -15425,6 +15327,7 @@ struct FrameFinishCursor {
     settle: bool,
     glyph_started: bool,
     glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
+    icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
 }
 
 #[derive(Clone, Copy)]
@@ -15443,25 +15346,25 @@ enum FrameFinishPhase {
 
 impl Default for FrameFinishCursor {
     fn default() -> Self {
-        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, shell_maintenance: false, settle: false, glyph_started: false, glyph_pages: None }
+        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, shell_maintenance: false, settle: false, glyph_started: false, glyph_pages: None, icon_pages: None }
     }
 }
 
 impl FrameFinishCursor {
-    fn close_step(&mut self) -> bool {
-        if let Some(pages) = self.glyph_pages.as_mut() {
-            if !pages.close_step() || !pages.terminal_is_empty() {
-                return false;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        for pages in [&mut self.icon_pages, &mut self.glyph_pages] {
+            if let Some(owner) = pages.as_mut() {
+                if !owner.terminal_is_empty() { return frame_child_step(owner.close_original_step(grant), grant, owner.terminal_is_empty()); }
+                let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedAtlasPages>>();
+                if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+                *pages = None;
+                return frame_inline_progress(bytes);
             }
-            self.glyph_pages = None;
-            return false;
         }
-        true
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.glyph_pages.is_none()
-    }
+    fn terminal_is_empty(&self) -> bool { self.glyph_pages.is_none() && self.icon_pages.is_none() }
 }
 
 enum FrameBuildBoundaryStep {
@@ -15531,7 +15434,7 @@ impl AppFrameAfterChrome {
             return false;
         }
         let Some(retirement) = self.retirement.as_mut() else { return false };
-        if !matches!(retirement.close_step(self.retained), InteractiveJobCloseStep::Complete { .. }) || !retirement.terminal_is_empty() {
+        if !matches!(retirement.close_step(self.retained,None), InteractiveJobCloseStep::Complete { .. }) || !retirement.terminal_is_empty() {
             return false;
         }
         self.retirement = None;
@@ -15553,15 +15456,15 @@ fn frame_child_step(step: InteractiveJobCloseStep, grant: RetainedCloneGrant, te
 }
 
 /// 🪙️ Quotes the original inline owner header after its physical children are empty.
-fn frame_inline_gate(grant: RetainedCloneGrant, bytes: usize) -> Option<InteractiveJobCloseStep> {
-    if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes { return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+fn frame_inline_gate(grant: RetainedCloneGrant, _bytes: usize) -> Option<InteractiveJobCloseStep> {
+    if grant.maximum_items == 0 { return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
     if grant.maximum_depth == 0 { return Some(InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }); }
     None
 }
 
 /// ♻️ Returns the actual paid inline header receipt independently of heap release.
-fn frame_inline_progress(bytes: usize) -> InteractiveJobCloseStep {
-    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..RetainedCloneProgress::default() } }
+fn frame_inline_progress(_bytes: usize) -> InteractiveJobCloseStep {
+    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: 0, ..RetainedCloneProgress::default() } }
 }
 
 /// 🧵️ Preserves all currencies and refusal progress from the original worker owner.
@@ -15876,7 +15779,7 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Pending;
                 }
                 let Some(cursor) = self.build_cursor.as_mut() else { return AppFrameTransactionStep::Pending };
-                match app.frame_before_input_step(handle, directives, cursor) {
+                match app.frame_before_input_step(handle, directives, cursor, context) {
                     FrameBuildBoundaryStep::Pending => AppFrameTransactionStep::Pending,
                     FrameBuildBoundaryStep::Complete(partial) => {
                         self.build_cursor = None;
@@ -16284,7 +16187,7 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Fault;
                 };
                 let cursor = self.finish_cursor.get_or_insert_with(Default::default);
-                match app.frame_after_input_step(runtime, partial, cursor, context.cancel_token()) {
+                match app.frame_after_input_step(runtime, partial, cursor, context) {
                     FrameFinishBoundaryStep::Pending => AppFrameTransactionStep::Pending,
                     FrameFinishBoundaryStep::Complete(frame) => {
                         self.after_chrome = None;
@@ -16313,6 +16216,16 @@ impl FrameTransaction {
             if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
             self.scene_camera_cursor = None;
             return frame_inline_progress(bytes);
+        }
+        if let Some(cursor) = self.finish_cursor.as_mut() {
+            if !cursor.terminal_is_empty() { return frame_child_step(cursor.close_step(grant), grant, cursor.terminal_is_empty()); }
+            let bytes = std::mem::size_of::<Option<FrameFinishCursor>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+            self.finish_cursor = None;
+            return frame_inline_progress(bytes);
+        }
+        if let Some(cursor) = self.build_cursor.as_mut() {
+            if cursor.icon_pages.is_some() { return cursor.close_step(grant); }
         }
         if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }; }
         frame_unpriced_child()
@@ -16396,11 +16309,16 @@ impl AppFrameBuild {
         };
         AppFramePreparation {
             retained,
+            params: None,
+            params_cancel_retirement: None,
+            worker_semantic_pending: false,
+            outcome_pending: None,
+            outcome_acknowledged: false,
+            refused_receipt: None,
             job,
             job_rejected,
             input_candidate,
             session: None,
-            rejected: None,
             engine_packets: Some(engine_packets),
             generation,
             cursor,
@@ -16415,13 +16333,21 @@ impl AppFrameBuild {
     }
 }
 
+#[derive(Clone,Copy,PartialEq,Eq)]
+pub(crate) enum FramePreparationStep { Pending, Complete, Cancelled, Fault }
+
 pub(crate) struct AppFramePreparation {
     retained: semio_framework_job::RetainedCloneGrant,
+    params: Option<semio_framework_job::BatchJobParams>,
+    params_cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
+    worker_semantic_pending: bool,
+    outcome_pending: Option<FramePreparationStep>,
+    outcome_acknowledged: bool,
+    refused_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,
     job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
     job_rejected: Option<ui_wgpu::wgpu::PreparedRenderJobRejected>,
     input_candidate: Option<shell::PresentedInputCandidateWitness>,
     session: Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
-    rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>,
     engine_packets: Option<FrameEnginePackets>,
     generation: semio_framework_trace::Generation,
     cursor: SemioCursor,
@@ -16455,93 +16381,73 @@ impl AppFramePreparation {
         self.session.as_ref().and_then(semio_framework_job::BatchJobSession::callback_verdict)
     }
 
-    pub(crate) fn drive_step(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, retained: semio_framework_job::RetainedCloneGrant, _preview_sequence: &mut u64) -> semio_framework_job::StepOutcome {
-        assert_eq!(retained, self.retained, "frame preparation preserves its original incoming five-axis authority");
-        if let Some(job) = self.job.take() {
-            let params = semio_framework_job::BatchJobParams {
-                operation,
-                generation,
-                cancel,
-                config: semio_framework_job::BatchDriveConfig { retained, site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 1000 },
-                now_us: semio_framework_job::default_now_us,
-            };
-            match semio_framework_job::BatchJobSession::try_new(job, params) {
-                Ok(session) => self.session = Some(session),
-                Err(mut rejected) => {
-                    rejected.begin_close();
-                    self.rejected = Some(rejected);
-                }
-            }
-            return semio_framework_job::StepOutcome::Yield;
+    pub(crate) fn drive_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<FramePreparationStep, semio_framework_value::ValueError> {
+        use semio_framework_job::{JobOutcomeView,WorkerJobPoll};
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        let refuse=|message|ValueError::literal(ValueRefusalKind::InvariantViolated,message);
+        if self.refused_receipt.is_some() { return Err(refuse("original prepared worker receipt remains refused")); }
+        if self.job_rejected.is_some() { return Err(refuse("original prepared render admission remains rejected")); }
+        if self.job.is_some() && self.params.is_none() {
+            let Some(cancel)=cx.admit_original_cancel_alias()? else { return Ok(FramePreparationStep::Pending); };
+            self.params=Some(semio_framework_job::BatchJobParams { operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job::BatchDriveConfig { retained:self.retained,site:"os_renderer.prepare.worker",stage:semio_framework_job::InteractiveStage::BackgroundStep,fuel_per_step:1,step_budget_us:1000 },now_us:cx.clock_source() });
+            return Ok(FramePreparationStep::Pending);
         }
-        if let Some(rejected) = self.job_rejected.as_mut() {
-            if rejected.close_step() {
-                self.job_rejected = None;
-                self.terminal = true;
-                self.fault = Some("prepared render job admission was refused");
-                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
-            }
-            return semio_framework_job::StepOutcome::Yield;
+        if self.job.is_some() {
+            if let Some((session,_already_received))=semio_framework_job::BatchJobSession::try_admit_owned(&mut self.job,&mut self.params,cx)? { self.session=Some(session); }
+            return Ok(FramePreparationStep::Pending);
         }
-        if let Some(rejected) = self.rejected.as_mut() {
-            let demand = match rejected.retirement_demands(self.retained.maximum_copy_bytes) { Ok(demand) => demand, Err(_) => { self.fault = Some("original rejected job close demand refused"); return semio_framework_job::StepOutcome::Yield; } };
-            if !frame_retirement_permits(self.retained, demand) { self.fault = Some("original worker owner exceeds fixed retirement policy"); return semio_framework_job::StepOutcome::Yield; }
-            let grant = self.retained;
-            let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused { .. }) { self.fault = Some("original rejected job close receipt refused"); return semio_framework_job::StepOutcome::Yield; }
-            if rejected.terminal_is_empty() {
-                self.rejected = None;
-                self.terminal = true;
-                self.fault = Some("prepared render job session admission was refused");
-                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+        let session=self.session.as_mut().ok_or_else(||refuse("original prepared render session is absent"))?;
+        if let Some(outcome)=self.outcome_pending {
+            if !self.outcome_acknowledged {
+                let step=session.acknowledge_outcome(cx.retained_grant());
+                cx.consume_retained(step.progress())?;
+                self.outcome_acknowledged=matches!(step,semio_framework_value::RetainedCloneStep::Complete(_));
+                return Ok(FramePreparationStep::Pending);
             }
-            return semio_framework_job::StepOutcome::Yield;
+            if outcome==FramePreparationStep::Pending {
+                session.resume().map_err(|_|refuse("original prepared worker resume was refused"))?;
+                self.worker_semantic_pending=false;self.outcome_pending=None;self.outcome_acknowledged=false;
+                return Ok(FramePreparationStep::Pending);
+            }
+            self.terminal=true;
+            return Ok(outcome);
         }
-        let Some(session) = self.session.as_mut() else {
-            self.terminal = true;
-            self.fault = Some("prepared render job lost its session");
-            return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
-        };
-        if !matches!(session.step(), Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome() {
-            return semio_framework_job::StepOutcome::Yield;
+        if !self.worker_semantic_pending {
+            if !matches!(session.step(cx.retained_grant()),Ok(WorkerJobPoll::Outcome|WorkerJobPoll::Terminal)) || !session.checkout_outcome() { return Ok(FramePreparationStep::Pending); }
+            if let Some((issued,progress))=session.take_checked_out_retained_step_receipt() {
+                let remaining=cx.retained_grant();
+                let expected=RetainedCloneGrant { maximum_items:remaining.maximum_items.min(self.retained.maximum_items),maximum_copy_bytes:remaining.maximum_copy_bytes.min(self.retained.maximum_copy_bytes),maximum_capacity_bytes:remaining.maximum_capacity_bytes.min(self.retained.maximum_capacity_bytes),maximum_release_bytes:remaining.maximum_release_bytes.min(self.retained.maximum_release_bytes),maximum_depth:remaining.maximum_depth.min(self.retained.maximum_depth) };
+                self.worker_semantic_pending=true;
+                let received=cx.consume_retained(progress);
+                if issued!=expected || !progress.fits(issued) || received.is_err() { self.refused_receipt=Some((issued,progress));return Err(received.err().unwrap_or_else(||refuse("original prepared worker tuple differs from issued authority"))); }
+                return Ok(FramePreparationStep::Pending);
+            }
+            return Err(refuse("original prepared worker omitted its checked-out physical receipt"));
         }
-        match session.checked_out_outcome() {
-            Some(semio_framework_job::StepOutcome::Yield) => {
-                let _ = session.resume();
-                semio_framework_job::StepOutcome::Yield
-            }
-            Some(semio_framework_job::StepOutcome::Complete(_)) => {
-                self.terminal = true;
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                })
-            }
-            Some(semio_framework_job::StepOutcome::Cancelled) => {
-                self.terminal = true;
-                self.fault = Some("prepared render job was cancelled");
-                semio_framework_job::StepOutcome::Cancelled
-            }
-            Some(semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) | semio_framework_job::StepOutcome::Fault(_)) | None => {
-                self.fault = session.checked_out_job_mut().and_then(|job| job.fault()).or(Some("prepared render job answered a non-terminal outcome"));
-                session.begin_close();
-                self.terminal = true;
-                semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
-            }
-        }
+        self.outcome_pending=Some(match session.checked_out_outcome()? {
+            None|Some(JobOutcomeView::Yield { .. })=>FramePreparationStep::Pending,
+            Some(JobOutcomeView::Complete { .. })=>FramePreparationStep::Complete,
+            Some(JobOutcomeView::Cancelled { .. })=>{self.fault=Some("prepared render job was cancelled");FramePreparationStep::Cancelled},
+            Some(JobOutcomeView::Fault { .. }|JobOutcomeView::PreviewReady { .. }|JobOutcomeView::CheckpointReady { .. })=>{self.fault=Some("prepared render job refused its terminal candidate");FramePreparationStep::Fault},
+        });
+        Ok(FramePreparationStep::Pending)
     }
 
-    pub(crate) fn take_presentation(&mut self) -> Option<AppFramePresentation> {
-        if !self.terminal {
-            return None;
+    pub(crate) fn take_presentation(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<AppFramePresentation>,semio_framework_value::ValueError> {
+        if !self.terminal || !self.outcome_acknowledged {
+            return Ok(None);
         }
-        let packet = self.session.as_mut()?.checked_out_job_mut()?.take_packet()?;
-        self.session.as_mut()?.begin_close();
-        Some(AppFramePresentation {
+        let grant=cx.retained_grant();
+        if grant.maximum_items==0 || grant.maximum_depth==0 { return Ok(None); }
+        if self.engine_packets.is_none() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame engine packets are absent")); }
+        let Some(packet)=self.session.as_mut().and_then(|session|session.checked_out_job_mut()).and_then(|job|job.take_packet())else{return Ok(None)};
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
+        if let Some(session)=self.session.as_mut(){session.begin_close();}
+        Ok(Some(AppFramePresentation {
             retained: self.retained,
             packet: Some(packet),
             input_candidate: self.input_candidate.take(),
-            engine_packets: self.engine_packets.take()?,
+            engine_packets: self.engine_packets.take().expect("original frame engine packets validated before publication"),
             generation: self.generation,
             cursor: self.cursor,
             theme_dark: self.theme_dark,
@@ -16549,16 +16455,35 @@ impl AppFramePreparation {
             cursor_wake: self.cursor_wake.take(),
             #[cfg(not(target_arch = "wasm32"))]
             job_progress: self.job_progress.take(),
-        })
+        }))
     }
 
     pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &RuntimeMailbox) -> bool {
         discard_frame_input_candidate(runtime, &mut self.input_candidate)
     }
 
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant, witness: Option<&semio_framework_job::CancelToken>) -> InteractiveJobCloseStep {
         if self.input_candidate.is_some() { return InteractiveJobCloseStep::Blocked; }
         if self.job_rejected.is_some() { return frame_unpriced_child(); }
+        if self.params.is_some() {
+            if let Some(step)=frame_inline_gate(grant,0){return step}
+            let params=self.params.take().expect("original prepared params selected before paid transfer");
+            self.params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));
+            return frame_inline_progress(0);
+        }
+        if let Some(original)=self.params_cancel_retirement.as_mut() {
+            if !original.terminal_is_empty() {
+                let Some(witness)=witness else{return InteractiveJobCloseStep::Blocked};
+                return match original.return_alias_step(witness,grant) {
+                    Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},
+                    Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>InteractiveJobCloseStep::Blocked,
+                    Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
+                };
+            }
+            if let Some(step)=frame_inline_gate(grant,0){return step}
+            self.params_cancel_retirement=None;
+            return frame_inline_progress(0);
+        }
         if let Some(job) = self.job.as_mut() {
             use semio_framework_job::InteractiveJob;
             job.begin_close();
@@ -16570,17 +16495,22 @@ impl AppFramePreparation {
             self.job = None;
             return frame_inline_progress(bytes);
         }
-        if let Some(rejected) = self.rejected.as_mut() {
-            if !rejected.terminal_is_empty() { return frame_child_step(rejected.close_step(grant), grant, rejected.terminal_is_empty()); }
-            let bytes = std::mem::size_of::<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>>();
-            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
-            self.rejected = None;
-            return frame_inline_progress(bytes);
-        }
         if let Some(session) = self.session.as_mut() {
             if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                 session.begin_close();
                 return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+            }
+            if let Some(witness)=witness {
+                match session.has_original_cancel_alias_witness(witness) {
+                    Ok(true)=>return match session.return_original_cancel_alias_step(witness,grant) {
+                        Ok(Some(step))=>InteractiveJobCloseStep::Pending{progress:step.progress()},
+                        Ok(None)|Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>InteractiveJobCloseStep::Blocked,
+                        Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
+                    },
+                    Ok(false)=>{},
+                    Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return InteractiveJobCloseStep::Blocked,
+                    Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
+                }
             }
             if !session.terminal_is_empty() { return frame_worker_child_step(session.close_step(grant), grant, session.terminal_is_empty()); }
             let bytes = std::mem::size_of::<Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>>();
@@ -16606,11 +16536,16 @@ impl AppFramePreparation {
             self.engine_packets = None;
             return frame_inline_progress(bytes);
         }
+        if self.worker_semantic_pending || self.outcome_pending.is_some() || self.outcome_acknowledged || self.refused_receipt.is_some() {
+            if let Some(step)=frame_inline_gate(grant,0){return step}
+            self.worker_semantic_pending=false;self.outcome_pending=None;self.outcome_acknowledged=false;self.refused_receipt=None;
+            return frame_inline_progress(0);
+        }
         InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.rejected.is_none() && self.engine_packets.is_none() && self.input_candidate.is_none() && self.cursor_wake.is_none() && {
+        self.params.is_none() && self.params_cancel_retirement.is_none() && !self.worker_semantic_pending && self.outcome_pending.is_none() && !self.outcome_acknowledged && self.refused_receipt.is_none() && self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.engine_packets.is_none() && self.input_candidate.is_none() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.job_progress.is_none()
@@ -18018,11 +17953,13 @@ impl AppRuntime {
     /// ♻️ Retires the registry the PREVIOUS build left staged, one entry per boundary
     /// step. The pointer's own authority is the last COMPLETE frame's buffer, which this
     /// never touches — see `ui_wgpu::wgpu::HitRegistry`.
-    fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &frame_job::FrameDirectives, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
+    fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &frame_job::FrameDirectives, cursor: &mut FrameBuildCursor, context: &mut semio_framework_job::StepContext<'_>) -> FrameBuildBoundaryStep {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
-                let grant = match ui_wgpu::wgpu::PreparedAtlasPages::next_abandoned_close_demands(4096) { Ok(grant) => grant, Err(_) => return FrameBuildBoundaryStep::Fault("prepared abandonment demand refused") };
-                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step(grant)) {
+                let grant = context.retained_grant();
+                let step = ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step(grant);
+                if context.consume_retained(step.progress()).is_err() { return FrameBuildBoundaryStep::Fault("atlas abandonment receipt exceeded original frame authority"); }
+                match frame_prepared_abandonment_complete(grant, step) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedGpuAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
@@ -18171,9 +18108,9 @@ impl AppRuntime {
                         if let Some(atlas) = cell.borrow_mut().take() {
                             observed = true;
                             self.icons = atlas;
-                            if let Ok(pages) = ui_wgpu::wgpu::PreparedAtlasPages::try_new(self.icons.width, self.icons.height, 4, self.icons.pixels.len()) {
-                                cursor.icon_pages = Some(pages);
-                                pending = true;
+                            match ui_wgpu::wgpu::PreparedAtlasPages::try_new(self.icons.width, self.icons.height, 4, self.icons.pixels.len(), ui_wgpu::wgpu::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: cursor.retained }) {
+                                Ok((pages, progress)) => { cursor.icon_pages = Some(pages); pending = context.consume_retained(progress).is_ok(); }
+                                Err(error) => { let _ = context.consume_retained(error.retained_progress()); }
                             }
                         }
                     });
@@ -18184,8 +18121,13 @@ impl AppRuntime {
                     return FrameBuildBoundaryStep::Pending;
                 }
                 if let Some(pages) = cursor.icon_pages.as_mut() {
-                    let complete = match pages.push_page(&self.icons.pixels, pages.next_row()) {
-                        Ok(complete) => complete,
+                    if !pages.slots_are_admitted() {
+                        let progress = match pages.admit_original_slots(context.retained_grant()) { Ok(progress) => progress, Err(_) => return FrameBuildBoundaryStep::Fault("frame icon slot authority was refused") };
+                        if context.consume_retained(progress).is_err() { return FrameBuildBoundaryStep::Fault("frame icon slot receipt exceeded original authority"); }
+                        return FrameBuildBoundaryStep::Pending;
+                    }
+                    let complete = match pages.push_page(&self.icons.pixels, pages.next_row(), context.retained_grant()) {
+                        Ok((complete, progress)) => { if context.consume_retained(progress).is_err() { return FrameBuildBoundaryStep::Fault("frame icon page receipt exceeded original authority"); } complete },
                         Err(_) => return FrameBuildBoundaryStep::Fault("frame icon atlas page construction faulted"),
                     };
                     if !complete {
@@ -18352,7 +18294,8 @@ impl AppRuntime {
     /// `📓️wgpu-deferred-action-commit-2026-09-13.md` closes; a `frame input action`
     /// now always has one of these behind it, however many builds were superseded in
     /// between.
-    fn frame_after_input_step(&mut self, runtime: &RuntimeMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor, cancel: semio_framework_job::CancelToken) -> FrameFinishBoundaryStep {
+    fn frame_after_input_step(&mut self, runtime: &RuntimeMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor, context: &mut semio_framework_job::StepContext<'_>) -> FrameFinishBoundaryStep {
+        let cancel = context.cancel_token();
         match cursor.phase {
             FrameFinishPhase::Inputs => {
                 runtime.update_frame_inputs(self);
@@ -18369,27 +18312,31 @@ impl AppRuntime {
                 cursor.phase = FrameFinishPhase::IconRaster;
             }
             FrameFinishPhase::IconRaster => {
-                if self.icon_rebuild.is_none() {
-                    cursor.phase = FrameFinishPhase::GlyphUpload;
+                if cursor.icon_pages.is_none() {
+                    if self.icon_rebuild.is_none() { cursor.phase = FrameFinishPhase::GlyphUpload; return FrameFinishBoundaryStep::Pending; }
+                    let Some(atlas) = self.drive_icon_raster_step() else { return FrameFinishBoundaryStep::Pending };
+                    let result = ui_wgpu::wgpu::PreparedAtlasPages::try_new(atlas.width, atlas.height, 1, atlas.pixels.len(), ui_wgpu::wgpu::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained });
+                    self.icons = atlas;
+                    let (pages, progress) = match result { Ok(result) => result, Err(error) => { let _ = context.consume_retained(error.retained_progress()); return FrameFinishBoundaryStep::Fault("frame icon atlas page admission failed"); } };
+                    cursor.icon_pages = Some(pages);
+                    if context.consume_retained(progress).is_err() { return FrameFinishBoundaryStep::Fault("frame icon header receipt exceeded original authority"); }
                     return FrameFinishBoundaryStep::Pending;
                 }
-                let Some(atlas) = self.drive_icon_raster_step() else { return FrameFinishBoundaryStep::Pending };
-                let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame icon transfer lost resource input") };
-                let Ok(mut pages) = ui_wgpu::wgpu::PreparedAtlasPages::try_new(atlas.width, atlas.height, 1, atlas.pixels.len()) else {
-                    return FrameFinishBoundaryStep::Fault("frame icon atlas page admission failed");
-                };
-                loop {
-                    match pages.push_page(&atlas.pixels, pages.next_row()) {
-                        Ok(true) => break,
-                        Ok(false) => {}
-                        Err(_) => return FrameFinishBoundaryStep::Fault("frame icon atlas page construction faulted"),
-                    }
+                let Some(pages) = cursor.icon_pages.as_mut() else { return FrameFinishBoundaryStep::Fault("frame icon atlas pages lost ownership") };
+                if !pages.slots_are_admitted() {
+                    let progress = match pages.admit_original_slots(context.retained_grant()) { Ok(progress) => progress, Err(_) => return FrameFinishBoundaryStep::Fault("frame icon slot authority was refused") };
+                    if context.consume_retained(progress).is_err() { return FrameFinishBoundaryStep::Fault("frame icon slot receipt exceeded original authority"); }
+                    return FrameFinishBoundaryStep::Pending;
                 }
+                let (complete, progress) = match pages.push_page(&self.icons.pixels, pages.next_row(), context.retained_grant()) { Ok(result) => result, Err(error) => { let _ = context.consume_retained(error.retained_progress()); return FrameFinishBoundaryStep::Fault("frame icon atlas page construction faulted"); } };
+                if context.consume_retained(progress).is_err() { return FrameFinishBoundaryStep::Fault("frame icon page receipt exceeded original authority"); }
+                if !complete { return FrameFinishBoundaryStep::Pending; }
+                let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame icon transfer lost resource input") };
+                let Some(pages) = cursor.icon_pages.take() else { return FrameFinishBoundaryStep::Fault("frame icon atlas pages lost ownership") };
                 if let Err(rejected) = input.try_push_upload(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlasPages { pixels: pages }) {
                     partial.upload_rejected = Some(rejected);
                     return FrameFinishBoundaryStep::Fault("frame icon upload fixed admission was refused");
                 }
-                self.icons = atlas;
                 cursor.phase = FrameFinishPhase::GlyphUpload;
             }
             FrameFinishPhase::GlyphUpload => {
@@ -18403,16 +18350,22 @@ impl AppRuntime {
                     if next > input.limits.max_upload_items {
                         return FrameFinishBoundaryStep::Fault("frame glyph upload credits exceeded");
                     }
-                    let Ok(pages) = ui_wgpu::wgpu::PreparedAtlasPages::try_new(self.atlas.width, self.atlas.height, 1, self.atlas.pixels.len()) else {
+                    let Ok((pages, progress)) = ui_wgpu::wgpu::PreparedAtlasPages::try_new(self.atlas.width, self.atlas.height, 1, self.atlas.pixels.len(), ui_wgpu::wgpu::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained }) else {
                         return FrameFinishBoundaryStep::Fault("frame glyph atlas page admission failed");
                     };
                     cursor.glyph_pages = Some(pages);
+                    if context.consume_retained(progress).is_err() { return FrameFinishBoundaryStep::Fault("frame glyph header receipt exceeded original authority"); }
                     cursor.glyph_started = true;
                     return FrameFinishBoundaryStep::Pending;
                 }
                 let Some(pages) = cursor.glyph_pages.as_mut() else { return FrameFinishBoundaryStep::Fault("frame glyph atlas pages lost ownership") };
-                let complete = match pages.push_page(&self.atlas.pixels, pages.next_row()) {
-                    Ok(complete) => complete,
+                if !pages.slots_are_admitted() {
+                    let progress = match pages.admit_original_slots(context.retained_grant()) { Ok(progress) => progress, Err(_) => return FrameFinishBoundaryStep::Fault("frame glyph slot authority was refused") };
+                    if context.consume_retained(progress).is_err() { return FrameFinishBoundaryStep::Fault("frame glyph slot receipt exceeded original authority"); }
+                    return FrameFinishBoundaryStep::Pending;
+                }
+                let complete = match pages.push_page(&self.atlas.pixels, pages.next_row(), context.retained_grant()) {
+                    Ok((complete, progress)) => { if context.consume_retained(progress).is_err() { return FrameFinishBoundaryStep::Fault("frame glyph page receipt exceeded original authority"); } complete },
                     Err(_) => return FrameFinishBoundaryStep::Fault("frame glyph atlas page construction faulted"),
                 };
                 if !complete {

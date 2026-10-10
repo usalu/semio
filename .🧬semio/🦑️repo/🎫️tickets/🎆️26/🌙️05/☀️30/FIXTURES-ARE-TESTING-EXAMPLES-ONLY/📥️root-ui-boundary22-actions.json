@@ -1,0 +1,62 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "fa09e71c51a0ff11095634b81ed0d461f9f3ac42258481cb435d311aa5746e00",
+      "afterSha256": "ba0761d5ff58f82252f80ec3c8999f9307e989a7af8ef58cfba211017491aa35",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "b308f5c9f3455c642af4db736e64cc7fb54a1cfb7acc7943e3f318bbe05749af",
+      "afterSha256": "bcc3442bcfa559f79241b25ece20022980f922795d67519ee0e47dcc43e2373c",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/📋️outcome.json",
+      "action": "removed",
+      "beforeSha256": "00785b258645076dd3ad6419fb1497db970bc07cba833aec27a8480123abcd90",
+      "afterSha256": null,
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧬️schema/📋️ingress.json",
+      "action": "removed",
+      "beforeSha256": "96e8ee8c384deb2696e9fe8b57859e333796a405d9e1d23715763f957d6e379e",
+      "afterSha256": null,
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧬️schema/🫴️receiving.json",
+      "action": "removed",
+      "beforeSha256": "2d8af67c2e335c62cac9b853a374e57e2f96b15f10c668f2b4d1bb3e7d0e393d",
+      "afterSha256": null,
+      "exclusive": false
+    }
+  ],
+  "excludedObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json",
+      "sha256": "40fab76b356e857f7c224cedf227f53370c2eb209fb21bfac7467e3345755046",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "sha256": "a15d786f0819ef4cbbce8b5d7162aae1d77633467dbca783e6c32c67a1f821c3",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🫴️receiving.json",
+      "sha256": "adfd8b87d8ec2f8125a2682b264c6b4fffe6b3aace9216bd82b26bb3a437a183",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs",
+      "sha256": "8cccfdde065187b9f5b97cf914ac19d67070e98e6a2438a43cbcda1296cca39a",
+      "authored": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

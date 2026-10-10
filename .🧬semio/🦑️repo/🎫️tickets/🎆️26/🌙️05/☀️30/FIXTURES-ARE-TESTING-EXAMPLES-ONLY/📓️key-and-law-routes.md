@@ -1,0 +1,9 @@
+# Key Domain and Existing Law Routes
+
+Read-only current Source, no execution or authorship. Hashes accompany this report.
+
+Genuine WGPU tree Rust180 defines NodeKey::Explicit(String) or Positional(u32,u32);187 defines borrowed NodeKeyRef::Explicit(&str) or Positional(u32,u32). borrowed193–198 retains original explicit String and copies only two scalar words. This is an internal keyed reconciliation identity, distinct from an entire UiNodeRecord DTO. UI retained TypeScript imports genuine UiNodeRecord from Manifest; Manifest TS87/181 explicitly exports generated UiNodeRecord. Do not replace the removed corpus union with an invented trial schema or assume its `{explicit}`/`{positional}` JSON shape is the produced UiNodeRecord wire shape. The bounded search did not establish a standalone genuine NodeKey JSON schema; actual defining enum is sufficient for preserving existing Rust behavior. Preserve per-row SQLite equality and actual tree/reconcile borrowed-key usage.
+
+Diagnostic Rust package owns `test-source` target via existing script. Its script34 selects retained tests, text-error tests and retained/ownership/tests/TS together. Preserve that original route and both independent TypeScript AST/SQLite tests. Native target `test-native` is separately registered, so TS metadata does not prove native behavior.
+
+Manifest root Rust8137 includes action-args/retirement/tests/Rust; native declaration is `manifest_argument_retirement_original_typed_fields_preserve_denied_pointers_and_physical_receipts`. It consumes unchanged plain policy/strings and System pointer/receipt observers. Manifest has no local package script in the inspected owner: do not invent a new standalone native project. Resolve the existing containing Kernel/framework package include route before executing it. The existing TS two laws remain direct Bun tests, preserving SQLite/RFC6902 stages; this review did not find their canonical registered target and does not fabricate one.

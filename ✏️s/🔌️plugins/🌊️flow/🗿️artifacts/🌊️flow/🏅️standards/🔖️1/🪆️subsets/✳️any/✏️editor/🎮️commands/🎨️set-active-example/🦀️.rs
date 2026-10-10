@@ -11,6 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🎨️ The navbar example id. An empty id is the picker's cleared row.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-active-example")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct SetActiveExample {
     pub example_id: String,
 }

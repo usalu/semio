@@ -1,0 +1,90 @@
+{
+  "limits": {
+    "maximumPayloadBytes": 8192,
+    "maximumCapacityBytes": 65536
+  },
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 16384,
+    "maximumReleaseBytes": 16384,
+    "maximumDepth": 64
+  },
+  "examples": [
+    {
+      "text": "Tür🚪",
+      "bytes": [
+        84,
+        195,
+        188,
+        114,
+        240,
+        159,
+        154,
+        170
+      ]
+    },
+    {
+      "text": "",
+      "bytes": []
+    },
+    {
+      "text": "x",
+      "repeat": 8192,
+      "bytes": [
+        120
+      ]
+    }
+  ],
+  "cancelStops": [
+    0,
+    1,
+    2,
+    4,
+    8,
+    64
+  ],
+  "maximumOperations": 8,
+  "operationRows": [
+    {
+      "values": [],
+      "expected": []
+    },
+    {
+      "values": [
+        [
+          84,
+          195,
+          188,
+          114,
+          240,
+          159,
+          154,
+          170
+        ],
+        [],
+        [
+          0,
+          255
+        ]
+      ],
+      "expected": [
+        [
+          84,
+          195,
+          188,
+          114,
+          240,
+          159,
+          154,
+          170
+        ],
+        [],
+        [
+          0,
+          255
+        ]
+      ]
+    }
+  ]
+}

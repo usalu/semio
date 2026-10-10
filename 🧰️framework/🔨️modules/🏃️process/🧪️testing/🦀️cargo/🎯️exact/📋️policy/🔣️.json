@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "buildMilliseconds": 0,
+  "listMilliseconds": 60000,
+  "lawMilliseconds": 60000,
+  "transport": {
+    "maximumBuildOutputBytes": 268435456,
+    "maximumNativeOutputBytes": 8388608
+  }
+}

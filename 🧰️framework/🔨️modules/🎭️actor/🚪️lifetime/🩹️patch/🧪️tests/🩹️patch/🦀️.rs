@@ -49,6 +49,7 @@ async fn actor_ui_patch_receipt_outer_field_preserves_order_and_rejects_partial_
     for row in fixture["vectors"].as_array().unwrap() {
         let receipt: ActorUiPatchReceipt = serde_json::from_value(row["value"].clone()).unwrap();
         let turn = crate::TurnResult {
+            retained_receipt: serde_json::from_str(include_str!("../../../../🎟️retained-turn/🧫️fixtures/🔣️.json")).unwrap(),
             ui_patches: vec![91],
             effects: vec![],
             command_ingress: vec![],
@@ -62,12 +63,14 @@ async fn actor_ui_patch_receipt_outer_field_preserves_order_and_rejects_partial_
         let mut bytes = Vec::new();
         turn.pack_encode(&mut bytes).await.unwrap();
         let body = unhex(row["hex"].as_str().unwrap());
-        let mut expected = vec![1, 91, 0, 0, 0, 0, body.len() as u8];
+        let mut expected = Vec::new();
+        turn.retained_receipt.pack_encode(&mut expected).await.unwrap();
+        expected.extend_from_slice(&[1, 91, 0, 0, 0, 0, body.len() as u8]);
         expected.extend_from_slice(&body);
         expected.extend_from_slice(&[0; 26]);
         assert_eq!(bytes, expected);
         assert_eq!(crate::TurnResult::pack_decode(&bytes, &mut 0).await.unwrap(), turn);
-        for invalid in [crate::TurnResult { ui_patch_receipt: None, ..turn.clone() }, crate::TurnResult { ui_patches: vec![], ..turn.clone() }] {
+        for invalid in [crate::TurnResult { ui_patch_receipt: None, ..turn.clone() }, crate::TurnResult { retained_receipt: serde_json::from_str(include_str!("../../../../🎟️retained-turn/🧫️fixtures/🔣️.json")).unwrap(), ui_patches: vec![], ..turn.clone() }] {
             let mut untouched = vec![73, 74];
             assert!(invalid.pack_encode(&mut untouched).await.is_err());
             assert_eq!(untouched, [73, 74]);

@@ -1,5 +1,0 @@
-{
-  "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
-  "before": "impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {\n",
-  "after": "impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {\n    fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if path.is_empty(){return Ok(native_encoding::FieldProjectionView::Map(self.len()))}self.iter().nth(path[0]).map(|(_,value)|value).ok_or_else(native_encoding::projection_path_error)?.projection_view(&path[1..])}\n    fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path.is_empty(){return self.keys().nth(index).map(String::as_str).ok_or_else(native_encoding::projection_path_error)}self.iter().nth(path[0]).map(|(_,value)|value).ok_or_else(native_encoding::projection_path_error)?.projection_key(&path[1..],index)}\n"
-}

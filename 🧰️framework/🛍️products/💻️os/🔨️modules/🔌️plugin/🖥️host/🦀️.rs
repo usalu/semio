@@ -482,6 +482,9 @@ impl Drop for EpochDemand {
 }
 //#endregion ⏱️EpochDeadlines
 
+#[path="🧬️component-codec/🎟️retained-turn/🦀️.rs"]
+mod retained_turn_wire;
+
 /// 📏️ Generic per-store `ResourceLimiter` (§2: "a `ResourceLimiter` per store bounding
 /// memory/tables/instances against the budget"). Plain numeric bounds rather than a `Budget`-typed
 /// constructor — `Budget` is A3's type, not yet landed — so `WasmtimeRuntime` builds one from
@@ -821,6 +824,7 @@ pub enum JobStep {
 /// plumbing faults): every `GuestRuntime::execute_turn`/`step_job` failure is one of these.
 #[derive(Debug)]
 pub enum TurnFault {
+    ActorCall(crate::reactor::original_actor_context::OriginalActorFixedCall),
     Host(PluginHostError),
     Guest(semio_framework::Fault),
     Exhausted,
@@ -854,6 +858,7 @@ impl std::fmt::Display for TurnFault {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Host(error) => std::fmt::Display::fmt(error, formatter),
+            Self::ActorCall(call)=>write!(formatter,"original actor call {}/{}/{} refused after {:?}",call.input.operation,call.input.generation,call.input.epoch,call.spent),
             Self::Guest(fault) => write!(formatter, "guest fault {}: {}", fault.code.0, fault.message),
             Self::Exhausted => formatter.write_str("guest instance has no more scripted/actual turns"),
             Self::Trapped(message) => write!(formatter, "guest trapped: {message}"),
@@ -936,6 +941,8 @@ impl From<PluginHostError> for TurnFault {
 pub trait GuestRuntime: Send + Sync {
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
     async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorAdmissionReply,TurnFault>;
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorCloseReply,TurnFault>;
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault>;
     /// 🧬️ `jobs.wit`'s `start-job` export — added past `design-runtime.md` §2's literal trait listing
     /// because that listing omits it even though `jobs.wit` declares three functions
@@ -980,6 +987,7 @@ enum ScriptedOutcome {
 
 #[derive(Default)]
 struct MockInstanceState {
+    actor_context:crate::reactor::original_actor_context::OriginalActorGuestEntry,
     #[allow(dead_code)]
     checkpoint: Option<Vec<u8>>,
 }
@@ -1199,8 +1207,9 @@ impl MockGuestRuntime {
 
     /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
     /// care about scheduling/backpressure, not turn content.
-    pub async fn idle_turn() -> TurnResult {
+    pub async fn idle_turn(original:semio_framework::kernel::RetainedTurnInput) -> TurnResult {
         TurnResult {
+            retained_receipt:original.return_original(semio_framework_value::RetainedCloneProgress::default()).expect("scripted idle has no original retained effects"),
             ui_patches: semio_framework::kernel::UiTurnPatches::default(),
             effects: Vec::new(),
             presence: Vec::new(),
@@ -1223,6 +1232,9 @@ impl MockGuestRuntime {
 
 #[cfg(test)]
 impl GuestRuntime for MockGuestRuntime {
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorAdmissionReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(crate::reactor::original_actor_context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input)))}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorCloseReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(crate::reactor::original_actor_context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input)))}
+
     async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         Ok(CompiledHandle { package_hash: package.hash.0, component: None, owned: None })
     }
@@ -1447,6 +1459,8 @@ enum OwnedOperation {
     Describe,
     ChannelVersion,
     Poll,
+    AdmitActorContext,
+    CloseActorContext,
     StartJob,
     StepJob,
     CancelJob,
@@ -1472,6 +1486,8 @@ impl OwnedOperation {
             Self::Describe => OwnedSemioExport::Describe,
             Self::ChannelVersion => OwnedSemioExport::ChannelVersion,
             Self::Poll => OwnedSemioExport::Poll,
+            Self::AdmitActorContext=>OwnedSemioExport::AdmitActorContext,
+            Self::CloseActorContext=>OwnedSemioExport::CloseActorContext,
             Self::StartJob => OwnedSemioExport::StartJob,
             Self::StepJob => OwnedSemioExport::StepJob,
             Self::CancelJob => OwnedSemioExport::CancelJob,
@@ -1754,6 +1770,13 @@ impl OwnedRuntime {
         GuestInstance { actor: RuntimeActorId(0), state: GuestInstanceState::Owned(state) }
     }
 
+    fn actor_context_call(&self,inst:&mut GuestInstance,operation:OwnedOperation,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorFixedCall,TurnFault>{
+        let state=owned_state_mut(inst)?;
+        if state.pending.is_none(){let encoded=identity.encode(|control|operation::input::encode_json_input(&input,control)).map_err(identity_turn_fault)?;identity.encode(|control|control.charge(encoded.len())).map_err(identity_turn_fault)?;begin_owned_operation(state,operation,Some(encoded))?;}
+        let invocation=resume_owned_operation(state,operation,budget.fuel,budget.deadline_ms)?;
+        crate::reactor::original_actor_context::OriginalActorFixedReceipt::read(&invocation.output).map_err(identity_turn_fault)
+    }
+
     pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         let state = owned_state_mut(inst)?;
         if state.pending.is_some() && !events.is_empty() {
@@ -1790,6 +1813,7 @@ impl OwnedRuntime {
         let receipt=receiver.pause();
         state.original_receipt=if state.pending.is_some()||invocation.is_err(){Some(receipt)}else{None};
         let invocation=invocation?;
+        if invocation.output.starts_with(b"SAC1") {let original=crate::reactor::original_actor_context::OriginalActorFixedReceipt::read(&invocation.output).map_err(identity_turn_fault)?;return Err(TurnFault::ActorCall(original));}
         let mut result: TurnResult = decode_owned_result(&invocation.output)?;
         result.fuel_used = invocation.fuel_used;
         Ok(result)
@@ -1916,6 +1940,9 @@ impl OwnedRuntime {
 }
 
 impl GuestRuntime for OwnedRuntime {
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorAdmissionReply,TurnFault>{let call=self.actor_context_call(inst,OwnedOperation::AdmitActorContext,input,budget,identity)?;match call.kind{crate::reactor::original_actor_context::OriginalActorFixedKind::Admission{ready,refusal}=>Ok(crate::reactor::original_actor_context::OriginalActorAdmissionReply{input:call.input,spent:call.spent,ready,refusal}),_=>Err(TurnFault::ActorCall(call))}}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorCloseReply,TurnFault>{let call=self.actor_context_call(inst,OwnedOperation::CloseActorContext,input,budget,identity)?;match call.kind{crate::reactor::original_actor_context::OriginalActorFixedKind::Close{complete,blocked,refusal}=>Ok(crate::reactor::original_actor_context::OriginalActorCloseReply{input:call.input,spent:call.spent,complete,blocked,refusal}),_=>Err(TurnFault::ActorCall(call))}}
+
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         self.compile_component(package, bytes)
     }
@@ -3153,6 +3180,9 @@ impl GuestRuntimes {
 //#endregion 🗂️GuestCodecDispatch
 
 impl GuestRuntime for WasmtimeRuntime {
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorAdmissionReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm(store,deadline,u64::from(budget.deadline_ms));let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_admit_actor_context(accessor,input).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::admission_from_wit(original)}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorCloseReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm(store,deadline,u64::from(budget.deadline_ms));let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_close_actor_context(accessor,input).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::close_from_wit(original)}
+
     /// 🚫️async: R13/R14 corollary — `let _ = <async call>;` used to suppress the lint while
     /// silently dropping this call's future: the on-disk compilation cache write never ran, so
     /// `compile` was recompiling from wasm bytes on every single call regardless of
@@ -3240,21 +3270,21 @@ impl GuestRuntime for WasmtimeRuntime {
         let WasmtimeInstanceState { store, bindings, instance_id, deadline } = state;
         arm_store_fuel(store, self.fuel_metering, budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
         let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
-        let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let wit_budget = wit_reactor::Budget { retained:retained_turn_wire::input_to_wit(budget.retained), fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let (wit_events, wit_command_page, wit_cold_pair_page) = kernel_turn_inputs_to_wit(events, *instance_id).await?;
         let call_result = store
             .run_concurrent(async |accessor| {
                 if let Some((cursor, bytes)) = wit_command_page {
                     if let Err(error) = bindings.semio_framework_reactor().call_stage_command_page(accessor, cursor, bytes).await? {
-                        return Ok(Err(error));
+                        return Ok(Err(decode_guest_plugin_error(error)));
                     }
                 }
                 if let Some(page) = wit_cold_pair_page {
                     if let Err(error) = bindings.semio_framework_reactor().call_stage_cold_pair_page(accessor, page).await? {
-                        return Ok(Err(error));
+                        return Ok(Err(decode_guest_plugin_error(error)));
                     }
                 }
-                bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_budget).await
+                bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_budget).await.map(|original|original.map_err(retained_turn_wire::failure_from_wit))
             })
             .await
             .and_then(|inner| inner);
@@ -3262,7 +3292,8 @@ impl GuestRuntime for WasmtimeRuntime {
             Ok(inner) => inner,
             Err(trap) => return Err(classify_guest_trap(&trap)),
         };
-        let wit_turn_result = poll_result.map_err(decode_guest_plugin_error)?;
+        let wit_turn_result = poll_result?;
+        let retained_receipt = retained_turn_wire::receipt_from_wit(wit_turn_result.retained_receipt,budget.retained)?;
         let emitted: Vec<wit_effects::Effect> = std::mem::take(&mut store.data_mut().emit_sink);
         let emitted_patches: Vec<wit_ui::UiPatch> = std::mem::take(&mut store.data_mut().emit_patch_sink);
         let mut effects = Vec::with_capacity(emitted.len() + wit_turn_result.effects.len());
@@ -3272,6 +3303,7 @@ impl GuestRuntime for WasmtimeRuntime {
         let ui_patch_receipt = wit_turn_result.ui_patch_receipt.map(wit_patch_receipt_to_kernel);
         let ui_patches = ui_patch::wit_ui_patches_to_kernel(*instance_id, budget.max_patch_bytes, emitted_patches, wit_turn_result.ui_patches, ui_patch_receipt).map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
         Ok(TurnResult {
+            retained_receipt,
             ui_patches,
             effects,
             presence: {
@@ -3422,6 +3454,9 @@ pub enum GuestRuntimes {
 }
 
 impl GuestRuntime for GuestRuntimes {
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorAdmissionReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Mock(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Recording(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await}}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorCloseReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Mock(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Recording(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await}}
+
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         match self {
             Self::Owned(r) => r.compile(package, bytes).await,
@@ -5089,7 +5124,7 @@ pub trait GuestRelayWakeReceiptReceiver:Send+Sync{fn checkout(&self,slot:usize,g
 pub struct GuestRelayWakeAuthority{pub drive_policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub issuer:semio_framework_job::OriginalWorkerWakeIssuer,pub receiver:Arc<dyn GuestRelayWakeReceiptReceiver>}
 #[path="🔔️wake/🦀️.rs"]
 mod original_wake_receipts;
-pub use original_wake_receipts::{GuestRelayWakeReceiptLedger,GuestRelayWakeTurnGrant,GuestRelayWakeTurnReceipt};
+pub use original_wake_receipts::{GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRelayDriverTurnGrant,GuestRelayWakeDriver,GuestRelayWakeContextTurn,GuestRelayWakeReceiptLedger,GuestRelayWakeTurnGrant,GuestRelayWakeTurnReceipt};
 #[cfg(test)]
 #[global_allocator]
 static HOST_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

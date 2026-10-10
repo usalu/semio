@@ -6,6 +6,7 @@ import {resolve} from "node:path";
 import fixture from "../../🧫️fixtures/🚦️refusals/🔣️.json";
 import "../🎞️intrinsic-media/🟦️.ts";
 import "../🔃️ordering/🟦️.ts";
+import "../../🧭️tooling/🧪️tests/🟦️.ts";
 
 test("neutral strict wire corpus separates grammar from observed native backing",async()=>{
     const root=resolve(import.meta.dir,"../../../../../..");

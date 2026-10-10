@@ -1,0 +1,396 @@
+{
+  "at": "2026-10-09T23:26:54.859565+00:00",
+  "session": 1297,
+  "exit": 0,
+  "nxTaskDuration": "17.0s",
+  "nextestDuration": "1.396s",
+  "nativePassed": 53,
+  "nativeFailed": 0,
+  "rawPassRowsIncludingFinalReporter": 106,
+  "actualNamedRows": [
+    {
+      "seconds": "0.090s",
+      "ordinal": 1,
+      "name": "semio-framework-canvas component::camera_fit_laws::a_camera_that_frames_nothing_is_never_reported_as_framing_something"
+    },
+    {
+      "seconds": "0.083s",
+      "ordinal": 2,
+      "name": "semio-framework-canvas component::camera_fit_laws::a_fitted_camera_frames_the_whole_graph_it_was_fitted_to"
+    },
+    {
+      "seconds": "0.035s",
+      "ordinal": 3,
+      "name": "semio-framework-canvas component::camera_fit_laws::a_stored_zero_zoom_camera_never_opens_a_surface"
+    },
+    {
+      "seconds": "0.021s",
+      "ordinal": 4,
+      "name": "semio-framework-canvas component::camera_fit_laws::every_fixture_row_opens_on_the_camera_the_law_names"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 5,
+      "name": "semio-framework-canvas component::camera_fit_laws::the_fit_leaves_the_padding_it_promises"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 6,
+      "name": "semio-framework-canvas component::camera_fit_laws::the_shared_constants_are_the_ones_the_fixture_was_pinned_against"
+    },
+    {
+      "seconds": "0.017s",
+      "ordinal": 7,
+      "name": "semio-framework-canvas component::draw_list_tests::a_scene_over_the_command_ceiling_truncates_loudly"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 8,
+      "name": "semio-framework-canvas component::draw_list_tests::a_zoomed_camera_moves_every_encoded_coordinate"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 9,
+      "name": "semio-framework-canvas component::draw_list_tests::every_command_keeps_the_camera_affine_the_painter_baked_in"
+    },
+    {
+      "seconds": "0.013s",
+      "ordinal": 10,
+      "name": "semio-framework-canvas component::draw_list_tests::shapes_stay_primitives_so_a_replay_never_facets_a_circle"
+    },
+    {
+      "seconds": "0.012s",
+      "ordinal": 11,
+      "name": "semio-framework-canvas component::draw_list_tests::the_node_graph_snapshot_encodes_to_the_shared_draw_list"
+    },
+    {
+      "seconds": "0.022s",
+      "ordinal": 12,
+      "name": "semio-framework-canvas component::icon_codec::generated_shortcode_emoji_bindings_match_the_assets_snapshot_oracle"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 13,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_bare_dollar_sugar_decodes_as_math"
+    },
+    {
+      "seconds": "0.015s",
+      "ordinal": 14,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_decodes_catalog_stem"
+    },
+    {
+      "seconds": "0.015s",
+      "ordinal": 15,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_decodes_themed_stem"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 16,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_rejects_unknown_catalogish_stem"
+    },
+    {
+      "seconds": "0.015s",
+      "ordinal": 17,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_resolves_catalog_shortcode_to_svg"
+    },
+    {
+      "seconds": "0.016s",
+      "ordinal": 18,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_resolves_emoji_shortcode_to_svg"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 19,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_resolves_metabolism_shortcode_to_themed_svg"
+    },
+    {
+      "seconds": "0.016s",
+      "ordinal": 20,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_resolves_text_to_svg"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 21,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_round_trips_all_kinds"
+    },
+    {
+      "seconds": "0.017s",
+      "ordinal": 22,
+      "name": "semio-framework-canvas component::icon_codec::tests::icon_codec_url_returns_none_for_sync_resolver"
+    },
+    {
+      "seconds": "0.020s",
+      "ordinal": 23,
+      "name": "semio-framework-canvas component::label_fit_laws::a_clipped_caption_keeps_the_longest_prefix_that_fits"
+    },
+    {
+      "seconds": "0.017s",
+      "ordinal": 24,
+      "name": "semio-framework-canvas component::label_fit_laws::every_fixture_row_clips_to_the_string_the_law_names"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 25,
+      "name": "semio-framework-canvas component::label_fit_laws::the_measure_the_caller_passes_is_the_one_that_decides"
+    },
+    {
+      "seconds": "0.015s",
+      "ordinal": 26,
+      "name": "semio-framework-canvas component::path_retirement::tests::original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 27,
+      "name": "semio-framework-canvas component::renderer::color_stroke_raster_tests::from_rgba8_agrees_with_peniko_color_across_every_channel_byte"
+    },
+    {
+      "seconds": "0.015s",
+      "ordinal": 28,
+      "name": "semio-framework-canvas component::renderer::color_stroke_raster_tests::multiply_alpha_agrees_with_peniko_color_across_fixtures"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 29,
+      "name": "semio-framework-canvas component::renderer::color_stroke_raster_tests::raster_image_clone_data_shares_the_same_backing_allocation"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 30,
+      "name": "semio-framework-canvas component::renderer::color_stroke_raster_tests::raster_image_to_peniko_preserves_dimensions_and_bytes"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 31,
+      "name": "semio-framework-canvas component::renderer::color_stroke_raster_tests::stroke_to_kurbo_matches_kurbo_stroke_new_defaults"
+    },
+    {
+      "seconds": "0.012s",
+      "ordinal": 32,
+      "name": "semio-framework-canvas component::renderer::color_stroke_raster_tests::stroke_to_kurbo_reflects_dash_pattern_and_cap_setters"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 33,
+      "name": "semio-framework-canvas component::renderer::color_stroke_raster_tests::to_rgba8_agrees_with_peniko_color_across_fixtures"
+    },
+    {
+      "seconds": "0.022s",
+      "ordinal": 34,
+      "name": "semio-framework-canvas component::renderer::opaque_scene_retirement_slot_table_is_heap_first_and_fits_a_bounded_thread_stack"
+    },
+    {
+      "seconds": "0.018s",
+      "ordinal": 35,
+      "name": "semio-framework-canvas component::renderer::opaque_scene_retirement_tests::fixed_quarantine_saturates_before_scene_ownership_transfer"
+    },
+    {
+      "seconds": "0.021s",
+      "ordinal": 36,
+      "name": "semio-framework-canvas component::renderer::opaque_scene_retirement_tests::late_opaque_scene_token_is_rejected_before_owner_publication"
+    },
+    {
+      "seconds": "0.025s",
+      "ordinal": 37,
+      "name": "semio-framework-canvas component::renderer::opaque_scene_retirement_tests::terminal_opaque_scene_slots_are_reused_after_exact_cursor_drain"
+    },
+    {
+      "seconds": "0.015s",
+      "ordinal": 38,
+      "name": "semio-framework-canvas component::stroke_retirement::tests::original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt"
+    },
+    {
+      "seconds": "0.025s",
+      "ordinal": 39,
+      "name": "semio-framework-canvas component::tests::append_label_renders_glyphs"
+    },
+    {
+      "seconds": "0.013s",
+      "ordinal": 40,
+      "name": "semio-framework-canvas component::tests::camera_round_trip"
+    },
+    {
+      "seconds": "0.017s",
+      "ordinal": 41,
+      "name": "semio-framework-canvas component::tests::label_advance_excludes_outer_padding"
+    },
+    {
+      "seconds": "0.015s",
+      "ordinal": 42,
+      "name": "semio-framework-canvas component::tests::label_byte_world_x_is_narrower_than_char_width_estimate"
+    },
+    {
+      "seconds": "0.017s",
+      "ordinal": 43,
+      "name": "semio-framework-canvas component::tests::label_extent_matches_append_label_box"
+    },
+    {
+      "seconds": "0.013s",
+      "ordinal": 44,
+      "name": "semio-framework-canvas component::tests::lod_scale_resolve"
+    },
+    {
+      "seconds": "0.014s",
+      "ordinal": 45,
+      "name": "semio-framework-canvas component::tests::scale_scene_for_device_pixel_ratio_scales_logical_scene"
+    },
+    {
+      "seconds": "0.308s",
+      "ordinal": 46,
+      "name": "semio-framework-canvas component::text::label_shapes_laws::a_working_set_is_accounted_by_its_outline_bytes_within_the_declared_bounds"
+    },
+    {
+      "seconds": "0.073s",
+      "ordinal": 47,
+      "name": "semio-framework-canvas component::text::label_shapes_laws::every_label_paints_what_usvg_shapes_and_shapes_it_once"
+    },
+    {
+      "seconds": "0.022s",
+      "ordinal": 48,
+      "name": "semio-framework-canvas component::text::label_shapes_laws::every_lru_case_admits_and_evicts_as_the_fixture_names"
+    },
+    {
+      "seconds": "0.028s",
+      "ordinal": 49,
+      "name": "semio-framework-canvas component::text::label_shapes_laws::every_tspan_line_paints_what_usvg_shapes_and_shapes_it_once"
+    },
+    {
+      "seconds": "0.015s",
+      "ordinal": 50,
+      "name": "semio-framework-canvas component::text::label_shapes_laws::the_cache_bounds_are_the_schema_consts"
+    },
+    {
+      "seconds": "0.017s",
+      "ordinal": 51,
+      "name": "semio-framework-canvas component::theme::theme_color_fields_match_owned_rows_and_independent_serde_peniko_oracles"
+    },
+    {
+      "seconds": "0.030s",
+      "ordinal": 52,
+      "name": "semio-framework-canvas test_allocation::tests::shared_requested_layout_scopes_preserve_totals_nesting_and_unwind"
+    },
+    {
+      "seconds": "0.016s",
+      "ordinal": 53,
+      "name": "semio-framework-canvas test_allocation::tests::shared_requested_overflow_delegates_bounded_allocation_then_restores_before_refusal"
+    }
+  ],
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "before": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750",
+      "after": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "before": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "after": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "before": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "after": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "before": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+      "after": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+      "before": "ffacf1b817337697a9c959d3d83de66a960d256896b2d48be1e732b2fa71daf9",
+      "after": "ffacf1b817337697a9c959d3d83de66a960d256896b2d48be1e732b2fa71daf9",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🟦️.ts",
+      "before": "783309d7c3a885a3f73cad4a0379c2ec2eb6e8cb2a8590506c572fbe3d298147",
+      "after": "783309d7c3a885a3f73cad4a0379c2ec2eb6e8cb2a8590506c572fbe3d298147",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+      "before": "a442c34719ba19de66a5b505ee811a5ab354ceb7c0f14e923698ea283ad6bd54",
+      "after": "a442c34719ba19de66a5b505ee811a5ab354ceb7c0f14e923698ea283ad6bd54",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🧫️fixtures/🔣️.json",
+      "before": "0046af23407c8848732c63c45cf4ccdfcda86a459dd5117b323788b58f08962a",
+      "after": "0046af23407c8848732c63c45cf4ccdfcda86a459dd5117b323788b58f08962a",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🦀️.rs",
+      "before": "8c274d0584ec6281fcafa315c299c7cd26835972d69ca34a06cc4093f69c3429",
+      "after": "8c274d0584ec6281fcafa315c299c7cd26835972d69ca34a06cc4093f69c3429",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🟦️.ts",
+      "before": "bf741eb04920a859a70407c4ebcff871de9fda0d4ca2d5f40dc9f8d5cfc7440d",
+      "after": "bf741eb04920a859a70407c4ebcff871de9fda0d4ca2d5f40dc9f8d5cfc7440d",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🦀️.rs",
+      "before": "5f6453f6b857fd81ae5693d0495e18e3f9330fcb784160574756aa32f0214bbb",
+      "after": "5f6453f6b857fd81ae5693d0495e18e3f9330fcb784160574756aa32f0214bbb",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🧫️fixtures/🔣️.json",
+      "before": "e432d5d083be49db63642e3e9685778b11eb82988f3e9b2e563be2916d4c57bd",
+      "after": "e432d5d083be49db63642e3e9685778b11eb82988f3e9b2e563be2916d4c57bd",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+      "before": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+      "after": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+      "before": "e9fd7c3930750dc04742e4ce4e902c6ef826d2c06a7d5afda36883c8c1242eb5",
+      "after": "e9fd7c3930750dc04742e4ce4e902c6ef826d2c06a7d5afda36883c8c1242eb5",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🦀️.rs",
+      "before": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+      "after": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "before": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "after": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "before": "f2b14f58ef66b1d3d7d126029d760d3e095d4a50519df9a9ee27adda259fa704",
+      "after": "f2b14f58ef66b1d3d7d126029d760d3e095d4a50519df9a9ee27adda259fa704",
+      "matches": true
+    }
+  ],
+  "nextestMetadata": "🗑️generated/cf2-out/semio-nextest-fljxsC/binaries-metadata.json",
+  "binaryArtifacts": [
+    {
+      "name": "semio-framework-canvas",
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/debug/build/semio-framework-canvas/dfc35f158a8a7e10/out/semio_framework_canvas-dfc35f158a8a7e10",
+      "sha256": "442939007b0f0b05ebe52b09a81c2ee671398afc763206c8e525701f6dc733e6",
+      "bytes": 16285216
+    }
+  ],
+  "ownRootsAbsent": [
+    67488,
+    67489,
+    67640
+  ],
+  "scope": "complete Canvas library test suite under original normal owner; no Kernel/WGPU/whole Frame production proof"
+}

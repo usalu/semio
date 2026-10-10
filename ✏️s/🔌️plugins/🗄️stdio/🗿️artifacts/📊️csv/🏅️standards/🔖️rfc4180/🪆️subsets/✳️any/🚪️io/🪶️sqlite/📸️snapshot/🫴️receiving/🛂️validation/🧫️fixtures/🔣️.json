@@ -1,0 +1,42 @@
+{
+  "format": 1,
+  "owner": "csv",
+  "directions": [
+    "decoding",
+    "encoding"
+  ],
+  "cases": [
+    {
+      "subset": "*",
+      "port": "accepted",
+      "kind": "clean"
+    },
+    {
+      "subset": "named",
+      "port": "accepted",
+      "kind": "unsupportedOwner"
+    },
+    {
+      "subset": "*",
+      "port": "sqlCanceled",
+      "kind": "canceled"
+    },
+    {
+      "subset": "*",
+      "port": "nativeCanceled",
+      "kind": "canceled"
+    }
+  ],
+  "grant": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 0
+  },
+  "nativeMaximumBytes": 0,
+  "allocatedBytes": 0,
+  "releasedBytes": 0,
+  "input": "borrowOriginal",
+  "diagnostics": "empty"
+}

@@ -1,0 +1,16 @@
+{
+  "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+  "beforeSha": "899b1d85f8f0e0f27268eb0b4ee93820284d902ff0a61b46892f2fa244754121",
+  "afterSha": "129be91e82ab86296137a5a88a6d07e895034e82f5e8ffffa1f6215d12283d14",
+  "actions": [
+    {
+      "beforeBlock": "expect(api.readScriptProcessEnvelope(row.value, row.now)).toBe(row.value);",
+      "afterBlock": "expect(row.value).toBe(api.readScriptProcessEnvelope(row.value, row.now));"
+    },
+    {
+      "beforeBlock": "if (row.accepted) expect(shared.scriptInvocationBudget(original, row.requested)).toBe(row.expected);",
+      "afterBlock": "if (row.accepted) { if(row.expected===undefined)throw Error(\"Accepted ordinary budget row requires exact ceiling\");expect(shared.scriptInvocationBudget(original, row.requested)).toBe(row.expected); }"
+    }
+  ],
+  "trueRed": "Original registered routing14004 strict TSC2 diagnostics; runtime/budgets unchanged, no casts/compatibility"
+}

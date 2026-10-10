@@ -1,0 +1,48 @@
+{
+  "boundaryRed": {
+    "session": 94792,
+    "source": "Root full boundary18",
+    "status": 1,
+    "actualFindings": 4
+  },
+  "actions": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "09ca4e65a07528a2b4e36c25718995b82a19f596d81a6b3ef13dbf77fc8de7ae",
+      "afterSha256": null,
+      "scope": "exclusive whole testing policy const document, no genuine production DTO export"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "4d2b69c812c621da0475a4c1fd693d3abf6b5fb63c31af5bab269e00fcaa8f0d",
+      "afterSha256": "fddb0db28c1f62e3b6a28311ab77605179eaab094f2685c4fd1edf1e5a637ac0",
+      "scope": "only whole-trial Ajv import/admission/missing-key mutants and truthful DEBUG attribution removed; Buffer/SQLite/domain source laws preserved"
+    }
+  ],
+  "preservedObservers": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json": {
+      "sha256": "30ee0708b163c39e2ddfb73a68b46b9a2864b44ef38624d84c65878c95f7036e",
+      "matchesBefore": true
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs": {
+      "sha256": "e745562815af98c6e8e6b5225dd58a450b8b7cb87a2c9e405c00eaac32550313",
+      "matchesBefore": true
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs": {
+      "sha256": "554f128a552092ab9632d45d5fd93268c735bd0c0071490a41407f3ce7d8c09f",
+      "matchesBefore": true
+    }
+  },
+  "nativeInvocationRequired": false,
+  "qualification": "Rust fixture read behavior and every plain policy byte unchanged; no native credit",
+  "sourceGreen": {
+    "session": 14107,
+    "NxStatus": 0,
+    "duration": "529ms",
+    "tests": "12pass/0fail/137assertions",
+    "route": "existing registered private tests facet; original CSV Snapshot TS",
+    "log": "🗑️generated/pub-csv-trial-source.log"
+  }
+}

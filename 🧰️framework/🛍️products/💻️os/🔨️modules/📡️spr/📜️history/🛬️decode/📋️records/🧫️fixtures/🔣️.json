@@ -1,0 +1,1 @@
+{"records":[{"id":"first","payload":"é🧬漢"},{"id":"second","payload":"original\u0000bytes"},{"id":"third","payload":""}],"grant":{"items":1,"copy":0,"capacity":65536,"release":65536,"depth":32},"metadataCopy":0,"growth":"separate-original-reserve-and-publish"}

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { buildCargoArtifacts, readCargoArtifactBuildPolicyV1 } from "../../../../🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -10,4 +11,4 @@ class BuildScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(import.meta.dir).register("build", BuildScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("build", BuildScript)).run(process.argv.slice(2), original));

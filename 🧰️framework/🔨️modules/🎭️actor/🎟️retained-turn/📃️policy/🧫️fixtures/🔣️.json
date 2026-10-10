@@ -1,0 +1,78 @@
+{
+  "carrier": "TurnGrant.original_input",
+  "schedulingBudget": "resourceOverridesPreserveOriginalInput",
+  "input": {
+    "operation": 71,
+    "generation": 3,
+    "epoch": 19,
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 64
+    }
+  },
+  "lanes": [
+    "Interactive",
+    "UserVisible",
+    "Background",
+    "Maintenance"
+  ],
+  "expectedInputs": [
+    {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 19,
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
+    },
+    {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 19,
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
+    },
+    {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 19,
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
+    },
+    {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 19,
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
+    }
+  ],
+  "wire": {
+    "originalInputBytes": 64,
+    "schedulingBudgetBytes": 34,
+    "emptyTurnGrantBytes": 109
+  },
+  "authorityStorage": "borrowedOriginal"
+}

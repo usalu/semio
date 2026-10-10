@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned Command Output Limits",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumBytes",
+    "maximumLines"
+  ],
+  "properties": {
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "maximumLines": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    }
+  }
+}

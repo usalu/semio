@@ -187,7 +187,7 @@ pub type IoResult<T> = Result<IoOutcome<T>, IoError>;
 //#region 🔖️Route
 /// 📇️ One registered `IoEntry`, erased to owned/wire data — the shape the WIT `list-io-entries`
 /// guest export and the TS `IoEntryDescriptor[]` mirror both use.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct IoEntryDescriptor {
     pub from: ArtifactDialect,
@@ -199,13 +199,14 @@ pub struct IoEntryDescriptor {
 /// 🗺️ A resolved, executable (or wire-transmissible) hop sequence from `io_route`. Pure data — no
 /// `&'static IoEntry` pointers — so it can cross the WIT `io-routes` boundary; `io_run` re-resolves
 /// each hop's `(from, into)` pair against the live registry.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct IoRoute {
     pub hops: Vec<IoEntryDescriptor>,
     pub fidelity: IoFidelity,
 }
 //#endregion 🔖️Route
+semio_framework_value::artifact_retire_leaf!(IoFidelity);
 
 //#region 🔖️SchemaExports
 const IO_SCHEMA_EXPORTS: [semio_framework_schema_registry::SchemaExport; 1] = [semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") } }];

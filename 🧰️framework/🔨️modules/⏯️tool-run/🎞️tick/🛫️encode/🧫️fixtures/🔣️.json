@@ -1,0 +1,15 @@
+{
+  "counts": [
+    0,
+    1,
+    17
+  ],
+  "payloadBytes": 8192,
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 17,
+    "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  }
+}

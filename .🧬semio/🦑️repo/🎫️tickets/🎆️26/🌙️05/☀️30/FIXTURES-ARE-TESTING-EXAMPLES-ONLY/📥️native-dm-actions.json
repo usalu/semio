@@ -1,0 +1,110 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧬️schema/🔣️.json",
+    "beforeSha256": "2c21198397cc5b14a63f840ba4c0fec67c708d0260ee19afed44940cd77c6a74",
+    "action": "delete exclusive current whole-trial schema after actual absence RED82005",
+    "required": [
+      "version",
+      "cases",
+      "generalReadsProduct",
+      "parentPropagationField"
+    ],
+    "genuineDomainDefinitions": []
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧬️schema/⚠️kind/🔣️.json",
+    "beforeSha256": "2c4e73c2bdd2637411ce9ba7b017040c2a40100e1d7249e4849b2964b7d0a6cc",
+    "action": "delete exclusive current whole-trial schema after actual absence RED82005",
+    "required": [
+      "kinds",
+      "unknown",
+      "missing",
+      "getterHeap",
+      "sameReceipt",
+      "sameParam",
+      "parentPropagation"
+    ],
+    "genuineDomainDefinitions": []
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧬️schema/🔣️.json",
+    "beforeSha256": "35e2afb3d7659626292a71c4dd2fad7585380843ea003100d9c781543e21388c",
+    "action": "delete exclusive current whole-trial schema after actual absence RED82005",
+    "required": [
+      "schema",
+      "policy",
+      "owners",
+      "stages",
+      "strings",
+      "locales",
+      "terminalDrop",
+      "refused",
+      "reservationStages"
+    ],
+    "genuineDomainDefinitions": []
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+    "beforeSha256": "9ec630b2fc2947b218ca88bd00b769ee5d90bffb08214a8e8d708c1288773967",
+    "action": "remove exact whole-trial admission/import; preserve original source/vector/oracle; admit actual Fault/Grant domain values where applicable",
+    "oldBlockSha256": "cba1b77183548d3e0a0eaf044b78756ffeb0e19ce0817e708b3276974ffd21a1",
+    "newBlockSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterSha256": "0cff9ebd44b73ae65a81a087e3820a1fdb54e5f2fbc368a6afe7475e422904ce"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+    "beforeSha256": "0cff9ebd44b73ae65a81a087e3820a1fdb54e5f2fbc368a6afe7475e422904ce",
+    "action": "remove exact whole-trial admission/import; preserve original source/vector/oracle; admit actual Fault/Grant domain values where applicable",
+    "oldBlockSha256": "224f086cb14fd87166192e2e25156f2e5ae449aefb3b79c4128b887f42cafcf8",
+    "newBlockSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterSha256": "59cb5655aecb02104d11566fe0ae201d6122727f4193ae64facc8bff8f983cd3"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+    "beforeSha256": "59cb5655aecb02104d11566fe0ae201d6122727f4193ae64facc8bff8f983cd3",
+    "action": "remove exact whole-trial admission/import; preserve original source/vector/oracle; admit actual Fault/Grant domain values where applicable",
+    "oldBlockSha256": "157166cd1fc73b6c7cdf71173e031d06c3e12d60aaff6de027ae0fd8c6442b1d",
+    "newBlockSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterSha256": "c4959483fd34d2d2384889d4afd55cf1df5e5d7f185260ff6a82950af03da213"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+    "beforeSha256": "c4959483fd34d2d2384889d4afd55cf1df5e5d7f185260ff6a82950af03da213",
+    "action": "remove exact whole-trial admission/import; preserve original source/vector/oracle; admit actual Fault/Grant domain values where applicable",
+    "oldBlockSha256": "b325bf57ba2e978adffaa8c97ad5b438b703de39d80abcfdbbe7bafedca3f28d",
+    "newBlockSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterSha256": "6b7145ed766dfd18e34c0259a1a0d866ffbb345ceb826e290fe40acb396dc2a6"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧪️tests/🟦️.ts",
+    "beforeSha256": "202b64f1d7342934d43940de374e67e6014cb7df5a6bd1504b00c5740b25dfda",
+    "action": "remove exact whole-trial admission/import; preserve original source/vector/oracle; admit actual Fault/Grant domain values where applicable",
+    "oldBlockSha256": "ec2c653a85205d85ff6ea512bf0a59cf066cdb68a9bc4888bc398e3ea504d96d",
+    "newBlockSha256": "2c1c85485888c0aced61041fa69c88fe149bd68819f550444ccfd30497fe5449",
+    "afterSha256": "7683bcd0167fef4c60a4f8c60dbc21ad23df85b7094b4295c6e37ce6dee1c333"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧪️tests/🟦️.ts",
+    "beforeSha256": "7683bcd0167fef4c60a4f8c60dbc21ad23df85b7094b4295c6e37ce6dee1c333",
+    "action": "remove exact whole-trial admission/import; preserve original source/vector/oracle; admit actual Fault/Grant domain values where applicable",
+    "oldBlockSha256": "150a1f58256f876234973d0227c17bcc65422b0501f8886958d6fb9b6bd69427",
+    "newBlockSha256": "fba7ef9c6fe8aec83f0338ccb731ce1f664ccfd3402e4692d50a2b40c61eba01",
+    "afterSha256": "1ae582892973bf36c7a9aa2fab3ab0580fe7305476df358a2c7fc589d1f1a333"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🟦️.ts",
+    "beforeSha256": "795cd8ea229dce6054ede7244553ad60e8634a118707cc52328ecfd80ceb71a5",
+    "action": "remove exact whole-trial admission/import; preserve original source/vector/oracle; admit actual Fault/Grant domain values where applicable",
+    "oldBlockSha256": "b27d1ef3b90f768f5e4177f60d96df7bc2a671328eb621ea29673c456d2bd561",
+    "newBlockSha256": "adfe487cd90666bc5ae6655fc7c9659f26fd956409a1b058d87c589fbccbcba6",
+    "afterSha256": "ea0373b4af2156159e46ed9ca3fcc8f3fb1562c2b648f70ec899c8596c98365e"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🟦️.ts",
+    "beforeSha256": "ea0373b4af2156159e46ed9ca3fcc8f3fb1562c2b648f70ec899c8596c98365e",
+    "action": "remove exact whole-trial admission/import; preserve original source/vector/oracle; admit actual Fault/Grant domain values where applicable",
+    "oldBlockSha256": "e3ea61d497e5d4afce6fb73c655d50948a29d6554658e934351ebfb9bd3ebfc3",
+    "newBlockSha256": "e0840bef7586c74b3d718fcd704619a029b87e0177ababc11c292972537eadf6",
+    "afterSha256": "af1e6c7a06484714a9a0e4d58d8cb17fc62db587f0096d244351595feeee1d49"
+  }
+]

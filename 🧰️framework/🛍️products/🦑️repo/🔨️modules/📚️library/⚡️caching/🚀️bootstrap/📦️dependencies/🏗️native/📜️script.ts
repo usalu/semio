@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { orchestratorBudgetMs } from "../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
@@ -71,4 +72,4 @@ export class NativeDependenciesScript extends Script {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("sync", NativeDependenciesScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(getWorkspaceRoot()).register("sync", NativeDependenciesScript)).run(process.argv.slice(2), original));

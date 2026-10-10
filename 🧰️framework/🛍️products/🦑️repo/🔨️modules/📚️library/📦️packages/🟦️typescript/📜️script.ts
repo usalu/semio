@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {consumeOwnerArgumentsV1} from "../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
@@ -14,7 +16,7 @@ import {buildBudgetMs} from "../../../../../../🔨️modules/🏃️process/⏱
 import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { devToolingEnv, runBunx } from "./🟦️.ts";
 import { repositoryProcessOwnerContextV1, repositoryVitestPolicyV1, runRepositoryExactCargoLaws, runRepositoryTestCommand } from "../../🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { runTransactionV2 } from "../../🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts";
@@ -38,9 +40,9 @@ class TypecheckScript extends BundleScript {
 /** 🧱️ Enforces the complete current framework graph without baselines or source-form exemptions. */
 async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEnv, sourceRole?: "framework-neutral"): Promise<void> {
   const { policy, taxonomy, workspacePackages } = loadDependencyDirectionPolicy(repoRoot, { onProgress: progress => console.log(`[canonical-architecture] policy ${progress.phase}; sources=${progress.sources}`) });
-  const names = ["framework-no-implementation", "repo-no-implementation", "s-modules-no-plugins", ...Object.keys(taxonomy.dependencyDirections.rules)];
+  const names = ["framework-no-implementation", "repo-no-implementation", "s-modules-no-plugins", "plugins-framework-sdk-only", ...Object.keys(taxonomy.dependencyDirections.rules)];
   const patterns = (value: string | readonly string[]): readonly string[] => typeof value === "string" ? [value] : value;
-  const rules = policy.forbidden.filter((rule) => names.includes(rule.name) || rule.name.startsWith("plugin-no-extension-or-artifact-")).map((rule) => ({ ...rule, from: { path: patterns(rule.from.path!), ...(rule.from.pathNot ? { pathNot: patterns(rule.from.pathNot) } : {}) }, to: { path: patterns(rule.to.path!), ...(rule.to.pathNot ? { pathNot: patterns(rule.to.pathNot) } : {}) } }));
+  const rules = policy.forbidden.filter((rule) => names.includes(rule.name) || rule.name.startsWith(taxonomy.dependencyDirections.publicApi.rulePrefix) || rule.name.startsWith("plugin-no-extension-or-artifact-")).map((rule) => ({ ...rule, from: { path: patterns(rule.from.path!), ...(rule.from.pathNot ? { pathNot: patterns(rule.from.pathNot) } : {}) }, to: { path: patterns(rule.to.path!), ...(rule.to.pathNot ? { pathNot: patterns(rule.to.pathNot) } : {}) } }));
   if (names.some((name) => !rules.some((rule) => rule.name === name))) throw new Error("Canonical architecture is missing a declared strict rule");
   const artifactRoot = env.SEMIO_TEST_ARTIFACT_DIR!;
   mkdirSync(artifactRoot, { recursive: true });
@@ -118,6 +120,7 @@ class TestScript extends BundleScript {
       return;
     }
     if(segments[0]==="nx-owner-arguments-probe"){console.log("[DEBUG] ownerArgumentReceipt="+JSON.stringify({arguments:segments.slice(1),carrierPresent:process.env.SEMIO_OWNER_ARGUMENTS!==undefined}));return;}
+    if(segments.length===1&&segments[0]==="nx-native-child-issuance"){await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-native-child-issuance"),budgetMs:TEST_LEVEL_BUDGET_MS.quick});return;}
 
     if(segments.length===1&&segments[0]==="nx-owner-arguments"){const {level}=resolveTestLevel([],"quick");await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-owner-arguments"),budgetMs:TEST_LEVEL_BUDGET_MS[level]});return;}
 
@@ -636,7 +639,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "cargo-discovery-exclusions") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚧️cargo-discovery-exclusions/🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      await runRepositoryTestCommand(process.execPath, ["test", source, join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts"), join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts"), ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "nested-cargo-collision-authority") {
@@ -879,7 +882,7 @@ class OwnerCommandScript extends BundleScript{
     if(args[0]!=="--cwd"||!args[1]||args[2]!=="--"||!args[3])throw Error("owner-command --cwd <directory> -- <command> <args>");
     const transported=consumeOwnerArgumentsV1(process.env),cwd=resolve(this.repoRoot,args[1]),policy=repositoryVitestPolicyV1(cwd),env=devToolingEnv({SEMIO_VITEST_POLICY:JSON.stringify(policy),SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(repositoryProcessOwnerContextV1(cwd))});
     delete env.SEMIO_OWNER_ARGUMENTS;
-    await runOwnedCommand(args[3],[...args.slice(4),...transported.arguments],cwd,"process:owner-command",0,{env});
+    await runOwnedCommand(args[3],[...args.slice(4),...transported.arguments],cwd,"process:owner-command",scriptInvocationBudget(this.invocation, 0),{env,signal:this.invocation.control.signal});
   }
 }
 
@@ -901,17 +904,7 @@ class FixtureOwnershipTestScript extends BundleScript {
     process.on("SIGINT", interrupt);
     process.on("SIGTERM", interrupt);
     try {
-      const receipts = await runRepositoryExactCargoLaws({
-        cwd: this.repoRoot,
-        env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
-        nativeEnv: { RUST_MIN_STACK: "268435456" },
-        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, "🗑️generated", "fixture-ownership"),
-        buildBudgetMs: buildBudgetMs(),
-        listBudgetMs: 60_000,
-        lawBudgetMs: 120_000,
-        cancelled: () => cancelled,
-        progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`),
-        groups: [
+      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, "🗑️generated", "fixture-ownership"), cancelled: () => cancelled, progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`), groups: [
           { package: "semio-framework-surface", target: { kind: "lib" }, laws: [
             "paint_stroke_refuses_locked_layers_and_locked_ancestors",
           ] },
@@ -939,8 +932,7 @@ class FixtureOwnershipTestScript extends BundleScript {
             "authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallback",
             "inference_approval_encoding_consumes_the_framework_owned_contract",
           ] },
-        ],
-      });
+        ] });
       console.log(`fixture-ownership: ${receipts.reduce((count, receipt) => count + receipt.assertions, 0)} exact native laws passed`);
     } finally {
       process.off("SIGINT", interrupt);
@@ -969,4 +961,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("workspaces", WorkspacePublicationScript)
   .register("ui", RepositoryUiScript);
 
-await runScriptMain(router);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

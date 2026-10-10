@@ -1,0 +1,11 @@
+{
+  "scope": "original Compute terminal recipient and descriptor acknowledgement",
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83e\udd80\ufe0f.rs",
+      "beforeSha256": "2b9a7f27a82f7d86052c904635b88e2ecb4ef2d437c792c1d9a7fd9f19335986",
+      "afterSha256": "80de8f1305bb7b4451ffa9fce5f759866abc7e96b26d35d0337b6276c0f32e36",
+      "role": "borrowed terminal recipient; unit notification, original payload remains in producer until bounded close"
+    }
+  ]
+}

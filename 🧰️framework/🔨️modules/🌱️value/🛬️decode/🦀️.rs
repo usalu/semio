@@ -51,12 +51,12 @@ impl<'a> NativeDecodeControl<'a> {
 
     /// 🫴️ Installs one explicit caller recipient before any retained decoder ownership is created.
     pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{
-        if self.retirement.is_some()||!recipient.terminal_is_empty(){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native decode requires one empty explicit retirement recipient"));}
+        if self.retirement.is_some()||!recipient.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native decode requires one empty explicit retirement recipient"));}
         self.retirement=Some(recipient);Ok(())
     }
     /// 🪑️ Pre-admits the return slot and exact immediate wrapper allocations, preserving every refusal owner.
     pub fn with_retirement_owner<T,E:From<ValueError>>(&mut self,wrapper_bytes:usize,operation:impl FnOnce(&mut Self)->(Result<T,E>,Option<Box<dyn crate::ErasedSnapshotRetirement>>))->Result<T,E>{
-        if self.retirement.as_ref().is_none_or(|recipient|recipient.reserved||recipient.owner.is_some()){return Err(E::from(ValueError::new(ValueRefusalKind::OwnershipLimit,"native decode has no available explicit retirement slot")));}
+        if self.retirement.as_ref().is_none_or(|recipient|recipient.reserved||recipient.owner.is_some()){return Err(E::from(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native decode has no available explicit retirement slot")));}
         self.charge(wrapper_bytes)?;self.checkpoint()?;
         self.retirement.as_mut().unwrap().reserved=true;
         let(result,owner)=operation(self);
@@ -71,12 +71,12 @@ impl<'a> NativeDecodeControl<'a> {
         self.continuation()
     }
     fn continuation(&self)->Result<NativeDecodeContinuation,ValueError>{
-        if self.depth!=0||self.owned_bytes>self.maximum_bytes||(self.total!=0&&self.completed>self.total){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
+        if self.depth!=0||self.owned_bytes>self.maximum_bytes||(self.total!=0&&self.completed>self.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
         Ok(NativeDecodeContinuation{receiving:self.receiving,maximum_bytes:self.maximum_bytes,owned_bytes:self.owned_bytes,completed:self.completed,total:self.total,stage:self.stage})
     }
     /// ▶️ Rebinds a moved operation receipt to the current hop's cancellation callback.
     pub fn resume(receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Result<Self,ValueError>{
-        if receipt.owned_bytes>receipt.maximum_bytes||(receipt.total!=0&&receipt.completed>receipt.total){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"native decode continuation has invalid cumulative accounting"));}
+        if receipt.owned_bytes>receipt.maximum_bytes||(receipt.total!=0&&receipt.completed>receipt.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation has invalid cumulative accounting"));}
         Ok(Self{scope_maximum:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback})
     }
 
@@ -84,7 +84,7 @@ impl<'a> NativeDecodeControl<'a> {
     pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{scope_maximum:None,allocation:allocation::Binding::Local,receiving:false,retirement:None,maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,callback} }
     /// 🪆️ Bounds recursive typed construction independently of physical input parsing.
     pub fn scoped_depth<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{
-        if self.depth>=maximum{return Err(E::from(ValueError::new(ValueRefusalKind::DepthLimit, "native typed construction exceeds depth limit")))}
+        if self.depth>=maximum{return Err(E::from(ValueError::literal(ValueRefusalKind::DepthLimit, "native typed construction exceeds depth limit")))}
         self.depth+=1;let result=operation(self);self.depth-=1;result
     }
     /// 📊️ Returns the cumulative ownership already admitted for this operation.
@@ -92,14 +92,14 @@ impl<'a> NativeDecodeControl<'a> {
     /// 🛂️ Starts with zero storage authority; each original retained turn must supply its grant.
     pub fn new_retained(callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self{let mut control=Self::new(0,callback);control.receiving=true;control}
     /// 🎟️ Binds this original turn's allocation authority without resetting cumulative ownership.
-    pub fn admit_turn_capacity(&mut self,maximum_capacity_bytes:usize)->Result<(),ValueError>{let next=self.owned_bytes.checked_add(maximum_capacity_bytes).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native turn capacity exceeds address space"))?;self.maximum_bytes=if self.receiving{self.scope_maximum.map_or(next,|maximum|maximum.min(next))}else{self.maximum_bytes.min(next)};Ok(())}
+    pub fn admit_turn_capacity(&mut self,maximum_capacity_bytes:usize)->Result<(),ValueError>{let whole=if self.receiving{self.scope_maximum}else{Some(self.maximum_bytes)};let next=crate::value::native_receiving::turn::maximum(self.owned_bytes,maximum_capacity_bytes,whole)?;self.maximum_bytes=if self.receiving{self.scope_maximum.map_or(next,|maximum|maximum.min(next))}else{self.maximum_bytes.min(next)};Ok(())}
 
     /// 📏️ Returns the caller's complete native allocation allowance.
     pub fn maximum_bytes(&self)->usize { self.maximum_bytes }
     /// 🛑️ Checks cancellation before an explicitly owned expensive operation.
     pub fn checkpoint(&mut self)->Result<(),ValueError> { let owned_bytes=self.owned_bytes();if(self.callback)(NativeDecodeProgress{completed:self.completed,total:self.total,owned_bytes}){self.started=true;Ok(())}else{Err(ValueError::literal(ValueRefusalKind::Canceled, "native decoding canceled"))} }
     /// 🧭️ Begins a known stage workload while retaining every previously admitted byte.
-    pub fn begin_stage(&mut self,total:usize)->Result<(),ValueError>{self.stage=self.stage.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "native decoding stage overflow"))?;self.completed=0;self.total=total;self.started=false;self.checkpoint()}
+    pub fn begin_stage(&mut self,total:usize)->Result<(),ValueError>{self.stage=self.stage.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "native decoding stage overflow"))?;self.completed=0;self.total=total;self.started=false;self.checkpoint()}
     /// 🪆️ Restores a parent workload after a child begins its own stage, preserving cumulative ownership.
     pub fn scoped_stage<T,E>(&mut self,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{
         let parent=(self.completed,self.total,self.started,self.stage);let mut scope=StageScope{control:self,parent};operation(&mut *scope.control)
@@ -107,20 +107,20 @@ impl<'a> NativeDecodeControl<'a> {
     /// 📐️ Restricts one owned decoder stage to its domain ceiling, retaining cumulative charges afterward.
     pub fn scoped_maximum<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{maximum::run(self,maximum,operation)}
     /// 📍️ Advances consumed stage units and checks cancellation across256-unit boundaries.
-    pub fn advance(&mut self,units:usize)->Result<(),ValueError>{if !self.started{self.checkpoint()?;}let previous=self.completed;self.completed=self.completed.checked_add(units).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "native decoding work overflow"))?;if self.total!=0&&self.completed>self.total{return Err(ValueError::new(ValueRefusalKind::WorkLimit, "native decoding exceeded declared stage workload"));}if previous/256!=self.completed/256||(self.total!=0&&self.completed==self.total){self.checkpoint()?;}Ok(())}
+    pub fn advance(&mut self,units:usize)->Result<(),ValueError>{if !self.started{self.checkpoint()?;}let previous=self.completed;let next=self.completed.checked_add(units).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"native decoding work overflow"))?;if self.total!=0&&next>self.total{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native decoding exceeded declared stage workload"))}self.completed=next;if previous/256!=self.completed/256||(self.total!=0&&self.completed==self.total){self.checkpoint()?;}Ok(())}
     /// 🔢️ Advances decoder work and publishes a checkpoint every256units.
     pub fn step(&mut self)->Result<(),ValueError> {self.advance(1)}
     /// 📦️ Admits cumulative storage before a caller copies or reserves it.
-    pub fn charge(&mut self,bytes:usize)->Result<(),ValueError> { let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native decoding ownership exceeds caller limit"))?;if !self.started||bytes>65536 {self.checkpoint()?;}if let allocation::Binding::Forwarded(port)=&mut self.allocation{port(NativeDecodeAllocation{bytes,owned_bytes:self.owned_bytes,next_owned_bytes:next,maximum_bytes:self.maximum_bytes})?;}self.owned_bytes=next;Ok(()) }
+    pub fn charge(&mut self,bytes:usize)->Result<(),ValueError> { let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native decoding ownership exceeds caller limit"))?;if !self.started||bytes>65536 {self.checkpoint()?;}if let allocation::Binding::Forwarded(port)=&mut self.allocation{port(NativeDecodeAllocation{bytes,owned_bytes:self.owned_bytes,next_owned_bytes:next,maximum_bytes:self.maximum_bytes})?;}self.owned_bytes=next;Ok(()) }
     /// 🗂️ Reserves typed collection slots after overflow and caller-bound admission.
-    pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError> { let bytes=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native decoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;Ok(output) }
+    pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError> { let bytes=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native decoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;Ok(output) }
     fn copy_checkpoint(&mut self,completed:usize,total:usize)->Result<(),ValueError>{let owned_bytes=self.owned_bytes();if(self.callback)(NativeDecodeProgress{completed,total,owned_bytes}){Ok(())}else{Err(ValueError::literal(ValueRefusalKind::Canceled, "native decoding canceled"))}}
     /// 🔎️ Validates borrowed UTF-8 in bounded spans without owning a second text buffer.
     pub fn borrow_text<'text>(&mut self,bytes:&'text[u8])->Result<&'text str,ValueError>{
         self.copy_checkpoint(0,bytes.len())?;let mut position=0;
         while position<bytes.len(){
             let mut end=position.saturating_add(65536).min(bytes.len());
-            loop{match std::str::from_utf8(&bytes[position..end]){Ok(_)=>break,Err(error) if error.error_len().is_none()&&end<bytes.len()=>{end+=1;},Err(_)=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid native UTF-8"))}}
+            loop{match std::str::from_utf8(&bytes[position..end]){Ok(_)=>break,Err(error) if error.error_len().is_none()&&end<bytes.len()=>{end+=1;},Err(_)=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "invalid native UTF-8"))}}
             position=end;self.copy_checkpoint(position,bytes.len())?;
         }
         Ok(unsafe{std::str::from_utf8_unchecked(bytes)})
@@ -128,7 +128,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 🔤️ Copies owned UTF-8 in cancellable64KiB spans, preserving the outer work stage.
     pub fn copy_text(&mut self,text:&str)->Result<String,ValueError> {
         self.charge(text.len())?;self.copy_checkpoint(0,text.len())?;
-        let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "native decoding text allocation failed"))?;
+        let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding text allocation failed"))?;
         let mut position=0;while position<text.len(){let mut end=position.saturating_add(65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[position..end]);position=end;self.copy_checkpoint(position,text.len())?;}Ok(output)
     }
     /// 🧵️ Preserves the caller's original UTF8 destination and each cancellable copied prefix.
@@ -148,7 +148,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 🧬️ Copies intrinsic octets in cancellable64KiB spans after complete ownership admission.
     pub fn copy_bytes(&mut self,bytes:&[u8])->Result<Vec<u8>,ValueError> {
         self.charge(bytes.len())?;self.copy_checkpoint(0,bytes.len())?;
-        let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;
+        let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;
         for chunk in bytes.chunks(65536){output.extend_from_slice(chunk);self.copy_checkpoint(output.len(),bytes.len())?;}Ok(output)
     }
 }
@@ -156,3 +156,7 @@ impl<'a> NativeDecodeControl<'a> {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "⚠️refusal/🧪️tests/🦀️.rs"]
+mod literal_refusal_tests;

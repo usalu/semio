@@ -1,0 +1,9 @@
+# Current Collection and Trial Census
+
+Read-only filesystem listing/JSON content inspection; no actual scanner/test/native run. Canonical four emoji collection components use immediate Modules predecessor exception. Excluded ticket/generated/node_modules. A schema folder after true collection ancestry produced no JSON paths in the inspected Framework/s/teaching listing. This is observed physical placement only, not global purity.
+
+Twenty-four collection JSON documents carried $schema/$id metadata; most are plain examples with schema URI annotations, not schema definitions. Four registry schema-input documents are legitimate candidates for inert parser-input role and must not be deleted merely because they contain Schema values. Parent schema folders before a fixture child are genuine domain owners and do not establish fixture-owned schema.
+
+Fresh adjacent confirmed authorities: Neural engine/topology/schema root cases/copyBudgets/refusals/schema, actual tests/TS4 imports and8 compiles entire fixture plus unknown-field mutant. Neural engine/evaluation/wave/schema root cases/laws, actual tests/TS5 imports and6 compiles whole fixture plus mutant before original JSONPatch/expectedInputJson/unchanged input/remaining neuron assertions. Preserve those behavioral oracles and all plain/native inputs. Remove only respective whole admissions and unused imports after fresh source guard. Hashes accompany report.
+
+Additional structural candidates remain unclassified: Flow editor contributions, raster mutation wrappers, Draw patch-layer/physical retirement, Renderer SQLite schema, Scenes camera schema and IO transfer route. Their cases/expected fields alone are insufficient authority verdict; actual per-domain or whole-envelope reader join is required. No current runtime collection edge was proven by this finite content/listing pass. Exact defining Source import traversal remains necessary.

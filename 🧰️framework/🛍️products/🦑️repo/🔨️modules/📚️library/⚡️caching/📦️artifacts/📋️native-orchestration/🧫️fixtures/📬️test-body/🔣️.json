@@ -122,7 +122,17 @@
           "command": "bun ./📜️script.ts test"
         }
       },
-      "expected": "owner-command"
+      "expected": "owner-command",
+      "declaredCommand": {
+        "kind": "native-owner-command",
+        "manifest": "owner/Cargo.toml",
+        "workingDirectory": "owner",
+        "program": "bun",
+        "arguments": [
+          "/repo/owner/📜️script.ts",
+          "test"
+        ]
+      }
     },
     {
       "id": "explicit-body",
@@ -131,7 +141,17 @@
           "command": "bun ./📜️script.ts test"
         }
       },
-      "expected": "owner-command"
+      "expected": "owner-command",
+      "declaredCommand": {
+        "kind": "native-owner-command",
+        "manifest": "owner/Cargo.toml",
+        "workingDirectory": "owner",
+        "program": "bun",
+        "arguments": [
+          "/repo/owner/📜️script.ts",
+          "test"
+        ]
+      }
     },
     {
       "id": "level-sibling",
@@ -140,7 +160,18 @@
           "command": "bun \"./📜️script.ts\" test long"
         }
       },
-      "expected": "owner-command"
+      "expected": "owner-command",
+      "declaredCommand": {
+        "kind": "native-owner-command",
+        "manifest": "owner/Cargo.toml",
+        "workingDirectory": "owner",
+        "program": "bun",
+        "arguments": [
+          "/repo/owner/📜️script.ts",
+          "test",
+          "long"
+        ]
+      }
     },
     {
       "id": "unknown-declaration",
@@ -149,7 +180,17 @@
           "command": "bun ./📜️script.ts test"
         }
       },
-      "expected": "owner-command"
+      "expected": "owner-command",
+      "declaredCommand": {
+        "kind": "native-owner-command",
+        "manifest": "owner/Cargo.toml",
+        "workingDirectory": "owner",
+        "program": "bun",
+        "arguments": [
+          "/repo/owner/📜️script.ts",
+          "test"
+        ]
+      }
     },
     {
       "id": "build-body-refused",
@@ -158,7 +199,17 @@
           "command": "bun ./📜️script.ts build"
         }
       },
-      "expected": "owner-command"
+      "expected": "owner-command",
+      "declaredCommand": {
+        "kind": "native-owner-command",
+        "manifest": "owner/Cargo.toml",
+        "workingDirectory": "owner",
+        "program": "bun",
+        "arguments": [
+          "/repo/owner/📜️script.ts",
+          "build"
+        ]
+      }
     }
   ],
   "testOwners": [
@@ -329,12 +380,35 @@
     }
   ],
   "provenanceRelay": {
-    "args": ["check", "--manifest-path", "Cargo.toml", "-p", "selected", "--locked", "--message-format=json"],
+    "args": [
+      "check",
+      "--manifest-path",
+      "Cargo.toml",
+      "-p",
+      "selected",
+      "--locked",
+      "--message-format=json"
+    ],
     "source": "pub fn original() -> u8 { 7 }\n",
     "cases": [
-      {"id": "original-bytes", "status": 0, "cancelDuringRead": false, "published": true},
-      {"id": "compiler-refused", "status": 101, "cancelDuringRead": false, "published": true},
-      {"id": "physical-read-cancelled", "status": 0, "cancelDuringRead": true, "published": false}
+      {
+        "id": "original-bytes",
+        "status": 0,
+        "cancelDuringRead": false,
+        "published": true
+      },
+      {
+        "id": "compiler-refused",
+        "status": 101,
+        "cancelDuringRead": false,
+        "published": true
+      },
+      {
+        "id": "physical-read-cancelled",
+        "status": 0,
+        "cancelDuringRead": true,
+        "published": false
+      }
     ]
   }
 }

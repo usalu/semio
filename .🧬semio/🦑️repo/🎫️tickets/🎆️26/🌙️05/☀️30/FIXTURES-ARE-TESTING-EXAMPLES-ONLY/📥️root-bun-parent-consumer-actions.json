@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "90b896da693d9485c526f03df8e4604c6b083dbe87b244f6a9e9005cd78b9efe",
+      "afterSha256": "44c2fbf4d3bfb48b77de0d1c86341dd37c55925fe32111d214af30e74c44c9eb",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false,
+  "reason": "Actual Bun does not create an unused workspace link. The full child membership isolation law now consumes its real selected workspace dependency before observing the native link; all prior full coverage assertions remain unchanged."
+}

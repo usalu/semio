@@ -206,4 +206,4 @@ mod refusal_tests;
 
 #[path="🫳️borrowed/⏳️cursor/🦀️.rs"]
 mod borrowed_cursor;
-pub use borrowed_cursor::{BorrowedProjectedPackCursor,BorrowedProjectedPackProgress};
+pub use borrowed_cursor::{BorrowedProjectedPackCursor,BorrowedProjectedPackProgress,BorrowedProjectedPackFailure};

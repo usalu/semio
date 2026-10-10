@@ -1,0 +1,52 @@
+{
+  "source": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "note-原",
+        "text": "same source 雪🌳️"
+      }
+    ],
+    "synapses": [],
+    "layout": {}
+  },
+  "expectedInputs": {
+    "note-原": {}
+  },
+  "expectedOutputs": {
+    "note-原": {
+      "text": {
+        "schema": "text",
+        "value": "same source 雪🌳️"
+      }
+    }
+  },
+  "copyAllowances": [
+    1,
+    3,
+    64
+  ],
+  "cancellationTurns": [
+    0,
+    9,
+    37,
+    101
+  ],
+  "snapshotTreePointerPreserved": true,
+  "snapshotSeedsPointerPreserved": true,
+  "normalPolicy": "recompute-all-original-nodes",
+  "revisionChange": "retain-and-close-original-work",
+  "registryChange": "retain-and-close-original-work",
+  "terminalDropBytes": 0,
+  "sessionHostPointerPreserved": true,
+  "sessionIncomingGrantForwardedWhole": true,
+  "registryLeaseCopyBytes": 0,
+  "sessionLiveTextOriginalSource": true,
+  "sessionLiveHeaderCopyBytes": 0
+}

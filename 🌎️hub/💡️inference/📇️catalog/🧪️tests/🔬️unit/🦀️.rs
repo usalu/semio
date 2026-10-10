@@ -22,10 +22,10 @@ fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
         assert_eq!(admitted, hostile["accepted"], "{}", hostile["name"]);
     }
 
-    fn reject(_request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
+    fn reject(_request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
         Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("test.reject", "wrong executable"))
     }
-    let substituted = ArtifactInferenceService::new(native.metadata(), reject);
+    let substituted = ArtifactInferenceService::new(native.metadata(), reject,rejected_owner_demands);
     assert_eq!(validate_gis_map_binding_projection(&projection, substituted), Err(InferenceErrorV1::Denied));
 }
 
@@ -56,3 +56,5 @@ fn inference_catalog_projection_requires_exact_scope_package_and_declared_servic
         assert_eq!(exact_projection(&scope, &descriptor, &projection).is_ok(), case["accepted"].as_bool().unwrap(), "{}", case["name"]);
     }
 }
+
+fn rejected_owner_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}

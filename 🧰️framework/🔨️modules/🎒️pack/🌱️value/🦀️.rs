@@ -19,7 +19,7 @@ use std::collections::{HashMap, HashSet};
 #[path = "🛫️encode/🦀️.rs"]
 mod controlled_encoding;
 pub use controlled_encoding::{ProjectedSymbolScratch,SourceTextLocator,SourceTextKind};
-pub use controlled_encoding::{BorrowedProjectedPackOperation,BorrowedPackSource,OwnedVariantPackSource,BorrowedProjectedPackCursor,BorrowedProjectedPackProgress};
+pub use controlled_encoding::{BorrowedProjectedPackOperation,BorrowedPackSource,OwnedVariantPackSource,BorrowedProjectedPackCursor,BorrowedProjectedPackProgress,BorrowedProjectedPackFailure};
 
 #[cfg(test)]
 #[path = "🧪️tests/📦️operation-pages/🦀️.rs"]

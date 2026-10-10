@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runRepositoryExactCargoLaws, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -17,7 +19,7 @@ class SourceScript extends BundleScript { async run():Promise<void> {nativeServi
 class TestScript extends BundleScript {
   async run():Promise<void> {
     nativeServiceCompositionLaws(this.repoRoot);
-    const laws=await runRepositoryExactCargoLaws({cwd:this.repoRoot,env:{...process.env,CARGO_BUILD_JOBS:"1",RUST_MIN_STACK:"33554432"},nativeEnv:{RUST_MIN_STACK:"268435456"},groups:[{package:"semio-s-dev-gis-services",target:{kind:"lib"},laws:["tests::native_composition_installs_the_real_owner_and_matches_the_portable_oracle","tests::installed_owner_cannot_execute_without_a_verified_document_lease"]}],progress:event=>console.log(`native-service ${event.stage} ${event.package} ${event.law??""}`)});
+    const laws=await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.repoRoot, env:{...process.env,CARGO_BUILD_JOBS:"1",RUST_MIN_STACK:"33554432"}, nativeEnv:{RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-s-dev-gis-services",target:{kind:"lib"},laws:["tests::native_composition_installs_the_real_owner_and_matches_the_portable_oracle","tests::installed_owner_cannot_execute_without_a_verified_document_lease"]}], progress:event=>console.log(`native-service ${event.stage} ${event.package} ${event.law??""}`) });
     console.log(`native-service-runtime: exact=${laws.length} passed`);
   }
 }
@@ -116,4 +118,4 @@ class CanonicalPairCompositionScript extends BundleScript {
 }
 
 const router=new ScriptRouter(import.meta.dir).register("source-check",SourceScript).register("native-check",TestScript).register("native",NativeScript).register("build",BuildScript).register("live-agent-loop-check",OsMcpLiveAgentLoopScript).register("hub-agent-participant-check",OsMcpHubAgentParticipantScript).register("plugin-coverage-check",OsMcpPluginCoverageScript).register("user-path-check",OsMcpUserPathScript).register("inference-quartet-check",OsMcpInferenceQuartetScript).register("security-check",OsMcpSecurityScript).register("hub-edit-durability-check",OsMcpHubEditDurabilityScript).register("agent-reply-check",OsMcpAgentReplyScript).register("untrusted-content-check",UntrustedContentScript).register("mcp-composition-source-check",McpCompositionSourceScript).register("fixture-ownership-check",FixtureOwnershipCompositionScript).register("canonical-pair-composition-check",CanonicalPairCompositionScript);
-if(import.meta.main) await runScriptMain(router,{defaultCommand:"source-check"});
+if(import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"source-check"}) }));

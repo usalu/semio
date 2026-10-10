@@ -421,11 +421,11 @@ fn evaluate_step_budget_one_converges_over_multiple_calls() {
     // ⏱️ Tick 1: budget for one cache-missed node — computes "add" for free-riding boundary nodes
     // plus that one dispatch, then stops right before the next miss ("pass"). `remaining[0]` is
     // the blocking node; anything after it (here, "preview") is just downstream-and-untouched.
-    let remaining_after_tick1 = host.evaluate_step(EvalStepBudget::dispatches(1),&|_|true);
+    let remaining_after_tick1 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true);
     assert_eq!(remaining_after_tick1.first(), Some(&"pass".to_string()), "pass is the next node blocking completion");
     assert_eq!(host.preview_text(), "3", "the chain hasn't reached \"pass\" (and thus \"preview\") yet");
     // ⏱️ Tick 2: "add" is now cached, so this reaches and computes "pass".
-    let remaining_after_tick2 = host.evaluate_step(EvalStepBudget::dispatches(1),&|_|true);
+    let remaining_after_tick2 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true);
     assert!(remaining_after_tick2.is_empty(), "the walk reached the end of the topo order");
     assert_eq!(host.preview_text(), "6", "converged to the dragged value after both ticks");
     host.retire_cold();
@@ -446,7 +446,7 @@ fn flow_eval_session_sync_and_tick_state_machine() {
     assert!(session.pending());
     assert!(session.status_json().contains("computing"), "the immediate dependent is reported as computing");
     assert!(!session.sync(&host));
-    while session.tick(&mut host, None) {}
+    while session.tick_cold(&mut host, None) {}
     assert!(!session.pending());
     assert_eq!(host.preview_text(), "12");
     host.set_slider_value("slider", 20.0);
@@ -455,7 +455,7 @@ fn flow_eval_session_sync_and_tick_state_machine() {
     host.set_slider_value("slider", 30.0);
     assert!(!session.sync(&host), "a chain is already scheduled — sync must not arm a redundant second one");
     assert!(session.pending(), "the in-flight chain is still the one that will pick up 30");
-    while session.tick(&mut host, None) {}
+    while session.tick_cold(&mut host, None) {}
     assert_eq!(host.preview_text(), "30", "converges on the latest value, not the superseded intermediate one");
     session.retire_cold();
     host.retire_cold();
@@ -501,7 +501,7 @@ fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
     assert_eq!(parked.in_flight, 1, "one extension answer is outstanding");
 
     let mut ratios = vec![parked.ratio()];
-    while session.tick(&mut host, None) {
+    while session.tick_cold(&mut host, None) {
         ratios.push(session.preview_chain_status().ratio());
     }
     session.settle_window_extension("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
@@ -2911,11 +2911,11 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
     let armed = build_flow_status_json(&host, &host.pending_eval_widget_ids());
     assert_eq!(census_entries(&armed), [("add".to_string(), "computing".to_string()), ("pass".to_string(), "queued".to_string()), ("preview".to_string(), "ok".to_string()), ("slider".to_string(), "ok".to_string())]);
 
-    let after_first = host.evaluate_step(EvalStepBudget::dispatches(1),&|_|true);
+    let after_first = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true);
     let hop1 = build_flow_status_json(&host, &after_first);
     assert_eq!(census_entries(&hop1), [("add".to_string(), "ok".to_string()), ("pass".to_string(), "computing".to_string()), ("preview".to_string(), "ok".to_string()), ("slider".to_string(), "ok".to_string())], "the node this hop recomputed has SETTLED, whatever the frozen baseline still calls dirty");
 
-    let after_second = host.evaluate_step(EvalStepBudget::dispatches(1),&|_|true);
+    let after_second = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true);
     assert!(after_second.is_empty(), "two budget-one hops converge this chain");
     let hop2 = build_flow_status_json(&host, &after_second);
     let census = [census_nodes_done(&armed), census_nodes_done(&hop1), census_nodes_done(&hop2)];
@@ -2929,7 +2929,7 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
 #[cfg(not(target_arch = "wasm32"))]
 fn a_coalesced_tick_parks_a_whole_wave_and_paints_every_member_computing() {
     let mut host = host_with_two_extension_siblings();
-    let remaining = host.evaluate_step(flow_eval_tick_budget(None),&|_|true);
+    let remaining = host.evaluate_cold_step(flow_eval_tick_budget(None),&|_|true);
     let parked: Vec<&str> = host.pending_extension_evals.iter().map(|pending| pending.neuron_id.as_str()).collect();
     assert_eq!(parked, ["left", "right"], "both ready contributed nodes park on the SAME hop");
     let census = census_entries(&build_flow_status_json(&host, &remaining));

@@ -1,12 +1,15 @@
 import { lstatSync } from "node:fs";
 import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
+import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation } from "./📥️invocation/🟦️.ts";
+export { readScriptPolicy, checkScriptInvocation, scriptInvocationBudget, type ScriptPolicy, type ScriptControl, type ScriptInvocation, type ScriptProgress } from "./📥️invocation/🟦️.ts";
 
 /** 🧭️Bundle command; `run` receives argv segments after the subcommand (e.g. `dev mcp` → `["mcp"]`). */
-export abstract class Script {
+export abstract class Script<Capabilities extends object = object> {
   protected readonly root: string;
   protected readonly repoRoot: string;
 
-  constructor(root: string, repoRoot: string) {
+  constructor(root: string, repoRoot: string, protected readonly invocation: ScriptInvocation<Capabilities>) {
+    checkScriptInvocation(invocation);
     this.root = root;
     this.repoRoot = repoRoot;
   }
@@ -14,17 +17,17 @@ export abstract class Script {
 }
 
 /** 📦️Bundle-scoped command with `root` at the package directory. */
-export abstract class BundleScript extends Script {
-  constructor(bundleRoot: string, repoRoot?: string) {
-    super(bundleRoot, repoRoot ?? findWorkspaceRoot(bundleRoot));
+export abstract class BundleScript<Capabilities extends object = object> extends Script<Capabilities> {
+  constructor(bundleRoot: string, repoRoot: string, invocation: ScriptInvocation<Capabilities>) {
+    super(bundleRoot, repoRoot, invocation);
   }
 }
-export type ScriptCommand = new (root: string, repoRoot: string) => Script;
-export type ScriptCommandLoader = () => Promise<ScriptCommand>;
+export type ScriptCommand<Capabilities extends object = object> = new (root: string, repoRoot: string, invocation: ScriptInvocation<Capabilities>) => Script<Capabilities>;
+export type ScriptCommandLoader<Capabilities extends object = object> = (invocation: ScriptInvocation<Capabilities>) => Promise<ScriptCommand<Capabilities>>;
 
 /** 🧭️Declarative subcommand registry for a single `script.ts`. */
-export class ScriptRouter {
-  private readonly commands = new Map<string, () => ScriptCommand | Promise<ScriptCommand>>();
+export class ScriptRouter<Capabilities extends object = object> {
+  private readonly commands = new Map<string, (invocation: ScriptInvocation<Capabilities>) => ScriptCommand<Capabilities> | Promise<ScriptCommand<Capabilities>>>();
   readonly bundleRoot: string;
   readonly repoRoot: string;
 
@@ -34,19 +37,19 @@ export class ScriptRouter {
   }
 
   /** 📌️Registers a subcommand implemented by a `Script` subclass. */
-  register(name: string, Command: ScriptCommand): this {
+  register(name: string, Command: ScriptCommand<Capabilities>): this {
     this.add(name, () => Command);
     return this;
   }
 
   /** 💤️Loads only the selected command owner, sharing one load across concurrent dispatches. */
-  registerLazy(name: string, load: ScriptCommandLoader): this {
-    let command: Promise<ScriptCommand> | undefined;
-    this.add(name, () => command ??= Promise.resolve().then(load));
+  registerLazy(name: string, load: ScriptCommandLoader<Capabilities>): this {
+    let command: Promise<ScriptCommand<Capabilities>> | undefined;
+    this.add(name, invocation => command ??= Promise.resolve().then(() => load(invocation)));
     return this;
   }
 
-  private add(name: string, load: () => ScriptCommand | Promise<ScriptCommand>): void {
+  private add(name: string, load: (invocation: ScriptInvocation<Capabilities>) => ScriptCommand<Capabilities> | Promise<ScriptCommand<Capabilities>>): void {
     if (!name || name.trim() !== name) throw Error("Command name must be nonempty and trimmed");
     if (this.commands.has(name)) throw Error(`Command ${JSON.stringify(name)} is already registered`);
     this.commands.set(name, load);
@@ -65,13 +68,17 @@ export class ScriptRouter {
   }
 
   /** ▶️Dispatches `segments[0]` to a registered command class. */
-  async run(segments: string[]): Promise<void> {
+  async run(segments: string[], invocation: ScriptInvocation<Capabilities>): Promise<void> {
+    checkScriptInvocation(invocation);
     const name = segments[0];
     if (!name) throw Error(`usage: ${this.usage()}`);
     const load = this.commands.get(name);
     if (!load) throw Error(`unknown command ${JSON.stringify(name)}; usage: ${this.usage()}`);
-    const Command = await load();
-    await Promise.resolve(new Command(this.bundleRoot, this.repoRoot).run(segments.slice(1)));
+    await advanceScriptInvocation(invocation, name, "loading");
+    const Command = await load(invocation);
+    await advanceScriptInvocation(invocation, name, "running");
+    await Promise.resolve(new Command(this.bundleRoot, this.repoRoot, invocation).run(segments.slice(1)));
+    await advanceScriptInvocation(invocation, name, "complete");
   }
 }
 

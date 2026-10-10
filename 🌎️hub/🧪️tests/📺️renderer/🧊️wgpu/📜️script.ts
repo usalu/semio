@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -176,12 +177,11 @@ class TestWorkerScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(import.meta.dir)
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir)
   .register("journey-check", HubLiveJourneyCheckScript)
   .register("creation-check", HubLiveCreationCheckScript)
   .register("collaboration-check", HubLiveCollaborationCheckScript)
   .register("collaboration-acceptance", HubCollaborationAcceptanceScript)
   .register("native-guest-journey-check", NativeGuestJourneyCheckScript)
   .register("test", TestScript)
-  .register("test-worker", TestWorkerScript)
-  .run(process.argv.slice(2));
+  .register("test-worker", TestWorkerScript)).run(process.argv.slice(2), original));

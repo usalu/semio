@@ -1,0 +1,3 @@
+# Original Wallet Trial Observation
+
+The current IO control schema 💰️wallet.json requires the complete grant/spans/remaining/originalNativeMaximum/nativePriorEncode/nativePriorDecode/sameWallet/heapBytes object. Its spans are exactly two, sameWallet is const true and heapBytes is const zero; it has no canonical id. The current original nested-io Source law validates only its real grant through the genuine Value contract. Exact Framework TypeScript/Rust reference census found no consumer of the wallet schema. This appears to encode a full trial witness rather than a produced variable payload. No schema mutation or producer attribution is inferred yet; Low was asked to review actual production intent before retirement. Exact hash is recorded separately.

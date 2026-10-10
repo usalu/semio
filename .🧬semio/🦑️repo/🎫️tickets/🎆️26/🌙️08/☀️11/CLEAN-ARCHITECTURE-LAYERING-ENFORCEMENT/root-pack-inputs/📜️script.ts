@@ -1,20 +1,27 @@
 import assert from "node:assert/strict";
-import {readFileSync,writeFileSync,mkdirSync,existsSync,readdirSync} from "node:fs";
+import {readFileSync,writeFileSync,mkdirSync,existsSync,readdirSync,lstatSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import {createHash} from "node:crypto";
-const ticket=dirname(import.meta.dir),root=resolve(ticket,"../../../../../../.."),[command,epoch]=process.argv.slice(2);
+import {terminateOwnedProcessTree} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+const startedAt=performance.now(),deadlineAt=Date.now()+30000,ticket=dirname(import.meta.dir),root=resolve(ticket,"../../../../../../.."),[command,epoch,expectedProducer,expectedDefinitions]=process.argv.slice(2);
 assert.ok(command==="source"||command==="json-source");assert.ok(epoch&&/^\d+$/.test(epoch));
+assert.equal(process.argv.length,6);assert.ok([expectedProducer,expectedDefinitions].every(value=>typeof value==="string"&&/^[0-9a-f]{64}$/.test(value)));
 const output=join(ticket,"🗑️generated/"+(command==="source"?"rpk":"rjp")+epoch);assert.ok(!existsSync(output));mkdirSync(output,{recursive:true});
 const pack=join(root,"🧰️framework/🔨️modules/🎒️pack"),script=join(pack,command==="source"?"📦️packages/🦀️rust/📜️script.ts":"🔤️json/📦️packages/🦀️rust/📜️script.ts"),paths=[import.meta.path,script];
 const walk=(path:string)=>{for(const entry of readdirSync(path,{withFileTypes:true})){const next=join(path,entry.name);assert.ok(!entry.isSymbolicLink());if(entry.isDirectory())walk(next);else paths.push(next);}};
 walk(join(pack,command==="source"?"🌱️value/🌳️intrinsic/🔢️occurrence-order":"🔤️json/📥️decode/🛂️policy"));
 if(command==="json-source")for(const path of["🔤️json/📥️decode/🫳️borrowed/🦀️.rs","🔤️json/🧫️fixtures/🫳️read-source.json","🔤️json/🧫️fixtures/🎟️borrowed-retirement/🔣️.json"])paths.push(join(pack,path));
 if(command==="json-source"){walk(join(pack,"🔤️json/📥️decode/🧾️receipt"));walk(join(pack,"🔤️json/📥️decode/🧵️operation"));paths.push(join(pack,"🔤️json/🦀️.rs"));}
-const capture=(path:string)=>{assert.ok(path.length<=256&&[...path].length<=256);const bytes=readFileSync(path);return {path,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};};
-const before=paths.map(capture);writeFileSync(join(output,"admission.json"),JSON.stringify(before));
-const child=Bun.spawn([process.execPath,script,command==="source"?"test-occurrence-order-source":"test-read-policy-source"],{cwd:root,env:process.env,stdout:Bun.file(join(output,"out.txt")),stderr:Bun.file(join(output,"err.txt"))});
-let timedOut=false;const cancel=()=>child.kill();process.once("SIGINT",cancel);process.once("SIGTERM",cancel);const timeout=setTimeout(()=>{timedOut=true;cancel();},30000);
+if(command==="json-source"){for(const path of["🏃️process/🧭️routing","🧬️schema/✅️validator","🏃️process/🧪️testing/🎛️execution","🏃️process/🪓️termination"])walk(join(root,"🧰️framework/🔨️modules",path));walk(join(pack,"🔤️json/📥️decode/🧪️testing"));paths.push(join(pack,"🔤️json/🧫️fixtures/🫳️read-limits.json"));}
+let capturedBytes=0;const check=()=>assert.ok(Date.now()<deadlineAt&&performance.now()-startedAt<30000,"Original source parent authority exhausted");
+const read=(path:string)=>{check();assert.ok(path.length<=256&&[...path].length<=256);const state=lstatSync(path);assert.ok(state.isFile()&&!state.isSymbolicLink()&&state.size<=16777216);const bytes=readFileSync(path),after=lstatSync(path);capturedBytes+=bytes.length;assert.ok(capturedBytes<=268435456);assert.ok(state.ino===after.ino&&state.size===after.size&&state.mtimeMs===after.mtimeMs&&bytes.length===state.size);check();return bytes;};
+const capture=(path:string)=>{const bytes=read(path);return {path,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};};
+const definitionsPath=join(import.meta.dir,command+"-"+epoch+"-defining.json"),definitionsSource=read(definitionsPath);assert.equal(createHash("sha256").update(definitionsSource).digest("hex"),expectedDefinitions);
+const definitions=JSON.parse(definitionsSource.toString("utf8")),before=paths.map(capture);writeFileSync(join(output,"source-observation.json"),JSON.stringify({before,expectedProducer,expectedDefinitions,originalDeadlineAt:deadlineAt}));assert.equal(before[0]!.sha256,expectedProducer);assert.ok(JSON.stringify(before.slice(1))===JSON.stringify(definitions),"Original selected source definitions advanced");writeFileSync(join(output,"admission.json"),JSON.stringify({before,expectedProducer,expectedDefinitions,originalDeadlineAt:deadlineAt}));
+const env=command==="json-source"?{...process.env,SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify({version:1,policy:{version:1,owner:"semio.pack.json.source",maximumElapsedMilliseconds:30000},deadlineEpochMilliseconds:deadlineAt,capabilities:{sourceRoot:pack,sourceCommand:"test-read-policy-source",maximumChildElapsedMilliseconds:30000}})}:process.env;
+const child=Bun.spawn([process.execPath,script,command==="source"?"test-occurrence-order-source":"test-read-policy-source"],{cwd:root,env,stdout:Bun.file(join(output,"out.txt")),stderr:Bun.file(join(output,"err.txt"))});
+let timedOut=false;const cancel=()=>{if(child.exitCode===null)terminateOwnedProcessTree(child.pid);};process.once("SIGINT",cancel);process.once("SIGTERM",cancel);const timeout=setTimeout(()=>{timedOut=true;cancel();},Math.max(1,Math.min(deadlineAt-Date.now(),30000-(performance.now()-startedAt))));
 const code=await child.exited;clearTimeout(timeout);process.off("SIGINT",cancel);process.off("SIGTERM",cancel);
-const after=paths.map(capture),exact=before.every((row,index)=>row.sha256===after[index]!.sha256&&row.bytes===after[index]!.bytes);
-writeFileSync(join(output,"terminal.json"),JSON.stringify({code,timedOut,before,after,exact,trackedSourceCopiesCreated:0,maxPath:Math.max(...paths.map(path=>path.length))}));
+let after:ReturnType<typeof capture>[]=[],custodyError:string|undefined;try{after=paths.map(capture);assert.equal(capture(definitionsPath).sha256,expectedDefinitions);}catch(error){custodyError=String(error);}const exact=!custodyError&&before.every((row,index)=>row.sha256===after[index]!.sha256&&row.bytes===after[index]!.bytes);
+writeFileSync(join(output,"terminal.json"),JSON.stringify({code,timedOut,before,after,exact,custodyError,expectedProducer,expectedDefinitions,capturedBytes,originalDeadlineAt:deadlineAt,originalMaximumElapsedMilliseconds:30000,trackedSourceCopiesCreated:0,maxPath:Math.max(...paths.map(path=>path.length))}));
 console.log(`[DEBUG] Pack order source physically closed=${code} exact=${exact} timedOut=${timedOut}`);process.exitCode=code||Number(!exact||timedOut);

@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧬️schema/🔣️.json",
+    "sha256": "706a00bf2ac1e4230a5935d3fdbb42b681097f8413c3d8992edb4adf9f9672be",
+    "bytes": 1773
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🟦️.ts",
+    "sha256": "91508f5496a3c2b5254ec6462ea35b12726cc6cec71a5a6bd6f6c91e609bfa64",
+    "bytes": 1189
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧫️fixtures/🔣️.json",
+    "sha256": "9fc561293f0d8839a0c3eb4f6e02fa8e0560cf4db2af0606491870cc1042554d",
+    "bytes": 429
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧬️schema/🔣️.json",
+    "sha256": "d6065b01a8b09728b96f511ed67fa0c1e0f47ab7c40bcf0d04686563074cfeb0",
+    "bytes": 2785
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧪️tests/🟦️.ts",
+    "sha256": "28e7e9da89807bdcaf6254decda8cd66a307564ffad16383904719144b6843ae",
+    "bytes": 3354
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🧫️fixtures/🔣️.json",
+    "sha256": "74ae6c30f5e203045219796785ae9bad7872464961ac810f4cf996011ed55320",
+    "bytes": 1792
+  }
+]

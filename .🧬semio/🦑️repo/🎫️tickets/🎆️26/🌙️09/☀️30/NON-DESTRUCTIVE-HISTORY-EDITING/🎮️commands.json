@@ -457,7 +457,7 @@
         "bun",
         "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
         "rust-syntax",
-        "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🔏️seal",
+        "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal",
         "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
         "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs"
       ],
@@ -721,6 +721,7 @@
         "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
         "rust-syntax",
         "{workspace}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical",
+        "{workspace}/🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical",
         "{workspace}/🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree",
         "{workspace}/🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔣️scalar"
       ],
@@ -1534,7 +1535,7 @@
         "--",
         "bun",
         "test",
-        "{workspace}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🔏️seal/🧪️tests/🟦️.ts"
+        "{workspace}/🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/🟦️.ts"
       ],
       "cwd": ""
     },
@@ -3692,6 +3693,61 @@
       }
     },
     {
+      "id": "test-host-original-context-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin-host:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "original_host_context_loan_preserves_same_recipient_and_returns_cumulative_wake_once",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-host-original-policy-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin-host:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "original_host_driver_treasury_never_renews_and_rejects_receipts_outside_the_independent_admission_policy",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-host-original-policy-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
       "id": "test-host-original-publication-native",
       "verb": "test",
       "command": [
@@ -4605,6 +4661,48 @@
       }
     },
     {
+      "id": "test-original-child-preparation-receipt-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_child_preparation_preserves_native_receipts_and_cancellation)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-child-preparation-receipt-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/📦️preparation/🎟️receipt/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
       "id": "test-original-child-root-registry-native",
       "verb": "test",
       "command": [
@@ -5048,6 +5146,48 @@
       "cwd": ""
     },
     {
+      "id": "test-original-retained-turn-wire-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-actor-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_retained_turn_receipt_roundtrips_all_identity_axes_and_rejects_every_forged_currency)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-retained-turn-wire-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
       "id": "test-original-review-view-native",
       "verb": "test",
       "command": [
@@ -5162,6 +5302,76 @@
       ],
       "cwd": "",
       "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-original-tool-run-tick-payload-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-tool-run-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_tick_payload_preserves_same_context_authority_and_cancellation)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-tool-run-tick-wire",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-tool-run-tick-wire-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-tool-run-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_tick_wire_preserves_writer_columns_and_fixed_grants)",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1",
         "NEXTEST_SUCCESS_OUTPUT": "immediate"
       }
     },
@@ -5598,7 +5808,7 @@
         "--",
         "bun",
         "test",
-        "{workspace}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧪️tests/🟦️.ts"
+        "{workspace}/🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🧪️tests/🟦️.ts"
       ],
       "cwd": ""
     },
@@ -7854,6 +8064,2176 @@
       "env": {
         "NEXTEST_SUCCESS_OUTPUT": "immediate"
       }
+    },
+    {
+      "id": "test-reactor-original-publication-receipts-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🎟️receipt/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-codec-catalog-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🎮️operation/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-codec-catalog-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-os-kernel:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-reactor-original-publication-receipts-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_reactor_publication_receipts_preserve_all_five_tuples_and_same_recipient_once)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "check-reactor-original-publication-receipts-syntax",
+      "verb": "check",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🎟️receipt/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-host-original-driver-cohort-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin-host:test-original-driver-policy-native",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-latest-key-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🟦️.ts",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/📦️preparation/🎟️receipt/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-latest-key-tick-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-tool-run-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_latest_key_admission_encoding_cancellation_preserve_actual_receipts) | test(original_tick_payload_preserves_same_context_authority_and_cancellation)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "check-original-tools-syntax",
+      "verb": "check",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🗝️latest/🧪️tests/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/📦️preparation/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+        "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-host-original-actor-treasury-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/⚛️actor/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "check-host-original-actor-treasury-syntax",
+      "verb": "check",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-wire-field-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-wire-field-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-replication-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_retained_wire_field_native_receipts_keep_borrowed_payload_and_actual_backing)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-actor-original-lane-policy-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-all-editor-history-inventory-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-descriptor-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🟦️.ts",
+        "./🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-descriptor-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_outcome_descriptors_keep_same_payload_and_receipt_until_paid_ack) | test(original_semantic_outcome_loans_preserve_payload_identity_fixed_grants_and_current_receipts)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "check-original-job-descriptor-syntax",
+      "verb": "check",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+        "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🦀️.rs",
+        "🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/🧪️tests/🦀️.rs",
+        "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs",
+        "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🦀️.rs",
+        "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-cancel-admission-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-cancel-admission-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-async-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_cancel_root_admission_uses_exact_native_birth_and_full_original_authority) | test(original_cancel_child_admission_preserves_exact_parent_and_alias_receipts)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-store-outcome-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️outcome/🧪️tests/🟦️.ts",
+        "--test-name-pattern",
+        "original Store outcome owns fault storage and lends exact semantic absence"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-history-decoder-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🟦️.ts",
+        "--test-name-pattern",
+        "original retained History decoder quotes all native custody before per-turn borrowed pieces"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-actor-original-lane-policy-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-actor-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_actor_lane_policy_preserves_supplied_retained_input_without_heap_or_renewal)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-tool-tick-successor-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-worker-metadata-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/♻️retirement/👷️authority/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-tool-tick-successor-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-tool-run-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_tick_successor_preserves_original_native_columns_and_zero_metadata_receipt)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-reactor-original-actor-context-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-reactor-original-actor-context-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_actor_context_preserves_input_and_paid_authorities_across_admission_loans_and_close)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "check-reactor-original-actor-context-syntax",
+      "verb": "check",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-builder-metadata-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-wire-dictionary-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🟦️.ts",
+        "--test-name-pattern",
+        "original wire dictionary retains borrowed ranges and pays only genuine paged backing"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-toy-operation-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🌱️operation/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-actor-original-receiving-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-actor-original-receiving-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-actor-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_actor_unissued_completion_refuses_before_metrics_and_preserves_result) | test(original_actor_issued_turn_refuses_forgery_and_duplicate_then_conserves_every_axis)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-wire-dictionary-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-replication-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_dictionary_native_ranges_keep_original_input_and_exact_paged_receipts)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-bim-model-original-history-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/bim-model-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(history_edits_end_to_end) | test(history_edit_inputs_resolve) | test(conflict_history_edits_end_to_end)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-job-owner-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_outcome_descriptors_keep_same_payload_and_receipt_until_paid_ack) | test(original_semantic_outcome_loans_preserve_payload_identity_fixed_grants_and_current_receipts) | test(original_in_place_payload_builder_preserves_fixed_grants_source_pages_and_all_cancellation_frontiers) | test(original_payload_authority_admits_once_and_borrowed_contexts_preserve_original_ledger_and_receipts) | test(worker_terminal_authority_retirement_preserves_original_ledger_then_in_place_backing) | test(worker_terminal_job_retirement_keeps_original_inline_job_for_in_place_removal) | test(worker_terminal_params_retirement_preserves_original_cancellation_and_separate_cursor) | test(worker_terminal_session_retirement_preserves_original_arc_aliases_and_funded_scaffolds)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-toy-operation-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_toy_operation_source_preserves_canonical_native_wire_and_original_custody)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-mounted-fault-capture-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_mounted_fault_capture_preserves_native_payload_and_independent_copy_turns)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-worker-turn-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-actor-original-public-receiving-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-actor-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--test",
+        "original-retained-receiving",
+        "-E",
+        "test(original_public_actor_)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-worker-turn-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_worker_turn_receipt_preserves_narrow_callback_and_exactly_once_recipient)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "check-original-worker-toy-syntax",
+      "verb": "check",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+        "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧪️tests/🦀️.rs",
+        "🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🌱️operation/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🌱️operation/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "check-cargo-coverage-help",
+      "verb": "check",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/verification/📜️script.ts",
+        "cargo-coverage-help"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-renderer-original-frame-outcome-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-trace-static-gate-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/⏱️trace/📈️percentile/🔐️gate/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-trace-static-gate-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-trace-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_static_telemetry_gate_preserves_exclusive_custody_and_zero_native_birth)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-prefixed-uuid-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🪪️id/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-prefixed-uuid-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-replication-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_prefixed_uuid_native_writes_only_funded_original_range_pieces)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-renderer-original-frame-outcome-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-wgpu-unit",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "-E",
+        "test(original_frame_outcome_keeps_candidate_and_absent_payload_through_funded_descriptor_ack)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-host-shard-original-issued-grant-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-page-extent-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📏️extent/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-page-extent-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_payload_pages_preserve_narrow_capacity_exact_extents_and_native_conservation)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-history-records-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📋️records/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-history-records-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-kernel-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_history_record_native_vector_growth_preserves_payloads_and_paid_receiving_custody)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-tick-writer-admission-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🎟️admission/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-tick-writer-admission-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-tool-run-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_tick_writer_admission_preserves_native_sources_all_receipts_and_payload_copy)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-wire-timestamp-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/⏱️timestamp/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-wire-timestamp-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-replication-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_timestamp_native_derivation_keeps_fixed_grant_receipts_and_original_input)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-history-operation-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧾️operation/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-history-operation-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-kernel-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_history_operation_native_fields_preserve_paid_partial_and_ready_receiving)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-actor-original-paired-admission-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-store-fault-close-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/📬️outcome/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-history-identity-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🪪️identity/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-reactor-original-guest-call-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-history-identity-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-kernel-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_history_identity_native_ranges_and_prior_edit_keep_exact_receipts)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-toy-unit-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🚦️unit/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-toy-installed-job-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_installed_toy_job_preserves_transaction_wire_borrowed_outcomes_and_physical_receipts)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-tool-port-admission-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/📮️port/🎟️admission/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-tool-port-admission-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_tool_run_port_dispatch_preserves_same_effect_and_native_queue_receipts)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-history-message-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📨️message/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-history-message-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-kernel-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_history_message_native_targets_keep_partial_receiving_and_physical_receipts)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-wire-json-string-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🔣️json-string/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-wire-json-string-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-replication-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_json_string_native_escape_pieces_preserve_original_grants_and_paid_receivers)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-job-admission-metadata-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-cancel-alias-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/🎟️context/🛑️cancel/🤝️alias/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-admission-receiving-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_batch_receipt_and_mutable_job_fence_preserve_none_semantics_and_original_authority) | test(original_outcome_descriptors_keep_same_payload_and_receipt_until_paid_ack) | test(original_worker_admission_preserves_sources_metadata_zero_and_exact_native_birth) | test(original_context_cancel_alias_preserves_same_root_paid_metadata_zero_and_return_witness) | test(original_source_publication_preserves_native_identity_paid_stages_and_every_cancellation_frontier) | test(original_typed_fault_publication_streams_canonical_wire_without_truncation_and_preserves_native_custody)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-core-original-history-origin-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-history-origin-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-kernel-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_history_origin_native_projection_preserves_original_payloads_and_paid_discarded_custody)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-history-origin-json-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-history-origin-json-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-kernel-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_history_origin_json_native_borrows_funded_grammar_and_same_original_control)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-job-staged-metadata-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🎟️metadata/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-staged-metadata-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_staged_source_preserves_metadata_zero_exact_ranges_and_native_custody)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-bytes-copy0-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️bytes/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-cause-copy0-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-replication-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(protocol_original_cause_metadata_closes_under_fixed_zero_copy_authority)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-bytes-copy0-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/value-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_bytes_retirement_metadata_keeps_fixed_copy0_and_actual_physical_receipts)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-actor-fixed-receipt-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️receipt/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-native-preparation-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-native-preparation-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_native_preparation_writes_final_fields_and_preserves_every_paid_cancellation_frontier)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-actor-fixed-receipt-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-actor-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--test",
+        "original-retained-receiving",
+        "-E",
+        "test(original_actor_fixed_native_receipt_preserves_raw_spend_and_all_u64_axes_without_heap)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-paged-wire-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-paged-wire-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-replication-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_paged_wire_native_preserves_sealed_header_and_actual_funded_field_backing)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-leaf-copy0-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-leaf-copy0-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/value-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_scalar_leaf_native_zero_copy_close_keeps_original_value_until_admitted_metadata)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-core-original-json-derived-bytes-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🔣️string/📦️bytes/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-core-original-json-derived-bytes-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-pack-json-rs:test-native",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_json_native_fixed2_derives_utf8_bytes_and_retires_partial_native_backing)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1"
+      }
+    },
+    {
+      "id": "test-original-job-paged-source-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-paged-source-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_job_paged_source_preserves_header_authority_bytes_and_zero_heap_borrows)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-host-actor-admission-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎟️context/🤝️admission/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
     }
   ]
 }

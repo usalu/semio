@@ -1,0 +1,34 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+    "beforeSha256": "6163009ef003456a3cbe0e13bcd6222ad9ae5552ff57a2a1893ffd1379bc9654",
+    "afterSha256": "12cff19ccc1788f8b3ae7e0cf19d8c6c638a3d5df86d665752dbf0e57f587a18",
+    "action": "preserve actual performed span in original cumulative body/decode/encode ledger before original authority refusal; unspent per-axis saturating subtraction after actual overdraw only",
+    "trueRed": 26461,
+    "redLog": "🗑️generated/native-wallet-refusal-red2.log",
+    "originalGrant": "unchanged",
+    "observedWholeBeforeSha256": "6163009ef003456a3cbe0e13bcd6222ad9ae5552ff57a2a1893ffd1379bc9654",
+    "logicalBlocks": [
+      "NativeSnapshotBodyWallet.remaining_grant",
+      "NativeSnapshotBodyWallet.record_progress",
+      "NativeSnapshotDecodeOwner.remaining_grant",
+      "NativeSnapshotDecodeOwner.record_progress"
+    ],
+    "nonexclusiveWholeObserver": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+    "beforeSha256": "dff07f2d7cd8c179a2a1bccde25daf9f3d1cf61f317281d29b2f5bfb93f6bc31",
+    "afterSha256": "396782f0b4e021f9789d7465eeaf837b48d3c025fab12727aa75e0fe19fd3730",
+    "action": "preserve actual performed span in original cumulative body/decode/encode ledger before original authority refusal; unspent per-axis saturating subtraction after actual overdraw only",
+    "trueRed": 26461,
+    "redLog": "🗑️generated/native-wallet-refusal-red2.log",
+    "originalGrant": "unchanged",
+    "observedWholeBeforeSha256": "dff07f2d7cd8c179a2a1bccde25daf9f3d1cf61f317281d29b2f5bfb93f6bc31",
+    "logicalBlocks": [
+      "NativeSnapshotEncodeOwner.remaining_grant",
+      "NativeSnapshotEncodeOwner.record_progress"
+    ],
+    "nonexclusiveWholeObserver": true
+  }
+]

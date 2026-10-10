@@ -1,0 +1,7 @@
+# Current Original Preparation Error Chain
+
+Kernel33131 holds the finite Rust cut during genuine selected preparation. This read-only census records 85 actual preparation signatures returning String, without adopting any observed Source bytes. The current Sealer advance converts the sole ValueError retained_progress through into_message; ephemeral advance also clones the resulting String into fault state, and batch advancement maps it to VcsError::ValidationFailed. These are actual custody and receipt boundaries, so changing only the Sealer signature would not complete the feature.
+
+The authorized canonical repair must retain original ValueError as the sole physical receipt through defining preparation interfaces, actual implementations and publication failure custody. Structural domain errors require explicit literal typed refusals at their owning boundary; an owned String wrapper or a second progress field would create competing authorities. Existing VCS native refusal variants already retain ValueError for encoding/inverse; preparation needs its genuine corresponding domain contract rather than discarding receipts into ValidationFailed. Original immutable grants and native owner cancellation remain unchanged.
+
+The hash-only observation input is pub-preparation-error-census.json. No Rust Source changed, native correctness is not inferred, and broad generic owned JSON/three proposal collectors remain required.

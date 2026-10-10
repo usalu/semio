@@ -1,4 +1,0 @@
-        let mut implicit_paints=std::collections::BTreeSet::new();
-        for (channel,_) in option_schema()?.get("x-semio-option-syntax").and_then(|value|value.get("layer")).and_then(DslValue::as_object).ok_or_else(||"layer option descriptors missing".to_string())? {
-            if columns.contains(channel)&&layer.get("encodings").and_then(|encodings|encodings.get(channel)).is_none()&&option_descriptor("layer",channel,false)?.syntax==ChartOptionSyntax::Paint {implicit_paints.insert(channel.clone());}
-        }

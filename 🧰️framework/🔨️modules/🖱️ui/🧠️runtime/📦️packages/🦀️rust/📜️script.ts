@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runExactCargoLaws } from "../../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { resolve } from "node:path";
@@ -27,14 +29,11 @@ class TreeRetirementScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testRuntimeTreeRetirement();
     if (segments.length === 1 && segments[0] === "--oracle-only") return;
-    const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory,
-      cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
-      groups: [{ package: "semio-framework-ui-runtime", target: { kind: "lib" }, laws: [
+    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 }, manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, cargoArgs: segments, groups: [{ package: "semio-framework-ui-runtime", target: { kind: "lib" }, laws: [
         "runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads",
         "runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmission",
         "runtime_tree_retirement_rejected_close_preserves_source_until_handback_admission",
-      ] }],
-    });
+      ] }] });
     console.log(`runtime-tree exact native laws:${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
@@ -61,5 +60,5 @@ class CheckWasmScript extends BundleScript {
 
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("tree-retirement-check", TreeRetirementScript);
-  await runScriptMain(router);
+  await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

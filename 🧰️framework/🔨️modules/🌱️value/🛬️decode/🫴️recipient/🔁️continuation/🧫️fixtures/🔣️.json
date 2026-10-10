@@ -7,6 +7,10 @@
   "textBytes": 12,
   "maximumNativeBytes": 1048576,
   "maximumTurns": 4096,
+  "rejectedWork": {"declared": 2, "attempted": 3, "kind": "workLimit", "conserveReceipt": true},
+  "invalidReceipt": {"completed": 3, "total": 2, "kind": "invariantViolated", "preserveOwnedBytes": true},
+  "recipientRelease": "originalGrantWitness",
+  "recipientReleaseRefusals": [{"axis":"depth","value":0,"kind":"depthLimit"},{"axis":"release","value":0,"kind":"ownershipLimit"}],
   "closeGrant": {
     "maximumItems": 16,
     "maximumCopyBytes": 65536,

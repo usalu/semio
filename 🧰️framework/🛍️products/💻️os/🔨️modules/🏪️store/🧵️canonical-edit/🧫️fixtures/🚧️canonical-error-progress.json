@@ -1,13 +1,79 @@
 {
   "version": 1,
   "text": "aä🧵",
-  "modes": ["indexed", "borrowed"],
-  "grants": [0, 1, 7, 256, 4096],
+  "modes": [
+    "indexed",
+    "borrowed"
+  ],
+  "grants": [
+    0,
+    1,
+    7,
+    256,
+    4096
+  ],
   "sentinel": 165,
   "expectedPrefix": "[\"aä🧵\",",
   "expectedBytes": 11,
   "expectedError": "canonical-reader.fixture-child",
   "expectedComplete": false,
   "expectedRootRetirements": 1,
-  "expectedSnapshotBytes": 7
+  "expectedSnapshotBytes": 7,
+  "depthRows": [
+    {
+      "source": true,
+      "maximumDepth": 1,
+      "expectedJson": "true"
+    },
+    {
+      "source": [
+        true
+      ],
+      "maximumDepth": 1,
+      "expectedPrefix": "[",
+      "refused": true
+    },
+    {
+      "source": [
+        true
+      ],
+      "maximumDepth": 2,
+      "expectedJson": "[true]"
+    }
+  ],
+  "retainedPolicy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  },
+  "preparationRefusal": {
+    "kind": "workLimit",
+    "message": "original preparation retained before refusal",
+    "retainedProgress": {
+      "copiedItems": 1,
+      "copiedBytes": 11,
+      "retainedCapacityBytes": 17,
+      "releasedBytes": 5
+    }
+  },
+  "selectionRows": [
+    {
+      "selected": null,
+      "expectedJson": "null"
+    },
+    {
+      "selected": "",
+      "expectedJson": "\"\""
+    },
+    {
+      "selected": "aä🧵",
+      "expectedJson": "\"aä🧵\""
+    },
+    {
+      "selected": "a\n\"\\",
+      "expectedJson": "\"a\\n\\\"\\\\\""
+    }
+  ]
 }

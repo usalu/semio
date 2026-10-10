@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧫️fixtures/🔣️.json",
+    "action": "update",
+    "beforeSha256": "21850f56c3c53f06b815c5f5b652d21247907adc8bd004dfb76fdacb7a1d7c07",
+    "afterSha256": "ab68e42965e68f45fe819c880eca30139ab1985da3ab5736295e1c6118846150",
+    "qualification": "Extend plain portable source-membership examples for four collections, genuine module names, nested refusal, literal and Unicode owners; no testing example schema"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "a4643cc7dc674c4c9d78ff7b05de5cc469be9b9e082cccfc8e1781dd2bb5522e",
+    "afterSha256": "1cfb523a7a90ec37404c7f97ac314f207e1d08b34d360f19317bbbba9343b4e6",
+    "qualification": "Original lower Bun test keeps portable declaration Ajv and removal/install oracles; adds exact first-party membership/native patterns vs independent glob and actual installed workspace links across 17 neutral vectors"
+  }
+]

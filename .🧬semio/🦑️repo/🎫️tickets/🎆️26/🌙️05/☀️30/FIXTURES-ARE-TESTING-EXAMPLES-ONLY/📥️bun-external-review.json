@@ -1,0 +1,12 @@
+{
+  "ownership": false,
+  "executed": false,
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+  "sha256": "4ad3bb66fc01b72566b94c6a0921696e5e424286fe0cc70da3c324f4b8a2cde9",
+  "counterexample": {
+    "positive": "../outside*/**",
+    "negative": "!**/node_modules/**",
+    "selectedPackage": "../outside-a/node_modules/vendor",
+    "emittedQualification": "!../outside/**/node_modules/**"
+  }
+}

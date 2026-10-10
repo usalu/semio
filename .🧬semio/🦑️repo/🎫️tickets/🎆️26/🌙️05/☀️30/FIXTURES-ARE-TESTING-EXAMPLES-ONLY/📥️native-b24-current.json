@@ -1,0 +1,95 @@
+{
+  "current": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/👥️presence/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🔗️causal/🧮️backbone/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🏛️ownership/🟦️.ts",
+      "exists": true,
+      "sha256": "d021ea44b793b1a85d111c3a7a45ad61acc12d1ae267b3cc9ee7128646586ee5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "c4cc30c75d12c992295cc55727afb97723b6b9a4d652f6a0feb8ee6819d466d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📜️script.ts",
+      "exists": true,
+      "sha256": "597f90fe7d90559436b6316ad960a9d851d5d1f988dea9d0b513ab49948e84bf"
+    }
+  ],
+  "plainCurrent": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json",
+      "observedBefore": "e68834c3bfece5be31c3a02b0df5c44e2455d8268b8203c9b90c7c3c1e285132",
+      "current": "ee70291677d5d3a0c6f2ab298252c98c23fbbbb29e2cfeec208a47941b61a36d",
+      "matches": false,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🔣️.json",
+      "observedBefore": "1cba4b169f05df719b9638900cf041b4bfc3b670fc3fd280f480d928febd77e2",
+      "current": "1cba4b169f05df719b9638900cf041b4bfc3b670fc3fd280f480d928febd77e2",
+      "matches": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json",
+      "observedBefore": "c5e6281a6bc25c7ab712b1ddcb29668649d2950528c325258b0405772d0b4ef9",
+      "current": "c5e6281a6bc25c7ab712b1ddcb29668649d2950528c325258b0405772d0b4ef9",
+      "matches": true,
+      "authored": false
+    }
+  ],
+  "red": "35033/Nx1/1.6s/2 failures",
+  "green": "6438/Nx0/1.5s/13 laws375 assertions+depth612",
+  "normalFirst": "6641/Nx130 before tests/child Nx project not found",
+  "normalRenewal": "90471 ACTUAL terminal Nx0/14.9s target+3 generator dependencies; original Binary DEBUG raw/hex/body/4Grant/7SQL laws",
+  "RustAuthorship": "none in corpus retirement",
+  "currentSource": "35195 Nx0/4.7s14laws384 assertions+depth1/612",
+  "afterObserved": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/👥️presence/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🔗️causal/🧮️backbone/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🏛️ownership/🟦️.ts",
+      "exists": true,
+      "sha256": "d021ea44b793b1a85d111c3a7a45ad61acc12d1ae267b3cc9ee7128646586ee5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "c4cc30c75d12c992295cc55727afb97723b6b9a4d652f6a0feb8ee6819d466d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📜️script.ts",
+      "exists": true,
+      "sha256": "597f90fe7d90559436b6316ad960a9d851d5d1f988dea9d0b513ab49948e84bf"
+    }
+  ]
+}

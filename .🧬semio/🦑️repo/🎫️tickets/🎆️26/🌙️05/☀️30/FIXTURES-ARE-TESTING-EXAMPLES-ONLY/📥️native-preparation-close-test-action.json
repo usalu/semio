@@ -1,0 +1,8 @@
+{
+  "fixture": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\udcc7\ufe0fregistry/\ud83e\uddec\ufe0fcontract/\u270f\ufe0fediting/\ud83e\uddeb\ufe0ffixtures/\ud83e\uddf5\ufe0fretained-native/\ud83e\uddfe\ufe0frefusal.json",
+  "fixtureBefore": "6a1013cd1a001ea81813de30142d11b17dbfc53795fee8e7807447ea673ef41b",
+  "fixtureAfter": "de5e60cd25de4d72a71332b31a08757056f1dc4ae67462f0d6173ca3a037b3c2",
+  "test": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\udcc7\ufe0fregistry/\ud83e\uddec\ufe0fcontract/\u270f\ufe0fediting/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83d\udfe6\ufe0f.test.ts",
+  "testBefore": "ce44f540d27a181bf0390979c91c229bc7fccd1313446b7f12a63ca3b535e4e5",
+  "testAfter": "112c9078d7e5c98dce0fae7e12700a2d8d4cb28d763d583b908026008283dc68"
+}

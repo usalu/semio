@@ -1,0 +1,42 @@
+{
+  "observers": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\ud83e\udd80\ufe0f.rs",
+      "sha256": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\u267b\ufe0fretirement/\ud83d\udd8a\ufe0fstroke/\ud83e\udd80\ufe0f.rs",
+      "sha256": "8c274d0584ec6281fcafa315c299c7cd26835972d69ca34a06cc4093f69c3429"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\u267b\ufe0fretirement/\ud83d\udd8a\ufe0fstroke/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "bf741eb04920a859a70407c4ebcff871de9fda0d4ca2d5f40dc9f8d5cfc7440d"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\u267b\ufe0fretirement/\ud83d\udd8a\ufe0fstroke/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "5f6453f6b857fd81ae5693d0495e18e3f9330fcb784160574756aa32f0214bbb"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fcanvas/\u267b\ufe0fretirement/\ud83d\udd8a\ufe0fstroke/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "e432d5d083be49db63642e3e9685778b11eb82988f3e9b2e563be2916d4c57bd"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfae\ufe0fcontrolled/\ud83e\udd80\ufe0f.rs",
+      "sha256": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750"
+    }
+  ],
+  "sourceGreen": {
+    "session": 2956,
+    "exit": 0,
+    "duration": "1.1s",
+    "laws": 1,
+    "assertions": 237,
+    "extraDepthAssertions": 612
+  },
+  "native": "UNRUN; genuine host invocation boundary blocks normal route",
+  "authoredRootBlocks": [
+    "Stroke dash borrow/capacity/owned transfer",
+    "stroke leaf module export"
+  ],
+  "excluded": "bool Scene/Frame callers and Vello/whole backend"
+}

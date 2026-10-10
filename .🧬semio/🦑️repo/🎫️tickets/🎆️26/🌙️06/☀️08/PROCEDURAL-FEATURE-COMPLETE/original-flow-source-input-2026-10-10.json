@@ -1,0 +1,86 @@
+{
+  "capturedUtc": "2026-10-09T22:16:55.831449+00:00",
+  "inputs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🦀️.rs",
+      "sha256": "336982cb9e3d666ade4881f9674b6e2cb3a98c2bdd3ec0d330832c97eb55f55b",
+      "absoluteUtf16Length": 125
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+      "sha256": "3c9d5aa6ddcacbc771fc100c2bc7cdec1dacef9ea83ff8ce049b1b7663f806c7",
+      "absoluteUtf16Length": 137
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧫️fixtures/🔣️.json",
+      "sha256": "982e9d94f18107d2ed5fa58db5623b1208f070099aad3577dd8452c021249566",
+      "absoluteUtf16Length": 139
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/📑️copy/🦀️.rs",
+      "sha256": "761806706c4474765f8978c7ef144686ee4f650345dfc22b644e1df1391b95d3",
+      "absoluteUtf16Length": 142
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+      "sha256": "45cb0a6ae96090049175876e6f051e9f0d5e6485ddd10fa1d69e5182f729cd4c",
+      "absoluteUtf16Length": 156
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs",
+      "sha256": "56affa8d3525abed5cc1166ae2cc0ce992482d754ea81cafeb450487e04796aa",
+      "absoluteUtf16Length": 104
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/🎟️retained-receipt/🔣️.json",
+      "sha256": "173c324b828da9ed0e04a64d34be61fec270a5bfb76a0955c01cf76e709e1f2c",
+      "absoluteUtf16Length": 126
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
+      "sha256": "971d4a680c87f4178a4dc1745d88f3ccc6b4619ec1ea151083c30b64f2345b3b",
+      "absoluteUtf16Length": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+      "sha256": "25453be62bea093eabdaa5b6c96684b6269b313757f0ac850021e834692997fa",
+      "absoluteUtf16Length": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️protocol-unit/🦀️.rs",
+      "sha256": "1920694cef08ce0710d0a65b339837dc3c236f42c4d28004f4b7fefed8792cb4",
+      "absoluteUtf16Length": 118
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750",
+      "absoluteUtf16Length": 94
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+      "sha256": "64c13c810002325e5e15cd9f5e6666cab3674071b690b512fefa4ee309db309e",
+      "absoluteUtf16Length": 91
+    }
+  ],
+  "portableCopy": {
+    "session": 94136,
+    "exitCode": 0,
+    "checks": 30,
+    "probes": 18,
+    "scope": "strict corpus and source receiving only"
+  },
+  "portableBridgeRed": {
+    "session": 47863,
+    "exitCode": 1,
+    "expectedAssertion": "actual normal failed child receipt must survive before reply projection"
+  },
+  "portableBridgeReplay": {
+    "session": 23561,
+    "status": "live"
+  },
+  "nativeCopy": {
+    "session": 46394,
+    "status": "live",
+    "scope": "two actual original factory laws"
+  }
+}

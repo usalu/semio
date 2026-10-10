@@ -1,0 +1,16 @@
+{
+  "version": 1, "maximumBytes": 4096, "maximumAllocationBytes": 262144, "maximumItems": 2, "maximumTurns": 100000,
+  "normalAuthority": {"maximumItems": 100000, "maximumCopyBytes": 1048576, "maximumCapacityBytes": 1048576, "maximumReleaseBytes": 1048576, "maximumDepth": 256},
+  "retirementAuthority": {"maximumItems": 100000, "maximumCopyBytes": 1048576, "maximumCapacityBytes": 1048576, "maximumReleaseBytes": 1048576, "maximumDepth": 256},
+  "turn": {"maximumItems": 1, "maximumCopyBytes": 65536, "maximumCapacityBytes": 65536, "maximumReleaseBytes": 65536, "maximumDepth": 256},
+  "closeTurn": {"maximumItems": 1, "maximumCopyBytes": 65536, "maximumCapacityBytes": 65536, "maximumReleaseBytes": 65536, "maximumDepth": 256},
+  "cases": [
+    {"source": "[]", "maximumDepth": 0, "containerDepth": 1, "expected": "depthLimit", "refusedPosition": 0},
+    {"source": "[[]]", "maximumDepth": 1, "containerDepth": 2, "expected": "depthLimit", "refusedPosition": 1},
+    {"source": "{}", "maximumDepth": 1, "containerDepth": 1, "expected": "admitted", "refusedPosition": null},
+    {"source": "[]", "maximumDepth": 1, "containerDepth": 1, "expected": "admitted", "refusedPosition": null},
+    {"source": "0", "maximumDepth": 0, "containerDepth": 0, "expected": "admitted", "refusedPosition": null},
+    {"source": "{\"nested\":{}}", "maximumDepth": 1, "containerDepth": 2, "expected": "depthLimit", "refusedPosition": 10},
+    {"source": "[[],{}]", "maximumDepth": 2, "containerDepth": 2, "expected": "admitted", "refusedPosition": null}
+  ]
+}

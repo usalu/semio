@@ -1,0 +1,32 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/📋️operations/🦀️.rs",
+      "action": "created",
+      "beforeSha256": null,
+      "afterSha256": "0ff5950e70248fa4b9b2781bf427344b20381c40f961306993f67b528573a38b",
+      "scope": "genuine original operation rows: paid collection birth, original buffer transfer, full-grant protocol handoff and cancellation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "b67fb8bf2583c1e905a397036bb15b0d1c29c57f900bdf5951d425948851fd78",
+      "afterSha256": "e5e065ecf03f9243fd3569cfe5d2b43a44e595ab3f815ee1777db6124483d56b",
+      "scope": "actual row owner export"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "2bc76b4e1c384c373f8d638e0b5baa305d068e0d35defd3135deea86b622c491",
+      "afterSha256": "b172667feed64033bc03af05965de2d07a5a5d6e1f4c28f5bf836e35cf7e6930",
+      "scope": "actual row owner export"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "action": "updated",
+      "beforeSha256": "d3111f83bcc8fe40ca114a3869441f872445592a4fbaaf84effb83ec66a9747a",
+      "afterSha256": "078ae459e0b207f045bae68d933c32cdd93abcb531b00b386fc40bc756b35edd",
+      "scope": "narrow current row owner public export"
+    }
+  ]
+}

@@ -1,0 +1,489 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replication Representation Ownership",
+  "type": "object",
+  "required": [
+    "traits",
+    "binaryOwner",
+    "semanticOwner",
+    "canonical",
+    "causal",
+    "primitives",
+    "presence",
+    "typescriptCausal",
+    "typescriptBackbone",
+    "typescriptBootstrap",
+    "typescriptWire",
+    "typescriptInputs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "traits": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "owner"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "pattern": "^🚪️io/"
+          }
+        }
+      }
+    },
+    "binaryOwner": {
+      "type": "string"
+    },
+    "semanticOwner": {
+      "type": "string"
+    },
+    "canonical": {
+      "type": "object",
+      "required": [
+        "semanticOwner",
+        "textOwner",
+        "sealOwner",
+        "oldSealOwner",
+        "borrowedTrees"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "semanticOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "textOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sealOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "oldSealOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "borrowedTrees": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "causal": {
+      "type": "object",
+      "required": [
+        "semanticOwner",
+        "binaryOwner",
+        "functions",
+        "semanticTypes",
+        "consumers",
+        "textOwner",
+        "valueTypes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "semanticOwner": {
+          "const": "🔗️causal/🦀️.rs"
+        },
+        "binaryOwner": {
+          "const": "🚪️io/💾️binary/🔗️causal/🦀️.rs"
+        },
+        "functions": {
+          "type": "array",
+          "minItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 12
+        },
+        "semanticTypes": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 4
+        },
+        "consumers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "textOwner": {
+          "const": "🚪️io/📝️text/🔗️causal/🦀️.rs"
+        },
+        "valueTypes": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "primitives": {
+      "type": "object",
+      "required": [
+        "semanticOwner",
+        "binaryOwner",
+        "functions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "semanticOwner": {
+          "const": "🟦️.ts"
+        },
+        "binaryOwner": {
+          "const": "🚪️io/💾️binary/🟦️.ts"
+        },
+        "functions": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "presence": {
+      "type": "object",
+      "required": [
+        "semanticOwner",
+        "binaryOwner",
+        "functions",
+        "semanticTypes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "semanticOwner": {
+          "const": "🟦️.ts"
+        },
+        "binaryOwner": {
+          "const": "🚪️io/💾️binary/👥️presence/🟦️.ts"
+        },
+        "functions": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "semanticTypes": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "typescriptCausal": {
+      "type": "object",
+      "required": [
+        "semanticOwner",
+        "binaryOwner",
+        "functions",
+        "semanticTypes",
+        "codecInterface"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "semanticOwner": {
+          "const": "🟦️.ts"
+        },
+        "binaryOwner": {
+          "const": "🚪️io/💾️binary/🔗️causal/🟦️.ts"
+        },
+        "functions": {
+          "type": "array",
+          "minItems": 22,
+          "maxItems": 22,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "semanticTypes": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "codecInterface": {
+          "const": "ReplicationPackCodec"
+        }
+      }
+    },
+    "typescriptBackbone": {
+      "type": "object",
+      "required": [
+        "semanticOwner",
+        "binaryOwner",
+        "functions",
+        "semanticTypes",
+        "codecTypes",
+        "codecErrors",
+        "codecConstants",
+        "semanticConstants"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "semanticOwner": {
+          "const": "🟦️.ts"
+        },
+        "binaryOwner": {
+          "const": "🚪️io/💾️binary/🔗️causal/🧮️backbone/🟦️.ts"
+        },
+        "functions": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "semanticTypes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "codecTypes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "codecErrors": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "codecConstants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "semanticConstants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "typescriptBootstrap": {
+      "type": "object",
+      "required": [
+        "semanticOwner",
+        "owner",
+        "functions",
+        "classes",
+        "types",
+        "interfaces",
+        "constants",
+        "semanticTypes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "semanticOwner": {
+          "const": "🟦️.ts"
+        },
+        "owner": {
+          "const": "🚪️io/📥️bootstrap/🟦️.ts"
+        },
+        "functions": {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "classes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "types": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "interfaces": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "constants": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "semanticTypes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "typescriptWire": {
+      "type": "object",
+      "required": [
+        "semanticOwner",
+        "owner",
+        "functions",
+        "constants",
+        "semanticTypes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "semanticOwner": {
+          "const": "🟦️.ts"
+        },
+        "owner": {
+          "const": "🚪️io/💾️binary/📡️wire/🟦️.ts"
+        },
+        "functions": {
+          "type": "array",
+          "minItems": 19,
+          "maxItems": 19,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "constants": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "semanticTypes": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "typescriptInputs": {
+      "type": "object",
+      "required": [
+        "projectOwner",
+        "requiredSourceInput"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "projectOwner": {
+          "const": "📦️packages/🟦️typescript/📋️project.json"
+        },
+        "requiredSourceInput": {
+          "const": "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/**/*.ts"
+        }
+      }
+    }
+  }
+}

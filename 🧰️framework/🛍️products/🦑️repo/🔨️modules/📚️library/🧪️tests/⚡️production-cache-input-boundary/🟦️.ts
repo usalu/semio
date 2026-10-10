@@ -131,15 +131,23 @@ test("exact example collection boundary preserves domain module names", () => {
 /** 🛡️ Current Nx core gitignore sees only genuine project custody before discovery. */
 test("core project discovery excludes examples and preserves exact domain manifest files", async () => {
   const policy = JSON.parse(readFileSync(join(root, library, "⚡️caching/🔣️policy.json"), "utf8"));
-  expect(policy.exampleCollections).toBeDefined();
   const schema = JSON.parse(readFileSync(join(root, library, "⚡️caching/🧬️schema/🔣️.json"), "utf8"));
   const validate = new Ajv({ strict: false }).compile(schema);
   expect(validate(policy)).toBe(true);
-  for (const field of ["names", "moduleMember", "manifestBasenames"]) {
-    const omitted = { ...policy.exampleCollections }; delete omitted[field];
-    expect(validate({ ...policy, exampleCollections: omitted })).toBe(false);
+  expect(validate({ ...policy, exampleCollections: {} })).toBe(false);
+  const ownership = JSON.parse(readFileSync(join(root, library, "🗂️workspaces/🔣️policy.json"), "utf8"));
+  const ownershipSchema = JSON.parse(readFileSync(join(root, library, "🗂️workspaces/🧬️schema/🔣️.json"), "utf8"));
+  const admitOwnership = new Ajv({ strict: true }).compile(ownershipSchema);
+  expect(admitOwnership(ownership)).toBe(true);
+  for (const field of ["names", "moduleMember"]) {
+    const omitted = { ...ownership.collections }; delete omitted[field];
+    expect(admitOwnership({ ...ownership, collections: omitted })).toBe(false);
   }
-  expect(validate({ ...policy, exampleCollections: { ...policy.exampleCollections, names: ["fixtures"] } })).toBe(false);
+  expect(admitOwnership({ ...ownership, collections: { ...ownership.collections, names: ["fixtures"] } })).toBe(false);
+  expect(admitOwnership({ ...ownership, collections: { ...ownership.collections, manifestBasenames: [] } })).toBe(false);
+  const { manifestBasenames, ...omittedBasenames } = policy;
+  expect(validate(omittedBasenames)).toBe(false);
+  expect(validate({ ...policy, manifestBasenames: ["schema.json"] })).toBe(false);
   const publish = (bootstrap as Record<string, unknown>).publishNxCollectionBoundary as (root: string, signal?: AbortSignal, progress?: (directories: number) => void) => Promise<void>;
   expect(typeof publish).toBe("function");
   const parent = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(); mkdirSync(parent, { recursive: true });

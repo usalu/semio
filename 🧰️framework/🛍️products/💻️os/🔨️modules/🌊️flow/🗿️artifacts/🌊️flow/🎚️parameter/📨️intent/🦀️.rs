@@ -32,12 +32,25 @@ impl SetGraphParameter {
 
 //#region 🔏️CanonicalIntent
 impl crate::os_store::ArtifactCanonicalJson for SetGraphParameter {
-    fn canonical_json_borrowed_root(&self) -> Result<Option<crate::os_store::ArtifactCanonicalJsonValue<'_>>, String> {
-        use crate::os_store::{ArtifactCanonicalJsonNode as Json, ArtifactCanonicalJsonObject as Object, ArtifactCanonicalJsonValue as Value};
-        self.validate().map_err(str::to_owned)?;
-        let required = [("widgetId", Value::Scalar(Json::String(&self.widget_id))), ("value", Value::Scalar(Json::F64(self.value)))];
-        let optional = self.surface_id.iter().map(|value| ("surfaceId", Value::Scalar(Json::String(value.as_str()))));
-        Ok(Some(Value::Object(Object::new(required.into_iter().chain(optional)))))
+    fn canonical_json_node(&self, path: &[usize]) -> Result<crate::os_store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        use crate::os_store::ArtifactCanonicalJsonNode as Node;
+        self.validate().map_err(|reason| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, reason))?;
+        match path {
+            [] => Ok(Node::Object(2 + usize::from(self.surface_id.is_some()))),
+            [0] => Ok(Node::String(&self.widget_id)),
+            [1] => Ok(Node::F64(self.value)),
+            [2] if self.surface_id.is_some() => Ok(Node::String(self.surface_id.as_deref().unwrap())),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "flow-parameter-canonical-ordinal-invalid")),
+        }
+    }
+    fn canonical_json_key(&self, path: &[usize], ordinal: usize) -> Result<crate::os_store::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+        if !path.is_empty() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "flow-parameter-canonical-key-parent-invalid")); }
+        match ordinal {
+            0 => Ok("widgetId".into()),
+            1 => Ok("value".into()),
+            2 if self.surface_id.is_some() => Ok("surfaceId".into()),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "flow-parameter-canonical-key-ordinal-invalid")),
+        }
     }
 }
 //#endregion 🔏️CanonicalIntent

@@ -6,13 +6,11 @@ use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::SynapseSpec;
-use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️ConnectSynapse
 /// 🔗 Full initial payload for a new synapse edge, placed at `index` (FINAL-state) if no edge with
 /// the same id already exists.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[value(rename_all = "camelCase")]
 pub struct ConnectSynapse {
     pub index: usize,
     pub synapse: SynapseSpec,

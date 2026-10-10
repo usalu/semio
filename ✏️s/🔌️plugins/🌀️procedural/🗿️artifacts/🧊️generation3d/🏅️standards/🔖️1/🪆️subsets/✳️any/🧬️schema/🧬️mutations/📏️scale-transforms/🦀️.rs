@@ -5,13 +5,11 @@ use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_items,generation3d_label_number,Generation3dMutation};
 
 use crate::Generation3dSnapshot;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ScaleTransforms
 /// 📏️ Multiplies `(sx, sy, sz)` into the factors of every addressed scale operator.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[value(rename_all = "camelCase")]
 pub struct ScaleTransforms {
     pub targets: Vec<String>,
     pub sx: f64,

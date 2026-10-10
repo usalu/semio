@@ -1,0 +1,50 @@
+{
+  "contract": "oneOriginalIssuedShardBatch",
+  "input": {
+    "operation": 71,
+    "generation": 3,
+    "epoch": 19,
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 64
+    }
+  },
+  "envelopes": 3,
+  "spent": [
+    {
+      "copiedItems": 0,
+      "copiedBytes": 3,
+      "retainedCapacityBytes": 128,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 0,
+      "copiedBytes": 9,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 128
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    }
+  ],
+  "remaining": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 4084,
+    "maximumCapacityBytes": 65408,
+    "maximumReleaseBytes": 262016,
+    "maximumDepth": 64
+  },
+  "completionCount": 1,
+  "duplicateRefused": true,
+  "earlyReturnRefused": true,
+  "refusalHeap": [
+    0,
+    0
+  ]
+}

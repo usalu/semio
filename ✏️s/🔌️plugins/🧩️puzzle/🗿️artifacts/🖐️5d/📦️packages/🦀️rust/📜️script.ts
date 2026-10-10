@@ -26,7 +26,7 @@ class OwnedVerifyScript extends BundleScript {
 class HostAdmissionTest extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Expected test host-admission");
-    await runArtifactRustTests("semio-s-artifact-puzzle-5d", this.repoRoot, ["--features", "component-app-assembly", "--lib", "puzzle5d_host_admission_", "--", "--nocapture"]);
+    await runArtifactRustTests("semio-s-artifact-puzzle-5d", this.repoRoot, ["--features", "component-app-assembly", "--lib", "puzzle5d_host_admission_", "--", "--nocapture"], this.invocation.control);
   }
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-puzzle-5d", {testCommands:{"host-admission":HostAdmissionTest},testFeatures:["component-app-assembly"],commands:{"graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

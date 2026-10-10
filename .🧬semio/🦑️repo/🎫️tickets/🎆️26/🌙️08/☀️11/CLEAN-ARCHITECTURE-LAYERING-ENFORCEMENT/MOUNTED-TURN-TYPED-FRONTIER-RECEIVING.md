@@ -98,3 +98,182 @@ Current in-place source 🧰️framework/🛍️products/💻️os/🔨️module
 mp2 physically closed Nx/Bun 1/Cargo 101 at one upstream Value factory Debug conflict before any original Plugin law. Current producer already removed the duplicate derive; no repair was made by this lane. Full custody 14339/14308 exact, 31 qualified advances, seven births, zero removals; cumulative 736766842 physical bytes / 28685 reads / 6235 ms.
 
 The next extension-to-reactor receiving change has its language-neutral original policy/context schema and independent Ajv/SQLite vectors declared first. A new source binding law is appended to the original full portable suite. The existing exact GUI portable row is preserved as one literal portable-current.json; no command, budget or policy default changes. The law requires the actual extension lifecycle receipt to survive the boundary and the original runtime close policy to be forwarded independently of scalar patch bytes. Native full Plugin remains an independent required proof.
+
+
+Portable pr1 physically closed Nx/Bun 1 before implementation: ten original matched laws passed, and the new receiving binding failed on the absent policy accessor. Whole selected physical custody 6485/6475 exact, ten advances, zero births, one prior removed Repo verification/current source explicitly recorded. The first new source assertion used a string matcher that caused Bun to render the entire Plugin source into generated output. That full-body rendering has been removed from the closed output and replaced with its original output hash/byte metadata (generated/pr1/render-redaction.json); all failure and law diagnostics remain. The assertion now compares a boolean source predicate, preventing source-body rendering on future failures. No production source or original assertion was changed during pr1.
+
+
+After physical pr1 red, the actual extension-to-reactor join now returns the unchanged PluginLifecycleStep alongside genuine post-step registry pressure. Inactivity returns AwaitingInput without claiming Complete or constructing a performed receipt. PluginRuntime exposes its already-mandatory embedding policy unchanged. The reactor supplies that original close grant; fuel may reduce only its admitted item count, never create copy/capacity/release/depth credit. Every actual performed progress tuple is validated against that grant before continuing. The original extension cursor, cancellation, phase order and full native laws are preserved. This receiving change does not claim whole Plugin compiler/runtime acceptance.
+
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs before fc9e63cccc5dd5911624573ad544c45801f13f84969351e6f5329da3a9bc56c5 after ece9e512914e1530fe454eb49f4a6e0712279add183f2e98a74b084af0e5dfb1.
+
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs before c128861f117d5dc87c6c1d510612d3daa21d1bf3a43804d9d4ffd4a7a6c88282 after dcbd3e5b8520f2d1cd4683392eaa74a61b3d12cee01363c9556c72f50cfccd59.
+
+
+The first pr2 orchestration attempt stopped before GUI comparison or child admission because the ephemeral driver store was lost across task resumption; no test ran. Its replacement again validates exact GUI row identity, streams actual physical before and after reads with SHA/extent/inode/mtime checks, explicitly qualifies removed prior claims and new roots, bounds paths and metadata, and preserves the exact child command/environment/cwd. A new independently declared portable observation policy caps cumulative reads at 256 MiB with 1 MiB read chunks and 60 s active observation time. Existing original 256 MiB source rows and unchanged native command/build budgets are not modified.
+
+
+The rebuilt pr2 initial roster carried prior extant claims but omitted the separate prior.removed list. One historical Repo verification/current claim was consequently re-observed only after child admission and is explicitly qualified in generated/pr2/prior-removed-receiving.json. It remains absent; nothing was restored. Current source-law output remains distinct from exact whole historical snapshot acceptance. The orchestration now carries both prior extant claims and prior removed paths into each future physical admission, so removed claims cannot silently disappear across successive epochs.
+
+
+Fresh portable pr2 physically closed Nx/Bun 1 before any portable law at the original Repo Cargo script invocation receiver: it passes argv to ScriptRouter.run while current checkScriptInvocation requires the canonical typed object. No source law green is claimed for this cut. Metadata: {"claims": 6713, "exact": 6705, "observedReadBytes": 214993333, "observedFiles": 13431, "observationMs": 4637.779941999847}; 8 qualified physical/content advances, 5 births. All current observed cumulative reads fit the new 256 MiB portable observation bound. The historical removed Repo verifier claim has its explicitly later observation qualification. No live own compiler or Nx handle remains. Root was notified for the actual infrastructure receiver owner; no array/scalar fallback or invocation adapter was introduced.
+
+## Fresh Original Parent Invocation Admission
+
+There is no complete prior pr2 control envelope evidence. Root explicitly authorized a new pr3 parent invocation at the existing 300000 ms root admission, with the original 60000 ms child ceiling and 134217728 bytes / 65536 lines transport unchanged. Input mounted-owner-turn-inputs/portable-parent-invocation.json names its mandatory original caller policy, actual repository cwd, original Cargo artifact directory, selected native owner-command manifest/package/program/arguments and offline constraint. The absolute deadline must be established once before GUI and source observations; all later stages and child receivers consume that same remaining deadline. Dynamic forwarded process environment is new authored transport, separate from literal GUI environment identity and from historical evidence.
+
+Interface10 owns the neutral process schema and actual Repo Cargo receiving publication. Its current unsupported preimage has no wire capabilities and authors an empty object internally; that preimage must not be used as accepted transport. Proposed canonical wire requires capabilities explicitly and forwards the same object identity inside the process together with real signal/progress/yield ports. No fresh portable/native child has been dispatched while this receiving producer is incomplete.
+
+
+## Current Receiver Review While Process Admission Is Incomplete
+
+The current Store decoder release_step already forwards the original retained grant, records both successful and failed actual child progress in the same StepContext, and updates released-field accounting. This is a peer source publication, separate from this lane's prior historical source findings; no source restoration or native acceptance is inferred. Remaining demand-funded synchronous registry/store retirement helpers are distinct.
+
+The current Plugin intrinsic produce_media receiver still calls the removed owned_retirement convenience constructor and scalar close_step. Its actual mounted media export owners already retain original media and retirement continuations, so repairing the convenience receiver requires an admitted original owner and a complete caller receipt rather than reconstructing a scalar shortcut. PatchTracker has three old StepBudget/StepContext constructors; drive_reconcile_within must receive original retained authority and its actual cumulative recipient before forwarding Job contexts. No production change from this review has been made.
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`: cac87f0dde761ee7d3602f261daed942c86090a86d86ad0c4c0ee378b625a021; 3159790 bytes.
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs`: 4c4d10bfc5aba8ed59a5789d1a39b8bdbe820d66343a3770c458ed8193677666; 73623 bytes.
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`: fac36eb0b919656dae8c2a6c27e5a9be122bfe9cb0b20f8139d52809c85f6b23; 1989332 bytes.
+
+
+
+## Next Reconcile Receiving Law Authored Before Production
+
+One new source binding is appended to the complete original portable suite, calling the existing strict independent original phase/context Ajv and SQLite oracle first. It requires a mandatory full RetainedCloneGrant and the same mutable cumulative RetainedCloneProgress recipient through PatchTracker and its three actual Job contexts. The current production preimage is unchanged and still lacks those arguments. Portable selection now contains ten original laws plus the extension receiving law and this next reconcile law; regex, GUI command, budgets, all original assertions and native scopes remain unchanged. No new law has run.
+
+Thirteen existing string-containment source predicates now use boolean includes with the same expected true/false outcomes. This preserves every original assertion while preventing Bun from rendering an entire checked-in source body into ticket output on assertion failure. Original source SHA256 111f3a5f70a9f890970efd22ede8ee76648b4be13dbbfbc50b705a7f689d1eb2; after 8dc2c06172875c239ce770d00ef2355447ebb65432a453168fc910b39716e1d8. No source bodies were copied by this change, and no runtime acceptance is claimed.
+
+
+## October 10 Physical Resumption
+
+Prior pr1/pr2 child PIDs40701/41328 are absent in the actual process inventory. Their generated admission/terminal/closure files, together with mp2/hk1 generated groups, are no longer present; the research Markdown and authored literal inputs remain. Historical closure facts above were recorded when those runs physically closed, but their removed individual claim rosters cannot now be treated as available exact admission inputs or silently skipped. The ephemeral driver store was also lost across resumption; no command was retried. Fresh admission must explicitly qualify missing historical metadata and the known removed Repo verifier source, and enumerate a concrete current scope. No historical source body will be reconstructed or restored.
+
+Current Generic process source has a peer zero-to-null no-deadline regression and floors remaining clock values. Root explicitly forbids that interpretation: positive explicit ceilings and fractional finite remaining clocks are mandatory, and policy zero has no elapsed authority. Interface owns schema-first whole receiving refusal laws and canonical process/domain/awaited-progress repair. pr3 remains authored and unrun at original300000/60000 and128MiB/65536lines. The12 current mounted source laws, unchanged original17 and whole Kernel/Plugin fixtures remain required; no Generic process green is transferred to them.
+
+
+The rebuilt ephemeral pr3 orchestration requires all five concrete input names: row, source observation policy, current scope, original parent invocation and new output group. It does not read a missing historical before.json or add a default control. Fresh portable-current-scope.json declares the actual selected roots, required configuration files, known removed verifier and unavailable historical metadata qualification. The original256MiB cumulative/60s active observation/16MiB metadata ceilings remain unchanged; an exhausted actual current scope refuses rather than increasing them. SHA/inode/extent/mtime are compared within each physical read and across the current admission interval, with all births/removals explicit. One parent clock starts before GUI/source/input stages; positive300000ms and original transport/artifact literals are checked against the exact row, dynamic wire is separately recorded, and actual cancellation forwards to the admitted child. Driver syntax alone was checked; no child has run.
+
+
+## Literal Defining Preimages and Saved Receiving Handoff
+
+portable-defining-inputs.json now declares ten literal SHA256/byte pairs: the complete twelve-law mounted source suite, unchanged PatchTracker production preimage, two defining neutral schemas, two independent fixture corpora, and the four authored command/control/scope/observation inputs. Its literal manifest SHA256 is b92e6af0f9297779a9a662c279a434029ccfe68ea8d7ea117fe6738521f77c08. The rebuilt ephemeral driver binds this digest itself and checks every defining input before GUI comparison, before child admission and after physical child closure. Source and manifest pins cannot refresh themselves. All physical pin reads consume the same cumulative source observation owner; a mismatched pin refuses. A final read-only check confirmed all ten exact digests and within-read inode/extent/mtime stability, plus both path ceilings. This is source admission evidence only; no portable or native child executed.
+
+The actual portable command receiver is the mounted-owner Rust package 📜️script.ts via its unchanged test-portable Nx row. PortableScript still calls runRepositoryCommand with its explicit 60000ms ceiling without forwarding this.invocation remaining time, original cancellation, or awaited publication progress. The actual original seventeen-law MountedReceivingScript lives in Plugin/📦️packages/🦀️rust/📜️script.ts, separate from the mounted-owner package. It currently creates a local AbortController and logs exact Cargo law progress, while its original 300000ms build and 60000ms list/law ceilings are unchanged. Neither receiver has yet demonstrated canonical incoming parent control forwarding. Repo runRepositoryCommand currently declares only optional signal/onLine; its delegated runOwnedCommand progress callback remains synchronous, so discarding an async ScriptControl publication promise would not satisfy the awaited receipt. Interface10 owns that execution/domain seam; this lane made no infrastructure changes.
+
+Current PatchTracker still lacks required grant and cumulative progress recipient and retains three obsolete Job context constructors. The new defining binding law is preserved as the genuine unchanged production preimage, SHA256 4c4d10bfc5aba8ed59a5789d1a39b8bdbe820d66343a3770c458ed8193677666. The complete source suite remains SHA256 8dc2c06172875c239ce770d00ef2355447ebb65432a453168fc910b39716e1d8. Current Store admission returns the owner without an actual performed constructor receipt; no quoted demand or checkpoint is promoted into performed progress. Original full Plugin, Kernel and seventeen mounted native scopes remain independent and unaccepted at this cut.
+
+This lane has no live child or compiler handle and made no native replay. pr3 is authored and held until Interface positive finite/fractional process authority, actual domain capability validation and awaited progress are coherent. Interface first finite39 peer nullable/no-deadline green is not transferred as parent acceptance. Original portable command, root300000ms/child60000ms, transport128MiB/65536lines, offline policy and256MiB cumulative observation ceilings remain unchanged. The execution slot may be released for independent boundary audit. Ephemeral orchestration is session state rather than a permanent script or retained historical evidence; if lost on later resumption it must be rebuilt from these concrete inputs and literal digests before any actual command.
+
+
+## Ordinary Contract Correction and Independent Pack Tooling Red
+
+Root corrected its earlier global no-deadline inference: explicit ordinary zero/null is a separate published General contract and is preserved. This does not widen the pr3 finite300000ms parent and60000ms child declaration. No Generic green or no-deadline authority is transferred to pr3. Its complete twelve-law literal pins remain untouched.
+
+The Low38 computed OS import and General native Repo subprocess dependency are present in the actual two Pack value scripts. The defining TS semantic codec exists only under OS, while the General fixture helper independently implements neutral grammar and SQLite UTF8 census over the original21 cases. The clean ownership proposal is to keep General grammar/UTF8/original refusal coverage and move actual OS decoder/exact-JSON comparisons to a product-owned test using the same literal corpus; no neutral duplicate decoder, compatibility layer or copied fixture. Native orchestration must receive a first-party execution port or require caller-authored Cargo policy rather than importing/routing to Repo from General.
+
+A fresh language-neutral tooling-boundary schema and five literal vectors were authored before producer changes, with strict Ajv missing/extra-field controls and independent SQLite classification. The source law uses the third-party TypeScript AST to detect product path strings across computed import and subprocess command constructions in both actual scripts. It is included in the existing whole unfiltered Refusals suite, preserving every original test/assertion; expected source frontier has two real product edges. No law has run and no production repair has occurred. Literal GUI request mounted-owner-turn-inputs/pack-boundary-source.json invokes the unchanged existing Nx/script test-refusals command with original30s typecheck and15s fundamental test ceilings. pack-boundary-preimages.json binds all eight authored test/schema/fixture/script/request inputs without source-body copies or self refresh.
+
+
+## Concrete Pack Boundary Parent Authored
+
+pb-inputs/📜️script.ts is the actual new permanent receiving parent; pb-inputs/launch.json is its exact Nx exec GUI request, retaining the underlying original whole Pack Refusals Nx/script command. Its new explicit60000ms composition binds the unchanged30000ms typecheck and15000ms fundamental test ceilings, original128MiB/65536lines transport and mandatory concrete neutral-source capabilities. The one parent epoch/monotonic clock begins before input, GUI and source stages; cancellation signals terminate the actual process tree, and physical child closure precedes after observations. Dynamic SEMIO_SCRIPT_PROCESS_INVOCATION is new authored transport, distinct from literal GUI environment and historical evidence.
+
+The defining manifest is literal96504d701f44afd310b3d53db656dd0bf3024a144d36284592cab3ce8a218a8f; all11 pins were rechecked exact before registration. The parent checks it and all original fixture/schema/source/request/control inputs before GUI, before child and after physical child closure. It conserves metadata and chunked source reads against the same256MiB cumulative source owner and reports actual inode/content advances and births. Scope explicitly selects full physical Pack/Process/Schema source roots, original wire fixture and OS decoder/configuration files; it does not assert all dynamically loaded product transitive code or any native acceptance. An initial input-authoring path lookup searched too broadly for a nonexistent template name; its own Python process41668 was terminated and physicallyclosed143. The actual canonical launch seed is .vscode/🧩️launch.seed.jsonc, confirmed JSON-compatible by a read-only parse; no child/runtime test was executed. The parent request is now ready for exact registration, and both offending production scripts remain unchanged.
+
+Before registration, parent/control/scope/launch/manifest themselves were explicitly added to current before/after physical custody. This authored scope expansion advanced the literal manifest once to 36997dcc568d69dc4f9c3e5d1c3d12f887e9209d879ef32352241aab87084a5f and updated the baked digest before admission; no runtime refresh exists. Parent script SHA256 b84dd8250bfca53f1131fa242a4e1ba9a629b6336f81275371d68087999b431e. No command executed.
+
+
+The actual General Cargo test owner already defines first-party CargoTestPolicyV1 and CargoTestExecutionPortV1. Pack's main Rust package script already requires readCargoTestPolicyV1 without a Repo fallback; the value Rust package has the offending extra self-wrapper branch. After genuine boundary red, removing only that branch and requiring the existing full policy preserves its actual native request (manifest, package, record:: selection, original arguments and output oracles) without inventing a second process interface. Original direct value GUI callers that fail to supply complete policy remain a separate explicit admission frontier; they must be authored by the calling owner, never defaulted by General. Full-native acceptance is independent from source-edge removal. No receiver change yet.
+
+The OS-owned semantic law is authored at OS/🧪️tests/🎒️pack-wire-materialization/🟦️.ts and consumes the original General fixture directly. It retains every accepted-row exact decoder/JSON comparison and the allowance-probe null comparison with fast-deep-equal and JSON witnesses; no decoder or fixture is duplicated. It is not yet wired/dispatched, and the original General semantic checks remain in place until genuine source-edge red physically closes.
+
+The new OS semantic law now has an explicit package script/project command test-pack-wire-materialization-source. This authored finite-only source command reuses the original15s semantic ceiling, awaits actual incoming running/complete publication and yields, clamps the child against the same remaining parent and forwards original cancellation. It adds no codec/umbrella changes and is still undispatched/unaccepted; current child periodic progress awaits Interface canonical runOwnedCommand seam. Original General semantic assertions remain until boundary red.
+
+
+## Post-431 Portable Admission Correction
+
+Registrar431 physically completed9306 Nx/Bun0 and admitted the prior pb1 row. No child ran. Root identified its hardcoded host paths and missing external producer SHA as admission defects; that admitted row is not authorized for dispatch of the changed producer. The parent now requires all three64-hex digest arguments: producer, original defining manifest36997dcc568d69dc4f9c3e5d1c3d12f887e9209d879ef32352241aab87084a5f, and current portable defining manifest. Producer SHA comes from literal GUI argv outside producer source, is checked before metadata dispatch and at every defining stage, and is never embedded as its own expected hash. The original defining manifest and old input files remain unchanged as historical authored evidence, not runtime fallback. No old argv shape is accepted.
+
+Fresh pb-inputs/launch-portable.json uses ${workspaceFolder} in every command/cwd/environment path, mandatory pb2 epoch and exact external digest argv. New parent-portable.json/scope-portable.json bind the same60/30/15 and21-wire-fixture controls with portable authored paths. defining-portable.json retains all seven original defining source/schema/fixture digests plus the original manifest and explicit new parent/scope inputs; producer and launch row identities are bound externally, avoiding a circular self-hash. Strict JSON parsing of both actual GUI files was confirmed: launch.json5846373B SHA b78a1689cccd18e7360cb92fe719094c3485231744156725aa7a275c6a60f1d4, seed4863971B SHA7f73a463e7fd91e3fd3d947ee19cb3f126a4c819edad9db9cb81f331bb0d74aa. The private GUI reader retains strict parsing and refuses malformed JSON; no speculative fallback parser was added.
+
+Current producer SHA 9210d1cc40e827c2fcb459743e9c9552f7a61e3169f1e5cc6eb806df97a7e347; current portable defining SHA 80ba42f9ef1a7de5091e10387a48f1f8d2bb0efe34d82ca82f977a5178f8e074. All ten independent current defining inputs were checked exact and both path ceilings checked for authored inputs. A fresh registration is required before any changed command dispatch. No Source/RootPack/shared umbrella file changed during this admission correction.
+
+Pre-registration final portability hardening: workspace substitution now JSON-escapes every platform root character, not only backslashes, and initial producer observation refuses symlinks/nonfiles/oversized sources and both path ceiling violations before reading. This intentional source advance updated the external literal producer argv to 8ba09d93c63fc637c22595a808258bd7f3e4dba172ed5d181db7a02a449b8127; defining/original digests unchanged. No runtime dispatch occurred.
+
+Root identified that ticket-fixed-slots is owned by the separate ticket Nx workspace, not the repository root graph. Before fresh registration, the portable parent GUI cwd and NX_WORKSPACE_ROOT_PATH were corrected to ${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx. Parent exact comparison validates that actual workspace. The underlying original Pack Nx child still explicitly executes from the repository root with root NX_WORKSPACE_ROOT_PATH; that domain handoff is separately recorded alongside the dynamic invocation. All other defining/control pins remain unchanged. External producer SHA is now 9cf8bde263f596b41c5fcba40e0abd525c1bcfb16ca48546bdcbba2139d256a1. Interface432 is registered separately; the corrected pb row awaits the next sequential registrar. No child ran.
+
+The parent validates portable GUI workspace paths via platform-native resolve so slash-separated workspace substitutions remain valid on Windows. Literal GUI row identity itself is still exact in both files. Final corrected producer 4f4e64127dd14167d3883d834f6bdc778f8fc5b530ffb091f340567a20a43283; both defining digests and ten inputs remain exact. No runtime acceptance or command dispatch.
+
+Registration433/current292 physically closed Root1444 Nx/Bun0 and admitted pb2 while retaining5035/6823 unrelated rows; no pb child ran. A final control review identified an actual lifecycle defect: Generic test execution creates descendant POSIX groups, while the authored parent killed only the immediate Nx group. Before child dispatch, parent now forwards termination directly to existing General terminateOwnedChildTree, which observes the live handle and terminates descendant-created groups and Windows trees. Its source is already included in full selected General Process custody. No duplicate termination implementation or new cleanup deadline was introduced. Updated external producer SHA ecb9e975b27bf44bfc929a89b72fccfc5bfd95e9d51db8ff803b6493fd58f92e; defining digests/pins/60/30/15 remain unchanged. This necessary receiving change requires fresh literal registration;433 alone does not authorize the changedproducer.
+
+Fresh434/current293 physically closed48694 Nx/Bun0 and admitted canonical-tree producer ecb9e975… in both GUI files. Both exact rows, three externalSHA arguments and ten original inputs were independently revalidated. The first dispatch outerPID59958 physically closed1 after0.378058833s before any GUI/source/law child: Nx cache/data created generated/pb2, so exclusive mkdir of that whole epoch refused EEXIST. No oracle ran; this is an actual parent storage admission failure, not the defining boundary red. A separate receipt records the physical cut without copying checked-in source bodies.
+
+Parent now allocates its exclusive receiving evidence at pb2/e separately from legitimate pre-existing Nx cache/data. Original artifact storage pb2/a is verified against the exact literalGUI/caller policy and created only after GUI admission. All60/30/15,21 fixture/preimage controls and ten definingpins remain unchanged. SourceSHA a72cd725862fba544cf1e64fa48922620ccd2c0f72d843f1172952467dc6b541 is carried outside the code in the refreshed literal request; fresh registration is required before dispatch. No generated evidence/cache was deleted or overwritten.
+
+Fresh436 actual receive pb2/e physically closed original outer53697 Nx/Bun1 before all source laws at authored test TS2307, after36.79535525s parent/37.419580792s outer. Current custody436/434exact, two qualified Interface original progress/finite test source advances, zero births,18,448,438 cumulative bytes/923reads. The test imports used two parent segments from a single 🧪️tests directory, accidentally selecting Pack value schema and missing its fixture. This is a real defining-test receiver defect, not feature red. Only those imports and the corresponding source owner path were corrected after physical closure: testSHA 27f73ca2bafda3595f2a260eae39484f0aa3ef773eb65fce55c7572183dca941 → c09e41b05baa682bfa0442334b829fff54dfc7999c1a4758fd6cb3ca9f32c0d7. All five language-neutral vectors, original21 wire fixture and both offending production script preimages remain unchanged. The current defining manifest explicitly qualifies this authored receiving advance and updates only affected current test/policy pins; original manifest36997… remains historical exact metadata, never restored or silently refreshed.
+
+Next explicit epochpb3 preserves60/30/15 and all native/fixture scopes while receiving into freshpb3/e and original-patternpb3/a. New current literal definingSHA b1f546745e40cd3bb20f7985d97c117511d1649433b90fb5d1fc1a7795d105c3; externally bound producer 189133314d54cc49616268869ca006821bb1e787b7800e7d6c97bfe4856bb2ba. Fresh exact GUI registration is required. No production dependency was removed and no law acceptance was claimed for the failed preflight.
+
+## Portable Pack Boundary Pb3 Genuine Red and Narrow Ownership Publication
+
+Registrar438/current297 admitted the literal portable parent. Both actual GUI definitions, three external SHA arguments and ten defining inputs were revalidated before dispatch. Outer70443/unified7660 physically closed1 after52.207s. Child physical close occurred51.473s into the same60s parent clock. Full7 source laws ran unfiltered:6pass,1fail,86 expectations. The new TypeScript AST boundary law observed exactly2 product dependencies and expected0. All21 independent grammar/SQLite cases and prior OS semantic checks passed. Custody observed437 prior claims,437 exact,0 advances and1 qualified Interface-owned process exit-schema birth;18,275,252 cumulative bytes across926 physical reads. This is genuine source-boundary red, not native acceptance.
+
+After physical closure the General helper removed only its computed OS import and two product semantic comparison sites. Independent grammar, UTF8 SQLite census, JSON/fast-deep-equal output checks, all21 cases and allowance-probe grammar checks remain. Product semantics use the same fixture at the actual OS owning test, with explicit21 total/10 accepted/1 allowance-probe counts; no codec or fixture duplication. Broader generic Pack semantic codec ownership remains a separate gap. The General NativeScript removed its Repo-specific self-wrapping process branch and forwards the existing explicit incoming CargoTestPolicyV1 and a first-party cargo command port. Package, manifest, cwd and original lib/record selection remain. Missing incoming native policy must refuse; no fallback policy or compatibility route was added. These publications require fresh digest-bound GUI admission and source runtime before any green claim.
+
+## Current Held Publication and Product Runtime Frontier
+
+The finite pb4 successor is authored at the existing whole-source row, with external producer e3a1a074b2ae6862388d2bc78313fc9d4d010ada25c9a4432c64fad0c260edfb and current defining manifest37a28ae75d7e93e92183497a6ae0ce3fa92c5d8f71a638f579947e2ebee85a52; original36997… unchanged. It explicitly qualifies two implementation advances and the new pb4 artifact declaration. Ten current inputs remain exact. No dispatch is authorized by old pb3 registration.
+
+The OS semantic target is @semio-tech/framework-os:test-pack-wire-materialization-source, implemented by its actual package script. It preserves21 original cases,10 accepted semantic outputs and1 null allowance probe. It clamps the15s child using incoming finite invocation, forwards cancellation and awaits initial/final publication. Generic runOwnedCommand still exposes synchronous periodic onProgress, and Interface30 full red/green is not accepted yet; therefore no complete original-owner progress or product runtime acceptance is claimed. The original12 mounted portable suite and17 native receiving roster remain held on their separate exact-Cargo/progress admission seams.
+
+Current authored publication hashes (metadata only, no source bodies):
+
+```json
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📜️script.ts",
+    "bytes": 5221,
+    "sha256": "e3f582b590140e7d0a98ea997d0b2066f7868b56fdc5bdfc1a720142c72e2197",
+    "pathCodePoints": 76,
+    "pathUtf16Units": 81
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+    "bytes": 3920,
+    "sha256": "763ba51b1b4bcd5b1d3dd56a92cc173710724f0ab9054214c70860f7545eba06",
+    "pathCodePoints": 94,
+    "pathUtf16Units": 101
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🎒️pack-wire-materialization/🟦️.ts",
+    "bytes": 1274,
+    "sha256": "afac41d42f5eab845bba9a7ba5ff6b8e47ee99723bbd00bb2c0d63fa3aa9d53c",
+    "pathCodePoints": 97,
+    "pathUtf16Units": 103
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+    "bytes": 19993,
+    "sha256": "760ab3d47603f0b757801c4512585dc432e54d293e6a30cda1fbad7234422c39",
+    "pathCodePoints": 91,
+    "pathUtf16Units": 97
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📋️project.json",
+    "bytes": 11106,
+    "sha256": "1df077110d700fc36d39d07422a277a59c474666a029389012da8b506489d1a1",
+    "pathCodePoints": 94,
+    "pathUtf16Units": 100
+  }
+]
+```
+
+Read-only current-source verification during pb4 physical execution confirmed the original12-law mounted test SHA8dc2c061… and PatchTracker production preimage4c4d10bf… remain exact. Mounted owner PortableScript still uses unchanged60000ms runRepositoryCommand without incoming control ports; original17 MountedReceivingScript still creates its own AbortController. Neither publication was edited or claimed received. The actual Repo/Generic async progress and per-probe same-parent clock seam remains Interface-owned.
+
+## Portable Pack Boundary Pb4 Whole Source Green
+
+Registrar439/current298 physically closed71235 Nx/Bun0 and admitted the exact current pb4 row in both GUI files. Before dispatch both actual rows, three external SHA arguments and all ten literal defining inputs were checked exact. Outer72941/unified43927 physically closed0 after37.900904708s; the same60s parent recorded actual child physicalClosed=true, exit0, cancelled=false at37.475781375s. The complete original source target ran unfiltered:7pass,0fail,86 expectations. Its new language-neutral/strict-Ajv/SQLite/TypeScript-AST law observed product-edges0. All21 original independent wire grammar/SQLite UTF8 cases and JSON-roundtrip outputs passed. Custody438/438 exact,0 advances,0 births,18,341,898 cumulative bytes/927 reads. No inline Bun exitcode was used as acceptance. No own process or Cargo compiler remains live.
+
+Accepted scope is the full General source boundary plus its selected physical custody. It does not prove moved OS semantic test execution, generic semantic codec extraction, full native suite, or original12/17 mounted receiving. The actual OS-owned same-fixture test target exists, and its complete awaited publication progress needs the still-unaccepted Interface async API before complete-control integration proof. Original12 tests and PatchTracker preimages remain exact and untouched. The next product invocation must be a separately registered finite parent with explicit sameclock/signal/awaitedprogress and literal source/test/schema pins; no direct ordinary0/null environment can promote this finite owner.

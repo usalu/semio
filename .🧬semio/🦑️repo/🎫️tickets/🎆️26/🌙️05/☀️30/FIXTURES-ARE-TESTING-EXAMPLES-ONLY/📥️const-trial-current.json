@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "2d6d406e74a78f91948dd264323c8099b7b3c53a46ab5ddf76494da5dbc9ca78"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "d91487c6a307e5d723c1def2d44fe24a422d1e5f36d046cdcd6e138e8b8e1f62"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "sha256": "12ff7cb672239174600b65c3c42c301d252bbf5d23151d15bc02d78f9a35497b"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {resolve} from "node:path";
 import {BundleScript,ScriptRouter} from "../../🏃️process/🧭️routing/🟦️.ts";
 import {runScriptMain} from "../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -14,4 +15,4 @@ class TestScript extends BundleScript{
 }
 /** 🧪️ Executes the complete portable fixture roster in its defining source owner. */
 class WorkerScript extends BundleScript{async run(segments:string[]):Promise<void>{if(segments.length)throw Error("physical observation worker accepts no arguments");const {runFileObservationChecksV1}=await import("./🧪️tests/🟦️.ts");await runFileObservationChecksV1();}}
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript).register("test-worker",WorkerScript),{defaultCommand:"test"});
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript).register("test-worker",WorkerScript), { invocation: original, ...({defaultCommand:"test"}) }));

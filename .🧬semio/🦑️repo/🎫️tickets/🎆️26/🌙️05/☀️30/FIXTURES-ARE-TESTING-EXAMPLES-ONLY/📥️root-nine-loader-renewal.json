@@ -1,0 +1,20 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🧪️tests/🟦️.ts",
+      "sha256": "587c2304972c5df7013292f0d74b1bcb4cb085e5f154f2d6cbccb909ae78e322",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "5b10db84c95bd900fe84be50971336def8e36de13c4e389deb759c96724f5559",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "bc233b73cffec62393a83db58fbdfc74c40896b8b906e51ae0f0233b51708a1e",
+      "authored": false
+    }
+  ],
+  "executed": false
+}

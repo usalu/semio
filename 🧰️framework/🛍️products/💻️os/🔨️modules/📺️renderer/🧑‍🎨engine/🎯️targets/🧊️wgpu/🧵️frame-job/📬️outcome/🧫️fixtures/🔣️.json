@@ -1,0 +1,81 @@
+{
+  "contract": "renderer.original-frame-outcome/v1",
+  "identity": {
+    "operation": 71,
+    "generation": 3
+  },
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 1
+  },
+  "phases": [
+    "deniedCandidate",
+    "originalCandidate",
+    "deniedPublication",
+    "originalPublication",
+    "acknowledge",
+    "closeCandidate",
+    "terminal"
+  ],
+  "progress": [
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    }
+  ],
+  "statePresent": false,
+  "outputPresent": false,
+  "sameCandidate": true,
+  "copyBytes": 0,
+  "cancelAlias": {
+    "deniedItems": 0,
+    "admittedItems": 1,
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "releasedBytes": 0,
+    "depth": 1,
+    "sameRoot": true,
+    "retainedUntilPaidReturn": true
+  }
+}

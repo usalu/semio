@@ -1,0 +1,12 @@
+{
+  "contract": "framework.plugin.original-archive-retirement",
+  "originalGrant": [1,4096,65536,262144,64],
+  "historyTypes": ["HistoryLog","HistoryTransitionRecord","HistoryComposition","HistoryConflict","HistoryMessage","HistoryEdit","OpPayload","HistoryOpMeta"],
+  "archiveOriginalRetained": true,
+  "historyAdmissionBeforeHandoff": true,
+  "logicalTruncationIsPhysicalRelease": false,
+  "childCompletionIsParentProgress": true,
+  "metadataCopyCurrency": 0,
+  "originalCapacities": [0,257,8192,65536],
+  "originalMemberCounts": [0,1,3]
+}

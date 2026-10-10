@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Tabular Native Caller Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "custody",
+    "nativeMaximumBytes",
+    "bodyGrant",
+    "closeGrant",
+    "deniedCloseGrant",
+    "maximumCloseTurns",
+    "observerContinuation"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "custody": {
+      "const": "originalNativeRecipient"
+    },
+    "nativeMaximumBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "bodyGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "closeGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "deniedCloseGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "maximumCloseTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observerContinuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "copyExtentBytes",
+        "cancelAfterBytes",
+        "canceledCloseKind",
+        "resumedSameObserver",
+        "nativeCause"
+      ],
+      "properties": {
+        "state": {
+          "const": "sameOriginalCapturedCell"
+        },
+        "copyExtentBytes": {
+          "const": 140000
+        },
+        "cancelAfterBytes": {
+          "const": 65534
+        },
+        "canceledCloseKind": {
+          "const": "Canceled"
+        },
+        "resumedSameObserver": {
+          "const": true
+        },
+        "nativeCause": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "message", "storage"],
+          "properties": {
+            "kind": { "const": "Canceled" },
+            "message": { "const": "native decoding canceled" },
+            "storage": { "const": "borrowedLiteral" }
+          }
+        }
+      }
+    }
+  }
+}

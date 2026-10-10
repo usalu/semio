@@ -26,7 +26,10 @@ fn finish(reader: &mut ArtifactCanonicalJsonReader<Edit<MapMutation>>, bytes: us
     for _ in 0..100_000 {
         let prior = reader.completed_bytes();
         let mut output = [0; 512];
-        let count = reader.encode_chunk(encoding_grant(1, bytes), &mut output).unwrap();
+        let grant = encoding_grant(1, bytes);
+        let step = reader.encode_chunk(grant, &mut output).unwrap();
+        assert!(step.ownership.progress().fits(grant.retained_grant()));
+        let count = step.written_bytes;
         assert!(count <= bytes.min(256));
         assert_eq!(reader.completed_bytes() - prior, count as u64);
         result.extend_from_slice(&output[..count]);
@@ -67,8 +70,8 @@ fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() 
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         assert_eq!(expected.len() as u64, reader_fixture["expectedByteLength"].as_u64().unwrap());
         assert!(reader.take_root().is_none());
-        assert_eq!(reader.encode_chunk(encoding_grant(0, bytes), &mut [0; 256]).unwrap(), 0);
-        assert_eq!(reader.encode_chunk(encoding_grant(1, 0), &mut [0; 256]).unwrap(), 0);
+        assert_eq!(reader.encode_chunk(encoding_grant(0, bytes), &mut [0; 256]).unwrap().written_bytes, 0);
+        assert_eq!(reader.encode_chunk(encoding_grant(1, 0), &mut [0; 256]).unwrap().written_bytes, 0);
         assert_eq!(reader.completed_bytes(), 0);
         assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
         let actual = finish(&mut reader, bytes);
@@ -92,12 +95,12 @@ fn canonical_reader_cancel_before_poll_mid_key_and_after_completion_retires_exac
         if stage == 1 {
             let target = fixture["expectedJson"].as_str().unwrap().find("key-").unwrap() as u64 + 128;
             while reader.completed_bytes() < target {
-                reader.encode_chunk(encoding_grant(1, 1), &mut [0; 1]).unwrap();
+                reader.encode_chunk(encoding_grant(1, 1), &mut [0; 1]).unwrap().written_bytes;
             }
             assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
             assert!(reader.take_root().is_none());
             reader = std::thread::spawn(move || {
-                reader.encode_chunk(encoding_grant(1, 1), &mut [0; 1]).unwrap();
+                reader.encode_chunk(encoding_grant(1, 1), &mut [0; 1]).unwrap().written_bytes;
                 reader
             })
             .join()
@@ -107,7 +110,7 @@ fn canonical_reader_cancel_before_poll_mid_key_and_after_completion_retires_exac
         }
         reader.cancel();
         let prior = reader.completed_bytes();
-        assert_eq!(reader.encode_chunk(encoding_grant(1, 4096), &mut [0; 256]).unwrap(), 0);
+        assert_eq!(reader.encode_chunk(encoding_grant(1, 4096), &mut [0; 256]).unwrap().written_bytes, 0);
         assert_eq!(reader.completed_bytes(), prior);
         close(&mut reader);
         assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
@@ -119,11 +122,12 @@ fn canonical_reader_cancel_before_poll_mid_key_and_after_completion_retires_exac
 fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
     let (mut reader, _, lifetime) = make_reader();
     for _ in 0..100 {
-        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap();
+        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap().written_bytes;
     }
     let (replacement, _, replacement_lifetime) = fixture();
     let original = reader.owned.root.replace(Arc::new(replacement)).unwrap();
-    assert_eq!(reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap_err(), ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: "canonical-edit.borrowed-root-rebound".into() });
+    let failure = match reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]) { Err(error) => error, Ok(_) => panic!("rebound root must be refused before borrowed reference use") };
+    assert_eq!(failure, ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.borrowed-root-rebound") });
     let replacement = reader.owned.root.replace(original).unwrap();
     retire(replacement, &replacement_lifetime);
     close(&mut reader);
@@ -131,7 +135,7 @@ fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
 
     let (mut reader, _, lifetime) = make_reader();
     for _ in 0..100 {
-        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap();
+        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap().written_bytes;
     }
     reader.cancel();
     reader.begin_close();
@@ -150,7 +154,7 @@ fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
 fn canonical_reader_unclosed_drop_preserves_owned_root_and_does_not_double_panic() {
     let (mut reader, _, lifetime) = make_reader();
     for _ in 0..100 {
-        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap();
+        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap().written_bytes;
     }
     assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(reader))).is_err());
@@ -182,20 +186,20 @@ struct ErrorRoot {
 struct ErrorRootRetirement(#[factory_child] Arc<std::sync::atomic::AtomicUsize>);
 
 impl ArtifactCanonicalJson for ErrorLeaf {
-    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
-        Err("canonical-reader.fixture-child".into())
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "canonical-reader.fixture-child"))
     }
 }
 
 impl ArtifactCanonicalJson for ErrorRoot {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
         match path {
             [] => Ok(ArtifactCanonicalJsonNode::Array(2)),
             [0] => Ok(ArtifactCanonicalJsonNode::String(&self.text)),
-            _ => Err("canonical-reader.fixture-child".into()),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "canonical-reader.fixture-child")),
         }
     }
-    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         Ok(self.borrowed.then(|| ArtifactCanonicalJsonValue::Array(ArtifactCanonicalJsonArray::new([ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String(&self.text)), ArtifactCanonicalJsonValue::Source(&self.error)].into_iter()))))
     }
 }
@@ -237,7 +241,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
             let mut actual = Vec::new();
             let mut failure = None;
             let mut empty = [sentinel; 512];
-            assert_eq!(reader.encode_chunk(encoding_grant(1, 0), &mut empty).unwrap(), 0);
+            assert_eq!(reader.encode_chunk(encoding_grant(1, 0), &mut empty).unwrap().written_bytes, 0);
             assert!(empty.iter().all(|byte| *byte == sentinel));
             for _ in 0..128 {
                 let mut output = [sentinel; 512];
@@ -247,7 +251,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
                 assert!(output[initialized..].iter().all(|byte| *byte == sentinel));
                 actual.extend_from_slice(&output[..initialized]);
                 match result {
-                    Ok(written) => assert_eq!(written, initialized),
+                    Ok(step) => { assert!(step.ownership.progress().fits(encoding_grant(1, bytes).retained_grant())); assert_eq!(step.written_bytes, initialized); },
                     Err(error) => {
                         assert_eq!(error.written_bytes, initialized);
                         failure = Some(error.reason);
@@ -258,7 +262,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
             let reported = reader.completed_bytes();
             let complete = reader.is_complete();
             assert!(reader.take_root().is_none());
-            assert_eq!(reader.encode_chunk(encoding_grant(1, 4096), &mut empty).unwrap(), 0);
+            assert_eq!(reader.encode_chunk(encoding_grant(1, 4096), &mut empty).unwrap().written_bytes, 0);
             assert!(empty.iter().all(|byte| *byte == sentinel));
             reader.begin_close();
             let retired=snapshot_bytes;let mut physical_released=0;
@@ -271,7 +275,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
                 }
             }
             assert!(reader.terminal_is_empty());
-            assert_eq!(failure.as_deref(), fixture["expectedError"].as_str());
+            assert_eq!(failure.as_ref().map(|error|error.message.as_ref()), fixture["expectedError"].as_str());
             assert_eq!(actual, prefix);
             assert_eq!(reported, actual.len() as u64, "{mode}: grant{bytes} must include initialized bytes from its failed write");
             assert_eq!(complete, fixture["expectedComplete"].as_bool().unwrap());
@@ -292,7 +296,7 @@ fn canonical_reader_indexed_cursor_error_preserves_actual_chunk_prefix() {
         let mut failure = None;
         for _ in 0..128 {
             let mut output = [165; 512];
-            let result = cursor.encode_chunk(&root, &mut output[..maximum.min(512)]);
+            let result = cursor.encode_chunk_admitted(&root, &mut output[..maximum.min(512)],RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).map(|step|step.written_bytes);
             let written = match result {
                 Ok(written) => written,
                 Err(error) => {
@@ -307,7 +311,7 @@ fn canonical_reader_indexed_cursor_error_preserves_actual_chunk_prefix() {
                 break;
             }
         }
-        assert_eq!(failure.as_deref(), fixture["expectedError"].as_str());
+        assert_eq!(failure.as_ref().map(|error| error.message.as_ref()), fixture["expectedError"].as_str());
         assert_eq!(actual, fixture["expectedPrefix"].as_str().unwrap().as_bytes());
         assert!(!cursor.is_complete());
     }
@@ -351,7 +355,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
                     break;
                 }
             }
-            assert_eq!(failure.as_deref(), fixture["expectedError"].as_str());
+            assert_eq!(failure.as_ref().map(|error|error.message.as_ref()), fixture["expectedError"].as_str());
             assert_eq!(actual, prefix);
             assert_eq!(owner.checkpoint().completed_bytes, actual.len() as u64);
             assert_eq!(owner.checkpoint().canonical_bytes, actual.len() as u64);

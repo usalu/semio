@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "callerCeilingMilliseconds": 15000,
+  "progressIntervalMilliseconds": 10000,
+  "childMilliseconds": 10500,
+  "publicationMilliseconds": 800,
+  "cases": [
+    {"id": "actual async publication completes before owned command terminal", "rejectPublication": false, "terminal": "completed", "publishedBeforeTerminal": true},
+    {"id": "actual async publication refusal rejects owned command terminal", "rejectPublication": true, "terminal": "rejected", "publishedBeforeTerminal": true}
+  ]
+}

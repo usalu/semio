@@ -1,0 +1,111 @@
+{
+  "scope": "current finite typed preparation Source observation only; no native/type/whole-turn proof or peer authorship",
+  "capturedAt": "2026-10-10T00:51:28.876457+00:00",
+  "sourceObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "2b9271cbf3dcc11dbce09d1d8350bb0a9ce5e0e2745f98d3bb5955920a07e793"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "51928086a2946582726232a6fac38cc810f6e26a5178042267ad314ba5da5446"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🦀️.rs",
+      "sha256": "a7e393a2b8b9805b7a568a58182e3b2e64e886651f60be610c78ee29960624ea"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "2d996e19565446c8e7be23abe83e8e92d78c3f0e2d552f3c9e0cb827a1cff8a2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "sha256": "fb3a9c0f956b81d0674b7cb419ae3cb4bd18eeab725203e01ae58ff94ab17110"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts",
+      "sha256": "c12931ea826975756dfd829e42780a0aa0f8e06f274918de43b122bb475cfb2d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/🚧️canonical-error-progress.json",
+      "sha256": "2572321d2d8547595fc53e6996eef7db1857fcdf58c4188bb030a1c2fe1aa2bb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧳️source/🦀️.rs",
+      "sha256": "7aa1b056445c1b244fba73ca4cc3a36d0c7faa2b5d24b18d235bdd10e5c23741"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "sha256": "d83d1b847fc405c1c59fc44c1c5dedbfe831f300476c12aa3838ee2e9877f104"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs",
+      "sha256": "0bea102c856d5ded5877bd74d4a9dc76c308a97ad2985ae2af4fd64fbacf3e02"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "sha256": "43703260e996389ab6ed67f4e9bebf2eda183027cc758712fb7aac76860beb00"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+      "sha256": "018bcae889e009060a763ac12eb0331606a0ab1e1f40e1efb43c31a498f65def"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🧬️preparation/🦀️.rs",
+      "sha256": "45f5f11e19e10ed3517e46832fab0b8b3ff68b2e5b47a68c88c8d50ac09e57e5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🦀️.rs",
+      "sha256": "3e1ec39ac95ff5579a66b9697c9f01939592a1f79368854c2c206b773bfa9bc5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🦀️.rs",
+      "sha256": "9c83f39981cdfa42b8ac70e22b609c26f11917579031ff07b89bb4a51de94e88"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs",
+      "sha256": "7b97c84b346ec7c15516169098d71316fd9cb94149922492760ca606e14598ca"
+    }
+  ],
+  "ownedActionInputs": [
+    "📥️pub-compute-pump-actions.json",
+    "📥️pub-compute-pump-runtime-action.json",
+    "📥️pub-preparation-sealer-action.json",
+    "📥️pub-preparation-owner-contract-action.json",
+    "📥️pub-preparation-refusal-custody-action.json",
+    "📥️pub-preparation-child-actions.json",
+    "📥️pub-preparation-installed-issuer-action.json",
+    "📥️pub-preparation-caller-actions.json",
+    "📥️pub-preparation-window-actions.json",
+    "📥️pub-preparation-core-test-action.json",
+    "📥️pub-preparation-child-test-action.json",
+    "📥️pub-preparation-issuer-test-action.json",
+    "📥️pub-preparation-grammar-action.json",
+    "📥️pub-wire-test-action.json",
+    "📥️pub-wire-action.json",
+    "📥️pub-one-prep-test-action.json",
+    "📥️pub-one-prep-action.json",
+    "📥️pub-unit-typed-test-action.json",
+    "📥️pub-unit-typed-header-action.json",
+    "📥️pub-unit-typed-actions.json",
+    "📥️pub-request-test-action.json",
+    "📥️pub-request-actions.json",
+    "📥️pub-config-error-test-action.json",
+    "📥️pub-config-error-action.json",
+    "📥️pub-source-receipt-action.json",
+    "📥️pub-source-receipt-test-action.json",
+    "📥️pub-linkage-action.json",
+    "📥️pub-linkage-test-action.json",
+    "📥️pub-selection-action.json",
+    "📥️pub-selection-test-actions.json"
+  ],
+  "originalSourceResult": {
+    "session": 14795,
+    "nxExit": 0,
+    "durationSeconds": 2.9,
+    "tests": 15,
+    "assertions": 153,
+    "log": "🗑️generated/pub-selection-green.log"
+  },
+  "remaining": "honest current report: no type/native proof; cold semantic receipts, original config/Writer/image producers and all three staged collectors"
+}

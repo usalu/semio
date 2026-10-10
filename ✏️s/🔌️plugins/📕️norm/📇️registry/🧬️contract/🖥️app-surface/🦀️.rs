@@ -2018,13 +2018,7 @@ impl NormEvaluateWorkState {
         Self::default()
     }
 
-    pub fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.is_empty() {
-            return Err(Fault::from("norm-evaluate-checkpoint-capacity"));
-        }
-        target[0] = self.phase;
-        Ok(1)
-    }
+    pub fn checkpoint_byte(&self,index:usize)->Option<u8>{(index==0).then_some(self.phase)}
 
     pub fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         self.phase = checkpoint.first().copied().unwrap_or(0);
@@ -2116,9 +2110,7 @@ impl<A: NormRetainedEditor> semio_framework_plugin::retained_command::ArtifactCo
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        self.state.checkpoint(target)
-    }
+    fn checkpoint_byte(&self,index:usize)->Option<u8>{self.state.checkpoint_byte(index)}
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         self.state.restore(checkpoint)

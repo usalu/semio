@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "id": "mounted-owner-portable-source-observation-v1",
+  "maximumCumulativeReadBytes": 268435456,
+  "maximumReadChunkBytes": 1048576,
+  "maximumObservationMs": 60000,
+  "maximumClaims": 20000,
+  "maximumMetadataOutputBytes": 16777216,
+  "maximumPathChars": 256,
+  "maximumUTF16PathUnits": 256
+}

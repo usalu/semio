@@ -1,0 +1,248 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.plugin.extension.invoke.corpus.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text",
+    "repeat",
+    "utf8Bytes",
+    "caller",
+    "replies",
+    "cancelCuts",
+    "expected",
+    "failureCopyGrants",
+    "admissionCases",
+    "registryGrant",
+    "executionGrant",
+    "lookupCases"
+  ],
+  "properties": {
+    "text": {
+      "const": "源🌊"
+    },
+    "repeat": {
+      "const": 257
+    },
+    "utf8Bytes": {
+      "const": 1799
+    },
+    "cancelCuts": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true
+    },
+    "caller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "grant"
+      ],
+      "properties": {
+        "operation": {
+          "const": 71
+        },
+        "generation": {
+          "const": 3
+        },
+        "grant": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+        }
+      }
+    },
+    "replies": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "payload",
+          "progress"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "pending",
+              "working",
+              "complete"
+            ]
+          },
+          "payload": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "progress": {
+            "$ref": "flow.original-retained-progress"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameOriginalRequest",
+        "sameCallerContext",
+        "pendingResponses",
+        "noEmptyPayloadFallback",
+        "debitOnce",
+        "preserveRefusedPayload",
+        "paidOriginalFailure",
+        "boundedJobOriginalContext",
+        "singleByteFailureEncoding",
+        "factoryOriginalInput",
+        "factoryOriginalAdmission",
+        "factoryOriginalDemands",
+        "prebornKindRegistry",
+        "boundedKindLookup",
+        "compactKindDirectory"
+      ],
+      "properties": {
+        "sameOriginalRequest": {
+          "const": true
+        },
+        "sameCallerContext": {
+          "const": true
+        },
+        "pendingResponses": {
+          "const": 0
+        },
+        "noEmptyPayloadFallback": {
+          "const": true
+        },
+        "debitOnce": {
+          "const": true
+        },
+        "preserveRefusedPayload": {
+          "const": true
+        },
+        "paidOriginalFailure": {
+          "const": true
+        },
+        "boundedJobOriginalContext": {
+          "const": true
+        },
+        "singleByteFailureEncoding": {
+          "const": true
+        },
+        "factoryOriginalInput": {
+          "const": true
+        },
+        "factoryOriginalAdmission": {
+          "const": true
+        },
+        "factoryOriginalDemands": {
+          "const": true
+        },
+        "prebornKindRegistry": {
+          "const": true
+        },
+        "boundedKindLookup": {
+          "const": true
+        },
+        "compactKindDirectory": {
+          "const": true
+        }
+      }
+    },
+    "failureCopyGrants": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          1,
+          3,
+          64
+        ]
+      }
+    },
+    "admissionCases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "checkpoint",
+          "frameBytes",
+          "demand"
+        ],
+        "properties": {
+          "checkpoint": {
+            "type": "boolean"
+          },
+          "frameBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "demand": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+          }
+        }
+      }
+    },
+    "registryGrant": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+    },
+    "executionGrant": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+    },
+    "lookupCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "input",
+          "candidates",
+          "matched",
+          "copyGrants"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "matched": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "copyGrants": {
+            "const": [
+              0,
+              1,
+              3,
+              64
+            ]
+          }
+        }
+      }
+    }
+  }
+}

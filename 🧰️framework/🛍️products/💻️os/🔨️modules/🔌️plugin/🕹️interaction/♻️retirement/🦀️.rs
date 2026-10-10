@@ -271,7 +271,7 @@ pub(crate) fn interaction_store_owners(grant: RetainedCloneGrant) -> Result<(sto
 pub(crate) fn interaction_store_owners_source_demands()->Result<semio_framework_value::RetirementDemand,ValueError>{
  type Owners=store::DocumentStoreOwners<InteractionState,InteractionConfigMutation>;
  type Disposer=store::ArtifactStoreCursorDisposer<InteractionState,InteractionConfigMutation>;
- Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Owners>()+size_of::<(InteractionRetirementFactory,InteractionRetirementFactory,InteractionRetirementFactory,Disposer)>(),capacity_bytes:Owners::source_birth_bytes::<InteractionRetirementFactory,InteractionRetirementFactory,InteractionRetirementFactory,Disposer>()?,depth:1,..Default::default()})
+ Ok(semio_framework_value::RetirementDemand{copy_bytes:0,capacity_bytes:Owners::source_birth_bytes::<InteractionRetirementFactory,InteractionRetirementFactory,InteractionRetirementFactory,Disposer>()?,depth:1,..Default::default()})
 }
 
 /// 🎟️ Funds the interaction catalog from its own quoted source and ticket demands.

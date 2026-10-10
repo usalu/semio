@@ -1,0 +1,338 @@
+{
+  "version": 1,
+  "pins": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/parent.json",
+      "bytes": 1102,
+      "sha256": "c78fb630cba59927efa200d5653c2d616691dfeb9ba6a047b54a641d217a2436"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/scope.json",
+      "bytes": 1182,
+      "sha256": "0b89b29f44edce598037fca2aa024ca4ef2bc0bc81445b532ff72e645740cad1"
+    },
+    {
+      "path": "package.json",
+      "bytes": 13091,
+      "sha256": "b83097079302b781df3deda8f20544f8699056e28ba0bcd75883259fac3b241b"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/package.json",
+      "bytes": 2334,
+      "sha256": "2ab939952cb2ab005e0b3b4d80c4ae88eda7bf10efaf84c8cb54a0c1fb0ccde9"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts",
+      "bytes": 407,
+      "sha256": "d4338ee9649db91969abe482177019b06f9f49571347219a2230c77272921f3b"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️command/🟦️.ts",
+      "bytes": 399,
+      "sha256": "5e78ac52cb7650a97accfb7fed6bd030e1537c3837502fd1c6b2f341dac38224"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts",
+      "bytes": 521,
+      "sha256": "9a33f94ca8c27515c5c9988cbccdfffc69b991f835064695a0ccb1925a36ea75"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📋️context/🟦️.ts",
+      "bytes": 320,
+      "sha256": "7f0ffee9e2d634938fcbd94e3204f3f4cd6ae1426559b801fa17e0c50b099c77"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "bytes": 762,
+      "sha256": "cb5799fa38645ace5698256dc0b8ce423eb82bdf1c660154ddd5093a26daa115"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "bytes": 360,
+      "sha256": "2bdc9f6a8208b83ea3441e11fc25c516601cb26ec8b14c1fdedd09dd93b77078"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "bytes": 457,
+      "sha256": "4f693b2bb996cb27244a630303f04e385616c4e8f47196517f8bed74567b46a5"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "bytes": 208,
+      "sha256": "837492d587d74f2d9cc35f225fac881b74d4b758dc8416c26b6530ba470a7a28"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🔒️leases/🟦️.ts",
+      "bytes": 389,
+      "sha256": "1a3d57fb9a6320d61b8a9d73adfba88521dc3247343e72b09ed4390c88a5e9b9"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 462,
+      "sha256": "5f495fccc2c18bbcbb84a92930a32d82c901593fd2d6e0f3086f599b29957c46"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "bytes": 329,
+      "sha256": "34a059d5b08567fe67f3fe5bb7aff6966a5685c833aae2993163c5e872dbedc1"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "bytes": 514,
+      "sha256": "3a2bd1bab9afa0f48e77efd36a16b527dfd398a78dcd137877f95c41598a6144"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts",
+      "bytes": 474,
+      "sha256": "1503ec9474082b3a755065d407cf5bb05c5bf9a3c629dc7c47651a3bceee5a18"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "bytes": 369,
+      "sha256": "4f7ed2792088fb1a1c49d21ed150a0f87a9093b404b5bdbec68a75021dfd44e4"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts",
+      "bytes": 742,
+      "sha256": "d40ca6ac5eda7d6c10ee081417c52ddccff3ddda087f07b642260d57df5bc50a"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🟦️.ts",
+      "bytes": 428,
+      "sha256": "9857c4992ab402c9b5f91da09eaf8902a5e5f614e14ca2a87b24d8260e7cff35"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🧬️schema/🟦️.ts",
+      "bytes": 245,
+      "sha256": "4204bd709bee5230877e8625f0be3be13e9272ded6e8c8d3f8609dceca3a486c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/package.json",
+      "bytes": 648,
+      "sha256": "e0485e705c69c1677ecda12ed30d62d18868db781673a352c63b8d060fe5ce24"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+      "bytes": 1353,
+      "sha256": "295344a5c5605a0cedb280d7d8358ce8dd30f3fdea92e73f8ea1a1d7674033b2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+      "bytes": 1198,
+      "sha256": "8287f65ce4ad38ae0a7fc61dbddb80918b5be887f7e1e6e72097eaeac77479e8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+      "bytes": 273,
+      "sha256": "9610713ed696f3ccfc968f21afa3f7df57932a65af9b7c53a12210a5a41189fa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️command/🟦️.ts",
+      "bytes": 295,
+      "sha256": "afb09e3bfc1976476f892397c27eee559822ee7c4b39665f7f72a0d841885010"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "bytes": 629,
+      "sha256": "a490cae8344ce4d81081fcd3cc5250fbf0a7e96151f6bf8984c7872779e57dca"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts",
+      "bytes": 186,
+      "sha256": "6131bf908dab6138907845b82a60cf7bef1f823a777dfe08d69ae8eeaec8aa45"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts",
+      "bytes": 815,
+      "sha256": "1731a6a46efd6331b66c707b240c9d2547d9a0e71328086d83f30b0cf3833d2c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+      "bytes": 226,
+      "sha256": "ad2d14429a0d0102180bb6804e06d97aec53b70ac6b0355a1528c093f5d4961e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "bytes": 323,
+      "sha256": "f67cb53ee2daed971c9b76e1adb73ed7cb524f80def98ba4a7b961711952812c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts",
+      "bytes": 141,
+      "sha256": "745d81e573b4e57c9bf90cbc93c5a0405f32d34485992f9eae2c2e6d38bbff3f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+      "bytes": 255,
+      "sha256": "b3966d43ca290e0f1dbccf26ee62a7d2d3aef6eafee6b622dde75765f78e1c46"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+      "bytes": 328,
+      "sha256": "f6212656ac20f28597bf3426de92bf30cbe6b8d142d5dff46a1437c7f92198cb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts",
+      "bytes": 195,
+      "sha256": "b143bbadfabb3d6b51b40f65d6a48083769a1665f1212c901af6285184cbc92a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts",
+      "bytes": 380,
+      "sha256": "6883cceca53ec8f4cd2fb03a5751ba9c7a88a4ff5f81d6edbc5d07fa531c1440"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts",
+      "bytes": 368,
+      "sha256": "38edf16bcc2ddcfdf5fe02a9c709ca421ad740880c00371d94cde0d7371dd074"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts",
+      "bytes": 235,
+      "sha256": "d5a2dac56db53a53109d4d4fb8fa34671ad6237f1ba7858e2a74838a178a3008"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "bytes": 1079,
+      "sha256": "5b8bff95fae934eab10cb3a4988a9805614af406d08da25a44597915056e2d88"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "bytes": 2971,
+      "sha256": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
+      "bytes": 1533,
+      "sha256": "87cf6fac984886d67c5a37c7b8e83cf2b3d3bc7269adede9edb36d05688fbc8e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🎨️palette.css",
+      "bytes": 44,
+      "sha256": "e1ee441ae1935518e0ffb00ba22e12b20917f2e4b477ae7decf30fb79fd1777e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🔤️tokens/🟦️.ts",
+      "bytes": 501,
+      "sha256": "09d29561389a6a6b1837fc1efd391c4ad353168684c617f36585e20114f74979"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🖌️ui.css",
+      "bytes": 39,
+      "sha256": "23e5d18059bd933efd30b77117d4f3c3853fbd4dc72bfedff7a35460f8a9c34e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "bytes": 2317,
+      "sha256": "c2ed84a8e8dff7210cda17340403338a735c8fab2b85852b52e010a8ed182447"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️globals-ui.css",
+      "bytes": 50,
+      "sha256": "db638afbe8e8e61a5511c184fed35ddde6c2ae99c81ed20e83242e9ee0736287"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌓️theme.css",
+      "bytes": 91,
+      "sha256": "fd14e7bcb4e0e29e235ea3beb434159ddfe266ac4d1dae48b92dd8c82fb002ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🧵️.css",
+      "bytes": 49,
+      "sha256": "a4ac479a1d7e9dc97cbec0bdc7ef2932337a1bc48095fe2d069c83617d7f12e4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "bytes": 1680,
+      "sha256": "3e8ecb1505c0cbcfd69e7c010a9d965a62e3531156876ffac5dc568df97a0b08"
+    },
+    {
+      "path": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/🎨️.css",
+      "bytes": 29,
+      "sha256": "124e37dd430f43bd185b7242f8f2a9648b302e815cb42459793bd448c4f88487"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "bytes": 1311,
+      "sha256": "6828d88fda20ccd3b416ec31a17cd81b5fd3e59fac7c962ad940493402bed409"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/🎨️.css",
+      "bytes": 29,
+      "sha256": "124e37dd430f43bd185b7242f8f2a9648b302e815cb42459793bd448c4f88487"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
+      "bytes": 419,
+      "sha256": "782f6f80e31ab80ad2ec315f2dd374aa323490a136185d51ed34314e0fbda5da"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/🟦️.ts",
+      "bytes": 260,
+      "sha256": "d08ab30c89007195d7b66fcdb1e5740580366a1124727a37e9acb49d98df4d0d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "bytes": 124167,
+      "sha256": "6de95e5aed3175c6064ce2cc34e46fa9e5926fd3a22652108ef15032df419b94"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "bytes": 1116850,
+      "sha256": "6efacddff78759062b4c8f7c167fcd40ebcfd0b04e66f7c573a1f5a5bee9c01c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟦️.ts",
+      "bytes": 1162,
+      "sha256": "ef20f2a94425a8f000abc7ae3b2db0f40aaa5d40b5737122c42342687a0e0a2d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "bytes": 28124,
+      "sha256": "54674c2b2d466f0f51b98c9b82c2dc97ec4dbfda70be291944a386b1c3b7c929"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts",
+      "bytes": 2854,
+      "sha256": "ae4c25479bbc2d52fbb40102ad7da394433b6fdbe0cc8556fdcd28f73fc6787b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "bytes": 8354,
+      "sha256": "42fd861f6a6411ff3744e0e62026da4f7273f7d9721a9b33b82fa74e02d5a036"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧪️tests/🟦️.ts",
+      "bytes": 11314,
+      "sha256": "f0d1d5078477731ea65ab050dd48c5730405f53171b45b03743f96bf265f5a0e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "bytes": 15336,
+      "sha256": "3adb6db0c66c0ef0c781c638a65a44779eac30f000d7d23a2079a467881cd020"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "bytes": 50543,
+      "sha256": "dbcf59dafebe5016a752cd25c9746ca1f6efdc700e782d04758869e228c050db"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "bytes": 127490,
+      "sha256": "0ab8fc1811718346adf0d8af683d6b6e6cab63a816611a94ec6fe9850fa5ce56"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "bytes": 9482,
+      "sha256": "1c2e716716e820c2ef6dc5acb98624b59ce0add0b19a782b100f501793a3da4c"
+    }
+  ],
+  "receivingModules": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "bytes": 86200,
+      "sha256": "75fdf43e5e0ac2f0d0d9fb26d5cd64bf6addf4bbadf8c8726f9baaf64189514c",
+      "qualification": "Current actual permanent receiving module; bounded full before/post census, not exact producer custody. Whole suite behavior remains required."
+    }
+  ]
+}

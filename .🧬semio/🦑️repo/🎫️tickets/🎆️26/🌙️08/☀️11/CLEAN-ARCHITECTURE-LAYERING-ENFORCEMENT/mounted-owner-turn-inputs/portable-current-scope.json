@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "roots": [
+    "🧰️framework/🔨️modules/🚪️io/⏱️control",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+    "✏️s/🔌️plugins/🏗️fem",
+    "🧰️framework/🔨️modules/🧵️job",
+    "🧰️framework/🔨️modules/🌱️value",
+    "🧰️framework/🔨️modules/🏃️process",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control",
+    "🧰️framework/🔨️modules/🎒️pack"
+  ],
+  "requiredFiles": [
+    "package.json",
+    "nx.json",
+    "tsconfig.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/📋️project.json"
+  ],
+  "knownHistoricalRemoved": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/📁️current/🟦️.ts"
+  ],
+  "historicalMetadata": {
+    "status": "unavailable",
+    "groups": [
+      "pr1",
+      "pr2",
+      "mp2",
+      "hk1"
+    ],
+    "qualification": "Fresh current selected roots; no exact historical roster acceptance; explicit known removed verifier receives a new physical absence check"
+  }
+}

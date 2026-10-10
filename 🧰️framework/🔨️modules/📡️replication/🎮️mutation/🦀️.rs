@@ -1411,7 +1411,7 @@ impl<D> MutationOutcome<D> {
 //#region 🔖️Foreign
 #[path = "🌐️foreign/🦀️.rs"]
 mod foreign_output;
-pub use foreign_output::{ForeignTarget,ForeignStep,ForeignStepSource,ForeignStepCopy,ForeignStepRetirement,ForeignStepsOwner};
+pub use foreign_output::{ForeignTarget,ForeignStep,ForeignStepSource,ForeignStepCopy,ForeignStepRetirement,ForeignStepsOwner,ForeignStepsPreparation};
 //#endregion 🔖️Foreign
 
 //#region 🔖️Meta
@@ -1808,5 +1808,5 @@ pub use prepared::{ArtifactReplayPrepared,retirement as prepared_retirement};
 
 #[path="🧵️canonical/🦀️.rs"]
 mod canonical_fields;
-pub use canonical_fields::{ArtifactCanonicalEditSealCursor,ArtifactCanonicalEditIdentityCursor};
+pub use canonical_fields::ArtifactCanonicalEditIdentityCursor;
 pub use canonical_fields::{ArtifactCanonicalEditAuthority,ArtifactCanonicalEditAuthorityCursor};

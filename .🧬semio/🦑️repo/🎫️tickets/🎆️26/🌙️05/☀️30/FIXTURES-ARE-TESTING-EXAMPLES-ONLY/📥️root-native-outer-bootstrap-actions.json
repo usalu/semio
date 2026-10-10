@@ -1,0 +1,21 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "fd1537182ab701fdccdac529d2a55667140e47b4a23862c2e299a91948d1b144",
+      "afterSha256": "d8f019e430638782dc8db871ddc1f22efef2aa84c3c03ebf65ec636a3b477f4f",
+      "exclusive": false,
+      "scope": "Actual default outer bootstrap declares genuine policy and resolved launch set before envelope; all actual children narrow declared selectors while original explicit capabilities remain unchanged"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "489a22f9c51c6756d429152da21dfed354e612a1459c1bc56cbef041489f8374",
+      "afterSha256": "5b9d019320b79fec950890cbc78607640534f8907b2f4fbbca69a804f7145324",
+      "exclusive": false,
+      "scope": "Existing actual launch-body original compiler ports receive actual declared selector function, retain peer explicit caller tests"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

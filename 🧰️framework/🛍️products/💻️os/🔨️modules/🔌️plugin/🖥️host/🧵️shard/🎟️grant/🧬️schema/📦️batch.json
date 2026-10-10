@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Issued Shard Batch Conservation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "input",
+    "envelopes",
+    "spent",
+    "remaining",
+    "completionCount",
+    "duplicateRefused",
+    "earlyReturnRefused",
+    "refusalHeap"
+  ],
+  "properties": {
+    "contract": {
+      "const": "oneOriginalIssuedShardBatch"
+    },
+    "input": {
+      "const": {
+        "operation": 71,
+        "generation": 3,
+        "epoch": 19,
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 4096,
+          "maximumCapacityBytes": 65536,
+          "maximumReleaseBytes": 262144,
+          "maximumDepth": 64
+        }
+      }
+    },
+    "envelopes": {
+      "const": 3
+    },
+    "spent": {
+      "const": [
+        {
+          "copiedItems": 0,
+          "copiedBytes": 3,
+          "retainedCapacityBytes": 128,
+          "releasedBytes": 0
+        },
+        {
+          "copiedItems": 0,
+          "copiedBytes": 9,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 128
+        },
+        {
+          "copiedItems": 1,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      ]
+    },
+    "remaining": {
+      "const": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 4084,
+        "maximumCapacityBytes": 65408,
+        "maximumReleaseBytes": 262016,
+        "maximumDepth": 64
+      }
+    },
+    "completionCount": {
+      "const": 1
+    },
+    "duplicateRefused": {
+      "const": true
+    },
+    "earlyReturnRefused": {
+      "const": true
+    },
+    "refusalHeap": {
+      "const": [
+        0,
+        0
+      ]
+    }
+  }
+}

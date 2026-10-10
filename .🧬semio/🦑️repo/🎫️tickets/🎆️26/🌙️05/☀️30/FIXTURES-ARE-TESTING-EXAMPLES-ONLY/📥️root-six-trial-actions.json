@@ -1,0 +1,101 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧭️topology/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "3e49513b837285369cfa226729945d62ccc0c8d2881b15c82f8a4946d520b8b6",
+      "afterSha256": "0378ff97e679db65ffeee1d79d2e7df26667b12f95dae449430a7305566fe598",
+      "exclusive": false,
+      "scope": "topology whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧭️topology/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "fb215befe369f177d7830a9ee27a4b2b59d8b2bceebc56e0171b0e042a421426",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "topology whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "02bf2cf8b5b5bc56fef65776cbb8c7d7ff757b0be4fd8156a2567054547e2a33",
+      "afterSha256": "b0dbe4479cf263d84b65f9694071e1aac9b6a2693a486c6e26e176fac873d94a",
+      "exclusive": false,
+      "scope": "wave whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "71805e3dd3649d88ed9ad2eebee8a35a57f3020906133c5ea93425c9c940e288",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "wave whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "20831eb8f9f770cd4e7c9623af7db22979febf9a8705d20d22c9abe5c53054a5",
+      "afterSha256": "f6cd8cf73a92360e031b10c4e62ef494b73b23e1348f1402e7730c6b2d171694",
+      "exclusive": false,
+      "scope": "draw whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "3ed152db0ec4a6d9e7e619a60d547382a8ac3b480a53816e788212d43c4de77e",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "draw whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "549801bbdeb96998bc63856a7de3e67c21e60184f2bbd0b72992143c89d894c3",
+      "afterSha256": "4649400adfa8a25bff9773b69efacd56a913967f731a14303ac8cd418a1dc574",
+      "exclusive": false,
+      "scope": "socket whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "e4a31a3d9947abfb699da346ada9441d7e5a7822d296a6f769048a65f81e503c",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "socket whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "f4c99e8c0fefda4df44a0d72c2554f3dfb95bfd94ecc0ee887ae146c065d4a0c",
+      "afterSha256": "e47611750e3a5146ffa41fd6367b6663e73f500f709813d4cb3fe8aa01e5920b",
+      "exclusive": false,
+      "scope": "nodekey whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🔑️node-key/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "24e0c7ce7822d947a398c3f3cc0a22e1a2bbb5c2db7b8542bbf57f6688a6fda5",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "nodekey whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎟️contributions/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "3ad0de2e30d68811cd69ce25fae0bfeaa3ed50a56f63e400fae0071edaa3adba",
+      "afterSha256": "3c8abdc051908ce9bcf9bfb692d4bb56bf24c59326beffac6cf088b11eef9976",
+      "exclusive": false,
+      "scope": "contributions whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧬️schema/🎟️contributions/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "d8c317b5c42129f37cf0c834f8e8e81c31d4009f0e8f49d7069107c998c806a9",
+      "afterSha256": null,
+      "exclusive": false,
+      "scope": "contributions whole-test authority retired, original plain/native/behavioral laws preserved; genuine per-grant admission where applicable"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

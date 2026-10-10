@@ -135,7 +135,7 @@ fn map_value<'a>(value: &'a MapValue, lifetime: &'a MapLifetime) -> ArtifactCano
 }
 
 impl ArtifactCanonicalJson for MapMutation {
-    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         let Self::ReplaceMap(MapBody { map, lifetime, .. }) = self;
         let fields = ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new([("map", map_object(map, lifetime))].into_iter()));
         Ok(Some(ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new([("ReplaceMap", fields)].into_iter()))))
@@ -144,7 +144,7 @@ impl ArtifactCanonicalJson for MapMutation {
 
 struct IndexedDepth(usize);
 impl ArtifactCanonicalJson for IndexedDepth {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
         Ok(if path.len() == self.0 { ArtifactCanonicalJsonNode::Null } else { ArtifactCanonicalJsonNode::Array(1) })
     }
 }
@@ -181,7 +181,7 @@ impl semio_framework_value::retirement::RetireOwned for MapTerminalLifetime {
             assert_eq!(self.lifetime.active_iterators.load(Ordering::SeqCst), 0);
             self.lifetime.root_drops.fetch_add(1, Ordering::SeqCst);
         }
-        self.lifetime.retirement()
+        semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.lifetime).retirement()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.lifetime)
@@ -389,14 +389,17 @@ fn borrowed_map_checkpoint_replays_fresh_root_and_live_owner_moves_workers() {
 #[test]
 fn borrowed_map_rebound_root_and_depth_overflow_fail_before_references_escape() {
     let mut indexed = ArtifactCanonicalJsonCursor { maximum_depth: 2, ..ArtifactCanonicalJsonCursor::default() };
-    assert_eq!(indexed.encode_chunk(&IndexedDepth(2), &mut [0; 256]).unwrap_err(), ArtifactCanonicalJsonEncodeError { written_bytes: 2, reason: "canonical-edit.depth-limit".into() });
+    let original_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};
+    let mut initialized=0;let mut failure=None;
+    for _ in 0..32{match indexed.encode_chunk_admitted(&IndexedDepth(2),&mut[0;256],original_grant){Ok(step)=>initialized+=step.written_bytes,Err(error)=>{failure=Some(error);break}}}
+    let error=failure.expect("original depth producer must refuse its exact crossing");assert_eq!(initialized+error.written_bytes,2);assert_eq!(error.reason.kind,semio_framework_value::ValueRefusalKind::DepthLimit);
     let (mut owner, _, lifetime) = owner();
     for _ in 0..100 {
         owner.advance(fixture_encoding_grant(1, 7)).unwrap();
     }
     let (replacement, _, _) = fixture();
     let original = owner.edit.replace(Box::new(replacement)).unwrap();
-    assert_eq!(owner.advance(fixture_encoding_grant(1, 7)).unwrap_err(), "canonical-edit.borrowed-root-rebound");
+    assert_eq!(owner.advance(fixture_encoding_grant(1, 7)).unwrap_err().message.as_ref(), "canonical-edit.borrowed-root-rebound");
     let replacement = owner.edit.replace(original).unwrap();
     retire_fixture_owned(replacement);
     close(&mut owner, &lifetime);
@@ -413,7 +416,7 @@ fn borrowed_map_rebound_root_and_depth_overflow_fail_before_references_escape() 
     for _ in 0..100_000 {
         match owner.advance(fixture_encoding_grant(1, 1)) {
             Err(reason) => {
-                assert_eq!(reason, "canonical-edit.depth-limit");
+                assert_eq!(reason.message.as_ref(), "canonical-edit.depth-limit");
                 rejected = true;
                 break;
             }

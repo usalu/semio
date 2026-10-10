@@ -1,0 +1,44 @@
+[
+  {
+    "path": "package.json",
+    "action": "update",
+    "beforeSha256": "adecfcc3b54b3ed00cc159f3d7512647f3efe8c77e9291afb999753c5b065943",
+    "afterSha256": "f8cc3ed1166ef854a668aa4aa130c51dcb5e1c8540f946122d106506c00c951c",
+    "qualification": "Handcrafted current source declaration removes unconditional fixture-name mask; genuine lower owner inventory publishes actual collection-root exclusions next, preserving module-named fixtures and independent payload exclusions"
+  },
+  {
+    "path": "🎓️teaching/package.json",
+    "action": "update",
+    "beforeSha256": "0274b6082d069c5af0e30686fe26c226de490b84e0cff9884afa2cadeca92dc2",
+    "afterSha256": "46baafb254ff9276b3d726762bd64c793eed9f09a3fccb24a227863f41210e7e",
+    "qualification": "Handcrafted current source declaration removes unconditional fixture-name mask; genuine lower owner inventory publishes actual collection-root exclusions next, preserving module-named fixtures and independent payload exclusions"
+  },
+  {
+    "path": "✏️s/package.json",
+    "action": "update",
+    "beforeSha256": "6e25a763521b3df1f5821fcec1357fa2a18839f79bd3490e005c1290c6e3c41f",
+    "afterSha256": "68a6658815c6d3cf0e6117809d582fb20ebac1055798b19bb4e9ed48c68e9094",
+    "qualification": "Handcrafted current source declaration removes unconditional fixture-name mask; genuine lower owner inventory publishes actual collection-root exclusions next, preserving module-named fixtures and independent payload exclusions"
+  },
+  {
+    "path": "🏢️semio-tech/package.json",
+    "action": "update",
+    "beforeSha256": "5142dfb2467865d1b07a281564f836a2b8033037bfd9fea8b9bb44c095efa63c",
+    "afterSha256": "2c9c69686b8d914730302cd96c11e500ddc43e9ad026d010fffcefad203f31b1",
+    "qualification": "Handcrafted current source declaration removes unconditional fixture-name mask; genuine lower owner inventory publishes actual collection-root exclusions next, preserving module-named fixtures and independent payload exclusions"
+  },
+  {
+    "path": "🌎️hub/package.json",
+    "action": "update",
+    "beforeSha256": "2798fe17f07070cbd807f6d6a33446ebd021213f0e14e82a31260dbfca0401bd",
+    "afterSha256": "60947e24df85dc29d54934a98ee55da982cd3a5f7d4e48fe050097b76c4b2797",
+    "qualification": "Handcrafted current source declaration removes unconditional fixture-name mask; genuine lower owner inventory publishes actual collection-root exclusions next, preserving module-named fixtures and independent payload exclusions"
+  },
+  {
+    "path": "♻️mit-bestand/package.json",
+    "action": "update",
+    "beforeSha256": "2a5801181296be646da6708183a9cc414dfd9425c3b3a706ca983adbd09ddad4",
+    "afterSha256": "984ec07906af11b340cb718137e15b0da960b6938707d8f2d67913433549f7d8",
+    "qualification": "Handcrafted current source declaration removes unconditional fixture-name mask; genuine lower owner inventory publishes actual collection-root exclusions next, preserving module-named fixtures and independent payload exclusions"
+  }
+]

@@ -5,13 +5,13 @@ use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase,SqliteSnapshotC
 use semio_framework_value::FromValue;
 type Result<T>=std::result::Result<T,ValueError>;
 const SQL:&str=include_str!("../🗄️.sql");
-fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn owner<T:FromValue>(value:T)->DecodedFieldOwner<T>{DecodedFieldOwner::new(value,T::retire_decoded)}
 
-fn authored_schema(control:&SqliteSnapshotControl<'_>)->Result<()>{let limits=control.limits();if SQL.len()>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"authored binary schema exceeds caller limit"))}if limits.max_tables<2||limits.max_columns<4{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"authored binary table or column extent exceeds caller limit"))}Ok(())}
+fn authored_schema(control:&SqliteSnapshotControl<'_>)->Result<()>{let limits=control.limits();if SQL.len()>limits.max_schema_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"authored binary schema exceeds caller limit"))}if limits.max_tables<2||limits.max_columns<4{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"authored binary table or column extent exceeds caller limit"))}Ok(())}
 fn write_rows(schema:&str,count:usize,bytes:impl IntoIterator<Item=Result<u8>>,output:&mut RowWriter<'_,'_>)->Result<()>{
- let total=count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"binary entity count overflow"))?;output.check_rows(total)?;let document=output.insert("binary_document",&[Cell::Text(schema)])?;output.checkpoint_total(total)?;
- for(index,byte)in bytes.into_iter().enumerate(){let ordinal=i64::try_from(index).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"binary ordinal overflow"))?;output.insert("binary_byte",&[Cell::Integer(document),Cell::Integer(ordinal),Cell::Integer(i64::from(byte?))])?;output.checkpoint_total(total)?;}Ok(())
+ let total=count.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"binary entity count overflow"))?;output.check_rows(total)?;let document=output.insert("binary_document",&[Cell::Text(schema)])?;output.checkpoint_total(total)?;
+ for(index,byte)in bytes.into_iter().enumerate(){let ordinal=i64::try_from(index).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"binary ordinal overflow"))?;output.insert("binary_byte",&[Cell::Integer(document),Cell::Integer(ordinal),Cell::Integer(i64::from(byte?))])?;output.checkpoint_total(total)?;}Ok(())
 }
 /// 🫳️ Admits the actual raw or validated hexadecimal octets before typed ownership.
 pub(super)fn native_cells(schema:&str,count:usize,bytes:impl IntoIterator<Item=Result<u8>>,control:&mut SqliteSnapshotControl<'_>)->Result<()>{authored_schema(control)?;let mut output=RowWriter::borrowed(control,SqliteSnapshotPhase::DecodeNative)?;write_rows(schema,count,bytes,&mut output)?;output.finish_borrowed()}

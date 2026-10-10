@@ -1,0 +1,30 @@
+{
+  "contract": "semio.tool-run.original-job-receiving.v1",
+  "steps": [
+    "cancel-birth",
+    "ledger-birth",
+    "original-callback",
+    "physical-receipt-return",
+    "borrow-original-descriptor",
+    "semantic-receiving",
+    "acknowledge",
+    "remove-descriptor"
+  ],
+  "cases": [
+    {
+      "items": 0,
+      "depth": 9,
+      "admitted": false
+    },
+    {
+      "items": 1,
+      "depth": 0,
+      "admitted": false
+    },
+    {
+      "items": 1,
+      "depth": 9,
+      "admitted": true
+    }
+  ]
+}

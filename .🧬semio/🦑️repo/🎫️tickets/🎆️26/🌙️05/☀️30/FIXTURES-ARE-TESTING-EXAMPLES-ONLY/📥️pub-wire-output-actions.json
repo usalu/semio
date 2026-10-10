@@ -1,0 +1,89 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🧬️schema/🔣️.json",
+      "scope": "genuine operation octet payload schema; no test-collection wrapper",
+      "beforeSha256": null,
+      "afterSha256": "0a3b3840199321aca02e0e69bb78771dc0483c61cce4eaf71507fda222b3e3f9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🧬️schema/🟦️.ts",
+      "scope": "actual language-neutral octet admission implementation preserving original array identity",
+      "beforeSha256": null,
+      "afterSha256": "f2e21e53fed4b0882534fc5a998e05eb4e9fa7c5ce0a23856652710209e9b15f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🧫️fixtures/🔣️.json",
+      "scope": "plain independently fixed original UTF8 octets, cumulative limits and five-axis policy; no schema controlling collection",
+      "beforeSha256": null,
+      "afterSha256": "0428b06432d5e3998fcc2d1440c186e5c286f08d9a4b58d781595e75921f7f3c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts",
+      "scope": "existing original operation wire source route independent actual octet/Ajv/Buffer/identity/refusal oracle and missing paid owner regression",
+      "beforeSha256": "ced41e08a3cdde77560abcaeecb534958b42a001985f61493b345430cdea2c1f",
+      "afterSha256": "e2f6cd8a08987bd05ecda92ecb8d38d9d037ea52dfc8d167193e99425ce6fec2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🦀️.rs",
+      "scope": "actual original operation output byte owner, independently supplied cumulative limits/full turn policy, exact paid page births/prefix copy/handoff/terminal closure",
+      "beforeSha256": null,
+      "afterSha256": "0423400dcbc143d0f176ba2f17439147797c547579885aec1ea4a010e2e2152a",
+      "qualification": "source/native proof pending; actual proposal callers not yet consuming this owner"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "scope": "actual retained operation output module/export next to original codec owner",
+      "beforeSha256": "73b264a86aafd344cfd31815d3af385193dbe7b799879f925d9ea6213cb90d99",
+      "afterSha256": "ae6be7292b5f0272e7d6b891cc42f8b7a2cc00333f910fb84554a172aa2e72cd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🦀️.rs",
+      "scope": "use exact current generic Value PagedBytes retained backing constructor and actual Erased trait; no invented port or alias",
+      "beforeSha256": "0423400dcbc143d0f176ba2f17439147797c547579885aec1ea4a010e2e2152a",
+      "afterSha256": "aec7616dbedf2f98c65f73322ee63cfef7c3ff198430bda82bacc17f58945807"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🧫️fixtures/🔣️.json",
+      "scope": "plain exact source/page-boundary witness, independently fixed original 8192 payload limit; original examples unchanged",
+      "beforeSha256": "0428b06432d5e3998fcc2d1440c186e5c286f08d9a4b58d781595e75921f7f3c",
+      "afterSha256": "b13d0f0f5011942395913388e8dcd04a36a62bcf731fc6da45e29f6633888325"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts",
+      "scope": "original independent Buffer/TextEncoder page-crossing witness and actual owner/native grammar at existing5s tool budget",
+      "beforeSha256": "e2f6cd8a08987bd05ecda92ecb8d38d9d037ea52dfc8d167193e99425ce6fec2",
+      "afterSha256": "3dcc6b1b64b871a1fd48d848070267c00ec01f0340c23494f72915453c548ce1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs",
+      "scope": "actual System original-source/prefix/zero-authority/multipage cancellation law with fixed independent payload/total/per-turn policies",
+      "beforeSha256": "f74fb6da24764cd55f3542b1ba4cd48be02e99cb1fe03d15e548c2cbc9f6cb75",
+      "afterSha256": "eb06d9229555e408ce526c7294442e528ef33f206c91a5b76a2c04b726f9c2de",
+      "qualification": "native law authored UNRUN"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "scope": "explicit retained original operation output owner export in current actual Store prepared wire facade; all peer root bodies retained",
+      "beforeSha256": "fac36eb0b919656dae8c2a6c27e5a9be122bfe9cb0b20f8139d52809c85f6b23",
+      "afterSha256": "82f6b31e832fd4a4121887e8408a1fc79284b631f642c3a4819b20730fc9eeed"
+    }
+  ],
+  "red": {
+    "toolCell": "223356",
+    "NxStatus": 1,
+    "tests": "5pass/1fail/102assertions",
+    "taskDuration": "181ms",
+    "log": "🗑️generated/pub-wire-output-red.log",
+    "qualification": "original TS via existing registered private Source facet, independent payload law reached; missing actual output owner"
+  },
+  "green": {
+    "session": 63546,
+    "NxStatus": 0,
+    "taskDuration": "498ms",
+    "tests": "7pass/0fail/117assertions",
+    "log": "🗑️generated/pub-wire-output-green.log",
+    "qualification": "original TS independent Ajv/Buffer/UTF8, original owner/native grammar only; System native law UNRUN; actual collectors not integrated"
+  },
+  "schemaId": "https://json.schemas.assets.semio-tech.com/os/store/operation-wire/output/schema.json"
+}

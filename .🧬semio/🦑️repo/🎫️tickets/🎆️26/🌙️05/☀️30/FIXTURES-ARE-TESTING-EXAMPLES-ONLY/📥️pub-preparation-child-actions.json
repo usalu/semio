@@ -1,0 +1,18 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddec\ufe0fsnapshot-clone/\ud83e\udd80\ufe0f.rs",
+    "beforeSHA256": "46479a064cf71df5cfad120c7bb9e5870215fc826017e515c674329af383449b",
+    "afterSHA256": "a51c94a45ffab767759269a07b88df2124ee94a3d4dfcc1c03ac36ecec2259c2",
+    "scope": "defining retained editor advance, original snapshot preparation typed error chain, cancellation/actual progress and seal owner preflight",
+    "beforeBlockSHA256": "84c415fbdfed5d22662f33b85c9e62e8703e2b67825015be552b05bac7a43904",
+    "afterBlockSHA256": "3ebb4c1558f21415fc55c124edd49e49ba3dcff037e7496712e3a7f252b5558c"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udee7\ufe0fephemeral/\ud83d\udce2\ufe0fpublication/\ud83e\udde9\ufe0fpreparation/\ud83e\udd80\ufe0f.rs",
+    "beforeSHA256": "933e5b833d856c73c672680b2e10e93b3c49eaa0fd9256e796aa92d943e3bbd2",
+    "afterSHA256": "0bea102c856d5ded5877bd74d4a9dc76c308a97ad2985ae2af4fd64fbacf3e02",
+    "scope": "defining ephemeral task typed failure, accepted output before refusal and actual receipt",
+    "beforeBlockSHA256": "41121ea4c47dcbfd9d1057ff19f6efd9e39778abd3096f655c7ef959ef06cf44",
+    "afterBlockSHA256": "be98cadedfb2b7046cbe3962426294416c72c72b6be468af2f6cce46b5092efc"
+  }
+]

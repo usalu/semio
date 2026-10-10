@@ -246,14 +246,34 @@
       ]
     },
     "test-socket-snapshot-sqlite-source": {
-      "executor": "nx:run-commands", "cache": false, "dependsOn": [], "outputs": [],
-      "options": {"command": "bun ./📜️script.ts test-socket-snapshot-sqlite source", "cwd": "{projectRoot}"},
-      "inputs": ["sharedGlobals", "{projectRoot}/📜️script.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/**/*"]
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-socket-snapshot-sqlite source",
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/**/*"
+      ]
     },
     "test-socket-snapshot-sqlite-native": {
-      "executor": "nx:run-commands", "cache": false, "dependsOn": [], "outputs": [],
-      "options": {"command": "bun ./📜️script.ts test-socket-snapshot-sqlite native", "cwd": "{projectRoot}"},
-      "inputs": ["sharedGlobals", "{projectRoot}/📜️script.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/**/*"]
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-socket-snapshot-sqlite native",
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/**/*"
+      ]
     },
     "test-native": {
       "executor": "nx:run-commands",
@@ -773,6 +793,29 @@
           "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/worker-cell/🗑️generated"
         }
       }
+    },
+    "test-worker-receiving-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-worker-receiving-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+      ],
+      "cache": false
+    },
+    "test-original-frame-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-original-frame-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "cache": false
     }
   },
   "tags": [

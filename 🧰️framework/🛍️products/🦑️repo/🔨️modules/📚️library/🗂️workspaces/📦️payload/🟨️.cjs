@@ -20,19 +20,25 @@ function exportTargets(value, subpaths = true) {
 }
 
 /** 🔗️ Binds nested payload identity to its nearest concrete physical export owner. */
-function ownsPayload(owner, payload, operations) {
+function* ownsPayloadPlan(owner, payload) {
   if (!owner.name || owner.name !== payload.name) return false;
   const prefix = relative(owner.absDir, payload.absDir).replaceAll("\\", "/") + "/";
-  return exportTargets(owner.exports).some((target) => {
-    if (!target.startsWith(".") || /[\\:*?%#\u0000]/u.test(target)) return false;
+  for (const target of exportTargets(owner.exports)) {
+    if (!target.startsWith(".") || /[\\:*?%#\u0000]/u.test(target)) continue;
     const segments = target.slice(2).split("/");
-    if (segments.some((segment) => !segment || segment === "." || segment === ".." || segment === "node_modules")) return false;
-    if (!segments.join("/").startsWith(prefix)) return false;
-    let path = owner.absDir;
-    return segments.every((segment, index) => {
+    if (segments.some(segment => !segment || segment === "." || segment === ".." || segment === "node_modules") || !segments.join("/").startsWith(prefix)) continue;
+    let path = owner.absDir, owned = true;
+    for (const [index, segment] of segments.entries()) {
       path = join(path, segment);
-      return operations.state(path) === (index === segments.length - 1 ? "file" : "directory");
-    });
-  });
+      if ((yield { operation: "state", path }) !== (index === segments.length - 1 ? "file" : "directory")) { owned = false; break; }
+    }
+    if (owned) return true;
+  }
+  return false;
 }
-module.exports = { ownsPayload };
+function ownsPayload(owner, payload, operations) {
+  const plan = ownsPayloadPlan(owner, payload); let step = plan.next();
+  try { while (!step.done) step = plan.next(operations.state(step.value.path)); return step.value; }
+  finally { plan.return(); }
+}
+module.exports = { ownsPayload, ownsPayloadPlan };

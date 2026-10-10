@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "digest": "fed8f9962e7185b5d53da9655b71a51bfab9a647baeadc73d79983be899a35d3",
+  "sources": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/manifest.json",
+      "sha256": "1651ff95f1c712e2500b88f2441ababbd4fc8690255e9bee41752a23d3e74e1e",
+      "bytes": 83700
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/schema.json",
+      "sha256": "a28e82b5f07864221f289d8766716d4d74a5d05b04cb393f97f0080fc522f418",
+      "bytes": 57238
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/📜️script.ts",
+      "sha256": "30446c20fb06a9e38e9b972463194ddba6e8c1a0cb7f71c5893981e069aa6319",
+      "bytes": 21347
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts",
+      "sha256": "65c13067f8db8e65e2735abfd55b2a07daafe58a4e77da50f233429920c3d859",
+      "bytes": 5181
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧫️fixtures/🔣️.json",
+      "sha256": "ff47479041afaae69f1f09449280e99437e258cbee41190bceb7c463582bd04d",
+      "bytes": 748
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧬️schema/🔣️.json",
+      "sha256": "5df7279d90fa3d3d69fd2e50a280cf1d23dc1af259a17ea1b8758dd969077def",
+      "bytes": 1181
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "sha256": "730f20d55f9d6a719622cf4b36184bf772fa8518df3f1e80fa7f97d6f4fe2bb5",
+      "bytes": 3488
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+      "sha256": "3dc8435e9300b250d76db8701400d998d0d003fea0af85d113509f5869933079",
+      "bytes": 6141
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🧫️fixtures/🔣️.json",
+      "sha256": "dce3cb4913e173adf07d32098e3c9ecfbd78770cda25c0b10bd6c4dfdfc2dcec",
+      "bytes": 1379
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🔣️.json",
+      "sha256": "5485e3c227a60a22c9e5afae50d88f6a484ed4b0ebe2ee6433c76ee17595c741",
+      "bytes": 206
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+      "sha256": "034ca683a0520220b1625305d8504b7e2cde6572da4fad521a9106cb7ef17493",
+      "bytes": 889
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+      "sha256": "e42af42993b7ba2aadf6fdafd96b41f4423b5feaef368f57ea5d4b8a096ebb83",
+      "bytes": 8280
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧫️fixtures/🔣️.json",
+      "sha256": "df746811f525e8d05e996f2c385d402dc8b748d8bd735713478fad4187305514",
+      "bytes": 2011
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+      "sha256": "5acd46eecc7cf1fb6f3146bc21edaae08f08e6392208787e88dc93ee0714a6bf",
+      "bytes": 19939
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+      "sha256": "1d4083a481eefcd6a8866de6b28ecf7f6dff57daa882d3b9ab08eac99716583b",
+      "bytes": 12212
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧫️fixtures/📨️managed-output.json",
+      "sha256": "14e7f5312a98367db2a0dd33e4e7f93e394bb55c08d6d43a1a1127ba0fb41fa4",
+      "bytes": 571
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧫️fixtures/🔣️.json",
+      "sha256": "eb78a375e94589b35387f59c3918c2bd6e2613e4aa1f6346acba08b6df58e987",
+      "bytes": 4298
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "sha256": "796df77bad05af10705251aa778a52b62cc17fba780f48cdb204b8c8c095a099",
+      "bytes": 3963
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "sha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "bytes": 550
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "sha256": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff",
+      "bytes": 2971
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+      "sha256": "a596f25cdba8c0a311b2120d6b70aa519ef31d6159ee192d6b3389c0c93bec70",
+      "bytes": 5395
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "sha256": "e4dc4085959d7e0bcfc87cb57fc53243ee2c36b5717a2a572ac35c19f6cebd03",
+      "bytes": 10849
+    }
+  ]
+}

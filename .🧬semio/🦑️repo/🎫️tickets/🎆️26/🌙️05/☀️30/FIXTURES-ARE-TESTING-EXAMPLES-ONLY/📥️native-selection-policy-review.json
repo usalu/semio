@@ -1,0 +1,25 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "sha256": "7ef4132eac494b5f60fa5f992735ebe98f7609ce71abbf42c43b7d2a82dcf8d1",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "sha256": "f8c286e407971b8bd782e62e3f12a62bd05efbcca0931b71123e834893833401",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "sha256": "def026368efa3bd364d37519ec936368ba5664d7e3c75da26296dfdfe96e691e",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json",
+      "sha256": "8844f860a9a27225e5bd269f56385fcc874847b235b49ca0480af82c2751d6b2",
+      "authored": false
+    }
+  ],
+  "executed": false
+}

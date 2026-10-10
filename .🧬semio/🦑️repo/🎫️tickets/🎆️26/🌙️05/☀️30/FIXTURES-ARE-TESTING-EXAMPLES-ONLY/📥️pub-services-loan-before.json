@@ -1,0 +1,25 @@
+{
+  "sourceObservers": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83d\udeaa\ufe0fnative-io/\ud83e\udd80\ufe0f.rs",
+      "sha256": "a8ba1584ad18847a26ecf4122990b4d2edc0235b66429824c2661869187908eb"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83e\udd80\ufe0f.rs",
+      "sha256": "2b9a7f27a82f7d86052c904635b88e2ecb4ef2d437c792c1d9a7fd9f19335986"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83e\uddea\ufe0ftests/\ud83e\uddee\ufe0fcompute-retained/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "111277663100b440f42b14bc4b0fb60c8127a83d6530d125a9ffe01130be26f3"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udece\ufe0fservices/\ud83d\udeaa\ufe0fnative-io/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "a04d60028a74a4e5dc2529eb371fb43187e294a6fda648152866f8e967694cf0"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\u26a1\ufe0feffects/\ud83e\udd80\ufe0f.rs",
+      "sha256": "0f9a648a83686a813ce073166e421e1afdf89d910b76c416cea4c9df69f8c62a"
+    }
+  ],
+  "red": "actual original Kernel72285 three Services API errors; no assertions"
+}

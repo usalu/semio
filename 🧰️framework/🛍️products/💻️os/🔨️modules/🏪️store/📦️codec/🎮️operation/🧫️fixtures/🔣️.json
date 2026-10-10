@@ -1,0 +1,81 @@
+{
+  "grant": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 8388608,
+    "depth": 256
+  },
+  "custody": [
+    {
+      "phase": "borrowed",
+      "source": "original",
+      "catalog": false,
+      "receipt": false,
+      "terminal": false
+    },
+    {
+      "phase": "sourceDenied",
+      "source": "original",
+      "catalog": false,
+      "receipt": false,
+      "terminal": false
+    },
+    {
+      "phase": "sourceBorn",
+      "source": "original",
+      "catalog": true,
+      "receipt": true,
+      "terminal": false
+    },
+    {
+      "phase": "ticketBorn",
+      "source": "original",
+      "catalog": true,
+      "receipt": true,
+      "terminal": false
+    },
+    {
+      "phase": "canceled",
+      "source": "original",
+      "catalog": true,
+      "receipt": false,
+      "terminal": false
+    },
+    {
+      "phase": "catalogClosed",
+      "source": "original",
+      "catalog": false,
+      "receipt": true,
+      "terminal": false
+    },
+    {
+      "phase": "transferred",
+      "source": "original",
+      "catalog": false,
+      "receipt": true,
+      "terminal": false
+    },
+    {
+      "phase": "recipientPaid",
+      "source": "original",
+      "catalog": false,
+      "receipt": false,
+      "terminal": true
+    }
+  ],
+  "metadata": [
+    {
+      "source": "session",
+      "copiedBytes": 0
+    },
+    {
+      "source": "command",
+      "copiedBytes": 0
+    },
+    {
+      "source": "discard",
+      "copiedBytes": 0
+    }
+  ]
+}

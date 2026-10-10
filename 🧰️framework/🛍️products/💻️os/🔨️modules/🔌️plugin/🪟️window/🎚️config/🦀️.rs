@@ -176,6 +176,7 @@ pub(crate) trait ErasedWindowConfigPublication: Send {
     fn window_kind_id(&self) -> &str;
     fn phase(&self) -> store::ArtifactStoreOneItemPublicationPhase;
     fn fault(&self) -> Option<&str>;
+    fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
     fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError>;
@@ -238,6 +239,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
     fn fault(&self) -> Option<&str> {
         self.publication.as_ref().and_then(|publication|publication.fault())
     }
+    fn preparation_refusal(&self) -> Option<&ValueError> { self.publication.as_ref().and_then(|publication|publication.preparation_refusal()) }
 
     fn acknowledge(&mut self) -> bool {
         let accepted=self.publication.as_mut().is_some_and(|publication|publication.acknowledge());

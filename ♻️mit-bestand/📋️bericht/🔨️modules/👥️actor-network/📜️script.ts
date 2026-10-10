@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -826,4 +827,4 @@ export class ActorNetworkScript extends BundleScript {
 
 
 const router = new ScriptRouter(import.meta.dir).register("akteursnetz", ActorNetworkScript);
-if (import.meta.main) await router.run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

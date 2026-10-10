@@ -1,0 +1,114 @@
+{
+  "observations": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "88e1639bd7244b412da875365b71591e52a79ebb4897ce6c2585de76be2d7fc1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "cfd66efd7c9d32be7ba16a5828905feaeb0e47a1729e357573f5e3745586e362"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "2132102c21c8de6ac19992bece72d2eecc0905f648951c15a4ec52a9566e09b8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "e8102d600b60f55741899aa7cca2bb0b14313f221acc0ee5b7a8fa702e61ed8a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "405afbb9fe2976aa6f9fe1c457af67034387fc6d7fbb1a73df311d3f5936de63"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "d413de329e2349d81b6b9c82cec6119d4e73cc69af18b3db836406ff5d2575f3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "c67f080cfce4f10481c5695f7e0004e46a09956ac766e38e24019d708757478b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "c1b3da39377ec47dd657b88ceb51d8238b99c941966ad263eae2d912a7c9c67f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "6315a2a12582c4d45f51ffcdb4fd67f47d917c1ad3f42e46cf49c4ca7ca13a9d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "fbbf23ac534f3769daabce8418e89203b830cb4a46203c75896c73cddcc12f1f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "c4fc6505bc9af20771d8e61464ef34173b2d687876234f880ab9900a4ff23bd0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "4fd8f345b05f59c318973c13ae29de0a36c0a8fd29014da748bd78a78c1e4871"
+    }
+  ],
+  "commands": [
+    [
+      "bun",
+      "nx",
+      "run",
+      "@semio-tech/stdio-binary-rs:test-original-receiving-native",
+      "--skip-nx-cache",
+      "--outputStyle=static"
+    ],
+    [
+      "bun",
+      "nx",
+      "run",
+      "@semio-tech/stdio-txt-rs:test-snapshot-sqlite-native",
+      "--skip-nx-cache",
+      "--outputStyle=static"
+    ],
+    [
+      "bun",
+      "nx",
+      "run",
+      "@semio-tech/stdio-txt-rs:test-original-encoding-native",
+      "--skip-nx-cache",
+      "--outputStyle=static"
+    ],
+    [
+      "bun",
+      "nx",
+      "run",
+      "@semio-tech/framework-replication-rs:test",
+      "--skip-nx-cache",
+      "--outputStyle=static",
+      "--",
+      "long",
+      "--lib",
+      "--status-level",
+      "pass",
+      "--final-status-level",
+      "all",
+      "--no-fail-fast",
+      "--",
+      "--nocapture"
+    ],
+    [
+      "bun",
+      "nx",
+      "run",
+      "@semio-tech/framework-pack-rs:test",
+      "--skip-nx-cache",
+      "--outputStyle=static",
+      "--",
+      "long",
+      "--lib",
+      "--status-level",
+      "pass",
+      "--final-status-level",
+      "all",
+      "--no-fail-fast",
+      "--",
+      "--nocapture"
+    ]
+  ]
+}

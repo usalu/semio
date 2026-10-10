@@ -1,0 +1,9 @@
+# Current Literal Envelope Review
+
+Current helper3306–3312 adds paired immutable input/expected rows and two-or-more named refusal axis/value/kind rows, requiring a sibling five-axis numeric record. It is independent of path/title and supports properties.const projection. Seven added examples cover object/property positive trials and genuine grant configuration/produced variable record/inert input positives. Actual136PASS1168 is Root supplied execution evidence; this audit ran no tests.
+
+Precision limitation: authority merely tests typeof number for five keys, not canonical Grant integer/nonnegative/closed shape, so fractional or negative pseudo-authority still activates the rule. Refusal rows accept arbitrary strings and numbers, no canonical axis membership or linkage to the sibling authority being denied. This is broader than “real Grant+concrete denied-axis”. Tighten to canonical axis/value constraints or classify only semantic candidate facts until a definitive join is available.
+
+Same-shaped immutable produced audit records remain a counterexample: a production result with a limits record plus audit rows input/expected/actual is immediately classified before producedRecord guard. Current produced-positive test with variable outcomes does not cover this exact immutable shape. Retain a genuine produced output DTO case with that same shape and a real individual runtime consumer; whole test read alone cannot resolve the role. Either require trial-exclusive semantic role evidence or leave ambiguous produced records unresolved. Do not introduce title suffix exemption as the fix.
+
+Refusal grammar remains field-name-bound (/refusals$/ plus axis/value/kind), while paired input observations allow any schedule key. A renamed denied schedule carrying identical semantics is an explicit false-negative test worth retaining as unresolved/coverage qualification; do not claim complete generic trial detection.

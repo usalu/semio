@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 📊️ `@semio-tech/print-viz-inference` router: `bun ./📜️script.ts build|test [level]`.
  * `test` runs the authored inference differential harness: every computation measured against the d3 package
  * that is its registered oracle. The check table and its d3 imports live in `🔬️probes/🟦️.ts`; the
@@ -101,6 +102,6 @@ class BuildScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript);
 
-if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
 
 

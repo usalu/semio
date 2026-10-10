@@ -1,0 +1,809 @@
+{
+  "schemas": {
+    "string-list": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "preview-camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positionX",
+        "positionY",
+        "positionZ",
+        "targetX",
+        "targetY",
+        "targetZ",
+        "fov"
+      ],
+      "properties": {
+        "positionX": {
+          "type": "number"
+        },
+        "positionY": {
+          "type": "number"
+        },
+        "positionZ": {
+          "type": "number"
+        },
+        "targetX": {
+          "type": "number"
+        },
+        "targetY": {
+          "type": "number"
+        },
+        "targetZ": {
+          "type": "number"
+        },
+        "fov": {
+          "type": "number"
+        }
+      }
+    },
+    "editor-camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "target": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "fov": {
+          "type": "number"
+        }
+      }
+    },
+    "presence-camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "target": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "fov": {
+          "type": "number"
+        }
+      }
+    },
+    "view-camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "target": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "fov": {
+          "type": "number"
+        }
+      }
+    },
+    "view-config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lodMode",
+        "showMode",
+        "previewCamera",
+        "sunJson"
+      ],
+      "properties": {
+        "lodMode": {
+          "type": "string"
+        },
+        "showMode": {
+          "type": "string"
+        },
+        "previewCamera": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position",
+            "target",
+            "fov"
+          ],
+          "properties": {
+            "position": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "target": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "fov": {
+              "type": "number"
+            }
+          }
+        },
+        "sunJson": {
+          "type": "string"
+        },
+        "activeExampleId": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "kind": "string-list",
+      "name": "native",
+      "input": {
+        "values": [
+          "",
+          "日本",
+          "🌀"
+        ]
+      },
+      "output": {
+        "values": [
+          "",
+          "日本",
+          "🌀"
+        ]
+      }
+    },
+    {
+      "kind": "string-list",
+      "name": "project-unknown",
+      "input": {
+        "values": [
+          "",
+          "日本",
+          "🌀"
+        ],
+        "extra": true
+      },
+      "output": {
+        "values": [
+          "",
+          "日本",
+          "🌀"
+        ]
+      }
+    },
+    {
+      "kind": "string-list",
+      "name": "missing",
+      "input": {},
+      "reject": true
+    },
+    {
+      "kind": "string-list",
+      "name": "null",
+      "input": null,
+      "reject": true
+    },
+    {
+      "kind": "preview-camera",
+      "name": "native",
+      "input": {
+        "positionX": 1,
+        "positionY": 2,
+        "positionZ": 3,
+        "targetX": 0,
+        "targetY": 0,
+        "targetZ": 0,
+        "fov": 45
+      },
+      "output": {
+        "positionX": 1,
+        "positionY": 2,
+        "positionZ": 3,
+        "targetX": 0,
+        "targetY": 0,
+        "targetZ": 0,
+        "fov": 45
+      }
+    },
+    {
+      "kind": "preview-camera",
+      "name": "project-unknown",
+      "input": {
+        "positionX": 1,
+        "positionY": 2,
+        "positionZ": 3,
+        "targetX": 0,
+        "targetY": 0,
+        "targetZ": 0,
+        "fov": 45,
+        "extra": true
+      },
+      "output": {
+        "positionX": 1,
+        "positionY": 2,
+        "positionZ": 3,
+        "targetX": 0,
+        "targetY": 0,
+        "targetZ": 0,
+        "fov": 45
+      }
+    },
+    {
+      "kind": "preview-camera",
+      "name": "missing",
+      "input": {},
+      "reject": true
+    },
+    {
+      "kind": "preview-camera",
+      "name": "null",
+      "input": null,
+      "reject": true
+    },
+    {
+      "kind": "inference",
+      "name": "native",
+      "input": {
+        "topology": {
+          "nodeCount": 1,
+          "edgeCount": 0,
+          "topoOrder": [
+            "日本"
+          ],
+          "depth": 0,
+          "cycleFree": true
+        },
+        "geometry": {
+          "widgets": {
+            "日本": {
+              "quality": "polygon-mesh",
+              "fault": {
+                "code": "E",
+                "en": "Fault",
+                "de": "Fehler",
+                "port": null
+              },
+              "outputs": [
+                {
+                  "port": "out",
+                  "kind": "mesh",
+                  "detail": "日本"
+                }
+              ]
+            }
+          },
+          "faulted": 1
+        }
+      },
+      "output": {
+        "topology": {
+          "nodeCount": 1,
+          "edgeCount": 0,
+          "topoOrder": [
+            "日本"
+          ],
+          "depth": 0,
+          "cycleFree": true
+        },
+        "geometry": {
+          "widgets": {
+            "日本": {
+              "quality": "polygon-mesh",
+              "fault": {
+                "code": "E",
+                "en": "Fault",
+                "de": "Fehler",
+                "port": null
+              },
+              "outputs": [
+                {
+                  "port": "out",
+                  "kind": "mesh",
+                  "detail": "日本"
+                }
+              ]
+            }
+          },
+          "faulted": 1
+        }
+      }
+    },
+    {
+      "kind": "inference",
+      "name": "project-unknown",
+      "input": {
+        "topology": {
+          "nodeCount": 1,
+          "edgeCount": 0,
+          "topoOrder": [
+            "日本"
+          ],
+          "depth": 0,
+          "cycleFree": true
+        },
+        "geometry": {
+          "widgets": {
+            "日本": {
+              "quality": "polygon-mesh",
+              "fault": {
+                "code": "E",
+                "en": "Fault",
+                "de": "Fehler",
+                "port": null
+              },
+              "outputs": [
+                {
+                  "port": "out",
+                  "kind": "mesh",
+                  "detail": "日本"
+                }
+              ]
+            }
+          },
+          "faulted": 1
+        },
+        "extra": true
+      },
+      "output": {
+        "topology": {
+          "nodeCount": 1,
+          "edgeCount": 0,
+          "topoOrder": [
+            "日本"
+          ],
+          "depth": 0,
+          "cycleFree": true
+        },
+        "geometry": {
+          "widgets": {
+            "日本": {
+              "quality": "polygon-mesh",
+              "fault": {
+                "code": "E",
+                "en": "Fault",
+                "de": "Fehler",
+                "port": null
+              },
+              "outputs": [
+                {
+                  "port": "out",
+                  "kind": "mesh",
+                  "detail": "日本"
+                }
+              ]
+            }
+          },
+          "faulted": 1
+        }
+      }
+    },
+    {
+      "kind": "inference",
+      "name": "missing",
+      "input": {},
+      "reject": true
+    },
+    {
+      "kind": "inference",
+      "name": "null",
+      "input": null,
+      "reject": true
+    },
+    {
+      "kind": "inference",
+      "name": "negative-node-count",
+      "input": {
+        "topology": {
+          "nodeCount": -1,
+          "edgeCount": 0,
+          "topoOrder": [
+            "日本"
+          ],
+          "depth": 0,
+          "cycleFree": true
+        },
+        "geometry": {
+          "widgets": {
+            "日本": {
+              "quality": "polygon-mesh",
+              "fault": {
+                "code": "E",
+                "en": "Fault",
+                "de": "Fehler",
+                "port": null
+              },
+              "outputs": [
+                {
+                  "port": "out",
+                  "kind": "mesh",
+                  "detail": "日本"
+                }
+              ]
+            }
+          },
+          "faulted": 1
+        }
+      },
+      "reject": true
+    },
+    {
+      "kind": "editor-camera",
+      "name": "native",
+      "input": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      },
+      "output": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      }
+    },
+    {
+      "kind": "editor-camera",
+      "name": "project-unknown",
+      "input": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45,
+        "extra": true
+      },
+      "output": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      }
+    },
+    {
+      "kind": "editor-camera",
+      "name": "missing",
+      "input": {},
+      "reject": true
+    },
+    {
+      "kind": "editor-camera",
+      "name": "null",
+      "input": null,
+      "reject": true
+    },
+    {
+      "kind": "presence-camera",
+      "name": "native",
+      "input": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      },
+      "output": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      }
+    },
+    {
+      "kind": "presence-camera",
+      "name": "project-unknown",
+      "input": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45,
+        "extra": true
+      },
+      "output": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      }
+    },
+    {
+      "kind": "presence-camera",
+      "name": "missing",
+      "input": {},
+      "reject": true
+    },
+    {
+      "kind": "presence-camera",
+      "name": "null",
+      "input": null,
+      "reject": true
+    },
+    {
+      "kind": "view-camera",
+      "name": "native",
+      "input": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      },
+      "output": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      }
+    },
+    {
+      "kind": "view-camera",
+      "name": "project-unknown",
+      "input": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45,
+        "extra": true
+      },
+      "output": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "fov": 45
+      }
+    },
+    {
+      "kind": "view-camera",
+      "name": "missing",
+      "input": {},
+      "reject": true
+    },
+    {
+      "kind": "view-camera",
+      "name": "null",
+      "input": null,
+      "reject": true
+    },
+    {
+      "kind": "view-config",
+      "name": "native",
+      "input": {
+        "lodMode": "fine",
+        "showMode": "shaded",
+        "previewCamera": {
+          "position": [
+            1,
+            2,
+            3
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "fov": 45
+        },
+        "sunJson": "{}",
+        "activeExampleId": ""
+      },
+      "output": {
+        "lodMode": "fine",
+        "showMode": "shaded",
+        "previewCamera": {
+          "position": [
+            1,
+            2,
+            3
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "fov": 45
+        },
+        "sunJson": "{}",
+        "activeExampleId": ""
+      }
+    },
+    {
+      "kind": "view-config",
+      "name": "project-unknown",
+      "input": {
+        "lodMode": "fine",
+        "showMode": "shaded",
+        "previewCamera": {
+          "position": [
+            1,
+            2,
+            3
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "fov": 45
+        },
+        "sunJson": "{}",
+        "activeExampleId": "",
+        "extra": true
+      },
+      "output": {
+        "lodMode": "fine",
+        "showMode": "shaded",
+        "previewCamera": {
+          "position": [
+            1,
+            2,
+            3
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "fov": 45
+        },
+        "sunJson": "{}",
+        "activeExampleId": ""
+      }
+    },
+    {
+      "kind": "view-config",
+      "name": "missing",
+      "input": {},
+      "reject": true
+    },
+    {
+      "kind": "view-config",
+      "name": "null",
+      "input": null,
+      "reject": true
+    }
+  ]
+}

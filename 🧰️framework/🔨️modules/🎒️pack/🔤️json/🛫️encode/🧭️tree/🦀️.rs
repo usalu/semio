@@ -129,7 +129,7 @@ impl ArtifactCanonicalJsonTreeCursor {
                 return frame.closure_demand();
             }
             let copy_bytes = match frame.phase {
-                Phase::Inspect => size_of::<ScalarBytes>(),
+                Phase::Inspect => match frame.owner.borrow()?.get().canonical_tree_node()? { Node::Array(_) | Node::Object(_) | Node::String(_) | Node::Text(_) => 0, _ => 64 },
                 Phase::ArrayChild | Phase::ObjectChild => size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>(),
                 Phase::ArrayNext if frame.ordinal < frame.length && frame.ordinal == 0 => size_of::<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>(),
                 _ => 1,
@@ -167,6 +167,7 @@ impl ArtifactCanonicalJsonTreeCursor {
                 if frame.owner.terminal_is_empty() { drop(self.frames.pop().unwrap()); progress.copied_bytes = demand.copy_bytes; }
                 else { progress = frame.owner.close_step(grant)?.progress(); }
             } else {
+                let inspected = frame.phase == Phase::Inspect;
                 let byte = match frame.phase {
                     Phase::Inspect => {
                         let reference = frame.owner.borrow()?;
@@ -175,9 +176,8 @@ impl ArtifactCanonicalJsonTreeCursor {
                             Node::Array(length) => { frame.length = length; frame.phase = Phase::ArrayStart; }
                             Node::Object(length) => { frame.length = length; frame.phase = Phase::ObjectStart; }
                             Node::String(_) | Node::Text(_) => frame.phase = Phase::Text,
-                            scalar => { frame.scalar = ScalarBytes::from_node(scalar).map_err(|_| refusal("canonical native scalar could not encode"))?; frame.phase = Phase::Scalar; }
+                            scalar => { progress = frame.scalar.write_node(scalar)?; frame.phase = Phase::Scalar; }
                         }
-                        progress.copied_bytes = demand.copy_bytes;
                         None
                     }
                     Phase::ArrayChild | Phase::ObjectChild | Phase::ArrayNext if frame.phase != Phase::ArrayNext || frame.ordinal == 0 && frame.ordinal < frame.length => {
@@ -219,7 +219,7 @@ impl ArtifactCanonicalJsonTreeCursor {
                     Phase::ObjectColon => { frame.phase = Phase::ObjectChild; Some(b':') }
                     _ => return Err(refusal("canonical native traversal phase is invalid")),
                 };
-                if progress.copied_bytes == 0 { progress.copied_bytes = 1; }
+                if !inspected && progress.copied_bytes == 0 { progress.copied_bytes = 1; }
                 if let Some(byte) = byte { output[0] = byte; written_bytes = 1; }
             }
         } else {

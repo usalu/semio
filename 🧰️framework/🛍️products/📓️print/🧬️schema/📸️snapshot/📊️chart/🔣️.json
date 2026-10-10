@@ -1,0 +1,6 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://semio.tech/schema/print/chart/specification",
+ "title":"Authored Print Chart Specification",
+ "$ref":"https://semio.tech/schema/print/chart/snapshot#/$defs/AuthoredChartSpecification"
+}

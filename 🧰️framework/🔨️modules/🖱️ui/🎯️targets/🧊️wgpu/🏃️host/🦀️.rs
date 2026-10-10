@@ -122,40 +122,46 @@ pub enum ClipboardContent {
 /// I/O lane and poll the returned receiver; no event callback executes or waits for `arboard`.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ClipboardIoJob {
-    operation: Option<ClipboardIoOperation>,
+    operation: std::mem::ManuallyDrop<Option<ClipboardIoOperation>>,
     closing: bool,
+    completed: bool,
+    cancelled: bool,
+    fault: semio_framework_job::RetainedPayloadBuilder,
+    fault_cursor: usize,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ClipboardIoJob {
     pub fn read() -> Self {
-        Self { operation: Some(ClipboardIoOperation::Read), closing: false }
+        Self { operation: std::mem::ManuallyDrop::new(Some(ClipboardIoOperation::Read)), closing: false, completed:false, cancelled:false, fault:semio_framework_job::RetainedPayloadBuilder::new(semio_framework_job::JobPayloadStream::Fault), fault_cursor:0 }
     }
 
     pub fn write(text: String) -> Self {
-        Self { operation: Some(ClipboardIoOperation::Write(text)), closing: false }
+        Self { operation: std::mem::ManuallyDrop::new(Some(ClipboardIoOperation::Write(text))), closing: false, completed:false, cancelled:false, fault:semio_framework_job::RetainedPayloadBuilder::new(semio_framework_job::JobPayloadStream::Fault), fault_cursor:0 }
     }
 
     /// 📥️ Decodes a successful read candidate. Write candidates and empty clipboards return
     /// `None`; cancellation/fault/yield are not terminal results and also return `None`.
-    pub fn read_candidate(outcome: &semio_framework_job::StepOutcome) -> Option<ClipboardContent> {
-        let semio_framework_job::StepOutcome::Complete(candidate) = outcome else { return None };
-        decode_clipboard_content(candidate.output.page(0)?)
+    pub fn read_candidate<'a>(outcome: &semio_framework_job::JobOutcomeView<'a>) -> Option<ClipboardContentBorrow<'a>> {
+        let semio_framework_job::JobOutcomeView::Complete {output:Some(output),..}=outcome else{return None};
+        decode_clipboard_content_borrow(output.page(0)?)
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn decode_clipboard_content(page: &[u8]) -> Option<ClipboardContent> {
-    let (&kind, bytes) = page.split_first()?;
-    match kind {
-        1 => String::from_utf8(bytes.to_vec()).ok().map(ClipboardContent::Text),
-        2 if bytes.len() >= 8 => {
-            let width = u32::from_le_bytes(bytes[0..4].try_into().ok()?);
-            let height = u32::from_le_bytes(bytes[4..8].try_into().ok()?);
-            let expected = usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)?;
-            (bytes.len() == expected + 8).then(|| ClipboardContent::ImageRgba8 { width, height, bytes: bytes[8..].to_vec() })
+pub enum ClipboardContentBorrow<'a>{Text(&'a str),ImageRgba8{width:u32,height:u32,bytes:&'a[u8]}}
+#[cfg(not(target_arch = "wasm32"))]
+fn decode_clipboard_content_borrow(page:&[u8])->Option<ClipboardContentBorrow<'_>>{
+    let (&kind,bytes)=page.split_first()?;
+    match kind{
+        1=>std::str::from_utf8(bytes).ok().map(ClipboardContentBorrow::Text),
+        2 if bytes.len()>=8=>{
+            let width=u32::from_le_bytes(bytes[0..4].try_into().ok()?);
+            let height=u32::from_le_bytes(bytes[4..8].try_into().ok()?);
+            let expected=usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)?;
+            (bytes.len()==expected+8).then(||ClipboardContentBorrow::ImageRgba8{width,height,bytes:&bytes[8..]})
         }
-        _ => None,
+        _=>None
     }
 }
 
@@ -169,54 +175,40 @@ pub(crate) mod physical_job_close_tests;
 
 #[cfg(not(target_arch = "wasm32"))]
 impl semio_framework_job::InteractiveJob for ClipboardIoJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        if cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+    fn step<'a>(&'a mut self, cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError>{
+        use semio_framework_job::JobOutcomeBorrow;
+        let grant=cx.retained_grant();
+        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+        if self.cancelled||cx.is_cancelled(){
+            let outcome=JobOutcomeBorrow::admit_cancelled(cx)?;
+            if outcome.is_some(){self.cancelled=true}
+            return Ok(outcome)
         }
-        if cx.should_yield() {
-            return semio_framework_job::StepOutcome::Yield;
-        }
+        if self.completed{return JobOutcomeBorrow::admit_complete(cx,None,None)}
+        if cx.should_yield(){return JobOutcomeBorrow::admit_yield(cx)}
         cx.set_stage("ClipboardIo");
-        use arboard as system_clipboard;
-        let output = match self.operation.take() {
-            Some(ClipboardIoOperation::Read) => {
-                let mut writer = semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput);
-                let source = semio_framework_job::JobPayloadPageSource::new();
-                let mut page = match cx.admit_payload_page(&mut writer, source) {
-                    Ok(page) => page,
-                    Err(_) => return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
-                };
-                let content = system_clipboard::Clipboard::new().ok().and_then(|mut clipboard| {
-                    if let Ok(image) = clipboard.get_image() {
-                        let width = u32::try_from(image.width).ok()?;
-                        let height = u32::try_from(image.height).ok()?;
-                        Some((2u8, width.to_le_bytes().to_vec(), height.to_le_bytes().to_vec(), image.bytes.into_owned()))
-                    } else {
-                        clipboard.get_text().ok().map(|text| (1u8, Vec::new(), Vec::new(), text.into_bytes()))
-                    }
-                });
-                let write = match content {
-                    Some((kind, width, height, bytes)) if 1 + width.len() + height.len() + bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => {
-                        page.write(&[kind]).and_then(|_| page.write(&width)).and_then(|_| page.write(&height)).and_then(|_| page.write(&bytes))
-                    }
-                    _ => page.write(&[0]),
-                };
-                if write.is_err() {
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
-                }
-                page.commit();
-                writer.finish().unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput))
-            }
-            Some(ClipboardIoOperation::Write(text)) => {
-                if let Ok(mut clipboard) = system_clipboard::Clipboard::new() {
-                    let _ = clipboard.set_text(text);
-                }
-                semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput)
-            }
-            None => semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        };
-        cx.consume_fuel(1);
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output })
+        if let Some(ClipboardIoOperation::Write(text))=self.operation.as_ref(){
+            let mut clipboard=arboard::Clipboard::new().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native clipboard write surface unavailable"))?;
+            clipboard.set_text(text.as_str()).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native clipboard write failed"))?;
+            self.completed=true;
+            cx.consume_fuel(1);
+            return JobOutcomeBorrow::admit_complete(cx,None,None)
+        }
+        let diagnostic=b"native clipboard read requires original bounded platform recipient";
+        if !self.fault.advance_initialization(cx)?{return Ok(None)}
+        if !self.fault.append_original(cx,diagnostic,&mut self.fault_cursor)?{return Ok(None)}
+        if !self.fault.seal(cx)?{return Ok(None)}
+        JobOutcomeBorrow::admit_fault(cx,self.fault.published().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original clipboard diagnostic was not sealed"))?)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{
+        match descriptor.kind(){
+            semio_framework_job::JobOutcomeKind::Cancelled if self.cancelled=>descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Complete if self.completed=>descriptor.complete(None,None),
+            semio_framework_job::JobOutcomeKind::Yield=>descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Fault=>descriptor.fault(self.fault.published().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original clipboard fault absent"))?),
+            _=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"clipboard descriptor does not match original outcome"))
+        }
     }
 
     fn begin_close(&mut self) {
@@ -224,24 +216,31 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
     }
 
     fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
-        use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};
-        if !self.closing{return InteractiveJobCloseStep::Blocked}
-        if self.operation.is_none(){return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
+        use semio_framework_job::{InteractiveJobCloseStep as Close,RetainedCloneProgress as Progress,RetainedCloneStep};
+        if !self.closing{return Close::Blocked}
+        if !self.fault.terminal_is_empty(){
+            let demand=match self.fault.retirement_demands(){Ok(demand)=>demand,Err(error)=>return Close::Refused{kind:error.kind,progress:error.retained_progress()}};
+            if grant.maximum_depth<=demand.depth{return Close::Pending{progress:Progress::default()}}
+            let child=semio_framework_job::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+            return match self.fault.close_step_granted(child){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>Close::Refused{kind:error.kind,progress:error.retained_progress()}}
+        }
+        if self.operation.is_none(){return Close::Complete{progress:Progress::default()}}
         let bytes=match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0};
-        if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
-        if bytes!=0&&grant.maximum_depth==0{return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}}
-        self.operation=None;
-        InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes}}
+        if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return Close::Pending{progress:Progress::default()}}
+        if bytes!=0&&grant.maximum_depth==0{return Close::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Progress::default()}}
+        *self.operation=None;
+        Close::Complete{progress:Progress{copied_items:1,released_bytes:bytes,..Progress::default()}}
     }
-    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0})}
-    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(matches!(self.operation.as_ref(),Some(ClipboardIoOperation::Write(text)) if text.capacity()!=0)))}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if !self.fault.terminal_is_empty(){return Ok(self.fault.retirement_demands()?.copy_bytes)}Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{if !self.fault.terminal_is_empty(){return Ok(self.fault.retirement_demands()?.capacity_bytes)}Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if !self.fault.terminal_is_empty(){return Ok(self.fault.retirement_demands()?.release_bytes)}Ok(match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0})}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{if !self.fault.terminal_is_empty(){return self.fault.retirement_demands()?.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"clipboard fault close depth overflow"))}Ok(usize::from(self.operation.is_some()))}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.operation.is_none()&&self.fault.terminal_is_empty()}
 
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.operation.is_none()
-    }
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for ClipboardIoJob{fn drop(&mut self){assert!(std::thread::panicking()||(self.operation.is_none()&&self.fault.terminal_is_empty()),"original clipboard owner reached Drop before funded closure");}}
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub async fn clipboard_write_text(text: &str) {

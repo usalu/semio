@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "source",
+    "dictionary",
+    "metadataCopy",
+    "frontiers",
+    "grant"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "const": "original-pointer-extent-per-turn-borrow"
+    },
+    "dictionary": {
+      "const": "original-source-ranges"
+    },
+    "metadataCopy": {
+      "const": 0
+    },
+    "frontiers": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "verify",
+          "frame",
+          "dictionary-reserve",
+          "dictionary-range",
+          "typed-reserve",
+          "field-reserve",
+          "field-copy",
+          "shared-string-admission",
+          "typed-transfer",
+          "validate",
+          "ready-transfer",
+          "partial-close",
+          "auxiliary-close",
+          "receipt"
+        ]
+      },
+      "minItems": 14,
+      "maxItems": 14,
+      "uniqueItems": true
+    },
+    "grant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "const": 1
+        },
+        "copy": {
+          "const": 3
+        },
+        "capacity": {
+          "const": 1048576
+        },
+        "release": {
+          "const": 1048576
+        },
+        "depth": {
+          "const": 64
+        }
+      }
+    }
+  }
+}

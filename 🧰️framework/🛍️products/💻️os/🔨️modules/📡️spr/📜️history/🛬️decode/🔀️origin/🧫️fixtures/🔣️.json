@@ -1,0 +1,28 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 32768,
+    "releaseBytes": 65536,
+    "depth": 64
+  },
+  "origins": [
+    {
+      "json": "{\"kind\":\"owner\",\"unused\":{\"nested\":[\"original\",\"漢😀\"]}}",
+      "kind": "owner"
+    },
+    {
+      "json": "{\"kind\":\"contributed\",\"pluginId\":\"plugin-漢\",\"mutationId\":\"schema-é\",\"payloadHash\":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]}",
+      "kind": "contributed"
+    },
+    {
+      "json": "{\"kind\":\"transaction\",\"initiator\":{\"artifactId\":\"artifact-😀\",\"artifactKind\":\"demo\",\"dialect\":\"é\",\"unused\":[1,2]}}",
+      "kind": "transaction"
+    }
+  ],
+  "invalid": [
+    "{\"kind\":\"other\"}",
+    "{\"kind\":\"contributed\",\"pluginId\":\"p\",\"mutationId\":\"m\",\"payloadHash\":[256]}",
+    "{\"kind\":\"transaction\",\"initiator\":{\"artifactId\":\"a\"}}"
+  ]
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "path": "package.json",
+    "action": "update",
+    "beforeSha256": "f8cc3ed1166ef854a668aa4aa130c51dcb5e1c8540f946122d106506c00c951c",
+    "afterSha256": "15ecb8129fa571efe80cdfcc8e5b828fe3b1bbcc6762d0b7cae424abfdbec77b",
+    "qualification": "Handcrafted current native patterns from actual defining producer with fresh full-byte guard; current literal collection-root negatives and owner payload exclusions, no Source preimage restores/allowlist"
+  },
+  {
+    "path": "♻️mit-bestand/package.json",
+    "action": "update",
+    "beforeSha256": "984ec07906af11b340cb718137e15b0da960b6938707d8f2d67913433549f7d8",
+    "afterSha256": "576c4d3a3ed7563601d507f25cac4b7df513fe4e832bebc9ed09dcf2d7be5847",
+    "qualification": "Handcrafted current native patterns from actual defining producer with fresh full-byte guard; current literal collection-root negatives and owner payload exclusions, no Source preimage restores/allowlist"
+  },
+  {
+    "path": "✏️s/package.json",
+    "action": "update",
+    "beforeSha256": "68a6658815c6d3cf0e6117809d582fb20ebac1055798b19bb4e9ed48c68e9094",
+    "afterSha256": "8a0948bb59503263e41e9fcc9107d385a4bc6887d176fffa5fa6ad21dddec1c5",
+    "qualification": "Handcrafted current native patterns from actual defining producer with fresh full-byte guard; current literal collection-root negatives and owner payload exclusions, no Source preimage restores/allowlist"
+  },
+  {
+    "path": "🌎️hub/package.json",
+    "action": "update",
+    "beforeSha256": "60947e24df85dc29d54934a98ee55da982cd3a5f7d4e48fe050097b76c4b2797",
+    "afterSha256": "b601abdf67ee6e985dda31c7fcdfaf41e1aa00cc319e7e5166ae02c68cc0ba9e",
+    "qualification": "Handcrafted current native patterns from actual defining producer with fresh full-byte guard; current literal collection-root negatives and owner payload exclusions, no Source preimage restores/allowlist"
+  },
+  {
+    "path": "🎓️teaching/package.json",
+    "action": "update",
+    "beforeSha256": "46baafb254ff9276b3d726762bd64c793eed9f09a3fccb24a227863f41210e7e",
+    "afterSha256": "70a55253038bb41d25bee76367332ddfcf2ac5c2c0e773d70b2e5a670e6c954e",
+    "qualification": "Handcrafted current native patterns from actual defining producer with fresh full-byte guard; current literal collection-root negatives and owner payload exclusions, no Source preimage restores/allowlist"
+  },
+  {
+    "path": "🏢️semio-tech/package.json",
+    "action": "update",
+    "beforeSha256": "2c9c69686b8d914730302cd96c11e500ddc43e9ad026d010fffcefad203f31b1",
+    "afterSha256": "ab0ec4b0b76628a4a22b914380ada4dd7268741ea578edb7691058e95ee679e9",
+    "qualification": "Handcrafted current native patterns from actual defining producer with fresh full-byte guard; current literal collection-root negatives and owner payload exclusions, no Source preimage restores/allowlist"
+  }
+]

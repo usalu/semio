@@ -74,6 +74,10 @@ pub enum ToolRunJobPurpose {
 /// in a `PluginApp`, which stays `Send` on every target.
 pub type ToolRunJob = Box<dyn semio_framework_job::InteractiveJob + Send>;
 
+#[path="🎞️tick/📦️payload/🦀️.rs"]
+mod original_tick_payload;
+pub(crate) use original_tick_payload::{advance_original_tick_payload,close_original_tick_payload};
+
 /// 🧳️ Everything an app needs to build one run or revalidate job (§3.7).
 ///
 /// - `snapshot` is the run's base for `Run` and the committed head for `Revalidate`.
@@ -166,7 +170,7 @@ impl ToolRunJobPort {
         if Arc::weak_count(&self.inner)!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port weak backing remains live"));}
         let effects=self.inner.effects.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port queue is unavailable"))?;
         if Arc::strong_count(&self.inner)==1&&!effects.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port effects require native retirement"));}
-        Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<Self>()+std::mem::size_of::<Option<Self>>()+2*std::mem::size_of::<OriginalToolRunJobPortRetirement>(),depth:1,..Default::default()})
+        Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})
     }
 
     /// 📮️ Captures the same original port under unchanged caller authority.
@@ -174,6 +178,13 @@ impl ToolRunJobPort {
         let Some(port)=source.as_ref()else{return Ok(None)};let demand=port.original_close_demands()?;
         if !tool_original_grant_funds(grant,demand){return Ok(None);}
         Ok(Some((OriginalToolRunJobPortRetirement{source:std::mem::ManuallyDrop::new(source.take()),effects:std::mem::ManuallyDrop::new(None)},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
+    }
+
+    /// 🎟️ Births the original native queue before moving the unchanged caller effect.
+    pub fn admit_original_dispatch(&self,source:&mut Option<Effect>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let empty=Default::default();if source.is_none(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty))}let mut effects=self.inner.effects.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port queue is unavailable"))?;
+        if effects.len()==effects.capacity(){let old=effects.capacity();let extent=old.checked_add(1).and_then(|capacity|capacity.checked_mul(std::mem::size_of::<Effect>())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue extent overflow"))?;let released=old.checked_mul(std::mem::size_of::<Effect>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port prior queue extent overflow"))?;if grant.maximum_capacity_bytes<extent||grant.maximum_release_bytes<released{return Ok(RetainedCloneStep::Progress(empty))}effects.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue backing unavailable"))?;let progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:effects.capacity()*std::mem::size_of::<Effect>(),released_bytes:released,..empty};if effects.capacity()!=old+1{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tool port native queue changed its quoted extent").with_retained_progress(progress))}return Ok(RetainedCloneStep::Progress(progress))}
+        effects.push_back(source.take().unwrap());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))
     }
 
     /// 📨️ Queues one effect the driver hands the host on its next turn, in order.
@@ -223,8 +234,8 @@ pub struct OriginalToolRunJobPortRetirement{
 impl OriginalToolRunJobPortRetirement{
     /// 📏️ Borrows the exact original lease or captured native queue frontier.
     pub fn demands(&self)->Result<RetirementDemand,ValueError>{
-        if let Some(port)=self.source.as_ref(){if Arc::weak_count(&port.inner)!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port weak backing remains live"));}return Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<ToolRunJobPortState>()+2*std::mem::size_of::<std::collections::VecDeque<Effect>>()+std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.effects),release_bytes:semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<ToolRunJobPortState>(),depth:1,..Default::default()});}
-        if let Some(effects)=self.effects.as_ref(){if !effects.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port final effects require native retirement"));}return Ok(RetirementDemand{copy_bytes:std::mem::size_of_val(&self.effects),release_bytes:effects.capacity().checked_mul(std::mem::size_of::<Effect>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue extent overflow"))?,depth:1,..Default::default()});}
+        if let Some(port)=self.source.as_ref(){if Arc::weak_count(&port.inner)!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port weak backing remains live"));}return Ok(RetirementDemand{copy_bytes:0,release_bytes:if Arc::strong_count(&port.inner)==1{semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<ToolRunJobPortState>()}else{0},depth:1,..Default::default()});}
+        if let Some(effects)=self.effects.as_ref(){if !effects.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port final effects require native retirement"));}return Ok(RetirementDemand{copy_bytes:0,release_bytes:effects.capacity().checked_mul(std::mem::size_of::<Effect>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue extent overflow"))?,depth:1,..Default::default()});}
         Ok(Default::default())
     }
 
@@ -243,6 +254,9 @@ impl Drop for OriginalToolRunJobPortRetirement{fn drop(&mut self){assert!(std::t
 #[cfg(test)]
 #[path="📮️port/♻️retirement/🧪️tests/🦀️.rs"]
 mod original_port_retirement_tests;
+#[cfg(test)]
+#[path="📮️port/🎟️admission/🧪️tests/🦀️.rs"]
+mod original_port_admission_tests;
 
 /// 🪟️ What a renderer learns about the run on this document instance (§4.1 layer 1): its identity and state, the
 /// provisional entities, the §2.3 progress (stage, counters, step ring) and the latest plugin payload a tick carried.

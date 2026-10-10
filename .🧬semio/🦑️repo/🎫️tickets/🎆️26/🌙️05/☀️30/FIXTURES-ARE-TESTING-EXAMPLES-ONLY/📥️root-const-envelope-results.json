@@ -1,0 +1,35 @@
+{
+  "red": {
+    "session": 55652,
+    "exitCode": 1,
+    "pass": 3,
+    "fail": 1,
+    "skip": 66,
+    "expect": 1104,
+    "reason": "first literal authority incorrectly exported"
+  },
+  "renewal": {
+    "session": 31373,
+    "exitCode": 1,
+    "pass": 3,
+    "fail": 1,
+    "skip": 66,
+    "expect": 1168,
+    "reason": "full catalog test exceeded original5000ms; no assertion failure observed",
+    "all133NeutralRowsCompleted": true,
+    "qualification": "All133 rows completed and DEBUG printed, but one aggregate original5000ms timeout makes whole suite RED; no test-budget override."
+  },
+  "native": false,
+  "normalCli": false,
+  "current": {
+    "session": 99071,
+    "exitCode": 0,
+    "pass": 136,
+    "fail": 0,
+    "skip": 66,
+    "expect": 1168,
+    "registeredNeutralRows": 133,
+    "unchangedEachTestDeadline": true,
+    "log": "\ud83d\uddd1\ufe0fgenerated/root-const-envelope-current.log"
+  }
+}

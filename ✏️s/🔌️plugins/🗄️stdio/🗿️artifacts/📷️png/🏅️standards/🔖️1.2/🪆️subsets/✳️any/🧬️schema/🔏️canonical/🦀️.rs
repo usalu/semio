@@ -25,7 +25,7 @@ fn image(value:&PngImage)->V<'_>{object([
 ("ancillaryChunks",array(&value.ancillary_chunks,|v|object([("kind",array(&v.kind,|v|number(*v))),("data",array(&v.data,|v|number(*v))),("afterRaster",boolean(v.after_raster))])))
 ])}
 impl store::ArtifactCanonicalJson for PngMutation {
-    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{
+    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>, semio_framework_value::ValueError>{
         let (kind,payload)=match self {
             Self::ReplaceImage(v)=>("replace-image",object([("image",image(&v.image))])),
             Self::ChangeGamma(v)=>("change-gamma",object([("revision",text(&v.revision)),("gama",optional(v.gama.as_ref(),|v|number(*v)))])),
@@ -37,10 +37,10 @@ impl store::ArtifactCanonicalJson for PngMutation {
     }
 }
 impl store::ArtifactCanonicalJson for PngSnapshot {
-    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{Ok(Some(snapshot(self)))}
+    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>, semio_framework_value::ValueError>{Ok(Some(snapshot(self)))}
 }
 impl store::ArtifactCanonicalJson for PngDiff {
-    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>,String>{
+    fn canonical_json_borrowed_root(&self)->Result<Option<V<'_>>, semio_framework_value::ValueError>{
         let fields=[
             self.gamma.as_ref().map(|value|("gamma",object([("gama",optional(value.gama.as_ref(),|v|number(*v)))]))),
             self.image.as_ref().map(|value|("image",image(value))),

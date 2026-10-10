@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts",
+      "sha256": "18a10f4745d88485e50d00a72f4cf63afec6c428d53c113c54cb6dac42383d0c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧪️tests/🟦️.ts",
+      "sha256": "3120105efd47debdc5f307adcb62759dd2b6c37ee0f59cbc898a1fc996553668"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🟦️.ts",
+      "sha256": "302e502aff2a357f5e6d47e7a4c4434c024522b5e269138d863ed0ee328c0cfa"
+    }
+  ]
+}

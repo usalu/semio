@@ -4,12 +4,10 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 pub use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Generation3dSnapshot
 /// 🧬️ Generation3dSnapshot facet type.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.procedural.generation3d")]
 pub struct Generation3dSnapshot {
     #[state(artifact)]

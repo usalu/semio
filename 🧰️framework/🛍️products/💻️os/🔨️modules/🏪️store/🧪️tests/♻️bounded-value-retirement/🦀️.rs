@@ -69,8 +69,8 @@ fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under
 fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_physical_receipts() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["vcsRetirement"];
-    let forwards: Vec<u64> = serde_json::from_value(law["forwards"].clone()).unwrap();
-    let inverse: Vec<u64> = serde_json::from_value(law["inverse"].clone()).unwrap();
+    let forwards: Vec<u64> = law["forwards"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().parse::<u64>().unwrap()).collect();
+    let inverse: Vec<u64> = law["inverse"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().parse::<u64>().unwrap()).collect();
     for with_edit in [false, true] {
         let (vcs, born, released) = crate::test_allocation::observe_backing(|| {
             let mut pack = Vec::<u8>::with_capacity(law["packCapacity"].as_u64().unwrap() as usize);

@@ -1,5 +1,8 @@
 //! 📝️ Authored chart text representation.
 use crate::ChartSnapshot;
+use semio_framework_value::DslValue;
+semio_framework_value_derive::value_codec!{#[value(deny_unknown_fields)]struct ChartSnapshot{pub chart:DslValue}}
+semio_framework_dsl_record_derive::record_binding!{struct ChartSnapshot{pub chart:DslValue}}
 use protocol as store;
 use semio_framework_diagnostic::{TextError,TextSpan};
 use semio_framework_value::ValueRefusalKind as K;

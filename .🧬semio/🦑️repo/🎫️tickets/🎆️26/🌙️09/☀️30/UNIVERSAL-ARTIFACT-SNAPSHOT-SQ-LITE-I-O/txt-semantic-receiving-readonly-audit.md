@@ -1,0 +1,27 @@
+# TXT Semantic Receiving Audit
+
+Read-only source audit, no builds/tests. TXT native encoding Native7620 is left untouched. Domain base is `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/`.
+
+## Actual current routing
+
+TXT `🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` supplies cold to_sqlite_database/from_sqlite_database and cold subset validation, plus original native decode/encode methods. It does not override explicit receiving projection/reconstruction or directional receiving validators.
+
+Actual ArtifactSqliteSnapshot trait defaults in `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:12105,12107,12146,12148` are fail-closed UnsupportedOwner; they do not execute cold P/R or cold validation. Generic `📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs::export` decodes under nested original custody then calls to_sqlite_database_receiving; import adopts original input database, receiving-checks its extent then calls from_sqlite_database_receiving and directional validator. Therefore current genuine TXT factory cannot complete whole IO through those missing hooks. It should refuse rather than silently clone cold locally owned data. This is source routing evidence, not observed runtime refusal.
+
+Cold TXT reconstruction uses ordered_row_refs allocating local index backing, fresh lines Vec/try_reserve_exact and restore.text into local Strings. Cold projection uses generic Projection insert allocations. These remain valid separate cold APIs but cannot substitute for original receiving qualification; wrapping their eventual return in owner.receive does not preserve interrupted internal backing.
+
+## Smallest handcrafted domain receiving frames
+
+Semantic DDL has text_document(id,schema,trailing_newline,line_ending) and text_line(id,document_id,ordinal,content). Projection frame holds an initially empty SqliteDatabase and only required current row state. Reconstruction frame holds initially empty TxtSnapshot plus retained ordinal/index and identity vectors. Both implement genuine controlled retirement. Birth the frame inside owner.receive Option before schema, table metadata, row vector or text allocation. Use actual artifact::receiving::Port with Direction::Decode for projection and Encode for reconstruction; work/text/vector methods settle original grants and callback cancellation. Borrow source and input tables; do not allocate a local ordered_row_refs result outside the frame.
+
+Projection must preserve schema literal, boolean trailing flag, chosen lf/crlf, exact UTF8/NUL content and authored row relations. Reconstruction must validate exact table schema/width, one positive root matching rowid, flag only0/1, ending onlylf/crlf, positive matching line IDs, parent relation, contiguous unique nonnegative ordinals, then birth each String slot before its paid copy. Retain actual sorted row indices/identities while checking original callback; reject duplicate/missing/orphan rows rather than taking incidental iteration order. Move finished database/snapshot into receiving output, retire scratch and frame under original remaining grant, and fund publication. Preserve exact SQL/native typed cause and promote full cumulative owner receipts even on early refusal.
+
+Override both directional validators using original native checkpoint and the exact TXT dialect(s.stdio.txt/utf-8/*); genuine generic extent validation already precedes import reconstruction and follows export projection. Any additional semantic validation must use borrowed receiving scans, not cold allocation-producing schema parser paths without original custody.
+
+Binary now mounts explicit four hooks at its corresponding root; CSV/TSV root mounts same hooks and their receiving modules use explicit Projection/Reconstruction frames with retained index vectors and Port methods. These are concrete implementation analogues, not Native passes. Their post-receive SQL allocation settlement must still be audited for successful output dropped on late settlement refusal; TXT can preserve its new encode principle by settling inside custody before publication.
+
+## First neutral and genuine laws
+
+Handcraft closed neutral schema/fixture first: original caller identity/grant/native maximum, original close grants; exact semantic two-table rows for empty document, multiple empty lines, LF/CRLF/trailing, literal embedded separators, NUL, multibyte text; forged root/parent/width/boolean/ending/duplicate/missing ordinal cases; exact refusal causes/storage and original partial custody expectations. Independent SQLite validates declared DDL/rows and rejects bad relations; independent UTF8 witness verifies source content bytes, without claiming native callbacks executed.
+
+Source law requires explicit four receiving method declarations and mounted owning native laws, and forbids calls to cold P/R within receiving bodies. Native laws invoke genuine typed projection and reconstruction on original supplied owners, deny each independent currency before the relevant birth, cancel long schema/line/index scans mid-prefix, compare exact wallet/whole-owner receipts and literal cause pointer, and rearm the same original observer for zero/funded close. Final law invokes actual capability export/import, verifies original adopted input empties only after accepted custody and final output/diagnostics match exact SQL semantics. No custom controller, grant derived from measured demand, feature bypass or cold fallback.

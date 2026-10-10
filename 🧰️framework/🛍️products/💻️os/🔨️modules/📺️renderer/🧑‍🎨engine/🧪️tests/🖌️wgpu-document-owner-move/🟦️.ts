@@ -15,6 +15,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import Ajv from "ajv";
+import { parseRetainedCloneGrant } from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
+import grantSchema from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
 import laws from "../../🧫️fixtures/🖌️wgpu-document-owner-move/🔣️.json";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
@@ -33,6 +36,50 @@ const fixture = JSON.parse(readFileSync(resolve(suiteRoot, laws.fixture), "utf8"
 const source = (key: "shellSource" | "interpreterSource" | "rendererSource" | "frameJobSource" | "winitSource") => readFileSync(join(engineRoot, laws[key]), "utf8");
 
 describe("wgpu retained document owner move", () => {
+  it("admits the exact original five-axis invocation grant with an independent schema oracle", () => {
+    const validate = new Ajv({ strict: true }).compile(grantSchema);
+    const ours = laws.workerInvocation.grantCases.map((original) => { try { expect(parseRetainedCloneGrant(original)).toBe(original); return true; } catch { return false; } });
+    const independent = laws.workerInvocation.grantCases.map((original) => validate(original));
+    expect(ours).toEqual(laws.workerInvocation.expectedGrantAdmissions);
+    expect(independent).toEqual(laws.workerInvocation.expectedGrantAdmissions);
+  });
+
+  it("retains original asset invocation authority through the canonical producer and receiving ports", () => {
+    const renderer = source("rendererSource");
+    const start = renderer.indexOf("impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob");
+    const end = renderer.indexOf("struct RendererAssetDecodeWake", start);
+    const producer = renderer.slice(start, end);
+    expect(producer).toContain("Result<Option<");
+    expect(producer).toContain("JobOutcomeBorrow");
+    expect(producer).toContain("fn borrow_outcome");
+    expect(renderer).toContain(laws.workerInvocation.nativeType);
+    expect(renderer).toContain(laws.workerInvocation.receiptPort);
+    expect(renderer).toContain(laws.workerInvocation.ackPort);
+    expect(renderer).not.toContain("session.try_step_on_worker()");
+    const host = readFileSync(join(engineRoot, laws.workerInvocation.hostSource), "utf8");
+    for (const port of laws.workerInvocation.originalHostPorts) expect(host).toContain(port);
+  });
+
+  it("the live asset session receives original authority without constructing its own policy or cancellation", () => {
+    const renderer = source("rendererSource");
+    const start = renderer.indexOf("impl RendererAssetDecodeSession {");
+    const end = renderer.indexOf("fn renderer_asset_svg_prefix_is_valid", start);
+    expect(start).toBeGreaterThan(0);
+    const session = renderer.slice(start, end);
+    for (const forbidden of laws.workerInvocation.forbiddenSessionAuthority) expect(session).not.toContain(forbidden);
+    expect(session).toContain("RendererAssetDecodeInvocation");
+    expect(session).toContain("try_admit_owned");
+  });
+
+  it("the actual frame receiving owner preserves admission and paid acknowledgement ports", () => {
+    const frame = source("frameJobSource");
+    expect(frame).toContain(laws.frameReceiving.admissionPort);
+    expect(frame).toContain(laws.frameReceiving.receiptPort);
+    expect(frame).toContain(laws.frameReceiving.acknowledgementPort);
+    expect(frame).not.toContain(laws.frameReceiving.forbiddenOutcomeRemoval);
+    expect(frame).not.toContain(laws.frameReceiving.forbiddenAdmission);
+  });
+
   it("keeps the fixture's own alias arithmetic self-consistent", () => {
     expect(fixture.aliasReads.admitted + fixture.publishedAliases).toBe(fixture.aliasCapacity);
     expect(fixture.aliasReads.refusedAt).toBe(fixture.aliasReads.admitted + 1);

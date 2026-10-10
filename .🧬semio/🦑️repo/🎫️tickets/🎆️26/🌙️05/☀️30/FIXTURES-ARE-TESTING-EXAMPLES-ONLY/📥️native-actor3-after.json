@@ -1,0 +1,74 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧬️schema/🔣️.json",
+    "sha256": null,
+    "matchesBefore": false,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🟦️.ts",
+    "sha256": "c0e8d948a8f4eea94cb0251d3bdb88430583963f5014c086c58f022bb60f64d2",
+    "matchesBefore": false,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧫️fixtures/🔣️.json",
+    "sha256": "40e576307da17b2f3e3731dc7ab69df6eb61f57e924d05033275f59023d7da14",
+    "matchesBefore": true,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧬️schema/🔣️.json",
+    "sha256": null,
+    "matchesBefore": false,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🟦️.ts",
+    "sha256": "6fdb6622f1de7a8a61b64357986c0f0991ffd0f982a5119acc76644fcd7b36d6",
+    "matchesBefore": false,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json",
+    "sha256": "920fe5353a8a67618592be475e0d8be5155470fda1a5e64009dc0da19f8ec273",
+    "matchesBefore": true,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧬️schema/🔣️.json",
+    "sha256": null,
+    "matchesBefore": false,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🟦️.ts",
+    "sha256": "62a0a3e07e35306f4493cf912db4db6a78a638cb013154a1afe34c1c2d61490a",
+    "matchesBefore": false,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧫️fixtures/🔣️.json",
+    "sha256": "1438371ba7abe616114798022c54c44b6e8880ee4dca761aa9dd57f3b008736e",
+    "matchesBefore": true,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧬️schema/🔣️.json",
+    "sha256": "ae5e11e348ecd322c752313dcef3f43483cc32ff7e56376312d94b2650b560fe",
+    "matchesBefore": true,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/🟦️.ts",
+    "sha256": "7944d08b267965f31e49b041de71531857fcd34e236df351ab6b1a4b59c0093c",
+    "matchesBefore": true,
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧫️fixtures/🔣️.json",
+    "sha256": "86e26c34bc0f80f8ed02c100b7e40fedb7045e84c9222a5ce19bdb31af109441",
+    "matchesBefore": true,
+    "observedOnly": true
+  }
+]

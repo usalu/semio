@@ -98,7 +98,7 @@ impl RetainedCloneEdit<u64, BirthMutation> for BirthEdit {
 }
 impl RetainedCloneEditCursor<u64, BirthMutation> for BirthCursor {
     fn foreign_step_presence(&self)->bool{false}
-    fn advance(&mut self, _: RetainedCloneRef<'_, u64>, _: &mut u64, _: RetainedCloneRef<'_, BirthMutation>, _: RetainedCloneGrant) -> Result<RetainedCloneEditStep, String> { unreachable!() }
+    fn advance(&mut self, _: RetainedCloneRef<'_, u64>, _: &mut u64, _: RetainedCloneRef<'_, BirthMutation>, _: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> { unreachable!() }
     fn take_inverse(&mut self) -> Option<Vec<BirthMutation>> { None }
     fn cancel(&mut self) {}
     fn begin_close(&mut self) -> bool { true }
@@ -123,7 +123,7 @@ fn snapshot_clone_preparation_birth_returns_original_request_before_domain_work(
     let authority = Arc::new(ArtifactStoreOneItemLiveAuthority { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(3), base_revision: [0;32], base_applied_edit_count: 0, next_sequence_number: 1, next_clock: crate::os_spr::HybridLogicalTimestamp::new(1, 0), actor: "original actor".into(), line: None, group_id: None, stamped_edit_id: None });
     let (mutation, original_heap) = observe_heap_allocations_on_this_thread(|| BirthMutation { text: "original α\0😀".into() });
     let mutation_pointer = mutation.text.as_ptr();
-    let mut request = ArtifactStoreOneItemPreparationRequest { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(3), base_revision: [0;32], lane: HistoryLane::Document, authority: Arc::clone(&authority), base: SnapshotRead::new(Arc::clone(&root), lease), mutation };
+    let mut request = ArtifactStoreOneItemPreparationRequest { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(3), base_revision: [0;32], lane: HistoryLane::Document, authority: Arc::clone(&authority), base: SnapshotRead::new(Arc::clone(&root), lease), mutation, mutation_retirement:Arc::clone(&factory.mutation_retirement),snapshot_retirement:Arc::clone(&factory.snapshot_retirement) };
     let (demand, heap) = observe_heap_allocations_on_this_thread(|| factory.begin_demand(&request.mutation, request.lane).unwrap());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0,0));
     assert_eq!(demand.capacity_bytes, size_of::<RetainedClonePreparation<u64, BirthMutation, BirthEdit>>());

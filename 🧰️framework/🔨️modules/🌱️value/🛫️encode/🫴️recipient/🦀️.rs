@@ -19,9 +19,9 @@ impl ErasedSnapshotRetirement for NativeEncodeRetirementRecipient{
         crate::close_factory_ticket(&mut self.owner,grant)
     }
     fn terminal_is_empty(&self)->bool{!self.reserved&&self.owner.is_none()}
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(std::mem::size_of_val(owner.as_ref()))}else{owner.next_release_byte_demand()})}
-    fn next_depth_demand(&self)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(usize::from(self.reserved)),|owner|if owner.terminal_is_empty(){Ok(1)}else{owner.next_depth_demand()})}
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if self.reserved{return Ok(0)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.copy_bytes))}
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{if self.reserved{return Ok(0)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,copy)?.capacity_bytes))}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>{if self.reserved{return Ok(0)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.release_bytes))}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{if self.reserved{return Ok(1)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.depth))}
 }
 impl Drop for NativeEncodeRetirementRecipient{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"encoder recipient retains returned physical ownership");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);}}}}

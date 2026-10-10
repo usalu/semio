@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-09T23:19:33.238625+00:00",
+  "red": {
+    "session": 55098,
+    "exit": 1,
+    "duration": "1.2s",
+    "failure": "Independent Node SIGTERM expected exact signal; actual owner collapsed it to failed(1)",
+    "log": "🗑️generated/native-owned-exit-red.log"
+  },
+  "action": {
+    "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "beforeSha256": "b91633467acfb794bce4dfca15979a4c0620f61c86d892fecb3aceb0ea4f1001",
+    "afterSha256": "f2b14f58ef66b1d3d7d126029d760d3e095d4a50519df9a9ee27adda259fa704",
+    "blocks": [
+      "preserve close code and signal",
+      "await existing stdout/stderr write queues before resolution/failure",
+      "refuse actual signal termination distinctly"
+    ]
+  },
+  "preserved": "Original cancellation/timeout precedence, signal authority, original process tree termination, progress and listener finally unchanged; no returned public DTO or corpus schema added."
+}

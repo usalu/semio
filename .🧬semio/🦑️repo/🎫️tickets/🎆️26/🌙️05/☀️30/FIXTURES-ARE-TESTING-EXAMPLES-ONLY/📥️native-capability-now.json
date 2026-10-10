@@ -1,0 +1,30 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "3cd6a2ec951fd0892fd3ad99d206c6bcb4fcbb983dce6a1981772048297ce682"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "sha256": "12c0e51915444cc90a127dc7c4817cc1fd797b2fd2f357d0436ece7e50ba895a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+      "sha256": "2c5fe3024d4c795dddf1bdbc8fadc69311b34804e3683d6e051e15eaafd580f5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+      "sha256": "ed86891ffb284aa3b20d5fc94b8c84c9fe07662f8d6152916c40bca5a064cb0f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "sha256": "dd3fb433a643e0497a75208b96f9acae9be07796d50a492b7eca40301077ead0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "sha256": "897b3a0a481c6787d3549c4e5c86ad7f002ecdd6354967d5d50b622b162a6de8"
+    }
+  ]
+}

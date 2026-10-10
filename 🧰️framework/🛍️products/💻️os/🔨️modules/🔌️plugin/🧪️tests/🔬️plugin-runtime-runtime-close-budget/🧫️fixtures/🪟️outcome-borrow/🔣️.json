@@ -1,0 +1,96 @@
+{
+  "contract": "framework.plugin.original-mounted-outcome-borrow",
+  "originalGrant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "payloadOwner": "original-worker-job",
+  "nativeAddressUnchanged": true,
+  "byValueHandback": false,
+  "semanticBorrowCount": 1,
+  "metadataCopyCurrency": 0,
+  "turns": [
+    {
+      "phase": "observe",
+      "items": 1,
+      "copy": 0
+    },
+    {
+      "phase": "acknowledge-child",
+      "items": 1,
+      "copy": 0
+    },
+    {
+      "phase": "remove-descriptor",
+      "items": 1,
+      "copy": 0
+    },
+    {
+      "phase": "resume",
+      "items": 1,
+      "copy": 0
+    }
+  ],
+  "faultCapture": {
+    "originalGrant": [
+      1,
+      17,
+      8192,
+      65536,
+      9
+    ],
+    "sourceBytes": 321,
+    "pageBytes": [
+      321
+    ],
+    "capacityBytes": 480,
+    "metadataCopyCurrency": 0,
+    "originalDescriptorUntilCaptureComplete": true,
+    "decodeOrReencodeDuringCapture": false,
+    "copyReceipts": [
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      15
+    ],
+    "semanticResumeAfterAcknowledgement": true
+  },
+  "workerReceipt": {
+    "originalGrant": [
+      1,
+      17,
+      8192,
+      65536,
+      9
+    ],
+    "receipt": [
+      1,
+      17,
+      0,
+      0
+    ],
+    "consumptionCount": 1,
+    "semanticOnReceiptTurn": false,
+    "poolWrapperBirth": false,
+    "metadataCopyCurrency": 0,
+    "originalOutcomeUntilAcknowledgement": true
+  }
+}

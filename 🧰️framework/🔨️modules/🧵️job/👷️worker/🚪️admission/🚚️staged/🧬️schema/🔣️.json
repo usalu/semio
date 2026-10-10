@@ -1,0 +1,218 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "source",
+    "policy",
+    "layout",
+    "cases",
+    "ranges",
+    "sourcePresent",
+    "abandonAfter",
+    "dropAllocations",
+    "sourceDroppedOnAbandonment",
+    "preparationRanges",
+    "preparationPresenceBytes",
+    "sourcePreparationCapacityBytes",
+    "sourceHeader",
+    "finalCloseStageBytes",
+    "failedPreparation"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.job.original-staged-prebirth.v1"
+    },
+    "source": {
+      "const": "original-initialized-slot-with-paid-presence"
+    },
+    "policy": {
+      "const": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceBytes",
+        "cursorBytes",
+        "sourcePresenceBytes",
+        "destinationPresenceBytes",
+        "paramsBytes",
+        "birthCopyBytes",
+        "birthCapacityBytes",
+        "handoffHeaderBytes"
+      ],
+      "properties": {
+        "sourceBytes": {
+          "const": 8192
+        },
+        "cursorBytes": {
+          "const": 0
+        },
+        "sourcePresenceBytes": {
+          "const": 0
+        },
+        "destinationPresenceBytes": {
+          "const": 0
+        },
+        "paramsBytes": {
+          "const": 0
+        },
+        "birthCopyBytes": {
+          "const": 26
+        },
+        "birthCapacityBytes": {
+          "const": 16848
+        },
+        "handoffHeaderBytes": {
+          "const": 0
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "grant",
+          "cancelled",
+          "clock",
+          "identity",
+          "open"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "funded",
+              "zero-items",
+              "zero-copy",
+              "short-birth-capacity",
+              "zero-depth",
+              "cancelled",
+              "missing-clock",
+              "different-operation",
+              "zero-release"
+            ]
+          },
+          "grant": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "clock": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "identity": {
+            "type": "boolean"
+          },
+          "open": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "ranges": {
+      "const": [
+        4096,
+        4096
+      ]
+    },
+    "sourcePresent": {
+      "const": [
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    "abandonAfter": {
+      "const": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "dropAllocations": {
+      "const": 0
+    },
+    "sourceDroppedOnAbandonment": {
+      "const": false
+    },
+    "preparationRanges": {
+      "const": [
+        4096,
+        4096
+      ]
+    },
+    "preparationPresenceBytes": {
+      "const": 0
+    },
+    "sourcePreparationCapacityBytes": {
+      "const": 0
+    },
+    "sourceHeader": {
+      "const": {
+        "presenceBytes": 0,
+        "operationBytes": 0,
+        "generationBytes": 0,
+        "copiedBytes": 0
+      }
+    },
+    "finalCloseStageBytes": {
+      "const": 0
+    },
+    "failedPreparation": {
+      "const": [
+        {
+          "name": "under-copy",
+          "maximumCopyBytes": 0,
+          "targetWrites": 0,
+          "cursorWrites": 0,
+          "receipt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "sourcePresent": false
+        },
+        {
+          "name": "post-write-refusal",
+          "maximumCopyBytes": 4096,
+          "targetWrites": 1,
+          "cursorWrites": 0,
+          "receipt": [
+            1,
+            1,
+            0,
+            0
+          ],
+          "sourcePresent": false
+        }
+      ]
+    }
+  }
+}

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -18,4 +19,4 @@ class NeutralSurfaceScript extends BundleScript {
   await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📐️surface/🧪️tests/🔬️neutral/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"fem2d-neutral-surface-oracle"),budgetMs:120000});
  }
 }
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test-surface-contract",SurfaceContractScript).register("test-neutral-surface",NeutralSurfaceScript));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test-surface-contract",SurfaceContractScript).register("test-neutral-surface",NeutralSurfaceScript), { invocation: original }));

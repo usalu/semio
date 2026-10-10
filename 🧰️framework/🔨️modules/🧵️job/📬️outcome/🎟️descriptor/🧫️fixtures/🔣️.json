@@ -1,0 +1,62 @@
+{
+  "schema": "framework.job.original-outcome-descriptor.v1",
+  "grant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "variants": [
+    "yield",
+    "preview",
+    "checkpoint",
+    "complete",
+    "cancelled",
+    "fault"
+  ],
+  "stages": [
+    {
+      "stage": 0,
+      "original": true,
+      "descriptor": false,
+      "borrow": false,
+      "acknowledged": false
+    },
+    {
+      "stage": 1,
+      "original": true,
+      "descriptor": true,
+      "borrow": false,
+      "acknowledged": false
+    },
+    {
+      "stage": 2,
+      "original": true,
+      "descriptor": true,
+      "borrow": true,
+      "acknowledged": false
+    },
+    {
+      "stage": 3,
+      "original": true,
+      "descriptor": true,
+      "borrow": false,
+      "acknowledged": false
+    },
+    {
+      "stage": 4,
+      "original": true,
+      "descriptor": false,
+      "borrow": false,
+      "acknowledged": true
+    },
+    {
+      "stage": 5,
+      "original": false,
+      "descriptor": false,
+      "borrow": false,
+      "acknowledged": true
+    }
+  ]
+}

@@ -8,7 +8,7 @@ use semio_framework_pack_json::{self as json, Value as JsonValue};
 use semio_framework_os_kernel::pack_rt;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::app::ArtifactContribution;
-use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
+use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
 use semio_s_artifact_cad_cad::{CadMutation, CadSnapshot, CAD_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 
@@ -148,18 +148,17 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
             policy_version: 1,
             payload: None,
         },
-        infer_building_structure_summary,
-    )
+        infer_building_structure_summary,building_structure_summary_demands)
 }
 
 // 🚫️async: E4 fn-pointer slot — `semio_framework_plugin::ArtifactInference` is a plain
 // `for<'a> fn(&ArtifactInferenceExecutionRequest<'a>) -> Result<..>` type alias (an `fn` item's
 // pointer type is unnameable); also E1 pure (pack decode + struct literal, zero suspension) — see R9.
-fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let snapshot = <CadSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
     let summary = BuildingStructureSummary { building_model_present: snapshot.building_model.is_some(), storey_count: snapshot.nodes.iter().filter(|node| node.kind == "building-storey").count() as u32 };
     let canonical_payload = pack_rt::encode_wire_value(&ToValue::to_value(&summary));
-    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload, diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
+    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload:Some(canonical_payload), diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 
 /// 🗂️ The single `ArtifactContribution` this extension registers onto cad's `s.cad.cad` artifact —
@@ -183,3 +182,6 @@ fn building_storey_contribution() -> ArtifactContribution {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+/// ♻️ This synchronous executable retains no callback child between invocations.
+fn building_structure_summary_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}

@@ -1,0 +1,26 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "sha256": "e66850d0292f6744a63bb45ef7d72c5b62159b5f67db47302958ef396d28070f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "3cd6a2ec951fd0892fd3ad99d206c6bcb4fcbb983dce6a1981772048297ce682"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+      "sha256": "3264be35ac95c63d90bdd855c2eb5755ae56267d6b47fb988bc5a47f302201ba"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "52ecbec3135d55a6e9290e7934c1dc457e16c9b3fd68e2951b257e79dc52bc81"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "sha256": "aac00e7eb20a0b06d08f9c7a7a5986fc5dcac73267068cb9b37bbb9acc6f102b"
+    }
+  ]
+}

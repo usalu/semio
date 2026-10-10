@@ -1,0 +1,55 @@
+{
+  "cases": [
+    {
+      "id": "original-extension-text-input",
+      "neuronId": "shape",
+      "extensionId": "geometry",
+      "operatorId": "geometry.box",
+      "input": {
+        "label": "original source"
+      },
+      "expectedInputJson": "{\"label\":\"original source\"}",
+      "remaining": [
+        "shape"
+      ],
+      "minimumJsonCopyBytes": 2
+    },
+    {
+      "id": "original-extension-nested-input",
+      "neuronId": "shape-雪",
+      "extensionId": "geometry",
+      "operatorId": "geometry.translate",
+      "input": {
+        "nested": {
+          "label": "same 雪"
+        }
+      },
+      "expectedInputJson": "{\"nested\":{\"label\":\"same 雪\"}}",
+      "remaining": [
+        "shape-雪"
+      ],
+      "minimumJsonCopyBytes": 3
+    }
+  ],
+  "laws": {
+    "metadataLeaseCopyBytes": 0,
+    "inputRootTransferCopyBytes": 0,
+    "fixedCopyGrants": [
+      1,
+      3,
+      64
+    ],
+    "cancelTurns": [
+      0,
+      9,
+      37,
+      101
+    ],
+    "terminalDropBytes": 0,
+    "originalNodeHashAuthority": true,
+    "pendingWireDistinctFromCompletedOutput": true
+    ,"encoderContinuationOriginalSource":true
+    ,"encoderContinuationChildBirthBytes":0
+    ,"encoderContinuationCopyBytes":0
+  }
+}

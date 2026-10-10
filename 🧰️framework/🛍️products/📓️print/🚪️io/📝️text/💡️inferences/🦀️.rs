@@ -1,8 +1,15 @@
 //! 🖋️ Native chart text output and cancellable LaTeX serialization.
 use crate::ChartSnapshot;
-use crate::inferences::{catalog,validate_chart,paint,ChartDiagnostic};
+use crate::inferences::{catalog,validate_chart,paint,ChartDiagnostic,ChartInference};
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{ToValue,FromValue};
+semio_framework_value_derive::value_codec!{struct ChartDiagnostic{pub code:String,pub path:String,pub message:String}}
+semio_framework_value_derive::value_codec!{
+ struct ChartInference{
+  #[value(default,skip_serializing_if="Option::is_none")]
+  pub chart:Option<ChartSnapshot>,pub diagnostics:Vec<ChartDiagnostic>,pub complete:bool
+ }
+}
 #[derive(Clone,Debug,PartialEq,ToValue,FromValue)]
 pub struct ChartTextOutput {pub tikz:String,pub diagnostics:Vec<ChartDiagnostic>,pub complete:bool}
 impl Default for ChartTextOutput{fn default()->Self{Self::render(&ChartSnapshot::default()).expect("chart text output describes admission")}}

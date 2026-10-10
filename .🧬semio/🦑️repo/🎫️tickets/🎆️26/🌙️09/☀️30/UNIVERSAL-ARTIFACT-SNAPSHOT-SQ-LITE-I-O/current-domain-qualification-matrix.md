@@ -1,0 +1,26 @@
+# Current Domain Qualification Matrix
+
+Read-only six-domain sample, 2026-10-10. No execution or source changes. P/R mean explicit original receiving projection/reconstruction; VD/VE mean explicit decode/encode subset validators. Counted declarations or methods do not measure installed route success. The parent-reported 129 snapshot methods was not independently recounted and remains declaration evidence only.
+
+| Domain | Handcrafted SQL | P/R | VD/VE | Original native source | Actual runtime evidence inspected |
+|---|---|---|---|---|---|
+| CSV rfc4180/* | Present | Both explicit | Both explicit | D/E owner signatures present; decode still ignores body, cold full construction before Option assignment | Existing source log records13pass/0fail; current Nx-caller native log still compiler lease/preparation running, no test result |
+| TSV iana/* | Present | Both explicit | Both explicit | D/E owner signatures present; decode uses actual admission::bind(record,Option,native,wallet) | Older closed-cap native log ends Nx exit1; current success not independently inspected |
+| Playground1/* | Present, one marker table | Neither explicit | Neither explicit | D/E owner signatures; decode ignores body and constructs fully before assignment | No current native runtime log qualified by this audit |
+| Binary raw/* | Present, document and byte tables | Neither explicit | Neither explicit | Decode still bare NativeDecodeControl, encode original owner | No current native runtime log qualified by this audit |
+| glTF2.0/* | Present,10split families/57tables | Neither explicit | Neither explicit | Decode still bare NativeDecodeControl; encode original owner | Mounted independent Bun SQLite tests exist; no current native success qualified |
+| DWG ac1018/*,ac1024/* | Present,16split families/277tables shared | Neither explicit | Neither explicit | D/E owner signatures; decode ignores body, full construct then post-binding admission | Mounted independent Bun SQLite tests exist; no current native success qualified |
+
+CSV/TSV hook evidence is exact snapshot `🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs:9–17` under each artifact standard subset. TSV actual wallet binder call is `🚦️native/🦀️.rs:11`; CSV ignored-body call is `🚦️native/🦀️.rs:16`. Playground snapshot lines18–19 are the native declarations; Binary lines11–12. glTF lines58–59; DWG lines60–61. Domain base paths and complete schema/mount detail are preserved in `csv-tsv-original-native-test-callers.md`, `domain-schema-next-bounded-census.md`, and corrected `gltf-dwg-split-semantic-schema-audit.md`.
+
+## Public Signature Versus Installed Route
+
+Fresh OS IO source `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs:2549` typed export takes dialect, &snapshot, encoding, limits, callback; typed import at2561 takes dialect, bytes, limits, callback. Both instantiate fresh SQL control and use ordinary domain projection/reconstruction. Neither accepts original Option, NativeSnapshotOwner/IoRunControl, independent five-axis grant, cumulative receipt, or pending recipient. Therefore a typed roundtrip is not qualification of the original ownership contract even if it succeeds semantically.
+
+Installed erased API `io_run_with_snapshot_control:2670` accepts `&mut Option<IoPayload>`, original IoRunControl, and original SQL control. Grant is carried by IoRunControl, not five newly derived budget scalars. `run_snapshot_hop:2604` obtains original decode owner for native→SQLite export and original encode owner for SQLite→native import, with nested SnapshotHopFrame and preservation until paid admission. It invokes actual registered provider, rather than the typed direct path. Provider presence and explicit P/R/VD/VE are necessary source seams; they alone do not prove zero-effect admission, real cumulative receipts, cancellation custody or successful installed runtime. Public dispatch still has the earlier codec/map cloning before nested admission gap documented in `domain-public-control-audit.md`.
+
+Artifact root bare mounts for glTF/DWG are actual mounts and publish provider via explicit ArtifactPack::sqlite_snapshot_codec overrides; absence of root SQL or bare naming is not missing-provider evidence. AC1018 reexports AC1024 DwgSnapshot and shares its provider; both dialect identities must be exercised independently. CSV/TSV declaration factory and provider tests likewise must use actual registered codec, named input Option, explicit neutral body and close authority, original callback/recipient, independently short grant axes and retired-prefix conservation before they can be marked runtime qualified.
+
+## Current Evidence Boundaries
+
+`🗑️generated/csv-subset-validation-source-current.log:91–92` records13pass/0fail and a DEBUG independent Buffer/SQLite witness, explicitly saying Native receiving is qualified separately. This is an observed existing log, not tests executed by this audit. `csv-original-subset-validation-current-nx-caller-native.log` currently ends ongoing cargo/compiler lease progress near390seconds, so native status is pending rather than failed/passed. `tsv-original-subset-validation-closed-cap-native.log` ends exit1. No broader universal runtime claim follows from schema counts, method counts, source tests, or successful capability-schema validation.

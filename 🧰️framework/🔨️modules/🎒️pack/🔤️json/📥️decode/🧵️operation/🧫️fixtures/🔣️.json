@@ -8,6 +8,12 @@
   "turn": {"maximumItems": 32, "maximumCopyBytes": 65536, "maximumCapacityBytes": 65536, "maximumReleaseBytes": 65536, "maximumDepth": 256},
   "closeTurn": {"maximumItems": 1, "maximumCopyBytes": 65536, "maximumCapacityBytes": 65536, "maximumReleaseBytes": 65536, "maximumDepth": 256},
   "maximumCloseTurns": 100000,
+  "outcomeLimits": {"maximumBytes": 1024, "maximumAllocationBytes": 65536, "maximumDepth": 2, "maximumItems": 2},
+  "outcomeNormalAuthority": {"maximumItems": 100000, "maximumCopyBytes": 1048576, "maximumCapacityBytes": 1048576, "maximumReleaseBytes": 1048576, "maximumDepth": 256},
+  "outcomes": [
+    {"name": "successfulUtf8", "source": "\"😀\"", "expected": "string", "text": "😀", "utf8Bytes": 4, "occurrences": 1},
+    {"name": "duplicateUtf8", "source": "{\"😀\":0,\"😀\":1}", "expected": "duplicateMember", "text": "😀", "utf8Bytes": 4, "occurrences": 2}
+  ],
   "axes": [
     {"name": "items", "total": 1, "used": 1, "incoming": 32, "remaining": 0},
     {"name": "copy", "total": 4, "used": 3, "incoming": 65536, "remaining": 1},

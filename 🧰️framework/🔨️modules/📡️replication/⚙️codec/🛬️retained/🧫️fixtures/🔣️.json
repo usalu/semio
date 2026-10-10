@@ -1,0 +1,26 @@
+{
+  "grant": {
+    "items": 1,
+    "copy": 3,
+    "capacity": 65536,
+    "release": 65536,
+    "depth": 8
+  },
+  "fields": [
+    {
+      "text": true,
+      "value": ""
+    },
+    {
+      "text": true,
+      "value": "é🧬漢"
+    },
+    {
+      "text": false,
+      "value": "original\u0000bytes"
+    }
+  ],
+  "metadataCopy": 0,
+  "sourceIdentity": "original-pointer-extent-per-turn-borrow",
+  "recipient": "original-granted-bytes-retirement"
+}

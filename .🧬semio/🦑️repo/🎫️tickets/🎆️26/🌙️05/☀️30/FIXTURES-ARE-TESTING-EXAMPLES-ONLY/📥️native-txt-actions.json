@@ -1,0 +1,26 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "before": "68514aeee740d40fa8c2aa2e87d9e2aaca4f4d9718bf9b9f648ff0a1894d09cc",
+    "after": "e77c4d30a0f1e2f8af8253113ce48ec58ad5d05552c54587ca9c4eba3327401d",
+    "blocks": [
+      "required paid Txt receiving"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+    "before": "a4120c9b96be4a885ab40100a550c7ea25a5c0fa46aea9699e71da01d024b7e0",
+    "after": "a41da8c1b4e0b14639c0f8cbf1e052a999fa4f2b1cd348eb8ab77204fa83cdd9",
+    "blocks": [
+      "actual LineEnding/TxtSnapshot controlled owned fields derive"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/Cargo.toml",
+    "before": "bb410aa6c39594940fecc5541a862108849ce82ae8b179ac73cd4fb181188317",
+    "after": "d413de329e2349d81b6b9c82cec6119d4e73cc69af18b3db836406ff5d2575f3",
+    "blocks": [
+      "first-party System test witness dev dependency only"
+    ]
+  }
+]

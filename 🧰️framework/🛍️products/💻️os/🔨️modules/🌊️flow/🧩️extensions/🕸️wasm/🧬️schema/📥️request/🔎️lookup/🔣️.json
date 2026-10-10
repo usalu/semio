@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "copyGrants": { "const": [1, 3, 64] },
+    "sameOriginalRequest": { "const": true },
+    "boundedKeyComparison": { "const": true },
+    "epochRestart": { "const": true },
+    "sameLockAdmission": { "const": true },
+    "zeroGrantMoves": { "const": false },
+    "terminalDrop": { "const": 0 }
+  },
+  "required": ["copyGrants", "sameOriginalRequest", "boundedKeyComparison", "epochRestart", "sameLockAdmission", "zeroGrantMoves", "terminalDrop"]
+}

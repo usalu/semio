@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "repositoryRoot": "/Users/ueli/Documents/semio",
+  "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+  "command": {
+    "kind": "native-owner-command",
+    "manifest": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+    "workingDirectory": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+    "program": "bun",
+    "arguments": [
+      "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts",
+      "test",
+      "long",
+      "--test",
+      "original-retained-receiving",
+      "-E",
+      "test(original_public_actor_)",
+      "--no-fail-fast",
+      "--status-level",
+      "pass",
+      "--final-status-level",
+      "all",
+      "--",
+      "--nocapture"
+    ]
+  },
+  "transport": {
+    "maximumBytes": 536870912,
+    "maximumLines": 65536
+  },
+  "child": {
+    "maximumElapsedMilliseconds": 1800000
+  },
+  "network": {
+    "offline": false
+  }
+}

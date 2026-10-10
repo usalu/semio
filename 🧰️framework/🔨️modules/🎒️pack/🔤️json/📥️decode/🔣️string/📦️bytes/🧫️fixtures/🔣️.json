@@ -1,0 +1,22 @@
+{
+  "limits": {
+    "maximumBytes": 65536,
+    "maximumAllocationBytes": 16777216,
+    "maximumDepth": 16,
+    "maximumItems": 65536
+  },
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 2,
+    "maximumCapacityBytes": 262144,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  },
+  "maximumTurns": 10000,
+  "sources": [
+    "\"😀\"",
+    "\"\\ud83d\\ude00\"",
+    "\"é😀漢\""
+  ],
+  "metadataCopy": 0
+}

@@ -1,0 +1,6 @@
+{
+  "exitCode": 1,
+  "SourceAssertions": 0,
+  "logSha256": "626389f027dd3afb7bd1facde7bb185b371e6aa32ebf0066edb41e05f0eefaba",
+  "qualification": "Canonical Root bootstrap now resolves actual validator, fails router missing required actual ScriptInvocation before graph/tests. No invented finite authority or adapter."
+}

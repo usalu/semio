@@ -18,6 +18,14 @@ pub mod paged_list;
 #[path = "📋️field/🦀️.rs"]
 mod field;
 pub use field::RetainedFieldCursor;
+#[path = "🌱️dynamic/🦀️.rs"]
+pub mod dynamic;
+#[path="🔮️demands/🦀️.rs"]
+mod normal_demands;
+pub use normal_demands::RetainedCloneDemandCursor;
+#[cfg(test)]
+#[path="🧮️scalar/🧪️tests/🦀️.rs"]
+mod scalar_authority_tests;
 #[path = "🔗️projection/🦀️.rs"]
 mod owned_projection;
 pub use owned_projection::RetainedOwnedProjection;
@@ -148,6 +156,8 @@ pub struct RetainedCloneGrant {
     pub maximum_depth: usize,
 }
 
+crate::artifact_retire_leaf!(RetainedCloneGrant);
+
 /// 🌐️ The canonical five-axis wire schema consumed by first-party schema registries.
 pub const RETAINED_CLONE_GRANT_SCHEMA: &str = include_str!("🌐️wire/🧬️schema/🔣️.json");
 
@@ -187,7 +197,6 @@ impl crate::FromValue for RetainedCloneGrant {
             })
     }
 }
-crate::artifact_retire_leaf!(RetainedCloneGrant);
 
 impl RetainedCloneGrant {
     /// 🎟️ Admits one structural allocation while reserving no payload-copy credit.
@@ -350,10 +359,10 @@ impl RetainedCloneClose {
     pub fn next_copy_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if self.is_empty(){RetainedCloneBinding::copy_demand(binding)}else{self.next_copy_byte_demand()}}
     pub fn next_release_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if self.is_empty(){RetainedCloneBinding::release_demand(binding)}else{self.next_release_byte_demand()}}
     pub fn next_owner_capacity_with_binding<T:RetireOwned>(&self,present:bool,body:usize,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if self.is_empty()&&!present{RetainedCloneBinding::capacity_demand(binding,body)}else{self.next_owner_capacity_byte_demand::<T>(present,body)}}
-    pub fn next_copy_byte_demand(&self)->Result<usize,crate::ValueError> {self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
-    pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError> {self.retirement.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(body))}
-    pub fn next_release_byte_demand(&self)->Result<usize,crate::ValueError> {self.retirement.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(size_of_val(owner.as_ref()))}else{owner.next_release_byte_demand()})}
-    pub fn next_depth_demand(&self)->Result<usize,crate::ValueError> {self.retirement.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(1)}else{owner.next_depth_demand()})}
+    pub fn next_copy_byte_demand(&self)->Result<usize,crate::ValueError> {self.retirement.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.copy_bytes))}
+    pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError> {self.retirement.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,body)?.capacity_bytes))}
+    pub fn next_release_byte_demand(&self)->Result<usize,crate::ValueError> {self.retirement.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.release_bytes))}
+    pub fn next_depth_demand(&self)->Result<usize,crate::ValueError> {self.retirement.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.depth))}
     pub fn next_owner_capacity_byte_demand<T:RetireOwned>(&self,present:bool,body:usize)->Result<usize,crate::ValueError> {
         if !self.is_empty(){return self.next_capacity_byte_demand(body);}
         if present&&!T::controlled_retirement_supported(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"typed owner has no controlled close birth authority"));}

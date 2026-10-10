@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 /** 📦️ flow flow Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { runCmd, runCargo, runVitest, runRepositoryExactCargoLaws, runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -36,10 +37,7 @@ class SourceTestScript extends BundleScript {
 class ChildIdentityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      cargoArgs: segments,
-      groups: [
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
         {
           package: "semio-s-artifact-flow-flow",
           target: { kind: "lib" },
@@ -59,8 +57,7 @@ class ChildIdentityCheckScript extends BundleScript {
           ],
         },
         { package: "semio-hub-flow", target: { kind: "lib" }, laws: ["flow_actual_surface_factories_close_all_owners_under_neutral_grants"] },
-      ],
-    });
+      ] });
     console.log(`Flow child identity native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
@@ -68,10 +65,7 @@ class ChildIdentityCheckScript extends BundleScript {
 class ChildEditCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      cargoArgs: segments,
-      groups: [
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
         {
           package: "semio-s-artifact-flow-flow",
           target: { kind: "lib" },
@@ -82,8 +76,7 @@ class ChildEditCheckScript extends BundleScript {
             "add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content",
           ],
         },
-      ],
-    });
+      ] });
     console.log(`Flow typed child edit native law: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
@@ -188,11 +181,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await this.oracle();
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      cargoArgs: segments,
-      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }],
-    });
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }] });
     console.log(`Flow retained addWidget native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }

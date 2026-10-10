@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:job:owned-session-admission",
+  "title": "Original Owned Session Admission",
+  "description": "A caller supplies the original invocation and all physical currencies before session storage exists. Refusal leaves its input and cancellation in the original recipient. Successful admission returns actual effects to that same recipient before exposing the session.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operation", "generation", "cancelled", "grant"],
+  "properties": {
+    "operation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "cancelled": { "type": "boolean" },
+    "grant": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant" }
+  }
+}

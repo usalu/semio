@@ -1,0 +1,76 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "source",
+    "clock",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.job.original-fault-binding.v1"
+    },
+    "source": {
+      "const": "same-pre-admitted-fault-page"
+    },
+    "clock": {
+      "const": "absent-or-unusable-does-not-mint-a-deadline"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "grant",
+          "prior",
+          "admitted",
+          "refused",
+          "receipt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "grant": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "prior": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "refused": {
+            "type": "boolean"
+          },
+          "receipt": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

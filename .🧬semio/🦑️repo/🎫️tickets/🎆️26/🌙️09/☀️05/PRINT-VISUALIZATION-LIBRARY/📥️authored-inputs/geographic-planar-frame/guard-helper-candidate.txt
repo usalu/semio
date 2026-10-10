@@ -1,9 +1,0 @@
-/** 🛑️ Requires the native compiler to reject an evaluated nonpositive display frame before rendering. */
-export async function compileNativeGeoPlanarGuard(workDir:string):Promise<void>{
-  let refused=false;
-  try{
-    await compileVizProbeDocument({case:"geo-planar-domain",scenario:"evaluated-zero-width",documentClass:"semio",documentClassOptions:"type=paper,language=en,theme=light",packages:["semio-viz"],body:[{raw:"\\begin{VizFigure}[width=100,height=90]\\SemioVizChart[width={1-1},height=30,radius=5,lineWidth=.3mm]{hexbin-map}\\end{VizFigure}"}]},{workDir:join(workDir,"zero-width"),keepWorkDir:true});
-  }catch(error){if(!String(error).includes("planar-domain")&&!String(error).includes("Planar display"))throw error;refused=true;}
-  if(!refused)throw Error("Native evaluated zero width was accepted instead of a planar-domain diagnostic");
-  console.log("[DEBUG] Native evaluated nonpositive frame rejected before rendering");
-}

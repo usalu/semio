@@ -29,7 +29,7 @@ use crate::db_durability::Frontier;
 use crate::*;
 use db_storage::SnapshotStorage;
 /// ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
-/// `protocol_causal::encode_envelope`'s binary record — the same primitive codec `protocol_wire`
+/// `protocol_io::binary::causal::encode_envelope`'s binary record — the same primitive codec `protocol_wire`
 /// uses for `ClientFrame::Commands`/`ServerFrame::Commands`, so a WAL command's bytes are
 /// byte-identical to its on-wire form (M-C's "communication AND storage both binary"). `db_wal`
 /// itself never interprets these bytes (per the contract, no crate below `db_artifact` does);

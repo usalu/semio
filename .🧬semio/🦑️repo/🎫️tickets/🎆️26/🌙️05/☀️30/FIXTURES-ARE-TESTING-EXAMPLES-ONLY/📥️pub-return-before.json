@@ -1,0 +1,28 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧬️schema/🔣️.json",
+      "sha256": "7bb00e34d25647a465364fb26359e0af39e27ec8df4468c9e5ade88eb8ec1c08"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧫️fixtures/🔣️.json",
+      "sha256": "785ed79f5470aa2af3d9b9564763186f21b2f7ca80df3357aa1d0638369d3cf5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧪️tests/🦀️.rs",
+      "sha256": "eeaf52ceb1a8904f78b8946600a4161aabd549e8389fb527de1afb19e0d55e7f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🦀️.rs",
+      "sha256": "1f768c4839a845a3f872f36e44001fc6bd9f60507a052f4ba263b1e9cc4d138d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "1c8db1938ad0420f218a89239ce28432cd47750717794b7b77d8382faf89ea58"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "e9b6ae2073dd80a9d766aca4767e5e95072d3e49492de028078619e2c9b6e096"
+    }
+  ]
+}

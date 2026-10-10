@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🦀️.rs",
+      "before": "83800d8fdb4132e74fa8ba8c595554e9b73ecf9db82b94ac3e9f22acd02039ec",
+      "after": "04f6acf3a0d92296dce88232bb36e9d6f38cf99c6aabf7beb6dedf0ef789d2cc",
+      "beforeBlockSHA256": "7635f53e404c3d3d64ca38c40c69da959e5c9b620cc1e33fe72d0c0000b3baac",
+      "afterBlockSHA256": "af9280b1979d8157c0a0654ba1352dec297ef210d5d660312a16ed0dd200e31d",
+      "action": "retain actual second-pass copied-prefix/cursor/UTF8 and original grant receipt before canonical error; existing peer fallible byte ? preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧪️tests/🦀️.rs",
+      "before": "9018902d4208677129e97b58824451c94b0f1c81ae0e4fd59ae18b95906512e5",
+      "after": "69390c52344cacd322a22f0524aa6b6e157ef0390f938df7e85f5c30ea817712",
+      "action": "append actual stateful source second-pass fault/System/pointer/originalgrant/paid release law; original native laws preserved"
+    }
+  ],
+  "observedGuardRefusal": "original missing ? already corrected before attempted authored guard; no mutation then. Earlier native-byte-green.log is Nx1, not positive",
+  "native": "UNRUN; next genuine original complete Kernel/Replication owner required"
+}

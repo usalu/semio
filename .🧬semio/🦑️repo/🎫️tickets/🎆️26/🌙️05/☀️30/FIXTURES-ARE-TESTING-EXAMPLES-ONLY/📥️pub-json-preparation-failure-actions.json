@@ -1,0 +1,27 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/🚧️canonical-error-progress.json",
+      "beforeSha256": "dda2ffb5995fe9fe782f6e06c8ad3d1d17d73191beef6bb78e50e79b4c8410f0",
+      "afterSha256": "abf3ed3fd3789f2425defd6173eb703b6104cd8ddda3c518f50c0c2acdbe166a",
+      "scope": "language-neutral canonical preparation refusal under original immutable policy; meaningful independent Ajv/JSON and actual production error-retention RED"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts",
+      "beforeSha256": "cadf3284f00f9d00b75e1155ab1b58632c32c2b6aedd2d3f0c83a73e821624e6",
+      "afterSha256": "ca59eed73a3df11f09925dfb4af9e246198c1ffd1e3da7c5b4222e11fbf47fee",
+      "scope": "language-neutral canonical preparation refusal under original immutable policy; meaningful independent Ajv/JSON and actual production error-retention RED"
+    }
+  ],
+  "productionMutation": "None during finite Kernel hold",
+  "native": "UNRUN",
+  "sourceRed": {
+    "session": 21843,
+    "exit": 1,
+    "NxStatus": 1,
+    "duration": "1.9s",
+    "Bun": "3pass1fail43assertions",
+    "log": "🗑️generated/pub-json-preparation-failure-red.log",
+    "failure": "Actual Sealer advance returns String rather than canonical ValueError; genuine JSON/Ajv original fixed-policy oracle reached before failure"
+  }
+}

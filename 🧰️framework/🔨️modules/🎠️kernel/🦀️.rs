@@ -2,6 +2,7 @@
 
 use crate::manifest::MediaType;
 use semio_framework_value::DslValue;
+pub use semio_framework_actor::{RetainedTurnInput,RetainedTurnReceipt};
 pub use semio_framework_diagnostic::Diagnostic;
 pub use semio_framework_diagnostic::Fault;
 pub use semio_framework_diagnostic::FaultCause;
@@ -17,6 +18,7 @@ use ui_wgpu::wgpu::UiNode;
 //#region 🔖️Identifiers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ArtifactHandle(pub u128);
 
 /// 🌉️ Hand-written, not derived: `u128` has no `ToValue`/`FromValue` scalar impl (no JavaScript
@@ -38,6 +40,7 @@ impl semio_framework_value::FromValue for ArtifactHandle {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct WindowHandle(pub u128);
 
 /// 🌉️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc directly above (same `u128`
@@ -83,6 +86,7 @@ impl semio_framework_value::FromValue for CapabilityToken {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PluginInstanceId(pub String);
 
 // 🎞️ CW3 kernel cut-over: MutationId/ActorId/ArtifactId/ArtifactVersion/SchemaId moved to
@@ -126,6 +130,7 @@ pub struct SchemaVersion(pub String);
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct WindowKindId(pub String);
 //#endregion 🔖️Identifiers
 
@@ -338,6 +343,7 @@ impl std::error::Error for ClipboardError {}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RequestId(pub u64);
 
 // 🪪️ `rename_all` on an enum only renames variant tags ("setActiveUtility"), not the fields *inside* each
@@ -368,6 +374,7 @@ pub struct RequestId(pub u64);
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum Effect {
     OpenWindow {
         req: RequestId,
@@ -723,6 +730,7 @@ impl Effect {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum JobPlacement {
     Inline,
     Isolated,
@@ -857,6 +865,7 @@ mod spawned_job_drive_tests;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct IconRenderExportItem {
     pub filename: String,
     pub request: DslValue,
@@ -940,6 +949,7 @@ pub const VIDEO_RENDER_PROGRAM_MAXIMUM_FRAMES: u64 = 36_000;
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct VideoRenderPath {
     pub verbs: String,
     pub points: Vec<f64>,
@@ -950,6 +960,7 @@ pub struct VideoRenderPath {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct VideoRenderImage {
     pub url: String,
 }
@@ -962,6 +973,7 @@ pub struct VideoRenderImage {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum VideoRenderOp {
     Fill { path: u32, transform: [f64; 6], color: [f64; 4] },
     Stroke { path: u32, transform: [f64; 6], color: [f64; 4], width: f64 },
@@ -972,6 +984,7 @@ pub enum VideoRenderOp {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct VideoRenderScene {
     pub ops: Vec<VideoRenderOp>,
 }
@@ -980,6 +993,7 @@ pub struct VideoRenderScene {
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct VideoRenderRun {
     pub scene: u32,
     pub frames: u32,
@@ -991,6 +1005,7 @@ pub struct VideoRenderRun {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct VideoRenderProgram {
     pub schema: String,
     pub width: u32,
@@ -1573,6 +1588,7 @@ mod file_open_import_tests;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct AppEvent {
     pub kind: String,
     pub payload: DslValue,
@@ -2528,6 +2544,7 @@ pub enum ArtifactMergeKind {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum MessageEndpoint {
     Shell { instance: PluginInstanceId },
     Backbone { uri: String },
@@ -2542,6 +2559,7 @@ pub enum MessageEndpoint {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum RequestOutcome {
     Ok(Vec<u8>),
     Err(Vec<u8>),
@@ -2709,6 +2727,7 @@ pub use semio_framework_ui_contract::{PresenceUpdate, UiPatch, UiPatchOp};
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Budget {
+    pub retained: semio_framework_actor::RetainedTurnInput,
     pub fuel: u64,
     pub deadline_ms: u32,
     pub max_effects: u32,
@@ -3536,6 +3555,7 @@ impl<'de> Deserialize<'de> for UiTurnPatches {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TurnResult {
+    pub retained_receipt: semio_framework_actor::RetainedTurnReceipt,
     pub ui_patches: UiTurnPatches,
     pub effects: Vec<Effect>,
     /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): render-plane presence derived this turn by the
@@ -3608,6 +3628,7 @@ mod ui_turn_patch_tests;
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CapabilityId(pub String);
 
 /// 🙏️ A guest's ask for a capability — `📓️design-abi.md` §5. Replaces `CapabilityRequirement`
@@ -3618,6 +3639,7 @@ pub struct CapabilityId(pub String);
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CapabilityRequest {
     pub id: CapabilityId,
     pub scope: String,

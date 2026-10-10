@@ -77,7 +77,7 @@
       "const": "in-place"
     },
     "slotPresenceBytes": {
-      "const": 1
+      "const": 0
     },
     "receiptPhysicalEqualsActual": {
       "const": true
@@ -86,7 +86,7 @@
       "const": "in-place"
     },
     "faultSlotPresenceBytes": {
-      "const": 1
+      "const": 0
     }
   }
 }

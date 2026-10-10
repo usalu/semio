@@ -526,7 +526,8 @@ struct DeterministicTextWorker {
 impl DeterministicTextWorker{
     fn terminal_is_empty(&self)->bool{self.kerning.terminal_is_empty()&&self.cancel_lease_is_empty()}
     fn cancel_lease_is_empty(&self)->bool{#[cfg(test)]{self.cancel_after_shape.is_none()}#[cfg(not(test))]{true}}
-    fn next_close_release_bytes(&self)->Result<usize,semio_framework_value::ValueError>{if self.terminal_is_empty(){Ok(0)}else{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original layout test cancellation lease requires its controlled issuer"))}}
+    fn next_close_release_bytes(&self)->Result<usize,semio_framework_value::ValueError>{
+        if self.terminal_is_empty(){Ok(0)}else{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original layout test cancellation lease requires its controlled issuer"))}}
 }
 
 impl OwnedTextWorker for DeterministicTextWorker {
@@ -783,6 +784,7 @@ pub(crate) struct MountedLayoutJob {
     #[cfg(test)]
     worker_thread_observed: bool,
     fault: Option<MountedLayoutFault>,
+    fault_payload: semio_framework_job::RetainedPayloadBuilder,
     text_worker: DeterministicTextWorker,
 }
 
@@ -851,6 +853,7 @@ impl MountedLayoutJob {
             #[cfg(test)]
             worker_thread_observed: false,
             fault: None,
+            fault_payload: semio_framework_job::RetainedPayloadBuilder::new(semio_framework_job::JobPayloadStream::Fault),
             text_worker: DeterministicTextWorker::default(),
         })
     }
@@ -1144,17 +1147,22 @@ impl MountedLayoutJob {
         (1, 0)
     }
 
-    fn worker_one(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn publish_fault<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if !self.fault_payload.advance_initialization(cx)? || !self.fault_payload.seal(cx)? { return Ok(None); }
+        semio_framework_job::JobOutcomeBorrow::admit_fault(cx, self.fault_payload.published().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "layout original fault payload was not sealed"))?)
+    }
+
+    fn worker_one<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        use semio_framework_job::JobOutcomeBorrow;
         #[cfg(test)]
         {
             self.worker_thread_observed = std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-"));
         }
-        if self.close_requested || cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
-        }
-        if cx.should_yield() {
-            return semio_framework_job::StepOutcome::Yield;
-        }
+        if self.close_requested || cx.is_cancelled() { return JobOutcomeBorrow::admit_cancelled(cx); }
+        let grant = cx.retained_grant();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
+        if cx.should_yield() { return JobOutcomeBorrow::admit_yield(cx); }
+        if self.fault.is_some() { return self.publish_fault(cx); }
         cx.set_stage(self.stage_label());
         match self.stage {
             LayoutJobStage::ShapeText => self.shape_one(),
@@ -1164,20 +1172,9 @@ impl MountedLayoutJob {
             _ => (0, 0),
         };
         cx.consume_fuel(1);
-        if cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
-        }
-        if self.fault.is_some() {
-            return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
-        }
-        if cx.deadline_exceeded() {
-            return semio_framework_job::StepOutcome::Yield;
-        }
-        if self.stage == LayoutJobStage::PublishResults {
-            semio_framework_job::StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))
-        } else {
-            semio_framework_job::StepOutcome::Yield
-        }
+        if cx.is_cancelled() { return JobOutcomeBorrow::admit_cancelled(cx); }
+        if self.fault.is_some() { return self.publish_fault(cx); }
+        JobOutcomeBorrow::admit_yield(cx)
     }
 
     fn shape_one(&mut self) -> (usize, usize) {
@@ -1436,6 +1433,7 @@ impl MountedLayoutJob {
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
         let empty=RetainedCloneProgress::default();if !self.close_requested{return Step::Blocked}if self.terminal_is_empty(){return Step::Complete{progress:empty}}
         if grant.maximum_items==0{return Step::Pending{progress:empty}}
+        if !self.fault_payload.terminal_is_empty(){return match self.fault_payload.close_step_granted(grant){Ok(step)=>Step::Pending{progress:step.progress()},Err(error)=>Step::Refused{kind:error.kind,progress:error.retained_progress()}}}
         let bytes=match self.next_close_release_bytes(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused{kind:error.kind,progress:error.retained_progress()}};
         if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}}
         if self.rejected_result.take().is_some()||self.rejected_line.take().is_some()||self.rejected_glyph.take().is_some()||self.rejected_preview.take().is_some()||self.rejected_run.take().is_some()||self.rejected_walk.take().is_some()||self.rejected_node.take().is_some(){return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
@@ -1451,12 +1449,13 @@ impl MountedLayoutJob {
         if !self.atlas_candidate.is_empty(){self.atlas_candidate.close_one();return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}}
         Step::Complete{progress:empty}
     }
+    #[cfg(any(test, feature = "testkit"))]
     pub(crate) fn close_one(&mut self)->bool{
         let Ok(bytes)=self.next_close_release_bytes()else{return false};
         matches!(self.close_granted(semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:bytes,maximum_depth:1}),semio_framework_job::InteractiveJobCloseStep::Complete{..})
     }
     pub(crate) fn terminal_is_empty(&self)->bool{
-        self.rejected_result.is_none()&&self.rejected_line.is_none()&&self.rejected_glyph.is_none()&&self.rejected_preview.is_none()&&self.rejected_run.is_none()&&self.rejected_walk.is_none()&&self.rejected_node.is_none()
+        self.fault_payload.terminal_is_empty()&&self.rejected_result.is_none()&&self.rejected_line.is_none()&&self.rejected_glyph.is_none()&&self.rejected_preview.is_none()&&self.rejected_run.is_none()&&self.rejected_walk.is_none()&&self.rejected_node.is_none()
         &&self.results.is_none()&&self.lines.is_none()&&self.glyph_previews.is_none()&&self.glyphs.is_none()&&self.runs.is_none()&&self.walk.is_none()&&self.nodes.is_none()
         &&self.child_scratch.capacity()==0&&self.flex.close_is_empty()&&self.atlas_candidate.is_empty()&&self.text_worker.terminal_is_empty()
     }
@@ -1484,8 +1483,11 @@ pub(crate) fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, wid
     while job.stage() != LayoutJobStage::PublishResults {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview,&mut actual_retained_progress);
-        if matches!(semio_framework_job::InteractiveJob::step(&mut job, &mut cx), semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled) {
-            return false;
+        let outcome = match semio_framework_job::InteractiveJob::step(&mut job, &mut cx) { Ok(outcome) => outcome.map(semio_framework_job::JobOutcomeBorrow::into_descriptor), Err(_) => return false };
+        if let Some(mut descriptor) = outcome {
+            let failed = matches!(descriptor.kind(), semio_framework_job::JobOutcomeKind::Fault | semio_framework_job::JobOutcomeKind::Cancelled);
+            descriptor.acknowledge(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+            if failed { job.begin_close(); while !job.close_one() {} return false; }
         }
     }
     while let Some(result) = job.take_preview_one() {
@@ -1523,8 +1525,17 @@ impl MountedLayoutFault {
 }
 
 impl semio_framework_job::InteractiveJob for MountedLayoutJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         self.worker_one(cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Fault if self.fault.is_some() => descriptor.fault(self.fault_payload.published().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "layout original fault custody was not published"))?),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "layout descriptor does not match its original outcome")),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -1532,10 +1543,10 @@ impl semio_framework_job::InteractiveJob for MountedLayoutJob {
     }
 
     fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{self.close_granted(grant)}
-    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if self.fault_payload.terminal_is_empty(){Ok(0)}else{self.fault_payload.retirement_demands().map(|demand|demand.copy_bytes)}}
+    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{if self.fault_payload.terminal_is_empty(){Ok(0)}else{self.fault_payload.retirement_demands().map(|demand|demand.capacity_bytes)}}
     fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.next_close_release_bytes()}
-    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{if self.fault_payload.terminal_is_empty(){Ok(usize::from(!self.terminal_is_empty()))}else{self.fault_payload.retirement_demands().map(|demand|demand.depth)}}
 
     fn terminal_is_empty(&self) -> bool {
         MountedLayoutJob::terminal_is_empty(self)

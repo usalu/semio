@@ -36,18 +36,18 @@ class RecursiveRetirementTest extends BundleScript {
     const mode = args.shift();
     if (args.length || (mode !== undefined && mode !== "source" && mode !== "native")) throw new Error("Expected test recursive-retirement [source|native]");
     if (mode !== "native") await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/♻️retirement/🟦️.ts")], this.repoRoot, "pdf:recursive-retirement:source", 15_000);
-    if (mode !== "source") await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--lib", "pdf_recursive_retirement_"]);
+    if (mode !== "source") await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--lib", "pdf_recursive_retirement_"], this.invocation.control);
   }
 }
 /** 🪪️ Runs native admission and pure stream identity laws through the package runner. */
 class StreamRolesTest extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Expected test stream-roles");
-    await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--features", "component-app-assembly", "--lib", "pdf_stream_roles_", "--", "--nocapture"]);
+    await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--features", "component-app-assembly", "--lib", "pdf_stream_roles_", "--", "--nocapture"], this.invocation.control);
   }
 }
 /** 🖼️ Proves logical image words and independently admitted native foreign artifact custody. */
 class SemanticBodyTest extends BundleScript {
-  async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test semantic-body");await runArtifactRustTests("semio-s-artifact-stdio-pdf",this.repoRoot,["--features","component-app-assembly","--lib","pdf_semantic_body_","--","--nocapture"]);}
+  async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test semantic-body");await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--features","component-app-assembly","--lib","pdf_semantic_body_","--","--nocapture"], this.invocation.control);}
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-pdf", { snapshotSqliteTests: snapshotSqliteSources, snapshotSqliteTestFeatures: ["component-app-assembly"], commands: { verify: VerifySnapshotSqliteSource }, testCommands: { "recursive-retirement": RecursiveRetirementTest, "stream-roles": StreamRolesTest, "semantic-body": SemanticBodyTest } });

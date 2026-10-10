@@ -1,0 +1,5 @@
+# Current Full Fixture Authority Boundary
+
+The independent same original full-current inventory/filter/order/diagnostic table acquisition completed actual Nx1. It inspected 4785 modules/3758 declared scopes and returned seven schema-fixture-defines-schema findings, 46 shared codes and zero unshared codes. Every finding is retained in generated/root-boundary16-api.json; hash-only schema seam observations are retained separately. This is full API-level fixture authority verification, not the original normal workspace command/native registry/runtime/publication proof. No narrower clean subset substitutes for the seven findings.
+
+The seven schemas currently define corpus roots in Pack depth, MCP workspace SQLite, Flow VCS retirement, Flow host evaluation-source/seeds, retained-copy, and Neural evaluation. Root owns targeted schema/corpus-reader corrections for six; Native handles Pack depth. Genuine domain fragments must remain with the real owner; testing examples have no whole-corpus schema. Unknown writer/epoch is not attributed.

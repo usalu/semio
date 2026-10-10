@@ -74,10 +74,8 @@ struct StagedStep {
 }
 
 impl InteractiveJob for StagedStep {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        context.set_stage("stage");
-        StepOutcome::Yield
-    }
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {cx.set_stage("stage");JobOutcomeBorrow::admit_yield(cx)}
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
 
     fn begin_close(&mut self) {
         self.closing = true;
@@ -98,14 +96,16 @@ fn a_worker_step_reads_the_clock_once_on_entry_and_once_on_exit() {
     let law = law();
     FAKE_NOW_US.store(9_000_000, Ordering::SeqCst);
     let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "clock-stride-law", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: fake_now_us };
-    let mut authority = WorkerJobAuthorityOwner::try_new(StagedStep { closing: false }, params).unwrap_or_else(|_| panic!("fixture admission"));
+    let mut authority = admit_original_fixture_owner!(WorkerJobAuthorityOwner,StagedStep { closing: false }, params).unwrap_or_else(|_| panic!("fixture admission"));
     for _ in 0..3 {
         FAKE_READS.store(0, Ordering::SeqCst);
         FAKE_NOW_US.fetch_add(10, Ordering::SeqCst);
+        authority.issued_retained=crate::component::TEST_RETAINED_POLICY;
         assert!(!drive_worker_job_authority(&mut authority));
+        assert!(authority.retained_receipt_pending);assert!(authority.retained_step_progress.fits(authority.issued_retained));authority.retained_receipt_pending=false;
         assert_eq!(FAKE_READS.load(Ordering::SeqCst), law["stepReadsOutsideTheJob"].as_u64().unwrap(), "a step reads the clock on entry and on exit only");
         assert_eq!(authority.last_step_end_us, Some(FAKE_NOW_US.load(Ordering::SeqCst)), "the exit reading is kept for the caller");
-        let _ = authority.outcome.return_original();
+        while !authority.outcome.is_empty() { let receipt=authority.outcome.close_step(crate::component::TEST_RETAINED_POLICY).progress(); assert!(receipt.fits(crate::component::TEST_RETAINED_POLICY)); }
     }
     let job = authority.job.original_mut().expect("fixture job");
     job.begin_close();

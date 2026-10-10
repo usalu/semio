@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-native": "bun nx run @semio-tech/framework-diagnostic-rs:test-native"
+    "test-native": "bun nx run @semio-tech/framework-diagnostic-rs:test-native",
+    "test-source": "bun nx run @semio-tech/framework-diagnostic-rs:test-source"
   },
   "bundleKind": "library",
   "nx": {

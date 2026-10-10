@@ -1,0 +1,42 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+    "beforeSha256": "2c1c71ef6658863bc1b2cacbd6ce6688712957a205198d121ea9b2b856fec1bd",
+    "afterSha256": "6aa8a47b38e51aa1907b687ba54c35ca9acdda334361e73a7282f3a612626326",
+    "action": "insert exact original trial-authority absence guard before whole fixture admission",
+    "oldBlockSha256": "2aa5c6578deb5713a25156afd2b7a83b09359507118463d177914cdf332d0a6a",
+    "newBlockSha256": "8e05f753d5d5377596c77b698cb73eda34bdac4c7a536bdc2ee9d5cee24ca7b0"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+    "beforeSha256": "6aa8a47b38e51aa1907b687ba54c35ca9acdda334361e73a7282f3a612626326",
+    "afterSha256": "9ec630b2fc2947b218ca88bd00b769ee5d90bffb08214a8e8d708c1288773967",
+    "action": "insert exact original trial-authority absence guard before whole fixture admission",
+    "oldBlockSha256": "3d88af0e76ac08536cb35657431362cf2bb30a149f6c82752b895e2d8ed374bb",
+    "newBlockSha256": "90f1017cfba3446bd655b401ec9b87ec0fab4563feb6163cb5217aede041c126"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧪️tests/🟦️.ts",
+    "beforeSha256": "9845b384074fed4e37b894fe37a7428de2fd2e2df42b82b9016dea95208e9e60",
+    "afterSha256": "202b64f1d7342934d43940de374e67e6014cb7df5a6bd1504b00c5740b25dfda",
+    "action": "insert exact original trial-authority absence guard before whole fixture admission",
+    "oldBlockSha256": "ed502f00165429415c22fc9720d756db0e45afbcb963baa4e1f41202cbb74c72",
+    "newBlockSha256": "9f2ffe8d441545a1ed80e51b9046af1b8ef3f293fe1d4a9868639b14e5190eb8"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🟦️.ts",
+    "beforeSha256": "191922054754498defb6dfccb5d14e812b6ad5736812a279554989d4b8ed3d45",
+    "afterSha256": "70801e69b43e3b0df5e2d14fdf5f68f39ab040b89a34ed6294b7a2614ed9e9dd",
+    "action": "insert exact original trial-authority absence guard before whole fixture admission",
+    "oldBlockSha256": "e6df18c83a046a88a78c96d68116862b054f034f605cd08be19d8b6b7ce8eca8",
+    "newBlockSha256": "15eb4f3a81163beeaf8bdd7c4d5b5d911add5b351a6ba747b1dbabf63d73b978"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🟦️.ts",
+    "beforeSha256": "70801e69b43e3b0df5e2d14fdf5f68f39ab040b89a34ed6294b7a2614ed9e9dd",
+    "afterSha256": "795cd8ea229dce6054ede7244553ad60e8634a118707cc52328ecfd80ceb71a5",
+    "action": "insert exact original trial-authority absence guard before whole fixture admission",
+    "oldBlockSha256": "0648d00a1129179bcb45b982ed2911872d393cf356ce7ac98682971b894b9ce6",
+    "newBlockSha256": "53d5f5bb4f42bdfe4a65905aa3b8ebfdd3066278b951ff290669cfa193f87d0d"
+  }
+]

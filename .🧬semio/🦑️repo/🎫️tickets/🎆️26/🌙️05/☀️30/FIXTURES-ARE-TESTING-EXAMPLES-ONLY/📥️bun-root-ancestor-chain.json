@@ -1,0 +1,16 @@
+{
+  "ownership": false,
+  "executed": false,
+  "upstream": "https://raw.githubusercontent.com/oven-sh/bun/bun-v1.3.14/src/install/PackageManager.zig",
+  "sourceLines": [
+    631,
+    635,
+    661,
+    672,
+    681,
+    702,
+    708
+  ],
+  "observedProbeSeconds": 9.03,
+  "measuredHotspot": false
+}

@@ -3,6 +3,8 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
+import {createRequire} from "node:module";
+import {dirname,resolve} from "node:path";
 const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));
 test("owner arguments are admitted then transported literally and consumed exactly once",async()=>{
@@ -24,8 +26,23 @@ test("Nx delegates the unchanged static owner command while literal argv stays o
  const api=await import(new URL("../🟨️.mjs",import.meta.url).href);
  for(const row of fixture.cases){
   let observed:any;
-  const options={command:'bun "./📜️script.ts" native owner-command --manifest "owner/Cargo.toml" --cwd "owner" -- bun "./📜️script.ts" test',cwd:".",forwardAllArgs:true,env:{KEEP:"original"},__unparsed__:row.arguments,E:"parsed-duplicate"};
-  const result=await api.executeOwnerArgumentsV1(options,{root:process.cwd()},async(plan:any)=>{observed=plan;return {success:true};});
+  const native=fixture.nativeOriginal,root=process.cwd(),require=createRequire(import.meta.url),nxRoot=dirname(require.resolve("nx/package.json"));
+  const {createTaskGraph}=require(resolve(nxRoot,"dist/src/tasks-runner/create-task-graph.js"));
+  const options={command:'bun "./📜️script.ts" native owner-command --manifest "owner/Cargo.toml" --cwd "owner" -- bun "./📜️script.ts" test',cwd:".",forwardAllArgs:true,nativeOwnerCommand:structuredClone(native.command),env:{KEEP:"original"} as Record<string,string>,__unparsed__:row.arguments,E:"parsed-duplicate"};
+  const projects={"literal-owner":{name:"literal-owner",root:".",targets:{probe:{executor:"@semio-tech/repo-lib:owner-command",options:{command:options.command,cwd:options.cwd,forwardAllArgs:true,nativeOwnerCommand:structuredClone(native.command)}}}}};
+  const projectGraph={nodes:{"literal-owner":{name:"literal-owner",type:"lib",data:projects["literal-owner"]}},dependencies:{"literal-owner":[]}};
+  const taskGraph=createTaskGraph(projectGraph,{},["literal-owner"],["probe"],undefined,{__overrides_unparsed__:row.arguments,E:"parsed-duplicate"},false);
+  const capabilities={workspaceRoot:root,arguments:["nx","run",native.selected,"--",...row.arguments],selection:["nx","run",native.selected,"--",...row.arguments],native:structuredClone(native.resources)};
+  const original={version:1,policy:{version:1,owner:native.owner,maximumElapsedMilliseconds:native.maximumElapsedMilliseconds},deadlineEpochMilliseconds:Date.now()+native.maximumElapsedMilliseconds,capabilities};
+  const callerSchema=JSON.parse(readFileSync(new URL("../🧬️schema/📥️native-caller.json",import.meta.url),"utf8"));
+  const nativeSchema=JSON.parse(readFileSync(new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+  expect(new Ajv({strict:true}).compile(callerSchema)(capabilities)).toBe(true);
+  options.env={...options.env,SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(original),SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(capabilities),CARGO_TARGET_DIR:native.resources.artifactDirectory,CARGO_NET_OFFLINE:String(native.resources.network.offline)};
+  const result=await api.executeOwnerArgumentsV1(options,{root,projectName:"literal-owner",targetName:"probe",taskGraph,projectsConfigurations:{projects}},async(plan:any)=>{observed=plan;return {success:true};});
+  const issued=JSON.parse(observed.env.SEMIO_SCRIPT_PROCESS_INVOCATION);
+  expect(new Ajv({strict:true}).compile(nativeSchema)(issued.capabilities)).toBe(true);
+  expect(issued.policy).toEqual(original.policy);expect(issued.deadlineEpochMilliseconds).toBe(original.deadlineEpochMilliseconds);
+  expect(issued.capabilities.command).toEqual({...native.command,arguments:[...native.command.arguments,...row.arguments]});
   expect(result.success).toBe(true);expect(observed.command).toBe(options.command);expect(observed.forwardAllArgs).toBe(false);expect(observed.__unparsed__).toEqual([]);expect(observed.args).toBeUndefined();
   expect(api.consumeOwnerArgumentsV1(observed.env).arguments).toEqual(row.arguments);
  }

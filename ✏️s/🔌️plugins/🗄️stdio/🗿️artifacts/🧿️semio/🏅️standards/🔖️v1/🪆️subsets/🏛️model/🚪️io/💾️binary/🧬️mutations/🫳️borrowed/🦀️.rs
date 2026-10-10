@@ -1,6 +1,7 @@
 //! 🏛️ Exact original Model element tuple fields reborrowed by bounded operation traversal.
 use crate::standards::v1::subsets::{model::schema::{snapshot::*, mutations::SemioModelMutation}, base::schema::geometry::{SemioTransform, SemioPoint3, SemioQuaternion, native::NativeF64}};
-use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactOperationText, ArtifactOperationTextNode as Node};
+use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactOperationText, ArtifactOperationTextNode as Node, ArtifactPreparedOperationError};
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 enum View<'a> {
     Operation(&'a SemioModelMutation), Element(&'a SemioModelElement), Class(&'a ElementClass),
@@ -33,14 +34,14 @@ impl<'a> View<'a> {
         })
     }
 
-    fn node(self) -> Result<Node<'a>, String> {
+    fn node(self) -> Result<Node<'a>, ValueError> {
         use View as V;
         let sequence = |length: usize| Node::Sequence { length, open: b"[", separator: b",", close: b"]" };
         let tagged = |open: &'a [u8]| Node::Sequence { length: 1, open, separator: b"", close: b"]" };
         Ok(match self {
             V::Operation(SemioModelMutation::InsertElement(payload)) => Node::Sequence { length: if payload.at.is_some() { 4 } else { 2 }, open: b"", separator: b"", close: b"" },
             V::Operation(SemioModelMutation::RemoveElement(_)) => Node::Sequence { length: 2, open: b"", separator: b"", close: b"" },
-            V::Operation(_) => return Err("model.operation-text.unsupported".into()),
+            V::Operation(_) => return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"model.operation-text.unsupported")),
             V::Element(_) => sequence(6), V::Transform(_) | V::Point(_) => sequence(3), V::Quaternion(_) => sequence(4),
             V::Class(value) => match value {
                 ElementClass::Wall => Node::Bytes(b"WA"), ElementClass::Slab => Node::Bytes(b"SL"), ElementClass::Column => Node::Bytes(b"CO"), ElementClass::Beam => Node::Bytes(b"BE"), ElementClass::Door => Node::Bytes(b"DO"), ElementClass::Window => Node::Bytes(b"WI"), ElementClass::Roof => Node::Bytes(b"RO"), ElementClass::Stair => Node::Bytes(b"ST"), ElementClass::Furniture => Node::Bytes(b"FU"), ElementClass::Other { .. } => tagged(b"OT["),
@@ -54,9 +55,9 @@ impl<'a> View<'a> {
     }
 }
 
-fn view<'a>(operation: &'a SemioModelMutation, path: &[usize]) -> Result<View<'a>, String> {
+fn view<'a>(operation: &'a SemioModelMutation, path: &[usize]) -> Result<View<'a>, ValueError> {
     let mut value = View::Operation(operation);
-    for index in path { value = value.child(*index).ok_or_else(|| "model.operation-text.invalid-path".to_string())?; }
+    for index in path { value = value.child(*index).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated,"model.operation-text.invalid-path"))?; }
     Ok(value)
 }
 
@@ -73,12 +74,12 @@ impl std::fmt::Write for ScalarWindow<'_> {
 }
 
 impl ArtifactOperationText for SemioModelMutation {
-    fn operation_text_node(&self, path: &[usize]) -> Result<Node<'_>, String> { view(self, path)?.node() }
-    fn operation_text_scalar(&self, path: &[usize], offset: usize, output: &mut [u8]) -> Result<(usize, bool), String> {
+    fn operation_text_node(&self, path: &[usize]) -> Result<Node<'_>, ValueError> { view(self, path)?.node() }
+    fn operation_text_scalar(&self, path: &[usize], offset: usize, output: &mut [u8]) -> Result<(usize, bool), ArtifactPreparedOperationError> {
         use std::fmt::Write;
-        let View::Float(value) = view(self, path)? else { return Err("model.operation-text.scalar-path".into()); };
+        let View::Float(value) = view(self, path)? else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"model.operation-text.scalar-path").into()); };
         let mut window = ScalarWindow { output, offset, position: 0, written: 0 };
-        write!(window, "{}", NativeF64(value)).map_err(|_| "model.operation-text.scalar-format".to_string())?;
+        write!(window, "{}", NativeF64(value)).map_err(|_| ArtifactPreparedOperationError{written_bytes:window.written,reason:ValueError::literal(ValueRefusalKind::InvariantViolated,"model.operation-text.scalar-format")})?;
         Ok((window.written, offset + window.written == window.position))
     }
 }

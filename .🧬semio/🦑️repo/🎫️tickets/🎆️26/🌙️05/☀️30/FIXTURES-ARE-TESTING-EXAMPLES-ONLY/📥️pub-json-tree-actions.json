@@ -1,0 +1,70 @@
+{
+  "sourceRed": {
+    "session": 10064,
+    "NxStatus": 1,
+    "duration": "278ms",
+    "Bun": "1pass1fail2838assertions",
+    "log": "🗑️generated/pub-json-tree-red.log"
+  },
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
+      "beforeSha256": "a56efee33dcf33dfb76b4b8d98850d1ac532055eb145bd6e12130344336af165",
+      "afterSha256": "42fe8bb4d526c7ab2e26874855ae6c972961db311a9495a845c932298b4ae77a",
+      "scope": "actual Tree scalar formats retained inline scratch; reports only actual initialized prefix; non-scalar inspection initializes no scalar payload; canonical Value error retained receipt unchanged",
+      "observedCurrentSha256": "42fe8bb4d526c7ab2e26874855ae6c972961db311a9495a845c932298b4ae77a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧫️fixtures/🔣️.json",
+      "beforeSha256": "48ed7c25d6ed460b0f33f0615be2e3fa9cf240582cd5cfcd8b3fa2b95a8d730e",
+      "afterSha256": "dbf5d1a142e6cd784c741037aac331551a87b040ae4e4a1e6033c531d6de95f6",
+      "scope": "immutable independent positive Tree caller policy; preserve every original grants/depths/pauses/text value",
+      "observedCurrentSha256": "dbf5d1a142e6cd784c741037aac331551a87b040ae4e4a1e6033c531d6de95f6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs",
+      "beforeSha256": "d23932b3d51be88c8d683bf0e4236d090afc2c987214dd9d322638ca97789d9b",
+      "afterSha256": "bceb956a80ed45dcba20e50a1d5a8146ce043fdf780ac7e41e4eb7db1b62f4f2",
+      "scope": "original native positive grants derive immutable plain caller policy; queried demands only assert fit; all original System/Serde/pointer/cancel laws remain",
+      "observedCurrentSha256": "bceb956a80ed45dcba20e50a1d5a8146ce043fdf780ac7e41e4eb7db1b62f4f2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🟦️.ts",
+      "beforeSha256": "a4e8010ec07f8c61f8abf84c19062c1ef2eec2296c506f08bce1d485fa9727de",
+      "afterSha256": "fc346fddd1efd1ddbf2c7adc399cd3694d0d98854a4f0b9b385925480ff32c5b",
+      "scope": "exclusive whole-trial compilation and two synthetic wrapper refusals removed; original JSON/TextEncoder/SQLite laws and new scalar/policy boundary retained",
+      "observedCurrentSha256": "fc346fddd1efd1ddbf2c7adc399cd3694d0d98854a4f0b9b385925480ff32c5b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧬️schema/🔣️.json",
+      "beforeSha256": "89418a73da532bc3fd2cbb082ffe3fe9ebef8832163e61d22911f948463f2cc0",
+      "afterSha256": null,
+      "scope": "exclusive grants/depths/pauses/text testing wrapper with sole TS whole admission; no production DTO exports or reader",
+      "observedCurrentSha256": null
+    }
+  ],
+  "native": "UNRUN",
+  "sourceFreeze": false,
+  "sourceCurrent": {
+    "NxStatus": 0,
+    "duration": "76ms",
+    "Bun": "2pass0fail2843assertions",
+    "log": "🗑️generated/pub-json-tree-renewed.log",
+    "qualification": "Executed original route after earlier ENFILE; no unobserved session ID, no native credit"
+  },
+  "acquisitionRefusals": [
+    {
+      "session": 52060,
+      "exit": 1,
+      "reason": "ENFILE pretests"
+    },
+    {
+      "session": 21689,
+      "exit": 130,
+      "reason": "exact own wrong-cwd Nx50350 SIGINT before assertions",
+      "log": "🗑️generated/pub-json-tree-cwd-refusal.log",
+      "metadata": "🗑️generated/pub-cwd-refusal-data",
+      "qualification": "Exact named metadata relocated into ticket after fresh birth/process absence/lsof no handles; no foreign data moved."
+    }
+  ]
+}

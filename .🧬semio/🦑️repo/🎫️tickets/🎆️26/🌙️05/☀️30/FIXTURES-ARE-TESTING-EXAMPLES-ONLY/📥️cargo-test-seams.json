@@ -1,0 +1,72 @@
+{
+  "observedOnly": true,
+  "executedTests": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "exists": true,
+      "sha256": "94b9e08c4e9ae6416728d5558f48b7abb7a65497cb9a0697bde3a010a48be862",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "exists": true,
+      "sha256": "4b9b9d0a6bbb945311d1db99b3dc38425f8d8d9a92147383f2e15506b39857f8",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "c463fc297f80969c77ed14125d0ff8aaa30b89d074b50481ea8e24dd2d210212",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧭️native-discovery/🟦️.ts",
+      "exists": true,
+      "sha256": "60435d057735f4c028ae910429ccea1b67857d54bac54be509bd7e6477cec374",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🏎️nextest-configuration/🟦️.ts",
+      "exists": true,
+      "sha256": "813ea39ea90defc7cd1329e00023af0013932148943ddd6067cfe57f5a80dce1",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️nested-owners/🟦️.ts",
+      "exists": true,
+      "sha256": "304ad71d386bb812c0eaf80e478eab7da93e184455c4fe1991a7b0d4829bb10b",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📖️toml/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "f1cf3f7cdb22c99edf7afacfd039ad8be5f2d93cd7e4f531cc78b7bd70011476",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "3120105efd47debdc5f307adcb62759dd2b6c37ee0f59cbc898a1fc996553668",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "exists": true,
+      "sha256": "0e84b6cbcc1e820b8dbe6a45235e0556c59250817d12d26d33cfd0ae58ae07e1",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "exists": true,
+      "sha256": "eee2413e4ea12afb196e744df9894a1259357c916841ee5653dd32ad093ebb8b",
+      "ownership": false
+    },
+    {
+      "path": "Cargo.toml",
+      "exists": true,
+      "sha256": "d842dc029762ae4718e11d889741aeb5d8e82925bdf1c3e6ff19923786048525",
+      "ownership": false
+    }
+  ]
+}

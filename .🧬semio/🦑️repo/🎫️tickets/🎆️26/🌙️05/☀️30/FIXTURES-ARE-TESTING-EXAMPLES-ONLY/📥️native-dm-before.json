@@ -1,0 +1,62 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧬️schema/🔣️.json",
+    "sha256": "2c21198397cc5b14a63f840ba4c0fec67c708d0260ee19afed44940cd77c6a74",
+    "bytes": 758,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧬️schema/⚠️kind/🔣️.json",
+    "sha256": "2c4e73c2bdd2637411ce9ba7b017040c2a40100e1d7249e4849b2964b7d0a6cc",
+    "bytes": 902,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧬️schema/🔣️.json",
+    "sha256": "35e2afb3d7659626292a71c4dd2fad7585380843ea003100d9c781543e21388c",
+    "bytes": 1547,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts",
+    "sha256": "2c1c71ef6658863bc1b2cacbd6ce6688712957a205198d121ea9b2b856fec1bd",
+    "bytes": 1990,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧪️tests/🟦️.ts",
+    "sha256": "9845b384074fed4e37b894fe37a7428de2fd2e2df42b82b9016dea95208e9e60",
+    "bytes": 2890,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🟦️.ts",
+    "sha256": "191922054754498defb6dfccb5d14e812b6ad5736812a279554989d4b8ed3d45",
+    "bytes": 3078,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧫️fixtures/🔣️.json",
+    "sha256": "423f420db5e56655a773f0018edcf99ab3c69d5fc16c07dea19b72ff33f6e6bc",
+    "bytes": 618,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🧫️fixtures/⚠️kind/🔣️.json",
+    "sha256": "4b9bf391172b36e16e58da95a5ffda70e23cd42bfb299fdda35a216d52577ee7",
+    "bytes": 389,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧫️fixtures/🔣️.json",
+    "sha256": "bbbaf47bd57cb0677197a6a45556fdd2a0de89a608d7350ac48f8a00de773d62",
+    "bytes": 865,
+    "role": "initial current observer only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛂️manifest/🔖️action-args/♻️retirement/🧪️tests/🦀️.rs",
+    "sha256": "e9572517bf30def2b60de00b4ecbc40ae20234f1a572001255f2ab4bb852cd15",
+    "bytes": 6197,
+    "role": "initial current observer only"
+  }
+]

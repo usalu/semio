@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { join, relative } from "node:path";
 import { writeGeneratedFileIfChanged } from "../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -22,4 +23,4 @@ export class PrintTokenPreviewScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PrintTokenPreviewScript);
-if (import.meta.main) await router.run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

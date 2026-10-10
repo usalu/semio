@@ -96,7 +96,7 @@ impl ArtifactCanonicalJsonTree for FixtureReplace {
 }
 
 impl ArtifactCanonicalJson for FixtureMutation {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
         use ArtifactCanonicalJsonNode as N;
         let Self::Replace(FixtureReplace { text, nested, enabled, amount }) = self;
         Ok(match path {
@@ -110,7 +110,7 @@ impl ArtifactCanonicalJson for FixtureMutation {
             _ => return Err(invalid_path()),
         })
     }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
         match path {
             [] if index == 0 => Ok("Replace".into()),
             [0] => ["text", "nested", "enabled", "amount"].get(index).copied().map(Into::into).ok_or_else(invalid_path),
@@ -133,9 +133,9 @@ fn canonical_edit_large_unicode_bytes_match_serde_and_language_neutral_oracle() 
         let mut encoder = ArtifactCanonicalJsonCursor::default();
         let mut actual = Vec::new();
         let mut output = vec![0; maximum];
-        assert_eq!(encoder.encode_chunk(&edit, &mut []).unwrap(), 0);
+        assert_eq!(encoder.encode_chunk_admitted(&edit, &mut [],RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).unwrap().written_bytes, 0);
         while !encoder.is_complete() {
-            let count = encoder.encode_chunk(&edit, &mut output).unwrap();
+            let count = encoder.encode_chunk_admitted(&edit, &mut output,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).unwrap().written_bytes;
             assert!(count <= maximum.min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES));
             actual.extend_from_slice(&output[..count]);
         }
@@ -354,7 +354,7 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
             let mut encoder = ArtifactCanonicalJsonCursor::default();
             let mut chunk = [0; 256];
             while !encoder.is_complete() {
-                let count = encoder.encode_chunk(&edit, &mut chunk).unwrap();
+                let count = encoder.encode_chunk_admitted(&edit, &mut chunk,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).unwrap().written_bytes;
                 actual.extend_from_slice(&chunk[..count]);
             }
             assert_eq!(actual, expected);
@@ -435,4 +435,62 @@ fn edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally() {
     grown.inverse.push(serde_json::json!({ "SetN": { "n": 2 } }).into());
     let (extended, _) = super::super::CursorRevisionAccumulator::edit_digest_extending(&grown, chains);
     assert_eq!(extended, super::super::CursorRevisionAccumulator::edit_digest(&grown), "an amend's incremental digest equals the from-scratch digest");
+}
+
+#[test]
+fn canonical_json_original_supplied_depth_and_prefix_conserve_every_real_turn() {
+    struct DepthSource(serde_json::Value);
+    impl ArtifactCanonicalJson for DepthSource {
+        fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+            let mut value = &self.0;
+            for ordinal in path { value = value.as_array().and_then(|values| values.get(*ordinal)).ok_or_else(invalid_path)?; }
+            Ok(match value {
+                serde_json::Value::Bool(value) => ArtifactCanonicalJsonNode::Bool(*value),
+                serde_json::Value::Array(values) => ArtifactCanonicalJsonNode::Array(values.len()),
+                _ => return Err(invalid_path()),
+            })
+        }
+    }
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️canonical-error-progress.json")).unwrap();
+    let limits = &fixture["retainedPolicy"];
+    let original = RetainedCloneGrant {
+        maximum_items: limits["maximumItems"].as_u64().unwrap() as usize,
+        maximum_copy_bytes: limits["maximumCopyBytes"].as_u64().unwrap() as usize,
+        maximum_capacity_bytes: limits["maximumCapacityBytes"].as_u64().unwrap() as usize,
+        maximum_release_bytes: limits["maximumReleaseBytes"].as_u64().unwrap() as usize,
+        maximum_depth: limits["maximumDepth"].as_u64().unwrap() as usize,
+    };
+    for row in fixture["depthRows"].as_array().unwrap() {
+        let source = DepthSource(row["source"].clone());
+        let source_address = &source.0 as *const _;
+        let expected = serde_json::to_vec(&source.0).unwrap();
+        let grant = RetainedCloneGrant { maximum_depth: row["maximumDepth"].as_u64().unwrap() as usize, ..original };
+        let mut encoder = ArtifactCanonicalJsonCursor::default();
+        let mut actual = Vec::with_capacity(expected.len());
+        let mut refused = false;
+        for _ in 0..64 {
+            let mut output = [0xa5; 8];
+            for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }] {
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| encoder.encode_chunk_admitted(&source, &mut output, denied).unwrap());
+                assert_eq!(step.written_bytes, 0); assert_eq!(step.ownership.progress(), RetainedCloneProgress::default()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); assert_eq!(output, [0xa5; 8]);
+            }
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| encoder.encode_chunk_admitted(&source, &mut output, grant));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            match step {
+                Ok(step) => {
+                    let receipt = step.ownership.progress();
+                    assert!(receipt.copied_items <= grant.maximum_items && receipt.copied_bytes <= grant.maximum_copy_bytes);
+                    assert_eq!((receipt.retained_capacity_bytes, receipt.released_bytes), (0, 0));
+                    assert!(output[step.written_bytes..].iter().all(|byte| *byte == 0xa5));
+                    actual.extend_from_slice(&output[..step.written_bytes]);
+                    if encoder.is_complete() { break; }
+                }
+                Err(error) => { assert_eq!(error.written_bytes, 0); assert_eq!(error.reason.retained_progress(), RetainedCloneProgress::default()); assert_eq!(output, [0xa5; 8]); refused = true; break; }
+            }
+        }
+        assert_eq!(&source.0 as *const _, source_address);
+        if row["refused"].as_bool().unwrap_or(false) { assert!(refused); assert_eq!(actual, row["expectedPrefix"].as_str().unwrap().as_bytes()); }
+        else { assert!(!refused && encoder.is_complete()); assert_eq!(actual, expected); }
+        println!("[DEBUG] canonical JSON original supplied depth={} prefix={} refused={} actual System0 full-grant per-event receipts", grant.maximum_depth, actual.len(), refused);
+    }
 }

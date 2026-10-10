@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "4649400adfa8a25bff9773b69efacd56a913967f731a14303ac8cd418a1dc574",
+      "afterSha256": "a9b6791134183a6b810c785d6fcad937bb372e39e6ff1217a8aa71f3d718448f",
+      "exclusive": false,
+      "scope": "Admit unchanged canonical draft7 Grant with correct independent Ajv dialect, preserve actual catalog/identity/binding draft2020 schemas"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

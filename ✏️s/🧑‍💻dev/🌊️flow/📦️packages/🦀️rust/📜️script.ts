@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🌊️ First-party Flow composition has its own bounded native and portable law runner. */
 import { runRepositoryExactCargoLaws, runBun } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -12,8 +14,7 @@ class SourceScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testFlowCompositionOwnership();
-    await runRepositoryExactCargoLaws({ cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: buildBudgetMs(), lawBudgetMs: 600_000,
-      groups: flowCompositionLaws().map(group => ({ package: "semio-s-flow-composition", target: { kind: "test", name: group.target }, laws: group.laws })) });
+    await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), lawMilliseconds: 600_000 }, cwd: this.repoRoot, cargoArgs: segments, groups: flowCompositionLaws().map(group => ({ package: "semio-s-flow-composition", target: { kind: "test", name: group.target }, laws: group.laws })) });
   }
 }
 class CanonicalScript extends BundleScript {
@@ -21,9 +22,8 @@ class CanonicalScript extends BundleScript {
     if (args.length !== 0) throw new Error("canonical-architecture takes no arguments");
     testFlowCompositionOwnership();
     runBun(["test","../../🧪️tests/🔌️port-sides/🟦️.ts"],import.meta.dir);
-    await runRepositoryExactCargoLaws({ cwd:this.repoRoot,cargoArgs:["--locked"],buildBudgetMs:buildBudgetMs(),lawBudgetMs:600_000,
-      groups:flowCompositionLaws().map(group => ({ package:"semio-s-flow-composition",target:{kind:"test",name:group.target},laws:group.laws })) });
+    await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), lawMilliseconds: 600_000 }, cwd:this.repoRoot, cargoArgs:["--locked"], groups:flowCompositionLaws().map(group => ({ package:"semio-s-flow-composition",target:{kind:"test",name:group.target},laws:group.laws })) });
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("canonical-architecture", CanonicalScript).register("port-sides-test", PortSidesScript).register("source-check", SourceScript).register("test", TestScript);
-await runScriptMain(router, { defaultCommand: "source-check" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "source-check" }) }));

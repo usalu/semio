@@ -1,11 +1,30 @@
 {
-  "peer": { "actor": "älice", "value": 41 },
+  "peer": {
+    "actor": "älice",
+    "value": 41
+  },
   "receivedAtMilliseconds": 17,
   "nativeMaximumBytes": 1048576,
-  "grant": { "maximumItems": 64, "maximumCopyBytes": 65536, "maximumCapacityBytes": 1048576, "maximumReleaseBytes": 1048576, "maximumDepth": 64 },
-  "prebirthRefusals": ["items", "copy", "capacity", "depth", "nativeCancellation"],
+  "grant": {
+    "maximumItems": 64,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "prebirthRefusals": [
+    "items",
+    "capacity",
+    "depth",
+    "nativeCancellation"
+  ],
   "refusedRequestedBytes": 0,
   "refusedReleasedBytes": 0,
   "expectedActorPointerPreserved": true,
-  "expectedPresencePreserved": true
+  "expectedPresencePreserved": true,
+  "commitTransferRefusals": [
+    "items",
+    "depth"
+  ],
+  "zeroSemanticCopyAccepted": true
 }

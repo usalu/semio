@@ -3302,6 +3302,15 @@ function schemaEmbeddedExampleAuthority(subject: unknown): boolean {
   });
 }
 
+/** 🔬️ Recognizes immutable supplied authorities paired with unperformed trial observations. */
+function schemaLiteralTrialEnvelope(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const envelope = value as Record<string, unknown>, axes: Readonly<Record<string, string>> = { work: "maximumItems", copy: "maximumCopyBytes", capacity: "maximumCapacityBytes", release: "maximumReleaseBytes", depth: "maximumDepth" };
+  const authorities = Object.values(envelope).filter((child): child is Record<string, number> => !!child && typeof child === "object" && !Array.isArray(child) && Object.values(axes).every(axis => Number.isInteger((child as Record<string, unknown>)[axis]) && Number((child as Record<string, unknown>)[axis]) >= 0));
+  if (!authorities.length) return false;
+  return Object.entries(envelope).some(([key, rows]) => Array.isArray(rows) && rows.length > 0 && (rows.every(row => row && typeof row === "object" && !Array.isArray(row) && !Object.hasOwn(row, "actual") && ["input", "inputs", "operation", "setup", "grant"].some(field => Object.hasOwn(row, field)) && Object.keys(row).some(field => /^(?:expect$|expected(?:$|[A-Z]))/u.test(field))) || /(?:^refusals$|Refusals$)/u.test(key) && rows.length > 1 && authorities.some(authority => rows.every(row => row && typeof row === "object" && !Array.isArray(row) && Object.hasOwn(axes, row.axis) && Number.isInteger(row.value) && row.value >= 0 && row.value <= authority[axes[row.axis]!]! && typeof row.kind === "string"))));
+}
+
 /** 🧫️ Recognizes test corpus contracts from their examples and expectations independently of titles. */
 function schemaTestCorpusDefinition(exportId: string, subject: unknown, document: Record<string, unknown>): boolean {
   const producedRecord = /(?:Report|Result|Progress|Outcome|Diagnostic|Coverage)(?:V\d+)?$/u.test(exportId);
@@ -3313,6 +3322,7 @@ function schemaTestCorpusDefinition(exportId: string, subject: unknown, document
     seen.add(value);
     if (Array.isArray(value)) return value.some((child) => inspect(child, testCases));
     const node = value as Record<string, unknown>;
+    if (schemaLiteralTrialEnvelope(node.const)) return true;
     if (Array.isArray(node.const) && node.const.some(row => row && typeof row === "object" && Object.keys(row).some(key => /^(?:expect$|expected(?:$|[A-Z]))/u.test(key)))) return true;
     if (node.const && typeof node.const === "object" && !Array.isArray(node.const)) {
       const envelope = node.const as Record<string, unknown>;
@@ -3333,6 +3343,7 @@ function schemaTestCorpusDefinition(exportId: string, subject: unknown, document
     const marker = properties.schema && typeof properties.schema === "object" ? (properties.schema as Record<string, unknown>).const : undefined;
     if (typeof marker === "string" && /(?:fixture|corpus|test[-.]cases)/iu.test(marker)) return true;
     const fixedProperties = Object.entries(properties).filter(([, child]) => child && typeof child === "object" && Object.hasOwn(child, "const"));
+    if (schemaLiteralTrialEnvelope(Object.fromEntries(fixedProperties.map(([key, child]) => [key, (child as Record<string, unknown>).const])))) return true;
     const fixed = new Map(fixedProperties), fields = (child: unknown): Record<string, unknown> => child && typeof child === "object" ? ((child as Record<string, unknown>).properties as Record<string, unknown> | undefined) ?? {} : {};
     const fixedNumbers = (keys: readonly string[]): boolean => keys.every(key => typeof (fixed.get(key) as Record<string, unknown> | undefined)?.const === "number");
     const items = (key: string): Record<string, unknown> => { const child = properties[key]; return child && typeof child === "object" ? ((child as Record<string, unknown>).items as Record<string, unknown> | undefined) ?? {} : {}; };

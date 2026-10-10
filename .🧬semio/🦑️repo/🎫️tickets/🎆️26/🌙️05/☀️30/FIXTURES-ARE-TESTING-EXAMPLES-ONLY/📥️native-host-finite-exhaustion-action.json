@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+  "beforeSha": "6ffb436d2ede6e7017b1595a60e14e9c5bfb09b19e0060749bd69ec90dff5d41",
+  "afterSha": "e4773360cdc99f08ec529bc65e2140a55d7b62b67a27f0f36a9ea3b3a47fb923",
+  "insertBefore": "  const listeners=[process.listenerCount(\"SIGINT\"),process.listenerCount(\"SIGTERM\")];",
+  "addedBlock": "  const exhaustedProgress:ScriptProgress[]=[], exhausted={policy:{version:1 as const,owner:\"original-exhausted-finite\",maximumElapsedMilliseconds:1000},control:{signal:controller.signal,remainingMilliseconds:()=>0,publish:async(event:ScriptProgress)=>{exhaustedProgress.push(event);},yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))},capabilities};\n  let exhaustedLoads=0;\n  const exhaustedRouter=new ScriptRouter(\"/original-owner\",\"/original-workspace\").registerLazy(\"owned\",async()=>{exhaustedLoads++;return OriginalCommand;});\n  await expect(exhaustedRouter.run([\"owned\"],exhausted)).rejects.toThrow(\"deadline refused\");\n  await expect(runScriptMain(exhaustedRouter,{argv:[\"owned\"],invocation:exhausted})).rejects.toThrow(\"deadline refused\");\n  expect(()=>new OriginalCommand(\"/original-owner\",\"/original-workspace\",exhausted)).toThrow(\"deadline refused\");\n  expect(exhaustedLoads).toBe(0);expect(exhaustedProgress).toEqual([]);\n",
+  "reason": "Explicit genuine finite remaining0 refuses before original lazy load/entrypoint/constructor/progress; distinguishes exhaustion from authored ordinary maximumElapsed0/no deadline. Original finite policy1000 not increased."
+}

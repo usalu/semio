@@ -1,0 +1,14 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "sha256": "4ad3bb66fc01b72566b94c6a0921696e5e424286fe0cc70da3c324f4b8a2cde9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧬️schema/🔣️.json",
+      "sha256": "de4c34b5d5368928d40aad49c337606d05ff1a80a803d85135dd7856f7e5a1dc"
+    }
+  ]
+}

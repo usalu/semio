@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "owner": "public-api-boundary-parent",
+  "maximumElapsedMilliseconds": 240000,
+  "typecheckMilliseconds": 45000,
+  "testMilliseconds": 45000,
+  "maximumBytes": 134217728,
+  "maximumLines": 65536,
+  "observation": {
+    "maximumCumulativeBytes": 1073741824,
+    "chunkBytes": 1048576,
+    "maximumClaims": 50000,
+    "maximumMetadataBytes": 16777216,
+    "maximumPathCodePoints": 256,
+    "maximumPathUtf16Units": 256
+  },
+  "capabilities": {
+    "version": 1,
+    "repositoryRoot": "${workspaceFolder}",
+    "artifactDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-red/a",
+    "command": {
+      "kind": "neutral-source-oracle",
+      "project": "@semio-tech/repo-lib",
+      "target": "test-dependency-direction",
+      "arguments": [
+        "--skip-nx-cache"
+      ]
+    },
+    "phaseCeilings": {
+      "typecheckMilliseconds": 45000,
+      "testMilliseconds": 45000
+    },
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 65536
+    }
+  }
+}

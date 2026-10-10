@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "eabb723410793ba28623f83ce9f60f36b4e39847e780aec45d7407e3e13e598e",
+      "afterSha256": "fc02712fb61c9fdb62c6753eefcb41c46ed1389dac778f082649f37e34ab7792",
+      "exclusive": false,
+      "scope": "Resolve original engine frame-close Source test from actual camera package"
+    }
+  ]
+}

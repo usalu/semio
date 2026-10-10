@@ -8,12 +8,62 @@
   "phases": [
     "job",
     "page",
-    "ledger"
+    "acknowledgement"
   ],
   "publications": [
     "yield",
     "yield",
     "checkpoint"
   ],
-  "jobCalls": 1
+  "jobCalls": 1,
+  "originalGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 8388608,
+    "maximumCapacityBytes": 8388608,
+    "maximumReleaseBytes": 8388608,
+    "maximumDepth": 64
+  },
+  "projection": "original-descriptor-and-borrowed-producer-pages",
+  "destination": "caller-owned-job-publication",
+  "destinationCloseGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 8388608,
+    "maximumCapacityBytes": 8388608,
+    "maximumReleaseBytes": 8388608,
+    "maximumDepth": 64
+  },
+  "originalSourceAuthority": {
+    "kind": "originalCallerWallet",
+    "walletId": "actor.checkpoint.source",
+    "operation": 91,
+    "generation": 3,
+    "receipt": "oneCumulativeRecipient"
+  },
+  "destinationCloseAuthority": {
+    "kind": "independentCallerWallet",
+    "walletId": "actor.checkpoint.destination-close",
+    "originalSourceWalletId": "actor.checkpoint.source",
+    "receipt": "oneCumulativeRecipient",
+    "renewsOriginalSource": false
+  },
+  "producerCloseAuthority": {
+    "kind": "independentCallerWallet",
+    "walletId": "actor.checkpoint.producer-close",
+    "originalSourceWalletId": "actor.checkpoint.source",
+    "receipt": "oneCumulativeRecipient",
+    "renewsOriginalSource": false
+  },
+  "producerCloseGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 8388608,
+    "maximumCapacityBytes": 8388608,
+    "maximumReleaseBytes": 8388608,
+    "maximumDepth": 64
+  },
+  "invalidOriginalOperation": 0,
+  "wireOutputSentinel": [
+    11,
+    13
+  ],
+  "wireRefusal": "pack: invalid original retained turn: operation identity is absent"
 }

@@ -64,5 +64,11 @@
     66,
     7,
     11
-  ]
+  ],
+  "projectedReceipt": {
+    "initialCharge": 9,
+    "expectedProjectionEqualsActual": true,
+    "maximumDecimalConvergencePasses": 22,
+    "canceledRequestedMustRemainRetained": true
+  }
 }

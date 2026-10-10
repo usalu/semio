@@ -281,7 +281,8 @@ pub enum AsyncActorCommand {
 /// comment (`🎠️kernel/🦀️.rs:918-923`), and no `PresencePeer → PresenceUpdate`
 /// conversion exists anywhere in this repo yet. See `📓️terra-shard-lane-report.md`'s
 /// presence-wire-mismatch finding.
-async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Effect>, patches: Vec<super::wit_ui::UiPatch>, instance_id: u32, max_patch_bytes: u32) -> Result<KernelTurnResult, TurnFault> {
+async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Effect>, patches: Vec<super::wit_ui::UiPatch>, instance_id: u32, max_patch_bytes: u32, original:semio_framework::kernel::RetainedTurnInput) -> Result<KernelTurnResult, TurnFault> {
+    let retained_receipt=super::retained_turn_wire::receipt_from_wit(turn.retained_receipt,original)?;
     for effect in turn.effects {
         match super::wit_effect_to_kernel(effect).await {
             Ok(kernel_effect) => effects.push(kernel_effect),
@@ -291,6 +292,7 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
     let ui_patch_receipt = turn.ui_patch_receipt.map(super::wit_patch_receipt_to_kernel);
     let ui_patches = super::ui_patch::wit_ui_patches_to_kernel(instance_id, max_patch_bytes, patches, turn.ui_patches, ui_patch_receipt).map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
     Ok(KernelTurnResult {
+        retained_receipt,
         ui_patches,
         effects,
         presence: Vec::new(),
@@ -382,7 +384,7 @@ impl AsyncActorTask {
                                         continue;
                                     }
                                 };
-                                let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+                                let wit_budget = wit_reactor::Budget { retained:super::retained_turn_wire::input_to_wit(budget.retained), fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
 
                                 struct PollTask {
                                     _epoch: crate::EpochDemand,
@@ -393,6 +395,7 @@ impl AsyncActorTask {
                                     cold_pair_page: Option<wit_reactor::ColdDocumentPairPage>,
                                     budget: wit_reactor::Budget,
                                     max_patch_bytes: u32,
+                                    retained_input:semio_framework::kernel::RetainedTurnInput,
                                     reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, TurnFault>>,
                                 }
                                 impl AccessorTask<AsyncActorHostState> for PollTask {
@@ -408,7 +411,7 @@ impl AsyncActorTask {
                                     /// owned data extracted synchronously), so `block_on` is the sound bridge here, not a
                                     /// shortcut around it.
                                     async fn run(self, accessor: &Accessor<AsyncActorHostState>) -> wasmtime::Result<()> {
-                                        let Self { _epoch, instance, instance_id, events, command_page, cold_pair_page, budget, max_patch_bytes, reply } = self;
+                                        let Self { _epoch, instance, instance_id, events, command_page, cold_pair_page, budget, max_patch_bytes, retained_input, reply } = self;
                                         let outcome = async {
                                             if let Some((cursor, bytes)) = command_page {
                                                 if let Err(fault) = instance.semio_framework_reactor().call_stage_command_page(accessor, cursor, bytes).await? {
@@ -429,7 +432,7 @@ impl AsyncActorTask {
                                                     let state = access.get();
                                                     (semio_framework_async::block_on(state.take_effects()), semio_framework_async::block_on(state.take_patches()))
                                                 });
-                                                convert_poll_success(turn, emitted, patches, instance_id, max_patch_bytes).await
+                                                convert_poll_success(turn, emitted, patches, instance_id, max_patch_bytes,retained_input).await
                                             }
                                             Ok(Err(fault)) => Err(super::decode_guest_plugin_error(fault)),
                                             Err(trap) => Err(TurnFault::Trapped(trap.to_string())),
@@ -438,7 +441,7 @@ impl AsyncActorTask {
                                         Ok(())
                                     }
                                 }
-                                let _ = accessor.spawn(PollTask { _epoch: epoch.arm_timeslice(), instance: instance.clone(), instance_id, events: wit_events_vec, command_page, cold_pair_page, budget: wit_budget, max_patch_bytes: budget.max_patch_bytes, reply });
+                                let _ = accessor.spawn(PollTask { _epoch: epoch.arm_timeslice(), instance: instance.clone(), instance_id, events: wit_events_vec, command_page, cold_pair_page, budget: wit_budget, max_patch_bytes: budget.max_patch_bytes, retained_input:budget.retained, reply });
                             }
                             Some(AsyncActorCommand::StartJob { job, kind, input, reply }) => {
                                 struct StartJobTask {

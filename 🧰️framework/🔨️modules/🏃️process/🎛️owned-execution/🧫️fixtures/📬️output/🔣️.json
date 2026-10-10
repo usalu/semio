@@ -1,0 +1,146 @@
+{
+  "policy": {
+    "maximumElapsedMilliseconds": 30000,
+    "childMilliseconds": 3000
+  },
+  "cases": [
+    {
+      "id": "exact-combined-bytes",
+      "stdout": [
+        "c3a90a"
+      ],
+      "stderr": [
+        "420a"
+      ],
+      "limits": {
+        "maximumBytes": 5,
+        "maximumLines": 2
+      },
+      "accepted": true,
+      "observe": true
+    },
+    {
+      "id": "one-over-combined-bytes",
+      "stdout": [
+        "c3a90a"
+      ],
+      "stderr": [
+        "420a"
+      ],
+      "limits": {
+        "maximumBytes": 4,
+        "maximumLines": 2
+      },
+      "accepted": false,
+      "observe": true
+    },
+    {
+      "id": "combined-lines-without-observer",
+      "stdout": [
+        "6f6e650a74776f0a"
+      ],
+      "stderr": [
+        "74687265650a"
+      ],
+      "limits": {
+        "maximumBytes": 32,
+        "maximumLines": 2
+      },
+      "accepted": false,
+      "observe": false
+    },
+    {
+      "id": "two-open-tails",
+      "stdout": [
+        "6f6e65"
+      ],
+      "stderr": [
+        "74776f"
+      ],
+      "limits": {
+        "maximumBytes": 6,
+        "maximumLines": 2
+      },
+      "accepted": true,
+      "observe": true
+    },
+    {
+      "id": "one-over-open-tail-lines",
+      "stdout": [
+        "6f6e65"
+      ],
+      "stderr": [
+        "74776f"
+      ],
+      "limits": {
+        "maximumBytes": 6,
+        "maximumLines": 1
+      },
+      "accepted": false,
+      "observe": false
+    },
+    {
+      "id": "blank-lines",
+      "stdout": [
+        "0a0a"
+      ],
+      "stderr": [],
+      "limits": {
+        "maximumBytes": 2,
+        "maximumLines": 2
+      },
+      "accepted": true,
+      "observe": true
+    },
+    {
+      "id": "split-utf8",
+      "stdout": [
+        "f0",
+        "9f",
+        "8c",
+        "90",
+        "0a"
+      ],
+      "stderr": [],
+      "limits": {
+        "maximumBytes": 5,
+        "maximumLines": 1
+      },
+      "accepted": true,
+      "observe": true
+    },
+    {
+      "id": "ignored-stdout-still-bounded",
+      "stdout": [
+        "68696464656e0a"
+      ],
+      "stderr": [],
+      "limits": {
+        "maximumBytes": 6,
+        "maximumLines": 1
+      },
+      "accepted": false,
+      "observe": false,
+      "mode": "ignore"
+    }
+  ],
+  "invalidLimits": [
+    {
+      "maximumBytes": 0,
+      "maximumLines": 1
+    },
+    {
+      "maximumBytes": 1,
+      "maximumLines": 0
+    },
+    {
+      "maximumBytes": 1.5,
+      "maximumLines": 1
+    },
+    {
+      "maximumBytes": 1,
+      "maximumLines": 1,
+      "foreign": true
+    }
+  ]
+}

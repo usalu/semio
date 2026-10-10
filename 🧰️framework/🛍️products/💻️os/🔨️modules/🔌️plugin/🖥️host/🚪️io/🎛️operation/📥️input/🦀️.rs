@@ -7,11 +7,22 @@ pub(super) struct JsonInputWriter<'control,'observer,'output>{pub(super) control
 impl JsonInputWriter<'_,'_,'_>{
  pub(super) fn native_write(&mut self,bytes:&[u8])->Result<(),ValueError>{let count=self.count.checked_add(bytes.len()).filter(|count|*count<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"owned input JSON length exceeds address space"))?;if self.output.as_ref().is_some_and(|output|output.len().checked_add(bytes.len()).is_none_or(|next|next>output.capacity())){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned input changed after its measured reservation"));}self.control.advance(bytes.len())?;if let Some(output)=self.output.as_mut(){output.extend_from_slice(bytes);}self.count=count;Ok(())}
 }
+pub(super) struct JsonBackingOwner{pub(super) bytes:std::mem::ManuallyDrop<Option<Vec<u8>>>}
+impl semio_framework_value::ErasedSnapshotRetirement for JsonBackingOwner{
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};let empty=RetainedCloneProgress::default();if self.bytes.is_none(){return Ok(RetainedCloneStep::Complete(empty));}let release=self.bytes.as_ref().unwrap().capacity();let copy=std::mem::size_of::<Option<Vec<u8>>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(empty));}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"host JSON release requires original depth"));}drop(self.bytes.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..empty}))}
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.bytes.is_some(){std::mem::size_of::<Option<Vec<u8>>>()}else{0})}
+    fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.bytes.as_ref().map_or(0,Vec::capacity))}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.bytes.is_some()))}
+    fn terminal_is_empty(&self)->bool{self.bytes.is_none()}
+}
+impl Drop for JsonBackingOwner{fn drop(&mut self){assert!(std::thread::panicking()||self.bytes.is_none(),"host JSON original frame reached Drop before admitted release");if self.bytes.is_none(){unsafe{std::mem::ManuallyDrop::drop(&mut self.bytes);}}}}
+
 pub(super) fn encode_borrowed<I:serde::Serialize>(writer:&mut JsonInputWriter<'_ ,'_ ,'_>,input:&I)->Result<(),ValueError>{encoding::write(writer,input)}
 
 /// 📥️ Measures borrowed input before the original caller admits its exact physical reservation.
 pub(crate) fn encode_json_input<I:serde::Serialize>(input:&I,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError>{
-    control.scoped_stage(|control|{control.begin_stage(0)?;let mut measure=JsonInputWriter{control,output:None,count:0};encode_borrowed(&mut measure,input)?;let count=measure.count;control.begin_stage(count)?;let mut output=control.allocate_vec(count)?;let mut writer=JsonInputWriter{control,output:Some(&mut output),count:0};encode_borrowed(&mut writer,input)?;if writer.count!=count{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned input changed after measurement"));}Ok(output)})
+    control.scoped_stage(|control|{control.begin_stage(0)?;let mut measure=JsonInputWriter{control,output:None,count:0};encode_borrowed(&mut measure,input)?;let count=measure.count;control.begin_stage(count)?;control.with_retirement_owner(std::mem::size_of::<JsonBackingOwner>(),|control|{let mut owner=Box::new(JsonBackingOwner{bytes:std::mem::ManuallyDrop::new(None)});let result=(||{owner.bytes.replace(control.allocate_vec(count)?);let mut writer=JsonInputWriter{control,output:owner.bytes.as_mut(),count:0};encode_borrowed(&mut writer,input)?;if writer.count!=count{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned input changed after measurement"));}Ok(owner.bytes.take().unwrap())})();(result,Some(owner as Box<dyn semio_framework_value::ErasedSnapshotRetirement>))})})
 }
 
 
@@ -37,6 +48,7 @@ mod tests {
    for denied in 1..=count{let seen=std::cell::Cell::new(0);let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|{seen.set(seen.get()+1);seen.get()!=denied};let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut observer);let mut output=None;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||encode_json_input_into(source,&mut control,&mut output));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(heap.released_bytes,0);assert_eq!(heap.requested_bytes,output.as_ref().map_or(0,Vec::capacity));assert_eq!(control.owned_bytes(),heap.requested_bytes);if let Some(output)=output.take(){close_original(output,&law["grant"]);}}
   }
   for value in law["float32"].as_array().unwrap(){let source=value.as_f64().unwrap()as f32;let expected=serde_json::to_vec(&source).unwrap();let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut observer);let mut output=None;encode_json_input_into(&source,&mut control,&mut output).unwrap();assert_eq!(output.as_ref().unwrap(),&expected);close_original(output.take().unwrap(),&law["grant"]);}
+  for bits in law["float32Bits"].as_array().unwrap(){let source=f32::from_bits(bits.as_u64().unwrap()as u32);let expected=serde_json::to_vec(&source).unwrap();let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut observer);let mut output=None;encode_json_input_into(&source,&mut control,&mut output).unwrap();assert_eq!(output.as_ref().unwrap(),&expected);close_original(output.take().unwrap(),&law["grant"]);}
   println!("[DEBUG] original scalar JSON null/bool/int/float/UTF8/list/map byte parity and every observed callback refusal preserve actual backing without error allocation");
  }
  #[test]

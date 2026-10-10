@@ -64,5 +64,16 @@
       "manifest": "../foreign/Cargo.toml",
       "accepted": false
     }
-  ]
+  ],
+  "originalCaller": {
+    "owner": "command.original-caller",
+    "maximumElapsedMilliseconds": 30000
+  },
+  "configuredCapture": {
+    "budgetMs": 0,
+    "maximumOutputBytes": 536870912,
+    "originalMaximumElapsedMilliseconds": 250,
+    "reason": "timeout",
+    "maximumObservedMilliseconds": 2000
+  }
 }

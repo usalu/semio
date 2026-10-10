@@ -2,7 +2,7 @@ use super::*;
 
 fn request() -> KernelActivationRequest {
     let package = PackageId("reserved-map".into());
-    KernelActivationRequest { package: package.clone(), plugin_ordinal: 7, kind: ActorKind::PluginApp { plugin: package, app_id: "map".into(), instance_id: 1 }, lane: Lane::Interactive, window: None, event: ActivationEvent::Manual }
+    KernelActivationRequest { package: package.clone(), plugin_ordinal: 7, kind: ActorKind::PluginApp { plugin: package, app_id: "map".into(), instance_id: 1 }, lane: Lane::Interactive, window: None, event: ActivationEvent::Manual, retained: RetainedTurnInput { operation: 71, generation: 3, epoch: 19, grant: protocol::value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 262144, maximum_depth: 64 } } }
 }
 
 fn binding(reservation: &KernelActivationReservation) -> ActorShardKey {
@@ -47,6 +47,7 @@ async fn neutral_reservation_traces_gate_dispatch_until_exact_binding() {
                     assert_eq!(kernel.request_exclusive(actor).await, Err(KernelError::InvalidTransition));
                     assert_eq!(kernel.link_extension(actor, actor).await, Err(KernelError::InvalidTransition));
                     let result = TurnResult {
+                        retained_receipt: request().retained.return_original(Default::default()).unwrap(),
                         ui_patches: vec![],
                         effects: vec![],
                         command_ingress: vec![],

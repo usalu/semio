@@ -1,0 +1,64 @@
+{
+  "contract": "semio.job.original-descriptor-ack.v1",
+  "original": "same-native-descriptor-and-presence-slot",
+  "steps": [
+    {
+      "kind": "acknowledge",
+      "copyBytes": 0,
+      "items": 1,
+      "releaseBytes": 0
+    },
+    {
+      "kind": "remove-terminal-in-place",
+      "copyBytes": 0,
+      "items": 1,
+      "releaseBytes": 0
+    }
+  ],
+  "cases": [
+    {
+      "name": "zero-items",
+      "grant": [
+        0,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "admitted": false
+    },
+    {
+      "name": "zero-copy",
+      "grant": [
+        1,
+        0,
+        65536,
+        262144,
+        64
+      ],
+      "admitted": true
+    },
+    {
+      "name": "zero-depth",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        0
+      ],
+      "admitted": false
+    },
+    {
+      "name": "funded",
+      "grant": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ],
+      "admitted": true
+    }
+  ]
+}

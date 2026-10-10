@@ -139,7 +139,7 @@ fn add_edit_widget(editor: &mut GraphEditor<'_>, base: &str, kind: &str, x: f64,
     let mut id = base.to_string();
     let mut suffix = 2;
     while editor.snapshot().widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
-    editor.add_widget(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":kind}).to_string(), x, y)
+    editor.add_widget_json(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":kind}).to_string(), x, y)
 }
 
 /// 🧩️ Splices one typed mesh operation, with its default params, into the selected output and reconnects its consumers.
@@ -158,7 +158,7 @@ fn insert_mesh_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
     let mut suffix = 2;
     while editor.snapshot().widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
     let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
-    editor.add_widget(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y)?;
+    editor.add_widget_json(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y)?;
     editor.insert_between(target.widget, target.channel, &id, "mesh", &output.name)?;
     editor.set_preview(&id, true);
     editor.set_preview(target.widget, false);

@@ -545,19 +545,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         self.complete_emit(command, config).map(ArtifactCommandWorkStep::Complete)
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 40 {
-            return Err(Fault::from("process3d-retained-checkpoint-capacity"));
-        }
-        target[..4].copy_from_slice(b"P3C1");
-        target[4] = u8::from(self.complete);
-        target[5] = 0;
-        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
-        target[16..24].copy_from_slice(&self.digest.to_le_bytes());
-        target[24..32].copy_from_slice(&process3d_tool_identity(self.tool_id).to_le_bytes());
-        target[32..40].copy_from_slice(&(self.extent as u64).to_le_bytes());
-        Ok(40)
-    }
+    fn checkpoint_byte(&self,index:usize)->Option<u8>{match index{0..=3=>Some(b"P3C1"[index]),4=>Some(u8::from(self.complete)),5..=7=>Some(0),8..=15=>Some(((self.cursor as u64)>>((index-8)*8))as u8),16..=23=>Some((self.digest>>((index-16)*8))as u8),24..=31=>Some((process3d_tool_identity(self.tool_id)>>((index-24)*8))as u8),32..=39=>Some(((self.extent as u64)>>((index-32)*8))as u8),_=>None}}
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 40 || &checkpoint[..4] != b"P3C1" || checkpoint[4] > 1 || checkpoint[5] != 0 {

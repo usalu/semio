@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🔮️ Energy oracle package command router. */
 import { ScriptRouter } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -13,4 +14,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("epjson", EpJsonScript)
   .register("emit", EmitScript)
   .register("test", TestScript);
-await runScriptMain(router, { defaultCommand: "status" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "status" }) }));

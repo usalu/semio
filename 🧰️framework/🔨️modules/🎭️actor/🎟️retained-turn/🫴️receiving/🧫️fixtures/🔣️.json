@@ -1,0 +1,17 @@
+{
+  "contractId": "actor.original-issued-turn/v1",
+  "epochAuthorizer": "scheduler.nonempty-mailbox-admission.checked-next-epoch",
+  "inputSource": "retained-turn.policy.input",
+  "spent": [{"copiedItems": 0, "copiedBytes": 3, "retainedCapacityBytes": 128, "releasedBytes": 0}, {"copiedItems": 1, "copiedBytes": 9, "retainedCapacityBytes": 0, "releasedBytes": 128}],
+  "remaining": [{"maximumItems": 1, "maximumCopyBytes": 4093, "maximumCapacityBytes": 65408, "maximumReleaseBytes": 262144, "maximumDepth": 64}, {"maximumItems": 0, "maximumCopyBytes": 4084, "maximumCapacityBytes": 65408, "maximumReleaseBytes": 262016, "maximumDepth": 64}],
+  "epochs": [19, 20],
+  "zeroSpend": {"spent": {"copiedItems": 0, "copiedBytes": 0, "retainedCapacityBytes": 0, "releasedBytes": 0}, "firstEpoch": 19, "secondEpoch": 20, "sameGrant": true, "staleRefused": true},
+  "overflow": {"epoch": "18446744073709551615", "firstIssued": true, "nextBlocked": true, "mailboxPreserved": true},
+  "emptyAdmission": {"epochUnchanged": true, "issued": false},
+  "unissuedRefusal": "actor turn was not issued",
+  "receiptRefusal": "original actor retained receipt does not match issued authority",
+  "refusalHeap": [0, 0],
+  "blockedWhileIssued": true,
+  "duplicateRefused": true,
+  "exhaustedNotReissued": true
+}

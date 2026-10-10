@@ -1,0 +1,58 @@
+{
+  "contract": "host.original-actor-admission/v1",
+  "originalIdentity": [
+    71,
+    3,
+    19
+  ],
+  "fixedGuestPolicy": [
+    1,
+    0,
+    512,
+    512,
+    8
+  ],
+  "spent": [
+    [
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      64,
+      0
+    ],
+    [
+      1,
+      0,
+      128,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "phases": [
+    "pending",
+    "pending",
+    "pending",
+    "ready"
+  ],
+  "failureSpent": [
+    1,
+    7,
+    0,
+    0
+  ],
+  "emptyInputUntilReady": true,
+  "requiredReceiving": true,
+  "requiredClose": true,
+  "ownedExports": 24,
+  "singleOriginalCheckout": true
+}

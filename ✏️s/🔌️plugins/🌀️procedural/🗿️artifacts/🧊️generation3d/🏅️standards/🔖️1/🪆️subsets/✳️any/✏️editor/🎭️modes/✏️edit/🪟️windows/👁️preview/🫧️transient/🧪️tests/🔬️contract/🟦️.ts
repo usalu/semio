@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { parseGeneration3dPreviewWindowTransient } from "../../🧬️schema/🟦️.ts";
+import { parseGeneration3dPreviewWindowTransient } from "../../🚪️io/📝️text/🟦️.ts";
 
 /** 🧪️ Compares the production parser with Ajv for the exact window-transient/config boundary. */
 export function testGeneration3dPreviewWindowTransientContract(): void {

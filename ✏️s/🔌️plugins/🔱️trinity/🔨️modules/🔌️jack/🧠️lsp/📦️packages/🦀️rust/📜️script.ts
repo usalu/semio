@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/trinity-jack-lsp` router: `bun ./📜️script.ts wasm`. */
 import { runRepositoryCargoTests, buildRepositoryWasmWebV1 } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -25,10 +26,10 @@ class WasmScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);
 
-await runScriptMain(router, { defaultCommand: "wasm" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "wasm" }) }));

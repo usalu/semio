@@ -18,6 +18,24 @@
   "terminalPhysicalReleaseBytes": 0,
   "originalPointers": true,
   "allOriginalAndRetirementBirthsConserved": true,
+  "faultTransfer": {
+    "code": "interactive-job.original-peer-fault",
+    "message": "Original peer refusal",
+    "grant": {
+      "items": 1,
+      "copyBytes": 4096,
+      "capacityBytes": 0,
+      "releaseBytes": 0,
+      "depth": 1
+    },
+    "handoffPhysicalBirthBytes": 0,
+    "handoffPhysicalReleaseBytes": 0,
+    "deniedPhysicalBirthBytes": 0,
+    "deniedPhysicalReleaseBytes": 0,
+    "originalPointers": true,
+    "terminalPhysicalBirthBytes": 0,
+    "terminalPhysicalReleaseBytes": 0
+  },
   "emptyPresence": {
     "input": [],
     "output": {},
@@ -34,5 +52,18 @@
     "physicalReleaseBytes": 0,
     "refusedItems": 0,
     "originalCallbacksRequired": true
+  },
+  "configurationCompletion": {
+    "message": "Original configuration cancellation",
+    "grant": {
+      "items": 1,
+      "copyBytes": 65536,
+      "capacityBytes": 262144,
+      "releaseBytes": 1048576,
+      "depth": 4096
+    },
+    "deniedHeapBytes": 0,
+    "handoffHeapBytes": 0,
+    "terminalHeapBytes": 0
   }
 }

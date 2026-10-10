@@ -8,6 +8,7 @@ use semio_framework_artifact_flow_flow::CameraJson;
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.flow.flow.mainwindowconfig", extension = "flowmainwindowcfg")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FlowMainWindowConfig {
     pub preview_off_node_ids: Vec<String>,
     #[dsl(block)]

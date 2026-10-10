@@ -1,0 +1,34 @@
+{
+  "ownership": false,
+  "testsExecuted": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "sha256": "94b9e08c4e9ae6416728d5558f48b7abb7a65497cb9a0697bde3a010a48be862"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "sha256": "4b9b9d0a6bbb945311d1db99b3dc38425f8d8d9a92147383f2e15506b39857f8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+      "sha256": "d52bd87e04758e3a2466192ffc8d3e4b100319f706fca4fac92db97c8f96f678"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+      "sha256": "a7f8d81b4d73b0f223ce53789f7170805a5fdbaa8aa71495c27b223833cc0db2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🟦️.ts",
+      "sha256": "4f4b7cd252a3dda2bfe9cdd55d99a38733fc1d6a3761cfe21f9e328d238dea74"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+      "sha256": "c463fc297f80969c77ed14125d0ff8aaa30b89d074b50481ea8e24dd2d210212"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "sha256": "796df77bad05af10705251aa778a52b62cc17fba780f48cdb204b8c8c095a099"
+    }
+  ]
+}

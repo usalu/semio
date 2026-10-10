@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🫴️receiving/🧪️tests/🟦️.ts",
+    "before": "2ff9302c20003816a2c1710d152bdcc004f9a96e1a64143667035c6cd594e62b",
+    "after": "dbd7e10ce686f5f75f93284e0583a6b192c9d15128d01bc3e1e4c45234baaccc",
+    "action": "append original absence law"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🟦️.ts",
+    "before": "321206ca9801f8e9255f06717138c177bc2f8001f355e49d221a862ecdbc44b0",
+    "after": "19db84d99ce1f9caa8b4b7b25e50474fa0dd33afada3797e94a1625ce3a78a76",
+    "action": "append original absence law"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🟦️.ts",
+    "before": "da5fb345ba3e05a7666e3d59433bd363ae2bc05758e456478dc211048c83dfd4",
+    "after": "e51719acdd4ed4b680bcb23a8b5bdc8673f7034dc9ec64456a1e0c623e245c41",
+    "action": "append original absence law"
+  }
+]

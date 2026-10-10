@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+      "sha256": "646c3a976af7d84a278325ea7ae9217e02eabcb49718faacde2df44c27260b24"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx",
+      "sha256": "fb5a97a68f52b44563c1d23eae10cbe8ab1867f006fff6c2360983df7ef4ae53"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json",
+      "sha256": "fcf074c9edfe3ee76259680f82d3b44afe571ab29c84a3102f84e21cc027a0f3"
+    }
+  ]
+}

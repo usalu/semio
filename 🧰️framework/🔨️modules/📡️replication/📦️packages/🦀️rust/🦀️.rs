@@ -51,6 +51,7 @@ pub mod crypto;
 #[path = "../../🚪️io/🦀️.rs"]
 pub mod io;
 pub use io::{DiffBinary, DiffCodec, DiffText, OpBinary, OpText};
+pub use io::binary::causal::{decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, DocumentBackboneBatchLimitsV1, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES};
 
 #[path = "../../🎮️mutation/🦀️.rs"]
 pub mod mutation;

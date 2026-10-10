@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
@@ -93,4 +94,4 @@ class BuildScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(resolve(import.meta.dir, "../../📦️packages/🦀️rust")).register("build", BuildScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(resolve(import.meta.dir, "../../📦️packages/🦀️rust")).register("build", BuildScript)).run(process.argv.slice(2), original));

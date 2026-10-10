@@ -1,0 +1,9 @@
+# Current Original Stroke Native Result
+
+Owned session74290 completed Nx0 through the original bun nx bootstrap and registered Canvas test owner, long/lib profile with the exact Stroke literal. Actual Nextest ran original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt:1PASS,0FAIL,52skipped, summary0.020s. Nx task duration1m26s; graph admission precedes that duration. Original features/package/profile/budgets and durable Cargo roots remained unchanged.
+
+Eighteen actual DEBUG rows cover empty spare capacity, nonempty dashed storage and zero capacity under cancellation cuts0/1/2/3/7/15. The assertions preserve original pointer/capacity/order, independent Kurbo output and exact per-turn System receipts, born/freed equality, supplied immutable policy, separately funded terminal shell and zero Drop work. The defining transfer keeps the original dash allocation and uses genuine ControlledRetirement; no Vello private allocation estimate or scalar bool receipt was introduced.
+
+Six defining/plain/native before/after observers match. Known own roots/descendants are absent. Exact current binary metadata/SHA bind the executed Canvas test artifact to the approved Cargo target/build roots and aarch64-apple-darwin platform; its186-character binary path meets the path limit. Inputs/result are native-stroke-next-before.json and native-stroke-next-result.json; raw log is generated/native-stroke-next.log. No checked-in Source was copied to the ticket.
+
+This is scoped first-party Stroke leaf proof. Canvas Path current copy-axis separately passed in17880. Whole Scene/Frame/backend/Vello and fixture end-to-end remain outstanding. The three repaired Kernel failures/four-law renewal remain unrun against their new Source cut until Publication finishes the current defining CanonicalJSON cohort.

@@ -1014,17 +1014,14 @@ pub fn inference_get_output_schema() -> serde_json::Value {
     wire("inference.get", "output", inference_get_output_shape())
 }
 
+/// 🎟️ The neutral five-axis caller schema is the only inference memory authority.
+fn inference_original_retained_shape()->serde_json::Value{let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");schema["$defs"]["InferenceRetainedAuthority"].take()}
+
+/// 🎟️ The exact original turn reuses the canonical actor identity and one full grant.
+fn inference_original_turn_shape()->serde_json::Value{let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut turn=schema["$defs"]["InferenceRetainedTurnInput"].take();turn["properties"]["grant"]=schema["$defs"]["InferenceRetainedAuthority"].take();turn}
+
 pub fn inference_submit_input_shape() -> serde_json::Value {
-    serde_json::json!({
-        "type": "object",
-        "properties": {
-            "documentId": { "type": "string" },
-            "lifetimeMs": { "type": "integer", "minimum": 1, "maximum": crate::inference::INFERENCE_JOB_MAX_LIFETIME_MS },
-            "requestId": { "type": "string", "pattern": hex_pattern(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH) },
-        },
-        "required": ["documentId"],
-        "additionalProperties": false,
-    })
+    let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut input=schema["$defs"]["InferenceSubmitInput"].take();input["properties"]["turn"]=inference_original_turn_shape();input
 }
 
 pub fn inference_submit_input_schema() -> serde_json::Value {
@@ -1071,22 +1068,7 @@ pub fn inference_job_output_schema(capability_id: &str) -> serde_json::Value {
 /// caller's canonical request body for the plugin's own inference schema; `pluginId`/`artifactId`
 /// are optional disambiguators when a kind declares rows from more than one contributor.
 pub fn inference_run_input_shape() -> serde_json::Value {
-    serde_json::json!({
-        "type": "object",
-        "properties": {
-            "artifactKind": { "type": "string" },
-            "inferenceSchema": { "type": "string" },
-            "pluginId": { "type": "string" },
-            "artifactId": { "type": "string" },
-            "payload": {},
-            "revision": { "type": "integer", "minimum": 0 },
-            "generation": { "type": "integer", "minimum": 0 },
-            "cancellationId": { "type": "string" },
-            "workUnits": { "type": "integer", "minimum": 1 },
-        },
-        "required": ["artifactKind", "inferenceSchema"],
-        "additionalProperties": false,
-    })
+    let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut input=schema["$defs"]["InferenceRunInput"].take();input["properties"]["turn"]=inference_original_turn_shape();input
 }
 
 pub fn inference_run_input_schema() -> serde_json::Value {
@@ -1194,7 +1176,7 @@ pub struct ArtifactInferenceResultV1 {
     pub generation: u64,
     pub complete: bool,
     pub actual_cache_mode: ArtifactInferenceCacheModeV1,
-    pub canonical_payload: Vec<u8>,
+    pub canonical_payload: Option<Vec<u8>>,
 }
 //#endregion 🔖️ArtifactInferenceWire
 
@@ -1293,6 +1275,8 @@ pub fn schemas() -> Vec<(&'static str, serde_json::Value)> {
         ("InferenceJobHandleInput", inference_job_handle_input_shape()),
         ("InferenceApproveInput", inference_approve_input_shape()),
         ("InferenceJobOutput", inference_job_output_shape()),
+        ("InferenceRetainedAuthority", inference_original_retained_shape()),
+        ("InferenceRetainedTurnInput", inference_original_turn_shape()),
         ("InferenceRunInput", inference_run_input_shape()),
         ("InferenceRunOutput", inference_run_output_shape()),
         ("ArtifactInferenceBudgetV1", serde_json::to_value(schema_for!(ArtifactInferenceBudgetV1)).expect("ArtifactInferenceBudgetV1 schema")),
@@ -1457,7 +1441,7 @@ const LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), type
 /// 🏷️ `$defs` of `🔣️.json`, which `🧪️Tests::the_json_mirror_publishes_exactly_the_registry_exports`
 /// pins to [`schemas`]; `🧪️Tests::the_scope_export_declaration_matches_the_registry` pins this list to
 /// the same set, so a new registry entry cannot be published without being resolvable.
-const EXPORTS: [SchemaExport; 72] = [
+const EXPORTS: [SchemaExport; 74] = [
     SchemaExport { id: "ActionInvokeInput", leaves: LEAVES },
     SchemaExport { id: "ArtifactInferenceBudgetV1", leaves: LEAVES },
     SchemaExport { id: "ArtifactInferenceCacheModeV1", leaves: LEAVES },
@@ -1500,6 +1484,8 @@ const EXPORTS: [SchemaExport; 72] = [
     SchemaExport { id: "InferenceJobOutput", leaves: LEAVES },
     SchemaExport { id: "InferenceListInput", leaves: LEAVES },
     SchemaExport { id: "InferenceListOutput", leaves: LEAVES },
+    SchemaExport { id: "InferenceRetainedAuthority", leaves: LEAVES },
+    SchemaExport { id: "InferenceRetainedTurnInput", leaves: LEAVES },
     SchemaExport { id: "InferenceRunInput", leaves: LEAVES },
     SchemaExport { id: "InferenceRunOutput", leaves: LEAVES },
     SchemaExport { id: "InferenceSubmitInput", leaves: LEAVES },

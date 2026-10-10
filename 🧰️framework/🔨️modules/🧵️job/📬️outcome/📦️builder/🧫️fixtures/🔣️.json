@@ -28,5 +28,6 @@
     "actual-page-lease",
     "separate-retirement"
   ],
-  "ledgerLeaseWords": 2
+  "ledgerLeaseWords": 2,
+  "metadataCopyBytes": 0
 }

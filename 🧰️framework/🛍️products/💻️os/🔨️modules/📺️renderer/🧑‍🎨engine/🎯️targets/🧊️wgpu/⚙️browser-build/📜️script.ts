@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -26,4 +27,4 @@ class GenerateRendererBootScript extends GenerateBrowserBootScript {
 const router = new ScriptRouter(resolve(import.meta.dir, "../📦️packages/🦀️rust"))
   .register("generate-browser-boot", GenerateBrowserBootScript)
   .register("generate-renderer-boot", GenerateRendererBootScript);
-if (import.meta.main) await router.run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

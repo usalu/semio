@@ -1,0 +1,308 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs",
+    "before": "beca4a439f172cd8aa718bf8ad31d44a9fc383da89e545c0eeac14024ab9c982",
+    "blocks": [
+      "unwrap_binary_controlled",
+      "matches_declared_token",
+      "text matcher ValueError to existing SemioError recipient"
+    ],
+    "after": "53a87598d90d037b836bdfbdb41e30c720b355ebbf692e930bd064f87d907844"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs",
+    "before": "318bcc18686d13e7c49ed522ad67c54a6643d54dd5876904f077c75ce399a443",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "c8bf11e34363a474c314386946dcd719c4abddfa06de00e1f444f2667d8422d4"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+    "before": "72df8f0c515b4776ccd765e80f048675bccc1b0d279975a116141bdd7b7d90e2",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "c532420a2a8379916e8d4ea0d298ba707269ab2f06b5364f0aa8a3f92485366d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "before": "25741192f9f7de91b10c5395482d7dd10e7e5388d1d1f38ed141fc1b1d762af6",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "9b8e75af0d54a8e8cf870868dac94828f707fd443092178c1cfb71fbb389ad73"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "before": "e57439d7f1184f8875226ca3c4f950211c350905553527d45f1c979854fbf40b",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "eba5ede9eed166b267f1a78514243fcbdcb86bd40481569aead0c6b187f8fbe5"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "before": "e7e64aae706e28aac699f86a07ee6ce9260aa8fe5684e3153443c956c19d46bf",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "079a994502e50e42bf21007aa9e16b021fcc3bd40721bbc4be4f8944217cdc8d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "00b4c832b655cca830d63d5a4baf50ee420c696e02563864467d42fb41ab8363",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "49954dc17044177294d8bc834709f637b7ded49dd6d71a33975f3b1b64d4c2fd"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "a60328313564069648b09784aa2cb6035501ed1170b07699c11ed249a4239c31",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "c979474b87c490c5b1c10fa4dc384a8622e0bd2824e1743fa9d9534f93bc53d0"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "4c6fd87f18dc309949cf6d21c1e16920501b15250ceed72844246f3003b17e00",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "2546e3ca1ca49dc6993674c0ea83a3e706399c24331160a055f607da6ff87e1c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "31c822639ec9c50f623dbeaf283709a7e9c703db80cb3d664c557ff830f0ec7e",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "fea4a3e635045d0e44bf9794a2fc44cece522867e24b2d367e67c6c2d08f3059"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "53000c28fa40326710d8f6c4c8d13421399a92fd027c41eb71199263355a9cb5",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "7c2a0236e98766850d1e14765181654c7cad1c97fcf377d29cda117d37002f86"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "13bf0cfb137003c530d6c3b43e85f93983024dfa2f7afd7d71782bf6ae5f46aa",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "5386df5a76840b1cca864de7e7881dfbc4ec8b26a45478c8e2c2a432befeef3e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "10b502be6868d19221003877f59a3139cf9ca57a6f6b7a679131e29a63f38105",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "e7bf20506e4556623ac547d84fe605c5e69647ee264848751922a23e743096e8"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "6cb6e979d8036afe498e775492b766b2ae93428fd6257bcb10ce0988dc7a6a9c",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "6285d7c5456f8942873c8f4d5ba35b02d54c93df9c5c2e077d7d9b8360071e0a"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "953962dbfa9eaeaae78e1f4d3e0bef612a02cbf707a0fedda34f3521fdaaed1e",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "99cdeceb2fa034c27b49090c4d9abab4f6c550c80ddcd49cb770196146fe0025"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "8ddd9c1b4a68eb1fb1bcb7b850ee06a2a461bcc73263a095aec494cca05ff58b",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "d84438b78f2b8d3120355917596e25ee37a4e4bdda9f5b8aec6e2d5de8e1e544"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "509299f753ecc2e89c70c80f521696a79d554d908856810ca88b65a7ce207b34",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "b1e03f452300749df1b6e548be75dc47e18fce8a4fa21b891d368bd439ab4683"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "609cf6bbd14873cb72804834525737d30a7725ccef1b06546a8425944b218f30",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "81fdd27ec75c914fd289274635a14d35e9ce75ca49129051c20554dbbed025eb"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "4f0acbdfa4cb90e998fc8057289ff69d6d4a2ea5eaf1bdf76295494b2063e05d",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "1ee61f30a50f4d30be6431c689f3d3df9998a54a3eb804b58e0293317cac84d1"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "40bf6df1e0ad22837bb841102a21f6145200a3aefaf48394fd2670f0a013a684",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "82598e5aabdde98fd63d86a3fa0f51ad8b58f6c1ccf083cfa2e5e006578b4c99"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "5a72b2359e5379c7172428896e61d689e42e125f516abdf372310fb98baa3bb3",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 2,
+    "after": "9283db8fe80799842116d37e947209ab6bd20f1473d5c3873f4cad6c5da2f81e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "d5f53e9e8a7fad6b0d73fbbd25631e6f99902d400e1866475488d6f55e0f601d",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "115ceac9cc9c0bb8f0b1ddc1c5394e86371414ab595e6fd2d3861015ccd2c833"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "b5803eec8793cbce1345f0e9417e6fbc3162515dfe1548ee7da540ffb467b84a",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "cad4c5697d435a7ad496094c8dc8d4e3966928a80cde40e26532dd0d1cd484d6"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "1ff87e1232b7a82abb178099a192e0aae2b96ab0d0c5cea71193ec505791bd40",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "caf39e21512cefc68866d2721dca9fbdd6a7b4a6532901d196596dc00e9a5c2e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "dcd37dfa474542893bb8525ee3e7c40cecad26a1250df9016ec4e21b4ca38cb2",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "2f645ff05f3121cbd04cd67145237c6d51f36ab9b479e5628560c9bf4be17e75"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "before": "637b5e84b59dd75939b5080ae1226596f7d8f6b51546ee81edd209b503c49a5d",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "8018027473cf9c9d54e7d90bfb8872fb80e9dea02ba61e4d6afd93bc1b76c43c"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "before": "ad732ee62c27d19801c2a8dfeee7faa162f5c2913d874f71d1e927900fcd7c94",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "0a7e87f300c7bc4610f65ede4a98dd2a008d67a7a9c845de580b20cd2bf4e52e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "before": "f5d47439590c73cedc73f518512cbaf5e884627c487c8606579f3328f270f3d2",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "c1c555e95a2b31eeb9eb67898f2f57ab956aac86021bb008dc2982821b2af0fe"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🧩️native/💰️backing/🦀️.rs",
+    "before": "0874ba6fb7e3f2abce3ff2322fae91db87f099e6f6301ef841bef041de5b9b4f",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "3ad80df7edce5a734c9bffa18c97854f9520ecad3cb662db431bfd49ce3b8e50"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "before": "57e1488288f8ede58792ffe992891efe72d989add8324320d8af9d4c2a372f31",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "62dd13a1a4a02efeb0092173e14856508ad694afcc9f13b266e172af95c77fe7"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🧩️native/💰️backing/🦀️.rs",
+    "before": "63b333295a47ef4f0b25d1152354f90a64e356435f2ecd2f513babeacd6d1822",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "3e0c10284d2f4729997cb60312690bb4c90746aeb4fb1fbb4f81968902180466"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🧩️native/💰️backing/🦀️.rs",
+    "before": "7721653525da11fb0d5263e7e5e8c2a640d16b335ed65fa67c80bef709c11692",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "ae5e4008a8742c401d8fb8e9a6ef005dccd3abd9e86a9d8e685af0576bbf31cb"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "before": "c44885eda1ffd013e04b0373b526808e86388a4b76edcb20c0008b1368f74407",
+    "blocks": [
+      "adjacent genuine controlled binary ValueError propagation"
+    ],
+    "calls": 1,
+    "after": "4259c91577fa76cea494498665d4123a2a70d03ca8ae6a2d9b6b0dc9adf615ad"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "before": "ff1267f88f25d28725942122c0ae57cf147431e7f4b1394c925474af93167a59",
+    "blocks": [
+      "actual binary match only; text unchanged"
+    ],
+    "after": "e070bf3fcaa37694fdf32a67988739c2d5d087a3e97635c9a980dd6ea13a1167"
+  }
+]

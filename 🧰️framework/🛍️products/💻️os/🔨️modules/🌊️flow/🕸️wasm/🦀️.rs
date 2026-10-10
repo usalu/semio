@@ -860,7 +860,7 @@ impl FlowDomain for FlowDomainAdapter {
 }
 
 fn flow_close_failure(code:AbiErrorCode)->FlowFailure{FlowFailure::new(code,String::new())}
-fn flow_close_value_failure(error:semio_framework_value::ValueError)->FlowFailure{flow_close_failure(AbiErrorCode::Busy).with_retained_progress(error.retained_progress())}
+fn flow_close_value_failure(error:semio_framework_value::ValueError)->FlowFailure{FlowFailure::from_value(AbiErrorCode::Busy,error)}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FlowVcsFeaturePhase {
@@ -1057,11 +1057,11 @@ impl FlowFeature for FlowVcsFeature {
             FlowVcsFeaturePhase::AwaitAcknowledgement => FlowFeatureStep::Yield,
             FlowVcsFeaturePhase::CloseOperation | FlowVcsFeaturePhase::CloseRetired => match self.close_cursor_step(budget) {
                 Ok(false) => FlowFeatureStep::Yield,
-                Ok(true) if self.terminal_failure.is_some() => FlowFeatureStep::Failed(self.terminal_failure.as_ref().expect("terminal Flow VCS failure").clone()),
+                Ok(true) if self.terminal_failure.is_some() => FlowFeatureStep::Failed(self.terminal_failure.take().expect("terminal Flow VCS failure")),
                 Ok(true) => FlowFeatureStep::Complete(Vec::new()),
                 Err(failure) => FlowFeatureStep::Failed(failure),
             },
-            FlowVcsFeaturePhase::Complete if self.terminal_failure.is_some() => FlowFeatureStep::Failed(self.terminal_failure.as_ref().expect("terminal Flow VCS failure").clone()),
+            FlowVcsFeaturePhase::Complete if self.terminal_failure.is_some() => FlowFeatureStep::Failed(self.terminal_failure.take().expect("terminal Flow VCS failure")),
             FlowVcsFeaturePhase::Complete => FlowFeatureStep::Complete(Vec::new()),
         }
     }
@@ -1120,7 +1120,7 @@ fn abi_code_failure(code: AbiErrorCode) -> FlowFailure {
     abi_failure(code)
 }
 
-fn flow_vcs_close_failure(failure:crate::vcs::FlowVcsCloseFailure)->FlowFailure{flow_close_failure(flow_vcs_fault_code(failure.fault)).with_retained_progress(failure.retained_progress)}
+fn flow_vcs_close_failure(failure:crate::vcs::FlowVcsCloseFailure)->FlowFailure{let code=flow_vcs_fault_code(failure.fault);match failure.cause{Some(error)=>FlowFailure::from_value(code,error),None=>flow_close_failure(code).with_retained_progress(failure.retained_progress)}}
 
 fn flow_vcs_fault_code(fault:FlowVcsFault)->AbiErrorCode{match fault {
         FlowVcsFault::Closed => AbiErrorCode::Closed,

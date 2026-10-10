@@ -1,0 +1,82 @@
+{
+  "actions": [
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2797\ufe0fmathematical/\ud83d\uddff\ufe0fartifacts/\u2797\ufe0fequation/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "beforeSha256": "80d215a69de4b41e55126897c947cb53e410c8e9a6124262a8a8edec65408a88",
+      "advanceBeforeSha256": "c4b19163d10f9406e1d2bc006b39cf981baf7e7b60396ae708a9b8a14755531b",
+      "owner": "EquationStorePreparation",
+      "snapshotType": "P",
+      "mutationType": "M",
+      "afterSha256": "c1a152b7bae94510442f60cbe1651d51410bc3c5cfb63845de75eb4594a80d21",
+      "qualification": "refusal custody phase; old close and cold success still pending"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf0d\ufe0fgis/\ud83d\uddff\ufe0fartifacts/\ud83d\uddfa\ufe0fgismap/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "beforeSha256": "9c36232cc3235110f53381c690de1e47a13915e76eaec6e6c85fa14f3f1ecb81",
+      "advanceBeforeSha256": "2f934b29af099f8faf5f165e3c0aa59d868a028bf84c4a4772612de60c886103",
+      "owner": "Gis2dOneItemPreparation",
+      "snapshotType": "P",
+      "mutationType": "M",
+      "afterSha256": "52c3e5e3ab2035470595c9b482fa6d0dcd9ab439aa81e28762c9292f11488488",
+      "qualification": "refusal custody phase; old close and cold success still pending"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf3f\ufe0fvcs/\ud83d\uddff\ufe0fartifacts/\ud83c\udf3f\ufe0fvcs/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "beforeSha256": "ec9a0430846cdd19c043dfd937facdb42acca9089adefde8c359a3dbf9fc66a2",
+      "advanceBeforeSha256": "2197813f7e9c246667f36312c5fc1e3ab279df00d9b88e505b157f9af3543ba4",
+      "owner": "VcsOneItemPreparation",
+      "snapshotType": "P",
+      "mutationType": "M",
+      "afterSha256": "603f7be833db55c3e770aeef81eeed92d21d1a9cf5a3eb041a43b9c31a8acfb3",
+      "qualification": "refusal custody phase; old close and cold success still pending"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\u25fb\ufe0f2d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "beforeSha256": "370daa92f2f55e19663402eccc5822c1d14a4c2e316de28d75cf9714b96c913c",
+      "advanceBeforeSha256": "3ad6128125f9c557d06ebb06ae9ae25bc9003bd1a19ccd26167c07d7b26c86aa",
+      "owner": "Fem2dArtifactPreparation",
+      "snapshotType": "Fem2dSnapshot",
+      "mutationType": "Fem2dMutation",
+      "afterSha256": "12eed87bc66c9d4148aef10024d282e0e0f8dbd9180e6c64abb51483e483ff18",
+      "qualification": "refusal custody phase; old close and cold success still pending"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\ud83e\uddca\ufe0f3d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "beforeSha256": "5ec0e027b8dd5aa14bf0b87aaddac07c6c3de5e31285cf4873bab078c0acf7ce",
+      "advanceBeforeSha256": "b2e53d75a0f434e3728ad8e48321fcf697a61444c8c27f7151ad26f83e53f91a",
+      "owner": "Fem3dArtifactPreparation",
+      "snapshotType": "Fem3dSnapshot",
+      "mutationType": "Fem3dMutation",
+      "afterSha256": "92641b19f4c23adba20e2f8d0a41dad5039bba730e55dd8e55f10f2713b70f14",
+      "qualification": "refusal custody phase; old close and cold success still pending"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\uddf1\ufe0fblock/\ud83d\uddff\ufe0fartifacts/\ud83d\udd90\ufe0f5d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "beforeSha256": "72a93ad13ecceffeb9cc925a964641b17cf083eb63407c8f11663d644efc0c8c",
+      "advanceBeforeSha256": "58eb027458bf4afea699c645c987243d099d2e7ca294a8cf124b2d6ba5094116",
+      "owner": "Block5dStorePreparation",
+      "snapshotType": "Block5dSnapshot",
+      "mutationType": "Block5dMutation",
+      "afterSha256": "423bd7a4c42e034838f29b44bc5f61321f3291984636c026609a9d627944159d",
+      "qualification": "refusal custody phase; old close and cold success still pending"
+    }
+  ],
+  "native": "unrun",
+  "sourceGreen": {
+    "session": 61990,
+    "nxExit": 0,
+    "duration": "3.0s",
+    "laws": 1,
+    "assertions": 44,
+    "extraDepthAssertions": 612,
+    "log": "\ud83d\uddd1\ufe0fgenerated/native-preparation-editor-green.log"
+  },
+  "currentMatches": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ]
+}

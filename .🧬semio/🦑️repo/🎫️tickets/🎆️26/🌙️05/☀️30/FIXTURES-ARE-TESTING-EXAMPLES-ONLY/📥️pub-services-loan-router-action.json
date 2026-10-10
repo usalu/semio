@@ -1,0 +1,11 @@
+{
+  "scope": "direct router terminal recipient",
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\u26a1\ufe0feffects/\ud83e\udd80\ufe0f.rs",
+      "beforeSha256": "0f9a648a83686a813ce073166e421e1afdf89d910b76c416cea4c9df69f8c62a",
+      "afterSha256": "13d33ccd48ffff555daee5929c187a653215f48797b8af6009893ca52f678b7d",
+      "role": "borrows original output before descriptor closure; preserves existing independent codec"
+    }
+  ]
+}

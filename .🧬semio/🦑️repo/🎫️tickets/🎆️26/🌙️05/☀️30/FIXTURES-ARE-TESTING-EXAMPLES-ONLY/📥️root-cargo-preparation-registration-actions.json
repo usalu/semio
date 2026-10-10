@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "4b7d2f41d9800ebffbe0d501446e06a06ba79bd5059e49cca63152f078db9351",
+      "afterSha256": "ae8b2d9fd28a610f9a99e6b0632f058f5f040582076dc166857b3d789a1ad72d",
+      "exclusive": false,
+      "scope": "Existing registered Cargo discovery command includes genuine selected preparation control laws"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

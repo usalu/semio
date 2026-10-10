@@ -17,7 +17,7 @@ pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,n
 
   let result=(||{
    let(bytes,binary)=match payload{
-    IoPayload::Binary(bytes)=>(store::semio_format::unwrap_binary_controlled(bytes,"stdio.svg",store::semio_format::Component::Pack,1,native).map_err(store::semio_format::SemioError::into_value_error)?,true),
+    IoPayload::Binary(bytes)=>(store::semio_format::unwrap_binary_controlled(bytes,"stdio.svg",store::semio_format::Component::Pack,1,native)?,true),
     IoPayload::Text(text)=>(store::semio_format::split_text_preamble_controlled(text,"stdio.svg",store::semio_format::Component::Dsl,1,native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes(),false)};
    native.begin_stage(bytes.len())?;let mut position=0;let mut rows=0;
    let(schema,doc)=read_xml_native_snapshot_fields(XmlNativeInput{bytes,position:&mut position,rows:&mut rows,limits,binary,control:native})?;

@@ -1,0 +1,116 @@
+{
+  "contract": "replication.binary.primitives.v1",
+  "cases": [
+    {
+      "kind": "u64",
+      "value": 0,
+      "hex": "00"
+    },
+    {
+      "kind": "u64",
+      "value": 128,
+      "hex": "8001"
+    },
+    {
+      "kind": "u64",
+      "value": 9007199254740991,
+      "hex": "ffffffffffffff0f"
+    },
+    {
+      "kind": "u64Exact",
+      "value": "18446744073709551615",
+      "hex": "ffffffffffffffffff01"
+    },
+    {
+      "kind": "text",
+      "value": "雪",
+      "hex": "03e99baa"
+    },
+    {
+      "kind": "text",
+      "value": "A\u0000B",
+      "hex": "03410042"
+    },
+    {
+      "kind": "bytes",
+      "value": [
+        0,
+        255,
+        13
+      ],
+      "hex": "0300ff0d"
+    },
+    {
+      "kind": "hash",
+      "value": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "kind": "bool",
+      "value": false,
+      "hex": "00"
+    },
+    {
+      "kind": "bool",
+      "value": true,
+      "hex": "01"
+    },
+    {
+      "kind": "f64",
+      "value": 1.5,
+      "hex": "000000000000f83f"
+    },
+    {
+      "kind": "f64",
+      "value": -2.25,
+      "hex": "00000000000002c0"
+    },
+    {
+      "kind": "vectorBytes",
+      "value": [
+        [
+          1,
+          2
+        ],
+        [],
+        [
+          255
+        ]
+      ],
+      "hex": "030201020001ff"
+    }
+  ]
+}

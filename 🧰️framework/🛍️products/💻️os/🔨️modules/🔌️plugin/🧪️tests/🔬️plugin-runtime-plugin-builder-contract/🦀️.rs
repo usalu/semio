@@ -188,7 +188,7 @@ mod plugin_builder_contract_tests {
     struct TestCountOneItemPreparationFactory;
 
     struct TestCountOneItemPreparation {
-        request: Option<store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>>,
+        request: Option<store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation, TestMutation>>,
         prepared: Option<store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>>,
         authority_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
         turn: u8,
@@ -206,8 +206,8 @@ mod plugin_builder_contract_tests {
 
         fn begin(
             &self,
-            request: store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>,
-        ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<TestSnapshot, TestMutation>>, store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>> {
+            request: store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation, TestMutation>,
+        ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<TestSnapshot, TestMutation>>, store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation, TestMutation>> {
             if !request.base.get().label.is_empty() || request.authority.actor().len() > 32 || request.authority.group_id().is_some() {
                 return Err(request);
             }
@@ -409,9 +409,19 @@ mod plugin_builder_contract_tests {
         ViewModel { active_utility_id: utility.map(str::to_string), ..view }
     }
 
-    /// 🧪️ App under test. `received_actions` records every command id THIS app's own `handle` was
-    /// actually called with — used to prove framework-owned interceptions (e.g. `noteShellCommand`)
-    /// never reach it.
+    #[derive(Debug,semio_framework_value::RetireOwned)]
+    struct SpawnCountTask;
+    impl crate::app::AsyncTaskSource<TestMutation,TestConfigMutation,NoDraftMutation> for SpawnCountTask{
+        type Future=std::pin::Pin<Box<dyn std::future::Future<Output=Result<TaskResolution<TestMutation,TestConfigMutation,NoDraftMutation>,Fault>>>>;
+        fn run(self,ctx:TaskCtx)->Self::Future{Box::pin(async move{
+            let bytes=ctx.host.storage_read("counter").await?;
+            let value=i32::from_le_bytes(bytes.try_into().map_err(|_|Fault::from("original counter task requires exactly four bytes"))?);
+            let command=TestCommand::ApplyCountFromTask{value};
+            let encoded=<TestCommand as ::protocol::OpBinary>::encode_op(&command).map_err(|error|error.into_fault())?;
+            Ok(TaskResolution::Command(encoded))
+        })}
+    }
+    /// 🧪️ Records the actual typed commands received by the app under test.
     #[derive(Default)]
     struct TestApp<const RETAINED: bool = false, const TOOLS: u8 = TEST_APP_TOOLS_FULL> {
         received_actions: std::cell::RefCell<Vec<String>>,
@@ -881,15 +891,7 @@ mod plugin_builder_contract_tests {
                 let _snapshot = doc.children.typed_read::<TestSnapshot>(slot, child_id)?;
                 Ok(Emit::effect(Effect::DispatchAction { req: RequestId(91_001), action: "probeChildContinuation".into(), args: None, delay_ms: 0 }))
             }
-            TestCommand::SpawnCountTask => Ok(Emit::task(
-                AsyncTask::new("spawn-count-task", |ctx: TaskCtx| async move {
-                    let bytes = ctx.host.storage_read("counter").await?;
-                    let value = i32::from_le_bytes(bytes.try_into().unwrap_or([0; 4]));
-                    let command = TestCommand::ApplyCountFromTask { value };
-                    let encoded = <TestCommand as ::protocol::OpBinary>::encode_op(&command).map_err(|error| error.into_fault())?;
-                    Ok(TaskResolution::Command(encoded))
-                }),
-            )),
+            TestCommand::SpawnCountTask => Ok(Emit::task(AsyncTask::new("spawn-count-task".into(),SpawnCountTask,semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:256}).unwrap().0)),
             TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: *value })])),
             TestCommand::PickItem { id } => Ok(keyed_pick_emit(id)),
             TestCommand::BulkEdit { rows } => Ok(Emit { artifact_mutations: (1..=*rows).map(|row| TestMutation::SetCount(SetCount { value: row })).collect(), ..Default::default() }),
@@ -5309,7 +5311,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 41 })], transaction: None })
             .await
             .expect("the source edits its document");
-        let artifact = PluginApp::produce_media(&mut source, "artifact:out").await.expect("the source hands out its whole document");
+        let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️media/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress);
+        let artifact = identity.encode(|native| { let mut owner=store::NativeSnapshotEncodeOwner::new(native,media_grant); ::semio_framework_async::poll::resolve_ready(PluginApp::produce_media(&mut source, "artifact:out", &mut owner)) }).expect("the source hands out its whole document through its original authority");
         let mut consumer = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let before = consumer.test_snapshot().await;
         let source_id = PluginApp::document_identity(&source).expect("the source's identity");
@@ -5361,7 +5364,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         register_test_child(&mut source, "child-1").await;
         source.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id).await.expect("the composite gesture settles");
-        let mut artifact = PluginApp::produce_media(&mut source, "artifact:out").await.expect("the composed source hands out its whole document");
+        let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️media/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original composed media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress);
+        let mut artifact = identity.encode(|native| { let mut owner=store::NativeSnapshotEncodeOwner::new(native,media_grant); ::semio_framework_async::poll::resolve_ready(PluginApp::produce_media(&mut source, "artifact:out", &mut owner)) }).expect("the composed source hands out its whole document through its original authority");
         artifact.data = String::from_utf8(artifact.data).expect("a text-only host edge carries the carrier").into_bytes();
 
         let mut consumer = contract_composed_app_raw(mounted_policy, &mut identity).await;

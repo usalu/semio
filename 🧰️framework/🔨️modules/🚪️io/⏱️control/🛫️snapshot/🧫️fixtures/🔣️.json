@@ -47,12 +47,32 @@
         {
           "nativeWordBytes": 4,
           "headerBytes": 12,
-          "aggregateBytes": 15
+          "aggregateBytes": 27
         },
         {
           "nativeWordBytes": 8,
           "headerBytes": 24,
+          "aggregateBytes": 51
+        }
+      ],
+      "intermediateHeaderCount": 1,
+      "publicationHeaderCount": 1
+    },
+    "cursorRetirementCopy": {
+      "payloadBytes": 3,
+      "cancelledBytes": 3,
+      "intermediateHeaderCount": 1,
+      "publicationHeaderCount": 1,
+      "headers": [
+        {
+          "nativeWordBytes": 4,
+          "headerBytes": 12,
           "aggregateBytes": 27
+        },
+        {
+          "nativeWordBytes": 8,
+          "headerBytes": 24,
+          "aggregateBytes": 51
         }
       ]
     }
@@ -130,5 +150,82 @@
       "expectedNativeOwnedBytes": 10,
       "expectedGrantPreserved": true
     }
-  ]
+  ],
+  "originalFieldChild": {
+    "nativeMaximumBytes": 65536,
+    "payload": "雪",
+    "payloadBytes": 3,
+    "maximumTurns": 8,
+    "workBytes": 3,
+    "headers": [
+      {
+        "nativeWordBytes": 4,
+        "stringHeaderBytes": 12,
+        "headerBytes": 16,
+        "childBirthBytes": 16
+      },
+      {
+        "nativeWordBytes": 8,
+        "stringHeaderBytes": 24,
+        "headerBytes": 32,
+        "childBirthBytes": 32
+      }
+    ],
+    "grant": {
+      "maximumItems": 256,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 4096
+    },
+    "transfer": "originalPayloadChildAndPhysicalReceipt",
+    "childCursor": {
+      "vectorNativeWords": 3,
+      "flagBytes": 1,
+      "alignedNativeWords": 4
+    }
+  },
+  "walletLoan": {
+    "grant": {
+      "maximumItems": 4,
+      "maximumCopyBytes": 8,
+      "maximumCapacityBytes": 16,
+      "maximumReleaseBytes": 16,
+      "maximumDepth": 3
+    },
+    "spans": [
+      "雪",
+      "ABCDE"
+    ],
+    "remaining": {
+      "maximumItems": 2,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 16,
+      "maximumReleaseBytes": 16,
+      "maximumDepth": 3
+    },
+    "originalNativeMaximum": 64,
+    "nativePriorEncode": 7,
+    "nativePriorDecode": 11,
+    "sameWallet": true,
+    "heapBytes": 0
+  },
+  "pendingTicket": {
+    "contract": "originalTerminalChildHeaderBeforeRelease",
+    "items": 1,
+    "capacityBytes": 0,
+    "depth": 2,
+    "architecture": [
+      {
+        "nativeWordBytes": 4,
+        "boxSlotHeaderBytes": 8
+      },
+      {
+        "nativeWordBytes": 8,
+        "boxSlotHeaderBytes": 16
+      }
+    ],
+    "refusal": "zeroPhysicalEffectOriginalPointerPreserved",
+    "oracle": "serdeJsonArchitectureVectorAndSystemPhysicalRelease"
+  }
 }

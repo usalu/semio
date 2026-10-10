@@ -236,5 +236,66 @@
     "future": "return same original record unless newer same-host record exists",
     "retired": "retain original body for paid release; do not restore retired component",
     "terminal": "body owners and original directory backing absent"
+  },
+  "boundaries": {
+    "identities": {
+      "prefix": "camera-",
+      "count": 256,
+      "surface": "surface",
+      "deadlineMs": 120,
+      "metadata": 7
+    },
+    "overflow": {
+      "host": "overflow",
+      "surface": "surface",
+      "rejection": "WorkLimit",
+      "retainedEntries": 256,
+      "originalPointersUnchanged": true,
+      "heap": {
+        "requestedBytes": 0,
+        "releasedBytes": 0,
+        "largestReleaseBytes": 0,
+        "overflowed": false
+      }
+    },
+    "checkout": {
+      "globalEntries": 0,
+      "cursorEntries": 256
+    },
+    "restore": {
+      "globalEntries": 256,
+      "cursorEntries": 0,
+      "originalPointersUnchanged": true,
+      "heap": {
+        "requestedBytes": 0,
+        "releasedBytes": 0,
+        "largestReleaseBytes": 0,
+        "overflowed": false
+      }
+    },
+    "occupiedRestore": {
+      "globalEntries": 256,
+      "cursorEntries": 256,
+      "returned": false,
+      "originalPointersUnchanged": true,
+      "heap": {
+        "requestedBytes": 0,
+        "releasedBytes": 0,
+        "largestReleaseBytes": 0,
+        "overflowed": false
+      }
+    },
+    "identifier": {
+      "maximumBytes": 256,
+      "attemptedBytes": 257,
+      "retainedEntries": 0,
+      "rejection": "WorkLimit",
+      "heap": {
+        "requestedBytes": 0,
+        "releasedBytes": 0,
+        "largestReleaseBytes": 0,
+        "overflowed": false
+      }
+    }
   }
 }

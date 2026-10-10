@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolve } from "node:path";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
@@ -53,5 +54,5 @@ class OutputSourceTestScript extends BundleScript {
  }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-source", SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-topology-source", TopologySourceTestScript).register("test-input-source", InputSourceTestScript).register("test-evaluation-source", EvaluationSourceTestScript).register("test-output-source", OutputSourceTestScript);
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
 //#endregion 🧪️Validation

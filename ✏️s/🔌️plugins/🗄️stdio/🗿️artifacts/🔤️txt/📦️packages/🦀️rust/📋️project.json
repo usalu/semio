@@ -8,6 +8,24 @@
     "family:stdio"
   ],
   "targets": {
+    "test-original-encoding-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-encoding source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-original-encoding-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-encoding native",
+        "forwardAllArgs": true
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -90,6 +108,24 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ]
+    },
+    "test-original-receiving-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-receiving source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-original-receiving-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-receiving native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

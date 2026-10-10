@@ -1,0 +1,7 @@
+{
+  "exitCode": 0,
+  "durationMs": 3500,
+  "assertionCountPrinted": null,
+  "logSha256": "407bcc9d1bb620e50af97ee05be2878bcb39422be167d2e1a5481707a7b990e0",
+  "qualification": "Actual canonical root bun run nx repo:test-native-input-vocabulary after physical queued-path guards, real core graph and original Source command; runner log retains three DEBUG lines but suppresses Bun assertion summary, so 361 assertions credited only to separate original Source run. Before forthcoming policy extraction."
+}

@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "sha256": "22049cf77eae00be6d9fdef004ffe63055701752a837c9b8377f843e673d912b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "sha256": "69eedc7d07b7e2d54bf76b86c0c81e1a65e99aeca387e7bd4a5d4de9e45d8f3b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧫️fixtures/📥️native-caller.json",
+      "sha256": "e9e99c9c041164a849844f3402b07bd6343a4fdf768042d41ddede44063a6edc"
+    }
+  ]
+}

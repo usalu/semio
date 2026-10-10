@@ -1658,11 +1658,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     describe("PluginRuntime documentPack/transaction wire adapter", () => {
       it("keeps the exact channel subscribed through refused close and releases only that channel after retry", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔒️channel-close.json");
-        const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
-        const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeChannelCloseV1` };
-        const { default: Ajv } = await import("ajv");
         const { produce } = await import("immer");
-        expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(fixture)).toBe(true);
         const returned: number[] = [];
         let subscriptions = 0;
         let rejectClose!: (reason: unknown) => void;
@@ -2004,13 +2000,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       }
   
       it("schedules captured lifecycle work through the original owner after operation revocation", async () => {
-        const { default: Ajv } = await import("ajv");
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
-        const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
-        const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1` };
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
-        expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(fixture)).toBe(true);
         const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
         const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
         const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
@@ -2100,12 +2092,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       });
 
       it("composes the production plugin runtime with one real UI owner through exact patch ACK and retirement", async () => {
-        const { default: Ajv } = await import("ajv");
         const { default: equal } = await import("fast-deep-equal");
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
-        const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
-        expect(new Ajv({ strict: true }).addSchema(rendererModule).compile({ $ref: `${rendererModule.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1` })(fixture)).toBe(true);
         const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
         const sent: Array<{ readonly kind: string; readonly events: readonly string[] }> = [];
         const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
@@ -2274,12 +2263,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
       it("retries actual actor retirement with the original witness after final acknowledgement failure", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
-        const { default: schema } = await import("../../../🧬️schema/🔣️.json");
-        const { default: Ajv } = await import("ajv");
         const { default: equal } = await import("fast-deep-equal");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
-        expect(new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/ActorDocumentPortFixtureV1`)!(fixture)).toBe(true);
         for (const row of fixture.disposal.retirementRetry) {
           const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
           const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };

@@ -1,0 +1,211 @@
+# Original Host Issued Receiving Retry 6
+
+Exact registered original full Host6 PID51765/session51994 terminal1/Cargo101; original handle polled/closed. Services original removed try_new dependency floor no longer blocks Host compilation. Host library and native test consumers now expose 175 typed diagnostic headers before assertions; original full roster,600000/60000 and1 assertion thread unchanged. Log generated/host/original-issued-batch-oct10-red6.log.
+
+Pending new IssuedShardTurn::new/issue_envelope/settle_envelope specific declaration RED is not emitted in this run; actual source still lacks these producers. Type/name floors prevent this law from qualifying, so its producer remains absent. Services/effects mandatory original controls and progress recipient are current source-owner work. No held receipt is dropped or replaced with a local throwaway recipient here.
+
+## Physical Owners
+
+- 40: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs`
+- 21: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs`
+- 16: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs`
+- 15: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs`
+- 15: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs`
+- 10: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs`
+- 8: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs`
+- 8: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs`
+- 7: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️ui-patch/🧪️tests/🧪️component/🦀️.rs`
+- 6: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🎠️activation/🧪️tests/🎠️activation/🦀️.rs`
+- 5: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️guest-cold-relay/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🧪️tests/🔬️unit/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️runtime-metrics-publisher/🦀️.rs`
+- 3: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs`
+- 3: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-runtime/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🪪️identity/🧪️tests/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⏳️runtime/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧬️component-codec/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️artifact-mutation-router/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️wasmtime-runtime/🦀️.rs`
+
+## Full Typed Diagnostic Roster
+
+- E0053: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5049:79`
+- E0046: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5048:1`
+- E0053: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4852:79`
+- E0046: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4851:1`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⏳️runtime/🦀️.rs:426:45`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework_actor::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:255:8`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework::kernel::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2064:30`
+- E0061: this method takes 9 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:632:28`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:641:25`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:641:109`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:641:173`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:641:251`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:3261:17`
+- E0599: no associated function or constant named `try_new` found for struct `WorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5951:66`
+- E0432: unresolved import `semio_framework_value::ControlledRetirement` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🪪️identity/🧪️tests/🦀️.rs:2:29`
+- E0061: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5530:25`
+- E0599: no method named `take_outcome` found for struct `WorkerJobOutcome<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5533:52`
+- E0599: no method named `take_outcome` found for struct `WorkerJobOutcome<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5540:52`
+- E0061: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5554:21`
+- E0599: no method named `take_outcome` found for struct `WorkerJobOutcome<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5559:56`
+- E0599: no method named `take_outcome` found for struct `WorkerJobOutcome<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5569:52`
+- E0599: no associated function or constant named `try_new` found for struct `WorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5707:44`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧬️component-codec/🦀️.rs:13:65`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️ui-patch/🧪️tests/🧪️component/🦀️.rs:87:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️ui-patch/🧪️tests/🧪️component/🦀️.rs:94:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️ui-patch/🧪️tests/🧪️component/🦀️.rs:101:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️ui-patch/🧪️tests/🧪️component/🦀️.rs:108:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️ui-patch/🧪️tests/🧪️component/🦀️.rs:115:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️ui-patch/🧪️tests/🧪️component/🦀️.rs:122:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:14:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:32:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:39:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:47:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:54:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:63:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:70:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:82:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-runtime/🦀️.rs:22:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-runtime/🦀️.rs:62:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs:18:217`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs:23:9`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs:29:217`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs:51:9`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs:56:217`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs:66:9`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs:76:217`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs:89:9`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:55:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:67:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:74:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:89:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:137:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:154:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:197:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:241:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:292:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:312:12`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:331:29`
+- E0433: cannot find `test_native_authority` in `crate` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:371:12`
+- E0053: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:4852:79`
+- E0053: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️.rs:5049:79`
+- E0053: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🧪️tests/🔬️unit/🦀️.rs:45:53`
+- E0046: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🧪️tests/🔬️unit/🦀️.rs:44:1`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs:26:88`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework::kernel::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️.rs:2601:12`
+- E0061: this method takes 9 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:632:28`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:641:25`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:641:109`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:641:173`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️.rs:641:251`
+- E0061: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️guest-cold-relay/🦀️.rs:149:34`
+- E0599: no method named `take_outcome` found for struct `WorkerJobOutcome<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️guest-cold-relay/🦀️.rs:155:29`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️guest-cold-relay/🦀️.rs:299:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️guest-cold-relay/🦀️.rs:331:61`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework_actor::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️runtime-metrics-publisher/🦀️.rs:10:5`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️artifact-mutation-router/🦀️.rs:67:18`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs:141:18`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs:160:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs:179:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs:196:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs:212:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs:237:18`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs:291:18`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️unit/🦀️.rs:325:18`
+- E0061: this method takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️runtime-metrics-publisher/🦀️.rs:126:28`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework_actor::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️runtime-metrics-publisher/🦀️.rs:143:19`
+- E0599: no associated function or constant named `try_new` found for struct `WorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️guest-cold-relay/🦀️.rs:122:50`
+- E0061: this method takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️runtime-metrics-publisher/🦀️.rs:29:24`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️wasmtime-runtime/🦀️.rs:16:18`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:263:38`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:24:5`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-instance-open/🦀️.rs:99:5`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️owned-runtime/🦀️.rs:4:5`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:19:64`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:21:21`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:23:22`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:28:90`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:30:91`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:44:64`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:45:86`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:59:64`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:61:86`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:75:64`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:78:68`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:99:60`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧪️tests/🔬️mock-guest-runtime/🦀️.rs:100:32`
+- E0063: missing field `retained` in initializer of `KernelActivationRequest` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🎠️activation/🧪️tests/🎠️activation/🦀️.rs:16:23`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../📥️ui-patch/🧪️tests/🧪️component/🦀️.rs:21:5`
+- E0061: this method takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🎠️activation/🧪️tests/🎠️activation/🦀️.rs:33:31`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework_actor::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🎠️activation/🧪️tests/🎠️activation/🦀️.rs:34:25`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1451:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:973:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:573:61`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework::kernel::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1007:25`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework::kernel::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1037:29`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:576:20`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🎠️activation/🧪️tests/🎠️activation/🦀️.rs:57:22`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework::kernel::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1061:22`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework::kernel::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1082:18`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1121:65`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1123:33`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1137:85`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1139:32`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:626:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:628:20`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1551:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1188:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:1568:22`
+- E0063: missing field `retained` in initializer of `KernelActivationRequest` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🎠️activation/🧪️tests/🎠️activation/🦀️.rs:102:19`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🎠️activation/🧪️tests/🎠️activation/🦀️.rs:116:18`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🧪️tests/🔬️unit/🦀️.rs:431:71`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🧪️tests/🔬️unit/🦀️.rs:432:74`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:677:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:681:20`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:160:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:161:24`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:52:65`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:210:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:254:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:257:29`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:263:29`
+- E0063: missing field `retained_receipt` in initializer of `semio_framework_actor::TurnResult` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:792:21`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:126:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:837:61`
+- E0599: no associated function or constant named `new` found for struct `component::shard::IssuedShardTurn` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:8:350`
+- E0308: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs:97:86`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs:106:34`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:164:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:868:64`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:343:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:345:29`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:350:29`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:923:64`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:200:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:201:24`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs:65:33`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:403:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:406:20`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:250:30`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:253:31`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:256:32`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:322:65`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:323:28`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:377:33`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:440:61`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:442:21`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:445:22`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:424:30`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:431:33`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:474:30`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:534:30`
+- E0061: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs:540:33`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:491:61`
+- E0063: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🧪️tests/🔬️unit/🦀️.rs:530:61`
+- E0599: no method named `copy_text_into` found for mutable reference `&mut semio_framework_value::NativeEncodeControl<'_>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🪪️identity/🧪️tests/🦀️.rs:16:290`
+
+## Corrected Specific Batch Declaration Evidence
+
+Fresh full-log inspection found genuine E0599 at log line 25028: `IssuedShardTurn::new` is absent at native fixture line 8. The earlier claim that this specific declaration was unreached was wrong: the inspection searched for E0425 rather than the actual associated-method diagnostic. No native assertions ran. The producer may now be implemented against this original full-roster declaration failure.

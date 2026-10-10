@@ -99,6 +99,7 @@ pub enum RunError {
     },
     Cycle(Vec<String>),
     Host(String),
+    Frame(semio_framework_actor::pack::PackError),
     /// 🤝️ The guest itself was refused at admission (`ActivationRefusal.fault`, e.g. `plugin.channel-mismatch` with its
     /// `guest`/`host` params): the structured fault, so the runner's caller tells its localized notice.
     Refused(semio_framework::Fault),
@@ -138,6 +139,7 @@ impl std::fmt::Display for RunError {
             Self::NoConverter { class, from, to } => write!(formatter, "no media converter registered for {class:?}: {from:?} -> {to:?}"),
             Self::Cycle(nodes) => write!(formatter, "workflow has a cycle (unreachable nodes: {nodes:?})"),
             Self::Host(message) => write!(formatter, "host error: {message}"),
+            Self::Frame(error) => std::fmt::Display::fmt(error, formatter),
             Self::Refused(fault) => write!(formatter, "{}: {}", fault.code.0, fault.message),
             Self::Media(error) => write!(formatter, "media error: {error}"),
             Self::Io { path, source } => write!(formatter, "io error at {}: {source}", path.display()),
@@ -152,6 +154,7 @@ impl std::error::Error for RunError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Media(error) => Some(error),
+            Self::Frame(error) => Some(error),
             Self::Io { source, .. } => Some(source),
             Self::Serde(error) => Some(error),
             _ => None,
@@ -166,6 +169,10 @@ pub fn activation_refusal_error(refusal: semio_framework_plugin_host::activation
         Some(fault) => RunError::Refused(fault),
         None => RunError::Host(refusal.reason),
     }
+}
+
+impl From<semio_framework_actor::pack::PackError> for RunError {
+    fn from(error: semio_framework_actor::pack::PackError) -> Self { Self::Frame(error) }
 }
 
 impl From<MediaError> for RunError {
@@ -1515,6 +1522,8 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     /// instantiates them directly — see `kernel`'s own doc for why that ONE call site does not go
     /// through the full kernel-activation facade.
     guest_runtime: Arc<semio_framework_plugin_host::GuestRuntimes>,
+    host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    host_driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,
     /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real kernel this
     /// host now drives instead of minting `RuntimeActorId`s ad hoc — see `semio-framework-os`'s
     /// `🎠️activation/🦀️.rs` module doc. `open`'s real per-app-instance actor uses `kernel.activate`
@@ -1628,11 +1637,13 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// `SpaceRunner::run`'s node loop never opens two instances concurrently either), so a second
     /// shard thread would sit idle. The type stays general (same `shard_count` parameter
     /// `ParallelRuntime::new` takes) for a future caller that does want more.
-    pub async fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<B>, identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer) -> Self {
+    pub async fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<B>, identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
         let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Owned(semio_framework_plugin_host::OwnedRuntime::new()));
         let kernel = NativeKernelRuntime::new(guest_runtime.clone(), 1, 0, 64,{let mut original=Some(identity);move |_|original.take().expect("sequential host has one original shard issuer")}).await;
         Self {
             guest_runtime,
+            host_driver_policy,
+            host_driver:Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy)),
             kernel,
             plugin_path_for_plugin,
             descriptor_path_for_plugin,
@@ -1682,7 +1693,6 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// plugin-service instantiate budget, now shared with the real per-node turn path too.
     async fn run_turn(&mut self, actor: RuntimeActorId, events: Vec<Event>) -> Result<semio_framework::kernel::TurnResult, RunError> {
         const RUN_TURN_OUTCOME_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
-        let node_budget = actor_budget_from_turn_budget(NODE_TURN_BUDGET, Lane::Background).await;
         let mut envelopes = Vec::with_capacity(events.len().max(1));
         for event in &events {
             let seq = self.take_turn_seq();
@@ -1697,7 +1707,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         let mut fault: Option<String> = None;
         loop {
             self.now_ms += 1;
-            let decision = self.kernel.tick_and_dispatch(self.now_ms, move |_actor| node_budget).await;
+            let decision = self.kernel.tick_and_dispatch(self.now_ms, move |_actor, original| actor_budget_from_turn_budget(NODE_TURN_BUDGET, original)).await?;
             if decision.run.is_empty() {
                 break;
             }
@@ -1905,7 +1915,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         // (`🌉️mcp/🏠️workspace/🦀️.rs`'s `activate_plugin_instance`), the closest real
         // precedent for "compile once, instantiate once, no live turn loop yet".
         let instance = self.guest_runtime.instantiate(&compiled, actor, &[], &NODE_TURN_BUDGET).await.map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: instantiate: {error}")))?;
-        let handle = Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&self.guest_runtime), instance).await);
+        let handle = Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&self.guest_runtime), instance,semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:self.host_driver_policy.drive,policy:self.host_driver_policy.wake,issuer:semio_framework_job::admit_original_thread_worker_wake,receiver:self.host_driver.clone()}).await);
 
         let artifact_dialect_entries: Vec<_> = descriptor.contributions.composer_entries.iter().map(|entry| (entry.writes.clone(), entry.reads.clone())).collect();
         // 🕳️ `ContributionSet.io_entries` (owner/counterpart/direction) carries no `fidelity`/

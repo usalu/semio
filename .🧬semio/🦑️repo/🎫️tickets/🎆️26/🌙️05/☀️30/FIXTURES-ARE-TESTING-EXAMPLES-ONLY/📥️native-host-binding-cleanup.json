@@ -1,0 +1,20 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+  "beforeSha": "12fcec21784b865e6cfc8361ab45fc410b2edb2956005a6827697b13a01e7b1e",
+  "afterSha": "68eb335daf8548323293e09922154ff16bd73e17e475bbc184365258ef433191",
+  "actions": [
+    {
+      "beforeBlock": "import {scriptInvocationBudget} from \"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\n",
+      "afterBlock": ""
+    },
+    {
+      "beforeBlock": "\"process\",\"consumeOwnerArgumentsV1\",\"scriptInvocationBudget\",compile(native)",
+      "afterBlock": "\"process\",\"consumeOwnerArgumentsV1\",compile(native)"
+    },
+    {
+      "beforeBlock": "stderr:{write(){}}},consumeOwnerArgumentsV1,scriptInvocationBudget);",
+      "afterBlock": "stderr:{write(){}}},consumeOwnerArgumentsV1);"
+    }
+  ],
+  "reason": "Retain existing first actual budget binding; remove only duplicate authored import/parameters/argument."
+}

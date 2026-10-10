@@ -1,0 +1,38 @@
+[
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2797\ufe0fmathematical/\ud83d\uddff\ufe0fartifacts/\u2797\ufe0fequation/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "before": "40c58a73bec350852cf13c1c621c28bd0e8c877b31e5f281a42fd6dfb7058104",
+    "after": "0b9ff2dc6c48f39b08ac016f1cd44ad583c9d0c354751cb40c93f9f2413f111f",
+    "action": "fail closed if original controlled owners reach Drop without terminal funding"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf0d\ufe0fgis/\ud83d\uddff\ufe0fartifacts/\ud83d\uddfa\ufe0fgismap/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "before": "6069ce01e8fbfb1f0ae338a8822cb51a0f26f76718030ec544b0fd73388c8362",
+    "after": "7e73130730f43fc610cd31463512166a144e0791c05ed51960340088d0bdeae7",
+    "action": "fail closed if original controlled owners reach Drop without terminal funding"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf3f\ufe0fvcs/\ud83d\uddff\ufe0fartifacts/\ud83c\udf3f\ufe0fvcs/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "before": "c1b4ea6452ec03c4026bd541d96119353d6d118943c23eba8c22e3775cd1fd05",
+    "after": "b7a09f69977a245476dbd776e29b56d65be9c73c26076ab9b0fa450c0889b460",
+    "action": "fail closed if original controlled owners reach Drop without terminal funding"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\u25fb\ufe0f2d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "before": "9ac73ea3b46f8ded5148a64c1e052c1279aae00841cea13ff0c9f56cff8fa7a3",
+    "after": "e6522fd020bd36a52f4a07f2d9c78341420a341ca292151ab86bb2f10f86c22b",
+    "action": "fail closed if original controlled owners reach Drop without terminal funding"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\ud83e\uddca\ufe0f3d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "before": "0d1ac506b04d384e19ae40422dda7101676d82586494e559d3b4e72463d9592f",
+    "after": "f23871626e11e728d2bfccc0768846d53c6ecf0c3f857584148e413ba75b575e",
+    "action": "fail closed if original controlled owners reach Drop without terminal funding"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\uddf1\ufe0fblock/\ud83d\uddff\ufe0fartifacts/\ud83d\udd90\ufe0f5d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "before": "0d3ec60dece007ed7cae2e1cfe190d1bfedc0c57b109f20a0f0fe25e0484ac98",
+    "after": "7e97a2963a2e742450a1d57040cbe0fb3e252b2e4cd9bc3f9d4c0e8878158270",
+    "action": "fail closed if original controlled owners reach Drop without terminal funding"
+  }
+]

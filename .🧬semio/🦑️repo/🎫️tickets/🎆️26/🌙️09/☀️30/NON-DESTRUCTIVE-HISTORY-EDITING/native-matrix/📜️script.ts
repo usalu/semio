@@ -9,6 +9,9 @@ while (!existsSync(join(repository, "nx.json"))) {
   if (parent === repository) throw Error("Repository root is unavailable");
   repository = parent;
 }
+const {receiveScriptProcessInvocation}=await import(join(repository,"🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"));
+await receiveScriptProcessInvocation(process.env,async original=>{
+const control=original.control;
 if(process.argv[2]==="source-oracle"){
   const source=process.argv[3]==="sqlite"?"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🏛️ownership/🟦️.ts":process.argv[3]==="puzzle"?"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts":undefined;
   const selectedSource=process.argv[3]==="step-history"?"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts":source;
@@ -21,11 +24,11 @@ if(process.argv[2]==="source-oracle"){
 const { runRepositoryCargoTests, runRepositoryTestCommand } = await import(join(repository, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts"));
 const { runRepositoryCommand } = await import(join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts"));
 if(process.argv[2]==="snapshot-clone-native"){
-  await runRepositoryCargoTests(["semio-framework-os-kernel"],repository,["--lib",...process.argv.slice(3)],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  await runRepositoryCargoTests(["semio-framework-os-kernel"],repository,control,["--lib",...process.argv.slice(3)],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
   process.exit(0);
 }
 if(process.argv[2]==="schema-retirement-native"){
-  await runRepositoryCargoTests(["semio-framework-schema-validator"],repository,["--lib","original_compiled_validator_retires_recursive_pattern_fields_under_full_grants","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/core-execution")});
+  await runRepositoryCargoTests(["semio-framework-schema-validator"],repository,control,["--lib","original_compiled_validator_retires_recursive_pattern_fields_under_full_grants","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/core-execution")});
   process.exit(0);
 }
 if(process.argv[2]==="puzzle-domain-native"){
@@ -34,15 +37,15 @@ if(process.argv[2]==="puzzle-domain-native"){
   process.exit(0);
 }
 if(process.argv[2]==="step-history-oracle"){
-  await runRepositoryCargoTests(["semio-s-artifact-stdio-step-test-oracle"],repository,["--lib","--features","oracles","committed_history_intents_match_independent_part21_reader_and_class_edits","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  await runRepositoryCargoTests(["semio-s-artifact-stdio-step-test-oracle"],repository,control,["--lib","--features","oracles","committed_history_intents_match_independent_part21_reader_and_class_edits","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
   process.exit(0);
 }
 if(process.argv[2]==="architect-role-native"){
-  await runRepositoryCargoTests(["semio-s-artifact-architect-program"],repository,["--lib","architect_native_sparse_diff_preserves_declared_roles_and_exact_text","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  await runRepositoryCargoTests(["semio-s-artifact-architect-program"],repository,control,["--lib","architect_native_sparse_diff_preserves_declared_roles_and_exact_text","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
   process.exit(0);
 }
 if(process.argv[2]==="sqlite-paged-native"){
-  await runRepositoryCargoTests(["semio-framework-io-sqlite-snapshot"],repository,["--lib","history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_free_and_cancel_owned_copy","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  await runRepositoryCargoTests(["semio-framework-io-sqlite-snapshot"],repository,control,["--lib","history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_free_and_cancel_owned_copy","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
   process.exit(0);
 }
 const roots = join(repository, "✏️s/🔌️plugins");
@@ -99,7 +102,7 @@ if (command === "genesis-oracle") {
   if(!["history","named"].includes(scope))throw Error("Execution scope must be history or named");
   const filter=scope==="named"?["-E",`test(/(^|::)(${[...suffixes].join("|")})$/)`]:["history_edit"];
   console.log(`[DEBUG] history acceptance runtime scope=${scope}`);
-  await runRepositoryCargoTests(selected.map(owner=>owner.crate),repository,["--lib",...(featureSelection==="assembly"?["--features","component-app-assembly"]:[]),...filter,"--no-fail-fast","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  await runRepositoryCargoTests(selected.map(owner=>owner.crate),repository,control,["--lib",...(featureSelection==="assembly"?["--features","component-app-assembly"]:[]),...filter,"--no-fail-fast","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
 } else if (command === "run") {
   let failed=false;
   for(const assembly of [false,true]){
@@ -111,7 +114,7 @@ if (command === "genesis-oracle") {
     const receipt=join(import.meta.dir,`../🗑️generated/tools-execution/assertions-${crateSelection.length>1?`selected-${Bun.hash(selection).toString(16)}`:selection}-${assembly?"assembly":"ungated"}-${Date.now()}.json`);
     console.log(`[DEBUG] history acceptance expected named assertions=${expected.reduce((sum,row)=>sum+row.direct*3+row.child,0)} crates=${group.length}`);
     try{
-      await runRepositoryCommand(process.execPath,[import.meta.filename,"execute-group",selection,assembly?"assembly":"ungated","named"],repository,"history-native-named-assertions",1800000,{onLine:line=>{
+      await runRepositoryCommand(process.execPath,[import.meta.filename,"execute-group",selection,assembly?"assembly":"ungated","named"],repository,"history-native-named-assertions",Math.min(1800000,control.remainingMilliseconds()??1800000),{signal:control.signal,onLine:line=>{
         const plain=line.replace(/\x1b\[[0-9;]*m/gu,""),match=plain.match(/\b(PASS|FAIL|SKIP)\s+\[[^\]]+\]\s+(?:\([^)]*\)\s+)?(\S+)\s+(\S+)\s*$/u);
         if(!match||!suffixes.has(match[3]!.split("::").at(-1)!))return;
         const [,status,crate,name]=match;if(status!=="PASS"){refused.add(`${crate}::${name}`);return;}
@@ -130,3 +133,5 @@ if (command === "genesis-oracle") {
   }
   if(failed)process.exitCode=1;
 } else throw Error("Expected census or run");
+
+});

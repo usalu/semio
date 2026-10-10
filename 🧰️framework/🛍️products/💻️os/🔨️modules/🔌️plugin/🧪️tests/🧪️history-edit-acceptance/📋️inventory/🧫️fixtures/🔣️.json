@@ -1,0 +1,11 @@
+{
+  "candidate": "BimModelApp",
+  "artifact": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model",
+  "editor": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "registration": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  "directAssertions": [
+    "history_edits_end_to_end",
+    "history_edit_inputs_resolve",
+    "conflict_history_edits_end_to_end"
+  ]
+}

@@ -1,3 +1,4 @@
+import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -58,9 +59,7 @@ export class DurableThreeStoreAssemblyCheckScript extends BundleScript {
 export class DurableThreeStoreAssemblyNativeCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisDurableThreeStoreAssembly(this.repoRoot);
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      groups: [
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, groups: [
         { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
           "durable_group::tests::durable_map_three_store_assembly_uses_exact_gis_factories_and_binds_one_decision",
           "durable_group::tests::durable_map_three_store_assembly_late_member_rejection_closes_prior_publications_before_owner_handoff",
@@ -70,13 +69,7 @@ export class DurableThreeStoreAssemblyNativeCheckScript extends BundleScript {
         { package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features", "--features", "component-app-assembly"], laws: [
           "editor::gis2d::component::tests::gis_map_durable_three_store_factory_builders_are_exact_role_ports",
         ] },
-      ],
-      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
-      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
-      listBudgetMs: 60_000,
-      lawBudgetMs: 120_000,
-      progress(event) { console.log(`gis-durable-three-store-assembly ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); },
-    });
+      ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`gis-durable-three-store-assembly ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`gis-durable-three-store-assembly-receipt: ${JSON.stringify(receipt)}`);
   }
 }

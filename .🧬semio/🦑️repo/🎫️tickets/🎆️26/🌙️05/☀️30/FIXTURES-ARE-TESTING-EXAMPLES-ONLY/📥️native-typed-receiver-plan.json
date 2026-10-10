@@ -1,0 +1,25 @@
+{
+  "observed": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "sha256": "0b9cf2511fc8d36dd9088e67ba86d08dccdc64150d347fcb52ba8102498239bb",
+      "role": "read-only existing owner"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+      "sha256": "85bdc192d867fff6e8c8d6c0e3fa6ee3f9125f8ef1ceba7aa9ad2d3a98224635",
+      "role": "read-only existing owner"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs",
+      "sha256": "40ad92ad1534ff6721a421f4aa207099bc266bbce410bb5fc7aa96a3f72bf54b",
+      "role": "read-only existing owner"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "94c8fa0666e91531be3c840b531bfeca733c8a27d4e6cfeee2a4d932c56f9776",
+      "role": "read-only existing owner"
+    }
+  ],
+  "cargo": "Publication33131 active; relevant Rust held; no own Cargo"
+}

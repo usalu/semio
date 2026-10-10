@@ -1,0 +1,74 @@
+{
+  "schemaId": "https://json.schemas.assets.semio-tech.com/os/store/operation-wire/failure/schema.json",
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "beforeSha256": "ae6be7292b5f0272e7d6b891cc42f8b7a2cc00333f910fb84554a172aa2e72cd",
+      "afterSha256": "2868e16568c8f2dc9f064549abbfd356de7db10f5209a2f7321a7e2fd5e53f4b",
+      "scope": "actual initialized operation Text prefix/canonical Value failure schema, direct literal scalar producer and exact original oracle/native law",
+      "qualification": "narrow logical authored action; native law UNRUN"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📝️text/🦀️.rs",
+      "beforeSha256": "46e2e6cc9b93a319dd0d70612fbf03db561a380551ddc9f961130dc67bc71f28",
+      "afterSha256": "ea5f9d16faf89e2d996f6441c170c522a882c5e8e4023ec56f07ac12e1fcbb4a",
+      "scope": "actual initialized operation Text prefix/canonical Value failure schema, direct literal scalar producer and exact original oracle/native law",
+      "qualification": "narrow logical authored action; native law UNRUN"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts",
+      "beforeSha256": "3dcc6b1b64b871a1fd48d848070267c00ec01f0340c23494f72915453c548ce1",
+      "afterSha256": "25dd551babf5505ed6c570a4843b5d8b35e4903d9d54afd0ce53a8bfcd89f37a",
+      "scope": "actual initialized operation Text prefix/canonical Value failure schema, direct literal scalar producer and exact original oracle/native law",
+      "qualification": "narrow logical authored action; native law UNRUN"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs",
+      "beforeSha256": "eb06d9229555e408ce526c7294442e528ef33f206c91a5b76a2c04b726f9c2de",
+      "afterSha256": "8e09543c619c346eff8284425520c66541f6f86d25cbca7e17652252a8fcbe89",
+      "scope": "actual initialized operation Text prefix/canonical Value failure schema, direct literal scalar producer and exact original oracle/native law",
+      "qualification": "narrow logical authored action; native law UNRUN"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧫️fixtures/🔣️.json",
+      "beforeSha256": "7168bf35834edf0d6ef9c2f4c0632cefc0b6244a81419541fb716e28a224fafb",
+      "afterSha256": "ee905c9d4b90a46fc7795bf08cf74da0eb5901527ba2a24d8c3f608be92e821e",
+      "scope": "actual initialized operation Text prefix/canonical Value failure schema, direct literal scalar producer and exact original oracle/native law",
+      "qualification": "narrow logical authored action; native law UNRUN"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🦀️.rs",
+      "beforeSha256": "49de970ff0e40a809c594fb8334a189e8872fe20c04cbbfafc014cf91793809b",
+      "afterSha256": "a5b32a5c31271db6c713f59feade6a7b6aaddc63480a8a20f65017fae1541c0c",
+      "scope": "actual initialized operation Text prefix/canonical Value failure schema, direct literal scalar producer and exact original oracle/native law",
+      "qualification": "narrow logical authored action; native law UNRUN"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/⚠️failure/🧬️schema/🔣️.json",
+      "beforeSha256": null,
+      "afterSha256": "2a0fa1b72bbb7a973d91a5a1e81758e614dff2a11cefde79e47722c196f33d97",
+      "scope": "actual initialized operation Text prefix/canonical Value failure schema, direct literal scalar producer and exact original oracle/native law",
+      "qualification": "narrow logical authored action; native law UNRUN"
+    }
+  ],
+  "red": {
+    "session": 70824,
+    "status": 1,
+    "duration": "540ms",
+    "tests": "7pass/1fail/123assertions",
+    "log": "🗑️generated/pub-text-prefix-red.log"
+  },
+  "green": {
+    "session": 8884,
+    "status": 0,
+    "duration": "1.6s",
+    "tests": "8pass/0fail/129assertions",
+    "log": "🗑️generated/pub-text-prefix-green.log"
+  },
+  "preflightFailure": {
+    "mutation": false,
+    "dispatch": false,
+    "reason": "First red command referenced missing log parent; corrected before actual route dispatch"
+  },
+  "native": "authored UNRUN; no Cargo dispatch"
+}

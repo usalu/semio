@@ -9,6 +9,14 @@
     "family:os-plugin"
   ],
   "targets": {
+    "test-extension-invoke-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["{projectRoot}/📜️script.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/**/*"],
+      "outputs": [],
+      "options": {"cwd": "{projectRoot}", "command": "bun ./📜️script.ts test-extension-invoke-source"}
+    },
     "test-window-registry-source": {
       "executor": "nx:run-commands",
       "cache": false,

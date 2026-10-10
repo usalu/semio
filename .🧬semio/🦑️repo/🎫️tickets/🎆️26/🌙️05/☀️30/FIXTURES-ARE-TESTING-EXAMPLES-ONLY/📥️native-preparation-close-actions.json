@@ -1,0 +1,62 @@
+[
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2797\ufe0fmathematical/\ud83d\uddff\ufe0fartifacts/\u2797\ufe0fequation/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "EquationStorePreparation",
+    "snapshotType": "P",
+    "mutationType": "M",
+    "before": "c1a152b7bae94510442f60cbe1651d51410bc3c5cfb63845de75eb4594a80d21",
+    "after": "7e8f4cf9b29f26d8d093cc0f84169339cf5e449b7b67ce373f8a8999b138eb8b",
+    "closeBefore": "7e8f4cf9b29f26d8d093cc0f84169339cf5e449b7b67ce373f8a8999b138eb8b",
+    "closeAfter": "40c58a73bec350852cf13c1c621c28bd0e8c877b31e5f281a42fd6dfb7058104"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf0d\ufe0fgis/\ud83d\uddff\ufe0fartifacts/\ud83d\uddfa\ufe0fgismap/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "Gis2dOneItemPreparation",
+    "snapshotType": "P",
+    "mutationType": "M",
+    "before": "52c3e5e3ab2035470595c9b482fa6d0dcd9ab439aa81e28762c9292f11488488",
+    "after": "c1bb0635f26bbc55de9e8b1f30b06f7ada2ec215f4096dc28952deaaf483373b",
+    "closeBefore": "c1bb0635f26bbc55de9e8b1f30b06f7ada2ec215f4096dc28952deaaf483373b",
+    "closeAfter": "9ec4e94d14c8e138f48d6717030d383bc0a4a1f9750a8c995d0c79f6447793a2"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf3f\ufe0fvcs/\ud83d\uddff\ufe0fartifacts/\ud83c\udf3f\ufe0fvcs/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "VcsOneItemPreparation",
+    "snapshotType": "P",
+    "mutationType": "M",
+    "before": "603f7be833db55c3e770aeef81eeed92d21d1a9cf5a3eb041a43b9c31a8acfb3",
+    "after": "8b00a12fff2b90533784b01d3d2ab242ff91e92099aeae6d0425c6176c170ea1",
+    "closeBefore": "8b00a12fff2b90533784b01d3d2ab242ff91e92099aeae6d0425c6176c170ea1",
+    "closeAfter": "c1b4ea6452ec03c4026bd541d96119353d6d118943c23eba8c22e3775cd1fd05"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\u25fb\ufe0f2d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "Fem2dArtifactPreparation",
+    "snapshotType": "Fem2dSnapshot",
+    "mutationType": "Fem2dMutation",
+    "before": "12eed87bc66c9d4148aef10024d282e0e0f8dbd9180e6c64abb51483e483ff18",
+    "after": "ac018b675b07990b4806fcca723d91612ec5f584c8c71b40a14931b06258f4ac",
+    "closeBefore": "ac018b675b07990b4806fcca723d91612ec5f584c8c71b40a14931b06258f4ac",
+    "closeAfter": "e0bd3a12c9bbd34eca957d99150de58612887eec56c73c6ed9f104cc3615d599"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\ud83e\uddca\ufe0f3d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "Fem3dArtifactPreparation",
+    "snapshotType": "Fem3dSnapshot",
+    "mutationType": "Fem3dMutation",
+    "before": "92641b19f4c23adba20e2f8d0a41dad5039bba730e55dd8e55f10f2713b70f14",
+    "after": "3aec096a3de8e72286f0fb459102cf0630caac42156a5c346933166ef5703ed3",
+    "closeBefore": "3aec096a3de8e72286f0fb459102cf0630caac42156a5c346933166ef5703ed3",
+    "closeAfter": "8b382fa34fcd0874a978726dadf31264312a2314bcd7a9820191c5c474b197c9"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\uddf1\ufe0fblock/\ud83d\uddff\ufe0fartifacts/\ud83d\udd90\ufe0f5d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "Block5dStorePreparation",
+    "snapshotType": "Block5dSnapshot",
+    "mutationType": "Block5dMutation",
+    "before": "423bd7a4c42e034838f29b44bc5f61321f3291984636c026609a9d627944159d",
+    "after": "a8d6da2b1d29481f784322ce1f8f5fdb4fff0ccc26ea48142d0de8b2b119bee8",
+    "closeBefore": "a8d6da2b1d29481f784322ce1f8f5fdb4fff0ccc26ea48142d0de8b2b119bee8",
+    "closeAfter": "aa5aa48a3d087f39d169c4b08118b543288d56b6b627f5aa28fd591f2f815587"
+  }
+]

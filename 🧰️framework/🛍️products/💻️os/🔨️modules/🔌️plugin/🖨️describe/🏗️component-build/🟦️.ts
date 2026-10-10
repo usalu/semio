@@ -27,7 +27,7 @@ export class DescriptorBuildScript extends BundleScript {
 export class DescriptorTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([CRATE_NAME], this.repoRoot, rest);
+    await runRepositoryCargoTests([CRATE_NAME], this.repoRoot, this.invocation.control, rest);
   }
 }
 

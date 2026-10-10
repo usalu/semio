@@ -1,0 +1,3 @@
+# IO Wallet Fixture Boundary
+
+The exclusive unused whole-wallet trial schema at IO/control/schema/wallet.json was retired; its grant, spans and expected native observations are testing data. Actual canonical Value Grant schemas and the plain nested IO witness remain. The original reader gained a physical absence guard and genuinely failed 0 pass / 1 fail / 1 expectation while the schema existed. After retirement, original Bun/Ajv/JSON/UTF8 law passed 1 test / 6 expectations through Nx (exit 0). Native Rust wallet execution is separate and is not claimed by this Source result. Exact shared Source action hashes are retained in the two wallet action ledgers.

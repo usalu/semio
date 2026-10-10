@@ -1,88 +1,50 @@
-//! 📸️ Exact Flow snapshot ownership handoff; local scene and wire strings retire separately.
+//! 📸️ Exact Flow snapshot and local scene sources retain their defining paid close frontiers.
+use crate::{FlowSnapshot,FlowWorkingScene};
+use std::{mem::ManuallyDrop,sync::Arc};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,shared::SharedControlledRetirement}};
 
-use crate::{FlowSnapshot, FlowWorkingScene};
-use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
-use std::{mem::ManuallyDrop, sync::Arc};
+#[derive(semio_framework_value::RetireOwned)]
+struct FlowSnapshotSources{schema:String,child_id:String,target:semio_framework_artifact_reference::ArtifactRef,scene:Option<SharedControlledRetirement<FlowWorkingScene>>}
 
-const _: () = assert!(!std::mem::needs_drop::<semio_framework_artifact_flow_flow::CameraJson>());
+impl RetireOwned for FlowWorkingScene{
+ fn retirement(self)->Box<dyn RetirementCursor>{let(widgets,synapses,layout)=self.into_parts();semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(widgets),semio_framework_value::retirement::deferred(synapses),semio_framework_value::retirement::deferred(layout)])}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.widgets),semio_framework_value::retirement::deferred_birth_bytes_for(&self.synapses),semio_framework_value::retirement::deferred_birth_bytes_for(&self.layout)])}
+ fn controlled_retirement_supported()->bool{true}
+}
 
-//#region 🧹️SnapshotOwnership
+struct FlowSnapshotRetirement{source:ManuallyDrop<Option<FlowSnapshot>>,owners:ManuallyDrop<Option<ControlledRetirement<FlowSnapshotSources>>>}
+impl FlowSnapshotRetirement{
+ fn new(source:FlowSnapshot)->Self{Self{source:ManuallyDrop::new(Some(source)),owners:ManuallyDrop::new(None)}}
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.owners.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original Flow snapshot depth overflow"))?})}Ok(RetirementDemand{depth:usize::from(self.source.is_some()),..Default::default()})}
+ fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}let d=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return Ok(RetainedCloneStep::Progress(empty))}
+  if let Some(owner)=self.owners.as_mut(){if owner.terminal_is_empty(){self.owners.take();return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}return owner.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|RetainedCloneStep::Progress(step.progress()))}
+  let FlowSnapshot{schema,content}=self.source.take().unwrap();match content.into_typed_retained_parts::<FlowWorkingScene>(){Ok(parts)=>{*self.owners=Some(ControlledRetirement::new(FlowSnapshotSources{schema,child_id:parts.child_id,target:parts.target,scene:parts.local_owner.map(SharedControlledRetirement::lease)}).unwrap_or_else(|_|unreachable!("original Flow snapshot sources define full closure")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))},Err(content)=>{*self.source=Some(FlowSnapshot{schema,content});Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original Flow snapshot local root has a different concrete type"))}}
+ }
+}
+impl RetirementCursor for FlowSnapshotRetirement{
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(p))if p==Default::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))=>RetirementStep::Progress(p)}}
+ fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.owners.is_none()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.demands(copy).ok().map(|d|d.capacity_bytes)}
+ fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|d|d.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
+ fn allows_admitted_narrow_work(&self)->bool{true}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+}
+impl RetireOwned for FlowSnapshot{
+ fn retirement(self)->Box<dyn RetirementCursor>{Box::new(FlowSnapshotRetirement::new(self))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<FlowSnapshotRetirement>())}
+ fn controlled_retirement_supported()->bool{true}
+}
+impl Drop for FlowSnapshotRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Flow snapshot abandoned local root custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.owners);}}}}
+
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SnapshotRetirementFactory;
-
-impl store::SnapshotRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<FlowSnapshot>) -> usize { std::mem::size_of::<SnapshotRetirement>() }
-
-    fn retire(&self, snapshot: Arc<FlowSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(SnapshotRetirement { root: ManuallyDrop::new(Some(snapshot)), owned: ManuallyDrop::new(None), retirement: FlowRetirement::default(), debt: 0, phase: 0 })
-    }
+impl store::SnapshotRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory{
+ fn retirement_birth_bytes(&self,_source:&Arc<FlowSnapshot>)->usize{semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<FlowSnapshot>()}
+ fn retire(&self,source:Arc<FlowSnapshot>,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowSnapshot>)>{semio_framework_value::retirement::shared::admit_shared_retirement(source,grant,true)}
 }
-
-impl store::ArtifactOwnedValueRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory {
-    fn retire_owned(&self, snapshot: FlowSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(SnapshotRetirement { root: ManuallyDrop::new(None), owned: ManuallyDrop::new(Some(snapshot)), retirement: FlowRetirement::default(), debt: 0, phase: 0 })
-    }
+impl store::ArtifactOwnedValueRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory{
+ fn retirement_birth_bytes(&self,_source:&FlowSnapshot)->usize{semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<FlowSnapshot>()}
+ fn retire_owned(&self,source:FlowSnapshot,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,FlowSnapshot)>{semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(source,grant).map(|(owner,p)|(owner as Box<dyn store::ErasedSnapshotRetirement>,p))}
 }
-
-struct SnapshotRetirement {
-    root: ManuallyDrop<Option<Arc<FlowSnapshot>>>,
-    owned: ManuallyDrop<Option<FlowSnapshot>>,
-    retirement: FlowRetirement,
-    /// 🎟️ Bytes already freed above the caller's page, still owed to the caller's accounting.
-    debt: usize,
-    phase: u8,
-}
-
-impl store::ErasedSnapshotRetirement for SnapshotRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        use store::SnapshotRetirementStep as Step;
-        if items == 0 || bytes == 0 {
-            return Ok(Step::Blocked);
-        }
-        if self.debt > 0 || !self.retirement.is_empty() {
-            return super::close_frontier_page(&mut self.retirement, &mut self.debt, bytes);
-        }
-        if let Some(root) = self.root.take() {
-            self.owned = ManuallyDrop::new(Arc::into_inner(root));
-            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
-        }
-        let Some(snapshot) = self.owned.as_mut() else {
-            return Ok(Step::Complete);
-        };
-        let text = match self.phase {
-            0 => {
-                let scene = snapshot.content.take_local_owner::<FlowWorkingScene>().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,message))?;
-                if let Some(scene) = scene.and_then(Arc::into_inner) {
-                    self.retirement = super::retire_scene(scene);
-                }
-                self.phase = 1;
-                return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
-            }
-            1 => std::mem::take(&mut snapshot.schema),
-            2 => std::mem::take(&mut snapshot.content.child_id),
-            3 => std::mem::take(&mut snapshot.content.target.artifact_id),
-            4 => std::mem::take(&mut snapshot.content.target.dialect.artifact_kind),
-            5 => std::mem::take(&mut snapshot.content.target.dialect.standard),
-            6 => std::mem::take(&mut snapshot.content.target.dialect.subset),
-            _ => {
-                self.owned.take();
-                return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
-            }
-        };
-        self.phase += 1;
-        self.retirement.push(FlowOwner::Bytes(text.into_bytes()));
-        Ok(Step::Pending { released_items: 1, released_bytes: 0 })
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.owned.is_none() && self.retirement.is_empty() && self.debt == 0
-    }
-}
-
-impl Drop for SnapshotRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.root.is_none() && self.owned.is_none() && self.retirement.is_empty() && self.debt == 0, "Flow snapshot retirement must close exactly");
-        }
-    }
-}
-//#endregion 🧹️SnapshotOwnership

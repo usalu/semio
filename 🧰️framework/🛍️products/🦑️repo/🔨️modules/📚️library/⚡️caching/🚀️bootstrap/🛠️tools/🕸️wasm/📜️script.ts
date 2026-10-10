@@ -1,3 +1,4 @@
+import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { open } from "node:fs/promises";
@@ -148,4 +149,4 @@ class FingerprintScript extends Script {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("prepare", PrepareScript).register("fingerprint", FingerprintScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(getWorkspaceRoot()).register("prepare", PrepareScript).register("fingerprint", FingerprintScript)).run(process.argv.slice(2), original));

@@ -1,0 +1,16 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sourceSha256": "7c68b8849102581d2b603e6a21fd18434168dbd562073d2e1f3098b60e84d4bd",
+  "proposedEventFields": [
+    "operation",
+    "repositoryPath",
+    "completedOperations"
+  ],
+  "operations": [
+    "state",
+    "list",
+    "readText",
+    "select"
+  ]
+}

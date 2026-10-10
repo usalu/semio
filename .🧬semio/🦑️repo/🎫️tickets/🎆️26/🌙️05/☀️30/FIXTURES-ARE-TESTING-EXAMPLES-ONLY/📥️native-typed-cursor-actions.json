@@ -1,0 +1,26 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "action": "append original Source test and one plain import",
+      "beforeSha256": "3f34599bb52c53adc28df760cb474ff5be6494a6bfa836bd2cefed448b5489e5",
+      "beforeHashEvidence": "exact narrow insertion reversal, not separate saved physical preimage",
+      "afterSha256": "ce34d8eb6d0b0014581fcc89baa5a19a13c8b5dd44b7ed4afc4836d69d2e9751"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🛬️cursor.json",
+      "action": "create plain vectors",
+      "beforeSha256": null,
+      "afterSha256": "b4715519b7ddc00abcd55fbb56405e7ef858f59251616d89741aaa6f82c21df9"
+    }
+  ],
+  "red": {
+    "session": 7078,
+    "nxExit": 1,
+    "durationSeconds": 4.8,
+    "actualAssertions": 9,
+    "reason": "original genuine DecodeOwner has no drive_cursor after independent grant/UTF8/SQLite witnesses",
+    "log": "🗑️generated/native-typed-cursor-red.log"
+  },
+  "native": "UNRUN; no Rust production or test edit during active Kernel33131"
+}

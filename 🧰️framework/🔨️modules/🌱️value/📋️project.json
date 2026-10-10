@@ -49,6 +49,28 @@
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test shared-unique"
       }
+    },
+    "test-dynamic-retained-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value",
+        "command": "bun ./📜️script.ts test dynamic-retained",
+        "forwardAllArgs": true
+      }
+    },
+    "test-scalar-retained-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value",
+        "command": "bun ./📜️script.ts test scalar-retained",
+        "forwardAllArgs": true
+      }
     }
   }
 }

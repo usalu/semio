@@ -1,0 +1,22 @@
+{
+  "schemaAbsent": true,
+  "consumerSha256": "1a5b5ef7e101d99b4807ee164aadafe14a86d8d9874464209896a8fc4c4d08d5",
+  "plainSha256": "4acf9212cd767fd515009fd2523191cf9222821f063fee94be660b2cf97be537",
+  "nativeSha256": "a07dcd8a8e4cb4d4c4d932956629b1e9eefc6c1fa78782b392e068b14bd5abdd",
+  "red": {
+    "session": 36090,
+    "exit": 1,
+    "duration": "884ms",
+    "error": "physical whole-trial authority present"
+  },
+  "green": {
+    "session": 86395,
+    "exit": 0,
+    "duration": "1.1s",
+    "laws": 1,
+    "assertions": 35,
+    "extraDepthAssertions": 612
+  },
+  "native": "unchanged and unrun in this cut",
+  "genericFullInventory": "Root owns renewed original boundary; no substitute claim from local absence"
+}

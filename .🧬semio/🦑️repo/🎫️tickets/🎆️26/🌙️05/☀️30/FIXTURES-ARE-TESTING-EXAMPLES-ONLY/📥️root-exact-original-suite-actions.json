@@ -1,0 +1,28 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "f65ee3d1a513d0003eafd874ef6d876b2a3004a44b3118b4c60941307388450c",
+      "afterSha256": "1d4083a481eefcd6a8866de6b28ecf7f6dff57daa882d3b9ab08eac99716583b",
+      "exclusive": false,
+      "scope": "Genuine original test caller policy/control; preserve all existing hostile native selection/fingerprint/cancellation laws"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "b295053b42816c6198bfd139f76506a5b868f1419c65a0da00df8f94e24f630c",
+      "afterSha256": "5485e3c227a60a22c9e5afae50d88f6a484ed4b0ebe2ee6433c76ee17595c741",
+      "exclusive": false,
+      "scope": "Neutral configured discovery/native phase durations preserve original prior 60000 default; owner-specific durations remain explicit"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "042aedb70e63f437a6fd4a1c3500961939246090fe6eceb75472ce7dcc863354",
+      "afterSha256": "b966aacc1acb87736b6a266238e81338edb5813e4a4ac6012299bf7eb51fbee6",
+      "exclusive": false,
+      "scope": "Canonical registered exact Cargo Source suite includes all genuine original invocation/control policy laws"
+    }
+  ]
+}

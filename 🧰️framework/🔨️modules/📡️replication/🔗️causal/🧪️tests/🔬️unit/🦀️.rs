@@ -1,4 +1,5 @@
 use super::*;
+use crate::io::binary::causal::*;
 
 //#region 🧸️Fixtures
 // Dummy (P=i64, Op=CausalAddOp) pair: the smallest possible Mutation/MutationDiff impl,

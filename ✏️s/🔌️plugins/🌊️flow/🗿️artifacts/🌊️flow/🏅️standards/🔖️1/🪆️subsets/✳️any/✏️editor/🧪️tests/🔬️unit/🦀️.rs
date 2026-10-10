@@ -396,7 +396,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 pub(super) fn every_command() -> Vec<FlowCommand> {
     use semio_framework_artifact_flow_flow::CameraJson;
     vec![
-        FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None, label: None, action: None, format: None }),
+        FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: Some("originalOperator雪".into()), x: Some(10.0), y: Some(20.0), label: Some("originalLabel🌊️".into()), action: Some("originalAction雪".into()), format: Some("originalFormat🌊️".into()) }),
         FlowCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "n1".into() }),
         FlowCommand::DuplicateWidget(duplicate_widget::DuplicateWidget { widget_id: "n1".into() }),
         FlowCommand::DeleteSelection(delete_selection::DeleteSelection {}),
@@ -411,6 +411,8 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
                 node_graph_edit::FlowNodeGraphEditOp::Delete { node_ids: vec!["n1".into()], synapse_ids: vec!["s1".into()] },
                 node_graph_edit::FlowNodeGraphEditOp::InsertPort { node_id: "n2".into(), side: "input".into(), index: 1 },
                 node_graph_edit::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
+                node_graph_edit::FlowNodeGraphEditOp::Move { gesture_id: "originalGesture雪".into(), node_ids: vec!["n1".into(), "n2".into()], dx: 2.0, dy: 3.0 },
+                node_graph_edit::FlowNodeGraphEditOp::SetSlider { widget_id: "originalSlider🌊️".into(), value: 4.0 },
             ],
         }),
         FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![spotlight_commit::FlowNodeGraphEditOp::Disconnect { synapse_id: "s1".into() }] }),
@@ -436,7 +438,7 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
         FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_framework_value::DslValue::float(5.0) }),
         FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: main::FLOW_PLAY_WINDOW_MAIN.into() }),
-        FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: "{}".into() }),
+        FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: Some(r#"{"done":true,"phase":"complete","unitsDone":1,"unitsTotal":1,"outputJson":"{}"}"#.into()) }),
         FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
     ]
 }

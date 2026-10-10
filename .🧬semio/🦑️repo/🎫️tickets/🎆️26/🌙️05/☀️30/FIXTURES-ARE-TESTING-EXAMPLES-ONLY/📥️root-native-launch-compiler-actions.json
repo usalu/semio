@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "18502ec1eece465f3f0f830c6586a8fe23fe391d06ec18465bc3f138805fdbf8",
+      "afterSha256": "b1ac0982c07a63d54fcb874d2825f793853337444594f2b3f24b3c536ec28487",
+      "exclusive": false,
+      "scope": "Original arrow compiled inside genuine enclosing function so module-level this lowering does not alter owner context in either compiler"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

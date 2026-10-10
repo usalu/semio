@@ -70,7 +70,9 @@ impl SnapshotGrant {
     }
 }
 
-#[derive(Deserialize, Serialize, ToValue, FromValue)]
+semio_framework_value::artifact_retire_leaf!(SnapshotLimits,SnapshotGrant);
+
+#[derive(Deserialize, Serialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(deny_unknown_fields)]
 pub struct SnapshotInput {
     pub dialect: String,
@@ -78,6 +80,16 @@ pub struct SnapshotInput {
     pub payload: Vec<u8>,
     pub limits: SnapshotLimits,
     pub native: SnapshotGrant,
+}
+
+/// 🫴️ Keeps the exact native request, hop payload and returned semantic outcome under their admitted frame.
+#[derive(semio_framework_value::RetireOwned)]
+pub struct SnapshotInputOwner {
+    pub wire: Option<SnapshotInput>,
+    pub dialect: Option<semio_framework_artifact_reference::ArtifactDialect>,
+    pub route: Option<semio_framework::io_schema::IoResult<semio_framework::io_schema::IoRoute>>,
+    pub payload: Option<semio_framework::io_schema::IoPayload>,
+    pub hop: Option<semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload>>,
 }
 
 /// 🧭️ Native snapshot encoding has no owned text backing at the component handoff.

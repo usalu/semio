@@ -1,10 +1,12 @@
+import { type ScriptControl } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
 import { safeGitEnv, gitSpawnEnv } from "./🏃️process/🌿️environment/🌳️git/🟦️.ts";
 export { safeGitEnv, gitSpawnEnv };
 import { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir } from "./🗂️workspaces/🧬️metadata/🟦️.ts";
 export { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir };
+import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import {captureOwnedProcess} from "../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import { buildWasmWebV1, type WasmPackWebBuildOptions, type WasmBuildPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { runExactCargoLaws, exactExecutableFingerprint, type ExactCargoLawOptions, type ExactCargoLawPort, type ExactCargoLawReceipt } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { runExactCargoLaws, readExactCargoLawPolicyV1, exactExecutableFingerprint, type ExactCargoLawOptions, type ExactCargoLawPort, type ExactCargoLawReceipt } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import type { ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📋️context/🟦️.ts";
 import { runVitestV1, vitestArgumentsV1, type VitestPolicyV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 import { type CargoTestPolicyV1, runCargoTestsV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -38,7 +40,7 @@ import { canonicalFilenameForKind, fixedContractFilename, loadCatalogTaxonomy, l
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, cargoNextestConfiguration, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, cargoNextestConfiguration, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoWorkspacePreparationInvocationV1 } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
 import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioShipEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
 
 export const HUB_DATA_DIR_NAME = "🌐hub";
@@ -878,6 +880,9 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 //#region 🔖️bundle-script
 //#region 🔖️Script
 import { Script, BundleScript, ScriptRouter, findWorkspaceRoot, type ScriptCommand } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { readScriptPolicy, checkScriptInvocation, advanceScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, receiveScriptProcessInvocation, withScriptProcessEnvelope } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 export { ownedScriptRoutes, resolveOwnedScriptRoute, dispatchOwnedScriptRoute, type OwnedScriptRoute } from "./🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
 
 export { runRepoScriptMain, type RunRepoScriptMainOptions } from "./🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -892,7 +897,10 @@ export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
 
 /** 🚪️Workspace root `script.ts` entry (no policy dispatch). */
 export async function runWorkspaceScriptMain(router: ScriptRouter): Promise<void> {
-  await router.run(process.argv.slice(2));
+  const run = (invocation: ScriptInvocation) => runScriptMain(router, { invocation });
+  if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) return receiveScriptProcessInvocation(process.env, run);
+  const policy = readScriptPolicy({ version: 1, owner: "workspace-root", maximumElapsedMilliseconds: 0 });
+  return withScriptProcessEnvelope(createScriptProcessEnvelope(policy, {}, Date.now()), run);
 }
 
 /**
@@ -1415,7 +1423,8 @@ export function repositoryCargoTestPolicyV1(manifestPath:string,cwd:string,env:R
 }
 
 /** 🦀️ Composes selected repository workspace preparation with explicit neutral Cargo execution. */
-export async function runRepositoryCargoTests(packages:string[],cwd:string,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
+export async function runRepositoryCargoTests(packages:string[],cwd:string,control:ScriptControl,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
+  control.signal.throwIfAborted();{const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");}
   const repository=getWorkspaceRoot(), rows=cargoRepositoryPackageSelections(repository,packages);
   const manifests=rows.length?[...new Set(rows.map(row=>row.manifest))]:[relative(repository,join(cwd,"Cargo.toml"))];
   const scopes=new Map<string,string[]>();
@@ -1423,8 +1432,9 @@ export async function runRepositoryCargoTests(packages:string[],cwd:string,extra
   for(const manifests of scopes.values()){
     const manifest=resolve(repository,manifests[0]!),names=rows.filter(row=>manifests.includes(row.manifest)).map(row=>row.name);
     prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(repository),repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,env);
+    control.signal.throwIfAborted();{const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo preparation deadline exhausted");}
     const policy=repositoryCargoTestPolicyV1(manifest,cwd,env);
-    await runCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets});
+    await runCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env,signal:control.signal,remainingMilliseconds:()=>control.remainingMilliseconds()},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets});
   }
 }
 
@@ -1523,6 +1533,9 @@ export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): Ru
 /** 🦀️ One explicit Cargo package/target and nonempty exact law selection. */
 /** 🦀️ Composes exact native execution with the repository's admitted manifest and compiler storage policy. */
 export async function runRepositoryExactCargoLaws(options: Omit<ExactCargoLawOptions, "manifestPaths" | "cargoTargetDir"> & { manifestPath?: string }, port?: ExactCargoLawPort): Promise<readonly ExactCargoLawReceipt[]> {
+  readExactCargoLawPolicyV1(options.policy);
+  checkScriptInvocation(options.invocation);
+  await advanceScriptInvocation(options.invocation, "repository:exact-cargo-selection", "loading");
   const root = getWorkspaceRoot(), environment = options.env ?? process.env;
   const artifactDirectory = options.artifactDir ?? environment.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactDirectory || !isAbsolute(artifactDirectory) || !isGeneratedPath(artifactDirectory)) throw new Error("Repository exact Cargo laws require generated artifact storage");
@@ -1531,7 +1544,17 @@ export async function runRepositoryExactCargoLaws(options: Omit<ExactCargoLawOpt
   const preparedPort: ExactCargoLawPort = port ?? {
     fingerprint: exactExecutableFingerprint,
     probe: async (command, args, capture) => {
-      if (command === "cargo") prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(root),root,args,capture.cwd,process.env);
+      if (command === "cargo") {
+        if (capture.invocation !== options.invocation) throw Error("Exact original Cargo preparation invocation required");
+        const started = performance.now();
+        await advanceScriptInvocation(options.invocation, "repository:exact-cargo-preparation", "running");
+        const request = cargoWorkspacePreparationInvocationV1(repositoryCargoPreparationStorageV1(root), root, args, capture.cwd, capture.env);
+        if (request) await runOwnedCommand(request.command, [...request.args], request.cwd, "cargo:selected-preparation", scriptInvocationBudget(options.invocation, capture.budgetMs), { env: request.environment, stdout: "stderr", output: { maximumBytes: capture.maxOutputBytes, maximumLines: capture.maxOutputBytes }, signal: options.invocation.control.signal, onProgress: async line => { await advanceScriptInvocation(options.invocation, "repository:exact-cargo-preparation", "running"); process.stderr.write(line + "\n"); } });
+        checkScriptInvocation(options.invocation);
+        const remaining = capture.budgetMs === 0 ? 0 : capture.budgetMs - (performance.now() - started);
+        if (capture.budgetMs > 0 && remaining <= 0) throw Error("Exact Cargo phase authority exhausted during preparation");
+        return await captureOwnedProcess(command, args, { ...capture, budgetMs: scriptInvocationBudget(options.invocation, Math.floor(remaining)) });
+      }
       return await captureOwnedProcess(command, args, capture);
     },
   };

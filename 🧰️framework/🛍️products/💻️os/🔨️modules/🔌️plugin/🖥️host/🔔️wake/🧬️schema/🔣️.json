@@ -10,7 +10,8 @@
     "receipts",
     "locales",
     "driver",
-    "closeCustody"
+    "closeCustody",
+    "contextCustody"
   ],
   "properties": {
     "version": {
@@ -79,6 +80,14 @@
         "checkoutPerOriginalTurn": true,
         "collectBeforeSuccessor": true,
         "wholeHeaderRequiresOriginalGrant": true
+      }
+    },
+    "contextCustody": {
+      "const": {
+        "source": "OriginalStepContext",
+        "receipt": "SameRecipientOnce",
+        "renewal": "OriginalDriverOnly",
+        "pending": "RetainedUntilAcknowledged"
       }
     }
   }

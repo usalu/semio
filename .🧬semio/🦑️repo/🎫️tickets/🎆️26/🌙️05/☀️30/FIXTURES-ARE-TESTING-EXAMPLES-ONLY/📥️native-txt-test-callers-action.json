@@ -1,0 +1,11 @@
+{
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+  "before": "9b255d872d2799e9fafcefcea8cd05ed20428e0cd2e3ecf388033e448115a78a",
+  "after": "2c4bfdd3dc870d46288022bc7db5f442411e33e7742bbe1e39f0518ed28a2ed0",
+  "blocks": [
+    "actual test caller fixed policy/native owners/recipient",
+    "original native codec and bare capability argument propagation"
+  ],
+  "native": "UNRUN",
+  "existingAssertions": "preserved"
+}

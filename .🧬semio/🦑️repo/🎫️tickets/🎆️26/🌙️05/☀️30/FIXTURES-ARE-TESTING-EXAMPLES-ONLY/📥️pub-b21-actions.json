@@ -1,0 +1,175 @@
+{
+  "actions": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧬️schema/🔣️.json",
+      "beforeSha256": "d667e3832ab399d72f432336e84e7db19eeb3f5bf853fc300aad6f2bd3549e5f",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial directional/receiving testing authority; no production export/reader",
+      "observedCurrentSha256": null,
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "beforeSha256": "2aad07b9d83b82101e4bd403c2751466b8a497d3577eaebd5d4c5226ddb787e4",
+      "guardedBeforeSha256": "7d303a6b966f26577680d7b435682c73dbac15274b0ea8b320ea21ba76ccd612",
+      "afterSha256": "d1f6abd1c1a29cebde2f0aa8b577264d7273dbf7efe786a3c4651ca4b5551f55",
+      "scope": "only whole trial imports/Ajv compilation/wrapper mutants retired; original plain directions/SQLite/Buffer/actual snapshot parsing/TreeSitter/native remain",
+      "observedCurrentSha256": "d1f6abd1c1a29cebde2f0aa8b577264d7273dbf7efe786a3c4651ca4b5551f55",
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧬️schema/🔣️.json",
+      "beforeSha256": "adc67a1ac15edb486efb4fee52102b4c9457e3e6ab07f61d604a5cc81aa6c2a2",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial directional/receiving testing authority; no production export/reader",
+      "observedCurrentSha256": null,
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧬️schema/🔣️.json",
+      "beforeSha256": "a193a0317c66b16803d75818783ee7413b79b6b7d0fb68af87cd5d0fefda0e3f",
+      "afterSha256": null,
+      "scope": "exclusive whole-trial directional/receiving testing authority; no production export/reader",
+      "observedCurrentSha256": null,
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "beforeSha256": "fdf8c9acfcd03ad36e5d1c2748e6e2a37f59a17a3181baf8346ffa1755ac22f9",
+      "guardedBeforeSha256": "5d2cc51f1df21a76a6a24cc3fa1561842ca39ee506920d327433b5a48ad660f1",
+      "afterSha256": "40393f3debc90060c6f650feae7fd4a6594d811c2eabc3abb7126bb19e92ceb8",
+      "scope": "only whole trial imports/Ajv compilation/wrapper mutants retired; original plain directions/SQLite/Buffer/actual snapshot parsing/TreeSitter/native remain",
+      "observedCurrentSha256": "40393f3debc90060c6f650feae7fd4a6594d811c2eabc3abb7126bb19e92ceb8",
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧬️schema/🔣️.json",
+      "beforeSha256": "538b3cc2cc9d6d33bf8e897195b9656007de084ad1d4360966ddded4fee9f952",
+      "afterSha256": null,
+      "scope": "exclusive Neural wave whole testing cases/laws authority; anonymous fragment only used by corpus reader",
+      "observedCurrentSha256": null,
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧪️tests/🟦️.ts",
+      "beforeSha256": "27239795f29c15ee91595f1e0401e53e4c94daa56c9846d35cc7cb1a40910d0b",
+      "guardedBeforeSha256": "e36decafc30165f49329020e6b6dcb949056aae2436c17f5df8dbc26d31a1a0e",
+      "afterSha256": "f2d99aaa97a113b148c7240904b71658f50ecba15ba500d6fa52ce812e1175ef",
+      "scope": "only whole trial import/Ajv compilation/extra wrapper mutant retired; independent JSONPatch/input/original-neuron identity preserved",
+      "observedCurrentSha256": "f2d99aaa97a113b148c7240904b71658f50ecba15ba500d6fa52ce812e1175ef",
+      "matchesAuthoredAfter": true
+    }
+  ],
+  "preservedObservers": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧫️fixtures/🔣️.json",
+      "sha256": "4d528668d4d29e9d3e5965a6ea8be6123ef350afcc5e451985c75fb4c3b9adac",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "4d528668d4d29e9d3e5965a6ea8be6123ef350afcc5e451985c75fb4c3b9adac",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "30ee0708b163c39e2ddfb73a68b46b9a2864b44ef38624d84c65878c95f7036e",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "30ee0708b163c39e2ddfb73a68b46b9a2864b44ef38624d84c65878c95f7036e",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs",
+      "sha256": "54b0be128abe61f4f498376ee34a2508b9cb76cbb25f193abfc5f50de34ac8b3",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "54b0be128abe61f4f498376ee34a2508b9cb76cbb25f193abfc5f50de34ac8b3",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs",
+      "sha256": "7c209e9c8c5c472e599e81fb0ce7f59397e1fac375d18c36dec414c1c93f82db",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "7c209e9c8c5c472e599e81fb0ce7f59397e1fac375d18c36dec414c1c93f82db",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧫️fixtures/🔣️.json",
+      "sha256": "0b8b7e5c618b0efdebc4e5991ed71f7dea39656d229c3b4d097cd5bb0071da84",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "0b8b7e5c618b0efdebc4e5991ed71f7dea39656d229c3b4d097cd5bb0071da84",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "6abaa2602e1afd730de64fb4f61c3eee6faf69f3dfc912e5c5fe2a8e2d36b4b7",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "6abaa2602e1afd730de64fb4f61c3eee6faf69f3dfc912e5c5fe2a8e2d36b4b7",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs",
+      "sha256": "d5a4cc12c9cd902d896e90dcc9969388d96302bbb38a8e78c1ad991e9cdd587f",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "d5a4cc12c9cd902d896e90dcc9969388d96302bbb38a8e78c1ad991e9cdd587f",
+      "matchesBefore": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs",
+      "sha256": "ecac0f127eab66c0c591d6d4067e1836ee96d8ac359ccd4842720306127f9b5d",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "ecac0f127eab66c0c591d6d4067e1836ee96d8ac359ccd4842720306127f9b5d",
+      "matchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🧫️fixtures/🔣️.json",
+      "sha256": "553d46484f17371b6a29691bedcd1fe868aeaffc2a4b93f22d281b337ba6bb4d",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "553d46484f17371b6a29691bedcd1fe868aeaffc2a4b93f22d281b337ba6bb4d",
+      "matchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🦀️.rs",
+      "sha256": "c44c422faad731ca5b230b62571bf850e164066a0b0bdada1e63fb54523bde43",
+      "classification": "Preserved plain/Rust observer",
+      "currentSha256": "c44c422faad731ca5b230b62571bf850e164066a0b0bdada1e63fb54523bde43",
+      "matchesBefore": true
+    }
+  ],
+  "boundaryRed": "Root26332 actualNx1/4817modules3760scopes7findings46shared",
+  "sourceRed": {
+    "neural": "Nx1/109ms1pass1fail9",
+    "csv": "13507 Nx1/520ms13pass1fail159",
+    "tsv": "57773 Nx1/615ms16pass1fail229"
+  },
+  "native": "UNCHANGED/UNRUN",
+  "sourceFreeze": false,
+  "sourceCurrent": {
+    "csv": {
+      "exit": 0,
+      "receipt": [
+        "14 pass",
+        "0 fail",
+        "156 expect() calls",
+        "Run duration:      200ms"
+      ],
+      "log": "🗑️generated/pub-b21-csv-current.log"
+    },
+    "tsv": {
+      "exit": 0,
+      "receipt": [
+        "17 pass",
+        "0 fail",
+        "225 expect() calls",
+        "Run duration:      486ms"
+      ],
+      "log": "🗑️generated/pub-b21-tsv-current.log"
+    },
+    "neural": {
+      "exit": 0,
+      "receipt": [
+        "2 pass",
+        "0 fail",
+        "7 expect() calls",
+        "Run duration:      68ms"
+      ],
+      "log": "🗑️generated/pub-b21-neural-current.log"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "copyPolicies",
+    "sameSource",
+    "sourceMovedBeforeAdmission",
+    "metadataCopiedBeforeAdmission",
+    "sameKeyedSlot",
+    "originalRequestRetained",
+    "responseRequiresGrant",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "copyPolicies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "sameSource": {
+      "const": true
+    },
+    "sourceMovedBeforeAdmission": {
+      "const": false
+    },
+    "metadataCopiedBeforeAdmission": {
+      "const": false
+    },
+    "sameKeyedSlot": {
+      "const": true
+    },
+    "originalRequestRetained": {
+      "const": true
+    },
+    "responseRequiresGrant": {
+      "const": true
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

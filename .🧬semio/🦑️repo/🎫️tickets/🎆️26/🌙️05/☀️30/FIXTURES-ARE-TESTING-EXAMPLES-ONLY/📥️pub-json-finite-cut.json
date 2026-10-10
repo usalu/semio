@@ -1,0 +1,111 @@
+{
+  "scope": "Finite current canonical callback/scalar/prefix typed diagnostic observation; no global freeze/owned iterator or collector completion",
+  "sourceObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "sha256": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔣️scalar/🦀️.rs",
+      "sha256": "7632cd4a05d08f6ee92ac9880b64ddf9bc21a3493865183e42825e0ca715fe43"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
+      "sha256": "42fe8bb4d526c7ab2e26874855ae6c972961db311a9495a845c932298b4ae77a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "7364ed9f0768002ac4b329950742307bbb22c16913e1dccd4bf430f4e05726fb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "sha256": "dd4cfc96dafdd0abd220606bbae57a1dd9344b3e4c0e8936fc6e200adf68e7c2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs",
+      "sha256": "9d915ad3ffb2d919f6caf8770c4f5f9bb264fdb637c5a13d3d9956b4c35375f4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🦀️.rs",
+      "sha256": "7e844efe15079e528cc8e566f44e6fba958212e4f30079c4e6d23f939e513a58"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "2cb3dd4541a6535a3cf627b3d6928f864ef152b817de674a1a031919805cc06e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🌱️value/🦀️.rs",
+      "sha256": "7b4d49a0fe132ef97c702a406b560d56d346fa66ac0e01f52b410a4b8a02dcde"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+      "sha256": "fdfa5b0e6210f7b41a31bb107c754f3d31c6d190f56894d7cd37e02377382f4d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🔤️text/🧪️tests/🦀️.rs",
+      "sha256": "bcf763cf13276f44bb5330ef6e26d352206ebcf6a15a95a0caf6aaa11e419cd7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+      "sha256": "98415366d3515473e1ed7e649168e3eaa416e525383c5bff9e5d6307eec665a5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "9dd8538fa965fd593b1877e41c5cdace8cce3a303964c8735e8a609f74058767"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📖️capture/🦀️.rs",
+      "sha256": "442127ea4c223640a13d435bda673b35fa2206e43a02c6ca328f01e02db9907b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs",
+      "sha256": "859ef256ce8f496958e01d5c589b56867e27e1981bf0ab188d8c41a150d27b55"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🧪️tests/🦀️.rs",
+      "sha256": "e3510f8282cf2ef9820e46ffb16d7f8b9f39577fb152c760c127c0a24435faa6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs",
+      "sha256": "1ad564de6c6f51b93579bbd3897399c7445c1e84e2c132884296231a50a9662d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/📦️codec/🫳️borrowed/🦀️.rs",
+      "sha256": "b0074b8b7d6776fe64475fca752fbe300110e6ecb9d125b50100b8fd39a01a32"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔏️canonical/🦀️.rs",
+      "sha256": "6e25b3e3483a94005b59c4cba6c5af66156925f03db4e630b76b32c9e38ec806"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔏️canonical/🦀️.rs",
+      "sha256": "f481c1adc3795b530022f9149ef90d2d21d866649d0512ed33d6dcd783cd2dac"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "d1dfac23a277c46ecf6b6c35a10713d576e2c0bdd8f89813bbb40db942c04da2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "3be61430667c4e820ce4816136d011e6fee1accf614a73785da37e72f8760647"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "cfe1476fa7a1fe8b0f1cf53f09853236f3a04e5d67b17e7d431ef4822ec82c5d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🦀️.rs",
+      "sha256": "8d10e42a9375f1acb1e428c8983585cdd099d4e89341bfc8aaa4db6e0cdf63a5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📬️preparation/🦀️.rs",
+      "sha256": "fb3e028bf84924522bd1645ade40d41f764b347401515318d31166aa4f2bee17"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs",
+      "sha256": "bceb956a80ed45dcba20e50a1d5a8146ce043fdf780ac7e41e4eb7db1b62f4f2"
+    }
+  ],
+  "cargo": "No own job",
+  "native": "New native laws UNRUN"
+}

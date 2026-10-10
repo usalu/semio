@@ -10,6 +10,7 @@ import { generation3dWidgetCreationSelfTests } from "../../🏅️standards/🔖
 import { resolve } from "node:path";
 import { testGeneration3dIoInputContracts } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts";
 import { testGeneration3dIoAuthorityFixture } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts";
+import { assertGeneration3dSemanticWire } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧬️semantic-wire/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -23,7 +24,7 @@ class OwnedVerifyScript extends BundleScript {
       const testRoot=join(this.repoRoot,"✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any");
       runCmd("bun",["test",`${testRoot}/🚪️io/📐️geometry/🧪️tests/🟦️.ts`,`${testRoot}/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/🧪️tests/🔬️oracle/🟦️.ts`],{cwd:this.repoRoot});
       runCmd("bun",[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--skipLibCheck",`${testRoot}/🚪️io/📐️geometry/🧪️tests/🟦️.ts`],{cwd:this.repoRoot});
-      if(segments[1]==="native")await runArtifactRustTests("semio-s-artifact-procedural-generation3d",this.repoRoot,["--lib","geometry_compute_context_","--","--nocapture"],["component-app-assembly"]);
+      if(segments[1]==="native")await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["--lib","geometry_compute_context_","--","--nocapture"], this.invocation.control, ["component-app-assembly"]);
       return;
     }
     if (segments[0] === "document-restoration-oracle") {
@@ -54,8 +55,8 @@ if (segments[0] === "generation3d-document-io") {
       if (preparedOracle && existsSync(preparedOracle)) await verifyPreparedGltfExportOracle(preparedOracle);
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧪️tests/🗿️artifact-surface/🟦️.ts`], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["quick", "--offline", "--test", "io-round-trip", "artifact_surface"]);
-        await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["quick", "--offline", "--lib", "document_io"], ["component-app-assembly"]);
+        await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["quick", "--offline", "--test", "io-round-trip", "artifact_surface"], this.invocation.control);
+        await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["quick", "--offline", "--lib", "document_io"], this.invocation.control, ["component-app-assembly"]);
       }
       return;
     }
@@ -77,12 +78,13 @@ if (segments[0] === "generation3d-preview-window-transient") {
 if (process.argv[2] === "canonical-io") {
   console.log(`generation3d-io-authority checks=${testGeneration3dIoAuthorityFixture()}`);
   console.log(`generation3d-io-input-contracts checks=${testGeneration3dIoInputContracts()}`);
-  await runArtifactRustTests("semio-s-artifact-procedural-generation3d", resolve(import.meta.dir, "../../../../../../.."), ["quick", "--locked", "--test", "io-round-trip"]);
+  await runArtifactRustTests("semio-s-artifact-procedural-generation3d", resolve(import.meta.dir, "../../../../../../.."), ["quick", "--locked", "--test", "io-round-trip"], this.invocation.control);
 } else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation3d", { ...{
   testFeatures: ["component-app-assembly"],
   snapshotSqliteTestFeatures: ["component-app-assembly"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],
   snapshotSqliteTestBudgetMs: 120000,
   twins: [
+    { name: "generation3d-semantic-wire", run: assertGeneration3dSemanticWire },
     { name: "generation3d-mesh-selection", run: generation3dMeshSelectionSelfTests },
     { name: "generation3d-widget-input", run: generation3dWidgetInputSelfTests },
     { name: "generation3d-widget-creation", run: generation3dWidgetCreationSelfTests },

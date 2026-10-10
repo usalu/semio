@@ -1,0 +1,9 @@
+# Original Selected Copy Current Execution
+
+Previous goal turn changed the original typed factory receiver and native refusal law, so it is classified as progress. Current tool handles55251/1476 are missing, no matching Cargo/Nx/nextest child existed on initial read, and old generated logs are absent. Those earlier pending runs have no result; no qualification is inferred.
+
+Current original production retains the typed FactoryRetirementTicket, returned original factory Arc, partial ticket and actual failed progress. Current natural whole-corpus schema was absent and the portable test logged wholeCorpusSchema=false. Restored the closed natural schema and strict Ajv whole-corpus admission with ten missing factory fields, extra factory field and extra root field rejection, preserving independent stable JSON/JSON pointer domain comparison. Source ticket probes remain.
+
+Both fresh commands terminated before Nx with ScriptPolicy maximumElapsedMilliseconds0 refused by the current defining minimum1 schema. No assertions executed. Only the two existing selected-copy rows now supply explicit finite caller invocation policies in both launcher authorities: source120000ms/native3600000ms. No bootstrap or invocation schema was changed. Original child grant remains unchanged. Fresh command replay is required.
+
+Portable26253 hit its finite120000ms process deadline during real Nx discovery; no assertions. Both exact source rows now carry1800000ms after that actual floor. Replay94136 terminated exit0:30 checks,18 strict/source ticket probes, canonical OwnedFields/Widget/Synapse plus independent stable JSON and pointer comparison. This qualifies the original source recipient and corpus only. Native46394 remains live, currently under canonical Cargo workspace preparation; no runtime factory custody claim. Input hashes/path-length checks are in original-flow-source-input-2026-10-10.json.

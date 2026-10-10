@@ -1,0 +1,11 @@
+{
+  "originalSourceHashes": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧬️schema/🔣️.json": "09ca4e65a07528a2b4e36c25718995b82a19f596d81a6b3ef13dbf77fc8de7ae",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts": "4d2b69c812c621da0475a4c1fd693d3abf6b5fb63c31af5bab269e00fcaa8f0d",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧫️fixtures/🔣️.json": "30ee0708b163c39e2ddfb73a68b46b9a2864b44ef38624d84c65878c95f7036e",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs": "e745562815af98c6e8e6b5225dd58a450b8b7cb87a2c9e405c00eaac32550313",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs": "554f128a552092ab9632d45d5fd93268c735bd0c0071490a41407f3ce7d8c09f"
+  },
+  "classification": "Exclusive const equality to whole test policy; sole TS whole-trial Ajv compile/missing-field mutants, no production reader",
+  "sourceCopiesRetained": false
+}

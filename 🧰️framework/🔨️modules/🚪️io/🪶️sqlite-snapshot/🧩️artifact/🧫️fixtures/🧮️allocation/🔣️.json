@@ -67,12 +67,14 @@
   "cancellationDiagnostics": {
     "parentMessage": "relational SQLite transfer cancelled",
     "childMessage": "native encoding canceled",
+    "parentBacking": "borrowed",
+    "childBacking": "borrowed",
     "cases": [
       {
         "id": "parent-before-owned",
         "parent": 1,
         "child": 0,
-        "requestedBytes": 36
+        "requestedBytes": 0
       },
       {
         "id": "child-text-interior",

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { createAssetHttpServerV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
@@ -130,4 +131,4 @@ class ScaleScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await new ScriptRouter(import.meta.dir).register("run", RunScript).register("scale", ScaleScript).register("mcp",McpScript).run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dir).register("run", RunScript).register("scale", ScaleScript).register("mcp",McpScript)).run(process.argv.slice(2), original));

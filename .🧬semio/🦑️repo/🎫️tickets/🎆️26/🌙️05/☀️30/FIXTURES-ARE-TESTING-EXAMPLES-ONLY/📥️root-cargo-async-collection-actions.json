@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "18a10f4745d88485e50d00a72f4cf63afec6c428d53c113c54cb6dac42383d0c",
+      "afterSha256": "4509f6b6fddb76e12eefb3b92e4ef45dee09b5062d3ce82835f9fc8feb1e7ad7",
+      "exclusive": false,
+      "scope": "Actual async owner/member guards consume one shared fourcollection taxonomy before all presence/read/list paths"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

@@ -15,3 +15,7 @@ assert.equal(set.has(fixture.reusedKey),true);
 for(const key of fixture.taken){assert.equal(set.has(key),true);assert.equal(set.delete(key),true);}
 assert.equal(set.size,0);
 console.log("[DEBUG] Original generic membership corpus agrees with JavaScript Set and independent canonical JSON");
+
+import {test,expect} from "bun:test";
+
+test("original receipt order fold 2 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🧺️set.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original receipt/order/fold trial has no whole-corpus schema authority");});

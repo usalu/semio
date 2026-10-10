@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "registeredChild",
+    "originalRequest",
+    "zeroGrantMoves",
+    "closeRecomputes",
+    "terminalDrop",
+    "demand"
+  ],
+  "properties": {
+    "registeredChild": {
+      "const": true
+    },
+    "originalRequest": {
+      "const": true
+    },
+    "zeroGrantMoves": {
+      "const": false
+    },
+    "closeRecomputes": {
+      "const": false
+    },
+    "terminalDrop": {
+      "const": 0
+    },
+    "demand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

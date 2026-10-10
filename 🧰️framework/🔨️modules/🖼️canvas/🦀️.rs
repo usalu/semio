@@ -170,6 +170,12 @@ mod renderer {
         pub fn set_dash_pattern(&mut self, pattern: Vec<f64>) {
             self.dash_pattern = pattern;
         }
+        /// 👁️ Borrows the original dash sequence without allocating or transferring it.
+        pub fn dash_pattern(&self) -> &[f64] { &self.dash_pattern }
+        /// 📦️ Observes the original dash allocation extent before custody transfers.
+        pub fn dash_capacity(&self) -> usize { self.dash_pattern.capacity() }
+        /// 🎁️ Transfers only the original dash buffer while retaining the scalar style.
+        pub(crate) fn take_dash_pattern(&mut self) -> Vec<f64> { std::mem::take(&mut self.dash_pattern) }
         pub fn set_start_cap(&mut self, cap: Cap) {
             self.start_cap = cap;
         }
@@ -1210,6 +1216,9 @@ pub use renderer::draw_list;
 #[path = "♻️retirement/➰️path/🦀️.rs"]
 mod path_retirement;
 pub use path_retirement::CanvasPathRetirement;
+#[path = "♻️retirement/🖊️stroke/🦀️.rs"]
+mod stroke_retirement;
+pub use stroke_retirement::CanvasStrokeRetirement;
 pub use renderer::{
     advance_opaque_scene_retirement, opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8,
     Scene, Stroke,

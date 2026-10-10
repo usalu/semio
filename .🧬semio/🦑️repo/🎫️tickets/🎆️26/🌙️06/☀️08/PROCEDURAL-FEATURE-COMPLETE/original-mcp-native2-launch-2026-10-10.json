@@ -1,0 +1,22 @@
+{
+  "name": "🧪️test🌉️mcp🎟️original-caller🦀️native",
+  "type": "node-terminal",
+  "request": "launch",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "CARGO_BUILD_JOBS": "2",
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "CARGO_NET_OFFLINE": "true",
+    "NX_TUI": "false",
+    "NX_DAEMON": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"procedural:MCP:caller-native\",\"maximumElapsedMilliseconds\":3600000}",
+    "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"/Users/ueli/Documents/semio\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/framework-os-mcp-rs:test\",\"--excludeTaskDependencies\",\"--skip-nx-cache\",\"--skip-remote-cache\",\"--output-style=stream\",\"--\",\"long\",\"--offline\",\"--lib\",\"-E\",\"test(original_mcp_inference_preserves_required_caller_authority) | test(original_mcp_source_requires_exact_turn_revision_cancellation_and_work)\",\"--no-fail-fast\",\"--status-level\",\"pass\",\"--final-status-level\",\"all\",\"--\",\"--nocapture\"],\"native\":{\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":true}},\"selection\":[\"nx\",\"run\",\"@semio-tech/framework-os-mcp-rs:test\",\"--excludeTaskDependencies\",\"--skip-nx-cache\",\"--skip-remote-cache\",\"--output-style=stream\",\"--\",\"long\",\"--offline\",\"--lib\",\"-E\",\"test(original_mcp_inference_preserves_required_caller_authority) | test(original_mcp_source_requires_exact_turn_revision_cancellation_and_work)\",\"--no-fail-fast\",\"--status-level\",\"pass\",\"--final-status-level\",\"all\",\"--\",\"--nocapture\"]}"
+  },
+  "presentation": {
+    "group": "9_gates",
+    "order": 900.058094799
+  },
+  "command": "bun nx run @semio-tech/framework-os-mcp-rs:test --excludeTaskDependencies --skip-nx-cache --skip-remote-cache --output-style=stream -- long --offline --lib -E \"test(original_mcp_inference_preserves_required_caller_authority) | test(original_mcp_source_requires_exact_turn_revision_cancellation_and_work)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture"
+}

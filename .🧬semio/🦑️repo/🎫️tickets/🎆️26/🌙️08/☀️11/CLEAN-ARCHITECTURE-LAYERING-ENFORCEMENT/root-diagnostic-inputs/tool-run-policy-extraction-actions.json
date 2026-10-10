@@ -1,0 +1,62 @@
+{
+  "actions": [
+    {
+      "path": "/Users/ueli/Documents/semio/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "1288e1f6b47708adc21220915f5ec7aaf499a86e9015b01bfb56b76dcfba302d",
+      "afterSha256": "85e1d9d804ba9e24768e083d75fac6a1bf5abf4a38a686ec4a9f774a6054b9df",
+      "exclusive": false
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🧪️interactivity-tool-run-policy/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "b394e4fc27bf4ec1f84e01d3ea82479e1e74f87864c7689f3c30680e631f6ee9",
+      "afterSha256": "d2b88d09b3cde0b5e0552b8ab39ececea177cbc08751e007c60061fe1a51b409",
+      "exclusive": false
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/🔎️source/🟦️.ts",
+      "action": "created",
+      "sha256": "6f0cfb7c7d8949373a676f803d49313bc5d3fddc507eff3d28f1b4ac63b2977b"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts",
+      "action": "created",
+      "sha256": "92fb1bdaaac22009fa44b59e5f0c8e65385252c56f9c33ace8df7231d4f0ce58"
+    }
+  ],
+  "movedDefinitions": [
+    "interactivityCfgTestSameLineKind",
+    "interactivityCfgTestItemSpans",
+    "InteractivityToolRunRequirement",
+    "InteractivityToolRunSource",
+    "InteractivityToolRunFinding",
+    "InteractivityToolRunDeclaration",
+    "InteractivityToolRunTool",
+    "InteractivityToolRunIndex",
+    "INTERACTIVITY_TOOL_RUN_TRIGGER",
+    "INTERACTIVITY_TOOL_RUN_LEGACY_TRACE",
+    "INTERACTIVITY_TOOL_RUN_LOCAL_LIFECYCLE",
+    "INTERACTIVITY_TOOL_RUN_RESERVED",
+    "INTERACTIVITY_TOOL_RUN_INDEXES",
+    "interactivityToolRunWithin",
+    "interactivityToolRunScopePath",
+    "interactivityToolRunCode",
+    "interactivityToolRunEnclosing",
+    "interactivityToolRunIndex",
+    "interactivityToolRunTools",
+    "interactivityToolRunInScope",
+    "interactivityToolRunToken",
+    "interactivityToolRunLocalLifecycleFailures",
+    "interactivityToolRunLegacyTraceFailures",
+    "interactivityToolRunDeclarationFailures",
+    "interactivityToolRunReservedActionFailures",
+    "PolicyModSpan",
+    "policyMaskLiterals",
+    "POLICY_MOD_ANY_OPEN_RE",
+    "policyTestModSpans",
+    "policyLineInTestMod"
+  ],
+  "sourceBodiesCopied": false,
+  "rootInventoryAndScanRetained": true
+}

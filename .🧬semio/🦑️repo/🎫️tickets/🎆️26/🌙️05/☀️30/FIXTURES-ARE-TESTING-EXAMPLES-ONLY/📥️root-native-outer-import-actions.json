@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "477824bc29984e5cde386ca54e0efeaf415f227adc5616d276b9a1b326beca53",
+      "afterSha256": "2ba6c56827d20c1a503df7ba4a9005fae83d3416ab30c9260dc92e430df82cd3",
+      "exclusive": false,
+      "scope": "Correct actual sibling production policy and canonical invocation imports"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

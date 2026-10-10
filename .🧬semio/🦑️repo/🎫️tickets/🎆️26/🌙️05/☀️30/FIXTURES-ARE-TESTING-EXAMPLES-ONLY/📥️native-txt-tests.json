@@ -1,0 +1,12 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🫴️receiving.json",
+    "before": null,
+    "after": "cc3e3ac708bd1ab6407023fc22898ecf593efd0b4192ec068562379d82c23b3d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "before": "2356723efb5a7ea45b550be8e5dad9b0763b04125d85164f53697ab58f0050a9",
+    "after": "30e6cc5046d9b206833acce8ef9dba42bd8d911dbf526f0994ba7dc0f8d8c76c"
+  }
+]

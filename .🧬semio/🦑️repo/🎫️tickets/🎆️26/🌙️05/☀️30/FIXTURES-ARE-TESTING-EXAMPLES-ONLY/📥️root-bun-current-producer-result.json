@@ -1,0 +1,22 @@
+{
+  "exitCode": 0,
+  "scopeCount": 6,
+  "patternsByScope": {
+    "package.json": 970,
+    "♻️mit-bestand/package.json": 1902,
+    "✏️s/package.json": 1900,
+    "🌎️hub/package.json": 1938,
+    "🎓️teaching/package.json": 973,
+    "🏢️semio-tech/package.json": 1905
+  },
+  "packagesByScope": {
+    "package.json": 93,
+    "♻️mit-bestand/package.json": 257,
+    "✏️s/package.json": 254,
+    "🌎️hub/package.json": 261,
+    "🎓️teaching/package.json": 95,
+    "🏢️semio-tech/package.json": 255
+  },
+  "logSha256": "68a48879d26f43ffb47d7c1ae77572821454cdb103390dc6249372bed76ad119",
+  "qualification": "Actual original current Bun ownership/native-pattern producer via independent private Nx exec; six source manifests reconciled with current beforeHash guards. Normal CLI route and actual real root installations not proved."
+}

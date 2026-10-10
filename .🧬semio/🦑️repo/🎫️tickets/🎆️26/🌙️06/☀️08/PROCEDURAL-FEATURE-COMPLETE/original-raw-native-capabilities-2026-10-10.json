@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "repositoryRoot": "/Users/ueli/Documents/semio",
+  "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+  "command": {
+    "kind": "native-owner-command",
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "workingDirectory": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+    "program": "bun",
+    "arguments": [
+      "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts",
+      "test",
+      "long",
+      "--offline",
+      "--lib",
+      "-E",
+      "test(original_extension_invoke_lends_caller_context_and_retains_pending_source) | test(original_extension_invoke_refusal_preserves_owned_payload_and_actual_receipt) | test(original_extension_invoke_fault_reply_preserves_source_system_receipts_and_canonical_wire) | test(original_extension_invoke_fault_reply_cancel_closes_original_prefix_and_output)",
+      "--",
+      "--nocapture"
+    ]
+  },
+  "transport": {
+    "maximumBytes": 134217728,
+    "maximumLines": 1000000
+  },
+  "child": {
+    "maximumElapsedMilliseconds": 3600000
+  },
+  "network": {
+    "offline": true
+  }
+}

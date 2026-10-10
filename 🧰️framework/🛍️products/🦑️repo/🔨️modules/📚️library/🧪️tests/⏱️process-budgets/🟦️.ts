@@ -10,6 +10,7 @@ import { defaultBudgetMs, workspaceScriptExists } from "../../🏃️process/�
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
 
 const budgetPath = fileURLToPath(new URL("../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts", import.meta.url));
+const processInvocationPath = fileURLToPath(new URL("../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts", import.meta.url));
 const libraryPath = fileURLToPath(new URL("../../📦️packages/🟦️typescript/🟦️.ts", import.meta.url));
 /** 🧵️ The Execa 1.x completion oracle, typed at its CommonJS boundary. */
 type ExecaOracle = (file: string, args: readonly string[], options: { readonly env?: NodeJS.ProcessEnv; readonly timeout?: number; readonly reject?: boolean }) => Promise<{ readonly code: number | null; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean }>;
@@ -21,7 +22,7 @@ test("owned snapshot Cargo feature admission remains separate from the ordinary 
  const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactRoot)throw Error("SEMIO_TEST_ARTIFACT_DIR must name the ticket generated directory");
  const root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),runner=fileURLToPath(new URL("../../⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",import.meta.url));
  for(const row of corpus.cases){const output=mkdtempSync(join(artifactRoot,"snapshot-features-"));
-  const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});mock.module(${JSON.stringify(libraryPath)},()=>({...library,runRepositoryCargoTests:async(packages,cwd,args)=>{console.log(JSON.stringify({packages,cwd,args}));console.log("owned-assertions-complete")}}));process.argv=[process.execPath,"owned-route",...${JSON.stringify(row.command)}];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});await runArtifactRustPackageMain(${JSON.stringify(join(root,corpus.packageRoot))},${JSON.stringify(corpus.packageName)},{testFeatures:${JSON.stringify(corpus.ordinaryFeatures)},snapshotSqliteTestFeatures:${row.snapshotFeatures===undefined?"undefined":JSON.stringify(row.snapshotFeatures)},snapshotSqliteTests:["owned-test-source"]});`;
+  const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});mock.module(${JSON.stringify(libraryPath)},()=>({...library,runRepositoryCargoTests:async(packages,cwd,control,args)=>{console.log(JSON.stringify({packages,cwd,args}));console.log("owned-assertions-complete")}}));process.argv=[process.execPath,"owned-route",...${JSON.stringify(row.command)}];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});await runArtifactRustPackageMain(${JSON.stringify(join(root,corpus.packageRoot))},${JSON.stringify(corpus.packageName)},{testFeatures:${JSON.stringify(corpus.ordinaryFeatures)},snapshotSqliteTestFeatures:${row.snapshotFeatures===undefined?"undefined":JSON.stringify(row.snapshotFeatures)},snapshotSqliteTests:["owned-test-source"]});`;
   const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_TEST_ARTIFACT_DIR:output},timeout:10000,reject:false});if(result.code!==0)throw Error(`Owned feature route failed: ${result.stdout}\n${result.stderr}`);expect(result.code).toBe(0);expect(result.stdout).toContain("owned-assertions-complete");
   const call=JSON.parse(result.stdout.split(/\r?\n/u).find(line=>line.startsWith("{"))!);expect(call.packages).toEqual([corpus.packageName]);expect(call.cwd).toBe(root.replace(/[/\\]$/u,""));expect(call.args.flatMap((value:string,index:number)=>value==="--features"?[call.args[index+1]]:[])).toEqual(row.expectedFeatures);expect(call.args).toContain("--lib");
 
@@ -115,7 +116,8 @@ test("process budgets let captured nextest compilation finish before budgeted as
       spawn: (cmd, args, opts) => cmd === "cargo" ? spawn(process.execPath, ["-e", args.includes("list") ? "await Bun.sleep(120); console.log('{}')" : "console.log('assertions-complete')"], opts) : spawn(cmd, args, opts),
     }));
     const { runRepositoryCargoTests } = await import(${JSON.stringify(libraryPath)});
-    await runRepositoryCargoTests(["semio-s-artifact-stdio-mp4"], process.cwd());
+    const {receiveScriptProcessInvocation}=await import(${JSON.stringify(processInvocationPath)});
+    await receiveScriptProcessInvocation(process.env, original => runRepositoryCargoTests(["semio-s-artifact-stdio-mp4"], process.cwd(), original.control));
   `;
   const result = await execa(process.execPath, ["-e", code], { env: { ...cleanEnv(), SEMIO_BUILD_BUDGET_MS: "0", SEMIO_TEST_BUDGET_MS: "1000", SEMIO_TEST_ARTIFACT_DIR: directory }, timeout: 5000, reject: false });
   expect(result.code, result.stderr).toBe(0);
@@ -141,7 +143,8 @@ for (const nextest of [true, false]) {
         },
       }));
       const { runRepositoryCargoTests } = await import(${JSON.stringify(libraryPath)});
-      await runRepositoryCargoTests(["semio-s-artifact-stdio-mp4"], process.cwd());
+      const {receiveScriptProcessInvocation}=await import(${JSON.stringify(processInvocationPath)});
+    await receiveScriptProcessInvocation(process.env, original => runRepositoryCargoTests(["semio-s-artifact-stdio-mp4"], process.cwd(), original.control));
     `;
     const result = await execa(process.execPath, ["-e", code], { env: { ...cleanEnv(), SEMIO_COVERAGE: "1", SEMIO_TEST_BUDGET_MS: "200" }, timeout: 5000, reject: false });
     expect(result.code, result.stderr).toBe(0);
@@ -170,7 +173,7 @@ test("process budgets bind nested native workspace profiles to the repository co
   
   expect(corpus["schemaVersion"]).toEqual(1);expect(corpus["configPath"]).toEqual(".config/nextest.toml");expect(corpus["periods"]["fundamental"]).toEqual("15s");expect(corpus["periods"]["quick"]).toEqual("300s");expect(corpus["periods"]["long"]).toEqual("900s");expect(corpus["periods"]["exhaustive"]).toEqual("1800s");expect(corpus["nativePackage"]["name"]).toEqual("semio-s-artifact-stdio-mp4");expect(corpus["nativePackage"]["workspace"]).toEqual("✏️s");expect(corpus["nativePackage"]["manifest"]).toEqual("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml");
   for(const coverage of corpus.coverage){
-    const code=`const{mock}=await import("bun:test");const preparePath=${JSON.stringify(fileURLToPath(new URL("../../🗂️workspaces/🦀️cargo/📜️script.ts",import.meta.url)))};const originalBunSpawnSync=Bun.spawnSync.bind(Bun);Bun.spawnSync=(args,options)=>args[1]===preparePath?{exitCode:0,stdout:new Uint8Array(),stderr:new Uint8Array()}:originalBunSpawnSync(args,options);const native=await import("node:child_process");const spawn=native.spawn,spawnSync=native.spawnSync;mock.module("node:child_process",()=>({...native,spawnSync:(cmd,args,opts)=>cmd==="cargo"?{status:0}:spawnSync(cmd,args,opts),spawn:(cmd,args,opts)=>{if(cmd!=="cargo")return spawn(cmd,args,opts);console.error(JSON.stringify(args));return spawn(process.execPath,["-e",args.includes("list")?"console.log('{}')":"console.log('native-complete')"],opts)}}));const{runRepositoryCargoTests,getWorkspaceRoot}=await import(${JSON.stringify(libraryPath)});console.error(JSON.stringify({root:getWorkspaceRoot()}));await runRepositoryCargoTests([${JSON.stringify(corpus.nativePackage.name)}],process.cwd());`;
+    const code=`const{mock}=await import("bun:test");const preparePath=${JSON.stringify(fileURLToPath(new URL("../../🗂️workspaces/🦀️cargo/📜️script.ts",import.meta.url)))};const originalBunSpawnSync=Bun.spawnSync.bind(Bun);Bun.spawnSync=(args,options)=>args[1]===preparePath?{exitCode:0,stdout:new Uint8Array(),stderr:new Uint8Array()}:originalBunSpawnSync(args,options);const native=await import("node:child_process");const spawn=native.spawn,spawnSync=native.spawnSync;mock.module("node:child_process",()=>({...native,spawnSync:(cmd,args,opts)=>cmd==="cargo"?{status:0}:spawnSync(cmd,args,opts),spawn:(cmd,args,opts)=>{if(cmd!=="cargo")return spawn(cmd,args,opts);console.error(JSON.stringify(args));return spawn(process.execPath,["-e",args.includes("list")?"console.log('{}')":"console.log('native-complete')"],opts)}}));const{runRepositoryCargoTests,getWorkspaceRoot}=await import(${JSON.stringify(libraryPath)});console.error(JSON.stringify({root:getWorkspaceRoot()}));const{receiveScriptProcessInvocation}=await import(${JSON.stringify(processInvocationPath)});await receiveScriptProcessInvocation(process.env,original=>runRepositoryCargoTests([${JSON.stringify(corpus.nativePackage.name)}],process.cwd(),original.control));`;
     const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_COVERAGE:coverage?"1":"0",SEMIO_TEST_LEVEL:corpus.profile},timeout:12000,reject:false});
     if(result.code!==0)throw Error(`Native profile route failed: ${result.stdout}\n${result.stderr}`);expect(result.code).toBe(0);
     const records=result.stderr.replace(/\u001b\[[0-9;]*m/g,"").split(/\r?\n/u).map(line=>line.trim()).filter(line=>line.startsWith('["')||line.startsWith('{"root":')).map(line=>JSON.parse(line));

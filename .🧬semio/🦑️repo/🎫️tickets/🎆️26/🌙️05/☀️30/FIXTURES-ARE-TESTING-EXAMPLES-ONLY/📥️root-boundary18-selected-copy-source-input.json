@@ -1,0 +1,3 @@
+{
+  "code": "const owner=await import('/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts');console.log('[DEBUG] Actual original selected-copy reader result='+await owner.flowSelectedCopySelfTests());"
+}

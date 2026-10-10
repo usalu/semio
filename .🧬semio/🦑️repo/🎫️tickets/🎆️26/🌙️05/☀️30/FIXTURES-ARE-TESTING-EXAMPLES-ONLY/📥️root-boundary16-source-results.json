@@ -1,0 +1,14 @@
+{
+  "sourceTests": {
+    "session": 43908,
+    "exitCode": 0,
+    "log": "🗑️generated/root-boundary16-tests.log"
+  },
+  "originalExports": {
+    "session": 88278,
+    "exitCode": 0,
+    "log": "🗑️generated/root-boundary16-exports.log"
+  },
+  "nativeExecution": false,
+  "normalCliInvocation": false
+}

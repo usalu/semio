@@ -11,6 +11,7 @@ pub struct KernelActivationRequest {
     pub lane: Lane,
     pub window: Option<WindowId>,
     pub event: ActivationEvent,
+    pub retained: RetainedTurnInput,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -68,7 +69,7 @@ impl Kernel {
         if self.actors.contains_key(&actor) {
             return Err(KernelActivationRefused { request, reason: KernelActivationFault::Occupied });
         }
-        let budget = lane_defaults::budget_for(request.lane);
+        let budget = lane_defaults::budget_for(request.lane, request.retained);
         let shard = if request.lane == Lane::Interactive {
             let avoid = self.saturated_shards().await;
             self.shards.pin_avoiding(actor, &avoid).await

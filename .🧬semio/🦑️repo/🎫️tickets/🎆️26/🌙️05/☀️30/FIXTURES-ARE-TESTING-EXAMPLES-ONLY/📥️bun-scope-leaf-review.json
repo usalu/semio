@@ -1,0 +1,26 @@
+{
+  "owned": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "sha256": "7e9ccc5fb7ad7b3181edd750be0391d879a81c74b0602207b0a34a0e97508596"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json",
+      "sha256": "abc18179a0ae9292731d9cfd7a32271284e69da7feec17232a4c1ad42cd5c43d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️schema/🔣️.json",
+      "sha256": "6dc41ba0fcebb76f3f67f718b8be2d34afdf6ad261d1ee5cde977ed64cf5093f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "sha256": "bc01aac463e6b9b96dc9d4f37431addeb9f6425141a46ebdcaad3d6cd4e01009"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+      "sha256": "7fee3bf98df2ed143b80021e9b07800a247c247e6e8d18bace76e43e655b146b"
+    }
+  ]
+}

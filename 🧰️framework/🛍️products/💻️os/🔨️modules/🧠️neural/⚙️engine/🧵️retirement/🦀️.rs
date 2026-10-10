@@ -1,6 +1,6 @@
 //! 🧹️ Exact nested-value retirement and explicitly synchronous construction owners.
 
-use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, NeuronSnapshot, OperatorInfo, Schema, TreeSnapshot, Value, ValueType};
+use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, OperatorInfo, Schema, TreeSnapshot, Value, ValueType};
 use protocol::value::ordered::{OrderedMap, RetirementStep,SharedOwner,UpdateCursor};
 use semio_framework_value::list::PagedList;
 use protocol::causal::transition::HistoryFoldIndex;
@@ -126,8 +126,13 @@ semio_framework_value::artifact_retire_struct!(OperatorInfo {id,extension,name,a
 semio_framework_value::artifact_retire_struct!(super::Tree {neurons,synapses});
 semio_framework_value::artifact_retire_struct!(super::Neuron {id,kind,params,tree});
 semio_framework_value::artifact_retire_struct!(super::Synapse {id,from,to,from_port,to_port});
-semio_framework_value::artifact_retire_struct!(NeuronSnapshot {key,incoming,dependents});
-semio_framework_value::artifact_retire_struct!(TreeSnapshot {neurons,seed_keys});
+struct SnapshotTreeLease(Arc<super::Tree>);
+struct SnapshotSeedLease(Arc<HistoryFoldIndex<String,Dictionary>>);
+impl RetireOwned for SnapshotTreeLease{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.0))}fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<super::Tree>())}fn controlled_retirement_supported()->bool{true}}
+impl RetireOwned for SnapshotSeedLease{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.0))}fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<HistoryFoldIndex<String,Dictionary>>())}fn controlled_retirement_supported()->bool{true}}
+#[derive(semio_framework_value::RetireOwned)]
+struct SnapshotSources{tree:SnapshotTreeLease,seeds:SnapshotSeedLease}
+impl RetireOwned for TreeSnapshot{fn retirement(self)->Box<dyn RetirementCursor>{SnapshotSources{tree:SnapshotTreeLease(self.tree),seeds:SnapshotSeedLease(self.seeds)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<super::Tree>(),semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<HistoryFoldIndex<String,Dictionary>>()])}fn controlled_retirement_supported()->bool{true}}
 semio_framework_value::artifact_retire_struct!(EvalChannels {outputs,inputs});
 semio_framework_value::artifact_retire_struct!(super::OperatorImpl {schemas,operator});
 semio_framework_value::artifact_retire_struct!(super::OperatorRecord {info,implementations});

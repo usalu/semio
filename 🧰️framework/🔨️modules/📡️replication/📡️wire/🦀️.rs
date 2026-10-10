@@ -16,6 +16,8 @@
 //! their `read_*` twins); this crate adds only the option/vec combinators and the frame/nested-enum
 //! tag dispatch below.
 
+pub use crate::io::presence::{borrow_presence_metadata, BorrowedPresenceMetadata, BorrowedPresenceInteraction, BorrowedPresenceDomain, BorrowedPresenceStrings};
+
 use std::collections::BTreeMap;
 
 //#region 🔖️Lane
@@ -629,13 +631,13 @@ async fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>
 async fn write_opt_frontier(out: &mut Vec<u8>, value: &Option<crate::causal::FrontierSummary>) {
     crate::write_bool(out, value.is_some());
     if let Some(f) = value {
-        crate::causal::encode_frontier(f, out);
+        crate::io::binary::causal::encode_frontier(f, out);
     }
 }
 
 async fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<crate::causal::FrontierSummary>, crate::ProtocolError> {
     if crate::read_bool(bytes, pos)? {
-        Ok(Some(crate::causal::decode_frontier(bytes, pos)?))
+        Ok(Some(crate::io::binary::causal::decode_frontier(bytes, pos)?))
     } else {
         Ok(None)
     }
@@ -660,7 +662,7 @@ async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, c
 async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::causal::MutationEnvelope]) {
     crate::wire::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::causal::encode_envelope(value, out);
+        crate::io::binary::causal::encode_envelope(value, out);
     }
 }
 
@@ -668,7 +670,7 @@ async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::c
     let count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut out = Vec::with_capacity((count as usize).min(bytes.len()));
     for _ in 0..count {
-        out.push(crate::causal::decode_envelope(bytes, pos)?);
+        out.push(crate::io::binary::causal::decode_envelope(bytes, pos)?);
     }
     Ok(out)
 }
@@ -681,14 +683,14 @@ fn encode_artifact_bootstrap(bootstrap: &ArtifactBootstrap, out: &mut Vec<u8>) {
     crate::write_str(out, &bootstrap.artifact_schema);
     crate::write_str(out, &bootstrap.artifact_kind);
     crate::write_hash32(out, &bootstrap.pack_schema_hash);
-    crate::causal::encode_frontier(&bootstrap.baseline_frontier, out);
+    crate::io::binary::causal::encode_frontier(&bootstrap.baseline_frontier, out);
     crate::write_hash32(out, &bootstrap.pack_hash);
     crate::write_hash32(out, &bootstrap.spr_hash);
     crate::wire::write_varint_u64(out, bootstrap.pack_length);
     crate::wire::write_varint_u64(out, bootstrap.spr_length);
     crate::wire::write_varint_u64(out, bootstrap.chunk_count as u64);
     crate::write_hash32(out, &bootstrap.aggregate_hash);
-    crate::causal::encode_frontier(&bootstrap.required_tail_frontier, out);
+    crate::io::binary::causal::encode_frontier(&bootstrap.required_tail_frontier, out);
     crate::write_bool(out, bootstrap.inline.is_some());
     if let Some(pair) = &bootstrap.inline {
         crate::write_bytes(out, &pair.pack);
@@ -729,14 +731,14 @@ fn decode_artifact_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<ArtifactBo
         artifact_schema: read_artifact_bootstrap_string(bytes, pos, "artifact schema")?,
         artifact_kind: read_artifact_bootstrap_string(bytes, pos, "artifact kind")?,
         pack_schema_hash: crate::read_hash32(bytes, pos)?,
-        baseline_frontier: crate::causal::decode_frontier(bytes, pos)?,
+        baseline_frontier: crate::io::binary::causal::decode_frontier(bytes, pos)?,
         pack_hash: crate::read_hash32(bytes, pos)?,
         spr_hash: crate::read_hash32(bytes, pos)?,
         pack_length: crate::wire::read_varint_u64(bytes, pos)?,
         spr_length: crate::wire::read_varint_u64(bytes, pos)?,
         chunk_count: u32::try_from(crate::wire::read_varint_u64(bytes, pos)?).map_err(|_| artifact_bootstrap_error("chunk count exceeds u32"))?,
         aggregate_hash: crate::read_hash32(bytes, pos)?,
-        required_tail_frontier: crate::causal::decode_frontier(bytes, pos)?,
+        required_tail_frontier: crate::io::binary::causal::decode_frontier(bytes, pos)?,
         inline: None,
     };
     let inline = crate::read_bool(bytes, pos)?;
@@ -788,7 +790,7 @@ async fn encode_apply_outcome(outcome: &ApplyOutcome, out: &mut Vec<u8>) {
         ApplyOutcome::Accepted => out.push(0),
         ApplyOutcome::Transformed { envelope } => {
             out.push(1);
-            crate::causal::encode_envelope(envelope, out);
+            crate::io::binary::causal::encode_envelope(envelope, out);
         }
         ApplyOutcome::Rejected { reason, messages } => {
             out.push(2);
@@ -806,7 +808,7 @@ async fn decode_apply_outcome(bytes: &[u8], pos: &mut usize) -> Result<ApplyOutc
     *pos += 1;
     match tag {
         0 => Ok(ApplyOutcome::Accepted),
-        1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(crate::causal::decode_envelope(bytes, pos)?) }),
+        1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(crate::io::binary::causal::decode_envelope(bytes, pos)?) }),
         2 => Ok(ApplyOutcome::Rejected { reason: crate::read_str(bytes, pos)?, messages: crate::read_bytes(bytes, pos)? }),
         other => Err(malformed("wire apply-outcome tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
@@ -875,7 +877,7 @@ pub async fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
         }
         ClientFrame::FrontierAdvertise { frontier } => {
             out.push(2);
-            crate::causal::encode_frontier(frontier, &mut out);
+            crate::io::binary::causal::encode_frontier(frontier, &mut out);
         }
         ClientFrame::PreviewPublish { key, seq, payload } => {
             out.push(3);
@@ -914,7 +916,7 @@ pub async fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), cr
     pos += 1;
     let frame = match tag {
         1 => ClientFrame::Commands { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
-        2 => ClientFrame::FrontierAdvertise { frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
+        2 => ClientFrame::FrontierAdvertise { frontier: crate::io::binary::causal::decode_frontier(bytes, &mut pos)? },
         3 => ClientFrame::PreviewPublish { key: crate::read_str(bytes, &mut pos)?, seq: crate::wire::read_varint_u64(bytes, &mut pos)?, payload: crate::read_bytes(bytes, &mut pos)? },
         4 => ClientFrame::Presence { peer: crate::read_bytes(bytes, &mut pos)? },
         5 => ClientFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
@@ -941,7 +943,7 @@ pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
             out.push(0);
             crate::write_str(&mut out, session_id);
             crate::write_str(&mut out, resume_token);
-            crate::causal::encode_frontier(server_frontier, &mut out);
+            crate::io::binary::causal::encode_frontier(server_frontier, &mut out);
             encode_bootstrap(bootstrap, &mut out).await;
         }
         ServerFrame::SnapshotChunk { seq, bytes } => {
@@ -957,13 +959,13 @@ pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
             out.push(3);
             write_vec_envelope(&mut out, envelopes).await;
             crate::write_str(&mut out, &origin.0);
-            crate::causal::encode_frontier(frontier, &mut out);
+            crate::io::binary::causal::encode_frontier(frontier, &mut out);
         }
         ServerFrame::Ack { batch_id, stages, frontier } => {
             out.push(4);
             crate::wire::write_varint_u64(&mut out, *batch_id);
             write_vec_ack_stage(&mut out, stages).await;
-            crate::causal::encode_frontier(frontier, &mut out);
+            crate::io::binary::causal::encode_frontier(frontier, &mut out);
         }
         ServerFrame::Preview { actor, key, seq, payload } => {
             out.push(5);
@@ -1007,7 +1009,7 @@ pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
             crate::write_str(&mut out, &control.document_id);
             crate::write_hash32(&mut out, &control.checkpoint_id);
             crate::write_hash32(&mut out, &control.descriptor_hash);
-            crate::causal::encode_frontier(&control.baseline_frontier, &mut out);
+            crate::io::binary::causal::encode_frontier(&control.baseline_frontier, &mut out);
         }
     }
     out
@@ -1054,13 +1056,13 @@ pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), cr
         0 => ServerFrame::Welcome {
             session_id: crate::read_str(bytes, &mut pos)?,
             resume_token: crate::read_str(bytes, &mut pos)?,
-            server_frontier: crate::causal::decode_frontier(bytes, &mut pos)?,
+            server_frontier: crate::io::binary::causal::decode_frontier(bytes, &mut pos)?,
             bootstrap: decode_bootstrap(bytes, &mut pos).await?,
         },
         1 => ServerFrame::SnapshotChunk { seq: crate::wire::read_varint_u64(bytes, &mut pos)? as u32, bytes: read_snapshot_chunk_bytes(bytes, &mut pos)? },
         2 => ServerFrame::SnapshotDone { seq_count: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
-        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?.into()), frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
-        4 => ServerFrame::Ack { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos).await?, frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
+        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?.into()), frontier: crate::io::binary::causal::decode_frontier(bytes, &mut pos)? },
+        4 => ServerFrame::Ack { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos).await?, frontier: crate::io::binary::causal::decode_frontier(bytes, &mut pos)? },
         5 => ServerFrame::Preview { actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?.into()), key: crate::read_str(bytes, &mut pos)?, seq: crate::wire::read_varint_u64(bytes, &mut pos)?, payload: crate::read_bytes(bytes, &mut pos)? },
         6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos).await? },
         7 => ServerFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
@@ -1078,7 +1080,7 @@ pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), cr
                 document_id: read_artifact_bootstrap_string(bytes, &mut pos, "rebootstrap document")?,
                 checkpoint_id: crate::read_hash32(bytes, &mut pos)?,
                 descriptor_hash: crate::read_hash32(bytes, &mut pos)?,
-                baseline_frontier: crate::causal::decode_frontier(bytes, &mut pos)?,
+                baseline_frontier: crate::io::binary::causal::decode_frontier(bytes, &mut pos)?,
             };
             validate_rebootstrap_required(&control)?;
             ServerFrame::RebootstrapRequired { control }

@@ -1,0 +1,88 @@
+{
+  "capturedUtc": "2026-10-09T22:31:09.142905+00:00",
+  "inputs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+      "sha256": "79519820bd9c86d5ce8b91ef0c125895b843c8e03cf5454970ae7fae4bcbc3f7",
+      "absoluteUtf16Length": 92
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🦀️.rs",
+      "sha256": "b824c658b208955f11e50b4c615be22f953502f4d559b69946de4f698c6a8c9c",
+      "absoluteUtf16Length": 106
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️host-source/🔣️.json",
+      "sha256": "d897526a2ca1e3b5b7d8cec0c2e28693064b18c00d5b84728ad01f7d5c6fa099",
+      "absoluteUtf16Length": 135
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+      "sha256": "1645682b2060e95bc70ecfa433f1948fdfbdbbf4b97650ff4f2e334feeff126e",
+      "absoluteUtf16Length": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+      "sha256": "7b755542c32c20c7fc47109a29eec44e21dc5a23ce389d3b1ce063efc9ec61c3",
+      "absoluteUtf16Length": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧫️fixtures/🔣️.json",
+      "sha256": "361b2c6188069d432e5cca527b12c243f13ca36a557d984a3352bb318e4aadb6",
+      "absoluteUtf16Length": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": "0bd65a5e98aa00e3827c2479375ad534bd2664fe0c161e9fc96bb488cf2fd814",
+      "absoluteUtf16Length": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+      "sha256": "7dc9a9ff742b261ec9e5748caef0389d7ff98e9d0b5b52ecdebc6ce3eb80962c",
+      "absoluteUtf16Length": 113
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs",
+      "sha256": "56affa8d3525abed5cc1166ae2cc0ce992482d754ea81cafeb450487e04796aa",
+      "absoluteUtf16Length": 104
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+      "sha256": "25453be62bea093eabdaa5b6c96684b6269b313757f0ac850021e834692997fa",
+      "absoluteUtf16Length": 121
+    }
+  ],
+  "qualifiedPortable": {
+    "copy": {
+      "session": 94136,
+      "checks": 30,
+      "scope": "strict corpus and source receiver"
+    },
+    "bridge": {
+      "session": 23561,
+      "cases": 4,
+      "assertions": 49,
+      "scope": "mock raw exports through actual receiver and source gate"
+    },
+    "vcs": {
+      "session": 74827,
+      "admissionCases": 8,
+      "receiptCases": 8,
+      "assertions": 70,
+      "scope": "schema/SQLite reference and source receiving"
+    },
+    "host": {
+      "session": 37197,
+      "originalFields": 39,
+      "scope": "strict corpus and source custody"
+    }
+  },
+  "unqualified": [
+    "selected-copy physical native",
+    "original VCS/Host/Domain physical native",
+    "original normal failed Bridge native boundary",
+    "full Bridge typed cause and Box/reply lifecycle",
+    "generated Wasm binary/browser publication",
+    "complete arbitrary BRep/Mesh Enduser workflow"
+  ]
+}

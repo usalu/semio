@@ -1,0 +1,93 @@
+{
+  "recordedAt": "2026-10-09T16:55:00Z",
+  "goalStatus": "active",
+  "universalSnapshotIoComplete": false,
+  "rootProbeFirstPartyMounted": true,
+  "rootProbeNativeQualified": false,
+  "rootProbeSourcePolicyReceipt": {
+    "session": 24924,
+    "exitCode": 0,
+    "laws": 2,
+    "expects": 64,
+    "receiptPredatesLocalContinuationField": true
+  },
+  "rootProbeNativeReceipt": {
+    "session": 86171,
+    "exitCode": 1,
+    "selectedAssertions": 0,
+    "phase": "kernelCompilation",
+    "errors": 8,
+    "warnings": 936
+  },
+  "rootLocalRecipientSourceReceipt": {
+    "session": 13147,
+    "exitCode": 0,
+    "laws": 1,
+    "expects": 15,
+    "strict": true
+  },
+  "rootLocalRecipientNativeQualified": true,
+  "rootLocalRecipientNativeBefore": {
+    "session": 26407,
+    "exitCode": 1,
+    "phase": "missingRequiredExplicitPolicy",
+    "selectedAssertions": 0
+  },
+  "rootLocalRecipientNativePolicyBefore": {
+    "session": 70873,
+    "exitCode": 1,
+    "phase": "NxGraphEnospc",
+    "selectedAssertions": 0
+  },
+  "rootLocalRecipientNativeReplay": {
+    "session": 8581,
+    "pending": false,
+    "exitCode": 0,
+    "passed": 2,
+    "skipped": 262,
+    "nextest": "5f3132ab-77bc-4209-ac24-72de356fa7f8",
+    "currentRevision": false
+  },
+  "rootLocalRecipientCurrentReport": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/local-recipient-continuation-current.md",
+  "rootLocalRecipientRegressionRed": {"session":31991,"exitCode":1,"passed":1,"failed":1,"notRun":3,"skipped":263,"nextest":"d0212573-77bc-4d9b-b7fb-8d04fcda3144","expected":"workLimit","actual":"invariantViolated"},
+  "rootLocalRecipientUpdatedGate": {"session":18182,"exitCode":1,"phase":"originalCargoCacheMissingScriptInvocation","selectedAssertions":0},
+  "rootLocalRecipientProcessPolicyEntryBefore": {"session":44799,"exitCode":1,"phase":"originalCargoCacheHashbangOrdering","selectedAssertions":0},
+  "rootLocalRecipientCurrentNative": {"session":20510,"pending":false,"exitCode":0,"passed":6,"skipped":264,"mountedLaws":6,"actualAllocatorComparisons":true,"nextest":"94913372-9434-4d14-8dca-b31843bfaa51","registeredProcessOwner":"value.original-recipient.native","qualificationScope":"six original local laws; not generic codec or native host"},
+  "rootLocalRecipientCurrentSource": {"session":97355,"pending":false,"exitCode":0,"laws":1,"expects":22,"strict":true,"independentOracles":["Ajv","SQLite","Buffer","JSON"]},
+  "rootProbeSemanticCurrentSource": {"session":5471,"exitCode":0,"passed":4,"expects":123},
+  "rootProbeCurrentNative": {"session":42010,"exitCode":1,"phase":"originalPluginCompilation","errors":207,"warnings":1033,"selectedAssertions":0},
+  "rootCsvReceivingNative": {"session":1238,"exitCode":130,"phase":"originalGenerationMissingScriptInvocation","selectedAssertions":0},
+  "rootCsvReceivingSourceBefore": {"session":90060,"exitCode":1,"passed":11,"failed":1,"expects":153,"newReceivingOraclePassed":true},
+  "rootCsvReceivingCurrentSource": {"session":65716,"exitCode":130,"phase":"originalGenerationMissingScriptInvocation","selectedAssertions":0},
+  "rootOriginalReceivingNative5459": {
+    "exitCode": 1,
+    "phase": "originalSelectedDependencyLockedPreparation",
+    "selectedAssertions": 0
+  },
+  "rootTsvReceivingSourceBefore": {"session":35976,"exitCode":130,"phase":"originalGenerationArrayScriptInvocationCallers","selectedAssertions":0},
+  "rootCurrentDiskAvailableGiB": 4.5,
+  "rootCurrentDiskDeletionPerformed": false,
+  "rootProbeReport": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/probe-first-party-node-owner-current.md",
+  "rootJsonParserNativeReceipt": {
+    "session": 75461,
+    "exitCode": 0,
+    "passed": 5,
+    "skipped": 72,
+    "nextest": "6baf410f-0aa6-40bc-a8fe-53c58e66f0be"
+  },
+  "rootJsonParserPortableReceipt": {
+    "session": 29113,
+    "exitCode": 0,
+    "laws": 6,
+    "expects": 64
+  },
+  "fleet": {
+    "root": "coordination, original local recipient qualification and Probe original IO",
+    "high": [
+      "native_owner_execution",
+      "probe_receiving_execution"
+    ],
+    "low": "local_receipt_readonly",
+    "maxConcurrent": 4
+  }
+}

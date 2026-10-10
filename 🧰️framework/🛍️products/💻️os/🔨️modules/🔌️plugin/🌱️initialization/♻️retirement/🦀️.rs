@@ -16,7 +16,7 @@ where P:Clone+ToValue+FromValue+ArtifactPack+RetireOwned+Send+Sync+'static,M:Clo
   if let Some(owner)=self.retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>(),release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{nested(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};}
   if self.envelope.is_some(){
    let Some(owners)=self.owners.as_ref()else{return Ok(RetirementDemand{copy_bytes:size_of::<Option<store::DocumentStoreOwners<P,M>>>(),capacity_bytes:store::bounded_artifact_store_owners_birth_bytes::<P,M>(),depth:1,..Default::default()});};
-   if !owners.constructor_is_complete(){return nested(owners.constructor_demands()?);}
+   if !owners.constructor_is_complete(){return nested(owners.constructor_demands(body)?);}
    let mut demand=nested(owners.uninstalled_envelope_retirement_demands(self.envelope.as_ref().unwrap()))?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"initializer original frame copy overflow"))?;return Ok(demand);
   }
   if let Some(owners)=self.owners.as_ref(){return if owners.uninstalled_owners_terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::DocumentStoreOwners<P,M>>>(),depth:1,..Default::default()})}else{nested(owners.uninstalled_owners_demands(body)?)};}

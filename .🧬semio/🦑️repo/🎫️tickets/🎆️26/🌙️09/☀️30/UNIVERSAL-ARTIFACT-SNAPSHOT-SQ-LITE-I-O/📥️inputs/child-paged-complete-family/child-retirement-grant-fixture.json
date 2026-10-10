@@ -1,1 +1,0 @@
-{"version":1,"wire":"17","paddingByte":32,"paddingBytes":8192,"sourceBytes":8194,"maximumAllocationBytes":65536,"maximumItems":1,"maximumBytes":4096,"modes":["close","parent-return"],"zeroAuthorities":[[0,4096],[1,0]],"expectedLiveBefore":true,"expectedLiveAfterWholeRetirement":false,"expectedLiveAfterCommittedScaffold":true}

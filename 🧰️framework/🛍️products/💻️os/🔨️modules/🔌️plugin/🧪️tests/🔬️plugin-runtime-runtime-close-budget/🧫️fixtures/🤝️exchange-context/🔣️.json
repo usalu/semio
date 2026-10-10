@@ -1,0 +1,9 @@
+{
+  "contract": "framework.plugin.original-exchange-context",
+  "phasePolicy": [1,4096,65536,262144,64],
+  "incomingRemaining": [3,17,8192,65536,9],
+  "admitted": [1,17,8192,65536,9],
+  "receiptConsumer": "original-reactor-context",
+  "receiptCurrencies": ["items","copy","capacity","release"],
+  "secondProducerBeforeReceiptAcknowledgement": false
+}

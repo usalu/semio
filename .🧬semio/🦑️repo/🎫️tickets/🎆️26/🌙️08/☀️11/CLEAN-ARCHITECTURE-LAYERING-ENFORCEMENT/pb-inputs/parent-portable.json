@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "owner": "pack-tooling-boundary-parent",
+  "maximumElapsedMilliseconds": 60000,
+  "typecheckMilliseconds": 30000,
+  "testMilliseconds": 15000,
+  "maximumBytes": 134217728,
+  "maximumLines": 65536,
+  "observation": {
+    "maximumCumulativeBytes": 268435456,
+    "chunkBytes": 1048576,
+    "maximumClaims": 20000,
+    "maximumMetadataBytes": 16777216,
+    "maximumPathCodePoints": 256,
+    "maximumPathUtf16Units": 256
+  },
+  "capabilities": {
+    "version": 1,
+    "repositoryRoot": "${workspaceFolder}",
+    "artifactDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pb4/a",
+    "command": {
+      "kind": "neutral-source-oracle",
+      "project": "@semio-tech/framework-pack-record-rs",
+      "target": "test-refusals",
+      "arguments": [
+        "--skip-nx-cache"
+      ]
+    },
+    "phaseCeilings": {
+      "typecheckMilliseconds": 30000,
+      "testMilliseconds": 15000
+    },
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 65536
+    }
+  }
+}

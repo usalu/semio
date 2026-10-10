@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "19d34ac01f2f429eacd40861534911ff9d4c1fd7a4fbb6f3eb77c4e6dfb486b9",
+      "afterSha256": "9b7efbf605507795b49760151994a2b22366a72f3420e56426e765ffdb244900",
+      "exclusive": false,
+      "scope": "Extracted original exported helper receives actual module namespace in both independent compiler contexts"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

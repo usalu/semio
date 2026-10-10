@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript, OwnerGraphWireCheckScript } from "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 🌊️ `@semio-tech/flow-plugin` router: `bun ./📜️script.ts test`. */
@@ -43,7 +44,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-flow"], this.repoRoot, rest, { ...process.env, RUST_TEST_THREADS: "1" });
+    await runRepositoryCargoTests(["semio-hub-flow"], this.repoRoot, this.invocation.control, rest, { ...process.env, RUST_TEST_THREADS: "1" });
   }
 }
 
@@ -61,4 +62,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("add-widget-retained-check", AddWidgetRetainedCheckScript);
 registerPlaygroundSiteBuildCommands(router);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

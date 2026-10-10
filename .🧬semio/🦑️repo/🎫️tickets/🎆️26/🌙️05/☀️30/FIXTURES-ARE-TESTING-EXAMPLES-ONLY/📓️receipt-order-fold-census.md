@@ -1,0 +1,13 @@
+# Receipt, Order and Fold Trial Census
+
+Read-only current originals; no Source mutation or test/native execution. Hash-only evidence in `📥️receipt-order-fold-census.json`; no global clean claim.
+
+Pack JSON decode/receipt root combines source+limits/preparation/close grants with exactly three frontier/grant/receipt observations. Tests6 loads schema;27 compiles whole fixture. Retire whole envelope/admission and only schema mirror mutants, preserve actual per-frontier receipt/SQLite UTF8/native allocation behavior. Nested Grant/limits must use real defining authority where genuinely needed; do not extract test schedule. Adjacent frontier schema is separately admitted at12 against failureFixture and remains a candidate pending complete shape review.
+
+Pack intrinsic occurrence-order root fixed ordering originalOrdinal/equalKeys retainOccurrences plus cases containing source and expected bodyHex. Tests4 imports contract;22 whole admission. Preserve actual per-case intrinsic encoding, duplicate occurrence order, SQLite/JSON/native byte outputs; tagged $defs.Value/Case are test representation here, no production consumer established by this bounded join. Whole case schema must not be relocated to domain authority merely to retain validation.
+
+Replication Fold index set schema describes original keys plus expected/taken/cleared/reuse observations, physical handoff/clear capacity/release and fixed live-generation preservation. Actual set.ts6 loads and7 compiles whole fixture. Preserve existing first-party set operations and independent Set/SQLite/source/native laws, remove schema-only admission.
+
+Replication Fold retirement actor schema original/deniedAxes/expected describes an experiment of original ownership and denial results. Tests12 loads and13 admits whole law. Preserve actual original actor payload/Grant/receipt and native ownership assertions. These are separate from genuine produced actor/runtime DTO schemas and cannot be classified solely by the word actor.
+
+Neutral existing schema-scope cases should include: variable input plus finite fixed refusal-frontier schedule and immutable expected receipts (trial); variable produced per-turn receipt only (domain); sequence of source/expected encoded bodies with fixed occurrence-order test metadata (trial); single typed intrinsic value (domain); keys+expected/taken/clear/reuse test observation envelope (trial); actual set command expected generation precondition (domain). Pair schema structural facts with concrete whole-reader and executed output role; whole read alone remains unresolved. No filename/title regex is required for these roles.

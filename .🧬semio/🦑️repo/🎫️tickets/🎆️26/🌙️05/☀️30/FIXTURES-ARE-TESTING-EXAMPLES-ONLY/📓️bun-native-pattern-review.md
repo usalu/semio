@@ -1,0 +1,9 @@
+# Six Published Native Patterns
+
+Current six original manifests retain exact semio.workspace.members prefix, all appended workspaces patterns are negative, and old unconditional fixture mask is removed from every declaration. Native pattern counts match Root: root970, teaching973, Specific1900, semio-tech1905, Hub1938, mit1902. Companion holds fresh hashes, not authored adoption. Actual producer log root-bun-current-patterns2.log reports scopes6 completed; canonical CLI remains separately blocked by incoming invocation.
+
+Genuine shared policy canonical root ID resolves repo.library.workspaces; closed collections pair exactly names4/moduleMember. Native CJS reads that first-party production instance; cache retains only manifest vocabulary. No example authority introduced.
+
+Concrete repeated work: readBunRepositoryMembership loops each generated negative tail against every selected package, and match constructs a new RegExp for each comparison. With current tails and parent-reported93/95/254/255/261/257 selected packages, successful checks require2,129,177 regex constructions in this check alone. This is arithmetic from Source, not a measured CPU attribution. Precompile each pattern once per read while preserving exact grammar; generated literal root subtree negatives can alternatively use a first-party component prefix index. Verify same results through existing actual native Bun/fast-glob laws, including escaped metacharacters and foreign scopes, before adoption.
+
+Physical directory state and manifest full ancestry/symlink checks are present. Synchronous cached inventory is not an atomic filesystem snapshot; no dev/inode epoch claim is made. No Source mutations, builds or tests by this lane. Fresh first-party vs fast-glob fullsix comparison is Root-owned and not inferred from counts.

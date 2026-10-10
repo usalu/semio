@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "authority": "Original independent defining preimages plus explicit portable control/scope; producer and row pinned outside their source through literal GUI argv; no self refresh",
+  "originalDefiningSha256": "36997dcc568d69dc4f9c3e5d1c3d12f887e9209d879ef32352241aab87084a5f",
+  "pins": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📜️script.ts",
+      "sha256": "e3f582b590140e7d0a98ea997d0b2066f7868b56fdc5bdfc1a720142c72e2197",
+      "bytes": 5221
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "763ba51b1b4bcd5b1d3dd56a92cc173710724f0ab9054214c70860f7545eba06",
+      "bytes": 3920
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🚦️refusals/🟦️.ts",
+      "sha256": "f7edaa2942d3e4f992a2642ee29f1e3d674fcdf2e4eadc96c998f8822b61d469",
+      "bytes": 2742
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧬️schema/🔣️.json",
+      "sha256": "9204f477cde46b86eb50df60d44b547b56a66bba4fd570bb294afd17b6ce0a17",
+      "bytes": 710
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧫️fixtures/🔣️.json",
+      "sha256": "ac9027ecab5e8043186b6711674732d6cb796b44ba1633fe8bb745565ec4a9f9",
+      "bytes": 779
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧪️tests/🟦️.ts",
+      "sha256": "c09e41b05baa682bfa0442334b829fff54dfc7999c1a4758fd6cb3ca9f32c0d7",
+      "bytes": 2273
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/🔣️.json",
+      "sha256": "4eec5f5c15d3e271bf26bff41449ee6d067280759d39f9ec402722889956ad71",
+      "bytes": 11734
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/defining.json",
+      "sha256": "36997dcc568d69dc4f9c3e5d1c3d12f887e9209d879ef32352241aab87084a5f",
+      "bytes": 2797
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/parent-portable.json",
+      "sha256": "885291cdc60a05a965fe5b1f8cdcf481c8e5b4ab8a5e2f90b546dba47f56d5c3",
+      "bytes": 1101
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/scope-portable.json",
+      "sha256": "dd89a4256324a935eb416c702fbad21dd10f16cf435648f2f76c7a079ee38292",
+      "bytes": 1563
+    }
+  ],
+  "qualifiedAuthoredReceivingAdvance": {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧪️tests/🟦️.ts",
+    "beforeSha256": "27f73ca2bafda3595f2a260eae39484f0aa3ef773eb65fce55c7572183dca941",
+    "afterSha256": "c09e41b05baa682bfa0442334b829fff54dfc7999c1a4758fd6cb3ca9f32c0d7",
+    "reason": "Actual pre-law TS2307 revealed one-level fixture/schema receiver mistake and corresponding owner root; literal vectors and production edge preimages unchanged"
+  },
+  "qualifiedImplementationAdvances": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📜️script.ts",
+      "beforeSha256": "201bb39d6592014cbf3afcc048b0d6230e7ade0cdb664f3a1988cdc7fa26c6a4",
+      "afterSha256": "e3f582b590140e7d0a98ea997d0b2066f7868b56fdc5bdfc1a720142c72e2197",
+      "reason": "Genuine pb3 full boundary law red physically closed before explicit ownership implementation or independent successor artifact declaration"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "5f0ff9df7ea2905da2a81c021509567b2f6948b0b6212c5c3b8190f33733b5b2",
+      "afterSha256": "763ba51b1b4bcd5b1d3dd56a92cc173710724f0ab9054214c70860f7545eba06",
+      "reason": "Genuine pb3 full boundary law red physically closed before explicit ownership implementation or independent successor artifact declaration"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/parent-portable.json",
+      "beforeSha256": "6d1419fc149a122fff00a1d105836030ca24da8fabe94a43d17869002d4e835e",
+      "afterSha256": "885291cdc60a05a965fe5b1f8cdcf481c8e5b4ab8a5e2f90b546dba47f56d5c3",
+      "reason": "Genuine pb3 full boundary law red physically closed before explicit ownership implementation or independent successor artifact declaration"
+    }
+  ],
+  "genuineDefiningRed": {
+    "epoch": "pb3",
+    "fullLaws": 7,
+    "passed": 6,
+    "failed": 1,
+    "expectations": 86,
+    "observedProductEdges": 2,
+    "expectedProductEdges": 0,
+    "childPhysicalClosed": true
+  }
+}

@@ -100,15 +100,15 @@ impl<T: Send + Sync + 'static> ReaderState<T> {
 }
 
 impl<T: ArtifactCanonicalJson + Send + 'static> ReaderState<T> {
-    fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, ArtifactCanonicalJsonEncodeError> {
+    fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonEncodeError> {
         if !grant.permits_one() || self.cancelled || self.failed || self.closing || output.is_empty() {
-            return Ok(0);
+            return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 });
         }
         let maximum = grant.maximum_copy_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES);
-        let root = self.root.as_ref().ok_or_else(|| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: "canonical-reader.root-missing".into() })?;
-        let result = self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum]);
+        let root = self.root.as_ref().ok_or_else(|| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-reader.root-missing") })?;
+        let result = self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum],grant.retained_grant());
         let count = match &result {
-            Ok(count) => *count,
+            Ok(step) => step.written_bytes,
             Err(error) => {
                 self.failed = true;
                 error.written_bytes
@@ -116,7 +116,8 @@ impl<T: ArtifactCanonicalJson + Send + 'static> ReaderState<T> {
         };
         let Some(completed) = self.completed_bytes.checked_add(count as u64) else {
             self.failed = true;
-            return Err(ArtifactCanonicalJsonEncodeError { written_bytes: count, reason: "canonical-reader.work-overflow".into() });
+            let progress = match &result { Ok(step) => step.ownership.progress(), Err(error) => error.reason.retained_progress() };
+            return Err(ArtifactCanonicalJsonEncodeError { written_bytes: count, reason: ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"canonical-reader.work-overflow").with_retained_progress(progress) });
         };
         self.completed_bytes = completed;
         result
@@ -154,7 +155,7 @@ impl<T: Send + Sync + 'static> ArtifactCanonicalJsonReader<T> {
 }
 
 impl<T: ArtifactCanonicalJson + Send + 'static> ArtifactCanonicalJsonReader<T> {
-    pub fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, ArtifactCanonicalJsonEncodeError> {
+    pub fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonEncodeError> {
         self.owned.encode_chunk(grant, output)
     }
 }

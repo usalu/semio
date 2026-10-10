@@ -1,0 +1,32 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "sha256": "6bc3630d59c783b48a46db265e1bdf36561ff55c70fc8e4ef7d4d9ca50951da5",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts",
+      "sha256": "efeae0e13b4ea284559d8c0209d532aeac8b06314e4287297d73f32bba061a87",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts",
+      "sha256": "d0213768124a279bab293b584acb0d0f615b01c9453385d65f3e38167c953097",
+      "authored": false
+    }
+  ],
+  "executed": false,
+  "plainCases": [
+    "exact combined byte ceiling",
+    "stdout below ceiling plus stderr crosses",
+    "many empty LF lines",
+    "unterminated tail counts once per stream",
+    "CRLF split across chunks",
+    "UTF8 scalar split across chunks",
+    "no onLine observer",
+    "stdout ignore still counts produced bytes",
+    "invalid limits no child marker",
+    "output refusal waits child tree and drain"
+  ]
+}

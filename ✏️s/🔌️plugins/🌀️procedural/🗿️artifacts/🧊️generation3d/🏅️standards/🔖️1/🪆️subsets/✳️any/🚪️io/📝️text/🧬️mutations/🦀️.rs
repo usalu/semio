@@ -171,7 +171,7 @@ pub(crate) fn generation3d_operation_from_dsl(operation: Generation3dOperationDs
         Generation3dOperationDsl::DeleteWidgetPosition { id } => Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id }),
         Generation3dOperationDsl::UpdateCamera { camera } => Generation3dMutation::UpdateCamera(UpdateCamera { camera: camera_from_dsl(&camera) }),
         Generation3dOperationDsl::ChangeSchema { new_schema } => Generation3dMutation::ChangeSchema(ChangeSchema { new_schema }),
-        Generation3dOperationDsl::CreateGeneration { generation, index } => Generation3dMutation::CreateGeneration(CreateGeneration { generation: form_generation_from_dsl(generation), index, index: None }),
+        Generation3dOperationDsl::CreateGeneration { generation, index } => Generation3dMutation::CreateGeneration(CreateGeneration { generation: form_generation_from_dsl(generation), index }),
         Generation3dOperationDsl::DeleteGeneration { id } => Generation3dMutation::DeleteGeneration(DeleteGeneration { id }),
         Generation3dOperationDsl::RenameGeneration { id, new_name } => Generation3dMutation::RenameGeneration(RenameGeneration { id, new_name }),
         Generation3dOperationDsl::ChangeGenerationValue { id, question_id, new_value } => Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value }),

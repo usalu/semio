@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_job::{allocate_operation_id, CommitCandidate, Generation, RevisionId};
+use semio_framework_job::{allocate_operation_id, Generation, RevisionId, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView};
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 fn fixture_step_grant()->semio_framework_job::RetainedCloneGrant{
     semio_framework_job::RetainedCloneGrant{maximum_items:8,maximum_copy_bytes:4096,maximum_capacity_bytes:8192,maximum_release_bytes:4096,maximum_depth:4}
@@ -12,18 +13,26 @@ fn fixture_close_grant(owner: &dyn InteractiveJob, body: usize) -> semio_framewo
 struct ImmediateJob {
     output: Option<Vec<u8>>,
     writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
+    published: Option<semio_framework_job::RetainedJobPayload>,
     cursor: usize,
     closing: bool,
 }
 
 impl InteractiveJob for ImmediateJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {
+        if self.published.is_some() { return JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref()); }
         let writer = self.writer.get_or_insert_with(|| semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));
-        if !writer.write_slice_page(cx, self.output.as_deref().unwrap_or_default(), &mut self.cursor).unwrap_or(false) {
-            return StepOutcome::Yield;
+        if !writer.write_slice_page(cx, self.output.as_deref().unwrap_or_default(), &mut self.cursor).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original fixture payload page admission refused"))? { return JobOutcomeBorrow::admit_yield(cx); }
+        match self.writer.take().expect("immediate original output writer").finish(){Ok(payload)=>self.published=Some(payload),Err(writer)=>{self.writer=Some(writer);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture payload writer has not completed"))}}
+        JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref())
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>,ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Complete => descriptor.complete(None,self.published.as_ref()),
+            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"immediate fixture requires its original yielded or completed descriptor")),
         }
-        let output = self.writer.take().expect("immediate output writer").finish().unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput));
-        StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output })
     }
 
     fn begin_close(&mut self) {
@@ -46,18 +55,31 @@ impl InteractiveJob for ImmediateJob {
             if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
             if bytes != 0 && grant.maximum_depth == 0 { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: Default::default() }; }
             drop(self.output.take());
-            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() } };
+            let progress=RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() };
+            return if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}};
+        }
+        if let Some(payload)=self.published.as_mut(){
+            let step=match payload.close_step(grant){Ok(step)=>step,Err(error)=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
+            if payload.terminal_is_empty(){self.published=None;}
+            return if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{InteractiveJobCloseStep::Pending{progress:step.progress()}};
         }
         InteractiveJobCloseStep::Complete { progress: Default::default() }
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.writer.as_ref().map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.copy_bytes)) }
-    fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.writer.as_ref().map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.capacity_bytes)) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.writer.as_ref().map(|owner| owner.retirement_demands()).transpose()?.map_or_else(|| self.output.as_ref().map_or(0, Vec::capacity), |demand| demand.release_bytes)) }
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.writer.as_ref().map(|owner| owner.retirement_demands()).transpose()?.map_or_else(|| usize::from(self.output.as_ref().is_some_and(|value| value.capacity() != 0)), |demand| demand.depth)) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize,ValueError> { Ok(self.demands()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self,_:usize) -> Result<usize,ValueError> { Ok(self.demands()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize,ValueError> { Ok(self.demands()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize,ValueError> { Ok(self.demands()?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.output.is_none() && self.writer.is_none() && self.published.is_none() }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.output.is_none() && self.writer.is_none()
+}
+
+impl ImmediateJob {
+    fn demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        if let Some(writer)=self.writer.as_ref(){return writer.retirement_demands()}
+        if let Some(output)=self.output.as_ref(){return Ok(semio_framework_value::RetirementDemand{release_bytes:output.capacity(),depth:usize::from(output.capacity()!=0),..Default::default()})}
+        if let Some(payload)=self.published.as_ref(){return payload.retirement_demands()}
+        Ok(Default::default())
     }
 }
 
@@ -87,7 +109,7 @@ impl ToolJobFactory for EchoFactory {
     }
 
     fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ImmediateJob { output: Some(format!("{payload}:ok").into_bytes()), writer: None, cursor: 0, closing: false })
+        Ok(ImmediateJob { output: Some(format!("{payload}:ok").into_bytes()), writer: None, published: None, cursor: 0, closing: false })
     }
 }
 
@@ -180,14 +202,14 @@ impl ToolJobFactory for NumberFactory {
     }
 
     fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ImmediateJob { output: Some(payload.to_le_bytes().to_vec()), writer: None, cursor: 0, closing: false })
+        Ok(ImmediateJob { output: Some(payload.to_le_bytes().to_vec()), writer: None, published: None, cursor: 0, closing: false })
     }
 
     fn create_job_from_wire(&mut self, _operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, ToolJobFactoryError> {
         let value = u64::from_le_bytes(payload.try_into().map_err(|_| ToolJobFactoryError::new("number wire payload must contain exactly eight bytes"))?);
         let mut output = value.to_le_bytes().to_vec();
         output.extend(checkpoint.unwrap_or_default());
-        Ok(ImmediateJob { output: Some(output), writer: None, cursor: 0, closing: false })
+        Ok(ImmediateJob { output: Some(output), writer: None, published: None, cursor: 0, closing: false })
     }
 }
 
@@ -230,21 +252,8 @@ fn wire_dispatch_uses_the_factory_decoder_and_preserves_the_restart_checkpoint()
     let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX,fixture_step_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence,&mut retained_progress);
     let mut expected = 42u64.to_le_bytes().to_vec();
     expected.extend([7, 8]);
-    let StepOutcome::Complete(mut candidate) = dispatch.job.step(&mut context) else { panic!("wire job did not complete") };
-    assert_eq!(candidate.output.page(0), Some(expected.as_slice()));
-    assert_eq!(candidate.output.page_count(), 1);
-    let demand = candidate.output.retirement_demands().unwrap();
-    let grant = semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-    let step = candidate.output.close_step(grant).unwrap();
-    assert_eq!(step.progress().released_bytes, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    assert!(step.progress().fits(grant));
-    for _ in 0..16 {
-        if candidate.output.terminal_is_empty() { break; }
-        let demand = candidate.output.retirement_demands().unwrap();
-        let grant = semio_framework_job::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, maximum_capacity_bytes: demand.capacity_bytes, ..grant };
-        assert!(candidate.output.close_step(grant).unwrap().progress().fits(grant));
-    }
-    assert!(candidate.output.terminal_is_empty());
+    let descriptor=dispatch.job.step(&mut context).unwrap().expect("original complete admission").into_descriptor();
+    {let JobOutcomeView::Complete{output:Some(output),..}=dispatch.job.borrow_outcome(&descriptor).unwrap()else{panic!("original wire output remains inside job")};assert_eq!(output.page(0),Some(expected.as_slice()));assert_eq!(output.page_count(),1);}
     dispatch.job.begin_close();
     for _ in 0..16 {
         if dispatch.job.terminal_is_empty() { break; }
@@ -264,12 +273,13 @@ fn completed_job_retains_original_input_until_exact_granted_close() {
     original.extend([4, 5, 6]);
     let pointer = original.as_ptr();
     let capacity = original.capacity();
-    let mut job = ImmediateJob { output: Some(original), writer: None, cursor: 0, closing: false };
+    let mut job = ImmediateJob { output: Some(original), writer: None, published: None, cursor: 0, closing: false };
     let mut sequence = 0;
     let operation = allocate_operation_id();
     let mut retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut context = StepContext::new(operation, Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX,fixture_step_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence,&mut retained_progress);
-    let StepOutcome::Complete(mut candidate) = job.step(&mut context) else { panic!("original fixture output completes"); };
+    let descriptor=job.step(&mut context).unwrap().expect("original complete admission").into_descriptor();
+    assert!(matches!(job.borrow_outcome(&descriptor).unwrap(),JobOutcomeView::Complete{output:Some(_),..}));
     let retained = job.output.as_ref().expect("completion retains the original input allocation");
     assert_eq!(retained.as_ptr(), pointer);
     assert_eq!(retained.capacity(), capacity);
@@ -285,20 +295,20 @@ fn completed_job_retains_original_input_until_exact_granted_close() {
     assert_eq!(step.progress().released_bytes, law["releasedAfterClose"].as_u64().unwrap() as usize);
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, capacity));
     assert!(step.progress().fits(grant));
-    assert!(job.terminal_is_empty());
-    for payload in [&mut candidate.state, &mut candidate.output] {
-        for _ in 0..16 {
-            if payload.terminal_is_empty() { break; }
-            let demand = payload.retirement_demands().unwrap();
-            let grant = semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            assert!(payload.close_step(grant).unwrap().progress().fits(grant));
-        }
-        assert!(payload.terminal_is_empty());
+    assert!(!job.terminal_is_empty());
+    for _ in 0..16 {
+        if job.terminal_is_empty(){break}
+        let grant=fixture_close_grant(&job,4096);
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
+        assert!(step.progress().fits(grant));
     }
+    assert!(job.terminal_is_empty());
     println!("[DEBUG] ActionBus completed input retains original pointer/capacity64, one-below inert, exact close releases64 with full receipt");
 }
 
 struct RetainedNumberJob {
+    checkpoint: semio_framework_job::RetainedJobPayload,
     input: Option<RetainedToolWireInput>,
     bytes: [u8; 8],
     cursor: usize,
@@ -307,20 +317,29 @@ struct RetainedNumberJob {
 }
 
 impl InteractiveJob for RetainedNumberJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {
         if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx);
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return StepOutcome::Yield;
+            return JobOutcomeBorrow::admit_yield(cx);
         }
         if self.cursor < self.bytes.len() {
             self.bytes[self.cursor] = self.input.as_ref().and_then(|input| input.page(0)).and_then(|page| page.get(self.cursor)).copied().unwrap_or_default();
             self.cursor += 1;
             cx.consume_fuel(1);
-            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: self.cursor as u64 });
+            return JobOutcomeBorrow::admit_checkpoint(cx,&self.checkpoint,self.cursor as u64);
         }
-        self.output.get_or_insert_with(|| ImmediateJob { output: Some(self.bytes.to_vec()), writer: None, cursor: 0, closing: false }).step(cx)
+        self.output.get_or_insert_with(|| ImmediateJob { output: Some(self.bytes.to_vec()), writer: None, published: None, cursor: 0, closing: false }).step(cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{
+        match descriptor.kind(){
+            JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),
+            JobOutcomeKind::CheckpointReady{..}=>descriptor.checkpoint(&self.checkpoint),
+            JobOutcomeKind::Complete=>self.output.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained fixture original completed output absent"))?.borrow_outcome(descriptor),
+            _=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained fixture original descriptor kind mismatch")),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -396,7 +415,7 @@ impl ToolJobFactory for RetainedNumberFactory {
         if input.declared_bytes() != 8 || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("retained number requires eight bytes and no checkpoint"), input, checkpoint));
         }
-        Ok(RetainedNumberJob { input: Some(input), bytes: [0; 8], cursor: 0, output: None, closing: false })
+        Ok(RetainedNumberJob { checkpoint: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), input: Some(input), bytes: [0; 8], cursor: 0, output: None, closing: false })
     }
 
     fn create_job_from_wire_pages_with_payload(
@@ -430,7 +449,7 @@ fn retained_wire_pages_are_admitted_sealed_transferred_and_closed_by_logical_byt
     let mut retained_progress=semio_framework_job::RetainedCloneProgress::default();
     for _ in 0..8 {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX,fixture_step_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence,&mut retained_progress);
-        assert!(matches!(dispatch.job.step(&mut context), StepOutcome::CheckpointReady(_)));
+        assert!(matches!(dispatch.job.step(&mut context), Ok(Some(JobOutcomeBorrow::CheckpointReady{..}))));
     }
     dispatch.job.begin_close();
     let fixture = semio_framework_pack_json::parse(include_str!("../../🧹️wire-retirement/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -468,7 +487,7 @@ fn production_typed_payload_and_retained_pages_enter_the_same_registered_factory
     input.admit_page(ToolWirePage::try_copy_from(&42u64.to_le_bytes()).unwrap()).unwrap();
     input.seal().unwrap();
     let operation = Operation::new(allocate_operation_id(), RevisionId(1), Generation(2), 3);
-    let payload = RetainedNumberJob { input: None, bytes: [0; 8], cursor: 0, output: None, closing: false };
+    let payload = RetainedNumberJob { checkpoint: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), input: None, bytes: [0; 8], cursor: 0, output: None, closing: false };
     let spec = ToolOperationSpec::new("number", "retained", "test.retained-number.v1", payload, operation);
     let mut dispatch = match bus.dispatch_wire_retained_with_spec(&admission, input, None, spec) {
         Ok(dispatch) => dispatch,
@@ -478,7 +497,7 @@ fn production_typed_payload_and_retained_pages_enter_the_same_registered_factory
     let mut retained_progress=semio_framework_job::RetainedCloneProgress::default();
     for _ in 0..8 {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX,fixture_step_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence,&mut retained_progress);
-        assert!(matches!(dispatch.job.step(&mut context), StepOutcome::CheckpointReady(_)));
+        assert!(matches!(dispatch.job.step(&mut context), Ok(Some(JobOutcomeBorrow::CheckpointReady{..}))));
     }
     dispatch.job.begin_close();
     for _ in 0..16 {

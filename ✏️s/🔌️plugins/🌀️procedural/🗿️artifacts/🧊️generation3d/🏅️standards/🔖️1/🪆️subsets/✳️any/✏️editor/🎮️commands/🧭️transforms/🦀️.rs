@@ -597,7 +597,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
     }
     let next_kind = format!("brep.mesh.{operation}Components");
     let selection = serde_json::to_string(&components).map_err(|error| GumballRefusal::ComponentSelection(error.to_string()))?;
-    let current = crate::standards::v1::subsets::any::schema::gumball_widget_json(editor.host(), target.widget);
+    let current = crate::standards::v1::subsets::any::io::text::snapshot::gumball_widget_json(editor.host(), target.widget);
     let params = current.as_ref().and_then(|value| value.get("params"));
     let parameter = |name| params.and_then(|value| value.get(name)).and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str);
     let inputs = editor.snapshot().synapses.iter().filter(|wire| wire.to == target.widget).collect::<Vec<_>>();
@@ -610,7 +610,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
     let mut suffix = 2;
     while editor.snapshot().widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
     let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
-    editor.add_widget(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y).map_err(GumballRefusal::HostEdit)?;
+    editor.add_widget_json(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y).map_err(GumballRefusal::HostEdit)?;
     editor.insert_between(target.widget, target.channel, &id, "mesh", &output.name).map_err(GumballRefusal::HostEdit)?;
     editor.set_preview(&id, true);
     editor.set_preview(target.widget, false);

@@ -1,0 +1,1 @@
+{"payloads":[{"wireHex":"02030001ff","text":null,"binaryHex":"0001ff"},{"wireHex":"0102c3a9","text":"é","binaryHex":null},{"wireHex":"030565646974000200ff","text":"edit\u0000","binaryHex":"00ff"}],"grant":{"items":1,"copyBytes":2,"capacityBytes":65536,"releaseBytes":65536,"depth":8},"metadataCopyBytes":0}

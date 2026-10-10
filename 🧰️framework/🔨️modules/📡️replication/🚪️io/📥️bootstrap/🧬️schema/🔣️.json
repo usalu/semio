@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "formatVersion",
+    "artifact",
+    "payload",
+    "chunkByteLengths",
+    "wire"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "descriptorHash",
+        "schema",
+        "kind",
+        "packSchemaHash",
+        "baselineFrontier",
+        "requiredTailFrontier"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "descriptorHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packSchemaHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "baselineFrontier": {
+          "type": "object",
+          "required": [
+            "documentId",
+            "headEditOrdinal",
+            "headEditId",
+            "lastCommitSeq",
+            "chainHash"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "documentId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "headEditOrdinal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "headEditId": {
+              "type": "string"
+            },
+            "lastCommitSeq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "chainHash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "requiredTailFrontier": {
+          "type": "object",
+          "required": [
+            "documentId",
+            "headEditOrdinal",
+            "headEditId",
+            "lastCommitSeq",
+            "chainHash"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "documentId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "headEditOrdinal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "headEditId": {
+              "type": "string"
+            },
+            "lastCommitSeq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "chainHash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "packHex",
+        "sprHex",
+        "packLength",
+        "sprLength",
+        "packHash",
+        "sprHash",
+        "aggregateHash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "packHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})*$"
+        },
+        "sprHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})*$"
+        },
+        "packLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sprLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "packHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sprHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "aggregateHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "chunkByteLengths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4096
+      }
+    },
+    "wire": {
+      "type": "object",
+      "required": [
+        "inlineWelcomeHex",
+        "chunkedWelcomeHex",
+        "chunkHex",
+        "doneHex"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "inlineWelcomeHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})*$"
+        },
+        "chunkedWelcomeHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})*$"
+        },
+        "chunkHex": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          }
+        },
+        "doneHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})*$"
+        }
+      }
+    }
+  }
+}

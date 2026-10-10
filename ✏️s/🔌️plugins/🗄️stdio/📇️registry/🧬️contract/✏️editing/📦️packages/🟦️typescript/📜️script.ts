@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** ✏️ Stdio snapshot editing TypeScript package router. */
 import { join } from "node:path";
 import { runCmd } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -11,4 +12,4 @@ class TestScript extends BundleScript {
     runCmd(process.execPath, ["test", join(root, "🧪️tests/🔬️unit/🟦️.test.ts"), join(root, "🩹️patch/🧪️tests/🟦️.test.ts"), join(root, "🖼️raster/🧪️tests/🟦️.test.ts")]);
   }
 }
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, ...({ defaultCommand: "test" }) }));

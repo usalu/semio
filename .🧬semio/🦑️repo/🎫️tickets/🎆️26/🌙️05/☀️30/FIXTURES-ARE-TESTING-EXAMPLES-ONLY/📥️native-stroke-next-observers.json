@@ -1,0 +1,17 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "sha256": "1c1bfcbb18264a642a43060fa22afb8aed3ed44aa21caff5f2fcb2b151815838"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "sha256": "bc01aac463e6b9b96dc9d4f37431addeb9f6425141a46ebdcaad3d6cd4e01009"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "258773e22164374bc83a9e6f755bec48b8bd48cac9dde4a847f2830498efeb64"
+    }
+  ],
+  "status": "read-only design; no Source action/native proof"
+}

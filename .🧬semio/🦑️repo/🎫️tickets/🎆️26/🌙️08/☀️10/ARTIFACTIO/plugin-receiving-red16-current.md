@@ -1,0 +1,2721 @@
+# Original Plugin Retry 16
+
+Exact registered full gate terminal1/Cargo101 before assertions; original roster, launchenv/policy,600000build/60000assertion and1thread retained. 2639 typed compiler diagnostic headers. Actual compile reaches current Media Error/Result receiving and Query independentwidth plusbody/close recipients without scoped diagnostics; this is not native acceptance. Original interaction dispatch andretirement old scalar/loan/identity fixtures still do notcompile. VCS reconciled actual seven duplicate History/Transaction RetireOwned implementations after thisRED, preserving canonical field-aware derives.
+
+## Physical Owners
+
+- 785: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs`
+- 310: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs`
+- 275: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs`
+- 160: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs`
+- 118: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs`
+- 97: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs`
+- 96: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs`
+- 93: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs`
+- 74: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs`
+- 52: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs`
+- 49: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs`
+- 46: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs`
+- 42: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs`
+- 41: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs`
+- 36: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs`
+- 35: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs`
+- 26: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs`
+- 22: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs`
+- 22: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs`
+- 22: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs`
+- 18: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs`
+- 16: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs`
+- 16: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs`
+- 12: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`
+- 11: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs`
+- 10: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs`
+- 9: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs`
+- 8: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs`
+- 7: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs`
+- 6: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/🦀️.rs`
+- 6: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️.rs`
+- 6: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs`
+- 6: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🦀️.rs`
+- 6: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🦀️.rs`
+- 6: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs`
+- 6: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs`
+- 5: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🤖️agent-lane-preview/🦀️.rs`
+- 5: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-child-member-registry/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs`
+- 4: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/../🧬️mutation-fixtures-transaction-unit-command-close/🦀️.rs`
+- 3: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/🪪️metadata/🦀️.rs`
+- 3: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/♻️metadata/🧪️tests/🦀️.rs`
+- 3: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📥️inbound-request/🦀️.rs`
+- 3: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/../../../../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs`
+- 3: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/../🔬️surface-view-state-routing/🦀️.rs`
+- 3: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/⚠️refusal/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/🧵️publication/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📸️checkpoint/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../💡️inference/🚪️gateway/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🛠️tool-machine/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/⚛️reactor-driver/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-artifact-reserved-tool-job/🦀️.rs`
+- 2: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📏️future-size/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/🧺️turn-patch-batch/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🧪️tests/🔬️unit/🦀️.rs`
+- 2: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/🪟️retained-window-config/🦀️.rs`
+- 1: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🚪️lifetime/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/📢️publication-fixtures/../📢️publication-fixtures-presence/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🧬️preparation/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🧪️tests/🔬️unit/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/🪪️metadata/🧪️tests/🔬️unit/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🧪️tests/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🌱️operation/🧪️tests/🦀️.rs`
+- 1: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../📬️completion/⚠️fault/🦀️.rs`
+
+## Exact Compiler Index
+
+- error[E0433]: cannot find type `ValueRefusalKind` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21082:166`
+- error[E0433]: cannot find type `ValueRefusalKind` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21091:184`
+- error[E0433]: cannot find type `ValueRefusalKind` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21092:44`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `HistoryCommandFilter` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13224:58`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `InverseAction` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13257:39`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `component::app::CommandView` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13394:39`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `component::app::MutationView` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13440:39`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `component::app::HistoryView` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13538:39`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `AlternativeView` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13565:39`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `TransactionPhase` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:17990:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41161:78`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41160:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38400:78`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38399:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41389:78`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22477:78`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41387:5`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22535:23`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22476:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21340:74`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21339:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19907:78`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19906:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19517:78`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19516:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19614:86`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19613:13`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19131:78`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19121:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/🦀️.rs:495:53`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/🦀️.rs:494:1`
+- error[E0053]: method `advance` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/🧵️publication/🦀️.rs:80:71`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📸️checkpoint/🦀️.rs:128:125`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📸️checkpoint/🦀️.rs:128:18`
+- error[E0432]: unresolved import `semio_framework_os_kernel::io::io_mechanism::io_run` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:598:122`
+- error[E0432]: unresolved import `semio_framework_os_kernel::io::io_mechanism::io_run` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:730:109`
+- error[E0560]: struct `component::app::MountedTypedCommandFullOperation<A>` has no field named `terminal_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs:120:343`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs:123:63`
+- error[E0599]: no associated function or constant named `try_new` found for struct `MountedWorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:25918:83`
+- error[E0599]: no method named `pump_one` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:25942:42`
+- error[E0599]: no method named `take_checked_out_outcome` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:25962:93`
+- error[E0599]: no method named `callback_verdict` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:25983:39`
+- error[E0599]: no method named `resume` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:25998:29`
+- error[E0599]: no method named `begin_close` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26001:25`
+- error[E0599]: no method named `retirement_demands` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26005:35`
+- error[E0599]: no method named `close_step` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26005:390`
+- error[E0599]: no method named `terminal_is_empty` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26007:97`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27621:44`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:37:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:38:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28926:118`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:39:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:88:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29541:54`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29604:122`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29649:37`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:89:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:90:20`
+- error[E0599]: no associated function or constant named `try_new` found for struct `MountedWorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30573:99`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30635:74`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:100:53`
+- error[E0599]: no associated function or constant named `take_checked_out_outcome` found for struct `MountedWorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30638:126`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30945:89`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30946:62`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:97:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:100:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:102:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32005:87`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32045:91`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32046:58`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:138:24`
+- error[E0599]: no associated function or constant named `try_new` found for struct `MountedWorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33318:99`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:139:24`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33689:9`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33692:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33693:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33694:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33698:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33917:55`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33918:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33919:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33920:67`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33921:69`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:140:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:565:99`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:592:93`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35363:79`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35378:67`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41000:68`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs:21:132`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:204:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:207:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:209:23`
+- error[E0658]: use of unstable library feature `str_as_str` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../💡️inference/🚪️gateway/🦀️.rs:123:28`
+- error[E0658]: use of unstable library feature `str_as_str` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../💡️inference/🚪️gateway/🦀️.rs:124:79`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `os_store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:20:37`
+- error[E0533]: expected value, found struct variant `Step::Refused` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41101:118`
+- error[E0533]: expected value, found struct variant `Step::Refused` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41107:217`
+- error[E0164]: expected tuple struct or tuple variant, found struct variant `Worker::Refused` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41118:188`
+- error[E0533]: expected value, found struct variant `Step::Refused` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41118:211`
+- error[E0533]: expected value, found struct variant `Step::Refused` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41118:234`
+- error[E0599]: no associated function or constant named `try_new` found for struct `BatchJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41351:57`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41360:20`
+- error[E0599]: no method named `is_some` found for struct `JobOutcomeSlot` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🚪️lifetime/🦀️.rs:76:96`
+- error[E0599]: no method named `take_outcome` found for mutable reference `&mut BatchJobSession<RuntimeLiveCleanupJob<PA>>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41372:37`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `os_store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:21:41`
+- error[E0599]: no associated function or constant named `try_new` found for struct `BatchJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41725:57`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41736:31`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31762:29`
+- error[E0599]: no method named `take_outcome` found for mutable reference `&mut BatchJobSession<RuntimeCloseCleanupJob<PA>>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41754:37`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28540:34`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28544:87`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27692:81`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27692:76`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28606:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26510:21`
+- error[E0529]: expected an array or slice, found `Option<(ArtifactStoreConstructorKind, _, _, _)>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26510:65`
+- error[E0070]: invalid left-hand side of assignment — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26510:68`
+- error[E0599]: no method named `private_child_group_operation_close_byte_demand` found for mutable reference `&mut component::app::VcsArtifactApp<A, M>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27739:175`
+- error[E0425]: cannot find function `mounted_private_child_grant` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27740:17`
+- error[E0616]: field `member` of struct `time_travel::TimeTravelLedger` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27758:43`
+- error[E0616]: field `member` of struct `time_travel::TimeTravelLedger` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27759:43`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23474:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26541:82`
+- error[E0529]: expected an array or slice, found `Option<(ArtifactStoreConstructorKind, _, _, _)>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26541:126`
+- error[E0070]: invalid left-hand side of assignment — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26541:129`
+- error[E0599]: no method named `is_cancelled_now` found for struct `std::mem::ManuallyDrop<std::option::Option<CancelToken>>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27092:80`
+- error[E0599]: no method named `take_checked_out_outcome` found for mutable reference `&mut MountedWorkerJobSession<ArtifactEnvelopeDecodeAuthority<P, Mutation>>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23476:41`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21896:69`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21897:70`
+- error[E0533]: expected value, found struct variant `Step::Refused` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21371:157`
+- error[E0599]: no associated function or constant named `try_new` found for struct `MountedWorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23896:99`
+- error[E0369]: cannot add `usize` to `()` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19854:142`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19854:58`
+- error[E0599]: no associated function or constant named `try_new` found for struct `BatchJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21411:71`
+- error[E0782]: expected a type, found a trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24104:179`
+- error[E0277]: the trait bound `M: ArtifactCanonicalJsonTree` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18768:9`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19191:33`
+- error[E0782]: expected a type, found a trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24104:259`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19192:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19193:23`
+- error[E0599]: no method named `step` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21432:46`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22539:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22539:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22543:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22543:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22547:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22547:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22550:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22550:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22554:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22554:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22557:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22557:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22561:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22561:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22564:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22564:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22568:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22568:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22571:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22571:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22575:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22575:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22578:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22578:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22582:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22582:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22585:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22585:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22589:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22589:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22592:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22592:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22596:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22596:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22599:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22599:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22603:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22603:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22606:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22606:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22610:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22610:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22613:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22613:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22617:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22617:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22620:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22620:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22624:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22624:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22627:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22627:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22631:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22631:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22634:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22634:99`
+- error[E0782]: expected a type, found a trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24104:347`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22637:13`
+- error[E0599]: no method named `take_outcome` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21435:45`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19519:115`
+- error[E0599]: no associated function or constant named `try_new` found for struct `MountedWorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23364:99`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21450:33`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18211:36`
+- error[E0782]: expected a type, found a trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24104:421`
+- error[E0599]: no method named `resume` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21455:46`
+- error[E0599]: no method named `begin_close` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21459:17`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24260:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24265:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24266:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24267:29`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:14558:142`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:14558:137`
+- error[E0599]: no method named `ok_or_else` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24270:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🦀️.rs:353:497`
+- error[E0599]: no method named `terminal_is_empty` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21461:24`
+- error[E0599]: no method named `take_checked_out_outcome` found for mutable reference `&mut MountedWorkerJobSession<component::app::ArtifactStoreInitializationJob<P, Mutation>>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24289:51`
+- error[E0599]: no method named `close_release` found for struct `PresenceCommandCursor` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12463:67`
+- error[E0599]: no method named `capacity` found for struct `SharedUtf8` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🦀️.rs:154:350`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🦀️.rs:155:423`
+- error[E0277]: `?` couldn't convert the error to `semio_framework_dsl::Fault` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:10803:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs:122:170`
+- error[E0061]: this enum variant takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🦀️.rs:46:24`
+- error[E0599]: no method named `close_step` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21464:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/🪪️metadata/🦀️.rs:39:435`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/🪪️metadata/🦀️.rs:42:395`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🦀️.rs:97:118`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/🪪️metadata/🦀️.rs:155:452`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs:418:181`
+- error[E0061]: this function takes 5 arguments but 10 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2137:47`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2137:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2155:51`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🛠️tool-machine/🦀️.rs:733:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🛠️tool-machine/🦀️.rs:776:60`
+- error[E0599]: no associated function or constant named `try_new` found for struct `MountedWorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:425:33`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:455:38`
+- error[E0599]: no associated function or constant named `take_checked_out_outcome` found for struct `MountedWorkerJobSession<J>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:463:78`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:470:57`
+- error[E0061]: this enum variant takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/🧵️publication/🦀️.rs:94:12`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️.rs:553:93`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️.rs:553:31`
+- error[E0599]: no method named `checkpoint` found for reference `&std::boxed::Box<dyn ArtifactCommandWork<A>>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/🦀️.rs:413:65`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️.rs:1251:89`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️.rs:1251:27`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️.rs:1276:85`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️.rs:1276:23`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:477:83`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:19:28`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:23:28`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:286:48`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:288:74`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:290:46`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:291:72`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:293:19`
+- error[E0407]: method `next_close_byte_demand` is not a member of trait `store::ErasedSnapshotRetirement` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:296:5`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:264:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:267:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:272:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:276:35`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:282:23`
+- error[E0407]: method `checkpoint` is not a member of trait `crate::retained_command::ArtifactCommandWork` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:491:9`
+- error[E0407]: method `close_step` is not a member of trait `ArtifactReservedJob` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:752:9`
+- error[E0407]: method `terminal_is_empty` is not a member of trait `ArtifactReservedJob` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:760:9`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:786:28`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:787:28`
+- error[E0597]: `error.message` does not live long enough — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/🦀️.rs:620:139`
+- error[E0597]: `error.message` does not live long enough — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/🦀️.rs:621:127`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:788:28`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1534:153`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1537:28`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1538:28`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1542:28`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `semio_framework_value` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:389`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `semio_framework_value` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:539`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `semio_framework_value` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:690`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `semio_framework_value` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3429:244`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `semio_framework_value` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3429:343`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4796:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4800:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4803:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4805:23`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4852:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4855:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4857:23`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4934:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4935:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4936:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:181:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:184:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:186:19`
+- error[E0407]: method `next_close_byte_demand` is not a member of trait `store::ArtifactEnvelopeSnapshotFieldAuthority` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:309:5`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:323:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:328:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:334:34`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:337:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:348:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:351:27`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:353:20`
+- error[E0407]: method `next_close_byte_demand` is not a member of trait `store::ArtifactEnvelopeMutationFieldAuthority` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:375:5`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:397:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:400:19`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:421:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:424:19`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:789:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:792:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:797:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:799:31`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:801:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:802:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:810:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:814:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:816:31`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:818:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:829:30`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:833:19`
+- error[E0407]: method `next_close_byte_demand` is not a member of trait `crate::app::ArtifactStoreInitializationAuthority` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:991:5`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1005:27`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1009:27`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1023:27`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1024:27`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1157:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1158:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1159:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1163:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1168:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1169:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1170:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1174:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1180:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1181:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1182:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1186:24`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1310:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1311:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1312:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1324:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1325:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1326:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:240:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:241:20`
+- error[E0433]: cannot find `SnapshotRetirementStep` in `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:242:20`
+- error[E0425]: cannot find value `STALL_LIMIT` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:315:20`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:95:92`
+- error[E0425]: cannot find value `identity` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8212:62`
+- error[E0425]: cannot find value `identity` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8213:96`
+- error[E0425]: cannot find type `RetirementDemand` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9320:63`
+- error[E0425]: cannot find type `ValueError` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9320:80`
+- error[E0425]: cannot find type `RetirementDemand` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9325:61`
+- error[E0425]: cannot find type `ValueError` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9325:78`
+- error[E0422]: cannot find struct, variant or union type `HistoryConflict` in crate `protocol` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-child-member-registry/🦀️.rs:95:822`
+- error[E0422]: cannot find struct, variant or union type `HistoryMessage` in crate `protocol` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-child-member-registry/🦀️.rs:95:978`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs:21:84`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:202:92`
+- error[E0425]: cannot find function `io_run` in module `semio_framework_os_kernel::io::io_mechanism` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:577:67`
+- error[E0425]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:17:72`
+- error[E0425]: cannot find function `snapshot_close_step` in module `extension_retirement` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:18:228`
+- error[E0425]: cannot find function `snapshot_close_step` in module `extension_retirement` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:22:38`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:49:17`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:50:17`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:63:124`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:70:58`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:74:126`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:77:52`
+- error[E0425]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:119:72`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:120:74`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:120:109`
+- error[E0425]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:129:72`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:131:38`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:131:121`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:155:46`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:155:121`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:158:62`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:161:66`
+- error[E0425]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:197:68`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:197:97`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:210:61`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:212:62`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:227:59`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:228:42`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:232:55`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:234:48`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:243:62`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:245:57`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:246:57`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:248:67`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:249:59`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:260:57`
+- error[E0433]: cannot find type `PluginCloseStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:317:84`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:285:69`
+- error[E0433]: cannot find `LocalizedLabel` in `crate` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:439:410`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:262:92`
+- error[E0425]: cannot find value `owned_retirement` in module `semio_framework_value::retirement` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:252`
+- error[E0425]: cannot find function `owned_retirement` in module `semio_framework_value::retirement` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3429:63`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4794:96`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4850:96`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:179:92`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:321:91`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:395:92`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:419:92`
+- error[E0425]: cannot find type `SnapshotRetirementStep` in crate `store` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:787:91`
+- error[E0603]: crate `store` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/♻️metadata/🧪️tests/🦀️.rs:28:53`
+- error[E0603]: crate `vcs` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/♻️metadata/🧪️tests/🦀️.rs:28:187`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `component::publication_fixture::presence::PublicationPresence` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/📢️publication-fixtures/../📢️publication-fixtures-presence/🦀️.rs:6:102`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `component::app::HistoryCommandFilter` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13224:58`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `component::app::InverseAction` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13257:39`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `component::app::AlternativeView` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:13565:39`
+- error[E0119]: conflicting implementations of trait `RetireOwned` for type `component::app::TransactionPhase` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:17990:5`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `component::retained_command::ArtifactCommandWork::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:27`
+- error[E0050]: method `invoke` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::invoke` has 4 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:15:19`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:17:23`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `component::app::ArtifactStoreInitializationAuthority::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1154:19`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4794:23`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:14:5`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:990:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:285:19`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:228:172`
+- error[E0046]: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:284:1`
+- error[E0053]: method `step` has an incompatible type for trait — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:109:74`
+- error[E0050]: method `invoke` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::invoke` has 4 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:117:19`
+- error[E0046]: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4789:5`
+- error[E0046]: not all trait items implemented, missing: `close_step`, `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:227:1`
+- error[E0050]: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:301:21`
+- error[E0046]: not all trait items implemented, missing: `retirement_birth_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:300:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:143:19`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:108:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:119:23`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:116:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:262:172`
+- error[E0050]: method `retire` has 2 parameters but the declaration in trait `dsl::SnapshotRetirementFactory::retire` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4821:19`
+- error[E0050]: method `invoke` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::invoke` has 4 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:127:19`
+- error[E0046]: not all trait items implemented, missing: `close_step`, `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:261:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:129:23`
+- error[E0050]: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:306:21`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:126:5`
+- error[E0050]: method `invoke` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::invoke` has 4 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:195:23`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:197:27`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:194:9`
+- error[E0046]: not all trait items implemented, missing: `retirement_birth_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:305:1`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:334:169`
+- error[E0050]: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4842:25`
+- error[E0046]: not all trait items implemented, missing: `close_step`, `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:333:5`
+- error[E0046]: not all trait items implemented, missing: `retirement_birth_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4841:5`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4850:23`
+- error[E0046]: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4849:5`
+- error[E0050]: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4869:25`
+- error[E0046]: not all trait items implemented, missing: `retirement_birth_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4868:5`
+- error[E0053]: method `step` has an incompatible type for trait — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:372:74`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:389:19`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:371:1`
+- error[E0050]: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:449:19`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:448:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:179:19`
+- error[E0046]: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:178:1`
+- error[E0050]: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:204:21`
+- error[E0046]: not all trait items implemented, missing: `retirement_birth_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:203:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ArtifactEnvelopeSnapshotFieldAuthority::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:321:19`
+- error[E0046]: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:249:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ArtifactEnvelopeMutationFieldAuthority::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:395:19`
+- error[E0046]: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:374:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ArtifactEnvelopeSprConflictAuthority::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:419:19`
+- error[E0046]: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:408:1`
+- error[E0277]: the trait bound `ComposedParentEnvelopeOwnedFieldCatalog: FactoryRetirement` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:434:101`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:714:78`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:730:23`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:707:5`
+- error[E0050]: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:780:23`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:779:5`
+- error[E0050]: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:803:23`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:802:5`
+- error[E0277]: the trait bound `TestCommand: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:29:20`
+- error[E0277]: the trait bound `ComposedParentSnapshot: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:511:21`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:177:25`
+- error[E0277]: the trait bound `RecursiveFixtureMutation: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:512:21`
+- error[E0053]: method `advance` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🧬️preparation/🦀️.rs:21:137`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:178:25`
+- error[E0277]: the trait bound `Std1AnyCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:187:24`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:202:25`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:203:25`
+- error[E0277]: the trait bound `Std1AnyCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:210:24`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1StrictSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:225:25`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:173:74`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:198:19`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:172:1`
+- error[E0277]: the trait bound `std1_strict::Std1StrictMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:226:25`
+- error[E0277]: the trait bound `DummySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:304:21`
+- error[E0277]: the trait bound `Std1StrictCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:235:24`
+- error[E0277]: the trait bound `DummyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:305:21`
+- error[E0277]: the trait bound `DummyCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:314:20`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1StrictSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:250:25`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📥️inbound-request/🦀️.rs:71:5`
+- error[E0277]: the trait bound `std1_strict::Std1StrictMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:251:25`
+- error[E0277]: the trait bound `Std1StrictCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:258:24`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std2AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:273:25`
+- error[E0277]: the trait bound `std2_any::Std2AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:274:25`
+- error[E0277]: the trait bound `Std2AnyCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:283:24`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std2AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:298:25`
+- error[E0277]: the trait bound `std2_any::Std2AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:299:25`
+- error[E0277]: the trait bound `Std2AnyCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:306:24`
+- error[E0061]: this function takes 9 arguments but 7 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/⚛️reactor-driver/🦀️.rs:18:18`
+- error[E0061]: this function takes 9 arguments but 7 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/⚛️reactor-driver/🦀️.rs:40:5`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:457:24`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:458:5`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:92:47`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:92:47`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:164:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:165:63`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:171:15`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:181:27`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:185:9`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:238:8`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:239:5`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:264:17`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:288:5`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:302:5`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:203:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:204:63`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:311:22`
+- error[E0061]: this method takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:329:13`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:347:5`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:359:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:362:67`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:366:13`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:371:27`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1074:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1077:72`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1081:26`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1087:21`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1177:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1181:77`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1183:17`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1234:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1237:67`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1244:13`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1425:19`
+- error[E0277]: the trait bound `P: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:33:83`
+- error[E0277]: the trait bound `Mu: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:33:86`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:33:51`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:33:51`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:35:19`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:51:15`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:58:22`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7541:30`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8876:30`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8907:37`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9147:24`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9148:24`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9154:24`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9189:22`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9191:22`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9234:22`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9237:22`
+- error[E0063]: missing fields `identity`, `identity_progress`, `original_retirement_receipt` and 1 other field in initializer of `component::app::MountedTypedCommandFullOperation<A>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/../../../../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs:6:27`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/../../../../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs:32:17`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/../../../../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs:42:21`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22768:25`
+- error[E0560]: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:229:123`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:231:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:239:130`
+- error[E0063]: missing field `original_retirement_receipt` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:250:31`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:317:25`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:332:17`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:346:74`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:363:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:363:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:364:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:368:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:369:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:370:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:485:130`
+- error[E0063]: missing field `original_retirement_receipt` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:494:35`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:561:29`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:585:21`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:625:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:626:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:630:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:631:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:632:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:900:130`
+- error[E0063]: missing field `original_retirement_receipt` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:922:17`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:977:17`
+- error[E0063]: missing field `original_retirement_receipt` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1002:17`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1057:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1057:89`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1077:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1079:35`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1086:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1092:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1093:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1097:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1098:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1099:17`
+- error[E0308]: arguments to this function are incorrect — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:25834:134`
+- error[E0599]: no method named `begin_close` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26001:25`
+- error[E0599]: no method named `retirement_demands` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26005:35`
+- error[E0599]: no method named `close_step` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26005:390`
+- error[E0599]: no method named `terminal_is_empty` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26007:97`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33689:9`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33692:19`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33740:9`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33746:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33747:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33748:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33752:17`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:253:36`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:384:22`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:474:53`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:474:53`
+- error[E0061]: this function takes 2 arguments but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:475:19`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:477:38`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:297:19`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:303:28`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:307:86`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:307:20`
+- error[E0061]: this method takes 2 arguments but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:310:17`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:339:19`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:340:16`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2473:27`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2502:27`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2528:23`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2550:9`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2647:31`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2679:27`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:15:15`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3823:26`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3865:26`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4506:21`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4751:36`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4757:13`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4770:51`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4770:51`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:893:19`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:905:24`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1267:51`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1267:51`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1270:61`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1284:17`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1292:19`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1295:9`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1367:28`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1456:54`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1456:54`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1458:27`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1513:31`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1520:17`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1543:51`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1543:51`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1548:9`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1614:28`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1617:18`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:2254:9`
+- error[E0616]: field `mounted_policy` of struct `component::app::VcsArtifactApp` is private — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:2267:72`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:142:31`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:146:17`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5192:26`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5404:9`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5406:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5407:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5408:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5409:17`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_document_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:335:5`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_config_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:338:5`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_draft_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:341:5`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_document_store_owners` has 1 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:60:5`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_document_store_owners` has 1 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:542:5`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_config_store_owners` has 1 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:81:5`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_config_store_owners` has 1 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:559:5`
+- error[E0050]: method `begin` has 2 parameters but the declaration in trait `dsl::ArtifactStoreOneItemPreparationFactory::begin` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:208:13`
+- error[E0046]: not all trait items implemented, missing: `begin_demand` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:198:5`
+- error[E0053]: method `advance` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:219:75`
+- error[E0046]: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:218:5`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_draft_store_owners` has 1 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:89:5`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_draft_store_owners` has 1 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:561:5`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:787:19`
+- error[E0046]: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:786:1`
+- error[E0277]: the trait bound `TestCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1004:24`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_document_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1010:9`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_config_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1014:9`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_draft_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1018:9`
+- error[E0050]: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:31:19`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:30:1`
+- error[E0050]: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:64:19`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:63:1`
+- error[E0050]: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1285:23`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1284:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1321:78`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1356:23`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1320:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:304:74`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:333:19`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:303:1`
+- error[E0277]: the trait bound `TestCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1459:24`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_document_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1476:9`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_config_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1479:9`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_draft_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1482:9`
+- error[E0277]: the trait bound `component::app::mutation_fixture::surface::SurfaceSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:503:21`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-artifact-reserved-tool-job/🦀️.rs:16:79`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-artifact-reserved-tool-job/🦀️.rs:15:5`
+- error[E0053]: method `advance` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:166:75`
+- error[E0046]: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:165:5`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🤖️agent-lane-preview/🦀️.rs:44:78`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🤖️agent-lane-preview/🦀️.rs:70:23`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🤖️agent-lane-preview/🦀️.rs:43:5`
+- error[E0277]: the trait bound `TestCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2216:24`
+- error[E0277]: the trait bound `SurfaceEditorCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:513:20`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactEditor::build_document_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:578:5`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactEditor::build_config_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:581:5`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactEditor::build_draft_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:584:5`
+- error[E0277]: the trait bound `component::app::mutation_fixture::surface::SurfaceSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:642:21`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands`, `preparation_refusal` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs:6:1`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:39:74`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:38:1`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:95:19`
+- error[E0046]: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:94:1`
+- error[E0053]: method `step` has an incompatible type for trait — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:184:74`
+- error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:215:19`
+- error[E0046]: not all trait items implemented, missing: `borrow_outcome` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:183:1`
+- error[E0050]: method `retire` has 2 parameters but the declaration in trait `dsl::SnapshotRetirementFactory::retire` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:122:15`
+- error[E0050]: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:132:19`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:131:1`
+- error[E0050]: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:156:19`
+- error[E0046]: not all trait items implemented, missing: `retirement_demands` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:155:1`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_document_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:236:5`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_config_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:240:5`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_draft_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:244:5`
+- error[E0277]: the trait bound `SurfaceViewerCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:650:20`
+- error[E0050]: method `mounted_job_maintenance_step` has 3 parameters but the declaration in trait `component::app::ArtifactViewer::mounted_job_maintenance_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:669:50`
+- error[E0050]: method `mounted_job_close_step` has 3 parameters but the declaration in trait `component::app::ArtifactViewer::mounted_job_close_step` has 2 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:676:44`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactViewer::build_document_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:695:5`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactViewer::build_config_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:698:5`
+- error[E0277]: the trait bound `TxnSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:321:21`
+- error[E0277]: the trait bound `LabelReloadCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:93:20`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_document_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:125:5`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_config_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:129:5`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_draft_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:133:5`
+- error[E0277]: the trait bound `transaction::mutations::TxnMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:322:21`
+- error[E0277]: the trait bound `transaction::TxnCommand: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:331:20`
+- error[E0050]: method `build_document_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_document_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:387:5`
+- error[E0050]: method `build_config_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_config_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:391:5`
+- error[E0050]: method `build_draft_store_owners` has 0 parameters but the declaration in trait `component::app::ArtifactApp::build_draft_store_owners` has 1 — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:395:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8718:66`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/../🔬️surface-view-state-routing/🦀️.rs:94:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6844:52`
+- error[E0061]: this function takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/../🔬️surface-view-state-routing/🦀️.rs:95:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7843:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6845:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8719:85`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/../🔬️surface-view-state-routing/🦀️.rs:102:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8720:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6846:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6851:132`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8107:59`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8802:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6871:55`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8837:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8843:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9863:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8850:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9877:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8870:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8142:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8871:191`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8895:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8900:10`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9878:36`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8920:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6874:64`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6884:57`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9892:65`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9894:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8143:71`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8921:174`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🦀️.rs:18:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5870:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8165:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5898:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8177:72`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8946:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8947:174`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8970:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8971:191`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8199:63`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6885:18`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8211:71`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5899:101`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6903:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5933:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6904:134`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9005:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8247:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9006:156`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5934:61`
+- error[E0599]: no method named `next_close_byte_demand` found for reference `&child_emit_preparation::OwnedChildEmit` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🦀️.rs:29:145`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9056:66`
+- error[E0616]: field `mounted_policy` of struct `component::app::VcsArtifactApp` is private — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:2329:72`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9057:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8248:112`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:61:14`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:61:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9058:160`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:82:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7193:52`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:82:9`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:90:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8267:63`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9060:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9079:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9080:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9081:160`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9082:187`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9115:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5935:88`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🦀️.rs:30:14`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:90:9`
+- error[E0061]: this function takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🦀️.rs:40:23`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:162:28`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5939:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5959:52`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:181:28`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7194:88`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7210:52`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9121:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8269:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5960:83`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8272:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9151:66`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🦀️.rs:48:47`
+- error[E0599]: no method named `next_close_byte_demand` found for reference `&std::boxed::Box<dyn dsl::ErasedSnapshotRetirement>` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:992:99`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:199:28`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1004:37`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🦀️.rs:77:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7212:86`
+- error[E0061]: this function takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs:8:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7229:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5961:61`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9153:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1022:27`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1128:30`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs:13:78`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8276:88`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:217:28`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1129:144`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8279:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8300:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7230:83`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9158:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9187:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5962:83`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7231:83`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs:15:26`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs:18:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:239:22`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9189:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8301:100`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5963:61`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:258:28`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9213:66`
+- error[E0061]: this function takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs:28:23`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1156:36`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5968:109`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:262:48`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7232:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5989:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8302:101`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9215:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5990:215`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1167:37`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5998:116`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs:33:78`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6016:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9240:66`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs:37:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7233:83`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🦀️.rs:43:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8303:115`
+- error[E0061]: this function takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🦀️.rs:14:15`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:262:48`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7249:52`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🦀️.rs:16:3`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6017:73`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1179:34`
+- error[E0061]: this function takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🦀️.rs:24:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8314:102`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9243:26`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🦀️.rs:26:2`
+- error[E0061]: this function takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🦀️.rs:33:14`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🦀️.rs:35:2`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:264:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9273:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8315:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7251:78`
+- error[E0616]: field `raw` of struct `component::app::FrameworkSetSelectionModeJob` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9911:320`
+- error[E0616]: field `raw` of struct `component::app::FrameworkSetSelectionModeJob` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9911:357`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7260:78`
+- error[E0616]: field `raw` of struct `component::app::FrameworkSetSelectionModeJob` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9912:285`
+- error[E0616]: field `raw` of struct `component::app::FrameworkSetSelectionModeJob` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9913:475`
+- error[E0616]: field `raw` of struct `component::app::FrameworkSetSelectionModeJob` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9914:263`
+- error[E0616]: field `raw` of struct `component::app::FrameworkSetSelectionModeJob` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9914:300`
+- error[E0616]: field `raw` of struct `component::app::FrameworkSetSelectionModeJob` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9915:279`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6033:52`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9275:26`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:268:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9316:187`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8330:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6034:86`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7283:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7284:139`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7306:52`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1309:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8331:84`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1323:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7307:76`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:307:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8350:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7324:52`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:309:31`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:312:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9320:101`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:313:27`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:314:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6035:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8352:59`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7327:103`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1594:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6054:52`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1594:5`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9330:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8356:73`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1635:15`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1636:13`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1636:81`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1641:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8377:240`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:315:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7328:103`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1680:17`
+- error[E0277]: the trait bound `ComposedParentSnapshot: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:164:15`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:332:41`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7330:102`
+- error[E0061]: this method takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9331:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6055:63`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:332:41`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:316:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8379:89`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6072:52`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1706:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8385:242`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:341:26`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:317:27`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9404:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7332:93`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7349:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6073:86`
+- error[E0277]: the trait bound `ComposedParentEnvelopeOwnedFieldCatalog: FactoryRetirement` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:442:18`
+- error[E0277]: the trait bound `ComposedParentEnvelopeOwnedFieldCatalog: FactoryRetirement` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:445:18`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:318:27`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:543:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7357:136`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:322:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9465:70`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9467:195`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9469:242`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1734:5`
+- error[E0782]: expected a type, found a trait — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1737:230`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8389:96`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:323:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9511:70`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8413:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9512:214`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6074:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7362:150`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9517:70`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6078:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6093:52`
+- error[E0599]: no method named `with_one_item_preparation` found for enum `Result<T, E>` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:543:46`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:559:112`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:559:112`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:561:109`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:561:109`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7378:52`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1738:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4972:177`
+- error[E0782]: expected a type, found a trait — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1741:127`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8414:64`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7379:63`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4978:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6103:58`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6118:52`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4985:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9518:216`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8417:68`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:796:33`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9589:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7380:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8437:63`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:813:34`
+- error[E0277]: the trait bound `RecursiveBranchSnapshot: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:871:80`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1742:18`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4995:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4996:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4997:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4998:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4999:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6128:58`
+- error[E0782]: expected a type, found a trait — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1743:140`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7381:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7415:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6143:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9592:83`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9594:23`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9624:22`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9634:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8438:74`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7416:81`
+- error[E0277]: the trait bound `RecursiveFixtureMutation: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:871:86`
+- error[E0277]: the trait bound `RecursiveBranchSnapshot: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:878:155`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5007:24`
+- error[E0277]: the trait bound `RecursiveFixtureMutation: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:878:161`
+- error[E0277]: the trait bound `RecursiveBranchSnapshot: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:878:17`
+- error[E0277]: the trait bound `RecursiveFixtureMutation: RetireOwned` is not satisfied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:878:17`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9653:20`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9653:108}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9653:108`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5007:60`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7433:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9657:53`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8486:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5022:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4538:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8487:71`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9677:24`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9677:99}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9677:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9678:57`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6144:64`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4576:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7434:96`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9682:21`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9682:98}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9682:98`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9683:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7449:52`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5029:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8488:71`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7451:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6176:52`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9689:20`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9689:101}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9689:101`
+- error[E0782]: expected a type, found a trait — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1744:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8490:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5050:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9690:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8502:212`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7468:52`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5053:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7470:121`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9702:21`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9702:98}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9702:98`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5059:182`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8503:71`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7486:52`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4588:17`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1748:20`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4598:21`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4606:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4607:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4608:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8522:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4631:62`
+- error[E0599]: no method named `keyed` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9706:10`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5060:18`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1749:20`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1756:30`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1756:83`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6178:106`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5094:61`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9713:22`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9713:100}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9713:100`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4644:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4656:62`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4665:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4666:39`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6180:101`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6182:49`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4670:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4682:58`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4689:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7488:139`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6199:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7505:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5097:146`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1776:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8523:85`
+- error[E0782]: expected a type, found a trait — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1781:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5143:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8524:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6201:88`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4908:51`
+- error[E0599]: no method named `keyed` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9717:10`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6203:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8542:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7506:64`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7528:52`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9746:26`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9746:103}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9746:103`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7529:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9751:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6218:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7546:52`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1782:99`
+- error[E0782]: expected a type, found a trait — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1784:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4908:51`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9753:29`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4919:51`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5155:27`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9753:109}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9753:109`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9757:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8543:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8544:177`
+- error[E0277]: the trait bound `{closure@🦀️.rs:9800:13}: AsyncTaskSource<TestMutation, _, _>` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9798:104`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8547:160`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9798:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6219:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7547:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4919:51`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8552:146`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5167:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8569:66`
+- error[E0599]: no method named `restartable` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:9806:10`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4933:26`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5170:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7548:83`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5173:21`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1785:99`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1788:12`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1788:110`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1796:30`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1798:30`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8570:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8571:177`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3391:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3391:70`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6220:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6223:60`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6228:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6231:78`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3392:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3392:70`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7551:57`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7552:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8574:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6248:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7567:55`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8593:66`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1820:17`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5178:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8594:126`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4947:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4948:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4949:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4950:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4951:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8597:142`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7570:64`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7581:57`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6260:89`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5180:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3393:26`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6264:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6265:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6266:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3393:70`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3397:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3397:73`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6284:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8600:159`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5226:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3398:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3398:73`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2264:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2265:20`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7582:18`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8616:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5228:133`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5229:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3400:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3400:73`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6287:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8617:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8619:63`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5240:70`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5249:68`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7583:18`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8622:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7598:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5279:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8639:66`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3401:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3401:73`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3422:150`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3422:40`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3422:346`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3422:469`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3422:556`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3422:694`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3422:780`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:2013:30`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6311:118`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3423:115`
+- error[E0026]: variant `semio_framework_job::InteractiveJobCloseStep::Pending` does not have fields named `released_items`, `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3423:188`
+- error[E0027]: pattern does not mention field `progress` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3423:155`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8640:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5281:133`
+- error[E0616]: field `mounted_policy` of struct `component::app::VcsArtifactApp` is private — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:2243:68`
+- error[E0616]: field `mounted_policy` of struct `component::app::VcsArtifactApp` is private — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:2244:72`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5282:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8641:177`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1477:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6320:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6321:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6322:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1477:13`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1480:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7603:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7608:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5307:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8644:81`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8662:66`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3423:321`
+- error[E0026]: variant `semio_framework_job::InteractiveJobCloseStep::Pending` does not have a field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3423:298`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1480:13`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1483:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2733:254`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6339:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1483:13`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5311:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5316:70`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5328:26`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6342:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7615:61`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1556:38`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8663:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1556:133`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8664:177`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8665:160`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:8666:68`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:333`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:480`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:497`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:636`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:651`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7641:63`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1558:34`
+- error[E0533]: expected value, found struct variant `InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3416:757`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1558:135`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2778:83`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3453:112`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3453:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3455:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3456:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3466:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3467:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3468:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3469:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5363:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2804:242`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1570:39`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:150:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:150:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1570:135`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5365:136`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5366:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6346:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3481:34`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3499:112`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3499:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3501:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3502:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3503:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2868:144`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3504:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3510:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2874:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2878:142`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3511:17`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2885:20`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2885:146`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2885:165`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2886:20`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2886:150`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2886:169`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2887:20`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2887:150`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2887:169`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1573:39`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1573:125`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2888:20`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2888:150`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2888:169`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5371:70`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2889:20`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:152:24`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:155:76`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:155:95`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7653:83`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2889:94`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2891:20`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3526:33`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2891:94`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2855:133`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2855:13`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3541:108`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3541:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3542:60`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5378:26`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:157:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6354:23`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3548:35`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5421:33`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1577:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6355:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6356:17`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2860:33`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:392:122`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:392:141`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7730:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1578:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6374:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5443:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5446:133`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3576:116`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3576:35`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3578:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7731:95`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6384:10`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:393:24`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:397:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:397:122`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:400:76`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:400:95`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:402:110`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:402:129`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6395:10`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1584:39`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1584:154`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3587:28`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3587:151`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3587:170`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:403:9`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5448:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3067:63`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3589:28`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3589:102`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3589:121`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1586:39`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1586:152`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:479:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5488:61`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:479:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3591:28`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3591:102`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3591:121`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1590:36`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1533:34`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1534:30`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7780:52`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:480:22`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1536:23`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:480:104`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1539:84`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3091:63`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3596:32`
+- error[E0026]: variant `semio_framework_job::InteractiveJobCloseStep::Pending` does not have fields named `released_items`, `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3597:80`
+- error[E0027]: pattern does not mention field `progress` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3597:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6402:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1629:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:7818:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5491:133`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1644:239`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:483:26`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:483:69`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1657:249`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6426:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1670:251`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6435:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6442:67`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3615:29`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3114:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3114:106`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3632:118`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3632:37`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1683:270`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5493:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3634:13`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:490:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6463:56`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3647:117`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3647:36`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3649:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1696:261`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:490:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5524:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5526:133`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1709:262`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3669:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6473:10`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3117:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1732:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6484:10`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1745:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3117:107`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:492:22`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:492:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1775:182`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5528:109`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:496:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3671:79`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:2:5`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3120:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3120:101`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:77:13`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:89:13`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:94:13`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:101:17`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:654:29`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:106:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6486:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5534:134`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:734:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:734:103`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:738:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:738:99`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:741:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:741:99`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:111:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3200:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6513:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1780:48`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:743:13`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1788:34`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:753:22`
+- error[E0026]: variant `semio_framework_job::InteractiveJobCloseStep::Pending` does not have fields named `released_items`, `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:754:73`
+- error[E0027]: pattern does not mention field `progress` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:754:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5538:129`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:208:13`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3209:21`
+- error[E0533]: expected unit struct, unit variant or constant, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:756:17`
+- error[E0061]: this function takes 4 arguments but 3 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:215:5`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6516:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5562:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6529:10`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6536:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6544:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1847:182`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3284:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5595:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:785:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6549:49`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1011:18`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1011:18`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1015:18`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1015:18`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1019:18`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1019:18`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📏️future-size/🦀️.rs:16:18`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6567:56`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📏️future-size/🦀️.rs:17:18`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3799:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1849:142`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5597:13`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1857:34`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1902:182`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5642:65`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3299:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🧪️tests/🔬️unit/🦀️.rs:105:93`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3306:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3340:63`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5644:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1361:32`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1364:84`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1364:103`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5650:22`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6571:14`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4064:30`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6588:24`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1369:48`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1370:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1371:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1372:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1373:21`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1370:147`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1370:163`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1376:88`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1376:107`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1381:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1381:99`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:38:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:40:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:41:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:44:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:48:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:49:9`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:51:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:52:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:53:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:57:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6598:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6599:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6600:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1964:182`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4112:22`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1383:13`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:68:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:69:5`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4126:26`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:70:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:71:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6624:52`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4144:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3352:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3353:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6626:95`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5658:31`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:75:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:76:5`
+- error[E0425]: cannot find function `restore_job` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:83:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:84:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:85:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3357:42`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:98:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:99:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:100:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:101:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3362:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3362:96`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5665:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5665:114`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5669:19`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:111:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:112:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🔀️migrate/🧪️tests/🔬️unit/🦀️.rs:113:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5701:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3364:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3364:97`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5703:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1968:113`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5712:21`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1978:34`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5736:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6635:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6655:60`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3366:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3366:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2053:195`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5738:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4232:98`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6677:52`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:16:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4242:56`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6680:14`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:16:46`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5771:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6688:10`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6694:62`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2056:36`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4244:73`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4259:56`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:16:90`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6741:52`
+- error[E0599]: no method named `begin_option` found for struct `RetainedCloneClose` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:18:44`
+- error[E0061]: this method takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2061:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:17:95`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5774:15`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2062:200`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6742:61`
+- error[E0599]: no method named `step` found for struct `RetainedCloneClose` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:19:35`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6766:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4273:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5780:143`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5802:61`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4274:9`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `MemberOpenRequest` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:20:24`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:48:26`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:35:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:37:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:38:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:43:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:47:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:48:9`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:50:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:51:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:60:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:64:9`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:61:27`
+- error[E0369]: binary operation `==` cannot be applied to type `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:61:9`
+- error[E0277]: `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` doesn't implement `std::fmt::Debug` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:61:9`
+- error[E0599]: no method named `is_some` found for struct `JobOutcomeSlot` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2079:34`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2087:34`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:63:31`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:76:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:77:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:78:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:79:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4329:52`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:21:97`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:83:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:84:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5804:133`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6768:99`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2114:47`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:68:27`
+- error[E0277]: `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` doesn't implement `std::fmt::Debug` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:68:53`
+- error[E0425]: cannot find function `restore_job` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:91:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:92:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:93:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6789:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4330:74`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5807:52`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:101:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:102:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🔬️unit/🦀️.rs:103:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:70:33`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5809:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5834:61`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:74:33`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5839:133`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6793:111`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `MemberOpenRequest` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:24:78`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:77:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4357:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2159:145`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2161:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:24:121`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2168:145`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2170:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:5842:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:39:39`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4362:27`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:45:30`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:100:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6817:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6818:61`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:105:29`
+- error[E0369]: binary operation `==` cannot be applied to type `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:105:9`
+- error[E0277]: `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` doesn't implement `std::fmt::Debug` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:105:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6820:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4380:52`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:107:38`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:6824:49`
+- error[E0599]: no method named `is_none` found for enum `Result<T, E>` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:45:54`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4398:52`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4399:82`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:145:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4423:66`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:154:31`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:46:18`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs:120:22`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs:122:23`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs:125:25`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs:128:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4424:85`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:158:37`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4425:177`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:161:31`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:25:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:26:9`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:178:27`
+- error[E0369]: binary operation `==` cannot be applied to type `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:178:9`
+- error[E0277]: `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` doesn't implement `std::fmt::Debug` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:178:9`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:33:5`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:210:33`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:35:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:36:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:212:27`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:43:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:44:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:45:9`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:56:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4462:78`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4463:189`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:57:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:58:9`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:65:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:66:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:67:9`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:103:9`
+- error[E0599]: no method named `is_none` found for enum `Result<T, E>` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:46:42`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:104:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:106:13`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:125:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:126:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:127:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:128:9`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:131:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:132:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:133:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:134:9`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:136:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:137:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:515:30`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:60:94`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:148:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:149:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:150:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:151:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:152:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:153:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:74:21`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:156:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:157:5`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:74:45`
+- error[E0425]: cannot find function `restore_job` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:164:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:165:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:166:9`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:78:94`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:80:16`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:81:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:626:55`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:181:5`
+- error[E0308]: arguments to this function are incorrect — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:631:25`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:182:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:182:58`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:183:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:184:9`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:188:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:189:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:190:9`
+- error[E0061]: this function takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:200:21`
+- error[E0599]: no method named `is_none` found for enum `Result<T, E>` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:82:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:634:81`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `MetadataRetirement` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:224:29`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:226:33`
+- error[E0308]: arguments to this function are incorrect — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:651:25`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1StrictSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:673:25`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:680:17`
+- error[E0599]: no method named `next_close_byte_demand` found for reference `&child_emit_preparation::OwnedChildEmit` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:84:371`
+- error[E0061]: this function takes 6 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:681:17`
+- error[E0599]: no method named `step` found for enum `std::option::Option<T>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:201:28`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `MetadataRetirement` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:230:33`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:683:63`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:232:29`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:85:18`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:683:80`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:234:29`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std2AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:58:15`
+- error[E0599]: no method named `take_outcome` found for mutable reference `&mut BatchJobSession<component::plugin_runtime::RuntimeCloseCleanupJob<PA>>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41754:37`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:243:29`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std2AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:686:54`
+- error[E0599]: no method named `is_none` found for enum `Result<T, E>` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:85:43`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1StrictSnapshot: ArtifactNativeSnapshot` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:358:84`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1StrictSnapshot: ArtifactNativeSnapshot` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:358:205`
+- error[E0277]: the trait bound `S: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:379:47`
+- error[E0277]: the trait bound `M: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:379:50`
+- error[E0277]: the trait bound `std2_any::Std2AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:686:71`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:100:34`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:103:33`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:688:48`
+- error[E0599]: no method named `cancel` found for enum `std::option::Option<T>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:202:11`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `MetadataRetirement` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:244:29`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `component::app::ChildEmit` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:126:26`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:688:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:245:35`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:246:29`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:697:48`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:697:65`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:127:17`
+- error[E0599]: no method named `terminal_drop_is_shallow` found for enum `std::option::Option<T>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:203:19`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:127:40`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:58:15`
+- error[E0599]: no method named `step` found for enum `std::option::Option<T>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:204:17`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:209:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:210:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:210:54`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:212:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:213:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:283:53`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:724:101`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:284:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:285:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:285:57`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:286:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:286:57`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:288:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:289:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:289:57`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `component::app::ChildEmit` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:129:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:297:53`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:298:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:299:5`
+- error[E0425]: cannot find function `restore_job` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:305:5`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:306:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:306:57`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:724:117`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `MetadataRetirement` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:247:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:311:56`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:143:33`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:312:5`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:248:35`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:316:15`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:317:13`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:321:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:322:9`
+- error[E0425]: cannot find function `insert_slot` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:344:5`
+- error[E0277]: the type `[std::option::Option<JobSlot>]` cannot be indexed by `&{integer}` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:345:96`
+- error[E0277]: the type `[std::option::Option<JobSlot>]` cannot be indexed by `&{integer}` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:349:100`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:350:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:350:91`
+- error[E0061]: this function takes 5 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:353:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:353:57`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:249:29`
+- error[E0593]: closure is expected to take 2 arguments, but it takes 1 argument — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:251:86`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:734:48`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:252:25`
+- error[E0369]: binary operation `==` cannot be applied to type `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:252:9`
+- error[E0277]: `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` doesn't implement `std::fmt::Debug` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:252:9`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1StrictSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:58:15`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:734:65`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:747:61`
+- error[E0599]: no method named `contains_key` found for struct `std::cell::Ref<'_, [std::option::Option<JobSlot>; 1024]>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:354:44`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs:337:83`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:260:29`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:273:26`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:284:17`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:286:28`
+- error[E0369]: binary operation `==` cannot be applied to type `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:286:17`
+- error[E0277]: `component::plugin_runtime::extension_retirement::ExtensionInvokeStep` doesn't implement `std::fmt::Debug` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:286:17`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:288:25`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:292:21`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `component::app::ChildEmit` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:152:27`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:294:142`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:294:26`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:747:78`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:297:143`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:297:27`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:300:90`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:300:28`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:310:13`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:312:17`
+- error[E0425]: cannot find function `extension_next_close_byte_demand` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:313:20`
+- error[E0425]: cannot find function `extension_next_close_byte_demand` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:315:26`
+- error[E0061]: this function takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:317:30`
+- error[E0425]: cannot find function `extension_next_close_byte_demand` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:318:24`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:321:13`
+- error[E0425]: cannot find function `extension_next_close_byte_demand` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:322:24`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:325:13`
+- error[E0425]: cannot find function `extension_next_close_byte_demand` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:326:24`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:329:13`
+- error[E0425]: cannot find function `extension_next_close_byte_demand` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:330:21`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:331:21`
+- error[E0061]: this function takes 7 arguments but 5 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:333:17`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:153:17`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:153:41`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:804:23`
+- error[E0063]: missing field `retained` in initializer of `BatchDriveConfig` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:22:17`
+- error[E0599]: no associated function or constant named `try_new` found for struct `BatchJobSession<J>` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:25:67`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:841:9`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `component::app::ChildEmit` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:155:21`
+- error[E0277]: the trait bound `component::app::declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/⚠️refusal/🦀️.rs:56:52`
+- error[E0599]: no method named `begin_close` found for type `!` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:26:13`
+- error[E0277]: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/⚠️refusal/🦀️.rs:56:69`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:175:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/⚠️refusal/🦀️.rs:62:21`
+- error[E0599]: no method named `terminal_is_empty` found for type `!` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:27:36`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `component::app::ChildEmit` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:197:31`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:198:21`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:198:45`
+- error[E0599]: no method named `close_step` found for type `!` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:27:83`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `component::app::ChildEmit` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:200:25`
+- error[E0599]: no method named `terminal_is_empty` found for type `!` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:28:21`
+- error[E0063]: missing field `mounted_policy` in initializer of `component::plugin_runtime::RuntimeCloseWorkerState<_>` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:31:25`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:323:34`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:329:27`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:345:28`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:345:65`
+- error[E0599]: no method named `is_none` found for struct `JobOutcomeSlot` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:80:62`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:94:61`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:348:28`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:348:81`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27692:76`
+- error[E0599]: no method named `is_some` found for struct `JobOutcomeSlot` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:109:30`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `child_emit_preparation::ChildEmitPreparation` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:353:31`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:354:30`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:355:16`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:356:21`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:361:31`
+- error[E0599]: no method named `as_ref` found for struct `JobOutcomeSlot` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:110:36`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:385:27`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:397:28`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:397:53`
+- error[E0599]: no method named `as_ref` found for struct `JobOutcomeSlot` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:113:33`
+- error[E0425]: cannot find function `mounted_private_child_grant` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27740:17`
+- error[E0616]: field `member` of struct `component::app::time_travel::TimeTravelLedger` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27758:43`
+- error[E0616]: field `member` of struct `component::app::time_travel::TimeTravelLedger` is private — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27759:43`
+- error[E0529]: expected an array or slice, found `Option<(ArtifactStoreConstructorKind, _, _, _)>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26510:65`
+- error[E0529]: expected an array or slice, found `Option<(ArtifactStoreConstructorKind, _, _, _)>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26541:126`
+- error[E0599]: no method named `is_none` found for struct `JobOutcomeSlot` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:145:52`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `child_emit_preparation::ChildEmitPreparation` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:402:31`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:184:36`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:403:27`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:404:13`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:405:13`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:406:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:191:105`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:194:51`
+- error[E0063]: missing field `retained` in initializer of `BatchDriveConfig` — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:210:17`
+- error[E0277]: `?` couldn't convert the error to `semio_framework_dsl::Fault` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23237:74`
+- error[E0599]: no associated function or constant named `try_new` found for struct `BatchJobSession<J>` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:213:67`
+- error[E0277]: the trait bound `document::mutations::TestMutation: ArtifactCanonicalJsonTree` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:199:326`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:220:46`
+- error[E0061]: this enum variant takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:225:27`
+- error[E0277]: `?` couldn't convert the error to `std::string::String` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:234:163`
+- error[E0061]: this enum variant takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:237:16`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:263:63`
+- error[E0061]: this enum variant takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:173:27`
+- error[E0061]: this enum variant takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:181:16`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:271:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:271:50`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:275:79`
+- error[E0599]: no associated function or constant named `new` found for struct `original_latest_key::ToolLatestWinsKeyCopy` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:430:47`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:275:34`
+- error[E0599]: no method named `step` found for type `!` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:214:13`
+- error[E0599]: no method named `take_outcome` found for type `!` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:215:27`
+- error[E0599]: no associated function or constant named `new` found for struct `original_latest_key::ToolLatestWinsKeyCopy` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:453:45`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:664:81`
+- error[E0600]: cannot apply unary operator `!` to type `Result<std::option::Option<dsl::RetainedCloneProgress>, semio_framework_dsl::Fault>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:664:13`
+- error[E0599]: no method named `as_ref` found for struct `JobOutcomeSlot` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:237:50`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:670:34`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:677:34`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:691:78`
+- error[E0600]: cannot apply unary operator `!` to type `Result<std::option::Option<dsl::RetainedCloneProgress>, semio_framework_dsl::Fault>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:691:13`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:699:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:700:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:704:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:705:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:706:21`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1635:30`
+- error[E0599]: no method named `as_mut` found for struct `JobOutcomeSlot` in the current scope — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:238:41`
+- error[E0308]: mismatched types — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:239:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1635:48`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:720:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:721:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:725:21`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:242:87`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:726:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:727:21`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1636:46`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1636:64`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1636:213`
+- error[E0599]: no method named `step` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21432:46`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:401:36`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:831:71`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:831:29`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:450:36`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:839:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:840:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:844:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:845:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:846:21`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:486:36`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:498:29`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:856:26`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:868:22`
+- error[E0560]: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1250:74`
+- error[E0599]: no method named `begin_close` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21459:17`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `component::app::ChildEmit` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1295:25`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📥️inbound-request/🦀️.rs:50:5`
+- error[E0593]: closure is expected to take 2 arguments, but it takes 1 argument — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📥️inbound-request/🦀️.rs:57:132`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1298:30`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1298:51`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1302:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1302:45`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19192:20`
+- error[E0599]: no method named `terminal_is_empty` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21461:24`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1303:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19193:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1303:45`
+- error[E0599]: no method named `next_close_byte_demand` found for mutable reference `&mut component::app::ChildEmit` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1306:34`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:14558:137`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1307:29`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1308:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1309:21`
+- error[E0599]: no method named `close_step` found for type `!` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:21464:29`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🤖️agent-lane-preview/🦀️.rs:75:13`
+- error[E0063]: missing field `retained` in initializer of `BatchDriveConfig` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🤖️agent-lane-preview/🦀️.rs:119:25`
+- error[E0599]: no method named `next_close_byte_demand` found for mutable reference `&mut component::app::ChildEmit` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1314:30`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/🧺️turn-patch-batch/🦀️.rs:24:29`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1335:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1335:75`
+- error[E0063]: missing field `retained` in initializer of `semio_framework::kernel::Budget` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/🧺️turn-patch-batch/🦀️.rs:235:60`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/🪪️metadata/🧪️tests/🔬️unit/🦀️.rs:253:60`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1340:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1341:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1346:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1350:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1351:17`
+- error[E0599]: no method named `unwrap` found for struct `std::string::String` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-child-member-registry/🦀️.rs:115:101`
+- error[E0599]: no method named `next_close_byte_demand` found for mutable reference `&mut component::app::VcsArtifactApp<A, M>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:23:28`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:24:104`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:25:32`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:28:108`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:29:36`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:32:102`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:33:30`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🧪️tests/🦀️.rs:279:304`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🧪️tests/🔬️unit/🦀️.rs:16:120`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🧪️tests/🔬️unit/🦀️.rs:17:120`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs:78:376`
+- error[E0599]: no method named `unwrap` found for struct `std::string::String` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-child-member-registry/🦀️.rs:181:104`
+- error[E0599]: no method named `next_close_byte_demand` found for mutable reference `&mut component::app::VcsArtifactApp<A, M>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:37:30`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:39:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:39:64`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:67:98`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:68:26`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:70:98`
+- error[E0063]: missing field `retained` in initializer of `component::app::AppOperationContext` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/♻️metadata/🧪️tests/🦀️.rs:23:39`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:71:26`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7683:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7684:21`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:385:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1326:100`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1327:97`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:126:14`
+- error[E0277]: a value of type `Vec<std::option::Option<std::string::String>>` cannot be built from an iterator over elements of type `std::option::Option<SharedUtf8>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2336:74`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:126:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:130:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:130:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:134:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2351:142`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:134:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1352:117`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:442:11`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:449:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1356:160`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1371:109`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:459:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1372:115`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1373:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2362:148`
+- error[E0599]: no method named `next_maintenance_byte_demand` found for mutable reference `&mut component::app::VcsArtifactApp<A, M>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:81:24`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:221:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2364:103`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:323:60`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:328:86`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2367:71`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:226:5`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:228:5`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:84:102`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:488:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:85:30`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:234:9`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:504:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1380:151`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:370:111`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2374:143`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2377:67`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1384:58`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1385:109`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:383:56`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:522:17`
+- error[E0061]: this function takes 6 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:525:21`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:531:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:385:60`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2378:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:387:162`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2393:142`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:535:18`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:88:98`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:540:9`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2396:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:89:26`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:390:97`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2399:146`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:405:56`
+- error[E0599]: no method named `checkpoint` found for reference `&std::boxed::Box<dyn component::retained_command::ArtifactCommandWork<A>>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/🦀️.rs:413:65`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:407:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1386:120`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1388:76`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2400:57`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:409:94`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:96:94`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:97:22`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs:100:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1403:160`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:418:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:420:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:421:107`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2401:11`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:435:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:436:86`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2424:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2431:86`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2438:77`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:646:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2439:107`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:147:48`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:437:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2455:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:147:48`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:170:146`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1412:98`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:157:47`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1556:114`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1557:120`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1558:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:157:47`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:174:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:175:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2465:100`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:440:78`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1560:92`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2475:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1561:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1562:155`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:443:175`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:446:239`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:448:193`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2533:118`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1564:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2534:124`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2535:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2537:76`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1566:150`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:457:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1568:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1602:115`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2543:120`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1603:121`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:458:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1604:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1605:92`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1606:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1609:68`
+- error[E0599]: no associated function or constant named `complete` found for struct `tool_run_tests::ToyRunJob` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:44:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:459:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2544:84`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1617:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:471:56`
+- error[E0599]: no associated function or constant named `emit` found for struct `tool_run_tests::ToyRunJob` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:65:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2545:168`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2561:248`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2564:96`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2566:137`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2572:79`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2576:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2578:109`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1621:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1626:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2594:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1629:119`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2596:74`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1631:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1633:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1635:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1637:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:475:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:477:101`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:489:90`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:492:93`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1641:171`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1643:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:494:148`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1646:68`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1647:85`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:498:120`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1651:71`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1653:176`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1669:104`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1670:97`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1673:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1675:116`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2606:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2611:253`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2614:77`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:503:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:505:272`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:508:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2615:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2630:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2632:83`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:509:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1685:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1686:116`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1720:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1722:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1727:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:523:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1728:107`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:527:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1771:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2644:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1773:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:553:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2650:74`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2653:109`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2675:56`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:559:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2679:135`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2681:186`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2683:94`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:561:165`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1781:114`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1785:102`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1787:58`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1788:95`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2686:135`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2689:96`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2692:88`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:562:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:564:165`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:565:105`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1800:116`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1804:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1809:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2697:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2700:101`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2703:90`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2708:135`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2711:90`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1810:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:590:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2714:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1824:150`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:593:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2745:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:625:56`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:629:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1827:132`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1832:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1842:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1844:109`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1845:155`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2755:129`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:657:124`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:665:162`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1847:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1849:150`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:671:79`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1851:105`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2764:145`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2767:79`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2771:135`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2778:147`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2781:146`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1880:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:675:135`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1882:115`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1887:147`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2785:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:678:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:679:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:694:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1894:97`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:698:13`
+- error[E0790]: cannot call associated function on trait without specifying the corresponding `impl` type — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🌱️operation/🧪️tests/🦀️.rs:10:88`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1909:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1911:97`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3008:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1942:111`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1943:117`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1945:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1947:92`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:701:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1948:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3043:120`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3063:62`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:704:131`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1955:104`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:12:25`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:14:9`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:19:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:20:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:24:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:27:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:28:13`
+- error[E0061]: this function takes 5 arguments but 10 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2137:47`
+- error[E0061]: this method takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:34:24`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:35:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:39:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:42:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🫧️transient/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:43:13`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:706:9`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:222:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:222:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3092:120`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:224:24`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:232:76`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:232:95`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:235:76`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:235:95`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3108:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1959:52`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:237:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1967:95`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1969:102`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1970:128`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:716:13`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:718:9`
+- error[E0277]: the trait bound `TxnSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:384:78`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1988:88`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1989:90`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1991:66`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:724:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1994:135`
+- error[E0277]: the trait bound `transaction::mutations::TxnMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:384:94`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1997:104`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3120:108`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2075:74`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3127:74`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:726:20`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2078:73`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2081:71`
+- error[E0277]: the trait bound `TxnSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:388:58`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2084:70`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2093:83`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2094:83`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2096:145`
+- error[E0277]: the trait bound `transaction::mutations::TxnMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:388:74`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2098:109`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:388:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:388:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:392:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:392:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:396:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:396:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3150:104`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3155:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:3156:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:58:61`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:444:19`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:445:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:948:56`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:464:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:949:86`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:960:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:961:107`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:115:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:975:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:977:86`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:473:19`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:485:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2102:57`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:500:19`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:502:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:995:77`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/../🧬️mutation-fixtures-transaction-unit-command-close/🦀️.rs:105:60`
+- error[E0026]: variant `semio_framework_job::InteractiveJobCloseStep::Pending` does not have fields named `released_items`, `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/../🧬️mutation-fixtures-transaction-unit-command-close/🦀️.rs:107:44`
+- error[E0027]: pattern does not mention field `progress` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/../🧬️mutation-fixtures-transaction-unit-command-close/🦀️.rs:107:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:997:107`
+- error[E0533]: expected unit struct, unit variant or constant, found struct variant `InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/../🧬️mutation-fixtures-transaction-unit-command-close/🦀️.rs:108:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1010:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2110:57`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1011:86`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2140:70`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:128:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1032:77`
+- error[E0061]: this method takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1202:57`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1202:17`
+- error[E0369]: binary operation `<=` cannot be applied to type `Result<usize, semio_framework_value::ValueError>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1204:32`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1205:84`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1033:107`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:505:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2142:121`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:511:19`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:533:22`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1253:27`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:136:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1045:56`
+- error[E0560]: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1263:203`
+- error[E0061]: this function takes 5 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:137:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2146:161`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1046:86`
+- error[E0560]: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1272:74`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1066:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1067:107`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:148:19`
+- error[E0560]: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1292:83`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1292:104`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:546:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2151:80`
+- error[E0023]: this pattern has 1 field, but the corresponding tuple variant has 2 fields — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1307:164`
+- error[E0277]: the trait bound `TxnSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:75:15`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1103:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2153:150`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2163:22`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:153:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1104:86`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2197:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1112:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2198:86`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:549:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1114:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2215:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2216:107`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:156:9`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:170:19`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:550:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1119:77`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `private_publication_group::PrivateOwnedPublicationLane` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1316:43`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1317:41`
+- error[E0560]: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1318:129`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1120:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2246:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2248:57`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1318:76`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1319:28`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1325:31`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1137:56`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1339:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2256:53`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:561:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1139:86`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:340:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:340:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1150:77`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:181:9`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️gesture/🦀️.rs:203:19`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:342:24`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:345:76`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:345:95`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1151:107`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:347:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2258:47`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1162:56`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:575:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1163:86`
+- error[E0277]: the trait bound `component::app::mutation_fixture::surface::SurfaceSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:575:78`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2260:47`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1179:93`
+- error[E0277]: the trait bound `component::app::NoTransient: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:25:5`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:587:19`
+- error[E0061]: this function takes 5 arguments but 4 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:588:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1186:125`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1191:96`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1193:107`
+- error[E0277]: the trait bound `component::app::mutation_fixture::surface::SurfaceSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:579:58`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:579:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2265:165`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2311:67`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1208:56`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:36:27`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2315:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1209:86`
+- error[E0599]: no method named `with_one_item_preparation` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:579:92`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:582:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1213:175`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:582:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:585:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1218:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:585:14`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `owner::PrivateChildPublicationGroup<M>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1371:31`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1380:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1219:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1232:56`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:590:9`
+- error[E0277]: the trait bound `TransientStore<component::app::NoTransient, component::app::NoTransientMutation>: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:76:87`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:76:30`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:77:66`
+- error[E0277]: the trait bound `component::app::mutation_fixture::surface::SurfaceSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:696:58`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:696:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1234:87`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:592:9`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:81:17`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:696:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:699:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:699:14`
+- error[E0061]: this function takes 2 arguments but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:744:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1237:61`
+- error[E0560]: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:36:137`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1243:49`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:750:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:750:125`
+- error[E0061]: this function takes 2 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:751:22`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:751:113`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:764:19`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:766:5`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:781:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1261:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1262:107`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2320:49`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/🪟️retained-window-config/🦀️.rs:14:358`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1276:56`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1278:61`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/🪟️retained-window-config/🦀️.rs:20:67`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:137:27`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:237:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:237:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:241:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:241:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:245:14`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:782:9`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:783:19`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:786:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:245:14`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:205:80`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:205:99`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1284:135`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:807:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1295:106`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:334:66`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1297:112`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:809:19`
+- error[E0061]: this function takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:812:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:33:475`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:207:24`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_items` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:210:76`
+- error[E0559]: variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:210:95`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:334:23`
+- error[E0609]: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:374:66`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:817:5`
+- error[E0063]: missing fields `retained` and `snapshot_read` in initializer of `component::app::ArtifactReservedToolJobRequest<_>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:832:19`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:34:412`
+- error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:212:9`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:867:139`
+- error[E0061]: this function takes 4 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1007:19`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:374:23`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:414:19`
+- error[E0277]: the trait bound `DummySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:332:78`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1009:5`
+- error[E0277]: the trait bound `DummyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:332:94`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1017:19`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:70:35`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:70:62`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:427:27`
+- error[E0277]: the trait bound `DummySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:336:58`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:446:34`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1018:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1302:49`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:78:18`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1022:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1310:77`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1311:107`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1038:19`
+- error[E0277]: the trait bound `DummyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:336:74`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:336:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:336:14`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:339:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:339:14`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:465:33`
+- error[E0061]: this function takes 1 argument but 0 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:342:14`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:89:13`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:342:14`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:414:90`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:105:14`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:106:22`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:107:22`
+- error[E0599]: no method named `begin` found for struct `window_config::WindowConfigOwnerRegistry` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:500:63`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:416:22`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1044:21`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1048:5`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1055:19`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1061:5`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1068:19`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1074:5`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:130:5`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/../🎞️media-owner-context/🦀️.rs:131:5`
+- error[E0061]: this function takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1086:21`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:423:23`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:440:109`
+- error[E0061]: this function takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1091:18`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:316:192`
+- error[E0599]: no method named `begin` found for struct `window_config::WindowConfigOwnerRegistry` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:501:63`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:536:5`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1101:19`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:549:19`
+- error[E0061]: this method takes 3 arguments but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:441:21`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:565:35`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:453:141`
+- error[E0061]: this function takes 7 arguments but 6 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:454:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:347:173`
+- error[E0061]: this method takes 4 arguments but 3 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1103:25`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1111:5`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:93:47`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1159:40`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:463:214`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:471:158`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:592:32`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:599:5`
+- error[E0061]: this function takes 3 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:608:19`
+- error[E0063]: missing fields `identity`, `identity_progress`, `original_retirement_receipt` and 1 other field in initializer of `component::app::MountedTypedCommandFullOperation<RetirementApp>` — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:624:23`
+- error[E0277]: the trait bound `DummySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:74:15`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:395:185`
+- error[E0277]: the trait bound `DummySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:492:61`
+- error[E0061]: this method takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:672:27`
+- error[E0061]: this function takes 2 arguments but 1 argument was supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:682:5`
+- error[E0277]: the trait bound `DummyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:492:67`
+- error[E0277]: the trait bound `DummySnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:496:53`
+- error[E0277]: the trait bound `DummyMutation: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:496:59`
+- error[E0599]: no method named `next_close_byte_demand` found for mutable reference `&mut MemberOpenRequest` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:97:42`
+- error[E0599]: no method named `terminal_is_empty` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1162:28`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:517:249`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:99:114`
+- error[E0308]: mismatched types — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:518:185`
+- error[E0599]: no method named `next_close_byte_demand` found for struct `child::PrivateChildPublicationInput` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:123:40`
+- error[E0599]: no method named `close_step` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1163:34`
+- error[E0277]: the trait bound `component::app::mutation_fixture::surface::SurfaceSnapshot: RetireOwned` is not satisfied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:181:15`
+- error[E0599]: no method named `terminal_is_empty` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1163:264`
+- error[E0599]: no method named `terminal_is_empty` found for enum `Result<T, E>` in the current scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1165:29`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:12:29`
+- error[E0061]: this method takes 1 argument but 2 arguments were supplied — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:14:22`
+- error[E0597]: `fixture` does not live long enough — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../📬️completion/⚠️fault/🦀️.rs:32:14`
+- error[E0433]: cannot find type `SnapshotRetirementStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:12:60`
+- error[E0433]: cannot find type `SnapshotRetirementStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:15:13`
+- error[E0433]: cannot find type `SnapshotRetirementStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:20:13`
+- error[E0433]: cannot find type `SnapshotRetirementStep` in this scope — `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:24:13`

@@ -1,0 +1,22 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "sha256": "4b9b9d0a6bbb945311d1db99b3dc38425f8d8d9a92147383f2e15506b39857f8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+      "sha256": "d52bd87e04758e3a2466192ffc8d3e4b100319f706fca4fac92db97c8f96f678"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+      "sha256": "a7f8d81b4d73b0f223ce53789f7170805a5fdbaa8aa71495c27b223833cc0db2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "sha256": "f89f0d953a8b21a6cba23ce571daf9a268f5b22c845549ca3e4b69f0e2a30706"
+    }
+  ]
+}

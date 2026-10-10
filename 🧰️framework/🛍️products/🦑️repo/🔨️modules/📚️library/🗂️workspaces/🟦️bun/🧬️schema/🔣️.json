@@ -32,5 +32,99 @@
         "const": "*/package.json"
       }
     }
+  },
+  "description": "Portable authoritative Source membership recipes use literal path components, * and ? within a component, and ** for zero or more components. Brackets and braces are literal Source names. Native Bun workspaces are the complete current byte-sorted native literal directory projection of independently owned packages, excluding the installation scope itself and all testing collections. Native metacharacters are escaped and an empty brace alternative selects that same exact directory through Bun glob interpretation; ordinary directories remain direct literal entries. Leading ! is prefixed with ./ to preserve literal identity. Source discovery does not depend on published native projection. All affected scopes are refreshed through the original caller control before the first installation; current topology, manifest and policy guards refuse concurrent changes.",
+  "$defs": {
+    "OwnershipProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "path",
+        "completedOperations"
+      ],
+      "properties": {
+        "operation": {
+          "enum": [
+            "state",
+            "list",
+            "readText",
+            "selection",
+            "publication"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "completedOperations": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "OwnershipScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "beforeSha256",
+        "patterns",
+        "packages"
+      ],
+      "properties": {
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "beforeSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "OwnershipReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "scopes",
+        "packages"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnershipScope"
+          }
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    }
   }
 }

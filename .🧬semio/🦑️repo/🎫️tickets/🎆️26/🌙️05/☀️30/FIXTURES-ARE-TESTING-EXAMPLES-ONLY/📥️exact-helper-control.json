@@ -1,0 +1,25 @@
+{
+  "observedOnly": true,
+  "sources": [
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "fcd5f122f419c17b8980b82871614effa2b46dfd53835fc1b51d9ae9b9f05871",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🗣️verb-vocabulary/🟦️.ts",
+      "sha256": "06a1686dae33982acf0bfd48ef9e83c43e2fcd881793c1c8aa048ae614858833",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "760ab3d47603f0b757801c4512585dc432e54d293e6a30cda1fbad7234422c39",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "sha256": "bd4df5730707d269fd9f90576706f11be53fb7e443915317d8b37f0eaeea8580",
+      "ownership": false
+    }
+  ]
+}

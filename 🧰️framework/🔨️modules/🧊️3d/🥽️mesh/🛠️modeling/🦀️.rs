@@ -14,6 +14,13 @@ use std::collections::BTreeSet;
 #[path = "../🧪️tests/🔬️jobs/🦀️.rs"]
 mod tests;
 
+#[path = "🧺️snapshot/🦀️.rs"]
+mod snapshot_preparation;
+
+#[path = "📥️input/🦀️.rs"]
+mod input;
+pub use input::MeshTranslationInput;
+
 /// 📊 Completed work and a conservative remaining-work estimate, finalized on completion.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MeshModelingProgress {
@@ -51,6 +58,39 @@ enum Work {
     Import(Box<Import>),
     Knife(Box<Knife>),
     Transform(Box<Transform>),
+}
+
+impl Work {
+    fn snapshot_frontier(&self)->Option<&Snapshot> {
+        match self {
+            Self::Bevel(work)if work.phase==0||work.phase==10=>Some(&work.snapshot),
+            Self::Decimate(work)if work.phase==0&&work.corner>=work.snapshot.source.halfedges.len()&&work.snapshot.source.vertex_count()>work.target=>Some(&work.snapshot),
+            Self::Mirror(work)if work.phase==0=>Some(&work.snapshot),
+            Self::Merge(work)if work.coplanar.as_ref().map_or(work.phase==1,|child|child.phase==0)=>Some(&work.snapshot),
+            Self::Subdivide(work)if work.phase==1=>Some(&work.snapshot),
+            Self::LoopCut(work)if work.phase==0=>Some(&work.snapshot),
+            Self::Orient(work)if work.phase==0=>Some(&work.snapshot),
+            Self::FillHoles(work)if work.phase==0=>Some(&work.snapshot),
+            Self::Inflate(work)if work.phase==0=>Some(&work.snapshot),
+            Self::Knife(work)if work.phase==0=>Some(&work.snapshot),
+            _=>None,
+        }.filter(|owner|!owner.complete())
+    }
+    fn snapshot_frontier_mut(&mut self)->Option<&mut Snapshot> {
+        match self {
+            Self::Bevel(work)if work.phase==0||work.phase==10=>Some(&mut work.snapshot),
+            Self::Decimate(work)if work.phase==0&&work.corner>=work.snapshot.source.halfedges.len()&&work.snapshot.source.vertex_count()>work.target=>Some(&mut work.snapshot),
+            Self::Mirror(work)if work.phase==0=>Some(&mut work.snapshot),
+            Self::Merge(work)if work.coplanar.as_ref().map_or(work.phase==1,|child|child.phase==0)=>Some(&mut work.snapshot),
+            Self::Subdivide(work)if work.phase==1=>Some(&mut work.snapshot),
+            Self::LoopCut(work)if work.phase==0=>Some(&mut work.snapshot),
+            Self::Orient(work)if work.phase==0=>Some(&mut work.snapshot),
+            Self::FillHoles(work)if work.phase==0=>Some(&mut work.snapshot),
+            Self::Inflate(work)if work.phase==0=>Some(&mut work.snapshot),
+            Self::Knife(work)if work.phase==0=>Some(&mut work.snapshot),
+            _=>None,
+        }.filter(|owner|!owner.complete())
+    }
 }
 
 impl MeshModelingJob {
@@ -100,7 +140,20 @@ impl MeshModelingJob {
         if self.cancelled { return Ok(MeshModelingStep::Cancelled(self.progress)); }
         if let Some(demand)=self.tessellation_demands(grant.maximum_copy_bytes).map_err(MeshKernelError::Retained)? {if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original Modeling tessellation frontier exceeds admitted depth")));}}
         for _ in 0..budget.min(grant.maximum_items) {
+            if let Some(demand)=self.snapshot_demands().map_err(MeshKernelError::Retained)? {
+                if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original Modeling snapshot frontier exceeds admitted depth")));}
+                let child=RetainedCloneGrant {maximum_depth:grant.maximum_depth-2,..grant};
+                self.work.snapshot_frontier_mut().unwrap().advance(child,tessellation_progress).map_err(MeshKernelError::Retained)?;
+                if *tessellation_progress!=RetainedCloneProgress::default() {self.progress.units_done=self.progress.units_done.checked_add(1).ok_or_else(||MeshKernelError::InvalidInput("modeling progress overflow".into()))?;self.progress.units_total=self.progress.units_total.max(self.progress.units_done.saturating_add(1));}
+                return Ok(MeshModelingStep::Working(self.progress));
+            }
             let retained_tessellation=matches!(&self.work,Work::Knife(work)if work.phase==4&&(work.tessellation.is_some()||work.tessellation_retirement.is_some()))||matches!(&self.work,Work::Subdivide(work)if work.phase==3&&(work.tessellation.is_some()||work.tessellation_retirement.is_some()));
+            let retained_translation=self.translation_demands();
+            if let Some(demand)=retained_translation {
+                if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original translation exceeds admitted depth")));}
+                if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(MeshModelingStep::Working(self.progress));}
+                *tessellation_progress=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+            }
             let next=self.progress.units_done.checked_add(1).ok_or_else(||MeshKernelError::InvalidInput("modeling progress overflow".into()))?;
             let result = match &mut self.work {
                 Work::Bevel(work) => work.advance(),
@@ -145,9 +198,16 @@ impl MeshModelingJob {
                 return Ok(MeshModelingStep::Done(mesh));
             }
             self.progress.units_total = self.progress.units_total.max(self.progress.units_done.saturating_add(1));
-            if retained_tessellation{return Ok(MeshModelingStep::Working(self.progress));}
+            if retained_tessellation||retained_translation.is_some(){return Ok(MeshModelingStep::Working(self.progress));}
         }
         Ok(MeshModelingStep::Working(self.progress))
+    }
+
+    /// ↔️ Quotes the original translation position atom or metadata transition through its retained parent frames.
+    pub fn translation_demands(&self)->Option<protocol::value::RetirementDemand> {
+        let Work::Transform(work)=&self.work else{return None};
+        if work.recompute||work.selection.is_some()||work.component_matrix.is_some()||!matches!(work.policy,PositionPolicy::Affine)||!matches!(work.phase,0|8) {return None;}
+        Some(protocol::value::RetirementDemand {copy_bytes:if work.phase==0&&work.vertex<work.mesh.vertices.len(){std::mem::size_of::<[f32;3]>()}else{0},depth:3,..Default::default()})
     }
 
     /// 🪆️ Quotes the same original tessellation child or retained handback frontier.
@@ -155,6 +215,11 @@ impl MeshModelingJob {
         let(child,retirement)=match &self.work {Work::Knife(work)if work.phase==4=>(&work.tessellation,&work.tessellation_retirement),Work::Subdivide(work)if work.phase==3=>(&work.tessellation,&work.tessellation_retirement),_=>return Ok(None)};
         let mut demand=if let Some(owner)=retirement {protocol::value::RetirementDemand {copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}}else if let Some(owner)=child {protocol::value::RetirementDemand {copy_bytes:owner.next_normal_copy_byte_demand()?,capacity_bytes:owner.next_normal_capacity_byte_demand(copy)?,release_bytes:owner.next_normal_release_byte_demand()?,depth:owner.next_normal_depth_demand()?}}else{return Ok(None)};
         demand.depth=demand.depth.checked_add(2).ok_or_else(||protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original Modeling tessellation depth overflow"))?;Ok(Some(demand))
+    }
+
+    /// 🧺️ Quotes the same original source projection through its existing parent frames.
+    pub fn snapshot_demands(&self)->Result<Option<protocol::value::RetirementDemand>,protocol::value::ValueError> {
+        let Some(owner)=self.work.snapshot_frontier()else{return Ok(None)};let mut demand=owner.preparation_demands()?;demand.depth=demand.depth.checked_add(2).ok_or_else(||protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original Modeling snapshot depth overflow"))?;Ok(Some(demand))
     }
 }
 
@@ -255,8 +320,9 @@ impl HalfedgeMesh {
         let Work::Transform(work)=&mut job.work else {unreachable!()};work.selection=Some(TransformSelection {vertices,edges,faces,pivot,selected:HistoryFoldSet::new(),sum:[0.0;3],mode:0,cursor:0,next:None,start:0});work.component_matrix=Some(matrix);if let Some(matrix)=normal_matrix {work.normal_matrix=matrix;}work.transform_attributes=normals;work.recompute=true;work.phase=9;job.progress.phase="transform-selection";Ok(job)
     }
     /// 📦 Moves the caller-owned source into the same retained modeling work.
-    fn transform_job_owned(self,matrix:[[f32;3];3],offset:[f32;3],normal_matrix:[[f64;3];3],flip:bool,recompute:bool)->MeshResult<MeshModelingJob> {let source_vertices=self.vertex_count();let source_corners=self.halfedge_count();
-        Ok(MeshModelingJob {work:Work::Transform(Box::new(Transform {mesh:self,policy:PositionPolicy::Affine,matrix,offset,normal_matrix,flip,recompute,flat:Vec::new(),smooth:Vec::new(),hes:Vec::new(),normal:Normal::default(),face_normal:Vec3::ZERO,face:0,vertex:0,cursor:0,start:0,next:0,attribute_names:Vec::new(),attribute:0,selection:None,component_matrix:None,component_pivot:[0.0;3],transform_attributes:recompute,attribute_values:Vec::new(),attribute_indices:Vec::new(),attribute_samples:HistoryFoldIndex::new(),attribute_retired:Vec::new(),attribute_affected:None,attribute_corner:None,phase:0})),progress:MeshModelingProgress {units_done:0,units_total:source_corners.saturating_mul(8).saturating_add(source_vertices.saturating_mul(3)).saturating_add(1),phase:"transform-vertices"},cancelled:false,retired:false})
+    fn transform_job_owned(self,matrix:[[f32;3];3],offset:[f32;3],normal_matrix:[[f64;3];3],flip:bool,recompute:bool)->MeshResult<MeshModelingJob> {Ok(self.transform_owner(matrix,offset,normal_matrix,flip,recompute))}
+    fn transform_owner(self,matrix:[[f32;3];3],offset:[f32;3],normal_matrix:[[f64;3];3],flip:bool,recompute:bool)->MeshModelingJob {let source_vertices=self.vertex_count();let source_corners=self.halfedge_count();
+        MeshModelingJob {work:Work::Transform(Box::new(Transform {mesh:self,policy:PositionPolicy::Affine,matrix,offset,normal_matrix,flip,recompute,flat:Vec::new(),smooth:Vec::new(),hes:Vec::new(),normal:Normal::default(),face_normal:Vec3::ZERO,face:0,vertex:0,cursor:0,start:0,next:0,attribute_names:Vec::new(),attribute:0,selection:None,component_matrix:None,component_pivot:[0.0;3],transform_attributes:recompute,attribute_values:Vec::new(),attribute_indices:Vec::new(),attribute_samples:HistoryFoldIndex::new(),attribute_retired:Vec::new(),attribute_affected:None,attribute_corner:None,phase:0})),progress:MeshModelingProgress {units_done:0,units_total:source_corners.saturating_mul(8).saturating_add(source_vertices.saturating_mul(3)).saturating_add(1),phase:"transform-vertices"},cancelled:false,retired:false}
     }
     /// 🔪 Retains projection tests, concave tessellation, clipping and neighboring corners.
     pub fn knife_cut_job(&self,face:FaceId,a:Vec3,b:Vec3)->MeshResult<MeshModelingJob> {self.clone().knife_cut_job_owned(face,a,b)}
@@ -563,7 +629,7 @@ impl Knife {
     fn advance(&mut self,grant:RetainedCloneGrant,tessellation_progress:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
         if self.tessellation_retirement.is_some(){if close_tessellation_handoff(&mut self.tessellation_retirement,grant,tessellation_progress)?{self.phase=5;}return Ok(None);}
         match self.phase {
-            0=>{if self.snapshot.advance() {self.normal=Self::tuple(self.snapshot.soup.normals[self.face].0);let direction=sub3((self.b[0],self.b[1],self.b[2]),(self.a[0],self.a[1],self.a[2]));let plane=cross3(direction,self.normal);let length=length3(plane);if length==0.0 || length<=length3(direction)*1e-7 {return Err(MeshKernelError::InvalidInput("knife direction must project onto a nondegenerate face".into()));}self.plane=(plane.0/length,plane.1/length,plane.2/length);self.origin=Self::tuple(self.snapshot.soup.positions[self.snapshot.soup.faces[self.face][0] as usize]);self.cursor=0;self.phase=10;}}
+            0=>{if self.snapshot.complete() {self.normal=Self::tuple(self.snapshot.soup.normals[self.face].0);let direction=sub3((self.b[0],self.b[1],self.b[2]),(self.a[0],self.a[1],self.a[2]));let plane=cross3(direction,self.normal);let length=length3(plane);if length==0.0 || length<=length3(direction)*1e-7 {return Err(MeshKernelError::InvalidInput("knife direction must project onto a nondegenerate face".into()));}self.plane=(plane.0/length,plane.1/length,plane.2/length);self.origin=Self::tuple(self.snapshot.soup.positions[self.snapshot.soup.faces[self.face][0] as usize]);self.cursor=0;self.phase=10;}}
             1=>{let face=&self.snapshot.soup.faces[self.face];let point=Self::tuple(self.snapshot.soup.positions[face[self.cursor] as usize]);self.scale=self.scale.max(length3(sub3(point,self.origin)));self.cursor+=1;if self.cursor==face.len() {self.tolerance=self.scale*1e-7;self.cursor=0;self.phase=2;}}
             2=>{
                 if self.cursor==self.snapshot.soup.positions.len() {self.phase=3;self.cursor=0;}
@@ -716,7 +782,7 @@ impl Inflate {
     fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{if self.cursor==self.input.len() {self.cursor=0;self.phase=1;}else {let face=self.input[self.cursor];self.snapshot.source.face_boundary(face)?;if !self.selected.insert(face.0) {return Err(MeshKernelError::InvalidInput("duplicate selected face".into()));}self.cursor+=1;}}
-            1=>{if self.snapshot.advance() {self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.cursor=0;self.phase=7;}}
+            1=>{if self.snapshot.complete() {self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.cursor=0;self.phase=7;}}
             2=>{
                 if self.cursor==self.input.len() {
                     if self.inset {self.phase=4;self.face=0;self.corner=0;}else {if self.snapshot.soup.faces.len().saturating_add(self.edges.len())>100_000 || self.snapshot.source.halfedge_count().saturating_add(self.edges.len().saturating_mul(4))>600_000 {return Err(MeshKernelError::InvalidInput("extrusion exceeds mesh capacity".into()));}self.phase=3;}
@@ -778,7 +844,7 @@ impl Orient {
     fn phase(&self)->&'static str { ["snapshot","orient-initialize","orient-incidence","orient-adjacency","orient-components","orient-corners","orient-reconstruct","orient-attributes","orient-selection"][self.phase as usize] }
     fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
-            0=>{if self.snapshot.advance() {self.phase=1;}}
+            0=>{if self.snapshot.complete() {self.phase=1;}}
             1=>{if self.cursor==self.snapshot.soup.faces.len() {self.phase=if self.input.is_some() {8}else {2};self.cursor=0;}else {self.adjacency.push(Vec::new());self.oriented.push(false);self.flipped.push(false);self.cursor+=1;}}
             2=>{
                 if self.face==self.snapshot.soup.faces.len() {self.phase=3;self.face=0;}
@@ -834,7 +900,7 @@ impl FillHoles {
     fn phase(&self)->&'static str { ["snapshot","fill-holes-boundaries","fill-holes-rotate","fill-holes-corners","fill-holes-reconstruct","fill-holes-source-corners","fill-holes-source-faces","fill-holes-attributes"][self.phase as usize] }
     fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
-            0=>{if self.snapshot.advance() {self.cursor=0;self.phase=5;}}
+            0=>{if self.snapshot.complete() {self.cursor=0;self.phase=5;}}
             1=>{
                 if self.cursor==self.snapshot.source.halfedge_count() {if self.filled==0 {return Ok(Some(std::mem::replace(&mut self.snapshot.source,HalfedgeMesh::empty())));}self.build=Some(Build::unreferenced(std::mem::take(&mut self.snapshot.soup)));self.phase=4;}
                 else {let id=self.cursor as u32;let edge=&self.snapshot.source.halfedges[self.cursor];self.cursor+=1;if edge.twin.is_none() && self.visited.insert(id) {self.start=id;self.vertices.push(edge.vertex);self.boundary_edges.push(id);self.probe=edge.next;self.rotations=0;self.phase=2;}}
@@ -894,7 +960,7 @@ impl LoopCut {
     fn on_edge(&self,a:u32,b:u32,step:usize,segments:usize)->u32 { if step==0 { a } else if step==segments { b } else { self.cut_vertices[&Self::key(a,b)][if a<b { step-1 } else { segments-step-1 }] } }
     fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
-            0=>{if self.snapshot.advance() {self.cursor=0;self.phase=8;}}
+            0=>{if self.snapshot.complete() {self.cursor=0;self.phase=8;}}
             1=>{
                 if self.face==self.snapshot.soup.faces.len() { self.phase=2;self.cursor=0;self.face=0; }
                 else { let face=&self.snapshot.soup.faces[self.face];self.incidence.entry(Self::key(face[self.corner],face[(self.corner+1)%face.len()])).or_default().push((self.face,self.corner));self.corner+=1;if self.corner==face.len() {self.corner=0;self.face+=1;} }
@@ -1015,7 +1081,7 @@ impl Subdivide {
                 if self.cursor==self.input.len() {if self.delete_selected && self.selected.len()==self.snapshot.source.face_count() {return Err(MeshKernelError::InvalidInput("deletion would leave an empty mesh".into()));}self.phase = 1;}
                 else { let face = self.input[self.cursor]; self.snapshot.source.face_boundary(face)?; if !self.selected.insert(face.0) { return Err(MeshKernelError::InvalidInput("duplicate face selection".into())); } self.cursor += 1; }
             }
-            1 => {if self.snapshot.advance() {self.cursor=0;self.phase=6;}}
+            1 => {if self.snapshot.complete() {self.cursor=0;self.phase=6;}}
             2 => {
                 if self.face==self.snapshot.soup.faces.len() {
                     if !self.concave.is_empty() { self.tessellation = Some(MeshTessellationJob::selected(std::mem::replace(&mut self.snapshot.source,HalfedgeMesh::empty()),std::mem::take(&mut self.concave))); }
@@ -1131,7 +1197,7 @@ impl Coplanar {
     fn reject(&mut self)->MeshResult<()> {if self.explicit.is_some() || self.vertex_input.is_some() {return Err(MeshKernelError::InvalidInput("selected dissolution cannot preserve the boundary contract".into()));}self.cursor=0;self.phase=11;Ok(())}
     fn advance(&mut self,snapshot:&mut Snapshot)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
-            0=>{if snapshot.advance() {self.cursor=0;self.phase=22;}},
+            0=>{if snapshot.complete() {self.cursor=0;self.phase=22;}},
             1=>{
                 if self.face==snapshot.soup.faces.len() {self.face=0;self.cursor=0;self.phase=2;}
                 else {let face=&snapshot.soup.faces[self.face];let key=(face[self.cursor],face[(self.cursor+1)%face.len()]);if self.incidence.insert(key,(self.face,self.cursor)).is_some() {return Err(MeshKernelError::NonManifold);}if self.explicit.is_none() {self.pending.insert(key);}self.cursor+=1;if self.cursor==face.len() {self.face+=1;self.cursor=0;}}
@@ -1230,7 +1296,7 @@ impl Merge {
         if let Some(work)=&mut self.coplanar {return work.advance(&mut self.snapshot);}
         match self.phase {
             0=>{if self.cursor==self.input.len() {if self.selected.len()<2 {return Err(MeshKernelError::EmptySelection);}self.phase=1;self.cursor=0;}else {let id=self.input[self.cursor];self.snapshot.source.vertex_position(id)?;if self.seen.insert(id.0) {self.roots.push(if self.mode==WeldMode::ByDistance {self.selected.len()}else {0});self.selected.push(id.0);}self.cursor+=1;}},
-            1=>{if self.snapshot.advance() {self.phase=if self.quantized {14}else {2};}},
+            1=>{if self.snapshot.complete() {self.phase=if self.quantized {14}else {2};}},
             2=>{if self.mode!=WeldMode::ByDistance || self.i==self.selected.len() {self.phase=5;}else if Vec3(self.snapshot.soup.positions[self.selected[self.i]as usize]).sub(Vec3(self.snapshot.soup.positions[self.selected[self.j]as usize])).length()<=self.threshold {self.a=self.i;self.b=self.j;self.phase=3;}else {self.next_pair();}},
             3=>{if self.roots[self.a]==self.a {self.phase=4;}else {self.a=self.roots[self.a];}},
             4=>{if self.roots[self.b]==self.b {self.roots[self.a.max(self.b)]=self.a.min(self.b);self.next_pair();}else {self.b=self.roots[self.b];}},
@@ -1270,7 +1336,7 @@ impl Mirror {
     fn phase(&self) -> &'static str { ["snapshot","mirror-side","mirror-vertices","mirror-corners","mirror-reconstruct","mirror-vertex-provenance","mirror-attributes"][self.phase as usize] }
     fn advance(&mut self) -> MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
-            0 => { if self.snapshot.advance() { self.phase = 1; } }
+            0 => { if self.snapshot.complete() { self.phase = 1; } }
             1 => {
                 if self.vertex == self.snapshot.soup.positions.len() { self.phase = 2; self.vertex = 0; }
                 else {
@@ -1527,6 +1593,7 @@ struct Soup {
 }
 
 struct Snapshot {
+    reservation:u8,
     source: HalfedgeMesh,
     soup: Soup,
     vertex: usize,
@@ -1541,10 +1608,10 @@ struct Snapshot {
 
 impl Snapshot {
     fn new(source: HalfedgeMesh) -> Self {
-        Self { source, soup: Soup::default(), vertex: 0, face: 0, halfedge: None, corners: Vec::new(), normal: Normal::default(), normal_corner: 0, normalizing: false, reversing: None }
+        Self { reservation:0,source, soup: Soup::default(), vertex: 0, face: 0, halfedge: None, corners: Vec::new(), normal: Normal::default(), normal_corner: 0, normalizing: false, reversing: None }
     }
 
-    fn advance(&mut self) -> bool {
+    fn advance_original(&mut self) -> bool {
         if self.vertex < self.source.vertices.len() {
             self.soup.positions.push(self.source.vertices[self.vertex].position);
             self.vertex += 1;
@@ -1736,7 +1803,7 @@ impl Bevel {
 
     fn advance(&mut self) -> MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
-            0 => { if self.snapshot.advance() { self.phase = 1; } }
+            0 => { if self.snapshot.complete() { self.phase = 1; } }
             1 => {
                 let positions = &self.snapshot.soup.positions;
                 if self.vertex == positions.len() {
@@ -1822,7 +1889,7 @@ impl Bevel {
             7=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {let clip=self.clip.as_mut().unwrap();let mut attributes=SourceAttributeRemap::new(mesh,None,Some(std::mem::take(&mut clip.source_faces)),None,None);attributes.corner_faces=Some(std::mem::take(&mut clip.corner_faces));attributes.generated_faces=Some(std::mem::take(&mut clip.face_weights));attributes.generated_vertices=Some(Vec::new());self.attributes=Some(attributes);self.vertex=0;self.phase=8;}},
             8=>{let origins=&self.build.as_ref().unwrap().origin_vertices;if self.vertex==origins.len() {self.phase=9;}else {self.attributes.as_mut().unwrap().generated_vertices.as_mut().unwrap().push(self.clip.as_ref().unwrap().vertex_sources[origins[self.vertex] as usize]);self.vertex+=1;}},
             9=>{if let Some(mesh)=self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source)? {self.snapshot=Snapshot::new(mesh);self.clip=None;self.build=None;self.attributes=None;self.phase=10;}},
-            10=>{if self.snapshot.advance() {self.edge+=1;self.phase=5;}},
+            10=>{if self.snapshot.complete() {self.edge+=1;self.phase=5;}},
             11=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
             _=>unreachable!(),
         }
@@ -1981,7 +2048,7 @@ impl Decimate {
                 if self.corner < self.snapshot.source.halfedges.len() {
                     self.closed &= self.snapshot.source.halfedges[self.corner].twin.is_some();
                     self.corner += 1;
-                } else if self.snapshot.advance() { self.phase = 1; self.corner = 0; }
+                } else if self.snapshot.complete() { self.phase = 1; self.corner = 0; }
             }
             1 => {
                 let soup = &self.snapshot.soup;

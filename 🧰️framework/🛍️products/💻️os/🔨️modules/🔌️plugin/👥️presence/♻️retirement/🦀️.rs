@@ -273,7 +273,7 @@ impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> ArtifactOwnedDisposer<Pre
                 demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "presence disposal depth overflow"))?;
                 Ok(demand)
             }
-            None => Ok(RetirementDemand { copy_bytes: std::mem::size_of::<PresenceStoreRetirement<P>>(), depth: 1, ..Default::default() }),
+            None => Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }),
         }
     }
 

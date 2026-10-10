@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "sha256": "12c0e51915444cc90a127dc7c4817cc1fd797b2fd2f357d0436ece7e50ba895a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+      "sha256": "2c5fe3024d4c795dddf1bdbc8fadc69311b34804e3683d6e051e15eaafd580f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "sha256": "6bc3630d59c783b48a46db265e1bdf36561ff55c70fc8e4ef7d4d9ca50951da5"
+    }
+  ]
+}

@@ -57,7 +57,7 @@ pub(super) struct TransferTask<P, M> {
 }
 
 impl<P, M> super::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
-    fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<super::ArtifactEphemeralPreparationTaskStep<P>, String> {
+    fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<super::ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError> {
         let capacity=semio_framework_value::shared_retirement_allocation_bytes::<P>();
         let copy=size_of::<P>()+size_of::<M>();
         if !grant.permits_one() || grant.maximum_capacity_bytes < capacity || grant.maximum_copy_bytes < copy {

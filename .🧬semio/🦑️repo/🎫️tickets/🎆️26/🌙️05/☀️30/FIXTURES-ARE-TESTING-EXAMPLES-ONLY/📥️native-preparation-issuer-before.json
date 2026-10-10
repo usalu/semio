@@ -1,0 +1,44 @@
+[
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2797\ufe0fmathematical/\ud83d\uddff\ufe0fartifacts/\u2797\ufe0fequation/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "EquationStorePreparation",
+    "snapshotType": "P",
+    "mutationType": "M",
+    "before": "c1a152b7bae94510442f60cbe1651d51410bc3c5cfb63845de75eb4594a80d21"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf0d\ufe0fgis/\ud83d\uddff\ufe0fartifacts/\ud83d\uddfa\ufe0fgismap/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "Gis2dOneItemPreparation",
+    "snapshotType": "P",
+    "mutationType": "M",
+    "before": "52c3e5e3ab2035470595c9b482fa6d0dcd9ab439aa81e28762c9292f11488488"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf3f\ufe0fvcs/\ud83d\uddff\ufe0fartifacts/\ud83c\udf3f\ufe0fvcs/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "VcsOneItemPreparation",
+    "snapshotType": "P",
+    "mutationType": "M",
+    "before": "603f7be833db55c3e770aeef81eeed92d21d1a9cf5a3eb041a43b9c31a8acfb3"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\u25fb\ufe0f2d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "Fem2dArtifactPreparation",
+    "snapshotType": "Fem2dSnapshot",
+    "mutationType": "Fem2dMutation",
+    "before": "12eed87bc66c9d4148aef10024d282e0e0f8dbd9180e6c64abb51483e483ff18"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\ud83e\uddca\ufe0f3d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "Fem3dArtifactPreparation",
+    "snapshotType": "Fem3dSnapshot",
+    "mutationType": "Fem3dMutation",
+    "before": "92641b19f4c23adba20e2f8d0a41dad5039bba730e55dd8e55f10f2713b70f14"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\uddf1\ufe0fblock/\ud83d\uddff\ufe0fartifacts/\ud83d\udd90\ufe0f5d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+    "owner": "Block5dStorePreparation",
+    "snapshotType": "Block5dSnapshot",
+    "mutationType": "Block5dMutation",
+    "before": "423bd7a4c42e034838f29b44bc5f61321f3291984636c026609a9d627944159d"
+  }
+]

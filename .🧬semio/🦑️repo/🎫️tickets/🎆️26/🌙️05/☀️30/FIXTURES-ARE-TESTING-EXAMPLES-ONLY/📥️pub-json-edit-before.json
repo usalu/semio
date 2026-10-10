@@ -1,0 +1,17 @@
+{
+  "scope": "Actual Edit canonical projection removes eager boxed iterator alternative in favor of current native indexed domain contract",
+  "before": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "sha256": "4ef80c7d6641ba9300cd523cee9548080279376e685d7c9e34276b2e27ca360d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts",
+      "sha256": "381e49f360ec96af31d62ef8fbe7f0fb16f5e1beb36217bdb2580a7acf5b8a89"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/🔏️canonical-edit-sealer.json",
+      "sha256": "12e6427dda65ffe5765a88c0f5dddd15ef4f08f3c87e198fe1fdf299e2263589"
+    }
+  ]
+}

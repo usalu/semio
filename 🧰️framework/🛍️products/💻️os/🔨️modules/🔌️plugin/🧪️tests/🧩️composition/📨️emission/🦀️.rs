@@ -36,7 +36,7 @@ fn child_emission_owned_preview_preserves_exact_wire_prefix() {
     let mut emit=Emit::<TestMutation>::default();
     emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot,_>("fixture","child",operations));
     let mut ready=false;
-    for _ in 0..1000{if matches!(emit.prepare_child_preview_one(1,4096).unwrap(),ChildEmitPreparationStep::Ready){ready=true;break;}}
+    for _ in 0..1000{if matches!(emit.prepare_child_preview_one(1,4096).unwrap(),ChildEmitPreparationStep::Ready(_)){ready=true;break;}}
     assert!(ready&&emit.owned_child_emits.is_empty());
     assert_eq!(emit.child_emits.len(),1);
     assert_eq!(emit.child_emits[0].ops,expected);
@@ -59,7 +59,7 @@ fn child_emission_emit_retains_applying_source_without_wire_handoff() {
     for _ in 0..1000 {
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||emit.prepare_child_one(1,4096).unwrap());
         assert!(!heap.overflowed);assert!(heap.requested_bytes+heap.released_bytes<=4096);
-        if matches!(step, ChildEmitPreparationStep::Ready) { ready = true; break; }
+        if matches!(step, ChildEmitPreparationStep::Ready(_)) { ready = true; break; }
     }
     assert!(ready);
     assert!(emit.child_emits.is_empty(), "applying owned source cannot become an unused wire group");
@@ -97,10 +97,10 @@ fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decod
     let pointer = operations.as_ptr();
     let mut preparation = ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
-    assert!(matches!(preparation.step(0, 4096).unwrap(), ChildEmitPreparationStep::Pending));
+    assert!(matches!(preparation.step(0, 4096).unwrap(), ChildEmitPreparationStep::Pending(_)));
     let mut ready = false;
     for _ in 0..100 {
-        if matches!(preparation.step(1, 4096).unwrap(), ChildEmitPreparationStep::Ready) { ready = true; break; }
+        if matches!(preparation.step(1, 4096).unwrap(), ChildEmitPreparationStep::Ready(_)) { ready = true; break; }
     }
     assert!(ready);
     assert_eq!(preparation.retained_operation_count(), 3);
@@ -140,7 +140,7 @@ fn child_emission_preview_retains_exact_encoded_operations_and_semantic_labels()
     let mut preparation = ChildEmitPreparation::of::<TestSnapshot, _>("fixture", "child", operations);
     let mut ready = false;
     for _ in 0..1000 {
-        if matches!(preparation.step(1, 4096).unwrap(), ChildEmitPreparationStep::Ready) { ready = true; break; }
+        if matches!(preparation.step(1, 4096).unwrap(), ChildEmitPreparationStep::Ready(_)) { ready = true; break; }
     }
     assert!(ready);
     let mut wire = preparation.take_ready().unwrap();
@@ -173,9 +173,9 @@ fn child_emission_owned_apply_admits_typed_source_without_requesting_wire_codec(
     let mut ready = false;
     for _ in 0..100 {
         match preparation.step(1, 4096).unwrap() {
-            ChildEmitPreparationStep::Ready => { ready = true; break; },
-            ChildEmitPreparationStep::Pending => {},
-            ChildEmitPreparationStep::Refused(fault) => panic!("applying typed admission must never request unused wire codec: {}", fault.message),
+            ChildEmitPreparationStep::Ready(_) => { ready = true; break; },
+            ChildEmitPreparationStep::Pending(_) => {},
+            ChildEmitPreparationStep::Refused(fault,_) => panic!("applying typed admission must never request unused wire codec: {}", fault.message),
         }
     }
     assert!(ready);
@@ -320,16 +320,16 @@ fn child_emission_owned_refusal_keeps_prefix_rejected_and_remaining_until_actual
     let count=operations.len();
     let factory:std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation>>=std::sync::Arc::new(TrackedChildRetirementFactory);
     let mut preparation=ChildEmitPreparation::with_factory::<TestSnapshot,_>(fixture["slot"].as_str().unwrap().to_owned(),fixture["childId"].as_str().unwrap().to_owned(),operations,std::sync::Arc::clone(&factory));
-    assert!(matches!(preparation.step(1,0).expect("zero-byte retained step"),ChildEmitPreparationStep::Pending));
+    assert!(matches!(preparation.step(1,0).expect("zero-byte retained step"),ChildEmitPreparationStep::Pending(_)));
     assert_eq!(preparation.retained_operation_count(),count);
     assert_eq!(returned.load(std::sync::atomic::Ordering::SeqCst),0);
     let maximum=demand["maximumAllocationGrant"].as_u64().unwrap() as usize;
     let mut refused=false;
     for _ in 0..demand["maximumPumpSteps"].as_u64().unwrap(){
         match preparation.step(1,maximum).expect("actual owned producer"){
-            ChildEmitPreparationStep::Pending=>{},
-            ChildEmitPreparationStep::Refused(fault)=>{assert_eq!(fault.code.0,"module.protocol");refused=true;break;},
-            ChildEmitPreparationStep::Ready=>panic!("closed second encoder refusal cannot issue a complete group"),
+            ChildEmitPreparationStep::Pending(_)=>{},
+            ChildEmitPreparationStep::Refused(fault,_)=>{assert_eq!(fault.code.0,"module.protocol");refused=true;break;},
+            ChildEmitPreparationStep::Ready(_)=>panic!("closed second encoder refusal cannot issue a complete group"),
         }
     }
     assert!(refused);
@@ -382,7 +382,7 @@ fn child_emission_accepted_owner_retirement_refusal_retains_exact_prefix_and_pro
     let maximum=demand["maximumAllocationGrant"].as_u64().unwrap() as usize;
     let mut refused=false;
     for _ in 0..demand["maximumPumpSteps"].as_u64().unwrap(){
-        match preparation.step(1,maximum){Ok(ChildEmitPreparationStep::Pending)=>{},Err(fault)=>{assert_eq!(fault.code.0,"interactive-job.child-emission-retirement-refused");refused=true;break},_=>panic!("accepted owner retirement refusal cannot produce a complete group")}
+        match preparation.step(1,maximum){Ok(ChildEmitPreparationStep::Pending(_))=>{},Err(fault)=>{assert_eq!(fault.code.0,"interactive-job.child-emission-retirement-refused");refused=true;break},_=>panic!("accepted owner retirement refusal cannot produce a complete group")}
     }
     assert!(refused);
     let error=preparation.retirement_refusal().expect("original typed retirement error");

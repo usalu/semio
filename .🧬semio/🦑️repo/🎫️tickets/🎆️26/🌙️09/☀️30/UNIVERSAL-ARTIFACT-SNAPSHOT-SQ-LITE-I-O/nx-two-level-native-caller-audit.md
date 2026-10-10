@@ -1,0 +1,35 @@
+# Two-Level Nx Native Caller Audit
+
+Read-only audit, 2026-10-10. No execution, builds, source edits, or schema validation claimed. Paths below are relative to `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library` unless stated otherwise.
+
+## Exact Top-Level Contract
+
+`🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json` is a closed object requiring exactly `workspaceRoot`, `arguments`, and `native`. There is no top-level version, repositoryRoot, artifactDirectory, command, transport, child, or network. `arguments` is an array of strings (3–65536 entries); actual admission requires its first three entries to be `nx`, `run`, and the selected `project:target[:configuration]`.
+
+`native` is closed and requires exactly `artifactDirectory`, `transport`, `child`, and `network`. Transport is closed `{maximumBytes,maximumLines}`, both positive safe integers. Child is closed `{maximumElapsedMilliseconds}`, integer 1–86400000. Network is closed `{offline}`, boolean. Both path strings require 1–256 characters and exclude NUL. Minimal corresponding shape:
+
+```json
+{"workspaceRoot":"${workspaceFolder}","arguments":["nx","run","ACTUAL_PROJECT:ACTUAL_TARGET"],"native":{"artifactDirectory":"ACTUAL_ORIGINAL_ARTIFACT_DIRECTORY","transport":{"maximumBytes":67108864,"maximumLines":65536},"child":{"maximumElapsedMilliseconds":660000},"network":{"offline":true}}}
+```
+
+The constants illustrate existing GUI resource values, not defaults to synthesize. Preserve each original GUI caller's actual values. The selected target must match that row's actual Nx selection. Flags may follow these first three arguments.
+
+`issueNativeOwnerInvocationV1` (`🔌️nx-plugin/📤️arguments/🟨️.mjs:34`) requires a four-key `SEMIO_SCRIPT_PROCESS_INVOCATION` envelope: `version:1`, closed three-key `policy:{version:1,owner,maximumElapsedMilliseconds}`, `deadlineEpochMilliseconds`, and `capabilities` in the top-level shape above. Deadline must be future and no farther than original policy maximum from current time. If `SEMIO_SCRIPT_CAPABILITIES` is present its parsed JSON must match original capabilities by JSON.stringify, including ordering. `workspaceRoot` resolves to context.root. `CARGO_TARGET_DIR` must already exist as an environment string resolving to `native.artifactDirectory` from context.root; `CARGO_NET_OFFLINE` must equal the exact string form of `native.network.offline`, e.g. `"true"`. Do not rebase original deadline or rebuild authority from lower-level capability fields.
+
+## Lower-Level Issuance And Discovery
+
+The lower native orchestration schema is `⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json`: closed `{version:1,repositoryRoot,artifactDirectory,command,transport,child,network}`. `command` is closed `{kind:"native-owner-command",manifest,workingDirectory,program,arguments}`. The executor issues this from discovered context; it preserves original policy/deadline and resource objects, resolves artifactDirectory, and appends actual permitted forwarded argv. Existing GUI rows at `.vscode/launch.json:94740`, `:94760`, `:94780`, `:94836`, etc. currently carry this lower-level shape in SEMIO_SCRIPT_CAPABILITIES. Passing the old lower reader and Ajv proves this lower schema only; it does not meet the current higher Nx caller schema.
+
+`issueNativeOwnerInvocationV1:40–47` requires an authentic complete taskGraph with one matching selected root, dependency reachability to the executing target, and projectsConfigurations options for that target. `declared.command` must equal executor `options.command`; `declared.nativeOwnerCommand` must stringify identically to requested `options.nativeOwnerCommand`; the request must meet the lower command schema. A hand-authored capability command cannot replace graph discovery.
+
+Actual graph normalization is `🟨️.mjs:935–944`. Only `nativePolicyTarget` enters the branch adding `nativeOwnerCommand` and installing `@semio-tech/repo-lib:owner-command`. This predicate requires a native Cargo project and discovered script closure containing the Cargo test/native-build/wasm-build process paths. Native target naming alone affects other flags but does not enter this registration branch. Normalization binds first Bun script source to an absolute literal path, chooses `ownerCwd=target.options?.cwd??root`, builds declaration via `declaredNativeOwnerCommandV1(manifest,ownerCwd,boundCommand)`, and wraps with the Cargo native owner driver. The registered options carry `cwd:"."`, nativeOwnerCommand, and the exact wrapper command together.
+
+`executeOwnerArgumentsV1:79` explicitly refuses a wrapper command containing ` native owner-command ` when its options lack `nativeOwnerCommand`: `Original discovered native request required`. Therefore a source task already manually wrapped but not admitted by `nativePolicyTarget` is a concrete normalization-registration mismatch. Correct discovery/classification and declare the request in the same normalization branch; do not remove the refusal, accept absent declarations, or install blanket capabilities. Inspect the actual source task's script closure, manifest/nativeRoot, command, executor, and cwd to establish its ownership before changing normalization.
+
+## Syntax Conflict And Evidence Limits
+
+`declaredNativeOwnerCommandV1:20–29` tokenizes literal commands. Unquoted tokens reject `[;&|<>\`$"']`; quoted JSON or single-quoted tokens preserve literal characters. The lower schema's current source patterns are `^[^\\u0000]+$` as JSON strings, which compile to NUL exclusion, and mounted fixture path cases test this against Ajv. I found no current rule prohibiting Unicode emoji/source identifiers: do not normalize them away. Graph-time `Original discovered native command refused` is thrown by lower command schema validation; distinguish it from `Native command requires literal discovered arguments` (token syntax) and executor-time `Original discovered native request required` (missing declared options). Fresh exact rejected command values are needed to attribute the former; existing failure text alone does not establish a source identifier defect.
+
+The inspected `🗑️generated/actor-original-receiving-sole-budget-source-wire.log:65` reaches Nx target `@semio-tech/framework-actor-rs:test-original-receiving-source` then reports `Original discovered native request required`, ending exit code 1. This is pre-delegation and cannot establish child test assertions. Core publication-header and SQLite delimiter logs show graph-time `Original discovered native command refused`; neither proves a child runtime result. Parent-reported RootSource25694 prechild/zero-assertion observation was not independently located in this audit's current files and should retain that provenance.
+
+Mounted `🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts` contains closed caller/Ajv comparison, literal path/NUL cases, two distinct reachable dependencies preserving unchanged deadline/resources, and seven refusal modes requiring delegation count zero. No tests were executed by this audit.

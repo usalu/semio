@@ -33,5 +33,13 @@ impl store::ArtifactPack for BinarySnapshot {
         Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
     }
 }
+impl store::ArtifactPackReceiving for BinarySnapshot {
+    fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,semio_framework_value::ValueError>{
+        owner.receive::<Self,Self>(|slot,native,body|{
+            crate::standards::v_raw::subsets::any::io::sqlite::snapshot::bind_raw_pack(bytes,slot,native,body)?;
+            slot.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Binary receiving lost original typed output"))
+        })
+    }
+}
 }
 pub use snapshot_codec::*;

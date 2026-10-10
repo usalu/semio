@@ -1,0 +1,49 @@
+{
+  "policy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  },
+  "examples": [
+    {
+      "text": "Tür🚪",
+      "failure": {
+        "reason": {
+          "kind": "invariantViolated",
+          "message": "Pack symbol occurrence overflow",
+          "retainedProgress": {
+            "copiedItems": 1,
+            "copiedBytes": 16,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        "writtenBytes": 0
+      }
+    },
+    {
+      "text": "",
+      "failure": {
+        "reason": {
+          "kind": "invariantViolated",
+          "message": "borrowed Pack original source identity changed",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        "writtenBytes": 0
+      }
+    }
+  ],
+  "depthProbe": {
+    "fieldId": 1,
+    "source": true,
+    "maximumDepth": 1,
+    "expectedHex": "0001011102"
+  }
+}

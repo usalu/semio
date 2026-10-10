@@ -1,0 +1,49 @@
+{
+  "sourceObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "sha256": "6163009ef003456a3cbe0e13bcd6222ad9ae5552ff57a2a1893ffd1379bc9654",
+      "bytes": 23204
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+      "sha256": "8d195bb2df414f562f29c6a2009f349c97357da873c2f56e7fbe16b6479ffef3",
+      "bytes": 21702
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "sha256": "ad9482157b3fa96b54fa70b48c601d99be393c691f06258b82b5c1d4e935d492",
+      "bytes": 53592
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "sha256": "ce34d8eb6d0b0014581fcc89baa5a19a13c8b5dd44b7ed4afc4836d69d2e9751",
+      "bytes": 4654
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🛬️cursor.json",
+      "sha256": "b4715519b7ddc00abcd55fbb56405e7ef858f59251616d89741aaa6f82c21df9",
+      "bytes": 572
+    }
+  ],
+  "sourceGreen": {
+    "session": 29677,
+    "NxExit": 0,
+    "duration": "1.6s",
+    "tests": 1,
+    "assertions": 10,
+    "extraDepthAssertions": 612,
+    "log": "🗑️generated/native-typed-cursor-green.log"
+  },
+  "sourceRed": {
+    "session": 7078,
+    "NxExit": 1,
+    "duration": "4.8s",
+    "log": "🗑️generated/native-typed-cursor-red.log"
+  },
+  "grammar": "3 original sources rustfmt parse exit0; no writes",
+  "nativeLaw": "original_typed_decode_cursor_retains_canceled_backing_and_exact_supplied_receipts",
+  "nativeStatus": "unrun",
+  "normalOwner": "@semio-tech/framework-os-kernel:test-native",
+  "sourceCopies": false
+}

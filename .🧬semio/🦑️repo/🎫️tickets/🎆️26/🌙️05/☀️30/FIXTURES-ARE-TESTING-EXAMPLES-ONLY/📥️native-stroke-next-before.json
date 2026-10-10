@@ -1,0 +1,76 @@
+{
+  "observedAt": "2026-10-09T22:38:52.233961+00:00",
+  "qualification": "Original Source references/hash-only; no source copies. Native Stroke unrun, host original normal57864 completed; current own Path acquisition17880 precedes serial Stroke launch. Shared peer bodies preserved.",
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "sha256": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "bytes": 143861,
+      "matchesPriorSourceReady": true,
+      "launchSha256": "184bb4e413bb64b4f2a9b2bdb50d6d1fb4d089b69eceb5c30d9a5e6f78d5da63",
+      "matchesReadinessAtLaunch": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🦀️.rs",
+      "sha256": "8c274d0584ec6281fcafa315c299c7cd26835972d69ca34a06cc4093f69c3429",
+      "bytes": 6479,
+      "matchesPriorSourceReady": true,
+      "launchSha256": "8c274d0584ec6281fcafa315c299c7cd26835972d69ca34a06cc4093f69c3429",
+      "matchesReadinessAtLaunch": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🟦️.ts",
+      "sha256": "bf741eb04920a859a70407c4ebcff871de9fda0d4ca2d5f40dc9f8d5cfc7440d",
+      "bytes": 3673,
+      "matchesPriorSourceReady": true,
+      "launchSha256": "bf741eb04920a859a70407c4ebcff871de9fda0d4ca2d5f40dc9f8d5cfc7440d",
+      "matchesReadinessAtLaunch": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🦀️.rs",
+      "sha256": "5f6453f6b857fd81ae5693d0495e18e3f9330fcb784160574756aa32f0214bbb",
+      "bytes": 7454,
+      "matchesPriorSourceReady": true,
+      "launchSha256": "5f6453f6b857fd81ae5693d0495e18e3f9330fcb784160574756aa32f0214bbb",
+      "matchesReadinessAtLaunch": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e432d5d083be49db63642e3e9685778b11eb82988f3e9b2e563be2916d4c57bd",
+      "bytes": 591,
+      "matchesPriorSourceReady": true,
+      "launchSha256": "e432d5d083be49db63642e3e9685778b11eb82988f3e9b2e563be2916d4c57bd",
+      "matchesReadinessAtLaunch": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750",
+      "bytes": 20519,
+      "matchesPriorSourceReady": true,
+      "launchSha256": "6f23d5aa10f8bacd254c6bf0e5db1efa8c8e404b195222cc291fafb0bc5fc750",
+      "matchesReadinessAtLaunch": true
+    }
+  ],
+  "argv": [
+    "bun",
+    "nx",
+    "run",
+    "semio-framework-canvas:test",
+    "--skip-nx-cache",
+    "--outputStyle=static",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt)",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "nativeStatus": "Launching original normal registered Stroke selection; no assertions inferred",
+  "beforeLaunchAt": "2026-10-09T22:39:56.773821+00:00",
+  "ownDurableProcessRows": []
+}

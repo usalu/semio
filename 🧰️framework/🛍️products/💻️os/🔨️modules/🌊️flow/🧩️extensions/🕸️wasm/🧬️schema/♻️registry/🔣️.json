@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "predicateMeansKeep",
+    "sameOwnerRemoved",
+    "unrelatedOwnerRetained",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "predicateMeansKeep": {
+      "const": true
+    },
+    "sameOwnerRemoved": {
+      "const": true
+    },
+    "unrelatedOwnerRetained": {
+      "const": true
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

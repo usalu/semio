@@ -1,0 +1,22 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts",
+      "sha256": "b92e14edfab819829f683e204f492cbaabeaf04572edaf64e122a5ba39202d07"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "3cd6a2ec951fd0892fd3ad99d206c6bcb4fcbb983dce6a1981772048297ce682"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "sha256": "e66850d0292f6744a63bb45ef7d72c5b62159b5f67db47302958ef396d28070f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+      "sha256": "01afaba090403b6de22715d69f82d303ef665f6ba2bd633e4eef5ffdb1fc2c37"
+    }
+  ]
+}

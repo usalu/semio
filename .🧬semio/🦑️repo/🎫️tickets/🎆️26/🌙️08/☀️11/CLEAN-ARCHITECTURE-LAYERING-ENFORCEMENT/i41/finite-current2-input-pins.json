@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "digest": "19f2ed9afa885c7cb2b591be04872d578abaed316f325d873e5dc5246079d25e",
+  "sources": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/manifest.json",
+      "sha256": "8a702c37cf6ce149750c326fc5a995d875e2862ed738cd768cff3defcd91d5c7",
+      "bytes": 80818
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/schema.json",
+      "sha256": "a01b1009c4a44179f6576d86738cd3be704e5651069c06e479244f477f137259",
+      "bytes": 52959
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/📜️script.ts",
+      "sha256": "d8ae791d75afad593c9caa380592c1ad7acea566885e431a91376bf0aed42560",
+      "bytes": 15920
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "sha256": "b91633467acfb794bce4dfca15979a4c0620f61c86d892fecb3aceb0ea4f1001",
+      "bytes": 3570
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts",
+      "sha256": "77c864afc439359fedcf4a8219dc901c44432f552437c0be342c23e7b4bea326",
+      "bytes": 1475
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "sha256": "5f8239672d7ad687f4b7d5441eab0bdbbe20c58f53418bfdd06deb6e753283dd",
+      "bytes": 6392
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "sha256": "45ed517acdca68e5ff7b98647b27af470337551e84b7ceca70dbaf6b4e11d3dd",
+      "bytes": 2967
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+      "sha256": "5828049c7977b965c737a5a77724c9fa1fcaec7074d546fd279a192c7f0fd1b2",
+      "bytes": 3293
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json",
+      "sha256": "4b34b34dbc6ca28c07aa5f51067b3d9f37e759b1daaa38212207115abcea0943",
+      "bytes": 849
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "sha256": "9ef06e6c0f840922dae28e93550d2ca6d8419e49137f4630abe3a5485e03c550",
+      "bytes": 37016
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+      "sha256": "92f4a6cc19c42df333cbc6d0fd9f94ee72b6fa9efa97688cdf554fc3abc65dc2",
+      "bytes": 8570
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧪️tests/🟦️.ts",
+      "sha256": "8ad7ba722863910dcb4d22a8da3e2af8658309d57176bf5603601e906eeb56be",
+      "bytes": 8839
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts",
+      "sha256": "bc28829607745b80fe31bfa7ae6c1eb1a6659f170b7cc9e225eaeb48b7ba47a8",
+      "bytes": 5696
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "sha256": "d196a937d396aae981a3ebdace18f369f8500e4486ef7561202297e47cb4a980",
+      "bytes": 13069
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+      "sha256": "f4ae7e1a7be6f94211ba2cb1a9b95fa938d16606afc76be8d4a98541fbc47c36",
+      "bytes": 563
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "sha256": "5f7c306eca4755e6dfeaeab67155b3460f5414119abe16aa72151b7423669834",
+      "bytes": 3826
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "sha256": "4e911792e3bfc923e9e73821897b39cbfecb4d2b9c8d46010760b1d4f02b3eaa",
+      "bytes": 3310
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "sha256": "1179ac3e6614f92d7d0cc408423e614baed701da3767197c3036632362e0c272",
+      "bytes": 14506
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+      "sha256": "97a1c61f4ea97015f24899e58a05afe72ba30a9a995257cdf928346f2d5e5844",
+      "bytes": 3175
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "sha256": "ff25bfc8fe300a64450579fa350cbe5513591a2816cdbd1996fc6af43860abd0",
+      "bytes": 7055
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "sha256": "b99f85e9fd8f47993e555464b2c344ac07e961e06b79e6caa3b193dee1d558d9",
+      "bytes": 6676
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+      "sha256": "4132defc09c273fb8713ad2817582b35b4dd3c523879e586efa6b7150128d852",
+      "bytes": 4708
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧫️fixtures/🌿️ordinary.json",
+      "sha256": "e7cc6cb6cdb911d33cb02fb55556eac5a34d1e07fce34a189825dbb93bdaf392",
+      "bytes": 2387
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧫️fixtures/🔣️.json",
+      "sha256": "c0d3c6463293453966093b349ea5515454134bee29c60129c63df299e9c0c81d",
+      "bytes": 2670
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "sha256": "b4d0746aea2f3daff5a49bc7623b2c5d6c37f9341c13330b2ed8d0c9373fb2a2",
+      "bytes": 1247
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/📥️loading/🧬️schema/🔣️.json",
+      "sha256": "be65963de37014c5f503dd55eefceaf048229d4cde1b1a61e37f9571b11b4f0c",
+      "bytes": 395
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+      "sha256": "796df77bad05af10705251aa778a52b62cc17fba780f48cdb204b8c8c095a099",
+      "bytes": 3963
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts",
+      "sha256": "9527e30a03588a50519e53c905d4e1ab6ad8a902253c93821d67fd206b02d416",
+      "bytes": 3859
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧫️fixtures/⏱️finite.json",
+      "sha256": "6bafa41c37903b74d77faa1f83a54a8887da37cfa76db4149fce7bb97a7a59cc",
+      "bytes": 543
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧫️fixtures/🔣️.json",
+      "sha256": "8005d48fd373fce74e217c8b7a71dc99f494d6e2b56480c8be48a4468012d8ca",
+      "bytes": 1743
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/⏱️finite.json",
+      "sha256": "5f536f0b992dd7a6a3babece5fd4adfa2bc9c633256a334709a84780dabd5eb9",
+      "bytes": 1057
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "sha256": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "bytes": 550
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "sha256": "06200b3f26dcea04f4d16c00fd2a4a4d89366918e4c23c597cf90eaafef57446",
+      "bytes": 1339
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "sha256": "283c76fdb8b0da19a0506b010a0fd44d33287a20cf7297abc3deebb2427c8eea",
+      "bytes": 5477
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+      "sha256": "e4773360cdc99f08ec529bc65e2140a55d7b62b67a27f0f36a9ea3b3a47fb923",
+      "bytes": 27474
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🧫️fixtures/🔣️.json",
+      "sha256": "b73822a3fd0e7793ecc31421e5b0d43639830415d7059fda13f9ea018495c3e7",
+      "bytes": 7915
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "sha256": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff",
+      "bytes": 2971
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "sha256": "16298eeef1d22fe280945f3dafe6fa13bee759c9c6cb3e1d44dfa7a134b0544c",
+      "bytes": 9027
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+      "sha256": "a596f25cdba8c0a311b2120d6b70aa519ef31d6159ee192d6b3389c0c93bec70",
+      "bytes": 5395
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "sha256": "e4dc4085959d7e0bcfc87cb57fc53243ee2c36b5717a2a572ac35c19f6cebd03",
+      "bytes": 10849
+    }
+  ]
+}

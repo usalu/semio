@@ -46,6 +46,7 @@ export function toolJobMicrosecondBudgetSelfTests(): number {
   const plugin = readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
   const job = readFileSync(join(base, "../🦀️.rs"), "utf8");
   const trace = readFileSync(join(base, "../../⏱️trace/🦀️.rs"), "utf8");
+  const loan = readFileSync(join(base, "../📬️outcome/🤝️loan/🦀️.rs"), "utf8");
   const mutations: Record<string, [number, string, string]> = {
     none: [0, "", ""],
     "wrong-helper": [0, "self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.wrong_operation(command, admission, meta, operation_id, None).await"],
@@ -53,19 +54,19 @@ export function toolJobMicrosecondBudgetSelfTests(): number {
     "rounded-grant": [0, "step_budget_us: u64::from(admission.proof.contract().max_step_micros),", "step_budget_us: u64::from(admission.proof.contract().max_step_micros).max(1_000),"],
     "coarse-clock": [0, "now_us: semio_framework_job::default_now_us,", "now_us: semio_framework_job::default_now_ms,"],
     "overflow-fallback": [1, "start_us.checked_add(duration_us)", "Some(start_us.saturating_add(duration_us))"],
-    "expired-entry": [1, "if budget.fuel == 0 || start_us.is_none_or(|start_us| start_us >= budget.deadline_us)", "if budget.fuel == 0"],
+    "expired-entry": [3, "if cx.fuel_remaining()==0||cx.latest_us().map(|now|now>=cx.deadline_us()).unwrap_or_else(||cx.deadline_exceeded())", "if cx.fuel_remaining()==0"],
     "synthetic-clock": [2, "fn default_clock_us() -> Option<u64> {\n    None\n}", "fn default_clock_us() -> Option<u64> { Some(0) }"],
     "missing-output-limit": [0, "ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes)", "ArtifactOutputChunks::new(u64::MAX)"],
   };
   const validBinding = new Ajv({ strict: true }).compile({ const: "none" });
   for (const law of binding.cases) {
     const [index, before, after] = mutations[law.mutation]!;
-    const sources = [plugin, job, trace];
+    const sources = [plugin, job, trace, loan];
     if (law.mutation !== "none") {
       if (!sources[index]!.includes(before)) throw new Error(`microsecond hostile target is stale: ${law.mutation}`);
       sources[index] = sources[index]!.replaceAll(before, after);
     }
-    if (validBinding(law.mutation) !== law.admitted || toolJobMicrosecondWorkerExact(sources[0]!, sources[1]!, sources[2]!) !== law.admitted) throw new Error(`microsecond exact worker binding: ${law.mutation}`);
+    if (validBinding(law.mutation) !== law.admitted || toolJobMicrosecondWorkerExact(sources[0]!, sources[1]!, sources[2]!, sources[3]!) !== law.admitted) throw new Error(`microsecond exact worker binding: ${law.mutation}`);
   }
   return fixture.cases.length + clocks.browser.length + clocks.wasi.length + clocks.installation.length + clocks.watchdog.length + 2 + binding.cases.length * 2;
 }

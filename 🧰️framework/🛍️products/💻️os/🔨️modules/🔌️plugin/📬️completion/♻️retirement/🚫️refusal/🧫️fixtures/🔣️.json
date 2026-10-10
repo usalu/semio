@@ -1,0 +1,182 @@
+{
+  "schema": "semio.plugin.completion-refusal-retirement.v1",
+  "rejectionFields": [
+    "emit",
+    "ephemeral",
+    "fault"
+  ],
+  "emitFields": [
+    "artifact_mutations",
+    "config_mutations",
+    "window_config_mutations",
+    "draft_mutations",
+    "transaction",
+    "transaction_phase",
+    "effects",
+    "extension_invocations",
+    "events",
+    "ui_scope",
+    "child_emits",
+    "owned_child_emits",
+    "child_preparations",
+    "interaction_writes",
+    "tasks"
+  ],
+  "ephemeralFields": [
+    "presence",
+    "transient",
+    "window_transient"
+  ],
+  "extensionFields": [
+    "extension_id",
+    "capability",
+    "request_json",
+    "response_action"
+  ],
+  "taskFields": [
+    "label",
+    "key",
+    "restart",
+    "run"
+  ],
+  "childFields": [
+    "genesis",
+    "owner",
+    "slot",
+    "child_id",
+    "ops",
+    "op_schema",
+    "labels"
+  ],
+  "ownedChildFields": [
+    "metadata",
+    "mutations"
+  ],
+  "effects": [
+    "OpenWindow",
+    "CloseWindow",
+    "Notify",
+    "ClipboardWrite",
+    "RequestSync",
+    "Navigate",
+    "LoadDocument",
+    "OpenExternalUrl",
+    "SetPanel",
+    "DownloadMediaExport",
+    "IconRenderExport",
+    "VideoRenderExport",
+    "RequestFileOpen",
+    "RequestMediaFrames",
+    "SpawnPluginInstance",
+    "OpenPluginInstance",
+    "SetActiveUtility",
+    "SetActiveTool",
+    "OpenDialog",
+    "DispatchAction",
+    "ReplayShellCommand",
+    "InvokeExtension",
+    "SendMessage",
+    "PublishEvent",
+    "BlobWrite",
+    "BlobLoad",
+    "HttpRequest",
+    "DocumentRead",
+    "DocumentWrite",
+    "LinkResolve",
+    "RegistryQuery",
+    "IoCompose",
+    "CacheDerive",
+    "CacheRead",
+    "SetTimer",
+    "SpawnJob",
+    "CancelJob",
+    "Respond",
+    "StorageRead",
+    "StorageWrite",
+    "StorageDelete",
+    "RequestCapability",
+    "ReleaseCapability",
+    "Subscribe",
+    "Unsubscribe",
+    "RequestServiceOperation"
+  ],
+  "taskSourceOriginal": true,
+  "childSourceOriginal": true,
+  "faultSourceOriginal": true,
+  "bodyCopyGrantUnchanged": true,
+  "headerCopyBytes": 0,
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "terminalDropBytes": 0,
+  "preparationFields": [
+    "owner"
+  ],
+  "preparationRetirementFields": [
+    "original",
+    "fault"
+  ],
+  "ownedChildRetirementFields": [
+    "original"
+  ],
+  "factoryAliasOriginal": true,
+  "taskConstructorGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 1,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 256
+  },
+  "ephemeralRetirementBounds": [
+    "PresenceMutation",
+    "TransientMutation"
+  ],
+  "appRetirementTraits": [
+    "ArtifactApp",
+    "ArtifactEditor",
+    "ArtifactViewer"
+  ],
+  "naturalFileRejectionRecipient": {
+    "source": "originalWholeRejection",
+    "admission": "ownedRetirementFullGrant",
+    "headerCopyBytes": 0,
+    "faultReshaping": false,
+    "refusedSourceReturned": true
+  },
+  "receivingCases": [
+    {
+      "outcome": "emit",
+      "extension": "geometry",
+      "input": "original雪\u0000input",
+      "message": "rejected original publication 🌊",
+      "scope": "drawing/clipboard",
+      "parameter": "original diagnostic parameter"
+    },
+    {
+      "outcome": "fault",
+      "extension": "geometry",
+      "input": "",
+      "message": "original output fault 雪",
+      "scope": "flow/editor",
+      "parameter": "whole output fault remains owned"
+    }
+  ],
+  "naturalFileFields": [
+    "port",
+    "media",
+    "decoder",
+    "completion",
+    "emit",
+    "pending_completion_rejection",
+    "retirement",
+    "contract",
+    "byte_cursor",
+    "byte_length",
+    "decode_progress",
+    "stage",
+    "completed",
+    "closing"
+  ]
+}

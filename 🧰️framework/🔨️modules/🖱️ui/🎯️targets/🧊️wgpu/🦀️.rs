@@ -334,7 +334,7 @@ pub use paint::{
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use prepared::OffscreenPresentToken;
 pub use prepared::{
-    PreparedAtlasPages, PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected,
+    PreparedAtlasAuthority, PreparedAtlasPages, PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected,
     PreparedRasterReservation, PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver,
     PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload, PreparedRenderUsage, RasterContentIdentity, RenderDirective, UiPresentToken, PREPARED_RASTER_ITEM_BYTES, PREPARED_RASTER_PAGE_BYTES,
 };

@@ -17,6 +17,24 @@
     ]
   },
   "targets": {
+    "test-original-receiving-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎭️actor/📦️packages/🦀️rust -- bun ./📜️script.ts test-original-receiving-source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-original-receiving-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎭️actor/📦️packages/🦀️rust --manifest 🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test long --lib original_actor_ --success-output immediate -- --nocapture",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

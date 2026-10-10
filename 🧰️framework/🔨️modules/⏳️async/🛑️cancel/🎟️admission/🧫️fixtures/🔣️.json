@@ -1,0 +1,58 @@
+{
+  "contract": "framework.async.original-cancellation-admission",
+  "originalGrant": [
+    1,
+    0,
+    4096,
+    0,
+    4
+  ],
+  "closeGrant": [
+    1,
+    0,
+    4096,
+    4096,
+    4
+  ],
+  "currencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release"
+  ],
+  "metadataCopyCurrency": 0,
+  "rootParent": null,
+  "physicalBirth": "original-arc-layout",
+  "underfundedOriginalUnchanged": true,
+  "closePhases": [
+    "original-arc",
+    "original-inline-node"
+  ],
+  "cases": [
+    {
+      "axis": "items",
+      "limit": 0,
+      "admitted": false
+    },
+    {
+      "axis": "copy",
+      "limit": 0,
+      "admitted": true
+    },
+    {
+      "axis": "capacity",
+      "limit": 0,
+      "admitted": false
+    },
+    {
+      "axis": "release",
+      "limit": 0,
+      "admitted": true
+    },
+    {
+      "axis": "depth",
+      "limit": 0,
+      "admitted": false
+    }
+  ]
+}

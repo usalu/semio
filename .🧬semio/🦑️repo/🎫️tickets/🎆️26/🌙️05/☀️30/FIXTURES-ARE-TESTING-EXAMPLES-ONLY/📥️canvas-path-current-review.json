@@ -1,0 +1,18 @@
+{
+  "owned": false,
+  "nativeExecuted": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+      "sha256": "7fee3bf98df2ed143b80021e9b07800a247c247e6e8d18bace76e43e655b146b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+      "sha256": "5e05c16a904302369fb2b7cf36bab5b46ee1836e10e3c0a8b798ae7ffbcdc426"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "sha256": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e"
+    }
+  ]
+}

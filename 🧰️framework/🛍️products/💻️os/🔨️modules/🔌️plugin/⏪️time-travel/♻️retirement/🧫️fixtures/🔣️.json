@@ -446,5 +446,121 @@
       "receipt": false,
       "installed": true
     }
+  ],
+  "constructorFailureCustody": [
+    {
+      "phase": "sourceRefused",
+      "original": "catalog",
+      "error": "retained",
+      "terminal": false
+    },
+    {
+      "phase": "ticketRefused",
+      "original": "ticket",
+      "error": "retained",
+      "terminal": false
+    },
+    {
+      "phase": "errorCursor",
+      "original": "cursor",
+      "error": "retained",
+      "terminal": false
+    },
+    {
+      "phase": "errorClosed",
+      "original": "none",
+      "error": "none",
+      "terminal": true
+    }
+  ],
+  "constructorCopySemantics": [
+    {
+      "transfer": "source",
+      "kind": "metadata",
+      "copyBytes": 0
+    },
+    {
+      "transfer": "ticket",
+      "kind": "metadata",
+      "copyBytes": 0
+    },
+    {
+      "transfer": "installation",
+      "kind": "metadata",
+      "copyBytes": 0
+    },
+    {
+      "transfer": "recipient",
+      "kind": "metadata",
+      "copyBytes": 0
+    }
+  ],
+  "snapshotCustody": [
+    {
+      "phase": "retained",
+      "source": "original",
+      "frame": false
+    },
+    {
+      "phase": "denied",
+      "source": "original",
+      "frame": false
+    },
+    {
+      "phase": "admitted",
+      "source": "none",
+      "frame": true
+    },
+    {
+      "phase": "closed",
+      "source": "none",
+      "frame": false
+    }
+  ],
+  "codecCustody": [
+    {
+      "phase": "borrowed",
+      "pack": "original",
+      "spr": "original",
+      "ops": "original",
+      "reduced": false
+    },
+    {
+      "phase": "unfunded",
+      "pack": "original",
+      "spr": "original",
+      "ops": "original",
+      "reduced": false
+    }
+  ],
+  "constructorCursorDrop": [
+    {
+      "original": true,
+      "error": false,
+      "ticket": false,
+      "done": false,
+      "mayDrop": false
+    },
+    {
+      "original": false,
+      "error": true,
+      "ticket": false,
+      "done": false,
+      "mayDrop": false
+    },
+    {
+      "original": false,
+      "error": false,
+      "ticket": true,
+      "done": false,
+      "mayDrop": false
+    },
+    {
+      "original": false,
+      "error": false,
+      "ticket": false,
+      "done": true,
+      "mayDrop": true
+    }
   ]
 }

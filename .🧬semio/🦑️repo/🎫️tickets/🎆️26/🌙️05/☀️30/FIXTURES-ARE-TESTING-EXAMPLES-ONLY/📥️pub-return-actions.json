@@ -1,0 +1,34 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧬️schema/🔣️.json",
+      "action": "delete",
+      "beforeSha256": "7bb00e34d25647a465364fb26359e0af39e27ec8df4468c9e5ade88eb8ec1c08",
+      "afterSha256": null,
+      "scope": "exclusive whole returned-read trial authority"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "action": "update",
+      "beforeSha256": "1ffa8e1464ce9c81edb5208905d179398400f2e52966a86752253b95fe691122",
+      "afterSha256": "95a4e6015b5681a0cfb391e54ca639f3882a25ebd35d0e4e6b8de57840de1d7d",
+      "beforeBlockSha256": "94c8bce724d57a704f9c66241aedbed2ec7ffba407fd91730edb62ec06150fdf",
+      "afterBlockSha256": "f5fb52ac8766b73bf7290c98bbcf59857c173ca89edf419c57b1504b2aaa2283",
+      "scope": "ReturnedReadCustodyScript whole-trial admission only"
+    }
+  ],
+  "preservedObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧫️fixtures/🔣️.json",
+      "sha256": "785ed79f5470aa2af3d9b9564763186f21b2f7ca80df3357aa1d0638369d3cf5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧪️tests/🦀️.rs",
+      "sha256": "eeaf52ceb1a8904f78b8946600a4161aabd549e8389fb527de1afb19e0d55e7f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🦀️.rs",
+      "sha256": "1f768c4839a845a3f872f36e44001fc6bd9f60507a052f4ba263b1e9cc4d138d"
+    }
+  ]
+}

@@ -111,6 +111,7 @@ semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦�
 semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 
 [dev-dependencies]
+semio-framework-trace.workspace = true
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 # 🔌️ Drives the `🧵️bridge` `BridgeServer` skeleton's websocket upgrade end-to-end in tests — same
 # version hub already uses for its own `os-hub` websocket tests (`🌎️hub/📦️packages/🦀️rust/Cargo.toml`).

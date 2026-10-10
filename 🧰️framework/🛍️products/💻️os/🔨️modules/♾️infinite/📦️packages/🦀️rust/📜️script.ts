@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -43,9 +44,9 @@ class FontsScript extends BundleScript {
 class TestWgpuWorldTerrainScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([], this.root, ["--lib", ...rest, "world::", "terrain"]);
+    await runRepositoryCargoTests([], this.root, this.invocation.control, ["--lib", ...rest, "world::", "terrain"]);
   }
 }
 
 const router = new ScriptRouter(ROOT).register("fonts", FontsScript).register("test-wgpu-world-terrain", TestWgpuWorldTerrainScript);
-if (import.meta.main) await router.run(process.argv.slice(2));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

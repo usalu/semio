@@ -1,0 +1,11 @@
+{
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddf5\ufe0foperation-wire/\ud83d\udce6\ufe0foutput/\ud83e\udd80\ufe0f.rs",
+      "action": "updated",
+      "beforeSha256": "0a50af29e5adfd389bc25d183e7ee900ebbabc3377624e13364d5205d8434afa",
+      "afterSha256": "115a47cf94069a60d157f48a054dfcb73a014027d4efd724d273ae2f78dbd690",
+      "scope": "genuine protocol contiguous output: supplied capacity/exact original buffer birth, bounded copied prefix, paid original pages cleanup, exact handoff and cancellation closure"
+    }
+  ]
+}

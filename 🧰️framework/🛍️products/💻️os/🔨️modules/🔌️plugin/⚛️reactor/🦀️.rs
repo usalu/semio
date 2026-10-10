@@ -14,6 +14,8 @@
 
 #[path = "📸️checkpoint/🦀️.rs"]
 pub mod checkpoint;
+#[path = "🎟️context/🦀️.rs"]
+pub mod original_actor_context;
 #[path = "📥️cold-pair/🦀️.rs"]
 pub(crate) mod cold_pair;
 #[path = "🧵️executor/🦀️.rs"]
@@ -863,7 +865,7 @@ where
     let resume_instance = instance;
     let resume_meta = meta.clone();
     reservation.install(Box::pin(async move {
-        let future = run(ctx);
+        let future = run.run(ctx);
         let outcome = match future.await {
             Ok(crate::app::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
             Ok(crate::app::TaskResolution::Emit(emit)) => {
@@ -1251,15 +1253,16 @@ mod wit_bridge {
         events: Vec<crate::component::wasip2::exports::semio::framework::reactor::Event>,
         budget: crate::component::wasip2::exports::semio::framework::reactor::Budget,
         identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+        cx:&mut semio_framework_job::StepContext<'_>,
     ) -> Result<crate::component::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
         turn::note_turn_events(events.len(), wit_events_payload_bytes(&events));
         let mut kernel_events = Vec::with_capacity(events.len());
         for event in events {
             kernel_events.push(wit_event_to_kernel(event));
         }
-        let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
-        turn::poll_kernel_output(runtime, kernel_events, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity).await
+        turn::poll_kernel_output(runtime, kernel_events, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
     }
 
     /// 🩺️ Bulk bytes a turn's events carry across the component boundary — every `pack`/`list<u8>`
@@ -1564,12 +1567,17 @@ mod wit_bridge {
     /// no STRUCTURAL wit change is needed to repoint what it carries: `wit-flip`'s doc comment there
     /// still names the OLD replication `PresencePeer` payload; this packet's report carries the exact
     /// (doc-comment-only, plus a field rename for clarity) WIT diff as a registrar lease-request.
+    fn wit_retained_input_to_kernel(input:crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput)->Result<semio_framework::kernel::RetainedTurnInput,semio_framework::Fault>{let extent=|value:u64|usize::try_from(value).map_err(|_|staging_fault("original retained wire extent exceeds native address space"));let grant=input.grant;let input=semio_framework::kernel::RetainedTurnInput{operation:input.operation,generation:input.generation,epoch:input.epoch,grant:semio_framework_value::RetainedCloneGrant{maximum_items:extent(grant.maximum_items)?,maximum_copy_bytes:extent(grant.maximum_copy_bytes)?,maximum_capacity_bytes:extent(grant.maximum_capacity_bytes)?,maximum_release_bytes:extent(grant.maximum_release_bytes)?,maximum_depth:extent(grant.maximum_depth)?}};input.validate().map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;Ok(input)}
+    fn kernel_retained_grant_to_wit(grant:semio_framework_value::RetainedCloneGrant)->crate::component::wasip2::exports::semio::framework::reactor::RetainedGrant{use crate::component::wasip2::exports::semio::framework::reactor as wit;wit::RetainedGrant{maximum_items:grant.maximum_items as u64,maximum_copy_bytes:grant.maximum_copy_bytes as u64,maximum_capacity_bytes:grant.maximum_capacity_bytes as u64,maximum_release_bytes:grant.maximum_release_bytes as u64,maximum_depth:grant.maximum_depth as u64}}
+    fn kernel_retained_receipt_to_wit(receipt:semio_framework::kernel::RetainedTurnReceipt)->crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnReceipt{use crate::component::wasip2::exports::semio::framework::reactor as wit;wit::RetainedTurnReceipt{input:wit::RetainedTurnInput{operation:receipt.input.operation,generation:receipt.input.generation,epoch:receipt.input.epoch,grant:kernel_retained_grant_to_wit(receipt.input.grant)},spent:wit::RetainedProgress{copied_items:receipt.spent.copied_items as u64,copied_bytes:receipt.spent.copied_bytes as u64,retained_capacity_bytes:receipt.spent.retained_capacity_bytes as u64,released_bytes:receipt.spent.released_bytes as u64},remaining:kernel_retained_grant_to_wit(receipt.remaining)}}
+
     fn kernel_turn_result_to_wit(
         result: &semio_framework::kernel::TurnResult,
         _budget: crate::component::wasip2::exports::semio::framework::reactor::Budget,
     ) -> Result<crate::component::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
         use crate::component::wasip2::exports::semio::framework::reactor as wit;
         Ok(wit::TurnResult {
+            retained_receipt:kernel_retained_receipt_to_wit(result.retained_receipt),
             ui_patches: result.ui_patches.iter().map(kernel_ui_patch_to_wit).collect(),
             effects: result.effects.iter().cloned().map(kernel_effect_to_wit).collect::<Result<Vec<_>, _>>()?,
             presence: result.presence.iter().map(kernel_presence_update_to_wit).collect(),

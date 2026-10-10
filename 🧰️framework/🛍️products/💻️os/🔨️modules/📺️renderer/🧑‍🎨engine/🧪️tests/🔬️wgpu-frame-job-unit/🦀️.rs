@@ -391,7 +391,8 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
     let mut sequence = 0;
     let mut retained_progress = RetainedCloneProgress::default();
     let mut context = StepContext::new(OperationId(99), Generation(99), semio_framework_job::StepBudget::new(1, u64::MAX, fixture_frame_grant()), root_cancel_token(), frozen_clock, &mut sequence, &mut retained_progress);
-    assert!(matches!(job.step(&mut context), StepOutcome::Complete(_)));
+    assert!(job.step(&mut context).unwrap().is_none());
+    assert_eq!(context.retained_progress(), RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Option<FrameDirectives>>(), ..RetainedCloneProgress::default() });
     job.begin_close();
     let original = job.complete.as_ref().unwrap() as *const FrameDirectives;
     assert_eq!(job.next_close_copy_byte_demand().unwrap(), size_of::<FrameDirectives>());

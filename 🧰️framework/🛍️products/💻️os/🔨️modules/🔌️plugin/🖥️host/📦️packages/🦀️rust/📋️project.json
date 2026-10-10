@@ -142,6 +142,16 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "test-original-driver-policy-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-original-driver-policy-native",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": []
     }
   },
   "implicitDependencies": [

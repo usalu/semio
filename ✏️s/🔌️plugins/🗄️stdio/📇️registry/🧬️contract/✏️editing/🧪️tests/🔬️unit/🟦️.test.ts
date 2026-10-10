@@ -173,3 +173,52 @@ describe("shared typed path fixture", () => {
     expect(applySnapshotEdit(row.before, event)).toEqual(row.expected);
   });
 });
+
+
+test("original editor preparation preserves canonical refusal receipts and original mutation slots",async()=>{
+  const root=new URL("../../../../../../../../",import.meta.url);
+  const law=await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
+  const schema=await Bun.file(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json",root)).json();
+  const {ValueError}=await import(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",root).href);
+  const {Database}=await import("bun:sqlite");const db=new Database(":memory:");const valid=new Ajv2020({strict:true}).compile(schema);
+  try{for(const wire of law.wireCases){expect(valid(wire)).toBe(true);const error=new ValueError(wire.kind,wire.message).withRetainedProgress(wire.retainedProgress);expect(error.under("preparation").retainedProgress).toBe(error.retainedProgress);const oracle=db.query("SELECT json_object('kind',?, 'message',?, 'retainedProgress',json(?)) AS wire").get(error.kind,error.message,JSON.stringify(error.retainedProgress)) as {wire:string};expect(JSON.parse(oracle.wire)).toEqual(wire);expect(valid({...wire,retainedProgress:{...wire.retainedProgress,copiedBytes:-1}})).toBe(false);}}
+  finally{db.close();}
+  for(const path of law.producerPaths){const source=await Bun.file(new URL(path,root)).text();const start=source.indexOf("fn advance(&mut self, grant:");const end=source.indexOf("fn checkpoint(",start);const actual=source.slice(start,end);expect(actual).toContain("Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError>");expect(actual).not.toContain("ValueError::into_message");expect(actual).not.toContain("error.to_string()");expect(actual).toContain("self.mutation = Some(mutation)");}
+  console.log("[DEBUG] Editor preparation canonical refusal per-value Ajv/SQLite agrees; original mutation slots and receipt propagation Source verified; native provider conservation remains unrun");
+});
+
+test("original editor preparation closes retained refusal owners under independent policy",async()=>{
+  const root=new URL("../../../../../../../../",import.meta.url);
+  const law=await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
+  const schema=await Bun.file(new URL("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",root)).json();
+  const valid=new Ajv({strict:true}).compile(schema);
+  expect(valid(law.closeGrant)).toBe(true);
+  for(const axis of Object.keys(law.closeGrant))expect(valid({...law.closeGrant,[axis]:-1})).toBe(false);
+  for(const path of law.producerPaths){
+    const source=await Bun.file(new URL(path,root)).text();
+    const start=source.indexOf("fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant)");
+    const end=source.indexOf("fn terminal_is_empty",start);const actual=source.slice(start,end);
+    expect(actual).toContain("Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>");
+    expect(actual).toContain("grant.retained_grant()");
+    expect(actual).toContain("artifact_retirement_box_close_step");
+    expect(actual).toContain("admit_retirement");
+    expect(actual).toContain("next_close_depth_demand");
+    expect(actual).not.toContain("SnapshotRetirementStep");
+    expect(actual).not.toContain("return_to_registry()");
+    expect(actual).not.toContain("maximum_bytes");
+  }
+  console.log("[DEBUG] Editor original independent full-axis close policy and genuine retained source boundaries verified; native extent laws unrun");
+});
+
+test("original unit preparation preserves typed semantic refusal custody",async()=>{
+  const root=new URL("../../../../../../../../",import.meta.url);
+  const law=await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
+  const {ValueError}=await import(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",root).href);
+  for(const row of law.wireCases){const error=new ValueError(row.kind,row.message).withRetainedProgress(row.retainedProgress);expect(JSON.parse(Buffer.from(JSON.stringify(error.retainedProgress)).toString("utf8"))).toEqual(row.retainedProgress);}
+  const source=await Bun.file(new URL("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",root)).text();
+  for(const definition of ["impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEphemeralPreparation", "impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEditCursor"]){
+    const start=source.indexOf(definition);expect(start).toBeGreaterThan(0);const stop=Math.min(...[source.indexOf("fn checkpoint",start),source.indexOf("fn take_inverse",start)].filter(index=>index>start));const actual=source.slice(start,stop);
+    expect(actual).not.toContain("Result<ArtifactStoreOneItemPreparationStep, String>");expect(actual).not.toContain("Result<RetainedCloneEditStep, String>");expect(actual).not.toContain("error.to_string()");expect(actual).not.toContain("ValueError::into_message");expect(actual).toContain("self.semantic_refusal = Some(error)");
+  }
+  console.log("[DEBUG] Original Unit typed semantic refusal custody Source and independent Buffer per-value receipt agree; native provider physical work remains unrun");
+});

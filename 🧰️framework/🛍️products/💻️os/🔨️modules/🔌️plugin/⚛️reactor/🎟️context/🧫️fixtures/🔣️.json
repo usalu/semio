@@ -1,0 +1,53 @@
+{
+  "operation": 71,
+  "generation": 3,
+  "admissionGrant": [
+    1,
+    0,
+    4096,
+    4096,
+    8
+  ],
+  "bodyGrant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "originalInputCapacity": 97,
+  "phases": [
+    {
+      "phase": "root-denied",
+      "admitted": false,
+      "ready": false,
+      "items": 0
+    },
+    {
+      "phase": "root",
+      "admitted": true,
+      "ready": false,
+      "items": 1
+    },
+    {
+      "phase": "payload-denied",
+      "admitted": false,
+      "ready": false,
+      "items": 0
+    },
+    {
+      "phase": "payload",
+      "admitted": true,
+      "ready": false,
+      "items": 1
+    },
+    {
+      "phase": "borrow",
+      "admitted": true,
+      "ready": true,
+      "items": 0
+    }
+  ],
+  "sameOriginalInput": true,
+  "sameCancelAndPayload": true
+}

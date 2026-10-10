@@ -19,6 +19,21 @@ use crate::*;
 use semio_framework_value::{DslValue,FromValue,ToValue};
 use protocol::{Mutation,MutationDiff,DiffAlgebra,Inference};
 
+#[test]
+fn io_value_declarations_preserve_neutral_omission_null_and_unicode(){
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
+ for row in neutral["cases"].as_array().unwrap(){let input=DslValue::from(&row["value"]);let output=match row["kind"].as_str().unwrap(){"mutation"=>ChangeChartValue::from_value(input).unwrap().to_value(),"edit"=>ChartEdit::from_value(input).unwrap().to_value(),"diff"=>ChartDiff::from_value(input).unwrap().to_value(),_=>unreachable!()};assert_eq!(serde_json::Value::from(output),row["value"]);}
+ for row in neutral["refused"].as_array().unwrap(){let input=DslValue::from(&row["value"]);assert!(match row["kind"].as_str().unwrap(){"mutation"=>ChangeChartValue::from_value(input).is_err(),"edit"=>ChartEdit::from_value(input).is_err(),_=>unreachable!()});}
+ eprintln!("[DEBUG] Print original native IO value declarations preserve seven neutral null/omission/unicode vectors and four refusals; independent Serde agrees");
+}
+
+#[test]
+fn semantic_chart_validation_borrows_authored_fields(){
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
+ for row in neutral["validation"].as_array().unwrap(){let snapshot=ChartSnapshot{chart:DslValue::from(&row["chart"])};let before=serde_json::Value::from(&snapshot.chart);assert_eq!(crate::inferences::validate_chart(&snapshot).is_ok(),row["valid"].as_bool().unwrap(),"{row}");assert_eq!(serde_json::Value::from(&snapshot.chart),before);}
+ eprintln!("[DEBUG] Print semantic validation borrowed seven neutral authored chart fields without changing input; independent Serde agrees");
+}
+
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
 fn snapshot() -> ChartSnapshot { ChartSnapshot::from_value(DslValue::from(fixture()["snapshot"].clone())).unwrap() }
 
@@ -90,7 +105,7 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
     let base = snapshot();
     let payload = protocol::pack_rt::encode_wire_value(&base.to_value());
     let budgets = WireArtifactInferenceBudget { work_units: 100, allocation_bytes: 1_000_000, recursion_depth: 64 };
-    let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "chart-test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Bypass, canonical_payload: &payload, dependencies: &[] };
+    let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, policy: &[], budgets: &budgets, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "chart-test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Bypass, canonical_payload: &payload, dependencies: &[] };
     let mut registry = ArtifactInferenceServiceRegistry::new();
     registry.register(chart_inference_service()).unwrap();
     register_chart_artifact().unwrap();
@@ -104,9 +119,9 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
     assert_eq!(decoded, ChartTextOutput::render(&base).unwrap());
     assert!(decoded.tikz.contains("\\SemioVizPlot[data=semio-print-layer-0,mark=point"));
     let mut progress = Vec::new();
-    assert!(execute_chart_inference_controlled(&request, &mut |work| { progress.push(work); Ok(()) }).is_ok());
+    assert!(crate::io::binary::inferences::execute_chart_inference_controlled(&request, &mut |work| { progress.push(work); Ok(()) }).is_ok());
     assert!(progress.windows(2).all(|pair| pair[0] <= pair[1]));
-    assert!(execute_chart_inference_controlled(&request, &mut |work| { if work >= 1 { Err(ArtifactInferenceExecutionError::new("test.cancelled", "cancelled")) } else { Ok(()) } }).is_err());
+    assert!(crate::io::binary::inferences::execute_chart_inference_controlled(&request, &mut |work| { if work >= 1 { Err(ArtifactInferenceExecutionError::new("test.cancelled", "cancelled")) } else { Ok(()) } }).is_err());
     let invalid_payload=protocol::pack_rt::encode_wire_value(&ChartSnapshot::default().to_value());
     let invalid_request=ArtifactInferenceExecutionRequest{canonical_payload:&invalid_payload,..request};
     let invalid=published.infer(&invalid_request).unwrap();

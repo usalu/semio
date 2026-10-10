@@ -1,0 +1,26 @@
+# Clipboard Original Outcome Receiving
+
+Root assigned NativeClipboardJob and ClipboardIoJob while Actor receiving and MountedLayout remain separately owned. Both actual clipboard implementations currently return StepOutcome by value, allocate temporary RetainedJobPayloadWriter carriers, fall back to empty payloads, and take write input into the platform API. Their original close laws already require retaining exact String pointer/capacity until an independently funded whole-capacity close.
+
+A neutral schema and fixture property now require a cancelled borrowed outcome, the original caller grant, unchanged input pointer, zero heap during a result borrow, paid descriptor acknowledgement, and input custody retained until actual close. The same native cancellation law is authored in both implementation rosters before producer edits. It uses the existing Job semantic-loan grant and existing UI operation/fuel/deadline data, observes actual allocator births/releases, rejects zero-item outcome admission, and compares the original input to the Serde fixture oracle. Tests cancel before platform access and do not modify the system clipboard.
+
+An independent tree-sitter source test inspects each actual InteractiveJob implementation and requires JobOutcomeBorrow, borrow_outcome and held RetainedPayloadBuilder storage, rejecting StepOutcome and empty fallbacks. The test joins the existing Mounted source invocation in the registered full UI-operation gate without changing its budget or native argv. Root owns that gate; no simultaneous duplicate launch is started. Specific Clipboard source RED has not yet been received, so clipboard producers remain untouched.
+
+The live Interpreter consumer still uses the earlier by-value WorkerJobSession boundary, missing original retained params/grant, taking old outcomes and calling close with two scalars. It needs the genuine upstream Actor turn/context authority before it can admit clipboard result copies, acknowledge original descriptors, resume and close. Media owns the Actor retained receiving port; no caller grant will be reconstructed from an I/O lane or scheduling budget.
+
+Actual arboard source permits set_text of a borrowed str, so the original write String can remain held through platform submission and funded retirement. Its read APIs return whole String/image owners without a bounded original allocation receipt. That external platform input frontier is not runtime-accepted by the cancellation laws or a borrowed outcome source witness; it requires explicit original receiving/retirement custody. Current source's image width/height temporary Vecs and discarded oversized content likewise do not establish five-axis admission.
+
+Files authored: UI physical-job fixture clipboardOutcome property and outcome schema, its TypeScript source/oracle law, both native cancellation laws, and the existing ticket script preflight. Native window observations use a test-only System allocator wrapper; no runtime dependency is added.
+
+## Current Receiving Migration
+
+Registered UI source RED2 completed with 2 passed and 2 failed tests (19 assertions, 217 ms). The two neutral/Ajv laws passed; the actual Mounted and Clipboard source laws rejected old StepOutcome. Log: `🗑️generated/mounted-original-source-red2-oct10.log`. This is source interface evidence, not native acceptance.
+
+Both actual Clipboard job producers now return original semantic loans, bind descriptors to held payloads, retain canceled/written input until its original funded retirement, and borrow decoded candidate bytes instead of copying a receiver String/Vec. Read currently publishes an original held diagnostic requiring a bounded platform recipient; this frontier is unresolved. Interpreter worker submission/receipt settlement/ACK and actual shell invocation ingress remain pending. No native runtime GREEN is claimed.
+
+
+## Current ingress and admission evidence
+
+The exact registered UI operation receiving row child82706/session42105 settled terminal1 with 4pass/1fail, 41assertions, 1.73s at generated/clipboard-ingress-source-red-oct10.log. Actual migrated Clipboard loan source and neutral clauses passed; the sole genuine failure was old Interpreter submit_clipboard_io lacking ClipboardInvocationInput and minting local operation/cancel authority. No native assertions ran. The actual drive_step cancellation laws remain pending native runtime RED; the driver bridge and producer witness guard are unchanged. New owned admission declarations are recorded in clipboard-session-admission-current.md.
+
+Fresh host trace finds supplied OsHost.retained from its actual constructor, but that value is the frame bootstrap root policy copied at native winit-app997/browser-worker834. It carries no original UI invocation operation/generation/epoch or cancellation/control. A mandatory distinct root UI invocation input must be admitted at those real shell callers and carried through RuntimeDispatchCursor/start_dispatch/dispatch_normalized_event/Interpreter, preserving original recipient and physical receipts. No frame-generation-derived grant, default policy, local submit mint or cold Box callback is accepted. Bounded platform read implementations remain required after original ingress/receiving admission; the explicit read refusal is unresolved.

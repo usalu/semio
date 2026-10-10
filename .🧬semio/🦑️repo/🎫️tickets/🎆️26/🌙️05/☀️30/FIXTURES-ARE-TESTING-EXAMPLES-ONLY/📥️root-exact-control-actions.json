@@ -1,0 +1,28 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "938efefac5ecfb375b33aba8edc7567b3cfbd9aa78a1c38f21d7abcc039a2051",
+      "afterSha256": "5acd46eecc7cf1fb6f3146bc21edaae08f08e6392208787e88dc93ee0714a6bf",
+      "exclusive": false,
+      "scope": "Genuine exact native caller policy and original invocation control; await actual publication before acquisition; preserve original signal through capture"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🔣️.json",
+      "action": "created",
+      "beforeSha256": null,
+      "afterSha256": "b295053b42816c6198bfd139f76506a5b868f1419c65a0da00df8f94e24f630c",
+      "exclusive": false,
+      "scope": "Genuine exact native caller policy and original invocation control; await actual publication before acquisition; preserve original signal through capture"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "45ed517acdca68e5ff7b98647b27af470337551e84b7ceca70dbaf6b4e11d3dd",
+      "afterSha256": "730f20d55f9d6a719622cf4b36184bf772fa8518df3f1e80fa7f97d6f4fe2bb5",
+      "exclusive": false,
+      "scope": "Genuine exact native caller policy and original invocation control; await actual publication before acquisition; preserve original signal through capture"
+    }
+  ]
+}

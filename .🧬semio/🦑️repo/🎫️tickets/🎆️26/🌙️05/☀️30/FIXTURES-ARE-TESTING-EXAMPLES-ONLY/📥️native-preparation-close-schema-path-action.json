@@ -1,0 +1,6 @@
+{
+  "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\udcc7\ufe0fregistry/\ud83e\uddec\ufe0fcontract/\u270f\ufe0fediting/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83d\udfe6\ufe0f.test.ts",
+  "before": "112c9078d7e5c98dce0fae7e12700a2d8d4cb28d763d583b908026008283dc68",
+  "after": "b2be61966219b17dbd9063f631691541f72d4ffbebf295922ede92fe3d4fc8a3",
+  "priorReceipt": "97519 qualified missing actual schema path, no close RED"
+}

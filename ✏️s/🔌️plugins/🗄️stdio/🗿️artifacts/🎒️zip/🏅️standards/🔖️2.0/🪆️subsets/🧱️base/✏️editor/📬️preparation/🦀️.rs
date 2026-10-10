@@ -825,13 +825,13 @@ fn canonical_object<'a, const N: usize>(mut fields: [(&'a str, app_store::Artifa
 }
 
 impl app_store::ArtifactCanonicalJson for ZipMutation {
-    fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<app_store::ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         Ok(Some(match self {
             ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, comment_utf8 }) => {
                 canonical_object([("comment", canonical_text(comment)), ("commentUtf8", canonical_bool(*comment_utf8)), ("mutation", canonical_static_text("setArchiveComment"))])
             }
             ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => canonical_object([("mutation", canonical_static_text("renameEntry")), ("name", canonical_text(name)), ("newName", canonical_text(new_name))]),
-            _ => return Err("stdio-zip-base-snapshot-edit-canonical-mutation".into()),
+            _ => return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio-zip-base-snapshot-edit-canonical-mutation")),
         }))
     }
 }

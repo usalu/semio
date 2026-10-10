@@ -1,10 +1,11 @@
 import { lstatSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { authoredPackageExportAuthority } from "./🏗️construction/🟦️.ts";
 import { bunRepositoryMembership } from "../../🗂️workspaces/🟦️bun/🟦️.ts";
 
 export type DependencyDirectionRule = Readonly<{ name: string; severity: string; from: { path: readonly string[]; pathNot?: readonly string[] }; to: { path: readonly string[]; pathNot?: readonly string[] } }>;
 export type DependencyDirectionEdge = Readonly<{ rule: string; from: string; to: string }>;
-export type DependencyDirectionGraphScope = Readonly<{ workspaceRoots: readonly string[]; workspacePackages: readonly Readonly<{ name: string; owner: string; exports: readonly string[] }>[]; excludedPaths: readonly string[]; nonFollowedPaths: readonly string[]; expectedSources: readonly string[] }>;
+export type DependencyDirectionGraphScope = Readonly<{ workspaceRoots: readonly string[]; workspacePackages: readonly Readonly<{ name: string; owner: string; sourceOwner:string; exports: readonly string[]; exportTargets:readonly Readonly<{subpath:string;target:string|null}>[] }>[]; excludedPaths: readonly string[]; nonFollowedPaths: readonly string[]; expectedSources: readonly string[] }>;
 
 const sourceExtension = /\.(?:[cm]?[jt]s|[jt]sx)$/u;
 const pathPatterns = new Map<string, RegExp>();
@@ -25,7 +26,15 @@ function validateScope(scope: DependencyDirectionGraphScope): void {
   }
   if (!scope.workspaceRoots.length) throw new Error("Dependency direction requires declared workspace roots");
   if (!Array.isArray(scope.workspacePackages) || scope.workspacePackages.some((pkg) => !pkg || typeof pkg.name !== "string" || !pkg.name || typeof pkg.owner !== "string" || !workspacePath(scope, pkg.owner))) throw new Error("Dependency direction requires readable workspace package ownership");
-  if (scope.workspacePackages.some((pkg) => !Array.isArray(pkg.exports) || !pkg.exports.length || pkg.exports.some((path: unknown) => typeof path !== "string" || !/^\.(?:\/.*)?$/u.test(path)) || new Set(pkg.exports).size !== pkg.exports.length)) throw new Error("Dependency direction requires readable authored package exports");
+  if (scope.workspacePackages.some((pkg) => !Array.isArray(pkg.exports) || pkg.exports.some((path: unknown) => typeof path !== "string" || !/^\.(?:\/.*)?$/u.test(path)) || new Set(pkg.exports).size !== pkg.exports.length)) throw new Error("Dependency direction requires readable authored package exports");
+  for (const pkg of scope.workspacePackages) {
+    if (pkg.sourceOwner !== (pkg.owner.includes("/📦️packages/") ? pkg.owner.split("/📦️packages/")[0] : pkg.owner) || !workspacePath(scope,pkg.sourceOwner)) throw Error("Dependency direction requires canonical semantic package ownership");
+    if (!Array.isArray(pkg.exportTargets) || pkg.exportTargets.some((row: Readonly<{subpath:string;target:string|null}>)=>!row || typeof row.subpath!=="string" || !/^\.(?:\/.*)?$/u.test(row.subpath) || (row.target!==null && (typeof row.target!=="string" || !row.target.startsWith("./"))))) throw Error("Dependency direction requires readable authored export targets");
+    const targets:Record<string,(string|null)[]> = {};
+    for (const row of pkg.exportTargets) { if (Object.keys(row).sort().join("|") !== "subpath|target") throw Error("Dependency direction requires exact target metadata"); (targets[row.subpath] ??= []).push(row.target); }
+    const canonical = authoredPackageExportAuthority(pkg.owner,{exports:targets});
+    if (new Set(pkg.exportTargets.map((row:Readonly<{subpath:string;target:string|null}>)=>JSON.stringify(row))).size !== pkg.exportTargets.length || pkg.exports.length !== canonical.exports.length || pkg.exports.some((key:string)=>!canonical.exports.includes(key))) throw Error("Dependency direction has contradictory authored public exports");
+  }
   if (new Set(scope.workspacePackages.map((pkg) => pkg.name)).size !== scope.workspacePackages.length) throw new Error("Dependency direction scope repeats a package name");
   for (const pattern of [...scope.excludedPaths, ...scope.nonFollowedPaths]) {
     try { new RegExp(pattern, "u"); } catch { throw new Error(`Dependency direction scope has an invalid path pattern: ${pattern}`); }
@@ -52,8 +61,7 @@ export function dependencyDirectionWorkspacePackages(root: string, excludedPaths
     const previous = names.get(manifest.name);
     if (previous !== undefined && previous !== owner) throw new Error("Dependency direction package name has distinct owners: "+manifest.name+" ("+previous+", "+owner+")");
     names.set(manifest.name,owner);
-    const exports = manifest.exports && typeof manifest.exports === "object" && !Array.isArray(manifest.exports) && Object.keys(manifest.exports).some((key) => key.startsWith(".")) ? Object.keys(manifest.exports).filter((key) => manifest.exports[key] !== null) : ["."];
-    return [{ name: manifest.name, owner, exports }];
+    return [{ name: manifest.name, owner, ...authoredPackageExportAuthority(owner, manifest) }];
   });
 }
 
@@ -125,6 +133,14 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
         if (subpath !== "." && subpath.slice(2).split(/[\\/]/u).some((segment) => !segment || segment === "." || segment === "..")) throw new Error(`Dependency direction graph uses an invalid authored package subpath: ${from} → ${specifier}`);
         const exported = pkg.exports.some((path) => new RegExp(`^${path.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`, "u").test(subpath));
         if (!exported) problems.push(`Dependency direction graph uses an undeclared authored package export: ${from} → ${specifier}`);
+        const candidates=pkg.exportTargets.flatMap(row=>{
+          const expression=new RegExp(`^${row.subpath.split("*").map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("(.*)")}$`,"u"),match=expression.exec(subpath);
+          return match?[{...row,capture:match[1]??"",rank:row.subpath.includes("*")?row.subpath.indexOf("*"):Number.MAX_SAFE_INTEGER}]:[];
+        }).sort((a,b)=>b.rank-a.rank || b.subpath.length-a.subpath.length);
+        const chosen=candidates.filter(row=>row.subpath===candidates[0]?.subpath);
+        const installedTarget=to.includes("/node_modules/")?to.slice(to.lastIndexOf("/node_modules/")+1):to;
+        if (!chosen.some(row=>{if(row.target===null)return false;const target=row.target.slice(2).replaceAll("*",row.capture);return to===`${pkg.owner}/${target}` || installedTarget===`node_modules/${pkg.name}/${target}`;})) problems.push(`Dependency direction graph resolves an authored package export to a different target: ${from} → ${specifier} → ${to}`);
+
       }
       const installed = to.split("/").lastIndexOf("node_modules"), ownership = installed < 0 ? to : to.split("/").slice(installed).join("/");
       for (const rule of applicable) if (!matches(rule.to.pathNot ?? [], to) && (matches(rule.to.path, ownership) || (pkg && (matches(rule.to.path, specifier) || matches(rule.to.path, `${pkg.owner}/`))))) edges.push({ rule: rule.name, from, to });

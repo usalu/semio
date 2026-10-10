@@ -13,3 +13,9 @@ pub trait DiffText: Sized {
     fn print_diff(&self) -> String;
     fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError>;
 }
+
+#[path = "🧵️canonical/🦀️.rs"]
+pub mod canonical;
+
+#[path="🔗️causal/🦀️.rs"]
+mod causal;

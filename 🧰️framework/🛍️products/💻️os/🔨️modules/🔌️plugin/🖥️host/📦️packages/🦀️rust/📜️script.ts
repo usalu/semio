@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🖥️ Runs owned plugin-host checks and exact native test filters. */
 const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 import assert from "node:assert/strict";
@@ -51,11 +53,7 @@ class ServiceOperationConversionCheckScript extends BundleScript {
     assert.throws(() => assertServiceOperationConversionSource(wit, synchronous, asynchronous.replace("E::RequestServiceOperation(inner) => K::RequestServiceOperation", "E::MissingServiceOperation(inner) => K::RequestServiceOperation")));
     console.log(`plugin-host-service-operation-source: effects=${fixture.effects.length} wit=1 sync=1 async=1 mutation=1 passed`);
     if (!segments.includes("--native")) return;
-    const laws = await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      env: { ...process.env, CARGO_BUILD_JOBS: "1", RUST_MIN_STACK: "33554432" },
-      nativeEnv: { RUST_MIN_STACK: "268435456" },
-      groups: [
+    const laws = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, env: { ...process.env, CARGO_BUILD_JOBS: "1", RUST_MIN_STACK: "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [
         { package: "semio-framework", target: { kind: "lib" }, laws: ["kernel::service_operation_tests::installed_owner_service_effects_match_the_portable_and_serde_oracles"] },
         { package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: [
           "component::service_operation_tests::service_operation_preserves_its_exact_owner_action_and_payload",
@@ -63,9 +61,7 @@ class ServiceOperationConversionCheckScript extends BundleScript {
           "component::imports::effect_conversion_tests::service_operation_preserves_its_exact_owner_action_and_payload",
           "component::imports::effect_conversion_tests::service_operation_rejects_a_malformed_payload",
         ] },
-      ],
-      progress: (event) => console.log(`service-operation ${event.stage} ${event.package} ${event.law ?? ""}`),
-    });
+      ], progress: (event) => console.log(`service-operation ${event.stage} ${event.package} ${event.law ?? ""}`) });
     console.log(`plugin-host-service-operation-native: groups=${laws.length} laws=${laws.reduce((count, group) => count + group.laws.length, 0)} passed`);
   }
 }
@@ -238,10 +234,7 @@ class GuestFaultCheckScript extends BundleScript {
     );
     console.log(`guest-fault-oracle cases=${guestFaultOracle()} retries=${retainedLifecycleOracle()} activations=${activationOwnershipOracle()} reservations=${kernelReservationOracle()}`);
     if (!segments.includes("--native")) return;
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.root,
-      env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
-      groups: [
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 86_400_000, lawMilliseconds: 60_000 }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" }, groups: [
         {
           package: "semio-framework-actor",
           target: { kind: "lib" },
@@ -275,13 +268,9 @@ class GuestFaultCheckScript extends BundleScript {
             "component::shard::lifecycle::tests::terminal_faults_never_create_a_lifecycle_retry",
           ],
         },
-      ],
-      buildBudgetMs: 86_400_000,
-      lawBudgetMs: 60_000,
-      progress(event) {
+      ], progress(event) {
         console.log(`guest-fault ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
-      },
-    });
+      } });
     console.log(`guest-fault-receipts: ${JSON.stringify(receipts)}`);
   }
 }
@@ -336,11 +325,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     assert(artifactRoot, "SEMIO_TEST_ARTIFACT_DIR is required");
     const scaleWasm = join(this.repoRoot, SCALE_COMPONENT_ARTIFACT);
     assert(existsSync(scaleWasm), "registered scale component was not materialized");
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.root,
-      env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432", CARGO_BUILD_JOBS: "1" },
-      nativeEnv: { RUST_MIN_STACK: "268435456" },
-      groups: [
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 86_400_000, lawMilliseconds: 60_000 }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432", CARGO_BUILD_JOBS: "1" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [
         {
           package: "semio-framework-plugin-host",
           target: { kind: "lib" },
@@ -353,13 +338,9 @@ class UiPatchMarshallingCheckScript extends BundleScript {
             "component::ui_patch_component_tests::malformed_import_is_drained_before_the_next_exact_patch_owner_is_published",
           ],
         },
-      ],
-      buildBudgetMs: 86_400_000,
-      lawBudgetMs: 60_000,
-      progress(event) {
+      ], progress(event) {
         console.log(`ui-patch-marshalling ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
-      },
-    });
+      } });
     console.log(`ui-patch-marshalling-receipts: ${JSON.stringify(receipts)}`);
   }
 }
@@ -405,31 +386,55 @@ class RouterEffectSourceCustodyScript extends BundleScript {
     try {
       for (const relative of ["🦀️.rs", "🧪️tests/🔬️unit/🦀️.rs", "../🦀️.rs", "../🧵️shard/🦀️.rs", "../🧵️shard/🪪️identity/🦀️.rs", "../🧵️shard/🪪️identity/🧪️tests/🦀️.rs", "../🧵️shard/🔁️lifecycle/🦀️.rs", "../🧵️shard/🧵️executor/🦀️.rs"]) {
         const tree = parser.parse(readFileSync(join(owner, relative), "utf8"));
-        if (tree?.rootNode.hasError()) console.log("[DEBUG] original router Rust parse refusal", relative, tree.rootNode.descendantsOfType("ERROR").slice(0, 8).map((node) => ({ line: node.startPosition.row + 1, text: node.text.slice(0, 200) })));
+        if (relative === "../🦀️.rs") {
+          assert(tree);
+          for (const name of ["GuestRelayWakeAuthority", "guest_relay_lifecycle_probe_session", "exercise_abandoned_relay_lifecycle_trace", "exercise_live_relay_lifecycle_trace", "exercise_stale_relay_lifecycle_trace", "test_relay_wake_authority", "run_job_on_worker", "apply_emit_ops"]) {
+            const node = tree.rootNode.descendantsOfType(["function_item", "struct_item"]).find((node) => node.childForFieldName("name")?.text === name);
+            assert(node && !node.hasError(), `original main Host owning span syntax: ${name}`);
+            const original = parser.parse(node.text);
+            assert(original && !original.rootNode.hasError(), `original main Host owning span parse: ${name}`);
+            original.delete();
+          }
+          tree.delete();
+          continue;
+        }
+        if (relative === "../🧵️shard/🦀️.rs") {
+          assert(tree);
+          const nodes = tree.rootNode.descendantsOfType(["struct_item", "impl_item", "function_item"]).filter((node) => node.childForFieldName("type")?.text === "ShardLoop" || ["ShardLoop", "test_identity_issuer"].includes(node.childForFieldName("name")?.text ?? ""));
+          assert(nodes.length >= 3, "original ShardLoop custody definitions are present");
+          for (const node of nodes) {
+            assert(!node.hasError(), "original ShardLoop custody syntax");
+            const original = parser.parse(node.text);
+            assert(original && !original.rootNode.hasError(), "original ShardLoop custody parse");
+            original.delete();
+          }
+          tree.delete();
+          continue;
+        }
+        if (tree?.rootNode.hasError()) {
+          const failures: { line: number; kind: string; text: string }[] = [];
+          const pending = [tree.rootNode];
+          while (pending.length && failures.length < 8) {
+            const node = pending.pop()!;
+            if (node.type === "ERROR" || node.isMissing()) failures.push({ line: node.startPosition.row + 1, kind: node.type, text: node.text.slice(0, 200) });
+            else if (node.hasError()) pending.push(...node.children.toReversed());
+          }
+          console.log("[DEBUG] original router Rust parse refusal", relative, failures);
+        }
         assert(tree && !tree.rootNode.hasError(), `original router Rust syntax: ${relative}`);
         tree.delete();
       }
     } finally { parser.delete(); }
-    console.log(`[DEBUG] router effect source custody: strict schema, five independent grants, UTF8 Buffer oracle, ${law.sources.length} original capacities, Rust syntax8, independent actor policy, native pending`);
+    console.log(`[DEBUG] router effect source custody: strict schema, five independent grants, UTF8 Buffer oracle, ${law.sources.length} original capacities, Rust completeOwningFiles=6 mainHostOwningSpans=8 originalShardLoopDefinitions=true wholeAsyncClosureOwnersRustcPending=true, independent actor policy, native pending`);
     if (!segments.includes("--native")) return;
-    await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::effects::tests::router_effect_original_sources_keep_capacity_until_funded_close", "component::effects::tests::router_effect_original_box_frame_has_a_separate_funded_terminal_turn", "component::effects::tests::router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody", "component::shard::identity::tests::shard_original_identity_loans_preserve_partial_children_and_actor_ledgers", "component::shard::identity::tests::shard_original_identity_slot_requires_each_original_positive_axis"] }],
-      buildBudgetMs: 86_400_000,
-      lawBudgetMs: 60_000,
-      progress: (event) => console.log(`router-effect-source-custody ${event.stage} ${event.law ?? ""}`),
-    });
+    await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 86_400_000, lawMilliseconds: 60_000 }, cwd: this.repoRoot, groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::effects::tests::router_effect_original_sources_keep_capacity_until_funded_close", "component::effects::tests::router_effect_original_box_frame_has_a_separate_funded_terminal_turn", "component::effects::tests::router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody", "component::shard::identity::tests::shard_original_identity_loans_preserve_partial_children_and_actor_ledgers", "component::shard::identity::tests::shard_original_identity_slot_requires_each_original_positive_axis"] }], progress: (event) => console.log(`router-effect-source-custody ${event.stage} ${event.law ?? ""}`) });
   }
 }
 
 class SqliteObservationCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("sqlite-observation-check has a fixed native observation contract");
-    await runRepositoryExactCargoLaws({
-      cwd: this.repoRoot,
-      groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::shared_wasmtime_engine_tests::sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor"] }],
-      progress: (event) => console.log(`sqlite-observation ${event.stage} ${event.law ?? ""}`),
-    });
+    await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::shared_wasmtime_engine_tests::sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor"] }], progress: (event) => console.log(`sqlite-observation ${event.stage} ${event.law ?? ""}`) });
   }
 }
 
@@ -444,17 +449,28 @@ class CountComponentCheckScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("count-component-check has an exact three-law contract");
     if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("count-component-check requires the task artifact root");
-    await runRepositoryExactCargoLaws({cwd:this.repoRoot,lawBudgetMs:300000,groups:[{package:"semio-framework-plugin-host",target:{kind:"lib"},laws:[
+    await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), lawMilliseconds: 300000 }, cwd:this.repoRoot, groups:[{package:"semio-framework-plugin-host",target:{kind:"lib"},laws:[
       "component::owned_instance_open_tests::count_component_tests::count_component_full_i32_both_native_encodings_use_real_wasm_and_independent_sqlite",
       "component::owned_instance_open_tests::count_component_tests::count_component_cancellation_occurs_during_real_export_and_import_interpretation",
       "component::owned_instance_open_tests::count_component_tests::count_component_selected_compiled_refusal_owners_preserve_all_eight_causes_and_full_nul_diagnostics",
-    ]}],progress:event=>console.log(`count-component ${event.stage} ${event.law??""}`)});
+    ]}], progress:event=>console.log(`count-component ${event.stage} ${event.law??""}`) });
   }
+}
+
+/** 🏦️ Runs the exact genuine finite-driver law cohort through the repository compiler authority. */
+class OriginalDriverPolicyScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-original-driver-policy-native accepts no arguments");
+  const names=["original_host_actor_and_wake_returns_share_one_finite_treasury_and_exact_checkout","original_host_driver_treasury_never_renews_and_rejects_receipts_outside_the_independent_admission_policy","original_host_production_driver_keeps_same_finite_treasury_across_all_wake_returns","original_host_context_loan_preserves_same_recipient_and_returns_cumulative_wake_once","original_host_wake_ledger_keeps_actual_turn_exclusion_all_currencies_and_explicit_driver_return"];
+  const receipts=await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), lawMilliseconds: 120000 }, cwd:this.repoRoot, groups:[{package:"semio-framework-plugin-host",target:{kind:"lib"},laws:names.map(name=>`component::original_wake_receipts::tests::${name}`)}], progress:event=>console.log(`[DEBUG] original Host driver ${event.stage} ${event.law??""}`) });
+  console.log(`[DEBUG] original Host driver exact groups=${receipts.length} laws=${names.length}`);
+ }
 }
 
 const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript)
+  .register("test-original-driver-policy-native", OriginalDriverPolicyScript)
   .register("owned-instance-check", OwnedInstanceCheckScript)
   .register("count-component-check", CountComponentCheckScript)
   .register("sqlite-observation-check", SqliteObservationCheckScript)
@@ -463,5 +479,5 @@ const router = new ScriptRouter(import.meta.dir)
   .register("lifecycle-check", LifecycleCheckScript)
   .register("guest-fault-check", GuestFaultCheckScript)
   .register("ui-patch-marshalling-check", UiPatchMarshallingCheckScript);
-await runScriptMain(router, { defaultCommand: "check" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));
 //#endregion 🎯️Tasks

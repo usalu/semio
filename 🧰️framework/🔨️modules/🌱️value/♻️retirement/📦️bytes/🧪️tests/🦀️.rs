@@ -1,0 +1,12 @@
+use super::*;
+#[test]
+fn original_bytes_retirement_metadata_keeps_fixed_copy0_and_actual_physical_receipts(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let p=&law["grant"];let n=|k:&str|p[k].as_u64().unwrap()as usize;let g=RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copyBytes"),maximum_capacity_bytes:n("capacityBytes"),maximum_release_bytes:n("releaseBytes"),maximum_depth:n("depth")};
+ for row in law["cases"].as_array().unwrap(){let text=row["text"].as_str().unwrap();let mut original=Vec::with_capacity(row["capacity"].as_u64().unwrap()as usize);original.extend_from_slice(text.as_bytes());let expected=original.capacity();let pointer=original.as_ptr();assert_eq!(serde_json::to_value(&original).unwrap(),serde_json::to_value(text.as_bytes()).unwrap());let mut owner=Bytes(ManuallyDrop::new(original),false);let mut total_release=0;
+  for _ in 0..16{if owner.terminal_is_empty(){break}assert_eq!(owner.next_work_byte_demand().unwrap(),0);let release=owner.next_close_byte_demand().unwrap();let before=(owner.0.as_ptr(),owner.0.len(),owner.0.capacity());for denied in[RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_depth:0,..g},RetainedCloneGrant{maximum_release_bytes:release.saturating_sub(1),..g}]{if release==0&&denied.maximum_items>0&&denied.maximum_depth>0{continue}let(result,heap)=crate::value::observe_retirement_allocations(||owner.close_step(denied));assert!(matches!(result,RetirementStep::BudgetExhausted));assert_eq!(heap,(0,0));assert_eq!((owner.0.as_ptr(),owner.0.len(),owner.0.capacity()),before)}
+   let(step,heap)=crate::value::observe_retirement_allocations(||owner.close_step(g));assert_eq!(heap.0,0);match step{RetirementStep::Bytes(bytes)=>{assert_eq!(heap.1,bytes);total_release+=bytes},RetirementStep::Advanced|RetirementStep::Complete=>assert_eq!(heap.1,0),_=>panic!("native metadata retirement invented payload copy")};if owner.0.capacity()>0{assert_eq!(owner.0.as_ptr(),pointer)}}
+  assert!(owner.terminal_is_empty());assert_eq!(total_release,expected);let(_,heap)=crate::value::observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));
+ }
+ eprintln!("[DEBUG] Original Bytes retirement only changes native length metadata under independent item/depth and copy0; actual whole capacity release refuses below authority, preserves original pointer and frees exactly once, terminalDrop0");
+}
+

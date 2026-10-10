@@ -1,0 +1,19 @@
+{
+  "name": "🧪️test🌊️sdk🎟️failed-normal-receipt📦️portable",
+  "type": "node-terminal",
+  "request": "launch",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "CARGO_BUILD_JOBS": "2",
+    "NX_TUI": "false",
+    "NX_DAEMON": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"procedural:SDK:portable\",\"maximumElapsedMilliseconds\":3600000}"
+  },
+  "presentation": {
+    "group": "9_gates",
+    "order": 900.058094794
+  },
+  "command": "bun nx exec --projects=@semio-tech/semio-tech-play --excludeTaskDependencies --skip-nx-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts\""
+}

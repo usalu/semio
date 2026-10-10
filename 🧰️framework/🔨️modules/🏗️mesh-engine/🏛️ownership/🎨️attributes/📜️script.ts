@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🎨️ Runs the neutral mesh attribute owner without native composition preparation. */
 import {resolve} from "node:path";
 import {BundleScript,ScriptRouter} from "../../../🏃️process/🧭️routing/🟦️.ts";
@@ -13,4 +14,4 @@ class Test extends BundleScript{
   await runBudgetedTestCommand(process.execPath,["test",source],options);
  }
 }
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test",Test));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",Test), { invocation: original }));

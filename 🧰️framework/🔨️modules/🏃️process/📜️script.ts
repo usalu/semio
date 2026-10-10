@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "./🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🏃️ Runs neutral process ownership and execution contracts. */
 import { resolve } from "node:path";
 import { mkdirSync } from "node:fs";
 import { runOwnedCommand } from "./🎛️owned-execution/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS } from "./🧪️testing/🎚️budget/🟦️.ts";
-import { BundleScript, ScriptRouter } from "./🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "./🧭️routing/🟦️.ts";
 import { runScriptMain } from "./🧭️routing/🚪️entrypoint/🟦️.ts";
 import {executeCommandV1} from "./🧭️routing/🎛️command/🟦️.ts";
 import {parseCommandArgumentsV1,resolveCommandConfigurationV1} from "./🧭️routing/🎛️command/⚙️configuration/🟦️.ts";
@@ -12,8 +13,8 @@ import {parseCommandArgumentsV1,resolveCommandConfigurationV1} from "./🧭️ro
 /** 🎛️ Runs a configured neutral command with exact context and artifact custody. */
 class CommandScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  const plan=resolveCommandConfigurationV1(parseCommandArgumentsV1(segments),process.env);let cancelled=false;const stop=()=>{cancelled=true;};process.once("SIGINT",stop);process.once("SIGTERM",stop);
-  try{const result=await executeCommandV1(plan.request,plan.policy,{environment:plan.environment,cancelled:()=>cancelled,onProgress:event=>process.stderr.write(`[DEBUG] General command ${event.phase} elapsedMs=${event.elapsedMs}\n`)});process.stdout.write(result.stdout);process.stderr.write(result.stderr);process.exitCode=result.reason==="exit"?result.status??1:1;console.error(`[DEBUG] General command receipt=${result.receiptPath} reason=${result.reason} status=${result.status}`);}finally{process.off("SIGINT",stop);process.off("SIGTERM",stop);}
+  const plan=resolveCommandConfigurationV1(parseCommandArgumentsV1(segments),process.env);
+  const result=await executeCommandV1(plan.request,plan.policy,{invocation:this.invocation,environment:plan.environment,onProgress:event=>{process.stderr.write(`[DEBUG] General command ${event.phase} elapsedMs=${event.elapsedMs}\n`);}});process.stdout.write(result.stdout);process.stderr.write(result.stderr);process.exitCode=result.reason==="exit"?result.status??1:1;console.error(`[DEBUG] General command receipt=${result.receiptPath} reason=${result.reason} status=${result.status}`);
  }
 }
 
@@ -53,8 +54,10 @@ class TestScript extends BundleScript {
     };
     const suite = suites[segments[0]!];
     if (!suite) throw Error(`Unknown process contract suite: ${segments[0]}`);
-    await runOwnedCommand(process.execPath, ["test", resolve(this.root, suite.source)], this.repoRoot, `process:${segments[0]}`, suite.budgetMs, { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output } });
+    if (["routing", "command", "capture"].includes(segments[0]!)) await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", resolve(this.root, suite.source)], this.repoRoot, "process:" + segments[0] + ":types", scriptInvocationBudget(this.invocation, suite.budgetMs), { signal: this.invocation.control.signal });
+    const sources = [resolve(this.root, suite.source), ...(segments[0] === "capture" ? [resolve(this.root, "📥️capture/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "exact-cargo-laws" ? [resolve(this.root, "🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "owned-execution" ? [resolve(this.root, "🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts"),resolve(this.root, "🎛️owned-execution/🧪️tests/📬️output/🟦️.ts")] : [])];
+    await runOwnedCommand(process.execPath, ["test", ...sources], this.repoRoot, `process:${segments[0]}`, scriptInvocationBudget(this.invocation, suite.budgetMs), { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output }, signal: this.invocation.control.signal });
   }
 }
 
-if (import.meta.main) await runScriptMain(new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("command",CommandScript).register("test", TestScript));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("command",CommandScript).register("test", TestScript), { invocation: original }));

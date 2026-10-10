@@ -10,7 +10,7 @@ import {resolve} from "node:path";
 class RunSqliteTestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   const mode=segments[0];if(segments.length>1||(mode!==undefined&&mode!=="source"&&mode!=="native"))throw Error("Unknown Run SQLite test mode");
-  if(mode!=="source")await runArtifactRustTests("semio-framework-artifact-workflow-run",this.repoRoot,["--lib","sqlite_","--no-fail-fast"]);
+  if(mode!=="source")await runArtifactRustTests("semio-framework-artifact-workflow-run", this.repoRoot, ["--lib","sqlite_","--no-fail-fast"], this.invocation.control);
   if(mode!=="native")await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],{cwd:this.repoRoot});
  }
 }

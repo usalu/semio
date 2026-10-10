@@ -1,0 +1,27 @@
+# TXT Receiving Fixture Contract
+
+Read-only design; no production/test edits or builds. Suggested paths relative to TXT's `🚪️io/🪶️sqlite/📸️snapshot/`: `🫴️receiving/🦀️.rs`, `🫴️receiving/🧬️schema/🔣️.json`, `🫴️receiving/🧫️fixtures/🔣️.json`, `🫴️receiving/🧪️tests/🦀️.rs`; extend the existing `🧪️tests/🟦️.ts` for the independent Source law. Keep the five selected native encoding laws stable. Validate complete absolute paths remain below256 before creating files.
+
+## Closed neutral shape
+
+One additionalProperties=false fixture object: version, original(input identity if applicable, grant, nativeMaximumBytes), deniedGrants, closeGrant, deniedCloseGrant, maximumCloseTurns, tables, cases, malformed, cancellation, expectedCustody. Table metadata must author both exact names and exact CREATE TABLE statements from current 🗄️.sql, not runtime-produced strings. Each case authors snapshot(schema,lines,trailingNewline,lineEnding), complete SQL rows(rowid plus all cell values), expected snapshot, and independent content bytes. Each malformed case authors a complete independent database and expected exact kind/message/storage, not a procedural patch whose behavior differs between languages.
+
+Canonical valid rows: text_document rowid1, values `[1,"schema literal",0,"lf"]`; text_line rowid1 values `[1,1,0,"first"]`, rowid2 `[2,1,1,"second"]`. Rowid/explicit ID both appear and must match. Projection may produce canonical ascending order; reconstruction case deliberately supplies line rows reversed while expected lines remain ordinal order. Empty lines array means root only; one empty String means one text_line with empty content. These distinct snapshots may print the same native text but semantic SQLite must preserve their difference.
+
+Minimal cases: empty document; one empty line; multiple empty lines with trailing true; lf; crlf; Unicode 文🌠/ß; embedded NUL; embedded LF/CRLF within one logical line. Add schema literal distinct from default and a long schema/long line repeating authored UTF8 unit for cancellation. Bool false/true and both ending values must be represented, and root schema is content authority rather than inferred dialect.
+
+## Malformed and witness obligations
+
+Complete malformed databases: missing/extra/renamed table; wrong definition/column order/type; no root/two roots; rowid versus explicit ID mismatch; nonpositive IDs; trailing flag2; unknown ending; orphan document_id; duplicate line ID; negative/duplicate/gapped ordinals; wrong row width; wrong SqliteValue type. SQL DDL currently lacks positive line ID and unique ordinal constraints, so independent SQLite alone cannot reject every semantic malformed shape. State which failures are DDL-enforced versus receiving semantic checks, and add explicit independent SQL queries for contiguous/unique ordinals, row relationships and identity consistency. Do not claim foreign-key checking unless PRAGMA foreign_keys=ON is actually enabled; schema definition mismatch belongs to the parser/metadata witness.
+
+Source validates strict closed schema (including forged grant/cause/custody constants), executes current DDL through Bun SQLite, inserts authored case rows with bindings, queries exact metadata/rows, runs independent semantic SQL predicates and Buffer/TextEncoder content witness. Avoid generic schema adjacency as qualification. Source additionally verifies four explicit receiving hook registrations and mounted domain laws; native owner behavior remains separate.
+
+## Original custody and laws
+
+Projection owns actual receiving Projection database/table/row/text prefixes inside owner.receive; reconstruction owns empty TxtSnapshot plus ordinal/identity scratch Vecs before any allocation, and each new line String is inserted empty before text copy. Use artifact::receiving::Port work/text/vector/sort, and count every schema name/definition, SQL row/cell header and accepted content prefix. Scratch indices remain in the original reconstruction frame; no local ordered_row_refs or cold constructor return outside custody.
+
+Both directions: independently authored grant denial before frame or typed backing birth; schema/table/long line cancellation through same original observer; exact body and cumulative owner receipts including prior receipts; exact literal cause storage/pointer through genuine owning wrapper; zero close preserves recipient and no physical release; funded close while same observer denies retains owner; rearm same Cell then all accepted backing plus close births equal actual release. Reconstruct malformed databases under real receiving owner and preserve partial typed output plus scratch for original funded close. Whole capability export/import must demonstrate all four directional hooks, retained adopted input on refusal, exact final rows/snapshot/payload and diagnostics.
+
+## Hazards from actual analogues
+
+CSV/TSV Port frames are good concrete row/index custody references, but their validator currently accepts subset `*` without testing full kind/standard. TXT should author exact s.stdio.txt/utf-8/* identity. Shared projection row helpers include the explicit primary key cell, so specify four document and four line cells; do not repeat the cold insert argument counts (three excluding auto ID). Follow actual scalar/header copy demand APIs, not guessed constant rows*bytes. SQL allocation settlement after a successful result can discard output on late denial; retain TXT's existing encoding principle of settlement before publication. No Native passes follow from these source patterns.

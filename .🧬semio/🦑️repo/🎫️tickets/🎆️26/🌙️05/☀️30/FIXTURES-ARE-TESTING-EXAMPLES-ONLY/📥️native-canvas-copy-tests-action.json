@@ -1,0 +1,37 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🧫️fixtures/🔣️.json",
+    "beforeSha256": "8f6ac69a648247a9caf7667f9ff10eb3bb547c91a106e94c73f7f4b71322359b",
+    "afterSha256": "0046af23407c8848732c63c45cf4ccdfcda86a459dd5117b323788b58f08962a",
+    "beforeBlock": "  \"cuts\": [",
+    "afterBlock": "  \"elementCopyBytes\": 56,\n  \"cuts\": ["
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🟦️.ts",
+    "beforeSha256": "486b5b45535d56cc01ea3752a7c7ad7caf3e2bb0fec9edc61755e0a8576b66a9",
+    "afterSha256": "07330c406b1996bb0a4b6a1185539a0e83b69eb38cc974db05919b1171606b8f",
+    "beforeBlock": "  const backing=Buffer.allocUnsafeSlow(row.capacity*56);",
+    "afterBlock": "  const backing=Buffer.allocUnsafeSlow(row.capacity*56);\n  for(const supplied of [0,example.elementCopyBytes-1,example.grant.maximumCopyBytes]){\n   const accepted=supplied>=example.elementCopyBytes;\n   const original={remaining:1,copied:0};\n   const after=applyPatch(original,accepted?[{op:\"replace\",path:\"/remaining\",value:0},{op:\"replace\",path:\"/copied\",value:Buffer.from(backing.subarray(0,example.elementCopyBytes)).byteLength}]:[],true,false).newDocument;\n   expect(after.remaining).toBe(accepted?0:1);expect(after.copied).toBe(accepted?example.elementCopyBytes:0);\n  }"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🟦️.ts",
+    "beforeSha256": "07330c406b1996bb0a4b6a1185539a0e83b69eb38cc974db05919b1171606b8f",
+    "afterSha256": "b30f557b6ded71b8491007dc84a39c2209afc074fc85154b9bc217ec59816fd2",
+    "beforeBlock": " expect(leaf).not.toContain(\"retirement_step()\");",
+    "afterBlock": " expect(leaf).not.toContain(\"retirement_step()\");\n const pop=leaf.slice(leaf.indexOf(\"if !self.elements.is_empty()\"),leaf.indexOf(\"let release =\"));\n expect(pop).toContain(\"grant.maximum_copy_bytes < copy\");\n expect(pop.indexOf(\"grant.maximum_copy_bytes < copy\")).toBeLessThan(pop.indexOf(\"self.elements.pop()\"));\n expect(pop).toContain(\"copied_bytes: copy\");"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+    "beforeSha256": "00e21de5f18a2caa2e8ec6e6f66f83c6a17bc62163bf6bd93575e58ab772df9d",
+    "afterSha256": "dbd6f75b496fe6bd7ffbb462f7e814e768ebce34252201f22f44dc88870b34ee",
+    "beforeBlock": "            let mut slot = Some(owner); let mut freed = 0; let mut born = original_birth + allocated;",
+    "afterBlock": "            let mut slot = Some(owner); let mut freed = 0; let mut born = original_birth + allocated;\n            let original_length = slot.as_ref().unwrap().original_elements().len();\n            if original_length != 0 {\n                assert_eq!(example[\"elementCopyBytes\"].as_u64().unwrap() as usize, size_of::<PathEl>());\n                for denied in [RetainedCloneGrant { maximum_copy_bytes: 0, ..policy }, RetainedCloneGrant { maximum_copy_bytes: size_of::<PathEl>() - 1, ..policy }] {\n                    let (step, allocated, released) = observe_backing(|| semio_framework_value::close_factory_ticket(&mut slot, denied).unwrap());\n                    assert_eq!(step.progress(), RetainedCloneProgress::default(), \"underfunded original typed element must remain retained\");\n                    assert_eq!((allocated, released), (0, 0));\n                    let retained = slot.as_ref().unwrap();\n                    assert_eq!(retained.original_elements().as_ptr(), pointer);\n                    assert_eq!(retained.original_elements(), &expected[..original_length]);\n                    assert_eq!(retained.original_capacity(), capacity);\n                }\n                assert_eq!(slot.as_ref().unwrap().next_copy_byte_demand().unwrap(), size_of::<PathEl>());\n            }"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🧪️tests/🦀️.rs",
+    "beforeSha256": "dbd6f75b496fe6bd7ffbb462f7e814e768ebce34252201f22f44dc88870b34ee",
+    "afterSha256": "a442c34719ba19de66a5b505ee811a5ab354ceb7c0f14e923698ea283ad6bd54",
+    "beforeBlock": "                let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,policy).unwrap());",
+    "afterBlock": "                let original_element = !slot.as_ref().unwrap().original_elements().is_empty();\n                let (step,allocated,released)=observe_backing(||semio_framework_value::close_factory_ticket(&mut slot,policy).unwrap());\n                if original_element { assert_eq!(step.progress().copied_bytes, size_of::<PathEl>()); }"
+  }
+]

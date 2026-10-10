@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Txt Authored Semantic SQLite Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tables"
+  ],
+  "properties": {
+    "tables": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "sql",
+            "rows"
+          ],
+          "properties": {
+            "name": {
+              "const": "text_document"
+            },
+            "sql": {
+              "const": "CREATE TABLE text_document (\n  id INTEGER PRIMARY KEY CHECK(id > 0),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n)"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "rowid",
+                  "values"
+                ],
+                "properties": {
+                  "rowid": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "values": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "prefixItems": [
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          0,
+                          1
+                        ]
+                      },
+                      {
+                        "enum": [
+                          "lf",
+                          "crlf"
+                        ]
+                      }
+                    ],
+                    "items": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "sql",
+            "rows"
+          ],
+          "properties": {
+            "name": {
+              "const": "text_line"
+            },
+            "sql": {
+              "const": "CREATE TABLE text_line (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES text_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  content TEXT NOT NULL\n)"
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "rowid",
+                  "values"
+                ],
+                "properties": {
+                  "rowid": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "values": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "prefixItems": [
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "items": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "items": false
+    }
+  }
+}

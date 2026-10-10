@@ -634,12 +634,24 @@ pub(crate) struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>> {
     replay: Option<store::ArtifactDerivedReplay<P, Mu>>,
     finished: Option<store::EditReplayResult<P, Mu>>,
     head: Option<store::ArtifactDerivedSnapshot<P>>,
+    snapshot_aliases: std::mem::ManuallyDrop<[Option<store::ArtifactDerivedSnapshot<P>>; 8]>,
+    snapshot_issuers: std::mem::ManuallyDrop<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>,
+    snapshot_close: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    snapshot_issuer_close: [Option<semio_framework_value::FactoryAuthority>; 2],
     retirements: VecDeque<Box<dyn store::ErasedSnapshotRetirement>>,
     discarded: Vec<Mu>,
     discarded_pending: Option<Mu>,
     discarded_active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     discarded_factory: Option<Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>>,
     discarded_factory_close: Option<semio_framework_value::FactoryAuthority>,
+}
+
+impl<P,Mu:protocol::Mutation<P>> Drop for TimeTravelStoreState<P,Mu>{
+    fn drop(&mut self){
+        let empty=self.snapshot_aliases.iter().all(Option::is_none)&&self.snapshot_close.is_none()&&self.snapshot_issuers.is_none()&&self.snapshot_issuer_close.iter().all(Option::is_none);
+        assert!(std::thread::panicking()||empty,"original derived snapshot custody requires granted retirement");
+        if empty{unsafe{std::mem::ManuallyDrop::drop(&mut self.snapshot_aliases);std::mem::ManuallyDrop::drop(&mut self.snapshot_close);std::mem::ManuallyDrop::drop(&mut self.snapshot_issuers)}}
+    }
 }
 
 /// ⏭️ What one replay slice did: progress, a completed report (the head is swapped in), or a fault.
@@ -710,7 +722,7 @@ where
 {
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub(crate) fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
-        Self { discard_effects:None,label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, replay: None, finished: None, head: None, retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
+        Self { discard_effects:None,label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, replay: None, finished: None, head: None, snapshot_aliases: std::mem::ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: std::mem::ManuallyDrop::new(None), snapshot_close: std::mem::ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
     }
 
     /// 🪞️ The snapshot the session shows at `stage`: the draft preview while editing; while replaying that preview — or,
@@ -725,9 +737,22 @@ where
         }
     }
 
+    fn snapshot_custody_available(&self, count:usize)->Result<(),Fault>{
+        if self.snapshot_issuer_close.iter().any(Option::is_some){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original snapshot issuer tickets must close before accepting another source").into_fault())}
+        if self.snapshot_aliases.iter().filter(|slot|slot.is_none()).count()<count{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original derived snapshots await their granted retirement turn").into_fault())}
+        Ok(())
+    }
+
     fn retire(&mut self, store: &ArtifactStore<P, Mu>, snapshot: Option<store::ArtifactDerivedSnapshot<P>>) -> Result<(), Fault> {
-        if let Some(snapshot) = snapshot {
-            self.retirements.push_back(store.retire_snapshot_alias(snapshot.into_snapshot_owner()).map_err(|error| error.into_fault())?);
+        if let Some(snapshot)=snapshot {
+            let slot=self.snapshot_aliases.iter_mut().find(|slot|slot.is_none()).expect("original snapshot custody was reserved before source publication");
+            *slot=Some(snapshot);
+            if self.snapshot_issuers.is_none() {
+                match (store.owned_snapshot_retirement_factory(),store.owned_mutation_retirement_factory()) {
+                    (Ok(snapshots),Ok(mutations))=>*self.snapshot_issuers=Some((Arc::clone(snapshots),Arc::clone(mutations))),
+                    _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original derived snapshot retains its missing retirement issuer").into_fault()),
+                }
+            }
         }
         Ok(())
     }
@@ -758,6 +783,7 @@ where
     /// 🧽️ Drops what `stage` no longer shows: the kind outside `Editing`, the draft preview once the replay finished or
     /// the session left, the replay outside `Replaying`, every replay owner once it is inactive.
     pub(crate) fn settle(&mut self, store: &ArtifactStore<P, Mu>, stage: TimeTravelStage) -> Result<(), Fault> {
+        self.snapshot_custody_available(2)?;
         if stage != TimeTravelStage::Editing {
             self.cancel_preview(store)?;
             let kind = self.kind.take();
@@ -935,6 +961,7 @@ where
 
     /// 🖼️ One bounded prefix slice; only a completed preview displaces the last complete projection.
     fn step_preview(&mut self, store: &mut ArtifactStore<P, Mu>, deadline_us: u64, clock: fn() -> Option<u64>) -> Result<TimeTravelPreviewStep, Fault> {
+        self.snapshot_custody_available(2)?;
         let Some(job) = self.preview_job.as_mut() else { return Ok(TimeTravelPreviewStep::Pending) };
         let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
         loop {
@@ -965,6 +992,7 @@ where
 
     /// ⏭️ Steps the replay until `deadline_us` on `clock`; completion swaps the replayed head in and keeps the finished result.
     fn step_replay(&mut self, store: &ArtifactStore<P, Mu>, deadline_us: u64, clock: fn() -> Option<u64>) -> Result<TimeTravelReplayStep, Fault> {
+        self.snapshot_custody_available(1)?;
         let Some(replay) = self.replay.as_mut() else { return Ok(TimeTravelReplayStep::Faulted) };
         let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
         let grant=history_planning_retirement_grant(replay.planning_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).map_err(ValueError::into_fault)?);
@@ -1008,11 +1036,11 @@ where
     }
 
     fn has_pending_work(&self) -> bool {
-        self.discard_effects.as_ref().is_some_and(|owner|owner.closing) || self.preview_job.is_some() || self.retirements.capacity()!=0 || self.discarded.capacity()!=0 || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
+        self.snapshot_aliases.iter().any(Option::is_some) || self.snapshot_close.is_some() || self.snapshot_issuers.is_some() || self.snapshot_issuer_close.iter().any(Option::is_some) || self.discard_effects.as_ref().is_some_and(|owner|owner.closing) || self.preview_job.is_some() || self.retirements.capacity()!=0 || self.discarded.capacity()!=0 || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.discard_effects.is_none() && self.staged.is_none() && self.kind.is_none() && self.preview.is_none() && self.preview_job.is_none() && self.preview_input.is_none() && self.replay.is_none() && self.finished.is_none() && self.head.is_none() && self.retirements.capacity()==0 && self.discarded.capacity()==0 && self.discarded_pending.is_none() && self.discarded_active.is_none() && self.discarded_factory.is_none() && self.discarded_factory_close.is_none()
+        self.snapshot_aliases.iter().all(Option::is_none) && self.snapshot_close.is_none() && self.snapshot_issuers.is_none() && self.snapshot_issuer_close.iter().all(Option::is_none) && self.discard_effects.is_none() && self.staged.is_none() && self.kind.is_none() && self.preview.is_none() && self.preview_job.is_none() && self.preview_input.is_none() && self.replay.is_none() && self.finished.is_none() && self.head.is_none() && self.retirements.capacity()==0 && self.discarded.capacity()==0 && self.discarded_pending.is_none() && self.discarded_active.is_none() && self.discarded_factory.is_none() && self.discarded_factory_close.is_none()
     }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.original_retirement_demands(body) }
@@ -3335,10 +3363,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             if let Some(custody)=time_travel.pending_command.as_mut(){
                 if custody.original().is_some()&&!time_travel.closing{
                     if !time_travel.command_retirements.has_reserved_slot(){if grant.maximum_depth<time_travel.command_retirements.len()+1||grant.maximum_capacity_bytes<time_travel.command_retirements.next_reserve_capacity_byte_demand()?{return Ok(Some(Default::default()))}return time_travel.command_retirements.reserve_step(grant).map(Some)}
-                    let parent_copy=std::mem::size_of_val(&time_travel.discard_cursor);if grant.maximum_copy_bytes<parent_copy||grant.maximum_depth<2{return Ok(Some(Default::default()))}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};
+                    let parent_copy=0usize;if grant.maximum_copy_bytes<parent_copy||grant.maximum_depth<2{return Ok(Some(Default::default()))}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};
                     if let Some((cursor,mut receipt))=custody.admit_discard(&time_travel.command_retirements,child)?{if !receipt.fits(child){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Discard semantic frame exceeded its original caller"))}receipt.copied_bytes+=parent_copy;time_travel.discard_cursor=Some(cursor);return Ok(Some(receipt))}return Ok(Some(Default::default()))
                 }
-                if custody.terminal_is_empty(){let copied_bytes=std::mem::size_of_val(&time_travel.pending_command);if grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes{return Ok(Some(Default::default()))}drop(time_travel.pending_command.take());return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))}
+                if custody.terminal_is_empty(){let copied_bytes=0usize;if grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes{return Ok(Some(Default::default()))}drop(time_travel.pending_command.take());return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))}
                 return custody.close_step(grant).map(|step|Some(step.progress()))
             }
             if !time_travel.command_retirements.terminal_is_empty(){let owner=&time_travel.command_retirements;if grant.maximum_items==0||grant.maximum_copy_bytes<owner.next_copy_byte_demand()?||grant.maximum_capacity_bytes<owner.next_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<owner.next_release_byte_demand()?||grant.maximum_depth<owner.next_depth_demand()?{return Ok(Some(Default::default()))}return time_travel.command_retirements.step(grant).map(|step|Some(step.progress()))}
@@ -3409,7 +3437,7 @@ pub enum SupersedeRole {
 #[derive(Clone, Debug, PartialEq)]
 pub struct SupersedeRecord {
     pub transition_id: String,
-    pub actor: String,
+    pub actor: semio_framework_value::SharedUtf8,
     pub timestamp: HybridLogicalTimestamp,
     pub scope: Option<String>,
     pub inputs: Vec<protocol::SupersededInput>,
@@ -3433,9 +3461,9 @@ pub struct SupersedeLedger {
     pub records: Vec<SupersedeRecord>,
     index: HashMap<String, usize>,
     originals: HashMap<MutationId, protocol::InputReplacement>,
-    undo: HashMap<String, Vec<usize>>,
-    redo: HashMap<String, Vec<(usize, usize)>>,
-    reverts: HashMap<String, HybridLogicalTimestamp>,
+    undo: HashMap<semio_framework_value::SharedUtf8, Vec<usize>>,
+    redo: HashMap<semio_framework_value::SharedUtf8, Vec<(usize, usize)>>,
+    reverts: HashMap<semio_framework_value::SharedUtf8, HybridLogicalTimestamp>,
 }
 
 impl SupersedeLedger {
@@ -3447,7 +3475,7 @@ impl SupersedeLedger {
             return;
         }
         let mut records = Vec::new();
-        let mut reverts: HashMap<String, HybridLogicalTimestamp> = HashMap::new();
+        let mut reverts: HashMap<semio_framework_value::SharedUtf8, HybridLogicalTimestamp> = HashMap::new();
         for envelope in transitions {
             match store::os_spr::history_transition_from_envelope(envelope) {
                 Ok(Some(store::os_spr::HistoryTransition::Supersede(supersede))) => {
@@ -3466,7 +3494,7 @@ impl SupersedeLedger {
 
     /// 🧮️ The ledger of decoded `Supersede` `records` (any order; sorted into fold order here, `role` and `entry`
     /// recomputed), each author's newest document-edit undo and the original input of every operation they name.
-    pub fn from_records(mut records: Vec<SupersedeRecord>, reverts: HashMap<String, HybridLogicalTimestamp>, originals: HashMap<MutationId, protocol::InputReplacement>) -> Self {
+    pub fn from_records(mut records: Vec<SupersedeRecord>, reverts: HashMap<semio_framework_value::SharedUtf8, HybridLogicalTimestamp>, originals: HashMap<MutationId, protocol::InputReplacement>) -> Self {
         records.sort_by(|a, b| a.timestamp.cmp(&b.timestamp).then_with(|| a.transition_id.cmp(&b.transition_id)));
         let index = records.iter().enumerate().map(|(index, record)| (record.transition_id.clone(), index)).collect();
         let mut ledger = Self { key: (0, None), records, index, originals, undo: HashMap::new(), redo: HashMap::new(), reverts };
@@ -3695,7 +3723,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         for entry in self.command_log.iter().rev() {
             if let Some(transition_id) = entry.transition_id.as_deref() {
                 let Some((_, record)) = self.supersedes.record(transition_id) else { continue };
-                if record.actor == local && record.role != SupersedeRole::Undo && self.supersedes.undoable(local, record.entry, &applied_entries) {
+                if record.actor.as_str() == local && record.role != SupersedeRole::Undo && self.supersedes.undoable(local, record.entry, &applied_entries) {
                     return Some(record.entry);
                 }
                 continue;
@@ -3728,7 +3756,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     pub(crate) fn supersede_can_undo(&self) -> bool {
         let local = self.supersede_author();
         let applied_entries = self.supersedes.applied_entries(self.store.supersessions().iter());
-        self.supersedes.records.iter().enumerate().any(|(index, record)| record.role == SupersedeRole::Edit && record.actor == local && self.supersedes.undoable(local, index, &applied_entries))
+        self.supersedes.records.iter().enumerate().any(|(index, record)| record.role == SupersedeRole::Edit && record.actor.as_str() == local && self.supersedes.undoable(local, index, &applied_entries))
     }
 
     /// ✍️ Authors `inputs` within `scope` (unscoped: every line) resumably (design §16.6) — the restore of an undo or the
@@ -3838,7 +3866,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     pub(crate) async fn revert_history_edit_row(&mut self, transition_id: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         let local = self.supersede_author().to_string();
         let applied_entries = self.supersedes.applied_entries(self.store.supersessions().iter());
-        let target = self.supersedes.record(transition_id).filter(|(_, record)| record.role != SupersedeRole::Undo && record.actor == local).map(|(_, record)| record.entry).filter(|entry| self.supersedes.undoable(&local, *entry, &applied_entries));
+        let target = self.supersedes.record(transition_id).filter(|(_, record)| record.role != SupersedeRole::Undo && record.actor.as_str() == local).map(|(_, record)| record.entry).filter(|entry| self.supersedes.undoable(&local, *entry, &applied_entries));
         let authored = match target.map(|entry| self.supersedes.restore(entry)).filter(|(_, inputs)| !inputs.is_empty()) {
             Some((scope, inputs)) => self.author_supersede(scope, inputs, identity).await?,
             None => SupersedeAuthored::Refused,

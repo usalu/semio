@@ -243,13 +243,13 @@ async fn named_geometry_inference_owns_worker_invocation_and_dependency_identity
     let service = semio_framework_plugin::artifact_inference_service(super::geometry_inference::GEOMETRY_ARTIFACT_KIND, super::geometry_inference::GEOMETRY_INFERENCE_SCHEMA).unwrap().unwrap();
     assert!(service.metadata().payload.is_some());
     let budgets = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 };
-    let context_required = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(fixture.get("request").unwrap().get("retained").unwrap()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "context-proof", previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Cold, canonical_payload: b"{}", dependencies: &[] };
+    let context_required = semio_framework_plugin::ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, policy: &[], budgets: &budgets, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(fixture.get("request").unwrap().get("retained").unwrap()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "context-proof", previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Cold, canonical_payload: b"{}", dependencies: &[] };
     assert_eq!(service.infer(&context_required).err().expect("context refusal").code, "artifact-inference.context-required");
     let mut registry = semio_framework_plugin::ArtifactInferenceServiceRegistry::default();
     registry.register(service).unwrap();
     registry.register(service).unwrap();
-    fn pure_owner(_request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> { unreachable!() }
-    assert!(registry.register(semio_framework_plugin::ArtifactInferenceService::new(service.metadata(), pure_owner)).is_err());
+    fn pure_owner(_request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> { unreachable!() }
+    assert!(registry.register(semio_framework_plugin::ArtifactInferenceService::new(service.metadata(), pure_owner,pure_owner_demands)).is_err());
     assert_eq!(bundle.manifest.contributions.len(), 1);
     let manifest = semio_framework_pack_json::parse(bundle.manifest.topic_contributions[0].payload.get("manifestJson").and_then(|value| value.as_str()).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for operator in manifest.get("contributes").unwrap().get("operators").and_then(|value| value.as_array()).unwrap() {
@@ -482,3 +482,5 @@ async fn named_geometry_inference_standard_gateway_uses_registered_extension_con
     let volume_envelope = semio_framework_pack_json::parse_bytes(&volume_result.canonical_payload, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(geometry_test_output(&volume_envelope).get("volume").unwrap().get("value").and_then(semio_framework_pack_json::Value::as_f64), fixture.get("expectedVolume").and_then(semio_framework_pack_json::Value::as_f64));
 }
+
+fn pure_owner_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}

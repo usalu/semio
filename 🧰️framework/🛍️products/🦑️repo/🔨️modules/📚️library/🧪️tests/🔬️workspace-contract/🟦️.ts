@@ -7457,20 +7457,24 @@ describe("mutation metadata facts", () => {
 
 //#region 🧬️SchemaScopeCatalog
 describe("schema scope catalog", () => {
-  test("catalogues declared scopes and reports every retired placement and unresolved binding", async () => {
-    const library = await import("../../🔍️discovery/🟦️.ts");
-    const taxonomy = library.loadCatalogTaxonomy();
     const casesPath = join(import.meta.dir, "../../🧫️fixtures/🧬️schema-scope-catalog/🔣️.json");
-    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] }; schemaGrammar?: Record<string, boolean>; schemaCompile?: Record<string, boolean> }[] };
+    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] }; schemaGrammar?: Record<string, boolean>; schemaCompile?: Record<string, boolean>; grantExamples?: { input: unknown; expected: boolean }[] }[] };
     const authority = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧬️schema-scope-catalog/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
     const admitScope = ajv.compile(authority);
+    const grantAuthority = JSON.parse(readFileSync(join(import.meta.dir, "../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json"), "utf8"));
+    ajv.addSchema(grantAuthority);
+    const admitGrant = ajv.compile({ $ref: grantAuthority.$id + "#/$defs/Grant" });
     
-    for (const row of cases.cases) {
-      const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "semio-schema-scope-"));
+    for (const row of cases.cases) test("catalogues declared scopes and reports every retired placement and unresolved binding: "+row.id, async () => {
+      const library = await import("../../🔍️discovery/🟦️.ts");
+      const taxonomy = library.loadCatalogTaxonomy();
+      const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "s"));
       try {
         for (const [rel, body] of Object.entries(row.files)) {
           const abs = join(root, rel);
+          expect(abs.length, row.id).toBeLessThanOrEqual(256);
+          expect(Array.from(abs).length, row.id).toBeLessThanOrEqual(256);
           mkdirSync(dirname(abs), { recursive: true });
           writeFileSync(abs, typeof body === "string" ? body : `${JSON.stringify(body, null, 2)}\n`);
         }
@@ -7480,6 +7484,7 @@ describe("schema scope catalog", () => {
           try { new Ajv({ strict: true, strictTypes: false }).compile(row.files[path]); } catch { accepted = false; }
           expect(accepted, row.id).toBe(expected);
         }
+        for (const example of row.grantExamples ?? []) expect(admitGrant(example.input), JSON.stringify(admitGrant.errors)).toBe(example.expected);
         const inventory = library.inventorySchemaScopes(root, taxonomy);
         const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: scope.exports, dependsOn: [...scope.dependsOn] }]));
         for (const scope of Object.values(scopes)) expect(admitScope(scope), JSON.stringify(admitScope.errors)).toBe(true);
@@ -7490,8 +7495,8 @@ describe("schema scope catalog", () => {
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
-    }
-  });
+      if (row === cases.cases.at(-1)) console.log(`[DEBUG] original schema scope catalog: ${cases.cases.length} independently registered neutral examples; real paths <=256; strict Ajv scope/document oracle and exact inventory/render laws`);
+    });
 
   test("resolves scope ids and export bindings only from declared identity", async () => {
     const library = await import("../../🔍️discovery/🟦️.ts");

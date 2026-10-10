@@ -16,7 +16,7 @@ pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCo
  control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?,|native_control|{
   let result=(||->Result<SemioImageSnapshot,ValueError>{let result=match payload{
-   store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,native_control,limits)?},
+   store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},
    store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native_control,limits)?}
   };let result=crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();result});(result,native_control.owned_bytes().saturating_sub(native_before))
  })?

@@ -25,7 +25,6 @@ use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::{widget_id, Generation3dSnapshot};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
-use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️AddressHelpers
@@ -367,8 +366,7 @@ pub mod change_generation_preview {
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the generation3d document, derived per
 /// `📓️derivation-rules.md` from `Generation3dSnapshot`'s shape.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
-#[value(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations)]
 #[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.3d")]
 pub enum Generation3dMutation {
     CreateWidget(create_widget::CreateWidget),

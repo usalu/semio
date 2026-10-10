@@ -6,6 +6,8 @@ pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64)
 
 /// 🌱️ The retained operation keeps this source immutable until projection and publication finish.
 pub trait FieldProjectionSource{
+    /// 🪪️ Identifies the retained original payload even when its inline ownership header moves.
+    fn projection_identity(&self)->usize{self as *const Self as *const () as usize}
     fn projection_view(&self,path:&[usize])->Result<FieldProjectionView<'_>,ValueError>;
     /// 🔤️ Borrows one output key from the same ordinal source without scanning previous entries.
     fn projection_key(&self,_path:&[usize],_index:usize)->Result<&str,ValueError>{Err(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"field owner has no retained ranked key projection"))}

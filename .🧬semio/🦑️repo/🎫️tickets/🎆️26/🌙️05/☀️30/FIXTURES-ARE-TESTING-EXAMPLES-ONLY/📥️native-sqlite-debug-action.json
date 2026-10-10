@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+  "beforeSha256": "ef019c4782a2d7f41e227bc1a1493989034f5d53d24a3bfefdde49999c47f2b5",
+  "afterSha256": "b4f156fff4f577c372b6d1aaf1f15a7ad05959a5915a2fe13dafb08383e59fd9",
+  "beforeBlock": "SQLite binding original two32768-byte payload allocations moved without duplication",
+  "afterBlock": "SQLite binding original32768 octets in two16384-byte payload allocations moved without duplication",
+  "purpose": "Correct console count to actual two vec![..;16384] setup; unchanged law/pointers/System/policy; current native UNRUN"
+}

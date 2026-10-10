@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Media Production Authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
+  "properties": {
+    "maximumItems": { "type": "integer", "minimum": 0 },
+    "maximumCopyBytes": { "type": "integer", "minimum": 0 },
+    "maximumCapacityBytes": { "type": "integer", "minimum": 0 },
+    "maximumReleaseBytes": { "type": "integer", "minimum": 0 },
+    "maximumDepth": { "type": "integer", "minimum": 0 }
+  }
+}

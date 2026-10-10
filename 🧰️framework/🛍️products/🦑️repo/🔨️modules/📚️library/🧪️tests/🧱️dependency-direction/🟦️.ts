@@ -2,11 +2,14 @@ import { expect, test } from "bun:test";
 import { cruise } from "dependency-cruiser";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import glob from "fast-glob";
 import ts from "typescript";
+import { authoredPackageExportAuthority } from "../../🕸️dependencies/🧭️direction/🏗️construction/🟦️.ts";
+import { loadDependencyDirectionPolicy } from "../../🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts";
 import { dependencyDirectionEdges, dependencyDirectionSourceInventory, dependencyDirectionWorkspacePackages, type DependencyDirectionGraphScope } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
 
 type Edge = Readonly<{ id: string; target: string; reference: "relative" | "package" | "package-subpath" | "unresolved-package"; syntax: "static" | "type" | "dynamic" | "export" | "export-all" | "require"; package?: string; installation?: string }>;
@@ -22,7 +25,6 @@ const fixture = read("🧫️fixtures/🧱️dependency-direction/🔣️.json")
 const schema = read("🧬️schema/🧱️dependency-direction/🔣️.json");
 type PolicyOwner = Readonly<{ owner: string; name: string; role?: string }>;
 const policyOwners = (fixture as typeof fixture & { policyOwners: readonly PolicyOwner[] }).policyOwners;
-const policyProviders = ["🔣️taxonomy.json", "🕸️dependencies/🧭️direction/🟦️.ts", "🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs", "🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs", "🗂️workspaces/🟦️bun/🟦️.ts", "🗂️workspaces/🟦️bun/🟨️.cjs", "🗂️workspaces/📦️payload/🟦️.ts", "🗂️workspaces/📦️payload/🟨️.cjs"];
 const config = portablePolicy();
 const rules = config.forbidden.filter((rule) => ["framework-no-implementation", "io-renderer-independent", "repo-no-implementation", "s-modules-no-plugins", "plugin-no-extension-or-artifact-📐️cad", "framework-no-products"].includes(rule.name)).map((rule) => {
   const patterns = (value: string | string[]): string[] => typeof value === "string" ? [value] : value;
@@ -32,8 +34,8 @@ const matches = (patterns: readonly string[], candidate: string): boolean => pat
 function write(root: string, path: string, content: string): void { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
 function writePolicyAuthority(root: string): void {
   write(root, "nx.json", "{}");
-  write(root, "📋️project.json", JSON.stringify({ metadata: { semio: { taxonomy: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json" } } }));
-  for (const source of policyProviders) write(root, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/${source}`, readFileSync(join(library, source), "utf8"));
+  write(root, "📋️project.json", JSON.stringify({ metadata: { semio: { taxonomy: "taxonomy.json" } } }));
+  write(root, "taxonomy.json", JSON.stringify(JSON.parse(readFileSync(join(library,"🔣️taxonomy.json"),"utf8"))));
 }
 
 /** 🧪️ Loads the actual policy generator over closed synthetic owner declarations. */
@@ -43,7 +45,6 @@ function portablePolicy(): { forbidden: readonly Rule[]; options: { enhancedReso
   const root = realpathSync(mkdtempSync(join(output, "dependency-policy-")));
   const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
   try {
-    write(root, boundary, readFileSync(join(repo, boundary), "utf8"));
     writePolicyAuthority(root);
     const members = policyOwners.map((row) => row.owner);
     write(root, "package.json", JSON.stringify({ workspaces: members, semio: { workspace: { schemaVersion: 1, members, owners: [] } } }));
@@ -51,7 +52,7 @@ function portablePolicy(): { forbidden: readonly Rule[]; options: { enhancedReso
       const manifest = {name:row.name,...(row.role ? {semio:{dependencyRole:row.role}} : {})};
       write(root, `${row.owner}/package.json`, JSON.stringify(manifest));
     }
-    return createRequire(import.meta.url)(join(root, boundary));
+    return loadDependencyDirectionPolicy(root).policy as unknown as ReturnType<typeof portablePolicy>;
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
 
@@ -70,6 +71,38 @@ function render(edge: Edge, from: string): { specifier: string; source: string }
   };
   return { specifier, source: sources[edge.syntax] };
 }
+
+/** 🧭️ Canonical package authority is unambiguous before selector or alias maps are constructed. */
+test("policy construction rejects ambiguous names and divergent owner declarations",async()=>{
+ const build=createRequire(import.meta.url)(join(library,"🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs")).buildDependencyDirectionPolicy;
+ const taxonomy=JSON.parse(readFileSync(join(library,"🔣️taxonomy.json"),"utf8"));
+ for(const row of fixture.constructionCases){
+  const construct=()=>build({taxonomy,plugins:[],workspacePackages:row.packages,nodeBuiltins:["fs","path"]});
+  if(row.accept)expect(construct,row.id).not.toThrow();
+  else expect(construct,row.id).toThrow();
+ }
+ type OwnershipPatternCase=Readonly<{id:string;root:string;descendants:readonly string[];subjects:readonly Readonly<{path:string;accept:boolean}>[];maximumPatternBytes:number}>;
+ const cases=(fixture as typeof fixture & {ownershipPatternCases:readonly OwnershipPatternCase[]}).ownershipPatternCases;
+ const validate=new Ajv({strict:true}).compile({...schema as object,$ref:"#/$defs/AuthoredPublicOwnerRule"});
+ const oracle=await import(join(repo,"node_modules/dependency-cruiser/src/validate/index.mjs")) as {validateDependency:(rules:unknown,from:unknown,to:unknown)=>{valid:boolean}};
+ const escape=(value:string)=>value.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+ for(const row of cases){
+  const packages=[row.root,...row.descendants].map((owner,index)=>({name:"@ownership-pattern/owner-"+index,owner:owner+"/📦️packages/🟦️typescript",sourceOwner:owner,exports:["."],exportTargets:[{subpath:".",target:"./🟦️.ts"}]}));
+  const policy=build({taxonomy,plugins:[],workspacePackages:packages,nodeBuiltins:["fs","path"]});
+  const rule=policy.forbidden.find((item:{name:string})=>item.name===taxonomy.dependencyDirections.publicApi.rulePrefix+packages[0]!.name);
+  expect(validate(rule),JSON.stringify(validate.errors)).toBe(true);
+  expect(typeof rule.from.pathNot,row.id).toBe("string");
+  const expression=new RegExp(rule.from.pathNot,"u");
+  const flat="^"+escape(row.root)+"/(?!(?:node_modules(?:/|$)|.*/node_modules(?:/|$)|"+row.descendants.map(owner=>escape(owner.slice(row.root.length+1))+"/").join("|")+"))";
+  const reference={forbidden:[{name:"foreign-owner",severity:"error",from:{path:"^",pathNot:flat},to:{path:"^"}}]};
+  for(const subject of row.subjects){
+   expect(expression.test(subject.path),row.id+" authored ownership").toBe(subject.accept);
+   expect(oracle.validateDependency(reference,{source:subject.path},{resolved:"other/file.ts",couldNotResolve:false,circular:false,dynamic:false,exoticallyRequired:false,dependencyTypes:["local"]}).valid,row.id+" independent flat ownership").toBe(subject.accept);
+  }
+  expect(Buffer.byteLength(rule.from.pathNot),row.id+" bounded shared-prefix ownership pattern").toBeLessThanOrEqual(row.maximumPatternBytes);
+ }
+ console.log(`[DEBUG] bounded ownership pattern cases=${cases.length}; independent predicate=dependency-cruiser flat ownership`);
+});
 
 test("schema defines unique neutral dependency cases and exact expected edges", () => {
   
@@ -251,7 +284,7 @@ test("dependency-cruiser unresolved local terminals fail and authored aliases re
       const terminal = report.modules.find((leaf: { source: string }) => leaf.source === module.dependencies[0].resolved);
       expect(terminal.dependencies, row.id).toEqual([]);
       const graph = { ...report, modules: [module, terminal], summary: { ...report.summary, totalCruised: 2, totalDependenciesCruised: 1, violations, error: violations.length } };
-      const scope = { ...fixture.graphScope, workspacePackages: row.authored ? [{ name: row.specifier.startsWith("@") ? row.specifier.split("/").slice(0, 2).join("/") : row.specifier.split("/")[0]!, owner: row.owner, exports: [".", "./schema"] }] : [], expectedSources: [entry] };
+      const scope = { ...fixture.graphScope, workspacePackages: row.authored ? [{ name: row.specifier.startsWith("@") ? row.specifier.split("/").slice(0, 2).join("/") : row.specifier.split("/")[0]!, owner: row.owner, ...authoredPackageExportAuthority(row.owner,{exports:{".":"./index.ts","./schema":"./schema.ts"}}) }] : [], expectedSources: [entry] };
       expect(violations.length, row.id).toBe(row.forbidden);
       if (row.accept) expect(dependencyDirectionEdges(graph, rules, scope), row.id).toHaveLength(row.forbidden);
       else expect(() => dependencyDirectionEdges(graph, rules, scope), row.id).toThrow();
@@ -313,14 +346,12 @@ test("portable removability cases agree with actual boundary policy loading", as
     const oracleRows: { entry: string; policy: { forbidden: readonly Rule[] } }[] = [];
     for (const [index, row] of fixture.removabilityCases.entries()) {
       const cwd = join(root, String(index));
-      write(cwd, boundary, readFileSync(join(repo, boundary), "utf8"));
-      write(cwd, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", readFileSync(join(library, "🔣️taxonomy.json"), "utf8"));
       writePolicyAuthority(cwd);
       const members = row.members ?? [owner, "✏️s/🔌️plugins/🧪️example/🗿️artifacts/🧪️example/📦️packages/🟦️typescript"];
       write(cwd, "package.json", JSON.stringify({ workspaces: members, semio: { workspace: { schemaVersion: 1, members, owners: [] } } }));
       for (const directory of row.directories) mkdirSync(join(cwd, directory), { recursive: true });
       for (const [directory, manifest] of Object.entries(row.manifests)) write(cwd, `${directory}/package.json`, typeof manifest === "string" ? manifest : JSON.stringify(manifest));
-      const load = (): { forbidden: readonly Rule[] } => createRequire(import.meta.url)(join(cwd, boundary));
+      const load = (): { forbidden: readonly Rule[] } => loadDependencyDirectionPolicy(cwd).policy as unknown as {forbidden:readonly Rule[]};
       if (!row.accept) {
         expect(() => dependencyDirectionWorkspacePackages(cwd, []), row.id).toThrow();
         expect(load, row.id).toThrow();
@@ -385,7 +416,7 @@ test("authored owner exports agree with independent package resolution", async (
         expect(terminal.dependencies, row.id).toEqual([]);
         const violations = report.summary.violations.filter((violation: { from: string }) => violation.from === from);
         const graph = { ...report, modules: [module, terminal], summary: { ...report.summary, totalCruised: 2, totalDependenciesCruised: 1, violations, error: violations.length } };
-        const scope = { ...fixture.graphScope, workspaceRoots: [...fixture.graphScope.workspaceRoots, "♻️mit-bestand", "✏️s"], workspacePackages: [{ name: manifest.name, owner: row.owner, exports: Object.keys(manifest.exports) }], expectedSources: [from] };
+        const scope = { ...fixture.graphScope, workspaceRoots: [...fixture.graphScope.workspaceRoots, "♻️mit-bestand", "✏️s"], workspacePackages: [{ name: manifest.name, owner: row.owner, ...authoredPackageExportAuthority(row.owner,manifest) }], expectedSources: [from] };
         if (row.accept) expect(dependencyDirectionEdges(graph, rules, scope), row.id).toEqual([]);
         else expect(() => dependencyDirectionEdges(graph, rules, scope), row.id).toThrow();
       }
@@ -436,11 +467,11 @@ test("synthetic owner policy accepts deletion and rejects malformed present decl
  const root=realpathSync(mkdtempSync(join(output,"dependency-specific-deletion-"))),boundary="🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
  try {
   for(const [index,row] of fixture.policyCases.entries()){
-   const cwd=join(root,String(index));write(cwd,boundary,readFileSync(join(repo,boundary),"utf8"));writePolicyAuthority(cwd);
+   const cwd=join(root,String(index));writePolicyAuthority(cwd);
    write(cwd,"package.json",JSON.stringify({workspaces:row.members,semio:{workspace:{schemaVersion:1,members:row.members,owners:[]}}}));
    for(const directory of row.directories)mkdirSync(join(cwd,directory),{recursive:true});
    for(const [owner,manifest] of Object.entries(row.manifests))write(cwd,owner+"/package.json",typeof manifest==="string"?manifest:JSON.stringify(manifest));
-   const load=()=>createRequire(import.meta.url)(join(cwd,boundary));
+   const load=()=>loadDependencyDirectionPolicy(cwd).policy;
    if(row.accept){expect(load,row.id).not.toThrow();expect(dependencyDirectionWorkspacePackages(cwd,[]).length,row.id).toBe(Object.keys(row.manifests).length);}
    else {expect(load,row.id).toThrow(); if(row.id==="present-duplicate-name")expect(()=>dependencyDirectionWorkspacePackages(cwd,[]),row.id).toThrow();}
    if(row.id==="deleted-specific-no-owners"){expect(existsSync(join(cwd,"✏️s"))).toBe(false);for(const owner of fixture.infrastructureCases.filter(x=>x.accept))assertInfrastructure(owner);expect(fixture.publicExportCases).toHaveLength(7);expect(fixture.typeCases).toHaveLength(3);}
@@ -448,13 +479,80 @@ test("synthetic owner policy accepts deletion and rejects malformed present decl
  } finally {rmSync(root,{recursive:true,force:true});}
 });
 
-/** 🧭️ Canonical package authority is unambiguous before selector or alias maps are constructed. */
-test("policy construction rejects ambiguous names and divergent owner declarations",()=>{
- const build=createRequire(import.meta.url)(join(library,"🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs")).buildDependencyDirectionPolicy;
- const taxonomy=JSON.parse(readFileSync(join(library,"🔣️taxonomy.json"),"utf8"));
- for(const row of fixture.constructionCases){
-  const construct=()=>build({taxonomy,plugins:[],workspacePackages:row.packages,nodeBuiltins:["fs","path"]});
-  if(row.accept)expect(construct,row.id).not.toThrow();
-  else expect(construct,row.id).toThrow();
- }
+/** 🛍️ Authored export targets govern every cross-owner source form, including executable owners. */
+test("cross-owner public targets agree with independent resolver and complete graph verdicts", async () => {
+  type PublicCase = Readonly<{ id: string; from: string; target: string; syntax: Edge["syntax"]; accept: boolean; oracleSpecifier: string; packages: readonly {owner:string;sourceOwner:string;name:string;exports:unknown}[] }>;
+  const rows = (fixture as typeof fixture & {publicOwnerCases:readonly PublicCase[]}).publicOwnerCases;
+  const validate = new Ajv({strict:true}).compile({...schema as object,$ref:"#/$defs/AuthoredPublicPackage"});
+  expect(new Set(rows.map(row=>row.id)).size).toBe(rows.length);
+  const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
+  mkdirSync(output,{recursive:true});
+  const root = realpathSync(mkdtempSync(join(output,"public-owner-")));
+  try {
+    for (const [index,row] of rows.entries()) {
+      const cwd=join(root,String(index)),members=row.packages.map(pkg=>pkg.owner);
+      write(cwd,"nx.json","{}");
+      write(cwd,"📋️project.json",JSON.stringify({metadata:{semio:{taxonomy:"taxonomy.json"}}}));
+      write(cwd,"taxonomy.json",readFileSync(join(library,"🔣️taxonomy.json"),"utf8"));
+      write(cwd,"package.json",JSON.stringify({workspaces:members,semio:{workspace:{schemaVersion:1,members,owners:[]}}}));
+      for(const pkg of row.packages) {
+        write(cwd,pkg.owner+"/package.json",JSON.stringify({name:pkg.name,type:"module",exports:pkg.exports}));
+        const targets:string[]=[];
+        const collect=(value:unknown):void=>{if(typeof value==="string")targets.push(value.replaceAll("*","widget"));else if(value&&typeof value==="object")Object.values(value).forEach(collect);};
+        collect(pkg.exports);
+        for(const target of targets)write(cwd,pkg.owner+"/"+target.slice(2),target.endsWith(".json")?"{}":"export interface Value {}\nexport const value=1;\n");
+        const installed=join(cwd,"node_modules",pkg.name);mkdirSync(dirname(installed),{recursive:true});symlinkSync(join(cwd,pkg.owner),installed,process.platform==="win32"?"junction":"dir");
+      }
+      write(cwd,row.target,row.target.endsWith(".json")?"{}":"export interface Value {}\nexport const value=1;\n");
+      const edge:Edge={id:row.id,target:row.target,reference:"relative",syntax:row.syntax};
+      write(cwd,row.from,render(edge,row.from).source+"\nexport {};");
+      const snapshot=loadDependencyDirectionPolicy(cwd);
+      for(const pkg of snapshot.workspacePackages)expect(validate(pkg),JSON.stringify(validate.errors)).toBe(true);
+      const publicRules=snapshot.policy.forbidden.filter(rule=>rule.name.startsWith("no-cross-package-relative-")||rule.name==="framework-no-implementation");
+      const normalized=publicRules.map(rule=>{const list=(value:string|readonly string[]|undefined):readonly string[]=>typeof value==="string"?[value]:value??[];return {...rule,from:{path:list(rule.from.path),pathNot:list(rule.from.pathNot)},to:{path:list(rule.to.path),pathNot:list(rule.to.pathNot)}};});
+      const result=await cruise([row.from],{baseDir:cwd,validate:true,ruleSet:{forbidden:normalized.map(rule=>({...rule,severity:"error" as const,from:{path:[...rule.from.path],pathNot:[...rule.from.pathNot]},to:{path:[...rule.to.path],pathNot:[...rule.to.pathNot]}}))},outputType:"json",tsPreCompilationDeps:true,combinedDependencies:true},{exportsFields:[...snapshot.policy.options.enhancedResolveOptions.exportsFields],conditionNames:["semio-source","import","require","node","default"],bustTheCache:true});
+      const graph=typeof result.output==="string"?JSON.parse(result.output):result.output;
+      const scope={workspaceRoots:["🧰️framework"],workspacePackages:snapshot.workspacePackages,excludedPaths:[],nonFollowedPaths:["node_modules"],expectedSources:graph.modules.map((module:{source:string})=>module.source)};
+      const edges=dependencyDirectionEdges(graph,normalized,scope);
+      expect(edges.length===0,row.id+" independent graph verdict").toBe(row.accept);
+      expect(graph.summary.error===0,row.id+" dependency-cruiser verdict").toBe(row.accept);
+      expect(snapshot.workspacePackages.map(pkg=>(pkg as typeof pkg & {sourceOwner?:string}).sourceOwner),row.id+" semantic source owners").toEqual(row.packages.map(pkg=>pkg.sourceOwner));
+      expect(publicRules.filter(rule=>rule.name.startsWith("no-cross-package-relative-")).length,row.id+" admitted strict owner rules").toBe(row.packages.length);
+      expect(publicRules.every(rule=>rule.severity==="error"),row.id).toBe(true);
+    }
+    console.log(`[DEBUG] public owner cases=${rows.length}; independent resolver=dependency-cruiser; schema=Ajv2020`);
+  } finally {rmSync(root,{recursive:true,force:true});}
+},90_000);
+
+/** 🔌️ Current catalogue ownership and neutral public SDK contracts remain strict. */
+test("current public owner policy replaces obsolete generated registry storage and admits strict SDK",()=>{
+  expect(config.forbidden.some(rule=>rule.name==="no-generated-edits-upstream")).toBe(false);
+});
+
+/** 🧭️ Plugin consumers use the strict neutral SDK without executable source exemptions. */
+test("plugin public SDK policy is strict for runtime and executable owners",()=>{
+  const rule=config.forbidden.find(rule=>rule.name==="plugins-framework-sdk-only");
+  expect(rule?.severity).toBe("error");
+  expect(rule?.from.pathNot).toBeUndefined();
+});
+
+
+/** 📮️ Proves actual package-local semantic facets with an independent Node export resolver. */
+test("actual public package targets obey Node ownership and expose neutral Process facets", () => {
+  type PublicPackageCase=Readonly<{id:string;owner:string;name:string;subpath:string;target:string;accept:boolean}>;
+  const rows=(fixture as typeof fixture & {actualPublicPackageCases:readonly PublicPackageCase[]}).actualPublicPackageCases;
+  const validate=new Ajv({strict:true}).compile({...schema as object,$ref:"#/$defs/AuthoredPublicPackage"});
+  expect(new Set(rows.map(row=>row.id)).size).toBe(rows.length);
+  const oracle=String.raw`const p=require("node:path"),m=require("node:module");const root=process.argv[1],rows=JSON.parse(process.argv[2]);process.stdout.write(JSON.stringify(rows.map(row=>{try{const target=m.createRequire(p.join(root,row.owner,"package.json")).resolve(row.name+(row.subpath==="."?"":row.subpath.slice(1)));return {id:row.id,accept:true,target};}catch(error){return {id:row.id,accept:false,error:error.code};}})));`;
+  const verdicts=JSON.parse(execFileSync("node",["--input-type=commonjs","-e",oracle,repo,JSON.stringify(rows)],{encoding:"utf8",timeout:1000,maxBuffer:16777216})) as readonly Readonly<{id:string;accept:boolean;target?:string;error?:string}>[];
+  expect(verdicts.length).toBe(rows.length);
+  for(const [index,row] of rows.entries()){
+    const verdict=verdicts[index]!;expect(verdict.id).toBe(row.id);expect(verdict.accept,row.id+" Node public package oracle "+verdict.error).toBe(row.accept);
+    if(!row.accept)continue;
+    expect(verdict.target).toBe(join(repo,row.owner,row.target));
+    const manifest=JSON.parse(readFileSync(join(repo,row.owner,"package.json"),"utf8"));expect(manifest.name).toBe(row.name);
+    const authority=authoredPackageExportAuthority(row.owner,manifest);expect(validate({owner:row.owner,name:manifest.name,...authority}),JSON.stringify(validate.errors)).toBe(true);expect(authority.exportTargets.some(target=>target.subpath===row.subpath&&target.target===row.target)).toBe(true);
+    expect(authority.exportTargets.every(target=>target.target===null||target.target.startsWith("./"))).toBe(true);
+  }
+  console.log(`[DEBUG] actual public package cases=${rows.length}; independent oracle=Node exports; local semantic targets exact`);
 });

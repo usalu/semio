@@ -1,36 +1,228 @@
 {
-  "outputGrants": [1, 3, 32, 64, 256],
-  "copyGrants": [2, 3, 64],
-  "cancelStops": [0, 1, 3, 20, 100],
+  "outputGrants": [
+    1,
+    3,
+    32,
+    64,
+    256
+  ],
+  "copyGrants": [
+    1,
+    2,
+    3,
+    64
+  ],
+  "cancelStops": [
+    0,
+    1,
+    3,
+    20,
+    100
+  ],
   "cases": [
-    {"name": "null", "fieldId": 1, "node": {"kind": "null"}, "expectedHex": "0001011112"},
-    {"name": "empty-object", "fieldId": 1, "node": {"kind": "object", "members": []}, "expectedHex": "000101111000"},
-    {"name": "empty-array", "fieldId": 1, "node": {"kind": "array", "items": []}, "expectedHex": "000101110c00"},
-    {"name": "ordered-duplicates", "fieldId": 1, "node": {"kind": "object", "members": [
-      {"key": "z", "node": {"kind": "uint", "value": "1"}},
-      {"key": "a", "node": {"kind": "uint", "value": "2"}},
-      {"key": "z", "node": {"kind": "uint", "value": "3"}}
-    ]}, "expectedHex": "00010111100307017a0401070161040207017a0403"},
-    {"name": "reordered-duplicates", "fieldId": 1, "node": {"kind": "object", "members": [
-      {"key": "a", "node": {"kind": "uint", "value": "2"}},
-      {"key": "z", "node": {"kind": "uint", "value": "1"}},
-      {"key": "z", "node": {"kind": "uint", "value": "3"}}
-    ]}, "expectedHex": "000101111003070161040207017a040107017a0403"},
-    {"name": "typed-scalars", "fieldId": 1, "node": {"kind": "array", "items": [
-      {"kind": "bool", "value": false}, {"kind": "bool", "value": true},
-      {"kind": "int", "value": "-17"}, {"kind": "float", "bits": "8000000000000000"},
-      {"kind": "bytes", "value": [0, 255]}
-    ]}, "expectedHex": "000101110c0501020321050000000000000080080200ff"},
-    {"name": "unsigned-limit", "fieldId": 65535, "node": {"kind": "uint", "value": "18446744073709551615"}, "expectedHex": "0001ffff031104ffffffffffffffffff01"},
-    {"name": "unicode-symbols-inline-keys", "fieldId": 1, "node": {"kind": "object", "members": [
-      {"key": "😀", "node": {"kind": "text", "value": "雪😀"}},
-      {"key": "z", "node": {"kind": "text", "value": "é"}}
-    ]}, "expectedHex": "0202c3a907e99baaf09f988001011110020704f09f9880060107017a0600"},
-    {"name": "nested-ordered-array", "fieldId": 0, "node": {"kind": "array", "items": [
-      {"kind": "object", "members": [{"key": "z", "node": {"kind": "null"}}, {"key": "z", "node": {"kind": "array", "items": []}}]},
-      {"kind": "object", "members": []}
-    ]}, "expectedHex": "000100110c02100207017a1207017a0c001000"},
-    {"name": "root-text", "fieldId": 1, "node": {"kind": "text", "value": "x"}, "expectedHex": "0101780101110600"},
-    {"name": "root-empty-text", "fieldId": 1, "node": {"kind": "text", "value": ""}, "expectedHex": "01000101110600"}
+    {
+      "name": "null",
+      "fieldId": 1,
+      "node": {
+        "kind": "null"
+      },
+      "expectedHex": "0001011112"
+    },
+    {
+      "name": "empty-object",
+      "fieldId": 1,
+      "node": {
+        "kind": "object",
+        "members": []
+      },
+      "expectedHex": "000101111000"
+    },
+    {
+      "name": "empty-array",
+      "fieldId": 1,
+      "node": {
+        "kind": "array",
+        "items": []
+      },
+      "expectedHex": "000101110c00"
+    },
+    {
+      "name": "ordered-duplicates",
+      "fieldId": 1,
+      "node": {
+        "kind": "object",
+        "members": [
+          {
+            "key": "z",
+            "node": {
+              "kind": "uint",
+              "value": "1"
+            }
+          },
+          {
+            "key": "a",
+            "node": {
+              "kind": "uint",
+              "value": "2"
+            }
+          },
+          {
+            "key": "z",
+            "node": {
+              "kind": "uint",
+              "value": "3"
+            }
+          }
+        ]
+      },
+      "expectedHex": "00010111100307017a0401070161040207017a0403"
+    },
+    {
+      "name": "reordered-duplicates",
+      "fieldId": 1,
+      "node": {
+        "kind": "object",
+        "members": [
+          {
+            "key": "a",
+            "node": {
+              "kind": "uint",
+              "value": "2"
+            }
+          },
+          {
+            "key": "z",
+            "node": {
+              "kind": "uint",
+              "value": "1"
+            }
+          },
+          {
+            "key": "z",
+            "node": {
+              "kind": "uint",
+              "value": "3"
+            }
+          }
+        ]
+      },
+      "expectedHex": "000101111003070161040207017a040107017a0403"
+    },
+    {
+      "name": "typed-scalars",
+      "fieldId": 1,
+      "node": {
+        "kind": "array",
+        "items": [
+          {
+            "kind": "bool",
+            "value": false
+          },
+          {
+            "kind": "bool",
+            "value": true
+          },
+          {
+            "kind": "int",
+            "value": "-17"
+          },
+          {
+            "kind": "float",
+            "bits": "8000000000000000"
+          },
+          {
+            "kind": "bytes",
+            "value": [
+              0,
+              255
+            ]
+          }
+        ]
+      },
+      "expectedHex": "000101110c0501020321050000000000000080080200ff"
+    },
+    {
+      "name": "unsigned-limit",
+      "fieldId": 65535,
+      "node": {
+        "kind": "uint",
+        "value": "18446744073709551615"
+      },
+      "expectedHex": "0001ffff031104ffffffffffffffffff01"
+    },
+    {
+      "name": "unicode-symbols-inline-keys",
+      "fieldId": 1,
+      "node": {
+        "kind": "object",
+        "members": [
+          {
+            "key": "😀",
+            "node": {
+              "kind": "text",
+              "value": "雪😀"
+            }
+          },
+          {
+            "key": "z",
+            "node": {
+              "kind": "text",
+              "value": "é"
+            }
+          }
+        ]
+      },
+      "expectedHex": "0202c3a907e99baaf09f988001011110020704f09f9880060107017a0600"
+    },
+    {
+      "name": "nested-ordered-array",
+      "fieldId": 0,
+      "node": {
+        "kind": "array",
+        "items": [
+          {
+            "kind": "object",
+            "members": [
+              {
+                "key": "z",
+                "node": {
+                  "kind": "null"
+                }
+              },
+              {
+                "key": "z",
+                "node": {
+                  "kind": "array",
+                  "items": []
+                }
+              }
+            ]
+          },
+          {
+            "kind": "object",
+            "members": []
+          }
+        ]
+      },
+      "expectedHex": "000100110c02100207017a1207017a0c001000"
+    },
+    {
+      "name": "root-text",
+      "fieldId": 1,
+      "node": {
+        "kind": "text",
+        "value": "x"
+      },
+      "expectedHex": "0101780101110600"
+    },
+    {
+      "name": "root-empty-text",
+      "fieldId": 1,
+      "node": {
+        "kind": "text",
+        "value": ""
+      },
+      "expectedHex": "01000101110600"
+    }
   ]
 }

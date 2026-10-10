@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "original-pointer-extent-per-turn-borrow",
+  "dictionary": "original-source-ranges",
+  "metadataCopy": 0,
+  "frontiers": [
+    "verify",
+    "frame",
+    "dictionary-reserve",
+    "dictionary-range",
+    "typed-reserve",
+    "field-reserve",
+    "field-copy",
+    "shared-string-admission",
+    "typed-transfer",
+    "validate",
+    "ready-transfer",
+    "partial-close",
+    "auxiliary-close",
+    "receipt"
+  ],
+  "grant": {
+    "items": 1,
+    "copy": 3,
+    "capacity": 1048576,
+    "release": 1048576,
+    "depth": 64
+  }
+}

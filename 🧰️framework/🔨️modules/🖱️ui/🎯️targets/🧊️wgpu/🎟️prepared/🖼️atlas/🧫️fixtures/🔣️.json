@@ -1,0 +1,124 @@
+{
+  "contract": "semio.ui.prepared-atlas.original-owner.v1",
+  "policy": {
+    "pageBytes": 16384,
+    "maximumPages": 2048
+  },
+  "authority": {
+    "normal": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "retirement": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    }
+  },
+  "backing": {
+    "slots": {
+      "element": "Option<PreparedAtlasPage>",
+      "count": 2048
+    },
+    "abandonment": "pre-admitted original owner; no Drop allocation"
+  },
+  "cases": [
+    {
+      "id": "single-partial-page",
+      "width": 4,
+      "height": 2,
+      "channels": 4,
+      "sourceByte": 91,
+      "sourceBytes": 32,
+      "pages": [
+        {
+          "startRow": 0,
+          "rows": 2,
+          "payloadBytes": 32,
+          "allocationBytes": 16384
+        }
+      ]
+    },
+    {
+      "id": "three-original-pages",
+      "width": 1,
+      "height": 32769,
+      "channels": 1,
+      "sourceByte": 91,
+      "sourceBytes": 32769,
+      "pages": [
+        {
+          "startRow": 0,
+          "rows": 16384,
+          "payloadBytes": 16384,
+          "allocationBytes": 16384
+        },
+        {
+          "startRow": 16384,
+          "rows": 16384,
+          "payloadBytes": 16384,
+          "allocationBytes": 16384
+        },
+        {
+          "startRow": 32768,
+          "rows": 1,
+          "payloadBytes": 1,
+          "allocationBytes": 16384
+        }
+      ]
+    }
+  ],
+  "closePhases": [
+    "original-page",
+    "original-slot-backing",
+    "permit-backing-counter",
+    "permit-payload-counter",
+    "permit-page-counter",
+    "permit-item-counter",
+    "original-permit-header",
+    "original-abandonment-backing-and-slot"
+  ],
+  "denial": {
+    "originalPointersUnchanged": true,
+    "receipt": {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    "heap": {
+      "requestedBytes": 0,
+      "releasedBytes": 0,
+      "largestReleaseBytes": 0,
+      "overflowed": false
+    }
+  },
+  "terminal": {
+    "pagesAbsent": true,
+    "slotBackingAbsent": true,
+    "permitAbsent": true,
+    "abandonmentBackingAbsent": true,
+    "dropHeapEffects": 0
+  },
+  "admissionPhases": [
+    "original-owner-header",
+    "original-slot-backing",
+    "original-page"
+  ],
+  "abandonmentPhases": [
+    "original-owner-handoff",
+    "original-page",
+    "original-slot-backing",
+    "permit-backing-counter",
+    "permit-payload-counter",
+    "permit-page-counter",
+    "permit-item-counter",
+    "original-permit-header",
+    "original-abandonment-backing-and-slot"
+  ]
+}

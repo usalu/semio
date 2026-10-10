@@ -1,0 +1,9 @@
+# Two Additional Renderer Whole Trials
+
+Read-only Source evidence; hashes in 📥️renderer-two-trials.json. No tests.
+
+PluginRuntimeChannelCloseV1 is a complete refusal/replacement trial: instance + refusal.before/afterFailure/afterRetry + replacement.whileClosing/afterOldClose/afterReplacementClose arrays. Actual TSX1662 selects it and1665 validates entire channel-close plain fixture. No production DTO producer was established; exact Renderer TS/TSX/Rust symbol refs are only this test selector. Retire only definition/export and whole admission; preserve real refused-close/retry exact channel subscriptions, replacement behavior, Immer and every original expected array.
+
+PluginRuntimeLifecycleSchedulerV1 is another whole trial: required actor/instance/guestLifetime/closeGeneration plus work/events/phases/refusedWork/mailbox/uiAcknowledgement/runtimeUiComposition. Mailbox expected outcome is refused; arrays describe fixed scheduling/acknowledgement order. Actual TSX2010/2013 and2108 validate the entire lifecycle-scheduler fixture before real captured-work and UI composition laws. Exact Renderer symbol refs are these three admissions. Retire whole selector/admissions only, preserving genuine Actor lifecycle/OwnedUiInstance/ShardClient protocol, pointer/ACK/retirement/refusal assertions and fast-deep-equal behavior.
+
+Do not delete domain admissions based on validate(fixture) text alone: directory-home-bootstrap TSX141–143 defines validate as per-value receipt/identity/action/outcome/labels projections using genuine domain definitions, and explicitly tests independent parser hostile values. That is a positive preserved case. Scoped-presence candidate remains unresolved until actual projection relation is inspected. Bounded extension-format census is not complete repository absence.

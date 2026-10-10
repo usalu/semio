@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceBytes",
+    "bufferExtent",
+    "metadataCopyBytes",
+    "originalGrant"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sourceBytes": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "bufferExtent": {
+      "const": 17
+    },
+    "metadataCopyBytes": {
+      "const": 0
+    },
+    "originalGrant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

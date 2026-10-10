@@ -1,0 +1,14 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"object","additionalProperties":false,
+ "required":["schema","value","dialect","grant","closeAuthority","closeGrant","deniedCloseGrant","nativeMaximumBytes","maximumTurns","expected"],
+ "properties":{
+  "schema":{"const":"CREATE TABLE original_input (id INTEGER PRIMARY KEY, value TEXT)"},"value":{"const":"original guest input 🪶️"},"dialect":{"const":"s.guest-input-fixture@1/strict"},
+  "grant":{"const":{"maximumItems":4096,"maximumCopyBytes":1048576,"maximumCapacityBytes":1048576,"maximumReleaseBytes":1048576,"maximumDepth":64}},
+  "closeAuthority":{"const":"independentCallerWallet"},
+  "closeGrant":{"const":{"maximumItems":1024,"maximumCopyBytes":65536,"maximumCapacityBytes":65536,"maximumReleaseBytes":65536,"maximumDepth":64}},
+  "deniedCloseGrant":{"const":{"maximumItems":0,"maximumCopyBytes":0,"maximumCapacityBytes":0,"maximumReleaseBytes":0,"maximumDepth":0}},
+  "nativeMaximumBytes":{"const":2097152},"maximumTurns":{"const":4096},
+  "expected":{"const":{"originalSlotBeforeAdmission":true,"originalSlotAfterAdmission":false,"zeroCloseProgress":0,"canceledKind":"Canceled"}}
+ }
+}

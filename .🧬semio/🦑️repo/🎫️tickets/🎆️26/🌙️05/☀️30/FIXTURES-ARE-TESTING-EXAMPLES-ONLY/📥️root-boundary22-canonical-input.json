@@ -1,0 +1,5 @@
+{
+  "cwd": "/Users/ueli/Documents/semio",
+  "command": "env NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct10-root-canonical-cache' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct10-root-canonical-nx' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated' bun nx run workspace:schema-fixture-boundary --skip-nx-cache --outputStyle=static > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/root-boundary22-canonical.log' 2>&1",
+  "qualification": "Actual normal registered workspace:schema-fixture-boundary, original complete inventory/filter/order/shared diagnostic table. No native proof or global purity inference."
+}

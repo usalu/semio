@@ -4,6 +4,7 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/**/*.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧫️fixtures/**/*",
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/**/*",

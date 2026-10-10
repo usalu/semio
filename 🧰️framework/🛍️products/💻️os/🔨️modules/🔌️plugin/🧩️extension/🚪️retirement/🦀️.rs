@@ -4,9 +4,27 @@ use super::{plugin_internal_fault, ExtensionBundle, ExtensionManifest, Extension
 use crate::app::PluginLifecycleStep;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 
+#[cfg(test)]
+#[path="../🧪️tests/📨️invoke/🦀️.rs"]
+mod original_invocation_tests;
+
+/// 📬️ A pending invocation publishes no payload and preserves the actual original caller receipt.
+pub struct ExtensionInvokeStep{pub payload:Option<Vec<u8>>,pub retained_progress:RetainedCloneProgress,pub refusal:Option<ValueError>}
+
+impl ExtensionInvokeStep{
+    /// 🧾️ Verifies the original context delta without spending its already debited receipt again.
+    pub fn admit(mut self,grant:RetainedCloneGrant,before:RetainedCloneProgress,after:RetainedCloneProgress)->Self{
+        if self.refusal.is_some(){return self}
+        let (Some(copied_items),Some(copied_bytes),Some(retained_capacity_bytes),Some(released_bytes))=(after.copied_items.checked_sub(before.copied_items),after.copied_bytes.checked_sub(before.copied_bytes),after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes),after.released_bytes.checked_sub(before.released_bytes))else{self.refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original extension invocation decreased its caller receipt"));return self};
+        let actual=RetainedCloneProgress{copied_items,copied_bytes,retained_capacity_bytes,released_bytes};
+        if actual!=self.retained_progress||!actual.fits(grant){self.refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original extension invocation requires its complete same caller receipt").with_retained_progress(actual))}
+        self
+    }
+}
+
 /// 🧳️ Owns the resources captured by extension handlers; terminal destruction must be shallow.
 pub trait ExtensionResourceOwner: Send + 'static {
-    fn invoke(&self, capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault>;
+    fn invoke(&self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault>;
     /// 💡️ The explicitly owned native context used by registered inference executables.
     fn inference_context(&self) -> Option<&dyn std::any::Any> {
         None
@@ -77,6 +95,7 @@ impl ExtensionBundle {
             return;
         }
         self.closing = true;
+        if let Some(gateway)=self.inference_gateway.get_mut().expect("exclusive inference gateway").as_mut(){gateway.begin_close();}
         if let Some(owner) = &mut *self.resource_owner {
             owner.begin_close();
         }
@@ -97,26 +116,32 @@ impl ExtensionBundle {
     }
 
     /// 📨️ Invokes only an unsealed bundle through its actual registered handler.
-    pub fn invoke(&self, capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> {
+    pub fn invoke(&self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
+        let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None})}
         if self.closing {
             return Err(close_fault("extension.closing", "extension resource retirement has sealed invocation"));
         }
         let index =
             self.handlers.binary_search_by(|(registered, _)| registered.as_str().cmp(capability)).map_err(|_| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.unknown-capability"), format!("unknown extension capability '{capability}'")))?;
-        match &self.handlers[index].1 {
-            ExtensionRequestHandler::Plain(handler) => handler(request),
-            ExtensionRequestHandler::Owned => self.resource_owner.as_ref().ok_or_else(|| close_fault("extension.missing-owner", "extension resource owner is absent"))?.invoke(capability, request),
-        }
+        let before=cx.retained_progress();let grant=cx.retained_grant();
+        let answer=match &self.handlers[index].1 {
+            ExtensionRequestHandler::Plain(handler) => handler(request,cx),
+            ExtensionRequestHandler::Owned => self.resource_owner.as_ref().ok_or_else(|| close_fault("extension.missing-owner", "extension resource owner is absent"))?.invoke(capability, request, cx),
+        }?;
+        Ok(answer.admit(grant,before,cx.retained_progress()))
     }
 
     /// 💡️ Public named inference transport shares the registered service wire gateway and owner.
-    pub fn artifact_infer(&self, request: &[u8]) -> Result<Vec<u8>, crate::app::ArtifactInferenceExecutionError> {
-        if self.closing {
-            return Err(crate::app::ArtifactInferenceExecutionError::new("artifact-inference.context-closing", "extension inference owner is closing"));
-        }
-        let context =
-            self.resource_owner.as_ref().and_then(|owner| owner.inference_context()).ok_or_else(|| crate::app::ArtifactInferenceExecutionError::new("artifact-inference.context-required", "extension resource owner supplies no inference context"))?;
-        crate::app::wire_artifact_infer_with_context(request, context)
+    pub fn artifact_infer(&self,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->crate::ArtifactInferenceGatewayStep {
+        let empty=|refusal|crate::ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal};
+        if self.closing{return empty(Some(crate::ArtifactInferenceGatewayFailure::Literal("extension inference owner is closing")))}
+        let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return empty(None)}
+        let context=self.resource_owner.as_ref().and_then(|owner|owner.inference_context());
+        let mut slot=match self.inference_gateway.lock(){Ok(slot)=>slot,Err(_)=>return empty(Some(crate::ArtifactInferenceGatewayFailure::Literal("original inference gateway owner is poisoned")))};
+        if slot.is_none(){*slot=Some(crate::ArtifactInferenceGateway::new(cx.operation().0,cx.generation().0,request));}
+        let answer=slot.as_mut().unwrap().step(request,cx,context);
+        if answer.payload.is_some(){assert!(slot.as_ref().unwrap().terminal_is_empty(),"original inference source remains owned before publication");*slot=None;}
+        answer
     }
 
     /// ⏱️ Retires resource payloads, then individual handler captures, then manifest metadata.
@@ -153,6 +178,11 @@ impl ExtensionBundle {
                 step => Ok(step),
             };
         }
+        if let Some(gateway)=self.inference_gateway.get_mut().expect("exclusive inference gateway").as_mut(){
+            gateway.child_closed();
+            if gateway.terminal_is_empty(){*self.inference_gateway.get_mut().expect("exclusive inference gateway")=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
+            return gateway.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(value_fault);
+        }
         if !self.metadata_retirement.is_empty() {
             return match self.metadata_retirement.step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })? {
                 PluginLifecycleStep::Complete(progress) => Ok(PluginLifecycleStep::Progress(progress)),
@@ -178,13 +208,16 @@ impl ExtensionBundle {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.resource_owner.is_none() && self.handlers.is_empty() && self.handlers.capacity() == 0 && self.manifest_retired && self.manifest.payload_is_empty() && self.metadata_retirement.is_empty()
+        self.closing && self.inference_gateway.lock().is_ok_and(|slot|slot.is_none()) && self.resource_owner.is_none() && self.handlers.is_empty() && self.handlers.capacity() == 0 && self.manifest_retired && self.manifest.payload_is_empty() && self.metadata_retirement.is_empty()
     }
 
     /// 📏️ Exact per-axis admission required by the next retained allocation move, birth or release.
     pub fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(owner) = self.resource_owner.as_ref() {
             return if owner.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { nested(owner.retirement_demands(maximum_body_bytes)?) };
+        }
+        if let Some(gateway)=self.inference_gateway.lock().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original inference gateway owner is poisoned"))?.as_ref(){
+            return if gateway.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{nested(gateway.retirement_demands(maximum_body_bytes)?)};
         }
         if !self.metadata_retirement.is_empty() {
             return nested(self.metadata_retirement.retirement_demands());
@@ -267,6 +300,7 @@ impl Drop for ExtensionBundle {
             std::mem::ManuallyDrop::drop(&mut self.manifest);
             std::mem::ManuallyDrop::drop(&mut self.handlers);
             std::mem::ManuallyDrop::drop(&mut self.resource_owner);
+            std::mem::ManuallyDrop::drop(&mut self.inference_gateway);
             std::mem::ManuallyDrop::drop(&mut self.metadata_retirement);
         }
     }
@@ -324,11 +358,12 @@ impl ExtensionBundleRegistry {
         Ok(())
     }
 
-    pub(super) fn invoke(&self, capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> {
+    pub(super) fn invoke(&self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
+        let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None})}
         if !self.active {
             return Err(close_fault("extension.inactive", "extension not activated"));
         }
-        self.current.as_ref().ok_or_else(|| close_fault("extension.missing", "extension bundle not installed"))?.invoke(capability, request)
+        self.current.as_ref().ok_or_else(|| close_fault("extension.missing", "extension bundle not installed"))?.invoke(capability, request, cx)
     }
 
     pub(super) fn begin_close(&mut self) {

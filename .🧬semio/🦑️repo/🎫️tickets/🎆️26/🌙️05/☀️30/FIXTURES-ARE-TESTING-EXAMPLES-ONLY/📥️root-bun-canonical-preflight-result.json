@@ -1,0 +1,6 @@
+{
+  "exitCode": 1,
+  "nativeOrSourceAssertions": 0,
+  "logSha256": "6b44f9439003f9904e37b333d8aab52f410c29111df7047d4e7a60167890c92a",
+  "qualification": "Canonical root Bun bootstrap failed before Nx/new tests: current shared Process invocation import of Schema/validator/TS absent; no test/graph/native/current workspace producer success credited"
+}

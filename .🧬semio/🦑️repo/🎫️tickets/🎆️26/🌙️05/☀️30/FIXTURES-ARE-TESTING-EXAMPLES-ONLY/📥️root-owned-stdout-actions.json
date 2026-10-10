@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "7baa4f82acc480d190d93d66fb0a314a6a65ceacf3b72ed432b336f79d7d3e12",
+      "afterSha256": "6bc3630d59c783b48a46db265e1bdf36561ff55c70fc8e4ef7d4d9ca50951da5",
+      "exclusive": false,
+      "scope": "Closed actual stdout destination admission and original child stream routing only"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

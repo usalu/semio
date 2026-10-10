@@ -1,0 +1,26 @@
+{
+  "ownership": false,
+  "executed": false,
+  "selectors": [
+    "#/$defs/PluginRuntimeChannelCloseV1",
+    "#/$defs/PluginRuntimeLifecycleSchedulerV1"
+  ],
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+      "sha256": "646c3a976af7d84a278325ea7ae9217e02eabcb49718faacde2df44c27260b24"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx",
+      "sha256": "fb5a97a68f52b44563c1d23eae10cbe8ab1867f006fff6c2360983df7ef4ae53"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔒️channel-close.json",
+      "sha256": "c00340133e8246d7c40daa3770ae6f74ab3d1241ebc2b7d972d216c1c2a229da"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json",
+      "sha256": "d8025d302511641ce56cb10a77d6722bdac6e0f017db5149e303126f5300f942"
+    }
+  ]
+}

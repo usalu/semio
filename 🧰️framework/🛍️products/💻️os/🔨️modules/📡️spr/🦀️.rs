@@ -24,11 +24,10 @@ pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, 
 pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord};
 pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 
+pub use crate::os_spr::io::binary::causal::{decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, DocumentBackboneBatchLimitsV1, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES};
 pub use crate::os_spr::causal::{
-    decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec,
-    frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_envelopes_from_edit_since, mutation_ids_for_edit, mutation_id_for_edit_operation, ArtifactDiff, DocumentBackboneBatchLimitsV1, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult,
-    InverseMutation, MutationDag, MutationDagAppliedStep, MutationDagCloseOwner, MutationDagError, MutationDagInsertRejected, MutationDagSeedRejected, MutationEnvelope, MutationTransform, TransformOutcome, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS,
-    DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES, DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES,
+    frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_envelopes_from_edit_since, mutation_ids_for_edit, mutation_id_for_edit_operation, ArtifactDiff, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult,
+    InverseMutation, MutationDag, MutationDagAppliedStep, MutationDagCloseOwner, MutationDagError, MutationDagInsertRejected, MutationDagSeedRejected, MutationEnvelope, MutationTransform, TransformOutcome, DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES, DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES,
 };
 pub use crate::os_spr::causal::transition::{
     HistoryFoldControl, HistoryFoldJob, HistoryFoldJobStep, fold_history_for_controlled, decode_history_transition_controlled, decode_history_envelope_controlled, copy_history_text, copy_history_text_parts, copy_history_bytes, history_envelope_id_controlled,
@@ -53,7 +52,7 @@ pub use crate::os_spr::command::{
 pub use crate::os_spr::command::mutation_fixture_ops;
 pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport, MutationReplayOutcome, ReplayReport};
 pub use crate::os_spr::wire::{
-    decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,
+    borrow_presence_metadata, BorrowedPresenceMetadata, BorrowedPresenceInteraction, BorrowedPresenceDomain, BorrowedPresenceStrings, decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,
     ServerFrame,
 };
 pub use crate::os_spr::wire::LOCAL_ACTOR_ID;

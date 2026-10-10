@@ -89,31 +89,41 @@ fn parse_credential_fd(raw: &str, stdio_mode: bool) -> Result<i32, String> {
     Ok(descriptor)
 }
 
+/// 🎟️ Reads the required independently authored Host policies without scalar conversion or renewal.
+fn read_host_driver_policy(path:&str)->Result<semio_framework_plugin_host::GuestRelayDriverPolicy,String>{let original=std::fs::read_to_string(path).map_err(|error|error.to_string())?;semio_framework_pack_json::from_json_str(&original,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())}
+
 fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOptions, String> {
-    let mut options = StdioOptions::default();
+    let mut host_driver_policy = None;
+    let mut options_folder = None;
+    let mut options_principal = None;
+    let mut options_scopes = Vec::new();
+    let mut options_auto_approve = AutoApprovePolicy::default();
+    let mut options_no_bridge = false;
     let mut hub = HubArgs::default();
     while let Some(flag) = argv.next() {
         match flag.as_str() {
-            "--folder" => options.folder = Some(argv.next().ok_or("--folder requires a value")?),
+            "--host-driver-policy" => host_driver_policy = Some(read_host_driver_policy(&argv.next().ok_or("--host-driver-policy requires a JSON path")?)?),
+            "--folder" => options_folder = Some(argv.next().ok_or("--folder requires a value")?),
             "--hub" => hub.base_url = Some(argv.next().ok_or("--hub requires a value")?),
             "--space" => hub.space_id = Some(argv.next().ok_or("--space requires a value")?),
             "--credential-file" => hub.credential_file = Some(argv.next().ok_or("--credential-file requires a path")?),
             "--credential-fd" => hub.credential_fd = Some(parse_credential_fd(&argv.next().ok_or("--credential-fd requires a descriptor number")?, true)?),
-            "--principal" => options.principal = Some(argv.next().ok_or("--principal requires a value")?),
-            "--scopes" => options.scopes = parse_scopes(&argv.next().ok_or("--scopes requires a comma-separated value")?),
-            "--auto-approve" => options.auto_approve = parse_auto_approve(&argv.next().ok_or("--auto-approve requires never|readonly|all")?)?,
-            "--no-bridge" => options.no_bridge = true,
+            "--principal" => options_principal = Some(argv.next().ok_or("--principal requires a value")?),
+            "--scopes" => options_scopes = parse_scopes(&argv.next().ok_or("--scopes requires a comma-separated value")?),
+            "--auto-approve" => options_auto_approve = parse_auto_approve(&argv.next().ok_or("--auto-approve requires never|readonly|all")?)?,
+            "--no-bridge" => options_no_bridge = true,
             other => return Err(format!("unknown flag {other}")),
         }
     }
-    options.hub = hub.into_options()?;
-    if options.folder.is_some() && options.hub.is_some() {
+    let hub = hub.into_options()?;
+    if options_folder.is_some() && hub.is_some() {
         return Err("--folder and --hub are mutually exclusive".to_string());
     }
-    Ok(options)
+    Ok(StdioOptions { host_driver_policy: host_driver_policy.ok_or("--host-driver-policy is required")?, folder:options_folder, hub, principal:options_principal, scopes:options_scopes, auto_approve:options_auto_approve, no_bridge:options_no_bridge })
 }
 
 fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOptions, String> {
+    let mut host_driver_policy = None;
     let mut port: u16 = 6300;
     let mut bind = "127.0.0.1".to_string();
     let mut folder = None;
@@ -125,6 +135,7 @@ fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOption
     let mut auto_approve = AutoApprovePolicy::default();
     while let Some(flag) = argv.next() {
         match flag.as_str() {
+            "--host-driver-policy" => host_driver_policy = Some(read_host_driver_policy(&argv.next().ok_or("--host-driver-policy requires a JSON path")?)?),
             "--port" => port = argv.next().ok_or("--port requires a value")?.parse().map_err(|_| "--port must be a number".to_string())?,
             "--bind" => bind = argv.next().ok_or("--bind requires a value")?,
             "--folder" => folder = Some(argv.next().ok_or("--folder requires a value")?),
@@ -144,7 +155,7 @@ fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOption
     if folder.is_some() && hub.is_some() {
         return Err("--folder and --hub are mutually exclusive".to_string());
     }
-    Ok(HttpOptions { port, bind, folder, hub, principal, scopes, audit_dir, allow_origin, auto_approve })
+    Ok(HttpOptions { host_driver_policy: host_driver_policy.ok_or("--host-driver-policy is required")?, port, bind, folder, hub, principal, scopes, audit_dir, allow_origin, auto_approve })
 }
 
 /// 🚨️ `audit` takes one optional `--folder <dir>` (default `.`) and nothing else — it never opens a

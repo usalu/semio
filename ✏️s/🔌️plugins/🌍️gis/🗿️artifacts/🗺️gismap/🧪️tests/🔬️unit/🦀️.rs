@@ -17,9 +17,9 @@ fn execute(
     budgets: &WireArtifactInferenceBudget,
     cancellation_id: &str,
     cache_mode: WireArtifactInferenceCacheMode,
-) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
+) -> Result<semio_framework_plugin::ArtifactInferenceExecutionStep, semio_framework_plugin::ArtifactInferenceExecutionError> {
     let pack = <GisMapSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    gis_map_inference_service().infer(&ArtifactInferenceExecutionRequest { policy: b"gis-map-v1", budgets, cancellation_id, previous_state: None, requested_cache_mode: cache_mode, canonical_payload: &pack, dependencies: &[] })
+    gis_map_inference_service().infer(&ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: b"gis-map-v1", budgets, cancellation_id, previous_state: None, requested_cache_mode: cache_mode, canonical_payload: &pack, dependencies: &[] })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -101,7 +101,7 @@ async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payl
 async fn malformed_snapshot_is_a_structured_execution_error() {
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000, work_units: 10, recursion_depth: 4 };
     let error = gis_map_inference_service()
-        .infer(&ArtifactInferenceExecutionRequest {
+        .infer(&ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128},
             policy: &[],
             budgets: &budgets,
             cancellation_id: "malformed",

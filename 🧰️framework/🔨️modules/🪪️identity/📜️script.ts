@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🪪️ Runs neutral identity contracts. */
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../🏃️process/🧭️routing/🟦️.ts";
@@ -11,4 +12,4 @@ class TestScript extends BundleScript {
   await runOwnedCommand(process.execPath, ["test", resolve(this.root, "🧩️grapheme/🧪️tests/🟦️.ts")], this.repoRoot, "identity-grapheme", TEST_LEVEL_BUDGET_MS.fundamental);
  }
 }
-if (import.meta.main) await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original }));

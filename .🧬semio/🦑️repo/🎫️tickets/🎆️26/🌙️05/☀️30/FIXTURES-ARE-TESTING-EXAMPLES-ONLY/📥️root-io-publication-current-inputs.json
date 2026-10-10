@@ -1,0 +1,35 @@
+{
+  "codes": {
+    "test": "# -*- coding: utf-8 -*-\nimport pathlib,json,hashlib\nr=pathlib.Path(\"/Users/ueli/Documents/semio\");t=pathlib.Path(\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY\");p=r/'🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts';before=p.read_bytes();text=before.decode();old=' const schema=await Bun.file(new URL(\"../🧬️schema/📤️publication.json\",import.meta.url)).json();expect(new Ajv({strict:true,allErrors:true}).compile(schema)(fixture.publicationHeader)).toBe(true);';assert text.count(old)==1;text=text.replace(old,' expect(existsSync(resolve(import.meta.dir,\"../🧬️schema/📤️publication.json\"))).toBe(false);');old='matches strict Ajv and independent SQLite 32/64-bit13/25-byte work';assert text.count(old)==1;text=text.replace(old,'matches independent SQLite 32/64-bit13/25-byte work with plain test rows');assert p.read_bytes()==before;p.write_text(text)\n(t/'📥️root-io-publication-test-actions.json').write_text(json.dumps(dict(actions=[dict(path=str(p.relative_to(r)),action='updated',beforeSha256=hashlib.sha256(before).hexdigest(),afterSha256=hashlib.sha256(p.read_bytes()).hexdigest(),exclusive=False,scope='Original receiving publication law asserts no whole trial Schema; all native and independent SQLite assertions retained')],wholeFileExclusivityClaim=False),ensure_ascii=False,indent=2)+'\\n');print('Original whole publication trial admission replaced by absence guard; real oracle preserved')\n",
+    "implementation": "# -*- coding: utf-8 -*-\nimport pathlib,json,hashlib\nr=pathlib.Path(\"/Users/ueli/Documents/semio\");t=pathlib.Path(\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY\");p=r/'🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/📤️publication.json';before=p.read_bytes();j=json.loads(before);assert '$defs' not in j and j.get('type')=='object';assert j['properties']['nativeWords'].get('const')==3;assert p.read_bytes()==before;p.unlink()\n(t/'📥️root-io-publication-actions.json').write_text(json.dumps(dict(actions=[dict(path=str(p.relative_to(r)),action='removed',beforeSha256=hashlib.sha256(before).hexdigest(),exclusive=False,scope='Exclusive whole original OptionString publication trial Schema only')],wholeFileExclusivityClaim=False),ensure_ascii=False,indent=2)+'\\n');print('Exclusive publication trial Schema removed; real Rust/plain rows retained')\n"
+  },
+  "commands": {
+    "red": "env NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-private-nx-cache' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-private-nx' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated' bun '/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js' run ticket-fixture-verification:tests --skip-nx-cache --outputStyle=static --args='🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/root-io-publication-red.log' 2>&1",
+    "green": "env NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-private-nx-cache' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-private-nx' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated' bun '/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js' run ticket-fixture-verification:tests --skip-nx-cache --outputStyle=static --args='🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/root-io-publication-green.log' 2>&1",
+    "current": "env NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-private-nx-cache' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-private-nx' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated' bun '/Users/ueli/Documents/semio/node_modules/nx/dist/bin/nx.js' run ticket-fixture-verification:tests --skip-nx-cache --outputStyle=static --args='🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/root-io-publication-current.log' 2>&1"
+  },
+  "results": [
+    {
+      "session": 96396,
+      "exitCode": 1,
+      "passed": 2,
+      "failed": 2,
+      "assertions": 49
+    },
+    {
+      "session": 12422,
+      "exitCode": 1,
+      "passed": 3,
+      "failed": 1,
+      "assertions": 61
+    },
+    {
+      "session": 40608,
+      "exitCode": 1,
+      "passed": 4,
+      "failed": 2,
+      "assertions": 88
+    }
+  ],
+  "qualification": "Root removed whole-trial publication schema and retained original grant/layout/native/plain laws. Shared reader gained Native laws; whole current renewal fails original target routing + SQL provider observed before Native correction. No all-pass/native claim."
+}

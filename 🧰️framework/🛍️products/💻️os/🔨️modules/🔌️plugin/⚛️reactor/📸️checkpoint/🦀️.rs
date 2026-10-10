@@ -91,6 +91,24 @@ pub async fn checkpoint<PA: crate::app::PluginApp>(runtime: &plugin_runtime::Plu
 /// fresh and owns at most one load.
 pub(crate) const RESTORE_DOCUMENT_LOAD_OPERATION: u64 = 1 << 62;
 
+/// 🫴️ Admits the original decoded actor text through the same decoder and caller wallet before its shared frame is born.
+pub(crate) fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>)->Result<crate::protocol::ActorId,semio_framework_value::ValueError>{
+    use semio_framework_value::{SharedUtf8,ValueError,ValueRefusalKind};
+    if source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"restored actor requires its original decoded text"))}
+    let demand=SharedUtf8::admission_demand();
+    let grant=original.remaining_grant();
+    if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"restored actor exceeds original item grant"))}
+    if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"restored actor exceeds original depth grant"))}
+    if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"restored actor exceeds original physical grant"))}
+    original.native().checkpoint()?;
+    original.native().charge(demand.capacity_bytes)?;
+    let text=source.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"restored actor lost original decoded text"))?;
+    match SharedUtf8::admit(text,grant){
+        Ok((text,progress))=>{original.record_progress(progress)?;Ok(crate::protocol::ActorId(text))}
+        Err((error,text))=>{*source=Some(text);Err(error)}
+    }
+}
+
 /// 📸️ A decoded checkpoint and the instances whose document load it admitted under [`RESTORE_DOCUMENT_LOAD_OPERATION`].
 pub struct RestoredCheckpoint {
     pub pack: CheckpointPack,

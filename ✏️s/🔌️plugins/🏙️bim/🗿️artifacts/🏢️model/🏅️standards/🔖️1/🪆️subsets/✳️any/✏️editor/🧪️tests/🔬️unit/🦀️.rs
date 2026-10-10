@@ -562,3 +562,10 @@ async fn every_refusal_code_the_commands_raise_has_an_english_and_a_german_notic
     assert_eq!(unique.len(), codes.len());
 }
 //#endregion 🔖️Faults
+
+semio_framework_plugin::history_edit_acceptance_law!(
+    "bim",
+    super::BimModelApp,
+    context::bim_app_manifest_for_tests,
+    "../../🏅️standards/🔖️1/🪆️subsets/✳️any"
+);

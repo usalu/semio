@@ -1,0 +1,22 @@
+{
+  "name": "🧪️test🔌️inference⚠️original-cause🦀️native",
+  "type": "node-terminal",
+  "request": "launch",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_TUI": "false",
+    "NX_DAEMON": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "CARGO_BUILD_JOBS": "2",
+    "CARGO_NET_OFFLINE": "true",
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"procedural:inference-cause:native\",\"maximumElapsedMilliseconds\":3600000}",
+    "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"/Users/ueli/Documents/semio\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/framework-plugin:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--verbose\",\"--\",\"long\",\"--offline\",\"--lib\",\"-E\",\"test(original_inference_gateway_failure_all_owned_causes) | test(original_inference_job_close_keeps_raw_checkpoint_system_receipts_and_drop_zero) | test(original_inference_job_admission_preserves_owned_input_and_checkpoint_before_birth) | test(original_inference_service_demand_keeps_same_child_and_actual_source) | test(original_inference_gateway_closes_execution_before_same_child)\",\"--no-fail-fast\",\"--status-level\",\"pass\",\"--final-status-level\",\"all\",\"--\",\"--nocapture\"],\"native\":{\"artifactDirectory\":\"/Users/ueli/Documents/semio/.\\ud83e\\uddecsemio/\\ud83e\\udd91\\ufe0frepo/\\u26a1\\ufe0fcache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":true}},\"selection\":[\"nx\",\"run\",\"@semio-tech/framework-plugin:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--verbose\",\"--\",\"long\",\"--offline\",\"--lib\",\"-E\",\"test(original_inference_gateway_failure_all_owned_causes) | test(original_inference_job_close_keeps_raw_checkpoint_system_receipts_and_drop_zero) | test(original_inference_job_admission_preserves_owned_input_and_checkpoint_before_birth) | test(original_inference_service_demand_keeps_same_child_and_actual_source) | test(original_inference_gateway_closes_execution_before_same_child)\",\"--no-fail-fast\",\"--status-level\",\"pass\",\"--final-status-level\",\"all\",\"--\",\"--nocapture\"]}"
+  },
+  "presentation": {
+    "group": "9_gates",
+    "order": 900.058094795
+  },
+  "command": "bun nx run @semio-tech/framework-plugin:test --skip-nx-cache --excludeTaskDependencies --verbose -- long --offline --lib -E \"test(original_inference_gateway_failure_all_owned_causes) | test(original_inference_job_close_keeps_raw_checkpoint_system_receipts_and_drop_zero) | test(original_inference_job_admission_preserves_owned_input_and_checkpoint_before_birth) | test(original_inference_service_demand_keeps_same_child_and_actual_source) | test(original_inference_gateway_closes_execution_before_same_child)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture"
+}

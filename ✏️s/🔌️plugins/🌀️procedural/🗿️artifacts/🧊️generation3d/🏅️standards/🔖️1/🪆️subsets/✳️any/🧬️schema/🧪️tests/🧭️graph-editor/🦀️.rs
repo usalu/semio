@@ -79,7 +79,7 @@ fn graph_editor_replay_reaches_the_host_snapshot_for_a_creation() {
     let _serial = crate::test_serial::lock();
     let base = normalised_example(PROCEDURAL_EXAMPLE_BOX_FILLET);
     let (leaves, replayed) = recorded_replay_reaches_the_host(&base, |editor| {
-        let id = editor.add_widget(r#"{"kind":"inputNote"}"#, 10.0, 20.0).expect("the note is created");
+        let id = editor.add_widget_json(r#"{"kind":"inputNote"}"#, 10.0, 20.0).expect("the note is created");
         editor.move_widget(&id, 30.0, 40.0).expect("the note is placed");
     });
     assert_eq!(kinds(&leaves), ["create-widget", "move-widget"]);
@@ -88,12 +88,23 @@ fn graph_editor_replay_reaches_the_host_snapshot_for_a_creation() {
 }
 
 /// 🗺️ Reorganising authors a `move-widget` per widget that moves, and the replayed layout is the host's.
-#[test]
-fn graph_editor_replay_reaches_the_host_snapshot_for_a_reorganisation() {
+#[semio_framework_async_macros::async_test]
+async fn graph_editor_replay_reaches_the_host_snapshot_for_a_reorganisation() {
+    use semio_framework_plugin::PluginApp;
     let _serial = crate::test_serial::lock();
-    let base = normalised_example(PROCEDURAL_EXAMPLE_BOX_FILLET);
-    let (leaves, _) = recorded_replay_reaches_the_host(&base, |editor| editor.reorganize(r#"{"orientation":"leftRight"}"#).expect("the graph is laid out"));
+    let mut app = crate::app_fixture::app().await;
+    let mut replayed = crate::app_fixture::snapshot(&app);
+    crate::app_fixture::dispatch(&mut app, crate::editor::generation3d::Generation3dCommand::Reorganize(crate::editor::generation3d::commands::reorganize::Reorganize {})).await;
+    let expected = crate::app_fixture::snapshot(&app);
+    let history = app.history_snapshot().await.expect("registered reorganisation history");
+    let leaves: Vec<Generation3dMutation> = history.upserts.iter().filter(|entry| entry.applied).flat_map(|entry| &entry.op_lines).map(|line| <Generation3dMutation as protocol::OpText>::parse_op(line).expect("recorded reorganisation leaf")).collect();
     assert!(kinds(&leaves).iter().all(|kind| *kind == "move-widget"));
+    for leaf in &leaves {
+        apply_generation3d_mutation(&mut replayed, leaf).expect("recorded reorganisation replays");
+    }
+    assert_eq!(replayed.host_snapshot.widgets, expected.host_snapshot.widgets, "the replayed widgets are the host's");
+    assert_eq!(replayed.host_snapshot.synapses, expected.host_snapshot.synapses, "the replayed wires are the host's");
+    assert_eq!(replayed.host_snapshot.layout, expected.host_snapshot.layout, "the replayed positions are the host's");
     retire(leaves);
 }
 

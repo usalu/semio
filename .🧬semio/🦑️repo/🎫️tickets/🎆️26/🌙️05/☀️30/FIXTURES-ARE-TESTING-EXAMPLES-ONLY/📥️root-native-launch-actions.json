@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "3cd6a2ec951fd0892fd3ad99d206c6bcb4fcbb983dce6a1981772048297ce682",
+      "afterSha256": "fc84b2921d8d34b363fc00f24ecd7f134c53e57959b57cb9cf84d3ca8c441e65",
+      "exclusive": false,
+      "scope": "Every actual Nx child launch receives genuine nativecapability resources and exact own selector before spawn; original policy/deadline and requested args retained"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

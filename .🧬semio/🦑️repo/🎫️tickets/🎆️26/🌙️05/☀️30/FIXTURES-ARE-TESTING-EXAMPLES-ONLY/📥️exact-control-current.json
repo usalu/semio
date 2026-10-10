@@ -1,0 +1,41 @@
+{
+  "observedOnly": true,
+  "execution": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+      "sha256": "938efefac5ecfb375b33aba8edc7567b3cfbd9aa78a1c38f21d7abcc039a2051",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts",
+      "sha256": "30b417bc3f305381bff64f8f2136f3cf18e564a78e4c5a7792f881537c181d67",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "sha256": "042aedb70e63f437a6fd4a1c3500961939246090fe6eceb75472ce7dcc863354",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+      "sha256": "565f63796d03fa9b75ac23ef93e1ccc087509f7a97d886e7484c55c076ea140d",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+      "sha256": "f45659e64e1830d3b50cb5bed5fb3a6d4f53b2ba7fae79a215706bcc21a36b31",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "26d2e9028342a36d002f0a7eefe5de08cf4df28f1f59c15cfd15e0bce476b1b7",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "873a91bb2546c01bb38c7dcd9799053c11cdb13c2799f433720f26f244fd25ad",
+      "ownership": false
+    }
+  ]
+}

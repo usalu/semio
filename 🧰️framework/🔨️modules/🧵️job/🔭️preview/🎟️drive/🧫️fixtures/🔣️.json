@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "metadataCopyBytes": 0,
+  "stepGrant": [
+    1,
+    17,
+    8192,
+    65536,
+    64
+  ],
+  "admissionGrant": [
+    1,
+    16384,
+    65536,
+    65536,
+    64
+  ],
+  "originalIdentity": [
+    907,
+    11
+  ],
+  "maximumTurns": 256,
+  "maximumWallMicros": 100000,
+  "phases": [
+    "Run",
+    "Read",
+    "FaultInput",
+    "Acknowledge",
+    "Resume",
+    "Close",
+    "Complete"
+  ],
+  "cases": [
+    {
+      "name": "yield then completion",
+      "events": [
+        "yield",
+        "complete"
+      ],
+      "verdict": "complete",
+      "outcomes": 2
+    },
+    {
+      "name": "preview checkpoint completion",
+      "events": [
+        "preview",
+        "checkpoint",
+        "complete"
+      ],
+      "verdict": "complete",
+      "outcomes": 3
+    },
+    {
+      "name": "explicit cancellation",
+      "events": [
+        "cancelled"
+      ],
+      "verdict": "cancelled",
+      "outcomes": 1
+    },
+    {
+      "name": "producer fault",
+      "events": [
+        "fault"
+      ],
+      "verdict": "fault",
+      "outcomes": 1
+    },
+    {
+      "name": "original turn limit",
+      "events": [
+        "yield"
+      ],
+      "maximumTurns": 1,
+      "verdict": "budget",
+      "outcomes": 1
+    }
+  ],
+  "faultSource": "original exact producer fault bytes"
+}

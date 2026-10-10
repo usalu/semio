@@ -1,0 +1,10 @@
+{
+  "exitCode": 0,
+  "passed": 4,
+  "failed": 0,
+  "skipped": 66,
+  "assertions": 1096,
+  "neutralExamples": 126,
+  "logSha256": "0470cdbf53c6fa827adfefda71506e2870c8c1f345d0924bbc7af4164942ea46",
+  "qualification": "Actual original private Nx structural-catalog-test: strict genuine scope/document Ajv plus exact scope/diagnostics/placement/render laws, all real input paths <=256 codepoints/UTF16; Source-only proof"
+}

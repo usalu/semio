@@ -256,6 +256,10 @@ struct CancelNode {
 mod cancellation_retirement;
 pub use cancellation_retirement::{CancelTokenRetirement,CancelTokenRetirementError,CancelTokenRetirementBlocked};
 
+#[cfg(test)]
+#[path="🛑️cancel/🎟️admission/🧪️tests/🦀️.rs"]
+mod original_cancel_admission_tests;
+
 static NEXT_CANCEL_WAITER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 /// 🛑️ Cooperative cancellation handle: an `Arc`-shared tri-state ([`CancelState`]) plus an optional
@@ -267,6 +271,27 @@ static NEXT_CANCEL_WAITER: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 pub struct CancelToken(Arc<CancelNode>);
 
 impl CancelToken {
+    /// 📏️ Quotes one original cancellation Arc and its inline empty waiter owner.
+    pub fn root_admission_demands()->semio_framework_value::RetirementDemand{
+        semio_framework_value::RetirementDemand{capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<CancelNode>(),depth:1,..Default::default()}
+    }
+
+    /// 🎟️ Creates one live root only after its original independent authority admits the actual birth.
+    pub fn admit_root(grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+        let bytes=semio_framework_value::shared_retirement_allocation_bytes::<CancelNode>();
+        if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(None);}
+        let original=Self(Arc::new(CancelNode{local:AtomicU8::new(0),parent:None,waiters:CancelWaiters::new()}));
+        Ok(Some((original,semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})))
+    }
+
+    /// 👶️ Creates one admitted child while retaining the exact borrowed original parent.
+    pub fn admit_child(&self,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+        let bytes=semio_framework_value::shared_retirement_allocation_bytes::<CancelNode>();
+        if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(None);}
+        let original=Self(Arc::new(CancelNode{local:AtomicU8::new(0),parent:Some(self.clone()),waiters:CancelWaiters::new()}));
+        Ok(Some((original,semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})))
+    }
+
     /// 🌱️ A fresh root token with no parent, starting `Live`.
     pub async fn root() -> CancelToken {
         CancelToken::root_now()

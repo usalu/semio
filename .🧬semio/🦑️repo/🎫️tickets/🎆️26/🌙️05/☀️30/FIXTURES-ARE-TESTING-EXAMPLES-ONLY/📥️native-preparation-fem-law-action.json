@@ -1,0 +1,8 @@
+{
+  "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\u25fb\ufe0f2d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0ffem2d-artifact-preparation-laws/\ud83e\udd80\ufe0f.rs",
+  "before": "d925236de2f58accc59247f17989b8edd81ac53b04cfb3a710306bcb2747747f",
+  "after": "a50dd0ee2f5b590860947c2c7ecf56caca010255b1ea286f9f0b4effddbc91d6",
+  "native": "unrun",
+  "policy": "immutable 1/65536/1048576/1048576/64",
+  "qualification": "pointer and exact receipt conservation; independent System allocation observation still required"
+}

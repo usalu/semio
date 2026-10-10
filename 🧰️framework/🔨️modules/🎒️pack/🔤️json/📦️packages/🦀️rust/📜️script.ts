@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { advanceScriptInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { admitJsonReadSourceOwner } from "../../📥️decode/🧪️testing/📥️invocation/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -10,9 +13,14 @@ import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/
 class ReadPolicyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-read-policy-source accepts no arguments");
-    const tests = [resolve(this.root, "../../📥️decode/🛂️policy/🧪️tests/🟦️.ts"), resolve(this.root, "../../📥️decode/🧾️receipt/🧪️tests/🟦️.ts"), resolve(this.root, "../../📥️decode/🧵️operation/🧪️tests/🟦️.ts")];
-    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
-    await runBudgetedTestCommand(process.execPath, ["test", ...tests], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
+    const owner=admitJsonReadSourceOwner(this.invocation, resolve(this.root, "../../..")),original=owner.invocation,budget=()=>owner.childBudgetMilliseconds();
+    const tests = [resolve(this.root, "../../📥️decode/🛂️policy/🧪️tests/🟦️.ts"), resolve(this.root, "../../📥️decode/🧾️receipt/🧪️tests/🟦️.ts"), resolve(this.root, "../../📥️decode/🧵️operation/🧪️tests/🟦️.ts"), resolve(this.root, "../../📥️decode/🛂️policy/📏️depth/🧪️tests/🟦️.ts"), resolve(this.root, "../../📥️decode/🧪️testing/📥️invocation/🧪️tests/🟦️.ts")];
+    await advanceScriptInvocation(original, "test-read-policy-source.typecheck", "running");
+    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], {cwd: this.repoRoot, budgetMs: budget(), signal:original.control.signal, throwOnFailure: true});
+    await advanceScriptInvocation(original, "test-read-policy-source.typecheck", "complete");
+    await advanceScriptInvocation(original, "test-read-policy-source.tests", "running");
+    await runBudgetedTestCommand(process.execPath, ["test", ...tests], {cwd: this.repoRoot, budgetMs: budget(), signal:original.control.signal, throwOnFailure: true});
+    await advanceScriptInvocation(original, "test-read-policy-source.tests", "complete");
   }
 }
 
@@ -40,9 +48,9 @@ class OwnershipScript extends BundleScript {
 class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const {rest} = resolveTestLevel(segments);
-    await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack-json"], cwd: this.root, extraArgs: rest}, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack-json"], cwd: this.root, extraArgs: rest, signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds()}, readCargoTestPolicyV1(process.env));
   }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test-read-policy-source", ReadPolicyScript).register("test-reference", ReferenceScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript);
-await runScriptMain(router, {defaultCommand: "test-ownership"});
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-ownership" }));

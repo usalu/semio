@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "callerCeilingMilliseconds", "operationMilliseconds", "maximumOutputBytes", "publicationMilliseconds", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "callerCeilingMilliseconds": { "const": 15000 },
+    "operationMilliseconds": { "const": 5000 },
+    "maximumOutputBytes": { "const": 1024 },
+    "publicationMilliseconds": { "const": 40 },
+    "cases": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "mode", "reason", "status", "stdout", "acquired", "published"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "mode": { "enum": ["pre-cancel", "live-cancel", "publication"] },
+          "reason": { "enum": ["cancelled", "exit"] },
+          "status": { "type": ["integer", "null"], "minimum": 0, "maximum": 0 },
+          "stdout": { "enum": ["", "ready"] },
+          "acquired": { "type": "boolean" },
+          "published": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

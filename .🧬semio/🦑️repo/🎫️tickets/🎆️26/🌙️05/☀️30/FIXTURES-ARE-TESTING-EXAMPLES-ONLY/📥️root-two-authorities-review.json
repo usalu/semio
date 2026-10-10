@@ -1,0 +1,35 @@
+{
+  "observedOnly": true,
+  "paths": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory/🧬️schema/🔣️.json",
+      "sha256": "1f82ff468d2c71d28c76450e206d877bf3a8da25a00a863adab020b29eacb030",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory/🧫️fixtures/🔣️.json",
+      "sha256": "e1e150d3706aa2d388bd0ef0c6e9761643ac5fceabc1c12e375187cf5e0a144d",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory/🧪️tests/🟦️.ts",
+      "sha256": "e7ed27564e5261eb149ae5cca3ff6f22e94e84bd7cb1c12fac935a4c28bd0a1c",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧬️schema/🔣️.json",
+      "sha256": "8349c6c838feba7c04f17143cc29b2f985c746bb1c5338aecffe689016228bbc",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧫️fixtures/🔣️.json",
+      "sha256": "985bca4e5e986a2627a6ea2f0140837d9601e921fd7f5908d3fffc5f58b80432",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️work/🧪️tests/🟦️.ts",
+      "sha256": "569dcded61b5368c0f01ca08340a04e490075d3f64933eb7b408b1c20c24dbeb",
+      "ownership": false
+    }
+  ]
+}

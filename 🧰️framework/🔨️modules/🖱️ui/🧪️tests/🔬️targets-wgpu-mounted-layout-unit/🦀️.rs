@@ -3,6 +3,16 @@ use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiButtonNode, UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
 use crate::wgpu::Label;
 
+fn observe_layout_step(job: &mut MountedLayoutJob, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::JobOutcomeKind> {
+    let outcome = semio_framework_job::InteractiveJob::step(job, cx).expect("original layout step").map(semio_framework_job::JobOutcomeBorrow::into_descriptor);
+    outcome.map(|mut descriptor| {
+        let kind = descriptor.kind();
+        semio_framework_job::InteractiveJob::borrow_outcome(job, &descriptor).expect("same original layout descriptor");
+        assert!(matches!(descriptor.acknowledge(ui_contract::UI_WORKER_RETIREMENT_POLICY), semio_framework_value::RetainedCloneStep::Complete(_)));
+        kind
+    })
+}
+
 fn clock_zero() -> Option<u64> {
     Some(0)
 }
@@ -147,7 +157,7 @@ fn mounted_layout_multi_page_unicode_uses_one_glyph_or_atlas_boundary_per_turn()
         let before = job.glyph_cursor;
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(27), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut preview_sequence,&mut actual_retained_progress);
-        let _ = semio_framework_job::InteractiveJob::step(&mut job, &mut cx);
+        let _ = observe_layout_step(&mut job, &mut cx);
         assert!(job.glyph_cursor - before <= 1);
         turns += 1;
     }
@@ -169,22 +179,34 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(29),
         generation: semio_framework_job::Generation(11),
-        cancel,
+        cancel: cancel.clone(),
         config: semio_framework_job::BatchDriveConfig { retained:ui_contract::UI_WORKER_RETIREMENT_POLICY, site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: clock_zero,
     };
-    let mut session = semio_framework_job::MountedWorkerJobSession::try_new(job, params).unwrap_or_else(|_| panic!("mounted worker session credit"));
+    let mut original_job = Some(job);
+    let mut original_params = Some(params);
+    let mut original_receipt = semio_framework_job::RetainedCloneProgress::default();
+    let mut original_preview = 0;
+    let mut original_context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(29), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, 1000, ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut original_preview, &mut original_receipt);
+    let (admitted, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::MountedWorkerJobSession::try_admit_owned(&mut original_job, &mut original_params, &mut original_context));
+    let (mut session, birth) = admitted.expect("original mounted worker authority").expect("mounted worker session credit");
+    assert_eq!((birth.retained_capacity_bytes, birth.released_bytes), (heap.requested_bytes, heap.released_bytes));
+    assert_eq!(original_context.retained_progress(), birth);
+    assert!(birth.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
+    assert!(original_job.is_none() && original_params.is_none());
+    drop(original_context);
+    eprintln!("[DEBUG] actual Mounted admission original operation29/generation11 cancellation witness and clock; receipt before exposure={birth:?} physical={heap:?}");
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let lane = semio_framework_async::Lane::UserVisible;
     for _ in 0..10_000 {
-        let _ = session.pump_one(&pool, lane);
+        let _ = session.pump_one(&pool, lane, ui_contract::UI_WORKER_RETIREMENT_POLICY);
         if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
             break;
         }
         std::thread::yield_now();
     }
     assert_eq!(lane, semio_framework_async::Lane::UserVisible);
-    assert!(session.checked_out_job_mut().is_some_and(|owner| owner.worker_thread_observed()));
+    assert!(session.checked_out_job().is_some_and(|owner| owner.worker_thread_observed()));
     session.begin_close();
     for _ in 0..LAYOUT_GLYPH_CREDITS + LAYOUT_NODE_CREDITS * 4 {
         let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
@@ -194,6 +216,12 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
         }
         assert!(ui_contract::ui_worker_retirement_permits(demand));
         let phase=session.close_phase();
+        if session.has_original_cancel_alias_witness(&cancel).expect("original mounted cancellation witness") {
+            let (returned, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(||session.return_original_cancel_alias_step(&cancel, grant).expect("original mounted alias return").expect("pending original mounted alias"));
+            assert!(returned.progress().fits(grant));
+            assert_eq!((returned.progress().retained_capacity_bytes, returned.progress().released_bytes), (heap.requested_bytes, heap.released_bytes));
+            continue;
+        }
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||session.close_step(grant));
         let progress=step.progress();
         if (progress.retained_capacity_bytes,progress.released_bytes)!=(heap.requested_bytes,heap.released_bytes){eprintln!("[DEBUG] actual mounted worker physical receipt phase={phase:?} demand={demand:?} progress={progress:?} originalHeap={heap:?}");}
@@ -220,7 +248,7 @@ fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained(
     let mut preview = 0;
     let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut before_cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(31), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, clock_zero, &mut preview,&mut actual_retained_progress);
-    assert!(matches!(semio_framework_job::InteractiveJob::step(&mut before, &mut before_cx), semio_framework_job::StepOutcome::Cancelled));
+    assert!(matches!(observe_layout_step(&mut before, &mut before_cx), Some(semio_framework_job::JobOutcomeKind::Cancelled)));
     assert_eq!(before.glyph_cursor, 0);
 
     let after_cancel = semio_framework_job::CancelToken::root_now();
@@ -230,7 +258,7 @@ fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained(
     let mut after_preview = 0;
     let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut after_cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(37), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), after_cancel, clock_zero, &mut after_preview,&mut actual_retained_progress);
-    assert!(matches!(semio_framework_job::InteractiveJob::step(&mut after, &mut after_cx), semio_framework_job::StepOutcome::Cancelled));
+    assert!(matches!(observe_layout_step(&mut after, &mut after_cx), Some(semio_framework_job::JobOutcomeKind::Cancelled)));
     assert_eq!(after.glyph_cursor, 1);
     assert_eq!(after.latest_glyph_preview().map(|preview| preview.generation), Some(11));
     after.begin_close();
@@ -247,7 +275,7 @@ fn mounted_layout_deadline_and_partial_close_each_advance_at_most_one_owner() {
     let mut preview = 0;
     let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut expired = semio_framework_job::StepContext::new(semio_framework_job::OperationId(41), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, 0,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, clock_zero, &mut preview,&mut actual_retained_progress);
-    assert!(matches!(semio_framework_job::InteractiveJob::step(&mut job, &mut expired), semio_framework_job::StepOutcome::Yield));
+    assert!(matches!(observe_layout_step(&mut job, &mut expired), Some(semio_framework_job::JobOutcomeKind::Yield)));
     assert_eq!(job.glyph_cursor, 0);
     let retained = job.glyphs.as_deref().expect("original layout owner").len() + job.nodes.as_deref().expect("original layout owner").len() + job.runs.as_deref().expect("original layout owner").len() + LAYOUT_ATLAS_PAGE_CREDITS;
     job.begin_close();
@@ -268,7 +296,7 @@ fn mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once
     while job.stage() != LayoutJobStage::PublishResults {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(43), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut preview_sequence,&mut actual_retained_progress);
-        let _ = semio_framework_job::InteractiveJob::step(&mut job, &mut cx);
+        let _ = observe_layout_step(&mut job, &mut cx);
     }
     let stale = (UiSurfaceToken::new(3, 8), 11, 13, 17, 19, 640.0, 480.0);
     assert!(matches!(job.publish_one(&mut tree, stale), LayoutJobStep::Fault("layout.stale")));
@@ -468,7 +496,7 @@ fn composite_intrinsic_and_layout(tree: &mut UiTree, root: NodeId, width: f32) -
     while job.stage() != LayoutJobStage::PublishResults {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(61), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut preview,&mut actual_retained_progress);
-        assert!(!matches!(semio_framework_job::InteractiveJob::step(&mut job, &mut cx), semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled));
+        assert!(!matches!(observe_layout_step(&mut job, &mut cx), Some(semio_framework_job::JobOutcomeKind::Fault | semio_framework_job::JobOutcomeKind::Cancelled)));
     }
     let intrinsic = job.root_intrinsic_height().expect("root intrinsic height");
     let identity = job.identity();
@@ -585,3 +613,61 @@ fn a_host_content_slot_without_a_declared_height_falls_back_and_clamps() {
     assert!(close(host_content_height("{\"hostContentHeight\": -5}", &theme), 0.0), "🧩️ a negative band is nothing, never an inversion");
 }
 //#endregion 🧩️HostContentLeaf
+
+#[test]
+fn mounted_layout_original_fault_descriptor_preserves_custody_and_paid_acknowledgement() {
+    use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🫴️receiving.json")).unwrap();
+    let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
+    assert_eq!(grant.maximum_items, law["grant"]["maximumItems"].as_u64().unwrap() as usize);
+    assert_eq!(grant.maximum_copy_bytes, law["grant"]["maximumCopyBytes"].as_u64().unwrap() as usize);
+    assert_eq!(grant.maximum_capacity_bytes, law["grant"]["maximumCapacityBytes"].as_u64().unwrap() as usize);
+    assert_eq!(grant.maximum_release_bytes, law["grant"]["maximumReleaseBytes"].as_u64().unwrap() as usize);
+    assert_eq!(grant.maximum_depth, law["grant"]["maximumDepth"].as_u64().unwrap() as usize);
+    let (tree, root) = text_tree("original".to_owned());
+    let mut job = text_job(&tree, root);
+    let cancel = semio_framework_job::CancelToken::root_now();
+    assert!(matches!(admit(&mut job, &tree, &cancel), LayoutJobStep::Yield { .. }));
+    job.fault = Some(MountedLayoutFault::Solver);
+    let original_results = job.results.as_deref().unwrap() as *const _;
+    let mut preview = 0;
+    for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
+        let mut progress = RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(law["operation"].as_u64().unwrap()), semio_framework_job::Generation(law["generation"].as_u64().unwrap()), semio_framework_job::StepBudget::new(1, u64::MAX, denied), cancel.clone(), clock_zero, &mut preview, &mut progress);
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| InteractiveJob::step(&mut job, &mut cx).map(|result| result.map(JobOutcomeBorrow::into_descriptor)));
+        assert!(result.unwrap().is_none());
+        assert_eq!(cx.retained_progress(), RetainedCloneProgress::default());
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(job.results.as_deref().unwrap() as *const _, original_results);
+    }
+    let mut accepted = false;
+    for _ in 0..law["maximumFaultTurns"].as_u64().unwrap() {
+        let mut progress = RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(law["operation"].as_u64().unwrap()), semio_framework_job::Generation(law["generation"].as_u64().unwrap()), semio_framework_job::StepBudget::new(1, u64::MAX, grant), cancel.clone(), clock_zero, &mut preview, &mut progress);
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| InteractiveJob::step(&mut job, &mut cx).map(|result| result.map(JobOutcomeBorrow::into_descriptor)));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        let Some(mut descriptor) = result.unwrap() else { continue };
+        assert_eq!(descriptor.kind(), JobOutcomeKind::Fault);
+        assert_eq!(descriptor.admission().progress(), cx.retained_progress());
+        let (pointer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| match job.borrow_outcome(&descriptor).unwrap() { JobOutcomeView::Fault { detail, .. } => detail as *const _, _ => panic!("original layout fault variant changed") });
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(pointer, job.fault_payload.published().unwrap() as *const _);
+        assert_eq!(descriptor.acknowledge(RetainedCloneGrant { maximum_items: 0, ..grant }).progress(), RetainedCloneProgress::default());
+        assert!(!descriptor.is_acknowledged());
+        assert_eq!(descriptor.acknowledge(grant).progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
+        accepted = true;
+        break;
+    }
+    assert!(accepted);
+    assert_eq!(serde_json::to_value(job.fault.unwrap().label()).unwrap(), serde_json::json!("layout.solver"));
+    job.begin_close();
+    for _ in 0..law["maximumCloseTurns"].as_u64().unwrap() {
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.close_step(grant));
+        let progress = step.progress();
+        assert!(progress.fits(grant));
+        assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (heap.requested_bytes, heap.released_bytes));
+        if job.terminal_is_empty() { break; }
+    }
+    assert!(job.terminal_is_empty());
+    eprintln!("[DEBUG] Mounted original fault custody samePointer=true deniedAdmission0heap=true nativeBorrow0heap=true separatePaidAck=true originalPolicy=true physicalClose=true");
+}

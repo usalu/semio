@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "grant",
+    "metadata",
+    "faultSourceBytes",
+    "sourceBytes",
+    "ranges",
+    "metadataBirth",
+    "metadataRelease",
+    "retirementMetadataCopy"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.job.original-staged-metadata.v1"
+    },
+    "grant": {
+      "const": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "metadata": {
+      "const": [
+        {
+          "stage": "source-bind",
+          "copy": 0
+        },
+        {
+          "stage": "source-presence",
+          "copy": 0
+        },
+        {
+          "stage": "birth-headers",
+          "copy": 0
+        },
+        {
+          "stage": "destination-cursor",
+          "copy": 0
+        },
+        {
+          "stage": "params-handoff",
+          "copy": 0
+        },
+        {
+          "stage": "source-removal",
+          "copy": 0
+        },
+        {
+          "stage": "destination-slots",
+          "copy": 0
+        },
+        {
+          "stage": "destination-page-publication",
+          "copy": 0
+        }
+      ]
+    },
+    "faultSourceBytes": {
+      "const": 26
+    },
+    "sourceBytes": {
+      "const": 8192
+    },
+    "ranges": {
+      "const": [
+        4096,
+        4096
+      ]
+    },
+    "metadataBirth": {
+      "const": 0
+    },
+    "metadataRelease": {
+      "const": 0
+    },
+    "retirementMetadataCopy": {
+      "const": 0
+    }
+  }
+}

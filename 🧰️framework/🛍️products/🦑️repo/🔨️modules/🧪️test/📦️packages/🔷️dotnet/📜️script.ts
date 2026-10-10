@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -28,4 +29,4 @@ class BuildScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("deps", DepsScript).register("build", BuildScript);
-if (import.meta.main) await runScriptMain(router);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

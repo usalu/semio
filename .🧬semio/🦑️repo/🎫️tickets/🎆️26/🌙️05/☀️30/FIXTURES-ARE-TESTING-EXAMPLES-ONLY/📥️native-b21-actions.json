@@ -1,0 +1,8 @@
+{
+  "red": "native-b21-red.log Nx1/757ms actualschema-present absenceguard",
+  "consumer": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧪️tests/🟦️.ts",
+  "before": "972cf7d1ad7a5932835653423fa31ede47b48f76e8b6bf37b363a5b25eff4b28",
+  "after": "7c821d9275122def7b0fc6f9dd71e291d0b9b41a5bcdd1a6423271e672d86c97",
+  "removedSchema": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧬️schema/🔣️.json",
+  "removedHash": "7fac3231b4372c1b19aa6eec6dda53045f9bbf82f88370c56417f616327076fb"
+}

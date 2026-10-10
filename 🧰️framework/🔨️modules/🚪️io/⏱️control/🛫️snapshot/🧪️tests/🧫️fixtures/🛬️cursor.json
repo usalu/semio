@@ -1,0 +1,34 @@
+{
+  "payload": "original 雪 λ🙂",
+  "grant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "nativeMaximumBytes": 1048576,
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8
+  ],
+  "deniedAxes": [
+    "maximumItems",
+    "maximumCapacityBytes",
+    "maximumDepth"
+  ],
+  "originalCustody": "callerUntilFrameAdmission",
+  "acceptedCustody": "originalRecipientBeforeReceiptValidation",
+  "publication": "sameOutputAfterIntermediateTerminal",
+  "positivePolicy": "independentOfFrontier",
+  "headerTransfers": {
+    "intermediateNativeWords": 3,
+    "publicationNativeWords": 3,
+    "originalPayloadCopies": 1
+  }
+}

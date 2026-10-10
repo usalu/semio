@@ -175,22 +175,22 @@ pub fn unwrap_binary(bytes: &[u8]) -> SemioResult<(SemioEnvelope, Vec<u8>)> {
 }
 
 /// 🚦️ Admits the exact declared envelope and borrows its binary body without a payload copy.
-pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->SemioResult<&'input[u8]>{
-    control.checkpoint().map_err(SemioError::DecodingControl)?;
-    if bytes.len()<BINARY_HEADER_PREFIX_LEN||bytes[..8]!=BINARY_MAGIC{return Err(SemioError::InvalidBinaryHeader("invalid binary envelope prefix".into()));}
+pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<&'input[u8],ValueError>{
+    control.checkpoint()?;
+    if bytes.len()<BINARY_HEADER_PREFIX_LEN||bytes[..8]!=BINARY_MAGIC{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"invalid binary semio header: invalid binary envelope prefix"));}
     let length=u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
-    let end=BINARY_HEADER_PREFIX_LEN.checked_add(length).filter(|end|*end<=bytes.len()).ok_or_else(||SemioError::InvalidBinaryHeader("truncated envelope token".into()))?;
-    if !matches_declared_token(&bytes[BINARY_HEADER_PREFIX_LEN..end],envelope_id,component,version,control)?{return Err(SemioError::InvalidBinaryHeader("declared envelope identity mismatch".into()));}
+    let end=BINARY_HEADER_PREFIX_LEN.checked_add(length).filter(|end|*end<=bytes.len()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"invalid binary semio header: truncated envelope token"))?;
+    if !matches_declared_token(&bytes[BINARY_HEADER_PREFIX_LEN..end],envelope_id,component,version,control)?{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"invalid binary semio header: declared envelope identity mismatch"));}
     Ok(&bytes[end..])
 }
 
-fn matches_declared_token(token:&[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->SemioResult<bool>{
+fn matches_declared_token(token:&[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<bool,ValueError>{
     let mut digits=[0u8;5];let mut start=digits.len();let mut remaining=version;
     loop{start-=1;digits[start]=b'0'+(remaining%10) as u8;remaining/=10;if remaining==0{break;}}
     let pieces=[envelope_id.as_bytes(),b".".as_slice(),component.as_str().as_bytes(),b" v".as_slice(),&digits[start..]];
-    let expected=pieces.iter().try_fold(0usize,|length,piece|length.checked_add(piece.len())).ok_or_else(||SemioError::InvalidBinaryHeader("declared envelope size overflow".into()))?;
+    let expected=pieces.iter().try_fold(0usize,|length,piece|length.checked_add(piece.len())).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"invalid binary semio header: declared envelope size overflow"))?;
     if token.len()!=expected{return Ok(false);}
-    control.scoped_stage(|control|{control.begin_stage(expected).map_err(SemioError::DecodingControl)?;let mut position=0;for piece in pieces{for chunk in piece.chunks(256){if token[position..position+chunk.len()]!=*chunk{return Ok(false);}position+=chunk.len();control.advance(chunk.len()).map_err(SemioError::DecodingControl)?;}}Ok(true)})
+    control.scoped_stage(|control|{control.begin_stage(expected)?;let mut position=0;for piece in pieces{for chunk in piece.chunks(256){if token[position..position+chunk.len()]!=*chunk{return Ok(false);}position+=chunk.len();control.advance(chunk.len())?;}}Ok(true)})
 }
 
 fn parse_binary_token(token: &str) -> SemioResult<SemioEnvelope> {
@@ -233,52 +233,66 @@ pub struct RetainedTextEnvelope {
     identity: Option<String>, body: Option<String>, component: Component,
     digits: [u8; 5], digit_start: usize, segment: usize, offset: usize,
     position: usize, output: Option<String>, admitted: bool, complete: bool,
+    grant: semio_framework_value::RetainedCloneGrant,
+    progress: semio_framework_value::RetainedCloneProgress,
     retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<RetainedTextEnvelopeSources>>,
 }
 impl RetainedTextEnvelope {
-    /// 🌱️ Moves the original identity and body without creating a source mirror.
-    pub fn new(identity: String, component: Component, version: u16, body: String) -> Self {
+    /// 🌱️ Keeps original fields beside independently supplied physical authority.
+    pub fn new(identity: String, component: Component, version: u16, body: String, grant: semio_framework_value::RetainedCloneGrant) -> Self {
         let mut digits=[0u8;5]; let mut digit_start=digits.len(); let mut remaining=version;
         loop { digit_start-=1; digits[digit_start]=b'0'+(remaining%10) as u8; remaining/=10; if remaining==0 { break; } }
-        Self { identity:Some(identity),body:Some(body),component,digits,digit_start,segment:0,offset:0,position:0,output:None,admitted:false,complete:false,retirement:None }
+        Self { identity:Some(identity),body:Some(body),component,digits,digit_start,segment:0,offset:0,position:0,output:None,admitted:false,complete:false,grant,progress:Default::default(),retirement:None }
     }
-    /// 🔎️ Borrows the exact original source while it remains owned by this operation.
+    /// 🔎️ Borrows the exact source while the operation owns its backing.
     pub fn source_body(&self) -> Option<&str> { self.body.as_deref() }
     /// 📍️ Returns the cumulative physical byte position.
     pub fn position(&self) -> usize { self.position }
-    /// ⏱️ Writes original scalars and admits independent source copy, capacity, release and depth.
-    pub fn step(&mut self, maximum_units: usize, maximum_copy_bytes: usize, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Option<String>,ValueError> {
-        if maximum_units==0 || maximum_copy_bytes==0 || self.complete { return Ok(None); }
-        let mut remaining_copy_bytes=maximum_copy_bytes;
-        for _ in 0..maximum_units {
+    /// 🧾️ Returns every accepted actual producer receipt without resetting authority.
+    pub fn progress(&self)->semio_framework_value::RetainedCloneProgress{self.progress}
+    /// 🎟️ Keeps all unspent currencies from the independently declared caller grant.
+    pub fn remaining_grant(&self)->semio_framework_value::RetainedCloneGrant{semio_framework_value::RetainedCloneGrant{maximum_items:self.grant.maximum_items-self.progress.copied_items,maximum_copy_bytes:self.grant.maximum_copy_bytes-self.progress.copied_bytes,maximum_capacity_bytes:self.grant.maximum_capacity_bytes-self.progress.retained_capacity_bytes,maximum_release_bytes:self.grant.maximum_release_bytes-self.progress.released_bytes,maximum_depth:self.grant.maximum_depth}}
+    fn admit(&self,items:usize,demand:semio_framework_value::RetirementDemand)->Result<(),ValueError>{let grant=self.remaining_grant();if items>grant.maximum_items{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"text envelope exhausted original work"))}if demand.depth>grant.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"text envelope exceeds original depth"))}if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"text envelope exceeds original physical grant"))}Ok(())}
+    fn record(&mut self,progress:semio_framework_value::RetainedCloneProgress)->Result<(),ValueError>{if !progress.fits(self.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"text envelope performed an ungranted receipt").with_retained_progress(progress))}self.progress=self.progress.checked_add(progress)?;Ok(())}
+    /// ⏱️ Uses body quanta and atomic headers only within the same original grant.
+    pub fn step(&mut self,maximum_units:usize,maximum_copy_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Option<String>,ValueError>{let before=self.progress;let result=self.advance(maximum_units,maximum_copy_bytes,control);let actual=semio_framework_value::RetainedCloneProgress{copied_items:self.progress.copied_items-before.copied_items,copied_bytes:self.progress.copied_bytes-before.copied_bytes,retained_capacity_bytes:self.progress.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:self.progress.released_bytes-before.released_bytes};result.map_err(|error|error.with_retained_progress(actual))}
+    fn advance(&mut self,maximum_units:usize,maximum_copy_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Option<String>,ValueError>{
+        use semio_framework_value::{RetirementDemand,RetainedCloneProgress};
+        if maximum_units==0||maximum_copy_bytes==0||self.complete{return Ok(None)}
+        for _ in 0..maximum_units{
             control.checkpoint()?;
-            if !self.admitted {
-                let identity=self.identity.as_deref().expect("declared identity is retained");
-                if !identity.contains('.') || !self.component.is_text() { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid declared text envelope identity")); }
-                let length=6usize.checked_add(identity.len()).and_then(|length|length.checked_add(self.component.as_str().len()+4+self.digits.len()-self.digit_start)).and_then(|length|length.checked_add(self.body.as_ref().expect("declared body is retained").len())).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native text envelope length overflow"))?;
+            if !self.admitted{
+                let identity=self.identity.as_deref().expect("declared identity retained");
+                if !identity.contains('.')||!self.component.is_text(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"invalid declared text envelope identity"))}
+                let length=6usize.checked_add(identity.len()).and_then(|length|length.checked_add(self.component.as_str().len()+4+self.digits.len()-self.digit_start)).and_then(|length|length.checked_add(self.body.as_ref().expect("declared body retained").len())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native text envelope length overflow"))?;
+                self.admit(1,RetirementDemand{capacity_bytes:length,depth:1,..Default::default()})?;
                 control.charge(length)?;
-                let mut output=String::new(); output.try_reserve_exact(length).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"native text envelope allocation failed"))?;
-                self.output=Some(output); self.admitted=true;
-            } else if let Some(retirement)=self.retirement.as_mut() {
-                if remaining_copy_bytes==0 { return Ok(None); }
-                let copy=retirement.next_copy_byte_demand()?;let release=retirement.next_release_byte_demand()?;let capacity=retirement.next_capacity_byte_demand(if copy==0{release}else{remaining_copy_bytes})?;let depth=retirement.next_depth_demand()?;
-                control.charge(capacity)?;
-                let step=retirement.step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:remaining_copy_bytes,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth})?;
-                let progress=match step{semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)=>progress};remaining_copy_bytes-=progress.copied_bytes;
-                if retirement.terminal_is_empty() {
-                    self.retirement.take(); self.complete=true; control.step()?; return Ok(self.output.take());
+                let mut output=String::new();output.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native text envelope allocation failed"))?;
+                let capacity=output.capacity();self.output=Some(output);self.admitted=true;
+                self.record(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;
+            }else if self.retirement.is_some(){
+                if self.retirement.as_ref().unwrap().terminal_is_empty(){
+                    self.admit(1,RetirementDemand{copy_bytes:std::mem::size_of::<Option<String>>(),depth:1,..Default::default()})?;
+                    control.step()?;
+                    self.retirement.take();let output=self.output.take();self.complete=true;
+                    self.record(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<String>>(),..Default::default()})?;
+                    return Ok(output)
                 }
-            } else if self.segment==8 {
-                self.retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(RetainedTextEnvelopeSources{identity:self.identity.take(),body:self.body.take()}).map_err(|(error,sources)|{self.identity=sources.identity;self.body=sources.body;error})?);
-            } else {
-                let text=match self.segment {
-                    0=>"semio ",1=>self.identity.as_deref().expect("identity retained"),2=>".",3=>self.component.as_str(),4=>" v",
-                    5=>std::str::from_utf8(&self.digits[self.digit_start..]).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"native version is not ASCII"))?,
-                    6=>"\n",7=>self.body.as_deref().expect("body retained"),_=>unreachable!(),
-                };
-                if let Some(character)=text[self.offset..].chars().next() {
-                    self.output.as_mut().expect("output admitted").push(character); self.offset+=character.len_utf8(); self.position+=character.len_utf8();
-                } else { self.segment+=1; self.offset=0; }
+                let original=self.remaining_grant();let owner=self.retirement.as_ref().unwrap();let copy=owner.next_copy_byte_demand()?;let quantum=maximum_copy_bytes.max(copy).min(original.maximum_copy_bytes);
+                let demand=RetirementDemand{copy_bytes:copy,capacity_bytes:owner.next_capacity_byte_demand(quantum)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?};
+                self.admit(1,demand)?;control.charge(demand.capacity_bytes)?;
+                let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quantum,..original};
+                match self.retirement.as_mut().unwrap().step(grant){Ok(step)=>self.record(step.progress())?,Err(error)=>{self.record(error.retained_progress())?;return Err(error)}}
+            }else if self.segment==8{
+                let copy=std::mem::size_of::<RetainedTextEnvelopeSources>();self.admit(1,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()})?;
+                let sources=RetainedTextEnvelopeSources{identity:self.identity.take(),body:self.body.take()};
+                let owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(sources).map_err(|(error,sources)|{self.identity=sources.identity;self.body=sources.body;error})?;self.retirement=Some(owner);
+                self.record(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
+            }else{
+                let text=match self.segment{0=>"semio ",1=>self.identity.as_deref().expect("identity retained"),2=>".",3=>self.component.as_str(),4=>" v",5=>std::str::from_utf8(&self.digits[self.digit_start..]).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"native version is not ASCII"))?,6=>"\n",7=>self.body.as_deref().expect("body retained"),_=>unreachable!()};
+                let character=text[self.offset..].chars().next();let bytes=character.map_or(0,char::len_utf8);self.admit(1,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()})?;
+                if let Some(character)=character{self.output.as_mut().expect("output admitted").push(character);self.offset+=bytes;self.position+=bytes;}else{self.segment+=1;self.offset=0;}
+                self.record(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
             }
             control.step()?;
         }
@@ -309,7 +323,7 @@ pub fn split_text_preamble_controlled<'input>(text:&'input str,envelope_id:&str,
     if !bytes.starts_with(b"semio "){return Err(SemioError::InvalidPreamble("missing canonical envelope prefix".into()));}
     let digits=if version>=10000{5}else if version>=1000{4}else if version>=100{3}else if version>=10{2}else{1};
     let end=token_start.checked_add(envelope_id.len()).and_then(|n|n.checked_add(component.as_str().len()+3+digits)).filter(|end|*end<=bytes.len()).ok_or_else(||SemioError::InvalidPreamble("truncated envelope token".into()))?;
-    if !matches_declared_token(&bytes[token_start..end],envelope_id,component,version,control)?{return Err(SemioError::InvalidPreamble("declared envelope identity mismatch".into()));}
+    if !matches_declared_token(&bytes[token_start..end],envelope_id,component,version,control).map_err(SemioError::DecodingControl)?{return Err(SemioError::InvalidPreamble("declared envelope identity mismatch".into()));}
     let body=if end==bytes.len(){end}else if bytes[end]==b'\n'{end+1}else if bytes.get(end..end+2)==Some(b"\r\n"){end+2}else{return Err(SemioError::InvalidPreamble("canonical preamble requires a line boundary".into()));};
     Ok(&text[body..])
 }

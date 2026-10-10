@@ -1,0 +1,77 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧬️schema/🔣️.json",
+    "sha256": "b39256337ae2724ff54dc721d55e20ae83573d9a96d7bfea2717b71a1c6984ae",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧫️fixtures/🔣️.json",
+    "sha256": "30be2dfdc2e4a5e77565a8e9f8492eea1151efa90939535366b463c59ceaefa8",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧫️fixtures/⚠️frontier.json",
+    "sha256": "ff3f38d58599a82838f6e0183f1333411d9bc4d02283fce63271c8715f1059ee",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🟦️.ts",
+    "sha256": "68ebaaa84eba8d3eed2a26876e4374d3c8de6c6e7a32bb175d8f3f56401ec15c",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧬️schema/🔣️.json",
+    "sha256": "7850ce3ccc727cc1eb0fe0e37b11257c9e4ad8516d005227bfb65b047159fa34",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧫️fixtures/🔣️.json",
+    "sha256": "164b7eadbd3f7d8e5c23602a67c1526c79fd286f9d14fc411b7b8a9aef671dff",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧪️tests/🟦️.ts",
+    "sha256": "31a4bc42ba701dee5666d724d3d867bce90f4754e0281fa0ae45a9eb94da223c",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🧺️set.json",
+    "sha256": "add4403863423fee51b13f9e2d9128ee1b66f9190df7ab52926da044f09eead9",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🔣️.json",
+    "sha256": "2d71c8de9a35d1f93ee4b3e72134d8e2cef202893e382421f835d545b8436b50",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🧺️set.json",
+    "sha256": "aa7262e9eb0cc588ec76d3c2c065c2eba9ed66e7ec1be1e36c24a1cc298c7e6a",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧺️set.ts",
+    "sha256": "b0717de89dd42b2506561308322e449b0c79bbedd88e28900be5600db970cd6b",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧬️schema/🔣️actor.json",
+    "sha256": "cdad48030b1b2d466e10f4bc1996411cdee53bad28e296ef4b6fe505f289ddbe",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧫️fixtures/🔣️actor.json",
+    "sha256": "e88ed0ee82550b605ddf6db9419d25ad2f64364918b17de969129da638d28e33",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧫️fixtures/🔣️.json",
+    "sha256": "0863e4bcb14b069a1e18800217a3b3f8b30abf42ba4b897c567c92316957830d",
+    "observedOnly": true
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🟦️.ts",
+    "sha256": "db5d1efdf1f6ebe58f333f6cf9c7996b0edaa2ff4280f6d8660afb8049da87df",
+    "observedOnly": true
+  }
+]

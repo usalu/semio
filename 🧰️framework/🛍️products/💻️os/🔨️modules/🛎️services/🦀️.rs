@@ -44,7 +44,7 @@ use semio_framework_async::{
     WorkerPoolConfig, WorkerSubmitErrorKind,
 };
 use semio_framework_job::{
-    default_now_us, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US, MAINTENANCE_LANE_FUEL,
+    default_now_us, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US, MAINTENANCE_LANE_FUEL,
     MAINTENANCE_LANE_WALL_US, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_US,
 };
 
@@ -657,17 +657,49 @@ pub enum ComputeError {
     /// 💥️ The result channel closed before a value arrived (the worker thread panicked, or the
     /// runtime is shutting down).
     WorkerLost,
+    /// 🛑️ Cancellation refused admission before an original semantic result could be borrowed.
+    Cancelled,
 }
 
 impl std::fmt::Display for ComputeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            ComputeError::Cancelled => write!(f,"compute cancelled before admission"),
             ComputeError::DeadlineExceeded => write!(f, "compute deadline exceeded"),
             ComputeError::WorkerLost => write!(f, "compute worker lost before returning a result"),
         }
     }
 }
 impl std::error::Error for ComputeError {}
+
+/// 🧳️ Keeps the original mounted owner available for borrowed receiving and separately paid retirement.
+/// 🎟️ Borrows the one original issued wallet that receives every physical compute transition.
+pub trait ComputeRetainedRecipient {
+    fn remaining_grant(&self)->Result<semio_framework_job::RetainedCloneGrant,semio_framework_value::ValueError>;
+    fn record_progress(&mut self,progress:semio_framework_job::RetainedCloneProgress)->Result<(),semio_framework_value::ValueError>;
+}
+
+pub struct ComputeJobCompletion<J:InteractiveJob+'static>{operation:OperationId,generation:JobGeneration,session:semio_framework_job::MountedWorkerJobSession<J>,result:Result<(),ComputeError>,permit:Option<OwnedPermit>,fault:std::mem::ManuallyDrop<Option<semio_framework_value::ValueError>>}
+impl<J:InteractiveJob+'static> ComputeJobCompletion<J>{
+    pub fn identity(&self)->(OperationId,JobGeneration){(self.operation,self.generation)}
+    pub fn result(&self)->&Result<(),ComputeError>{&self.result}
+    pub fn session(&self)->&semio_framework_job::MountedWorkerJobSession<J>{&self.session}
+    pub fn fault(&self)->Option<&semio_framework_value::ValueError>{self.fault.as_ref()}
+    pub fn terminal_is_empty(&self)->bool{self.session.terminal_is_empty()&&self.permit.is_none()&&self.fault.is_none()}
+    /// 🪢️ Retires one original descriptor, alias or session frontier under this caller's full grant.
+    pub fn close_step(&mut self,witness:&CancelToken,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::WorkerJobCloseStep,semio_framework_value::ValueError>{
+        use semio_framework_job::{WorkerJobCloseStep,WorkerJobDemandError};
+        if self.terminal_is_empty(){return Ok(WorkerJobCloseStep::Complete{progress:Default::default()})}
+        if let Some(fault)=self.fault.as_ref(){let copied_bytes=std::mem::size_of::<Option<semio_framework_value::ValueError>>();let released_bytes=match &fault.message{std::borrow::Cow::Owned(message)=>message.capacity(),std::borrow::Cow::Borrowed(_)=>0};if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_release_bytes<released_bytes{return Ok(WorkerJobCloseStep::Blocked)}drop(self.fault.take());return Ok(WorkerJobCloseStep::Pending{progress:semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,released_bytes,..Default::default()}})}
+        if self.session.terminal_is_empty(){let copied_bytes=std::mem::size_of::<Option<OwnedPermit>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes{return Ok(WorkerJobCloseStep::Blocked)}drop(self.permit.take());return Ok(WorkerJobCloseStep::Complete{progress:semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}})}
+        if self.session.checked_out_outcome_descriptor().is_some(){let step=self.session.acknowledge_checked_out_outcome(grant);return Ok(WorkerJobCloseStep::Pending{progress:step.progress()})}
+        self.session.begin_close();
+        match self.session.return_original_cancel_alias_step(witness,grant){Ok(Some(step))=>return Ok(WorkerJobCloseStep::Pending{progress:step.progress()}),Err(WorkerJobDemandError::Refused(error))=>return Err(error),Err(WorkerJobDemandError::Contention(_))=>return Ok(WorkerJobCloseStep::Blocked),Ok(None)=>{}}
+        let step=self.session.close_step(grant);
+        Ok(step)
+    }
+}
+impl<J:InteractiveJob+'static> Drop for ComputeJobCompletion<J>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"compute completion abandoned original mounted custody");}}
 
 /// 🧮️ Bounds every interactive compute job and blocking platform-I/O call admitted to
 /// `capacity`, independent of
@@ -691,66 +723,61 @@ impl ComputePool {
         ComputePool { admission: Arc::new(Semaphore::new(capacity.max(1) as usize)), pool }
     }
 
+    /// 🎟️ Prepares the original invocation parameters only after its supplied control funds the alias and metadata.
+    pub fn prepare_job_params(ctx:&OperationContext,retained:semio_framework_job::RetainedCloneGrant,now_us:fn()->Option<u64>,params:&mut Option<semio_framework_job::BatchJobParams>,control:&mut impl semio_framework_job::WorkerJobAdmissionControl,retained_recipient: &mut impl ComputeRetainedRecipient)->Result<bool,semio_framework_value::ValueError>{
+        if control.admission_identity()!=(OperationId(ctx.trace.0),JobGeneration(u64::from(ctx.generation))){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"compute parameter preparation requires original invocation identity"))}
+        if params.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"compute preparation retains its already prepared original parameters"))}
+        let grant=control.admission_grant()?;let remaining=retained_recipient.remaining_grant()?;let copied_bytes=std::mem::size_of::<Option<semio_framework_job::BatchJobParams>>();
+        if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0||remaining.maximum_items==0||remaining.maximum_copy_bytes<copied_bytes||remaining.maximum_depth==0||ctx.cancel.is_cancelled_now()||!control.admission_is_open(){return Ok(false)}
+        let(stage,fuel,wall_us)=compute_job_budget(Lane::from_context_lane(ctx.lane));
+        *params=Some(semio_framework_job::BatchJobParams{operation:OperationId(ctx.trace.0),generation:JobGeneration(u64::from(ctx.generation)),cancel:ctx.cancel.clone(),config:semio_framework_job::BatchDriveConfig{retained,site:"os-services.compute-job",stage,fuel_per_step:fuel,step_budget_us:wall_us},now_us});
+        let progress=semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()};let received=control.receive_admission(progress);retained_recipient.record_progress(progress)?;received?;Ok(true)
+    }
+
     /// 🧮️ Drives `job` to a terminal outcome on [`global_worker_pool`] through one retained mounted
     /// session. Every worker closure pumps at most one bounded session transition; resumable outcomes
     /// enqueue a fresh closure on the context lane. The admission permit spans the whole job. Cancellation is checked
     /// before admission and inside every step, while an absolute deadline cancels the job and returns
     /// [`ComputeError::DeadlineExceeded`].
-    pub async fn run_job<J: InteractiveJob + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, retained: semio_framework_job::RetainedCloneGrant, job: J) -> Result<StepOutcome, ComputeError> {
+    pub async fn run_job<J: InteractiveJob + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: &OperationContext, retained: semio_framework_job::RetainedCloneGrant, job: &mut Option<J>, params: &mut Option<semio_framework_job::BatchJobParams>, control: &mut impl semio_framework_job::WorkerJobAdmissionControl, retained_recipient: &mut impl ComputeRetainedRecipient, completion: &mut Option<ComputeJobCompletion<J>>, recipient: impl for<'a> FnOnce(semio_framework_job::JobOutcomeView<'a>)) -> Result<bool, semio_framework_value::ValueError> {
         let lane = Lane::from_context_lane(ctx.lane);
-        let (stage, fuel, wall_us) = compute_job_budget(lane);
-        let params = semio_framework_job::BatchJobParams {
-            operation: OperationId(ctx.trace.0),
-            generation: JobGeneration(u64::from(ctx.generation)),
-            cancel: ctx.cancel.clone(),
-            config: semio_framework_job::BatchDriveConfig { retained, site: "os-services.compute-job", stage, fuel_per_step: fuel, step_budget_us: wall_us },
-            now_us: default_now_us,
-        };
-        let session = match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
-            Ok(session) => session,
-            Err(mut rejected) => {
-                rejected.begin_close();
-                schedule_rejected_compute_job(&self.pool, lane, rejected, retained, Default::default());
-                return Err(ComputeError::WorkerLost);
-            }
-        };
-        let permit = match self.acquire_job_permit(runtime, &ctx).await {
-            Ok(Some(permit)) => Some(permit),
-            result => {
-                let error = match result { Ok(None) => Ok(StepOutcome::Cancelled), Err(error) => Err(error), Ok(Some(_)) => unreachable!() };
-                let mut session = session;session.begin_close();
-                let state = Arc::new(Mutex::new(ComputeJobDriveState { session, lane, retained, execution_progress: Default::default(), close_progress: Default::default(), retained_outcome: semio_framework_job::JobOutcomeSlot::empty(), sender: None, closing: true, _permit: None }));
-                schedule_compute_job_cleanup(&self.pool, state);
-                return error;
-            }
-        };
-        let (result_tx, result_rx) = oneshot::channel::<Result<StepOutcome, ComputeError>>();
-        let state = Arc::new(Mutex::new(ComputeJobDriveState { session, lane, retained, execution_progress: Default::default(), close_progress: Default::default(), retained_outcome: semio_framework_job::JobOutcomeSlot::empty(), sender: Some(result_tx), closing: false, _permit: permit }));
-        schedule_compute_job_step(&self.pool, state.clone());
-        let result=match ctx.deadline_ms {
-            Some(deadline_ms) => match select2(result_rx, runtime.sleep_until(deadline_ms)).await {
-                Either::Left(result) => result.map_err(|_| ComputeError::WorkerLost)?,
-                Either::Right(()) => {
-                    ctx.cancel.cancel().await;
-                    Err(ComputeError::DeadlineExceeded)
-                }
-            },
-            None => result_rx.await.map_err(|_| ComputeError::WorkerLost)?,
-        };
-        if result.is_ok(){
-            if let Err(error)=return_compute_cancel_alias(runtime,&ctx,&state).await{
-                if let Ok(outcome)=result{state.lock().expect("ComputeJobDriveState mutex poisoned").retained_outcome.retain(outcome).expect("empty original terminal handback slot");}
-                return Err(error);
-            }
+        if control.admission_identity()!=(OperationId(ctx.trace.0),JobGeneration(u64::from(ctx.generation))){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"compute admission requires its original invocation identity"))}
+        if let Some(owner)=completion.as_ref(){if owner.identity()!=control.admission_identity(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"compute driver received another original completion owner"))}}
+        if completion.is_none(){
+            let grant=control.admission_grant()?;let remaining=retained_recipient.remaining_grant()?;let header=std::mem::size_of::<Option<ComputeJobCompletion<J>>>();let child=semio_framework_job::WorkerJobSession::<J>::owned_admission_demand()?;let copied_bytes=child.copy_bytes.checked_add(header).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original compute admission layout overflow"))?;
+            if grant.maximum_items<2||grant.maximum_copy_bytes<copied_bytes||grant.maximum_capacity_bytes<child.capacity_bytes||grant.maximum_depth<child.depth||remaining.maximum_items<2||remaining.maximum_copy_bytes<copied_bytes||remaining.maximum_capacity_bytes<child.capacity_bytes||remaining.maximum_depth<child.depth||!control.admission_is_open(){return Ok(false)}
+            let Some((session,admission))=semio_framework_job::MountedWorkerJobSession::try_admit_owned(job, params, control)?else{return Ok(false)};
+            *completion=Some(ComputeJobCompletion{operation:OperationId(ctx.trace.0),generation:JobGeneration(u64::from(ctx.generation)),session,result:Ok(()),permit:None,fault:std::mem::ManuallyDrop::new(None)});
+            let header_progress=semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes:header,..Default::default()};if let Err(error)=retained_recipient.record_progress(admission.checked_add(header_progress)?){let owner=completion.as_mut().unwrap();*owner.fault=Some(error);owner.result=Err(ComputeError::WorkerLost);return Ok(true)}if let Err(error)=control.receive_admission(header_progress){let owner=completion.as_mut().unwrap();*owner.fault=Some(error);owner.result=Err(ComputeError::WorkerLost);return Ok(true)}
         }
-        result
-    }
-
-    /// ♻️ Retains the exact returned outcome through bounded close turns under caller authority.
-    pub fn retain_outcome_for_close(&self, outcome: StepOutcome, grant: semio_framework_job::RetainedCloneGrant) {
-        let mut original=semio_framework_job::JobOutcomeSlot::empty();
-        original.retain(outcome).expect("empty returned compute outcome slot");
-        schedule_compute_outcome_close(&self.pool,ComputeOutcomeCloseOwner{original,grant,progress:Default::default()});
+        let completion=completion.as_mut().expect("original caller retains admitted compute owner");
+        if completion.result.is_err()||completion.fault.is_some(){return Ok(true)}
+        if completion.session.checked_out_outcome().ok().flatten().is_some_and(|view|view.is_terminal()){return Ok(true)}
+        if completion.permit.is_none(){match self.acquire_job_permit(runtime,ctx).await{Ok(Some(permit))=>completion.permit=Some(permit),Ok(None)=>{completion.result=Err(ComputeError::Cancelled);return Ok(true)},Err(error)=>{completion.result=Err(error);return Ok(true)}}}
+        let mut recipient=Some(recipient);
+        loop{
+            let now=runtime.now_ms().await;
+            if ctx.deadline_ms.is_some_and(|deadline|now>=deadline){ctx.cancel.cancel().await;completion.result=Err(ComputeError::DeadlineExceeded);return Ok(true)}
+            if ctx.cancel.is_cancelled_now(){completion.result=Err(ComputeError::Cancelled);return Ok(true)}
+            let retained=retained_recipient.remaining_grant()?;
+            match completion.session.pump_one(&self.pool, lane, retained){
+                Ok(semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)=>{
+                    let Some((_issued,progress))=completion.session.take_checked_out_retained_step_receipt()else{completion.result=Err(ComputeError::WorkerLost);return Ok(true)};
+                    if let Err(error)=retained_recipient.record_progress(progress){*completion.fault=Some(error);completion.result=Err(ComputeError::WorkerLost);return Ok(true)}
+                    match completion.session.checked_out_outcome(){
+                        Ok(Some(view))if view.is_terminal()=>{recipient.take().expect("original compute terminal recipient")(view);return Ok(true)},
+                        Ok(Some(_))=>{},
+                        _=>{completion.result=Err(ComputeError::WorkerLost);return Ok(true)},
+                    }
+                    while completion.session.checked_out_outcome_descriptor().is_some(){let retained=retained_recipient.remaining_grant()?;let step=completion.session.acknowledge_checked_out_outcome(retained);if let Err(error)=retained_recipient.record_progress(step.progress()){*completion.fault=Some(error);completion.result=Err(ComputeError::WorkerLost);return Ok(true)}if step.progress()==Default::default(){completion.result=Err(ComputeError::WorkerLost);return Ok(true)}}
+                    if completion.session.resume().is_err(){completion.result=Err(ComputeError::WorkerLost);return Ok(true)}
+                },
+                Ok(_)=>{},
+                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(WorkerSubmitErrorKind::Contended|WorkerSubmitErrorKind::Saturated)))=>{},
+                Err(_)=>{completion.result=Err(ComputeError::WorkerLost);return Ok(true)},
+            }
+            runtime.sleep_until(ctx.deadline_ms.map_or(now.saturating_add(1),|deadline|deadline.min(now.saturating_add(1)))).await;
+        }
     }
 
     /// 🌐️ Runs a blocking platform-I/O boundary on the pool's dedicated fair I/O lane.
@@ -803,18 +830,6 @@ impl ComputePool {
     }
 }
 
-struct ComputeJobDriveState<J: InteractiveJob + 'static> {
-    session: semio_framework_job::MountedWorkerJobSession<J>,
-    lane: Lane,
-    retained: semio_framework_job::RetainedCloneGrant,
-    execution_progress: semio_framework_job::RetainedCloneProgress,
-    close_progress: semio_framework_job::RetainedCloneProgress,
-    retained_outcome: semio_framework_job::JobOutcomeSlot,
-    sender: Option<oneshot::Sender<Result<StepOutcome, ComputeError>>>,
-    closing: bool,
-    _permit: Option<OwnedPermit>,
-}
-
 fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
     match lane {
         Lane::Interactive => (InteractiveStage::InteractiveStep, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US),
@@ -824,199 +839,6 @@ fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
     }
 }
 
-async fn return_compute_cancel_alias<J:InteractiveJob+'static,R:HostAsyncRuntime>(runtime:&R,ctx:&OperationContext,state:&Arc<Mutex<ComputeJobDriveState<J>>>)->Result<(),ComputeError>{
-    loop{
-        let returned={
-            let mut original=state.lock().expect("ComputeJobDriveState mutex poisoned");
-            let phase=original.session.close_phase();
-            if matches!(phase,semio_framework_job::WorkerJobClosePhase::PayloadLedger|semio_framework_job::WorkerJobClosePhase::AuthorityRelease|semio_framework_job::WorkerJobClosePhase::SessionArc|semio_framework_job::WorkerJobClosePhase::RetirementSlot|semio_framework_job::WorkerJobClosePhase::Empty){return Ok(());}
-            let grant=original.retained;
-            match original.session.return_original_cancel_alias_step(&ctx.cancel,grant){
-                Ok(Some(step))=>{
-                    assert!(step.progress().fits(grant),"original cancellation alias receipt exceeds incoming caller grant");
-                    original.close_progress=original.close_progress.checked_add(step.progress()).expect("compute alias receipt overflow");
-                    if matches!(step,semio_framework_job::RetainedCloneStep::Complete(_)){Some(Ok(()))}else{Some(Err(ComputeError::WorkerLost))}
-                },
-                Ok(None)|Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>None,
-                Err(semio_framework_job::WorkerJobDemandError::Refused(_))=>Some(Err(ComputeError::WorkerLost)),
-            }
-        };
-        if let Some(result)=returned{return result;}
-        let now=runtime.now_ms().await;
-        if ctx.deadline_ms.is_some_and(|deadline|now>=deadline){ctx.cancel.cancel().await;return Err(ComputeError::DeadlineExceeded);}
-        runtime.sleep_until(ctx.deadline_ms.map_or(now.saturating_add(1),|deadline|deadline.min(now.saturating_add(1)))).await;
-    }
-}
-
-fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
-    let next_pool = pool.clone();
-    let lane = state.lock().expect("ComputeJobDriveState mutex poisoned").lane;
-    let retry_state = state.clone();
-    let delivery_state = state.clone();
-    let job = Box::new(move || {
-        let (terminal, finished) = {
-            let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
-            if !state.retained_outcome.is_empty() {
-                close_compute_job_outcome(&mut state);
-                (None, false)
-            } else if state.closing {
-                (None, close_compute_job_session(&mut state))
-            } else {
-                let lane = state.lane;
-                match state.session.pump_one(&next_pool, lane) {
-                    Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
-                        let progress=state.session.checked_out_retained_step_progress().expect("mounted compute session retains its actual step receipt");
-                        assert!(progress.fits(state.retained),"mounted compute step exceeds incoming caller grant");
-                        state.execution_progress=state.execution_progress.checked_add(progress).expect("compute execution receipt overflow");
-                        let outcome = state.session.take_checked_out_outcome().expect("mounted compute session checked out one exact outcome");
-                        if outcome.is_terminal() {
-                            state.session.begin_close();
-                            state.closing = true;
-                            (Some((state.sender.take().expect("terminal compute job has a result sender"), Ok(outcome))), false)
-                        } else {
-                            state.retained_outcome.retain(outcome).expect("empty original compute outcome slot");
-                            (None, false)
-                        }
-                    }
-                    Ok(_) => (None, false),
-                    Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated))) => (None, false),
-                    Err(_) => {
-                        state.session.begin_close();
-                        state.closing = true;
-                        (state.sender.take().map(|sender| (sender, Err(ComputeError::WorkerLost))), false)
-                    }
-                }
-            }
-        };
-        if let Some((sender, outcome)) = terminal {
-            if let Err(Ok(outcome)) = sender.send(outcome) {
-                let mut state = delivery_state.lock().expect("ComputeJobDriveState mutex poisoned");
-                state.retained_outcome.retain(outcome).expect("empty original compute outcome slot");
-            }
-        }
-        if !finished {
-            let retained_pool = next_pool.clone();
-            next_pool.callback_at(next_pool.now_ms().saturating_add(1), move || schedule_compute_job_step(&retained_pool, state));
-        }
-    });
-    match pool.try_submit(lane, job) {
-        Ok(()) => {}
-        Err(error) => match error.kind() {
-            WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
-                let retry_pool = pool.clone();
-                let retained = error.into_job();
-                pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(&retry_pool, lane, retained, retry_state));
-            }
-            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(pool, retry_state.clone()),
-        },
-    }
-}
-
-fn submit_retained_compute_job<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, job: semio_framework_async::Job, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
-    match pool.try_submit(lane, job) {
-        Ok(()) => {}
-        Err(error) => match error.kind() {
-            WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
-                let retry = pool.clone();
-                let retained = error.into_job();
-                pool.callback_at(pool.now_ms().saturating_add(1), move || submit_retained_compute_job(&retry, lane, retained, state));
-            }
-            WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => fail_compute_job_state(pool, state.clone()),
-        },
-    }
-}
-
-struct ComputeOutcomeCloseOwner {
-    original: semio_framework_job::JobOutcomeSlot,
-    grant: semio_framework_job::RetainedCloneGrant,
-    progress: semio_framework_job::RetainedCloneProgress,
-}
-
-impl ComputeOutcomeCloseOwner {
-    fn close_step(&mut self)->Result<semio_framework_job::RetainedCloneStep,semio_framework_value::ValueError>{
-        let step=semio_framework_job::close_step_outcome_slot(&mut self.original,self.grant)?;
-        semio_framework_value::retained_clone::admit_retained_clone_progress(self.grant,step.progress(),"returned compute outcome")?;
-        self.progress=self.progress.checked_add(step.progress())?;
-        Ok(step)
-    }
-}
-
-fn schedule_compute_outcome_close(pool:&WorkerPool,mut retained:ComputeOutcomeCloseOwner){
-    let next_pool=pool.clone();
-    pool.callback_at(pool.now_ms().saturating_add(1),move||{
-        let _=retained.close_step();
-        if !retained.original.is_empty(){schedule_compute_outcome_close(&next_pool,retained);}
-    });
-}
-
-fn close_compute_job_outcome<J: InteractiveJob + 'static>(state: &mut ComputeJobDriveState<J>) {
-    let authority=state.retained;
-    let result=semio_framework_job::close_step_outcome_slot(&mut state.retained_outcome,authority);
-    let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
-    state.close_progress=state.close_progress.checked_add(progress).expect("compute close receipt overflow");
-    match result {
-        Ok(step) if step.progress().fits(authority) => { if state.retained_outcome.is_empty()&&!state.closing { let _=state.session.resume(); } },
-        Ok(_) | Err(_) => { if let Some(sender)=state.sender.take() { let _=sender.send(Err(ComputeError::WorkerLost)); } },
-    }
-}
-
-fn close_compute_job_session<J: InteractiveJob + 'static>(state: &mut ComputeJobDriveState<J>) -> bool {
-    let authority = state.retained;
-    match state.session.retirement_demands(authority.maximum_copy_bytes) {
-        Ok(demand) if authority.maximum_items>0 && demand.copy_bytes <= authority.maximum_copy_bytes && demand.capacity_bytes <= authority.maximum_capacity_bytes && demand.release_bytes <= authority.maximum_release_bytes && demand.depth <= authority.maximum_depth => {},
-        Ok(_) | Err(semio_framework_job::WorkerJobDemandError::Refused(_)) => {
-            if let Some(sender) = state.sender.take() { let _ = sender.send(Err(ComputeError::WorkerLost)); }
-            return false;
-        }
-        Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return false,
-    }
-    let grant = authority;
-    let step=state.session.close_step(grant);
-    state.close_progress=state.close_progress.checked_add(step.progress()).expect("compute session close receipt overflow");
-    if !step.progress().fits(grant) { if let Some(sender)=state.sender.take(){let _=sender.send(Err(ComputeError::WorkerLost));} return false; }
-    match step {
-        semio_framework_job::WorkerJobCloseStep::Complete { .. } => state.session.terminal_is_empty(),
-        semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => false,
-        semio_framework_job::WorkerJobCloseStep::Refused{..} => {
-            if let Some(sender) = state.sender.take() { let _ = sender.send(Err(ComputeError::WorkerLost)); }
-            false
-        }
-    }
-}
-
-fn schedule_rejected_compute_job<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, mut rejected: semio_framework_job::WorkerJobSessionAdmissionRejected<J>, grant: semio_framework_job::RetainedCloneGrant, mut progress: semio_framework_job::RetainedCloneProgress) {
-    let next_pool = pool.clone();
-    pool.callback_at(pool.now_ms().saturating_add(1), move || {
-        if let Ok(demand) = rejected.retirement_demands(grant.maximum_copy_bytes) {
-            if grant.maximum_items>0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth {
-                let step=rejected.close_step(grant);assert!(step.progress().fits(grant),"rejected compute close exceeds incoming grant");progress=progress.checked_add(step.progress()).expect("rejected compute close receipt overflow");
-            }
-        }
-        if !rejected.terminal_is_empty() { schedule_rejected_compute_job(&next_pool, lane, rejected, grant, progress); }
-    });
-}
-
-fn schedule_compute_job_cleanup<J: InteractiveJob + 'static>(pool: &WorkerPool, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
-    let next_pool = pool.clone();
-    pool.callback_at(pool.now_ms().saturating_add(1), move || {
-        let terminal = {
-            let mut retained = state.lock().expect("ComputeJobDriveState mutex poisoned");
-            if !retained.retained_outcome.is_empty() { close_compute_job_outcome(&mut retained); false }
-            else { close_compute_job_session(&mut retained) }
-        };
-        if !terminal { schedule_compute_job_cleanup(&next_pool, state); }
-    });
-}
-
-fn fail_compute_job_state<J: InteractiveJob + 'static>(pool: &WorkerPool, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
-    {
-        let mut retained = state.lock().expect("ComputeJobDriveState mutex poisoned");
-        retained.closing = true;
-        retained.session.begin_close();
-        if let Some(sender) = retained.sender.take() { let _ = sender.send(Err(ComputeError::WorkerLost)); }
-    }
-    schedule_compute_job_cleanup(pool, state);
-}
 //#endregion 🧮️ComputePool
 
 //#region 🌐️HttpPool

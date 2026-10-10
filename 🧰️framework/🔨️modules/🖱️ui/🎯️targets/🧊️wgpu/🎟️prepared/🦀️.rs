@@ -2,7 +2,7 @@
 
 use crate::wgpu::draw_types::{DrawLayer, DrawList, ScissorRect};
 use crate::wgpu::kernel_3d_scene::Mesh3dLease;
-use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, RetainedPayloadBuilder, StepContext};
 use std::mem::size_of;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicPtr, AtomicU64, AtomicU8, AtomicUsize, Ordering};
@@ -690,22 +690,25 @@ impl PreparedAtlasPermit {
         Some(Self { generation, items: 1, pages, payload_bytes, backing_bytes, payload_units, backing_units, release_phase: 0 })
     }
 
-    fn release_step(&mut self) -> bool {
+    fn close_original_step(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+        if self.release_phase > 3 { return CloseStep::Complete { progress: RetainedCloneProgress::default() }; }
+        let progress = atlas_progress(size_of::<u64>() * 2 + size_of::<u8>(), 0, 0);
+        if let Some(step) = atlas_gate(grant, progress) { return step; }
         let delta = match self.release_phase {
             0 => prepared_atlas_delta(0, 0, 0, self.backing_units),
             1 => prepared_atlas_delta(0, 0, self.payload_units, 0),
             2 => prepared_atlas_delta(0, self.pages, 0, 0),
             3 => prepared_atlas_delta(self.items, 0, 0, 0),
-            _ => return true,
+            _ => None,
         };
-        let Some(delta) = delta else { return false };
+        let Some(delta) = delta else { return atlas_refused(ValueRefusalKind::InvariantViolated); };
         let current = PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire);
-        let Some(next) = current.checked_sub(delta) else { return false };
+        let Some(next) = current.checked_sub(delta) else { return atlas_refused(ValueRefusalKind::InvariantViolated); };
         if PREPARED_ATLAS_PROCESS_PERMITS.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return false;
+            return CloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
-        self.release_phase = self.release_phase.saturating_add(1);
-        self.release_phase > 3
+        self.release_phase += 1;
+        CloseStep::Pending { progress }
     }
 }
 
@@ -717,203 +720,255 @@ struct PreparedAtlasPage {
     rows: u32,
 }
 
+/// 🎟️ Independent original construction and retirement authority for one atlas owner.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PreparedAtlasAuthority {
+    pub normal: RetainedCloneGrant,
+    pub retirement: RetainedCloneGrant,
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct PreparedAtlasPages {
-    slots: Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>,
-    len: usize,
+    owner: Option<Box<PreparedAtlasAbandonment>>,
     width: u32,
     height: u32,
     channels: u8,
     byte_len: usize,
     rows_per_page: u32,
-    permit: Option<PreparedAtlasPermit>,
     abandonment_slot: u8,
+    observed: RetainedCloneProgress,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 struct PreparedAtlasAbandonment {
     slots: Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>,
     len: usize,
     permit: Option<PreparedAtlasPermit>,
+    authority: PreparedAtlasAuthority,
+    handoff_pending: bool,
+    closing: bool,
+}
+
+fn atlas_progress(copied_bytes: usize, retained_capacity_bytes: usize, released_bytes: usize) -> RetainedCloneProgress {
+    RetainedCloneProgress { copied_items: 1, copied_bytes, retained_capacity_bytes, released_bytes }
+}
+
+fn atlas_refused(kind: ValueRefusalKind) -> CloseStep {
+    CloseStep::Refused { kind, progress: RetainedCloneProgress::default() }
+}
+
+fn atlas_gate(grant: RetainedCloneGrant, progress: RetainedCloneProgress) -> Option<CloseStep> {
+    if grant.maximum_depth == 0 { return Some(atlas_refused(ValueRefusalKind::DepthLimit)); }
+    (!progress.fits(grant)).then_some(CloseStep::Pending { progress: RetainedCloneProgress::default() })
+}
+
+fn atlas_cap(received: RetainedCloneGrant, original: RetainedCloneGrant) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: received.maximum_items.min(original.maximum_items), maximum_copy_bytes: received.maximum_copy_bytes.min(original.maximum_copy_bytes), maximum_capacity_bytes: received.maximum_capacity_bytes.min(original.maximum_capacity_bytes), maximum_release_bytes: received.maximum_release_bytes.min(original.maximum_release_bytes), maximum_depth: received.maximum_depth.min(original.maximum_depth) }
+}
+
+fn atlas_add(total: &mut RetainedCloneProgress, progress: RetainedCloneProgress) {
+    total.copied_items += progress.copied_items;
+    total.copied_bytes += progress.copied_bytes;
+    total.retained_capacity_bytes += progress.retained_capacity_bytes;
+    total.released_bytes += progress.released_bytes;
 }
 
 impl PreparedAtlasAbandonment {
     fn terminal_is_empty(&self) -> bool { self.len == 0 && self.slots.is_none() && self.permit.is_none() }
 
-    fn next_close_demands(&self, _copy: usize) -> Result<RetainedCloneGrant, ValueError> {
-        prepared_owner_demands(self.terminal_is_empty(), Ok(if self.len != 0 { PREPARED_ATLAS_PAGE_BYTES } else if self.slots.is_some() { size_of::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>() } else { 0 }))
+    fn original_close_progress(&self) -> RetainedCloneProgress {
+        if self.handoff_pending { return atlas_progress(size_of::<*mut Self>() + size_of::<u8>() + size_of::<bool>() * 3, 0, 0); }
+        if self.len != 0 { return atlas_progress(size_of::<Option<PreparedAtlasPage>>() + size_of::<usize>() + size_of::<bool>(), 0, PREPARED_ATLAS_PAGE_BYTES); }
+        if self.slots.is_some() { return atlas_progress(size_of::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>() + size_of::<Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>>() + size_of::<bool>(), 0, size_of::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>()); }
+        if let Some(permit) = &self.permit {
+            return atlas_progress((if permit.release_phase <= 3 { size_of::<u64>() * 2 + size_of::<u8>() } else { size_of::<Option<PreparedAtlasPermit>>() }) + size_of::<bool>(), 0, 0);
+        }
+        atlas_progress(size_of::<Self>() + size_of::<*mut Self>() + size_of::<u8>(), 0, size_of::<Self>())
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
-        let demand = match self.next_close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return CloseStep::Refused { kind: error.kind, progress: error.retained_progress() } };
-        if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), Ok(demand.maximum_release_bytes)) { return step; }
-        let before = (self.len, self.slots.is_some(), self.permit.as_ref().map(|permit| permit.release_phase));
-        self.close_step();
-        if before == (self.len, self.slots.is_some(), self.permit.as_ref().map(|permit| permit.release_phase)) { return CloseStep::Blocked; }
-        prepared_close_progress(demand.maximum_release_bytes)
-    }
-
-    fn close_step(&mut self) -> bool {
+    fn close_original_step(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+        let grant = atlas_cap(grant, self.authority.retirement);
+        let progress = self.original_close_progress();
+        if let Some(step) = atlas_gate(grant, progress) { return step; }
+        if self.handoff_pending { self.handoff_pending = false; self.closing = true; return CloseStep::Pending { progress }; }
         if let Some(index) = self.len.checked_sub(1) {
+            let Some(slots) = self.slots.as_mut() else { return atlas_refused(ValueRefusalKind::InvariantViolated); };
+            if slots[index].is_none() { return atlas_refused(ValueRefusalKind::InvariantViolated); }
             self.len = index;
-            if let Some(slots) = self.slots.as_mut() {
-                slots[index] = None;
-            }
-            return false;
+            self.closing = true;
+            drop(slots[index].take());
+            return CloseStep::Pending { progress };
         }
-        if self.slots.take().is_some() {
-            return false;
-        }
+        if self.slots.is_some() { self.closing = true; drop(self.slots.take()); return CloseStep::Pending { progress }; }
         if let Some(permit) = self.permit.as_mut() {
-            if !permit.release_step() {
-                return false;
+            if permit.release_phase <= 3 {
+                let step = permit.close_original_step(grant);
+                return match step { CloseStep::Pending { progress: child } if child.copied_items != 0 => { self.closing = true; CloseStep::Pending { progress } }, step => step };
             }
+            self.closing = true;
             self.permit = None;
-            return false;
+            return CloseStep::Pending { progress };
         }
-        true
+        CloseStep::Complete { progress: RetainedCloneProgress::default() }
     }
 }
 
 impl PreparedAtlasPages {
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(if self.len != 0 { PREPARED_ATLAS_PAGE_BYTES } else if self.slots.is_some() { size_of::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>() } else { 0 })
+    pub fn original_owner_progress(&self) -> RetainedCloneProgress { self.observed }
+
+    pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.owner.as_ref().map_or(0, |owner| owner.original_close_progress().copied_bytes)) }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.owner.as_ref().map_or(0, |owner| owner.original_close_progress().released_bytes)) }
+
+    pub fn close_original_step(&mut self, grant: RetainedCloneGrant) -> CloseStep {
+        let Some(owner) = self.owner.as_mut() else { return CloseStep::Complete { progress: RetainedCloneProgress::default() }; };
+        let grant = atlas_cap(grant, owner.authority.retirement);
+        let progress = owner.original_close_progress();
+        if let Some(step) = atlas_gate(grant, progress) { return step; }
+        if !owner.terminal_is_empty() || owner.handoff_pending {
+            let step = owner.close_original_step(grant);
+            atlas_add(&mut self.observed, step.progress());
+            return step;
+        }
+        let slot = usize::from(self.abandonment_slot);
+        if PREPARED_ATLAS_ABANDONMENT_STATE[slot].load(Ordering::Acquire) != 1 { return atlas_refused(ValueRefusalKind::InvariantViolated); }
+        drop(self.owner.take());
+        PREPARED_ATLAS_ABANDONMENT_STATE[slot].store(0, Ordering::Release);
+        self.abandonment_slot = u8::MAX;
+        atlas_add(&mut self.observed, progress);
+        CloseStep::Complete { progress }
     }
 
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
-        let demand = self.next_close_release_byte_demand();
-        if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand.clone()) { return step; }
-        let before = (self.len, self.slots.is_some(), self.permit.as_ref().map(|permit| permit.release_phase), self.abandonment_slot);
-        self.close_step();
-        let after = (self.len, self.slots.is_some(), self.permit.as_ref().map(|permit| permit.release_phase), self.abandonment_slot);
-        if before == after { return CloseStep::Blocked; }
-        prepared_close_progress(demand.unwrap_or(0))
-    }
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep { self.close_original_step(grant) }
 
-    pub fn try_new(width: u32, height: u32, channels: u8, byte_len: usize) -> Result<Self, &'static str> {
-        let row_bytes = usize::try_from(width).ok().and_then(|width| width.checked_mul(usize::from(channels))).ok_or("atlas row bytes exhausted")?;
-        let expected = row_bytes.checked_mul(usize::try_from(height).map_err(|_| "atlas height exhausted")?).ok_or("atlas byte length exhausted")?;
-        if expected != byte_len || row_bytes == 0 || row_bytes > PREPARED_ATLAS_PAGE_BYTES {
-            return Err("atlas dimensions do not fit fixed page credits");
-        }
-        let rows_per_page = u32::try_from(PREPARED_ATLAS_PAGE_BYTES / row_bytes).map_err(|_| "atlas rows per page exhausted")?;
-        let rows_per_page_usize = usize::try_from(rows_per_page).map_err(|_| "atlas rows per page exhausted")?;
-        let pages = usize::try_from(height).ok().and_then(|height| height.checked_add(rows_per_page_usize.checked_sub(1)?)).map(|rows| rows / rows_per_page_usize).ok_or("atlas page count exhausted")?;
-        if pages > PREPARED_ATLAS_PAGE_CAPACITY || byte_len > PREPARED_ATLAS_PROCESS_PAYLOAD_BYTES {
-            return Err("atlas page or byte credits exceeded");
-        }
-        let slot_backing = PREPARED_ATLAS_PAGE_CAPACITY.checked_mul(size_of::<Option<PreparedAtlasPage>>()).ok_or("atlas slot backing credits exhausted")?;
-        let page_backing = pages.checked_mul(PREPARED_ATLAS_PAGE_BYTES).ok_or("atlas page backing credits exhausted")?;
-        let backing_bytes = slot_backing.checked_add(page_backing).ok_or("atlas aggregate backing credits exhausted")?;
-        let Some(abandonment_slot) = PREPARED_ATLAS_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_ok()) else {
-            return Err("atlas process permit credits exhausted");
-        };
+    pub fn try_new(width: u32, height: u32, channels: u8, byte_len: usize, authority: PreparedAtlasAuthority) -> Result<(Self, RetainedCloneProgress), ValueError> {
+        let fault = |message| ValueError::literal(ValueRefusalKind::OwnershipLimit, message);
+        let row_bytes = usize::try_from(width).ok().and_then(|width| width.checked_mul(usize::from(channels))).ok_or_else(|| fault("atlas row bytes exhausted"))?;
+        let expected = row_bytes.checked_mul(usize::try_from(height).map_err(|_| fault("atlas height exhausted"))?).ok_or_else(|| fault("atlas byte length exhausted"))?;
+        if expected != byte_len || row_bytes == 0 || row_bytes > PREPARED_ATLAS_PAGE_BYTES { return Err(fault("atlas dimensions do not fit fixed page credits")); }
+        let rows_per_page = u32::try_from(PREPARED_ATLAS_PAGE_BYTES / row_bytes).map_err(|_| fault("atlas rows per page exhausted"))?;
+        let rows_per_page_usize = usize::try_from(rows_per_page).map_err(|_| fault("atlas rows per page exhausted"))?;
+        let pages = usize::try_from(height).ok().and_then(|height| height.checked_add(rows_per_page_usize.checked_sub(1)?)).map(|rows| rows / rows_per_page_usize).ok_or_else(|| fault("atlas page count exhausted"))?;
+        if pages > PREPARED_ATLAS_PAGE_CAPACITY || byte_len > PREPARED_ATLAS_PROCESS_PAYLOAD_BYTES { return Err(fault("atlas page or byte credits exceeded")); }
+        let slot_backing = size_of::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>();
+        let page_backing = pages.checked_mul(PREPARED_ATLAS_PAGE_BYTES).ok_or_else(|| fault("atlas page backing credits exhausted"))?;
+        let backing_bytes = slot_backing.checked_add(page_backing).and_then(|bytes| bytes.checked_add(size_of::<PreparedAtlasAbandonment>())).ok_or_else(|| fault("atlas aggregate backing credits exhausted"))?;
+        let progress = atlas_progress(size_of::<PreparedAtlasAbandonment>() + size_of::<Self>() + size_of::<u64>() * 2 + size_of::<u8>(), size_of::<PreparedAtlasAbandonment>(), 0);
+        if !progress.fits(authority.normal) || authority.normal.maximum_depth == 0 { return Err(fault("atlas original header authority exhausted")); }
+        if authority.retirement.maximum_items == 0 || authority.retirement.maximum_copy_bytes < size_of::<*mut PreparedAtlasAbandonment>() + size_of::<u8>() + size_of::<bool>() * 3 || authority.retirement.maximum_depth == 0 { return Err(fault("atlas abandonment handoff authority exhausted")); }
+        let Some(abandonment_slot) = PREPARED_ATLAS_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return Err(fault("atlas process permit credits exhausted")); };
         let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes) else {
             PREPARED_ATLAS_ABANDONMENT_STATE[abandonment_slot].store(0, Ordering::Release);
-            return Err("atlas process permit credits exhausted");
+            return Err(fault("atlas process permit credits exhausted"));
         };
-        Ok(Self { slots: Some(Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY])), len: 0, width, height, channels, byte_len, rows_per_page, permit: Some(permit), abandonment_slot: abandonment_slot as u8 })
+        let owner = Box::new(PreparedAtlasAbandonment { slots: None, len: 0, permit: Some(permit), authority, handoff_pending: false, closing: false });
+        Ok((Self { owner: Some(owner), width, height, channels, byte_len, rows_per_page, abandonment_slot: abandonment_slot as u8, observed: progress }, progress))
     }
 
-    pub fn push_page(&mut self, source: &[u8], start_row: u32) -> Result<bool, &'static str> {
-        if self.len == PREPARED_ATLAS_PAGE_CAPACITY || start_row >= self.height {
-            return Err("atlas page item credits exceeded");
-        }
-        let row_bytes = usize::try_from(self.width).ok().and_then(|width| width.checked_mul(usize::from(self.channels))).ok_or("atlas row bytes exhausted")?;
-        let remaining_rows = self.height - start_row;
-        let rows = remaining_rows.min(self.rows_per_page);
-        let bytes = usize::try_from(rows).ok().and_then(|rows| rows.checked_mul(row_bytes)).ok_or("atlas page byte count exhausted")?;
-        let start = usize::try_from(start_row).ok().and_then(|row| row.checked_mul(row_bytes)).ok_or("atlas page offset exhausted")?;
-        let slice = source.get(start..start.checked_add(bytes).ok_or("atlas page end exhausted")?).ok_or("atlas page source was truncated")?;
-        let mut page = Box::new([0; PREPARED_ATLAS_PAGE_BYTES]);
+    pub fn admit_original_slots(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+        let Some(owner) = self.owner.as_mut() else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "atlas original header was released")); };
+        if owner.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "atlas original owner is retiring")); }
+        if owner.slots.is_some() { return Ok(RetainedCloneProgress::default()); }
+        let bytes = size_of::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>();
+        let progress = atlas_progress(bytes + size_of::<Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>>(), bytes, 0);
+        let grant = atlas_cap(grant, owner.authority.normal);
+        if !progress.fits(grant) || grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "atlas original slot authority exhausted")); }
+        let mut slots = Box::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>::new_uninit();
+        let pointer = slots.as_mut_ptr().cast::<Option<PreparedAtlasPage>>();
+        for index in 0..PREPARED_ATLAS_PAGE_CAPACITY { unsafe { pointer.add(index).write(None) }; }
+        owner.slots = Some(unsafe { slots.assume_init() });
+        atlas_add(&mut self.observed, progress);
+        Ok(progress)
+    }
+
+    pub fn slots_are_admitted(&self) -> bool { self.owner.as_ref().is_some_and(|owner| owner.slots.is_some()) }
+
+    pub fn push_page(&mut self, source: &[u8], start_row: u32, grant: RetainedCloneGrant) -> Result<(bool, RetainedCloneProgress), ValueError> {
+        let fault = |message| ValueError::literal(ValueRefusalKind::OwnershipLimit, message);
+        let next_row = self.next_row();
+        let owner = self.owner.as_mut().ok_or_else(|| fault("atlas original header was released"))?;
+        if owner.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "atlas original owner is retiring")); }
+        if owner.len == PREPARED_ATLAS_PAGE_CAPACITY || start_row >= self.height || start_row != next_row { return Err(fault("atlas page item credits exceeded")); }
+        let row_bytes = usize::try_from(self.width).ok().and_then(|width| width.checked_mul(usize::from(self.channels))).ok_or_else(|| fault("atlas row bytes exhausted"))?;
+        let rows = (self.height - start_row).min(self.rows_per_page);
+        let bytes = usize::try_from(rows).ok().and_then(|rows| rows.checked_mul(row_bytes)).ok_or_else(|| fault("atlas page byte count exhausted"))?;
+        let start = usize::try_from(start_row).ok().and_then(|row| row.checked_mul(row_bytes)).ok_or_else(|| fault("atlas page offset exhausted"))?;
+        let slice = source.get(start..start.checked_add(bytes).ok_or_else(|| fault("atlas page end exhausted"))?).ok_or_else(|| fault("atlas page source was truncated"))?;
+        let progress = atlas_progress(PREPARED_ATLAS_PAGE_BYTES + bytes + size_of::<Option<PreparedAtlasPage>>() + size_of::<usize>(), PREPARED_ATLAS_PAGE_BYTES, 0);
+        let grant = atlas_cap(grant, owner.authority.normal);
+        if !progress.fits(grant) || grant.maximum_depth == 0 { return Err(fault("atlas original page authority exhausted")); }
+        let slots = owner.slots.as_mut().ok_or_else(|| fault("atlas slot backing was not admitted"))?;
+        if slots[owner.len].is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "atlas original page slot was occupied")); }
+        let mut page = Box::<[u8; PREPARED_ATLAS_PAGE_BYTES]>::new_uninit();
+        unsafe { page.as_mut_ptr().cast::<u8>().write_bytes(0, PREPARED_ATLAS_PAGE_BYTES) };
+        let mut page = unsafe { page.assume_init() };
         page[..bytes].copy_from_slice(slice);
-        let slots = self.slots.as_mut().ok_or("atlas slot backing was released")?;
-        slots[self.len] = Some(PreparedAtlasPage { bytes: page, len: u16::try_from(bytes).map_err(|_| "atlas page length exhausted")?, start_row, rows });
-        self.len += 1;
-        Ok(start_row.checked_add(rows) == Some(self.height))
+        slots[owner.len] = Some(PreparedAtlasPage { bytes: page, len: u16::try_from(bytes).map_err(|_| fault("atlas page length exhausted"))?, start_row, rows });
+        owner.len += 1;
+        atlas_add(&mut self.observed, progress);
+        Ok((start_row.checked_add(rows) == Some(self.height), progress))
     }
 
     pub fn page(&self, index: usize) -> Option<(&[u8], u32, u32)> {
-        let page = self.slots.as_ref()?.get(index)?.as_ref()?;
+        let page = self.owner.as_ref()?.slots.as_ref()?.get(index)?.as_ref()?;
         Some((&page.bytes[..usize::from(page.len)], page.start_row, page.rows))
     }
 
-    pub fn len(&self) -> usize {
-        self.len
-    }
+    pub fn len(&self) -> usize { self.owner.as_ref().map_or(0, |owner| owner.len) }
+    pub fn is_empty(&self) -> bool { self.len() == 0 }
+    pub fn next_row(&self) -> u32 { self.len().checked_sub(1).and_then(|index| self.owner.as_ref()?.slots.as_ref()?.get(index)?.as_ref()).and_then(|page| page.start_row.checked_add(page.rows)).unwrap_or(0) }
+    pub fn width(&self) -> u32 { self.width }
+    pub fn height(&self) -> u32 { self.height }
+    pub fn byte_len(&self) -> usize { self.byte_len }
+    pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.abandonment_slot == u8::MAX }
 
-    pub fn is_empty(&self) -> bool {
-        self.len == 0
-    }
-
-    pub fn next_row(&self) -> u32 {
-        self.len.checked_sub(1).and_then(|index| self.slots.as_ref()?.get(index)?.as_ref()).and_then(|page| page.start_row.checked_add(page.rows)).unwrap_or(0)
-    }
-
-    pub fn width(&self) -> u32 {
-        self.width
-    }
-
-    pub fn height(&self) -> u32 {
-        self.height
-    }
-
-    pub fn byte_len(&self) -> usize {
-        self.byte_len
-    }
-
-    pub fn close_step(&mut self) -> bool {
-        if let Some(index) = self.len.checked_sub(1) {
-            self.len = index;
-            if let Some(slots) = self.slots.as_mut() {
-                slots[index] = None;
-            }
-            return false;
+    pub fn next_abandoned_close_demands(_copy: usize) -> Result<RetainedCloneGrant, ValueError> {
+        for (state, owner) in PREPARED_ATLAS_ABANDONMENT_STATE.iter().zip(PREPARED_ATLAS_ABANDONMENT_OWNER.iter()) {
+            if state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_err() { continue; }
+            let pointer = owner.load(Ordering::Acquire);
+            let result = if pointer.is_null() { Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "atlas original abandonment pointer was absent")) } else {
+                let progress = unsafe { &*pointer }.original_close_progress();
+                Ok(RetainedCloneGrant { maximum_items: progress.copied_items, maximum_copy_bytes: progress.copied_bytes, maximum_capacity_bytes: progress.retained_capacity_bytes, maximum_release_bytes: progress.released_bytes, maximum_depth: 1 })
+            };
+            state.store(2, Ordering::Release);
+            return result;
         }
-        if self.slots.take().is_some() {
-            return false;
-        }
-        if let Some(permit) = self.permit.as_mut() {
-            if !permit.release_step() {
-                return false;
-            }
-            self.permit = None;
-            return false;
-        }
-        let slot = usize::from(self.abandonment_slot);
-        if PREPARED_ATLAS_ABANDONMENT_STATE.get(slot).is_some_and(|state| state.compare_exchange(1, 0, Ordering::AcqRel, Ordering::Acquire).is_ok()) {
-            self.abandonment_slot = u8::MAX;
-            return false;
-        }
-        true
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.slots.is_none() && self.permit.is_none() && self.abandonment_slot == u8::MAX
-    }
-
-    /// 🧹 Advances one page, backing owner, or permit scalar from one abandoned atlas.
-    pub fn next_abandoned_close_demands(copy: usize) -> Result<RetainedCloneGrant, ValueError> {
-        prepared_abandoned_demands(PREPARED_ATLAS_ABANDONMENT_STATE.iter().zip(PREPARED_ATLAS_ABANDONMENT_OWNER.iter()), 2, copy, PreparedAtlasAbandonment::next_close_demands, PreparedAtlasAbandonment::terminal_is_empty)
+        Ok(RetainedCloneGrant::default())
     }
 
     pub fn close_abandoned_step(grant: RetainedCloneGrant) -> CloseStep {
-        prepared_abandoned_close(PREPARED_ATLAS_ABANDONMENT_STATE.iter().zip(PREPARED_ATLAS_ABANDONMENT_OWNER.iter()), 2, grant, PreparedAtlasAbandonment::terminal_is_empty, PreparedAtlasAbandonment::close_granted)
+        for (state, owner) in PREPARED_ATLAS_ABANDONMENT_STATE.iter().zip(PREPARED_ATLAS_ABANDONMENT_OWNER.iter()) {
+            if state.load(Ordering::Acquire) != 2 { continue; }
+            if grant.maximum_items == 0 { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
+            if state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
+            let pointer = owner.load(Ordering::Acquire);
+            if pointer.is_null() { state.store(2, Ordering::Release); return atlas_refused(ValueRefusalKind::InvariantViolated); }
+            let value = unsafe { &mut *pointer };
+            let grant = atlas_cap(grant, value.authority.retirement);
+            let progress = value.original_close_progress();
+            if let Some(step) = atlas_gate(grant, progress) { state.store(2, Ordering::Release); return step; }
+            if value.terminal_is_empty() && !value.handoff_pending {
+                owner.store(std::ptr::null_mut(), Ordering::Release);
+                drop(unsafe { Box::from_raw(pointer) });
+                state.store(0, Ordering::Release);
+                return CloseStep::Pending { progress };
+            }
+            let step = value.close_original_step(grant);
+            state.store(2, Ordering::Release);
+            return step;
+        }
+        if PREPARED_ATLAS_ABANDONMENT_STATE.iter().any(|state| state.load(Ordering::Acquire) == 3) { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
+        CloseStep::Complete { progress: RetainedCloneProgress::default() }
     }
 }
 
 impl Drop for PreparedAtlasPages {
     fn drop(&mut self) {
-        if self.terminal_is_empty() {
-            return;
-        }
+        let Some(mut owner) = self.owner.take() else { return };
         let slot = usize::from(self.abandonment_slot);
-        let Some(state) = PREPARED_ATLAS_ABANDONMENT_STATE.get(slot) else { return };
-        if state.load(Ordering::Acquire) != 1 {
-            return;
-        }
-        let owner = Box::new(PreparedAtlasAbandonment { slots: self.slots.take(), len: std::mem::take(&mut self.len), permit: self.permit.take() });
+        owner.handoff_pending = true;
         PREPARED_ATLAS_ABANDONMENT_OWNER[slot].store(Box::into_raw(owner), Ordering::Release);
-        state.store(2, Ordering::Release);
+        PREPARED_ATLAS_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
         self.abandonment_slot = u8::MAX;
     }
 }
@@ -1531,7 +1586,7 @@ impl PreparedRenderUpload {
         match self {
             #[cfg(test)]
             Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => return prepared_close_bytes(pixels, grant),
-            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => return pixels.close_granted(grant),
+            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => return pixels.close_original_step(grant),
             #[cfg(test)]
             Self::Raster { key, pixels, .. } => { if !pixels.is_empty() || pixels.capacity() != 0 { return prepared_close_bytes(pixels, grant); } else { prepared_close_text(key); } }
             Self::RasterPages { key, pixels } => return pixels.close_with_key_granted(key, grant),
@@ -2561,6 +2616,7 @@ pub struct PreparedRenderJob {
     commands: Option<PreparedRenderCommandPages>,
     digest: u64,
     fault: Option<&'static str>,
+    fault_payload: RetainedPayloadBuilder,
     receiver: PreparedRenderReceiver,
     rejected_upload: Option<PreparedRenderUpload>,
     rejected_packet: Option<PreparedRenderPacket>,
@@ -2664,6 +2720,10 @@ impl PreparedRenderJob {
             if let Some(input) = self.input.as_ref() { if !input.terminal_is_empty() { return input.next_close_demands(copy); } }
             else if !self.receiver.terminal_is_empty() { return self.receiver.next_close_demands(copy); }
         }
+        if self.rejected_upload.is_none() && self.rejected_packet.is_none() && self.commands.is_none() && self.input.is_none() && self.receiver.terminal_is_empty() && !self.fault_payload.terminal_is_empty() {
+            let demand = self.fault_payload.retirement_demands()?;
+            return Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth });
+        }
         prepared_owner_demands(self.terminal_is_empty(), self.next_close_release_byte_demand())
     }
 
@@ -2672,7 +2732,8 @@ impl PreparedRenderJob {
         if let Some(packet) = self.rejected_packet.as_ref() { return if packet.retirement_is_empty() { Ok(0) } else { packet.next_close_release_byte_demand() } }
         if let Some(commands) = self.commands.as_ref() { return commands.next_close_release_byte_demand() }
         if let Some(input) = self.input.as_ref() { return input.next_close_release_byte_demand() }
-        self.receiver.next_close_release_byte_demand()
+        if !self.receiver.terminal_is_empty() { return self.receiver.next_close_release_byte_demand(); }
+        self.fault_payload.retirement_demands().map(|demand| demand.release_bytes)
     }
     fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
         if !self.closing { return CloseStep::Blocked }
@@ -2696,6 +2757,12 @@ impl PreparedRenderJob {
             self.input = None; return prepared_close_progress(0)
         }
         if !self.receiver.terminal_is_empty() { return prepared_close_child(self.receiver.close_granted(grant)) }
+        if !self.fault_payload.terminal_is_empty() {
+            return match self.fault_payload.close_step_granted(grant) {
+                Ok(step) => CloseStep::Pending { progress: step.progress() },
+                Err(error) => CloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
+        }
         if self.abandonment_slot != u8::MAX {
             let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() } };
             let current = state.load(Ordering::Acquire);
@@ -2706,7 +2773,7 @@ impl PreparedRenderJob {
     }
 
     /// 🩺️ The exact reason this job refused, once it has refused — the string [`Self::fault_outcome`]
-    /// recorded. [`StepOutcome::Fault`] carries an EMPTY retained payload here (a fixed `&'static str`
+    /// recorded. The original held fault detail carries no text pages here (a fixed `&'static str`
     /// needs no page), so without this accessor a preparation fault is completely invisible to its
     /// driver, which is exactly how one silent refusal froze the wgpu shell at one presented frame per
     /// boot (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w7b-presenter-one-frame-per-boot.md`).
@@ -2752,6 +2819,7 @@ impl PreparedRenderJob {
             commands: Some(PreparedRenderCommandPages::default()),
             digest: 0xcbf29ce484222325,
             fault: None,
+            fault_payload: RetainedPayloadBuilder::new(JobPayloadStream::Fault),
             receiver,
             rejected_upload: None,
             rejected_packet: None,
@@ -2781,7 +2849,7 @@ impl PreparedRenderJob {
 
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.input.is_none() && self.commands.is_none() && self.rejected_upload.is_none() && self.rejected_packet.is_none() && self.receiver.terminal_is_empty() && self.abandonment_slot == u8::MAX
+        self.input.is_none() && self.commands.is_none() && self.rejected_upload.is_none() && self.rejected_packet.is_none() && self.receiver.terminal_is_empty() && self.fault_payload.terminal_is_empty() && self.abandonment_slot == u8::MAX
     }
 
     /// 🧹 Advances one exact job owner recovered after an interrupted worker execution.
@@ -3404,33 +3472,38 @@ impl PreparedRenderJob {
         self.usage.include_draw(usage.draw_items, usage.draw_bytes) && (usage.upload_items == 0 || self.usage.include_upload(usage.upload_bytes, usage.scene_raster_bytes))
     }
 
-    fn fault_outcome(&mut self, fault: &'static str) -> StepOutcome {
+    fn fault_outcome<'a>(&'a mut self, fault: &'static str, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         self.fault = Some(fault);
         self.closing = true;
-        StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
+        self.publish_fault(cx)
     }
 
-    fn complete(&mut self) -> StepOutcome {
+    fn publish_fault<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if !self.fault_payload.advance_initialization(cx)? || !self.fault_payload.seal(cx)? { return Ok(None); }
+        JobOutcomeBorrow::admit_fault(cx, self.fault_payload.published().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared fault owner was not sealed"))?)
+    }
+
+    fn complete<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if !self.packet_command_staged {
             let command = PreparedRenderCommand { kind: PreparedRenderCommandKind::Packet, source: 0, digest: self.digest, draw_cursor: None, packet_overlay: false };
-            let Some(commands) = self.commands.as_mut() else { return self.fault_outcome("prepared render command owner was missing") };
+            let Some(commands) = self.commands.as_mut() else { return self.fault_outcome("prepared render command owner was missing", cx) };
             if commands.try_push(command).is_err() {
-                return self.fault_outcome("prepared render packet command credits exhausted");
+                return self.fault_outcome("prepared render packet command credits exhausted", cx);
             }
             self.packet_command_staged = true;
-            return StepOutcome::Yield;
+            return JobOutcomeBorrow::admit_yield(cx);
         }
         if !self.published {
-            let Some(input) = self.input.take() else { return self.fault_outcome("prepared render input was missing before publication") };
+            let Some(input) = self.input.take() else { return self.fault_outcome("prepared render input was missing before publication", cx) };
             if !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
                 self.input = Some(input);
-                return self.fault_outcome("prepared render process generation was stale before publication");
+                return self.fault_outcome("prepared render process generation was stale before publication", cx);
             }
             let revision = input.scene_revision;
             let generation = input.preview_generation;
             let Some(commands) = self.commands.take() else {
                 self.input = Some(input);
-                return self.fault_outcome("prepared render command pages were missing before publication");
+                return self.fault_outcome("prepared render command pages were missing before publication", cx);
             };
             let input = std::mem::ManuallyDrop::new(input);
             let packet = PreparedRenderPacket {
@@ -3456,20 +3529,17 @@ impl PreparedRenderJob {
                 Ok(packet) => packet,
                 Err(packet) => {
                     self.rejected_packet = Some(packet);
-                    return self.fault_outcome("prepared render packet abandonment admission was refused");
+                    return self.fault_outcome("prepared render packet abandonment admission was refused", cx);
                 }
             };
             if let Err(packet) = self.receiver.publish(packet) {
                 self.rejected_packet = Some(packet);
-                return self.fault_outcome("prepared render packet mailbox publication refused");
+                return self.fault_outcome("prepared render packet mailbox publication refused", cx);
             }
             self.published = true;
-            return StepOutcome::Yield;
+            return JobOutcomeBorrow::admit_yield(cx);
         }
-        StepOutcome::Complete(CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        JobOutcomeBorrow::admit_complete(cx, None, None)
     }
 }
 
@@ -3497,6 +3567,7 @@ impl Drop for PreparedRenderJob {
             commands: self.commands.take(),
             digest: self.digest,
             fault: self.fault.take(),
+            fault_payload: std::mem::replace(&mut self.fault_payload, RetainedPayloadBuilder::new(JobPayloadStream::Fault)),
             receiver: std::mem::replace(&mut self.receiver, PreparedRenderReceiver::unowned()),
             rejected_upload: self.rejected_upload.take(),
             rejected_packet: self.rejected_packet.take(),
@@ -3514,75 +3585,83 @@ impl Drop for PreparedRenderJob {
 }
 
 impl InteractiveJob for PreparedRenderJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let grant = cx.retained_grant();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         if cx.is_cancelled() {
             self.closing = true;
-            return StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx);
         }
-        if self.closing {
-            return self.fault_outcome("prepared render job was stepped while closing");
-        }
+        if cx.should_yield() { return Ok(None); }
+        if self.fault.is_some() { return self.publish_fault(cx); }
+        if self.closing { return self.fault_outcome("prepared render job was stepped while closing", cx); }
         let Some(input) = self.input() else {
-            return self.complete();
+            return self.complete(cx);
         };
         if input.preview_generation != cx.generation().0 || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
-            return self.fault_outcome("prepared render generation is stale");
-        }
-        if cx.should_yield() {
-            return StepOutcome::Yield;
+            return self.fault_outcome("prepared render generation is stale", cx);
         }
         if let Some(producer) = self.input.as_mut().and_then(|input| input.raster_producers.front_mut()) {
             cx.consume_fuel(1);
             let step = producer.step(cx.generation().0);
-            let outcome = match step {
-                PreparedRasterProducerStep::Pending => StepOutcome::Yield,
+            match step {
+                PreparedRasterProducerStep::Pending => {},
                 PreparedRasterProducerStep::Complete(upload) => {
-                    let Some(input) = self.input.as_mut() else { return self.fault_outcome("prepared render input disappeared during raster publication") };
+                    let Some(input) = self.input.as_mut() else { return self.fault_outcome("prepared render input disappeared during raster publication", cx) };
                     input.raster_producers.pop_front();
                     if let Err(upload) = input.try_push_upload(upload) {
                         self.rejected_upload = Some(upload);
-                        return self.fault_outcome("prepared render upload admission refused the exact raster owner");
+                        return self.fault_outcome("prepared render upload admission refused the exact raster owner", cx);
                     }
-                    StepOutcome::Yield
                 }
-                PreparedRasterProducerStep::Fault(fault) => self.fault_outcome(fault),
-            };
+                PreparedRasterProducerStep::Fault(fault) => return self.fault_outcome(fault, cx),
+            }
             if cx.is_cancelled() {
                 self.closing = true;
-                return StepOutcome::Cancelled;
+                return JobOutcomeBorrow::admit_cancelled(cx);
             }
             if self.input().is_some_and(|input| input.preview_generation != cx.generation().0) {
-                return self.fault_outcome("prepared render generation became stale after raster work");
+                return self.fault_outcome("prepared render generation became stale after raster work", cx);
             }
-            return outcome;
+            return JobOutcomeBorrow::admit_yield(cx);
         }
         if !self.raster_backing_closed {
             cx.consume_fuel(1);
-            let Some(input) = self.input.as_mut() else { return self.fault_outcome("prepared render input disappeared before producer backing close") };
+            let Some(input) = self.input.as_mut() else { return self.fault_outcome("prepared render input disappeared before producer backing close", cx) };
             if input.raster_producers.release_backing_step() {
                 self.raster_backing_closed = true;
             }
-            return StepOutcome::Yield;
+            return JobOutcomeBorrow::admit_yield(cx);
         }
         let Some(usage) = self.measure_next() else {
-            return self.complete();
+            return self.complete(cx);
         };
         cx.consume_fuel(1);
         if self.fault.is_some() || !self.include_usage(usage) {
-            return self.fault_outcome("prepared render cumulative credits overflowed");
+            return self.fault_outcome("prepared render cumulative credits overflowed", cx);
         }
-        let Some(input) = self.input() else { return self.fault_outcome("prepared render input disappeared after one worker unit") };
+        let Some(input) = self.input() else { return self.fault_outcome("prepared render input disappeared after one worker unit", cx) };
         if !self.usage.fits(input.limits) {
-            return self.fault_outcome("prepared render credits exceeded");
+            return self.fault_outcome("prepared render credits exceeded", cx);
         }
         if cx.is_cancelled() {
             self.closing = true;
-            return StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx);
         }
         if input.preview_generation != cx.generation().0 || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
-            return self.fault_outcome("prepared render generation became stale after one worker unit");
+            return self.fault_outcome("prepared render generation became stale after one worker unit", cx);
         }
-        StepOutcome::Yield
+        JobOutcomeBorrow::admit_yield(cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Complete if self.published => descriptor.complete(None, None),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Fault if self.fault.is_some() => descriptor.fault(self.fault_payload.published().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared original fault custody was not published"))?),
+            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared outcome descriptor does not match its original owner")),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -3801,3 +3880,7 @@ impl OffscreenPresentToken {
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🖼️atlas/🧪️tests/🦀️.rs"]
+mod atlas_original_owner_tests;

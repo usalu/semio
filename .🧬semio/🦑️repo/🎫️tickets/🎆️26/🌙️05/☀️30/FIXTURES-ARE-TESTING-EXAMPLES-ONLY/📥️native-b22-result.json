@@ -1,0 +1,62 @@
+{
+  "red": {
+    "session": 91589,
+    "nxExit": 1,
+    "log": "🗑️generated/native-b22-red.log"
+  },
+  "intermediate": {
+    "session": 64956,
+    "nxExit": 1,
+    "cause": "new concurrent per-case authoredSql override; Source oracle initially used one global declaration; corrected own test only"
+  },
+  "green": {
+    "session": 76808,
+    "nxExit": 0,
+    "durationSeconds": 1.7,
+    "tests": 1,
+    "assertions": 24,
+    "extraDepthAssertions": 612,
+    "log": "🗑️generated/native-b22-green2.log"
+  },
+  "ownedAfter": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null,
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts",
+      "exists": true,
+      "sha256": "2c34456f5032ea13092c3b7ad10b4d327c8ee2af32798f5d705ecdda72973202",
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "e90c20bc1a97bf33d0e0debe7124ce92d31abc7c093652994a99e8bf29ca2431",
+      "matchesAuthoredAfter": true
+    }
+  ],
+  "excludedObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "bea9f46c3edebdd209e66729e2c0097b47ddff5986e83f5b95cd4cd965f129a8",
+      "matchesBefore": true,
+      "role": "excluded peer/source observer"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs",
+      "sha256": "7c519bd71bbbd5ffcc4ceb14744c5503eb84d5431175eeb319cec23dd80a3452",
+      "matchesBefore": true,
+      "role": "excluded peer/source observer"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧪️tests/🦀️.rs",
+      "sha256": "52180f08512538534192e85097d22abc07f81c95e5b70b3d5328d7383b47afdc",
+      "matchesBefore": true,
+      "role": "excluded peer/source observer"
+    }
+  ],
+  "native": "UNRUN; current Kernel33131 owns Cargo slot; original ReceivingSchemaScript native call vector unchanged"
+}

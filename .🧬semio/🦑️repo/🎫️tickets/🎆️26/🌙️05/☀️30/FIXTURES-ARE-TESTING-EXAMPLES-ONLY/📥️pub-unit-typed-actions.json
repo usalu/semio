@@ -1,0 +1,32 @@
+{
+  "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "action": "update",
+  "logicalActions": [
+    {
+      "anchor": "impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for ProbedRetainedClonePreparation",
+      "beforeBlockSha256": "d3eaec641df4984d75a8f07e1d220878795c8a454ca9858cbbe12eaa152eba8c",
+      "afterBlockSha256": "ba2df8f9d37dd4565d67acb78975260e3d1a93bfa6e8d508b2cf7637572394f5"
+    },
+    {
+      "anchor": "impl RetainedCloneEditCursor<RetainedTextSnapshot, RetainedTextMutation> for RetainedTextEditCursor",
+      "beforeBlockSha256": "266ca4e9f39598dfb8837dd225e55479d2c9c2a31ad79f6d44693edd8a3e7484",
+      "afterBlockSha256": "9acafbcb300fa8cb97d42b9b4d6923ec595c60ab8bb652f0b8b2d8de92ed2986"
+    },
+    {
+      "anchor": "impl ArtifactEphemeralPreparationTask<DemoSnapshot, DemoMutation> for FaultingEphemeralTask",
+      "beforeBlockSha256": "6e9d99394b2dbea8e0882f0b85b388ff52374092844a7ff58f1fda9df82fe07f",
+      "afterBlockSha256": "3125798e97addcf015759f3865c1575ffddac4e789c00d6d13b54f47e40be7ca"
+    },
+    {
+      "anchor": "impl<const N: usize> ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for TerminalPreparation<N>",
+      "beforeBlockSha256": "9367a3738aef53db4c0921a52ec4a641d089216593068a99a3c209f84cd29b1c",
+      "afterBlockSha256": "2ca1881d0f66d81c977429bb7e2e5a3827ce0f535ee6b02432438dec9d0dc5e4"
+    },
+    {
+      "anchor": "DemoOneItemPreparation original ManuallyDrop slot assignment",
+      "beforeBlockSha256": "42779fd774b77f2291a7598a5b29d3d2b70c0731795a412e1b98566752d2d831",
+      "afterBlockSha256": "8c4a33c60af859dcaeb81b4072ab4101bfde14146b69b4df3071a27a2d7a2d69"
+    }
+  ],
+  "afterSourceObservationSha256": "8b2288e461ff5f53999246d49ed53a86b50f4521c0a3ef9f0eef4e25fe7f38e5"
+}

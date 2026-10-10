@@ -1,0 +1,54 @@
+{
+ "grant": {
+  "maximumItems": 1,
+  "maximumCopyBytes": 4096,
+  "maximumCapacityBytes": 1048576,
+  "maximumReleaseBytes": 1048576,
+  "maximumDepth": 64
+ },
+ "cuts": [
+  0,
+  1,
+  2,
+  3,
+  7,
+  15
+ ],
+ "cases": [
+  {
+   "id": "empty-spare",
+   "capacity": 9,
+   "width": 2.5,
+   "caps": [
+    0,
+    2
+   ],
+   "dashes": []
+  },
+  {
+   "id": "dashed",
+   "capacity": 13,
+   "width": 4,
+   "caps": [
+    2,
+    1
+   ],
+   "dashes": [
+    3,
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "id": "zero-capacity",
+   "capacity": 0,
+   "width": 1,
+   "caps": [
+    1,
+    1
+   ],
+   "dashes": []
+  }
+ ]
+}

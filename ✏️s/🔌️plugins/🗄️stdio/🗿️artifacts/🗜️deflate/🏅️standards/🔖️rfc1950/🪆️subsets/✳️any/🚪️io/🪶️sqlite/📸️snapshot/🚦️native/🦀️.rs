@@ -30,7 +30,7 @@ pub(crate) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSna
     let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
 let result=(||->Result<DeflateSnapshot,ValueError>{let owned;
  let bytes=match payload{
-  store::io_schema::IoPayload::Binary(bytes)=>store::semio_format::unwrap_binary_controlled(bytes,"stdio.deflate",store::semio_format::Component::Pack,1,native).map_err(store::semio_format::SemioError::into_value_error)?,
+  store::io_schema::IoPayload::Binary(bytes)=>store::semio_format::unwrap_binary_controlled(bytes,"stdio.deflate",store::semio_format::Component::Pack,1,native)?,
   store::io_schema::IoPayload::Text(text)=>{let body=if text.starts_with("semio "){store::semio_format::split_text_preamble_controlled(text,"stdio.deflate",store::semio_format::Component::Dsl,1,native).map_err(store::semio_format::SemioError::into_value_error)?}else{text.as_str()};owned=hex(body,native)?;owned.as_slice()}
  };
  if bytes.len()<6{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"zlib stream too short"))}let cmf=bytes[0];let flg=bytes[1];if cmf&15!=8{return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"unsupported zlib compression method"))}if cmf>>4>7{return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"unsupported zlib window indicator"))}if !(u16::from(cmf)*256+u16::from(flg)).is_multiple_of(31){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"zlib CMF/FLG check failed"))}

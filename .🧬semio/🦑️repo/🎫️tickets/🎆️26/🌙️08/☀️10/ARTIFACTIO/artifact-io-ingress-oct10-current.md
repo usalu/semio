@@ -1,0 +1,346 @@
+# Artifact IO Ingress — 2026-10-10 Current Source Audit
+
+Source-only findings during a concurrent port. No compile, test, or native runtime execution was performed; no runtime-success claim follows. Line references identify the inspected source, and hashes below disambiguate subsequent concurrent edits. No production files changed.
+
+## Highest-impact original-input gaps
+
+1. **Reactor context chain is incomplete.** `⚛️reactor/🔄️turn/🦀️.rs:539–548` requires the original `StepContext` on `poll_kernel` and forwards it. `poll_kernel_output:553–563` does not declare `cx` but references it and receives an extra argument from that caller. `⚛️reactor/🦀️.rs:1263` also passes `cx` to that incomplete signature. `plugin/🦀️.rs:45527` native owned poll wrapper still passes only identity. The WIT retained-turn-input (`📜️.wit:1139`), Budget.retained (`1151`), and TurnResult.retained-receipt (`1252`) are present. Turn source validates operation, generation, and exact grant against the borrowed context (`761–763`) and computes returned progress (`1559–1560`); this is source intent, not working ingress proof.
+2. **Job original controls stop before actor export.** `jobs/🦀️.rs:130` and `282` require original `IoRunControl` and `SqliteSnapshotControl`; execute_io_run uses those exact arguments (`581`). Calls in plugin source `33773`, `33827`, WIT macro `45296`, and owned native export `45556` still pass only job and budget. WIT `step-job:1411` exposes job-budget only. Caller-owned original controls therefore cannot currently reach that mandatory boundary through these wrappers. Existing job factories/checkpoints still take raw input/restore bytes (`238–250`) and checkpoint owners have uncontrolled `checkpoint()` (`132`, `351–360`); these are separate retained-state boundaries, not a reason to manufacture IO grants from job-budget.
+3. **MediaOut discards original media request.** `plugin/🦀️.rs:44907` matches request as `_` and calls `plugin_produce_media(..., "")`; `42953–42961` invokes `app.produce_media(port_id)` with no context/control and encodes descriptor JSON. Passing `cx` as plugin_exchange’s fifth argument (`44375`) does not repair this downstream call. Concrete route: preserve the incoming request owner and borrow original media/control inputs at actor admission, then pass them through plugin_exchange → plugin_produce_media → app media owner. Root owns MediaHigh, so this audit makes no changes there.
+4. **Checkpoint restore admits owned artifact state without caller authority.** `reactor/🦀️.rs:1104` and `checkpoint/🦀️.rs:104` accept only runtime/state. The latter parses checkpoint JSON (`105–107`), creates app instances (`110`), decodes document pack bytes (`113`), and starts archive load under constant RESTORE_DOCUMENT_LOAD_OPERATION (`114`). Both WIT and native restore wrappers (`plugin/🦀️.rs:45320–45322`, `45591–45595`) preserve that authority-free API; WIT restore (`1428`) has only bytes. Original restore identity, retained custody, cancellation, native receipt/controls must enter at caller admission and remain borrowed through checkpoint parser, document decode, and archive admission. This is an actual caller chain, not a schema-only concern.
+
+## Concrete first-party original-input route
+
+Actor host must supply its exact operation/generation/grant, cancellation/progress owner, native IO custody and SQLite limits. Native owned request/WIT conversion must preserve that original input; ingress must construct/borrow the StepContext from it, then thread the same context through poll_kernel → poll_kernel_output → poll_kernel_turn → plugin_exchange. Turn receipt returns progress against the same retained input. Job stepping requires independent original IO and SQLite controls all the way from the actor host to jobs::step_job → BoundedJob::step → execute_io_run; JobBudget fuel/deadline does not authorize replacement controls. Media and restore require their own original admitted input routes above. Do not derive grants from payload extent, use defaults, or mint ownership from the operation constant.
+
+## Schema/mutation representation inventory
+
+Classification from the current matches: the DSL module’s own schema parser/printer is an actual remaining representation codec (`🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs:1081,2122`), whereas its binding comments are references. Plugin host testing component schema contains explicit ArtifactDsl/ArtifactPack implementations (`plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🦀️.rs:13–21`), but is test infrastructure. Drawing stroke schema’s decode_dash_text match at line 73 is an inline test (case fixture input), not a production representation owner. Artifact mutation models referencing IO mutation record types remain semantic API couplings to representation types, distinct from encoder/decoder implementations; each such coupling remains visible below. Snapshot comments describing relocated implementations and fixture hashes are not live codecs.
+
+Only files outside `/🚪️io/` and outside explicit `/🧪️tests/` were included below. Inline cfg(test) sections can still produce test-only matches. Names such as ArtifactPack/ArtifactDsl in semantic mutation records do not alone establish a live codec; metadata references to protocol/grammar are IO schema exports. Concrete implementation/call lines are included for qualification; this inventory is textual, not a compile reachability proof.
+
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 12: `use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 3: `//! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):`
+  - 16: `use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;`
+- `✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 103: `/// algebra this subset needs; all io now goes exclusively through `io::io()` (design.md rule 3).`
+- `✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 41: `// 🚪️ `store::ArtifactDsl`/`store::ArtifactPack for VcsSnapshot` — the real codec impls — moved to`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️set-drawing-text/🦀️.rs`
+  - 8: `use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🦀️.rs`
+  - 20: `pub fn holding(object: &crate::LowpolyObject, handle: &store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot>) -> Self {`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - 11: `use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::diff::NodePath;`
+  - 12: `use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{create_node, inverse_semio_drawing_mutation, SemioDrawingMutation};`
+  - 13: `use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;`
+  - 14: `use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::{inverse_semio_value_mutation, SemioValueMutation};`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 14: `use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};`
+  - 15: `use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};`
+  - 17: `use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 5: `//! [`crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack`].`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 3: `//! `ArtifactDsl` and `ArtifactPack` are the derived spec-driven text and pack of the one`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🦀️.rs`
+  - 73: `let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut accepted);crate::standards::v1::subsets::any::io::text::dash::decode_dash_text(case["value"].as_str().unwrap(),&mut control)};`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 40: `// ✉️ Handcrafted `ArtifactDsl`/`ArtifactPack` impls for `DrawingSnapshot` relocated to`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🦀️.rs`
+  - 7: `use semio_s_artifact_stdio_semio::standards::v1::subsets::{`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 6: `use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 5: `use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};`
+  - 6: `use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 6: `use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs`
+  - 687: `let body = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(snapshot).ok()?;`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs`
+  - 25: `use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};`
+  - 26: `use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};`
+  - 27: `use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};`
+  - 37: `pub owned_breps: HashMap<String, std::sync::Arc<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>>,`
+  - 55: `pub(crate) fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot) -> Result<MeshData, String> {`
+  - 56: `let body = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(snapshot).map_err(|error| format!("{error:?}"))?;`
+  - 649: `use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{Property, PropertySet, PsetValue};`
+  - 686: `use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::PsetValue;`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs`
+  - 525: `/// `crate::os_spr::OpText::parse_op`/`crate::os_store::ArtifactDsl::parse_dsl` already return, and the derive's`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`
+  - 1064: `Shape::Value => Ok(FieldValue::Value(parse_dsl_value(cursor, depth + 1)?)),`
+  - 1081: `fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextError> {`
+  - 1090: `entries.push((key, parse_dsl_value(cursor, depth + 1)?));`
+  - 1099: `items.push(parse_dsl_value(cursor, depth + 1)?);`
+  - 1214: `let properties = if cursor.peek().kind == TokenKind::LBrace { parse_dsl_value(cursor, 0)? } else { DslValue::Object(Vec::new()) };`
+  - 2067: `(FieldValue::Value(dsl_value), Shape::Value) => print_dsl_value(dsl_value, writer),`
+  - 2122: `fn print_dsl_value(value: &DslValue, writer: &mut Writer) {`
+  - 2141: `print_dsl_value(item, writer);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/📦️package/🦀️.rs`
+  - 18: `pub struct CollectionArtifactPackage {`
+  - 36: `pub fn admit_collection_package_declaration(declaration: CollectionPackageDeclaration) -> Result<CollectionArtifactPackage, CollectionPackageError> {`
+  - 38: `Ok(CollectionArtifactPackage { id: declaration.id, artifact: declaration.artifact, directory: declaration.directory, rust_package: declaration.rust_package, nx_project: declaration.nx_project, dependencies: declaration.dependencies })`
+  - 42: `pub fn package_descriptor() -> Result<CollectionArtifactPackage, CollectionPackageError> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/📦️package/🦀️.rs`
+  - 18: `pub struct SpaceArtifactPackage {`
+  - 36: `pub fn admit_space_package_declaration(declaration: SpacePackageDeclaration) -> Result<SpaceArtifactPackage, SpacePackageError> {`
+  - 38: `Ok(SpaceArtifactPackage { id: declaration.id, artifact: declaration.artifact, directory: declaration.directory, rust_package: declaration.rust_package, nx_project: declaration.nx_project, dependencies: declaration.dependencies })`
+  - 42: `pub fn package_descriptor() -> Result<SpaceArtifactPackage, SpacePackageError> {`
+- `🧰️framework/🔨️modules/🧬️schema/📽️projection/🦀️.rs`
+  - 610: `* `file_types`/`io_entries`/`composer_entries` are new types grounded in `AppIo`/`io::IoKey`/`
+  - 611: `* `io::ComposerEntry` — see each type's own doc. `menus`/`themes` stay `DescriptorEntry` — see`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/🦀️.rs`
+  - 717: `/// `envelope.vcs.initial_snapshot.encode_pack()` — the GENESIS snapshot, fixed for the life of`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎬️scenario/🌱️create/↩️inverse/🦀️.rs`
+  - 11: `vec![ProgramMutation::DeleteScenario(super::super::delete_scenario::DeleteScenario { id: payload.scenario.header.id.clone() })]`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎬️scenario/🗑️delete/↩️inverse/🦀️.rs`
+  - 12: `Some(position) => vec![ProgramMutation::CreateScenario(super::super::create_scenario::CreateScenario { scenario: base.scenarios[position].clone(), index: Some(position) })],`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 90: `CreateScenario(super::create_scenario::CreateScenario),`
+  - 91: `DeleteScenario(super::delete_scenario::DeleteScenario),`
+  - 92: `RenameScenario(super::rename_scenario::RenameScenario),`
+  - 93: `ReplaceScenario(super::replace_scenario::ReplaceScenario),`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🦀️.rs`
+  - 26: `use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 8: `//! codec (`impl store::ArtifactDsl`/`impl store::ArtifactPack for WiresSnapshot`, formerly here) now`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🦀️.rs`
+  - 32: `use crate::standards::v3_0::subsets::any::io::text::diff::{dec_unknown, enc_unknown};`
+  - 34: `use crate::standards::v3_0::subsets::any::io::binary::diff::dec_unknown_bin;`
+  - 36: `use crate::standards::v3_0::subsets::any::io::binary::diff::enc_unknown_bin;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🦀️.rs`
+  - 29: `//! committed `crate::standards::v3_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO`/`crate::standards::v3_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO``
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 35: `// ArtifactDsl/ArtifactPack envelope-wrap glue now lives once, in `crate::document`'s`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🦀️.rs`
+  - 183: `/// `print_dsl(demo_obj_snapshot())` is genuinely stable, matching `🗣️.dsl.semio`'s own`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🦀️.rs`
+  - 13: `impl store::ArtifactDsl for Snapshot {`
+  - 15: `fn parse_dsl(text:&str)->Result<Self,store::TextError>{if text.trim().is_empty(){return Ok(Self::default());}semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|store::TextError`
+  - 16: `fn print_dsl(&self)->String{semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(self))}`
+  - 18: `impl store::ArtifactPack for Snapshot {`
+  - 19: `fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}`
+  - 20: `fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)}`
+  - 21: `fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(record,_)=store::pack_rt::decode_document(bytes,&Self::__dsl_spec(),options)?;Self::__dsl_from_record(&record).map_err(store::text_error_t`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 69: `use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;`
+  - 89: `// `store::ArtifactDsl`/`store::ArtifactPack` codec impls (and their hex/LEB128 primitives) moved to`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs`
+  - 22: `fn bound(source: &Snapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {`
+  - 23: `control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 1)?;`
+  - 31: `control.checkpoint(SqliteSnapshotPhase::EncodeNative, 1, 1)`
+  - 33: `impl store::ArtifactSqliteSnapshot for Snapshot {`
+  - 35: `fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {`
+  - 36: `control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?; control.check_rows(1)?; control.check_value_bytes(16)?;`
+  - 41: `fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {`
+  - 42: `control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,1)?;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 3: `//! `ArtifactDsl`/`ArtifactPack` impls that call it directly, mirroring `json`'s own already-`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 3: `//! `ArtifactDsl`/`ArtifactPack` impls that call it directly, mirroring `json`'s own already-`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 9: `pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_en1990_mutation, inverse_en1990_mutation};`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 9: `pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_en1998_mutation, inverse_en1998_mutation};`
+  - 58: `ChangeMasonryWallRatio(change_masonry_wall_ratio::ChangeMasonryWallRatio),`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 8: `pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_en1993_mutation, inverse_en1993_mutation};`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+  - 9: `use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 8: `pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_din4108_mutation, inverse_din4108_mutation};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-source/🦀️.rs`
+  - 6: `use crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 101: `/// `🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+  - 6: `use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;`
+  - 45: `use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 7: `use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 5: `use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;`
+  - 54: `semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&self.catalog.child_id, &self.catalog.target, "kit")`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🦀️.rs`
+  - 116: `/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` below).`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 5: `use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 5: `use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 8: `pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_din16798_mutation, inverse_din16798_mutation};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs`
+  - 342: `assert_eq!(crate::standards::v2_0::subsets::base::io::encode_zip(&after).is_ok(),fixture["nativeEncode"].as_bool().unwrap());`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs`
+  - 16: `use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+  - 9: `use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🦀️.rs`
+  - 74: `/// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🦀️.rs`
+  - 17: `use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🦀️.rs`
+  - 139: `GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.surface-to-volume-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.surface-to-volume-ratio.v1:geometry-v2", encode: surface_to_volume_ratio::encode_result }`
+  - 142: `GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.hull-fill-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.hull-fill-ratio.v1:geometry-v2", encode: hull_fill_ratio::encode_result },`
+  - 193: `GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.repetition-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.repetition-ratio.v1:geometry-v2", encode: repetition_ratio::encode_result },`
+  - 194: `GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.modularity-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.modularity-ratio.v1:geometry-v2", encode: modularity_ratio::encode_result },`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 6: `use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;`
+  - 7: `use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 12: `use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;`
+  - 13: `use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+  - 151: `/// `DeflateSnapshot`'s own `ArtifactDsl` impl above already uses, and the same reason `GifDiff``
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 25: `/// committed `crate::standards::v_rfc1950::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO`/`crate::standards::v_rfc1950::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO``
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 80: `/// `🎒️.pack.semio` (all three are literally this snapshot's `print_dsl`/`
+  - 81: `/// `encode_deflate_snapshot`/`encode_pack` output, asserted equal by `fixture_honesty_law` in`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 55: `/// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/`
+  - 56: `/// `store::ArtifactPack` below — NOT a replacement (same treatment as `BinarySnapshot`).`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🗜️compactness/🦀️.rs`
+  - 54: `surface_to_volume_ratio: surface_to_volume_ratio::from_raw(context, &raw),`
+  - 57: `hull_fill_ratio: hull_fill_ratio::from_raw(context, &raw),`
+  - 64: `surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids),`
+  - 67: `hull_fill_ratio: hull_fill_ratio::unavailable_measure(diagnostic_ids),`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🪞️symmetry/🦀️.rs`
+  - 114: `if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology) {`
+  - 117: `if let Some(measure) = modularity_ratio::from_assembly(parts, policy, topology) {`
+  - 133: `repetition_ratio: repetition_ratio::infer(context),`
+  - 134: `modularity_ratio: modularity_ratio::infer(context),`
+  - 144: `repetition_ratio: repetition_ratio::unavailable_measure(diagnostic_ids),`
+  - 145: `modularity_ratio: modularity_ratio::unavailable_measure(diagnostic_ids),`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🦀️.rs`
+  - 182: `/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🦀️.rs`
+  - 106: `/// this snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`) and`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🦀️.rs`
+  - 101: `/// `🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 7: `use crate::standards::v2_0::subsets::any::io::text::snapshot::ordered_attr_map;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🦀️.rs`
+  - 115: `/// `🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+  - 528: `/// `ArtifactDsl` impl in the `📸️snapshot` module already uses hex for the same reason). `Option<T>``
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 63: `SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio),`
+  - 97: `GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: 3 }),`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏set-pixel-aspect-ratio/🦀️.rs`
+  - 22: `Ok(vec![GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: base.pixel_aspect_ratio })])`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/🔺️diff/🦀️.rs`
+  - 1053: `/// hex (no external base64 dep, matches this artifact's own `ArtifactDsl` hex-dump convention and`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs`
+  - 824: `/// own `ArtifactDsl` impl above already uses hex for the same reason: no external base64 dep, no`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/🦀️.rs`
+  - 105: `/// from this snapshot's real `print_dsl`/`encode_pack` output). Single source of truth for those`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs`
+  - 75: `SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio),`
+  - 197: `GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: 3 }),`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📏set-pixel-aspect-ratio/🦀️.rs`
+  - 22: `Ok(vec![GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: base.pixel_aspect_ratio })])`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/💡️inferences/🦀️.rs`
+  - 8: `use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/💡️inferences/⏱️duration/🦀️.rs`
+  - 7: `use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🔺️diff/🦀️.rs`
+  - 15: `use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🦀️.rs`
+  - 13: `use crate::standards::v1::subsets::audio::schema::diff::{self, SemioAudioChannelDiff, SemioAudioDiff};`
+  - 28: `use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🦀️.rs`
+  - 4: `use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 112: `/// (both are literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 144: `/// come back from `parse_dsl`/`decode_pack` as this one anyway.`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 310: `SemioImageSnapshot { schema: "s.stdio.semio.image".into(), width, height, colorspace: semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioColorspace::Rgba, bit_depth: 8, frames: vec![semio_s_artifact_stdio_se`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 3: `//! `ArtifactDsl` and `ArtifactPack` carry the literal typed Raster layer and intrinsic graph. `RasterSnapshot.assets` carries `store::ArtifactChild<SemioImageSnapshot>``
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🔺️diff/🦀️.rs`
+  - 7: `use crate::standards::v1::subsets::audio::schema::{diff::SemioAudioDiff, snapshot::SemioAudioSnapshot};`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/🦀️.rs`
+  - 30: `use crate::standards::v1::subsets::audio::schema::mutations::set_sample_rate;`
+  - 31: `use crate::standards::v1::subsets::audio::schema::{mutations::SemioAudioMutation, snapshot::SemioAudioSnapshot};`
+  - 127: `ApplyAudio(apply_audio::ApplyAudio),`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs`
+  - 10: `use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 98: `/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`), a bare `parse_dsl` of persisted/fixture text`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+  - 427: `/// external base64 dep, matches this artifact family's own `ArtifactDsl` idiom). Every array level`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 108: `/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `conformance_laws::`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🦀️.rs`
+  - 93: `/// literally this snapshot's `print_dsl`/`encode_pack` output, asserted equal by`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 10: `use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/🦀️.rs`
+  - 625: `use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};`
+  - 634: `use crate::standards::v1_7::subsets::base::io::decode_pdf;`
+  - 671: `let base = crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(base, rows);`
+  - 673: `Some(_) => crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(&base, set_catalog_entry_rows(&base, "Tail", PdfObject::Int(1), None)),`
+  - 681: `crate::standards::v1_7::subsets::base::io::mutation_bridge::after_rows(base, set_entry_rows(base, id, "Tail", PdfObject::Int(1), None))`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs`
+  - 56: `use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 248: `use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{change_node_label::ChangeNodeLabel, resize_node::ResizeNode, set_node_property::SetNodeProperty};`
+  - 249: `use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;`
+  - 271: `use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{delete_edge::DeleteEdge, delete_node::DeleteNode};`
+  - 272: `use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId};`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 66: `use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 18: `use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🦀️.rs`
+  - 96: `/// for `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (literally this snapshot's `print_dsl`/`encode_pack``
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs`
+  - 125: `/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🦀️.rs`
+  - 13: `//! Modeled on `🔤️text`'s hand-rolled `ArtifactDsl`/`ArtifactPack` convention (real hex/bracket text`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 13: `use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛️flat-position/🦀️.rs`
+  - 4: `use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphEdge;`
+  - 5: `use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;`
+  - 19: `SemioValue::Float{lexeme}=>semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::read_binary64_lexeme(lexeme),`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+  - 26: `/// committed `crate::standards::v_raw::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO`/`crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO``
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/🦀️.rs`
+  - 7: `use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;`
+  - 89: `fn content_property_bytes(value:&semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue,depth:usize,items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{`
+  - 90: `use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;`
+  - 97: `fn content_bag_bytes(values:&[semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry],items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{for entry in values{add_owned_bytes(bytes,`
+  - 98: `fn content_node_bytes(node:&semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphNode,maximum:usize)->Result<(),ValueError>{`
+  - 105: `fn content_edge_bytes(edge:&semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphEdge,maximum:usize)->Result<(),ValueError>{`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🦀️.rs`
+  - 52: `/// artifact struct (binary has no format codec of its own to sit beside — the hex `ArtifactDsl`/`
+  - 53: `/// `ArtifactPack` impls already live in `📸️snapshot/🦀️.rs`, untouched by this move).`
+  - 63: `/// `🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/`encode_pack` output,`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 11: `/// 🧪️ F6-PILOT: `semio_framework_dsl_record_derive::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/`
+  - 12: `/// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField``
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 9: `use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs`
+  - 40: `/// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/`
+  - 41: `/// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField``
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🦀️.rs`
+  - 6: `//! Modeled directly on `🔤️text`'s hand-rolled `ArtifactDsl`/`ArtifactPack` convention (real`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs`
+  - 8: `//! Modeled on `🖼️image`'s hand-rolled `ArtifactDsl`/`ArtifactPack` convention (real hex/bracket`
+
+## Inspected ingress SHA-256
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`: `21800823768504566f6058db93838c9de2fa0b49dd715a1a440ecd7499eb2bbe`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs`: `b8d260395f5e34c08e2b998d861a5412488900fd64dd4e9ee1ab54ee5f88f333`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs`: `09bffcc17eef50ea6c911f6cb62cc084474641c7127fdca87adebfaa04f53b7d`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📸️checkpoint/🦀️.rs`: `39f4590164e7e59eb00fb725a0f2f063e27c9539e70f8f44bfce0d4d85adfe13`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs`: `5f7009cdd560b47643c707b798b056dc4474e546779864962448b2326aae9457`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit`: `08c3774d9b84c20d8aa33f83c738a9a7dbe2313babd56c156057b8bdfb8f4689`

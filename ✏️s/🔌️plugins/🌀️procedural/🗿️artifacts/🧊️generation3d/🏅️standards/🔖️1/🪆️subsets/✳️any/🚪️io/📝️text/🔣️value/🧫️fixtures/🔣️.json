@@ -1,0 +1,89 @@
+{
+  "localized": {
+    "en": "Translate",
+    "de": "Verschieben"
+  },
+  "localizedUnknown": {
+    "en": "Translate",
+    "de": "Verschieben",
+    "unknown": true
+  },
+  "selectionOmitted": {},
+  "selectionNull": {
+    "generationId": null
+  },
+  "selectionNamed": {
+    "generationId": "gen-1"
+  },
+  "inputNumber": {
+    "type": "number",
+    "value": -12.5
+  },
+  "inputVector": {
+    "type": "vector",
+    "value": [
+      1,
+      -2.5,
+      3
+    ]
+  },
+  "inputPlane": {
+    "type": "plane",
+    "value": {
+      "origin": [
+        1,
+        2,
+        3
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "inputMissing": {
+    "type": "number"
+  },
+  "inputForged": {
+    "type": "forged",
+    "value": 1
+  },
+  "inputShortVector": {
+    "type": "vector",
+    "value": [
+      1,
+      2
+    ]
+  },
+  "snapshotMissingGeneration": {},
+  "descriptors": [
+    {
+      "value": {
+        "kind": "inputNote",
+        "id": "io-note",
+        "text": "Native"
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "kind": "forged"
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "kind": "neuron"
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "kind": "inputNote",
+        "id": 123
+      },
+      "accepted": false
+    }
+  ]
+}

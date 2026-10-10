@@ -1,0 +1,8 @@
+{
+  "nativeLaw": "decode_fault_descriptor_borrows_original_payload_until_paid_nested_close",
+  "diagnostic": "field.wallet-after-real-turn",
+  "grantSource": "store.decode-release-step-wallet",
+  "samePayload": true,
+  "borrowHeapBytes": 0,
+  "parentDepth": 1
+}

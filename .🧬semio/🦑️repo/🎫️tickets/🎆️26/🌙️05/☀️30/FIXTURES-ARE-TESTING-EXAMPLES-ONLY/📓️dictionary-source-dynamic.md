@@ -1,0 +1,11 @@
+# Dictionary, Source and Dynamic Trial Authorities
+
+Read-only current Source; no execution or authorship adopted. Fresh guarded candidates/hashes are in `📥️dictionary-source-dynamic.json`. Bounded module searches do not establish global absence.
+
+Replication dictionary/decode schema validates an experiment envelope: raw payloadHex, minimum-three expected strings, fixed supplied 1/0/65536/65536/32 grant, metadataCopy0 and same-original-source marker. Its TS1 imports both schema and plain law and compiles whole law. Retire only schema import/Ajv whole admission; preserve raw header/count, byte ranges, exact SQLite decoded values including NUL/UTF8 and source-custody invariants. Actual dictionary Rust remains untouched. Genuine Grant can validate the grant member only; do not relocate the whole envelope.
+
+Replication codec/decode-retained/source schema pairs paged original bytes with expectedHex, metadataCopy0 and JSON source/expected output. TS3 imports schema and TS4 admits whole law before actual Buffer/SQLite/offset reconstruction. Remove only whole admission/import; preserve every exact byte/per-offset comparison, JSON actual output, source identity proof and original plain input. This complete test envelope is not OriginalWireSourceIdentity alone; keep its genuine Rust production owner rather than treating the envelope as a domain DTO.
+
+Value retained-clone/dynamic schema combines fixed positive/close budgets, max turns/denial capacity, pointer observation markers, fixed depth/cancel schedules, minimum-fifteen cases and normalDemandFields. TS9 reads it;12–17 compile whole law and mutate only schema mirrors. Remove the schema load, whole admission and mirror-only mutants. Retain behavioral test18–25 and second test28–44: JSONPatch, structuredClone, repeated map keys, UTF8 bytes, actual float bit words and deep tree behavior. Nested definitions.value is a tagged test representation here; no genuine production consumer of this schema selector was established. Do not copy that representation into a new production owner merely to preserve corpus validation. Genuine actual Value APIs/Schema must remain separately authoritative.
+
+No additional actual production collection import was established by this finite cohort. Earlier collection-route findings remain qualified; this is not runtime purity proof.

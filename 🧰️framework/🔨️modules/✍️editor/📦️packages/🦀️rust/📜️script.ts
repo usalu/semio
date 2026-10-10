@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { BROWSER_CANVAS_HOT_CRATES } from "../../../🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
 import { resolve } from "node:path";
@@ -47,4 +48,4 @@ class OwnedErrorScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test-owned-error",OwnedErrorScript).register("wasm", WasmScript).register("test", TestScript);
 
-await runScriptMain(router, { defaultCommand: "wasm" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "wasm" }) }));

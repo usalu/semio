@@ -40,7 +40,7 @@ pub(super) enum LifecycleRetry {
 pub(super) struct AdmittedAuthority {
     pub(super) allocation: Option<ShardActorAllocation>,
     pub(super) authority: DeferredAuthority,
-    pub(super) budget: semio_framework_actor::Budget,
+    pub(super) budget: Option<IssuedShardTurn>,
     pub(super) lane: semio_framework_actor::Lane,
     pub(super) owner_bytes: usize,
     pub(super) retry: LifecycleRetry,
@@ -61,7 +61,7 @@ impl DeferredAuthority {
 }
 
 impl AdmittedAuthority {
-    pub(super) fn new(allocation: Option<ShardActorAllocation>, budget: semio_framework_actor::Budget, authority: DeferredAuthority, lane: semio_framework_actor::Lane, owner_bytes: usize) -> Self {
+    pub(super) fn new(allocation: Option<ShardActorAllocation>, budget: Option<IssuedShardTurn>, authority: DeferredAuthority, lane: semio_framework_actor::Lane, owner_bytes: usize) -> Self {
         Self { allocation, authority, budget, lane, owner_bytes, retry: LifecycleRetry::None }
     }
 
@@ -99,6 +99,22 @@ impl ShardLoop {
         Ok(allocation)
     }
 
+    pub(super) fn has_unissued_authority(&self) -> bool {
+        [&self.pending_interactive, &self.pending_background].into_iter().any(|ring| (0..ring.len).any(|index| ring.get(index).is_some_and(|owner| owner.budget.is_none())))
+    }
+
+    pub(super) fn drive_unissued_authority(&mut self) {
+        for ring in [&mut self.pending_interactive, &mut self.pending_background] {
+            for offset in 0..ring.len {
+                if let Some(slot) = ring.slots[ring.order[offset]].as_mut() {
+                    if slot.owner.budget.is_none() {
+                        slot.owner.budget = self.granted_budgets.get(&slot.owner.authority.actor()).copied();
+                    }
+                }
+            }
+        }
+    }
+
     pub(super) fn has_lifecycle_retry(&self) -> bool {
         [&self.pending_interactive, &self.pending_background].into_iter().any(|ring| (0..ring.len).any(|index| ring.get(index).is_some_and(AdmittedAuthority::retries)))
     }
@@ -111,20 +127,20 @@ impl ShardLoop {
     }
 
     pub(super) fn select_lane(&self, ring: &FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>) -> Option<usize> {
-        let retry = (0..ring.len).find(|index| ring.get(*index).is_some_and(AdmittedAuthority::retries));
+        let retry = (0..ring.len).find(|index| ring.get(*index).is_some_and(|owner| owner.budget.is_some() && owner.retries()));
         if let Some(index) = retry {
             let owner = ring.get(index).expect("selected retry remains owned");
             if owner.retry == LifecycleRetry::Ready {
                 return Some(index);
             }
-            return (0..ring.len).find(|candidate| ring.get(*candidate).is_some_and(|peer| peer.allocation != owner.allocation && !self.retry_blocks(peer))).or(Some(index));
+            return (0..ring.len).find(|candidate| ring.get(*candidate).is_some_and(|peer| peer.budget.is_some() && peer.allocation != owner.allocation && !self.retry_blocks(peer))).or(Some(index));
         }
-        let first = (0..ring.len).find(|index| ring.get(*index).is_some_and(|owner| !self.retry_blocks(owner)))?;
+        let first = (0..ring.len).find(|index| ring.get(*index).is_some_and(|owner| owner.budget.is_some() && !self.retry_blocks(owner)))?;
         let DeferredAuthority::JobStep { actor, .. } = &ring.get(first)?.authority else { return Some(first) };
         for index in first..ring.len {
             let Some(owner) = ring.get(index) else { break };
             let DeferredAuthority::JobStep { actor: candidate, turn } = &owner.authority else { break };
-            if candidate != actor || self.retry_blocks(owner) {
+            if owner.budget.is_none() || candidate != actor || self.retry_blocks(owner) {
                 break;
             }
             if self.job_placement.get(&(*actor, turn.job)) == Some(&JobPlacement::Exclusive) {
@@ -139,7 +155,7 @@ impl ShardLoop {
             (0..ring.len)
                 .find(|index| {
                     ring.get(*index).is_some_and(|owner| {
-                        owner.authority.revokes()
+                        owner.budget.is_some() && owner.authority.revokes()
                             && self.allocation_is_current(owner.allocation)
                             && [&self.pending_interactive, &self.pending_background].into_iter().any(|pending| (0..pending.len).any(|index| pending.get(index).is_some_and(|retry| retry.retries() && retry.allocation == owner.allocation)))
                     })

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 /** ⚙️ Routes styling generation, verification, font acquisition, and tests. */
@@ -77,4 +78,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-relative-sizing", RelativeSizingContractScript)
   .register("test-color-primitives", ColorPrimitivesContractScript);
 
-if (import.meta.main) await runScriptMain(router);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

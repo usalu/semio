@@ -1,6 +1,9 @@
 //! 🧵️ Native consuming receipts retain the actual caller recipient without foreign allocation authority.
 use super::{NativeEncodeControl,NativeEncodeContinuation,NativeEncodeProgress,NativeEncodeRetirementRecipient,allocation};
 use crate::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement};
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;
 /// 🫴️ Preserves original local admission beside its original borrowed retirement recipient.
 pub struct NativeRetirementEncodeContinuation<'recipient>{receipt:Option<NativeEncodeContinuation>,recipient:&'recipient mut NativeEncodeRetirementRecipient}
 /// 🔐️ Preserves a consuming local receipt beside its unique original recipient identity.
@@ -26,13 +29,15 @@ impl<'recipient> NativeRetirementEncodeContinuation<'recipient>{
  /// 🫴️ Returns the unique original admission receipt and caller recipient together.
  pub fn into_parts(mut self)->(NativeEncodeContinuation,&'recipient mut NativeEncodeRetirementRecipient){(self.receipt.take().expect("native retirement receipt exists between hops"),self.recipient)}
  /// 🔁️ Runs one original local hop while preserving recipient custody and cumulative allocation admission.
- pub fn encode<T>(&mut self,progress:&mut dyn FnMut(NativeEncodeProgress)->bool,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<T,ValueError>)->Result<T,ValueError>{let receipt=self.receipt.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native retirement continuation is already receiving"))?;let mut control=NativeEncodeControl::resume(receipt,progress)?;control.retirement=Some(&mut *self.recipient);let mut scope=Scope{control,slot:&mut self.receipt};let result=scope.control.scoped_stage(operation);scope.control.continuation()?;result}
+ pub fn encode<T>(&mut self,progress:&mut dyn FnMut(NativeEncodeProgress)->bool,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<T,ValueError>)->Result<T,ValueError>{let receipt=self.receipt.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native retirement continuation is already receiving"))?;if receipt.owned_bytes>receipt.maximum_bytes||(receipt.total!=0&&receipt.completed>receipt.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original encode resume preserves invalid cumulative receipt"))}let receipt=self.receipt.take().unwrap();let mut control=NativeEncodeControl::resume(receipt,progress)?;control.retirement=Some(&mut *self.recipient);let mut scope=Scope{control,slot:&mut self.receipt};let result=scope.control.scoped_stage(operation);scope.control.continuation()?;result}
  /// 📏️ Returns the complete original caller allowance.
  pub fn maximum_bytes(&self)->usize{self.receipt.as_ref().expect("native retirement receipt exists between hops").maximum_bytes}
  /// 📊️ Observes exact admission retained across every original encode and close hop.
  pub fn owned_bytes(&self)->usize{self.receipt.as_ref().expect("native retirement receipt exists between hops").owned_bytes}
 }
 impl NativeDetachedRetirementEncodeContinuation{
+ /// ♻️ Releases the exact empty original recipient box under its caller grant and observer.
+ pub fn release_recipient_box(&mut self,recipient:&mut Option<Box<NativeEncodeRetirementRecipient>>,grant:crate::RetainedCloneGrant,progress:&mut dyn FnMut(NativeEncodeProgress)->bool)->Result<crate::RetainedCloneProgress,ValueError>{let original=recipient.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original recipient box was already released"))?;if original.identity!=self.recipient{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"recipient box release requires original unique identity"))}if !original.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original recipient box retains unfinished retirement"))}if self.receipt.owned_bytes>self.receipt.maximum_bytes||(self.receipt.total!=0&&self.receipt.completed>self.receipt.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"recipient release preserves invalid original receipt"))}if grant.maximum_items==0{return Ok(Default::default())}if grant.maximum_depth<1{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original recipient release requires admitted depth"))}let bytes=std::mem::size_of::<NativeEncodeRetirementRecipient>();if bytes>grant.maximum_release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original recipient release exceeds caller release grant"))}if !progress(NativeEncodeProgress{completed:self.receipt.completed,total:self.receipt.total,owned_bytes:self.receipt.owned_bytes}){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original recipient release canceled"))}drop(recipient.take().unwrap());Ok(crate::RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})}
  /// 🧾️ Observes unchanged original cumulative allocation admission.
  pub fn owned_bytes(&self)->usize{self.receipt.owned_bytes}
  /// 🔗️ Rebinds only the original recipient without consuming a mismatched receipt.

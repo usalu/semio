@@ -896,7 +896,11 @@ struct JsonFrame<V:JsonParsedValue> {
     key: Option<String>, key_offset: usize, probe: usize, compare: usize, duplicate: Option<usize>,
     array:Vec<V>, members:Vec<(String,V)>, admitted:bool, reverse:usize,
 }
-struct JsonStringScan {start:usize,position:usize,bytes:usize,output:String,writing:bool,admitted:bool}
+struct JsonStringScan {start:usize,position:usize,bytes:usize,output:Vec<u8>,pending_scalar:u32,pending_width:u8,pending_index:u8,writing:bool,admitted:bool}
+impl JsonStringScan{
+    fn next_byte(&self)->u8{let scalar=self.pending_scalar;let width=self.pending_width;let index=self.pending_index;if width==1{return scalar as u8}if index==0{return match width{2=>0xc0|(scalar>>6)as u8,3=>0xe0|(scalar>>12)as u8,_=>0xf0|(scalar>>18)as u8}}0x80|((scalar>>(6*u32::from(width-index-1)))&63)as u8}
+    fn write_byte(&mut self,receipt:&mut RetainedCloneProgress)->Result<(),JsonError>{if self.output.len()>=self.bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON string changed after admission").into())}self.output.push(self.next_byte());self.pending_index+=1;receipt.copied_bytes=1;Ok(())}
+}
 enum JsonLexeme { String(JsonStringScan), Number(NumberScan) }
 
 fn json_candidate_slot<T>(owner:&mut JsonCandidates<T>,control:&mut semio_framework_value::NativeDecodeControl<'_>,receipt:&mut RetainedCloneProgress)->Result<bool,JsonError> {
@@ -944,17 +948,18 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
             return Ok(demand);
         }
         if self.pending.is_some(){if let Some(frame)=self.frames.last(){if let Some(index)=frame.duplicate{json_candidate_demand(&self.retired,&mut demand)?;if self.retired.has_reserved_slot(){demand.depth=demand.depth.max(frame.entries.next_get_depth_demand(index).map_err(ValueError::from)?);}}else if frame.object{json_candidate_demand(&frame.entries,&mut demand)?;}else{json_candidate_demand(&frame.values,&mut demand)?;}}return Ok(demand);}
+        if self.lexeme.is_none()&&self.result.is_none()&&self.frames.last().map_or(true,|frame|if frame.object{frame.state==4}else{matches!(frame.state,0|2)})&&matches!(input.byte_at(self.position),Some(b'{'|b'[')){self.admit_container_depth()?;}
         if let Some(frame)=self.frames.last().filter(|frame|frame.state==6){demand.depth=demand.depth.max(frame.entries.next_get_depth_demand(frame.probe).map_err(ValueError::from)?);}
         if let Some(JsonLexeme::String(scan))=&self.lexeme{
             if scan.writing&&!scan.admitted{demand.capacity_bytes=scan.bytes;}
-            else if scan.writing{let mut position=scan.position;demand.copy_bytes=borrowed_read_source::json_character(input,&mut position)?.map_or(0,char::len_utf8);}
+            else if scan.writing{let mut position=scan.position;demand.copy_bytes=if scan.pending_index<scan.pending_width{1}else{usize::from(borrowed_read_source::json_character(input,&mut position)?.is_some())};}
         }else if self.lexeme.is_none()&&self.frames.capacity()==0&&matches!(input.byte_at(self.position),Some(b'{'|b'[')){demand.capacity_bytes=(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)*std::mem::size_of::<JsonFrame<V>>();}
         Ok(demand)
     }
     pub fn step(&mut self,input:&str,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<V>,JsonError>{
         self.step_source(input,maximum_units,control,grant,true)
     }
-    fn step_source<S:JsonReadSource+?Sized>(&mut self,input:&S,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,known_utf8:bool)->Result<Option<V>,JsonError>{
+    pub fn step_source<S:JsonReadSource+?Sized>(&mut self,input:&S,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,known_utf8:bool)->Result<Option<V>,JsonError>{
         self.normal_step_progress=Default::default();
         let result=(||{
         for _ in 0..maximum_units{
@@ -1011,16 +1016,17 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
             match lexeme {
                 JsonLexeme::String(scan)=>{
                     if scan.writing && !scan.admitted {control.charge(scan.bytes)?;scan.output.try_reserve_exact(scan.bytes).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"JSON string allocation failed"))?;receipt.retained_capacity_bytes=scan.output.capacity();scan.admitted=true;return Ok(());}
+                    if scan.writing&&scan.pending_index<scan.pending_width{scan.write_byte(receipt)?;return Ok(());}
                     let mut position=if scan.writing{scan.position}else{self.position};
                     let character=borrowed_read_source::json_character(input,&mut position)?;
                     if scan.writing{scan.position=position;}else{self.position=position;}
                     if let Some(character)=character {
-                        if scan.writing {if scan.output.len()+character.len_utf8()>scan.bytes{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON string changed after admission").into());}scan.output.push(character);receipt.copied_bytes=character.len_utf8();}else {scan.bytes=scan.bytes.checked_add(character.len_utf8()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"JSON string size overflow"))?;}
+                        if scan.writing {scan.pending_scalar=character as u32;scan.pending_width=character.len_utf8()as u8;scan.pending_index=0;scan.write_byte(receipt)?;}else {scan.bytes=scan.bytes.checked_add(character.len_utf8()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"JSON string size overflow"))?;}
                         return Ok(());
                     }
                     if !scan.writing {scan.writing=true;scan.position=scan.start;return Ok(());}
                     if scan.output.len()!=scan.bytes {return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON string changed after measurement").into());}
-                    let Some(JsonLexeme::String(scan))=self.lexeme.take() else {unreachable!()};let text=scan.output;
+                    let Some(JsonLexeme::String(scan))=self.lexeme.take() else {unreachable!()};let text=unsafe{String::from_utf8_unchecked(scan.output)};
                     if let Some(frame)=self.frames.last_mut().filter(|frame|frame.object && matches!(frame.state,0|2)) {frame.key=Some(text);frame.state=6;frame.probe=0;frame.compare=0;frame.duplicate=None;}
                     else {self.pending=Some(V::json_string(text));}
                 },
@@ -1060,13 +1066,13 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
                 if frame.state==1 {if byte==b']' {self.close_frame();return Ok(());}if byte!=b',' {return Err(error());}frame.state=2;self.position+=1;return Ok(());}
             }
         }
-        if self.frames.len()>self.limits.maximum_depth.min(MAX_DEPTH as usize){return Err(JsonError::MaxDepthExceeded(self.limits.maximum_depth.min(MAX_DEPTH as usize)as u32));}
         let declared_item=self.frames.len().checked_sub(1).filter(|index|matches!(self.frames[*index].state,0|2));
         if let Some(index)=declared_item{if self.frames[index].item_count>=self.limits.maximum_items{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"JSON declared collection extent exceeds caller limit").into());}}
         match byte {
-            b'"'=>{self.position+=1;self.lexeme=Some(JsonLexeme::String(JsonStringScan {start:self.position,position:self.position,bytes:0,output:String::new(),writing:false,admitted:false}));},
+            b'"'=>{self.position+=1;self.lexeme=Some(JsonLexeme::String(JsonStringScan {start:self.position,position:self.position,bytes:0,output:Vec::new(),pending_scalar:0,pending_width:0,pending_index:0,writing:false,admitted:false}));},
             b'-'|b'0'..=b'9'=>self.lexeme=Some(JsonLexeme::Number(NumberScan::new(self.position))),
             b'{'|b'['=>{
+                self.admit_container_depth()?;
                 if self.frames.capacity()==0 {self.frames=control.allocate_vec(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)?;receipt.retained_capacity_bytes=self.frames.capacity()*std::mem::size_of::<JsonFrame<V>>();return Ok(());}
                 self.frames.push(JsonFrame {object:byte==b'{',state:0,item_count:0,values:Default::default(),entries:Default::default(),key:None,key_offset:0,probe:0,compare:0,duplicate:None,array:Vec::new(),members:Vec::new(),admitted:false,reverse:0});self.position+=1;
             },
@@ -1076,6 +1082,7 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
         if let Some(index)=declared_item{self.frames[index].item_count+=1;}
         Ok(())
     }
+    fn admit_container_depth(&self)->Result<(),JsonError>{let maximum=self.limits.maximum_depth.min(MAX_DEPTH as usize);if self.frames.len()>=maximum{Err(JsonError::MaxDepthExceeded(maximum as u32))}else{Ok(())}}
     fn close_frame(&mut self) {self.frames.last_mut().unwrap().state=8;self.position+=1;}
     fn materialize_frame(&mut self,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<(),JsonError> {
         let frame=self.frames.last_mut().unwrap();
@@ -1110,8 +1117,8 @@ impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonF
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
 impl semio_framework_value::retirement::RetireOwned for JsonLexeme {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.output.retirement(),Self::Number(value)=>leaf(value)}}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.output.retirement_birth_bytes(),Self::Number(_)=>Some(leaf_birth_bytes::<NumberScan>())}}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self {Self::String(value)=>bytes(value.output),Self::Number(value)=>leaf(value)}}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;match self {Self::String(_)=>Some(bytes_birth_bytes()),Self::Number(_)=>Some(leaf_birth_bytes::<NumberScan>())}}
     fn controlled_retirement_supported()->bool{true}
 }
 impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonGrammarCursor<V> {
@@ -1435,13 +1442,33 @@ pub fn write_float_to(value: f64, out: &mut impl fmt::Write) -> fmt::Result {
     if exponent_adjust != 0 {
         digits.truncate(digit_count);
     }
+    write_decimal_digits(negative, &digits, exponent, -5..=15, out)
+}
+
+/// 🔢️ Preserves binary32 shortest digits and its canonical JSON decimal range without promoting its precision.
+pub fn write_float32_to(value: f32, out: &mut impl fmt::Write) -> fmt::Result {
+    use fmt::Write as _;
+    if !value.is_finite() { return out.write_str("null"); }
+    if value == 0.0 { return out.write_str(if value.is_sign_negative() { "-0.0" } else { "0.0" }); }
+    let mut scientific = ScalarText::new();
+    write!(scientific, "{:e}", value.abs())?;
+    let (mantissa, exponent) = scientific.text().split_once('e').expect("LowerExp always emits an exponent");
+    let mut exponent: i32 = exponent.parse().expect("LowerExp exponent is a plain integer");
+    let count = mantissa.bytes().filter(|byte| *byte != b'.').count();
+    let (mut digits, adjustment) = float_format::correctly_rounded_digits(value.abs() as f64, exponent, count);
+    exponent += adjustment;
+    if adjustment != 0 { digits.truncate(count); }
+    write_decimal_digits(value.is_sign_negative(), &digits, exponent, -6..=12, out)
+}
+
+fn write_decimal_digits(negative: bool, digits: &[u8], exponent: i32, fixed: std::ops::RangeInclusive<i32>, out: &mut impl fmt::Write) -> fmt::Result {
     let digit_count = digits.len() as i32;
     if negative {
         out.write_char('-')?;
     }
-    if (-5..=15).contains(&exponent) {
+    if fixed.contains(&exponent) {
         if exponent >= digit_count - 1 {
-            out.write_str(std::str::from_utf8(&digits).expect("decimal digits are ASCII"))?;
+            out.write_str(std::str::from_utf8(digits).expect("decimal digits are ASCII"))?;
             for _ in 0..(exponent - (digit_count - 1)) {
                 out.write_char('0')?;
             }
@@ -1456,7 +1483,7 @@ pub fn write_float_to(value: f64, out: &mut impl fmt::Write) -> fmt::Result {
             for _ in 0..(-exponent - 1) {
                 out.write_char('0')?;
             }
-            out.write_str(std::str::from_utf8(&digits).expect("decimal digits are ASCII"))?;
+            out.write_str(std::str::from_utf8(digits).expect("decimal digits are ASCII"))?;
         }
     } else {
         out.write_char(digits[0] as char)?;
@@ -2209,6 +2236,9 @@ mod read_policy_tests;
 #[cfg(test)]
 #[path="📥️decode/🧾️receipt/🧪️tests/🦀️.rs"]
 mod normal_refusal_receipt_tests;
+#[cfg(test)]
+#[path="📥️decode/🔣️string/📦️bytes/🧪️tests/🦀️.rs"]
+mod original_string_byte_tests;
 
 #[cfg(test)]
 #[test]

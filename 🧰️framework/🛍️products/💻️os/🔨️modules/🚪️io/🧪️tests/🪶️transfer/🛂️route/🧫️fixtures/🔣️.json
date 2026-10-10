@@ -1,0 +1,173 @@
+{
+  "original": {
+    "grant": {
+      "maximumItems": 0,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 0
+    },
+    "nativeMaximumBytes": 0,
+    "inputText": "original 世界"
+  },
+  "cases": [
+    {
+      "id": "empty-original-route",
+      "route": {
+        "hops": [],
+        "fidelity": "Exact"
+      },
+      "accepted": false,
+      "kind": "InvalidValue",
+      "cause": "io_run: route must contain connected hops",
+      "callerRetainsInput": true,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "id": "disconnected-original-route",
+      "route": {
+        "hops": [
+          {
+            "from": {
+              "artifactKind": "fixture.original.first",
+              "standard": "1",
+              "subset": "*"
+            },
+            "into": {
+              "artifactKind": "fixture.original.second",
+              "standard": "1",
+              "subset": "*"
+            },
+            "fidelity": "Exact",
+            "sniffs": false
+          },
+          {
+            "from": {
+              "artifactKind": "fixture.original.third",
+              "standard": "1",
+              "subset": "*"
+            },
+            "into": {
+              "artifactKind": "fixture.original.first",
+              "standard": "1",
+              "subset": "*"
+            },
+            "fidelity": "Exact",
+            "sniffs": false
+          }
+        ],
+        "fidelity": "Exact"
+      },
+      "accepted": false,
+      "kind": "InvalidValue",
+      "cause": "io_run: route must contain connected hops",
+      "callerRetainsInput": true,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "id": "sqlite-intermediate-original-route",
+      "route": {
+        "hops": [
+          {
+            "from": {
+              "artifactKind": "fixture.original.first",
+              "standard": "1",
+              "subset": "*"
+            },
+            "into": {
+              "artifactKind": "s.framework.sqlite-snapshot",
+              "standard": "1",
+              "subset": "*"
+            },
+            "fidelity": "Exact",
+            "sniffs": false
+          },
+          {
+            "from": {
+              "artifactKind": "s.framework.sqlite-snapshot",
+              "standard": "1",
+              "subset": "*"
+            },
+            "into": {
+              "artifactKind": "fixture.original.second",
+              "standard": "1",
+              "subset": "*"
+            },
+            "fidelity": "Exact",
+            "sniffs": false
+          }
+        ],
+        "fidelity": "Exact"
+      },
+      "accepted": false,
+      "kind": "InvalidValue",
+      "cause": "io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops",
+      "callerRetainsInput": true,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "id": "sqlite-nonexact-original-route",
+      "route": {
+        "hops": [
+          {
+            "from": {
+              "artifactKind": "fixture.original.first",
+              "standard": "1",
+              "subset": "*"
+            },
+            "into": {
+              "artifactKind": "s.framework.sqlite-snapshot",
+              "standard": "1",
+              "subset": "*"
+            },
+            "fidelity": "Exact",
+            "sniffs": false
+          }
+        ],
+        "fidelity": "Canonical"
+      },
+      "accepted": false,
+      "kind": "InvalidValue",
+      "cause": "io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops",
+      "callerRetainsInput": true,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    },
+    {
+      "id": "sqlite-self-original-route",
+      "route": {
+        "hops": [
+          {
+            "from": {
+              "artifactKind": "s.framework.sqlite-snapshot",
+              "standard": "1",
+              "subset": "*"
+            },
+            "into": {
+              "artifactKind": "s.framework.sqlite-snapshot",
+              "standard": "1",
+              "subset": "*"
+            },
+            "fidelity": "Exact",
+            "sniffs": false
+          }
+        ],
+        "fidelity": "Exact"
+      },
+      "accepted": false,
+      "kind": "InvalidValue",
+      "cause": "io_run: inconsistent SQLite snapshot descriptor",
+      "callerRetainsInput": true,
+      "allocatedBytes": 0,
+      "releasedBytes": 0,
+      "causeStorage": "borrowedLiteral"
+    }
+  ]
+}

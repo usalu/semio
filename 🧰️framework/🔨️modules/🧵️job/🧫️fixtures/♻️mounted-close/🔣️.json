@@ -113,7 +113,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 56,
+            "copiedBytes": 48,
             "retainedCapacityBytes": 0,
             "releasedBytes": 64
           }
@@ -146,7 +146,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 8,
+            "copiedBytes": 120,
             "retainedCapacityBytes": 0,
             "releasedBytes": 128
           }
@@ -157,9 +157,9 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 24,
+            "copiedBytes": 32,
             "retainedCapacityBytes": 0,
-            "releasedBytes": 21080
+            "releasedBytes": 4912
           }
         },
         {
@@ -168,7 +168,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 96,
+            "copiedBytes": 112,
             "retainedCapacityBytes": 0,
             "releasedBytes": 104
           }
@@ -179,7 +179,7 @@
           "kind": "complete",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 16,
+            "copiedBytes": 18,
             "retainedCapacityBytes": 0,
             "releasedBytes": 40
           }
@@ -187,9 +187,9 @@
       ],
       "totalReceipt": {
         "copiedItems": 13,
-        "copiedBytes": 498,
+        "copiedBytes": 628,
         "retainedCapacityBytes": 0,
-        "releasedBytes": 37801
+        "releasedBytes": 21633
       }
     }
   ],

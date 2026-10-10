@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 /** 🧭️ Runs the async scheduler, fixed-slot, publication, and public API contracts. */
@@ -65,4 +66,4 @@ class SinglePollCheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("info", InfoScript).register("test", TestScript).register("twin", TwinScript).register("test-publication-contract", PublicationContractScript).register("single-poll-check", SinglePollCheckScript).register("test-api-contract", ApiContractScript);
 
-await runScriptMain(router, { defaultCommand: "info" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "info" }) }));

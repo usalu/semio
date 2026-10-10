@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"array","items":{"type":"object","required":["phase","progress"],"additionalProperties":false,"properties":{"phase":{"enum":["Pending","Ready","Refused"]},"progress":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"integer","minimum":0}}}}}

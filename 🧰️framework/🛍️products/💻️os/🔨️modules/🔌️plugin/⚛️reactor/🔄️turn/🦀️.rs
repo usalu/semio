@@ -1,4 +1,57 @@
 use super::*;
+use crate::component::extension_invocation_failure::{ExtensionInvocationCause,RetainedExtensionFaultReply};
+
+struct RetainedExtensionInvocation{
+    req:semio_framework::kernel::RequestId,
+    source:Option<(String,Vec<u8>,String)>,
+    origin_kind:u8,
+    result:Option<semio_framework::kernel::RequestOutcome>,
+    failure:Option<RetainedExtensionFaultReply>,
+    refused_output:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<u8>>>,
+    close_refusal:Option<semio_framework_value::ValueError>,
+    closing:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(String,Vec<u8>,String)>>,
+}
+
+impl RetainedExtensionInvocation{
+    fn new(req:semio_framework::kernel::RequestId,from:MessageEndpoint,capability:String,payload:Vec<u8>)->Self{
+        let(origin_kind,origin)=match from{MessageEndpoint::Shell{instance}=>(0,instance.0),MessageEndpoint::Backbone{uri}=>(1,uri),MessageEndpoint::PluginInstance{id}=>(2,id.0),MessageEndpoint::Extension{id}=>(3,id),MessageEndpoint::Topic{name}=>(4,name)};
+        Self{req,source:Some((capability,payload,origin)),origin_kind,result:None,failure:None,refused_output:None,close_refusal:None,closing:None}
+    }
+
+    async fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework::kernel::RequestOutcome>,semio_framework::Fault>{
+        if self.close_refusal.is_some(){return Ok(None)}
+        if let Some(closing)=self.refused_output.as_mut(){
+            let grant=cx.retained_grant();if closing.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}self.refused_output=None;if let Err(error)=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}){self.close_refusal=Some(error)}return Ok(None)}
+            match closing.step(grant){Ok(step)=>if let Err(error)=cx.consume_retained(step.progress()){self.close_refusal=Some(error)},Err(error)=>{let progress=error.retained_progress();if let Err(error)=cx.consume_retained(progress){self.close_refusal=Some(error)}else{self.close_refusal=Some(error)}}}return Ok(None)
+        }
+        if let Some(failure)=self.failure.as_mut(){
+            match failure.advance(cx){Ok(Some(payload))=>{self.result=Some(semio_framework::kernel::RequestOutcome::Err(payload));self.failure=None;self.begin_source_close();},Ok(None)=>{},Err(error)=>self.close_refusal=Some(error)}return Ok(None)
+        }
+        if let Some(closing)=self.closing.as_mut(){
+            if !closing.terminal_is_empty(){let grant=cx.retained_grant();match closing.step(grant){Ok(step)=>if let Err(error)=cx.consume_retained(step.progress()){self.close_refusal=Some(error)},Err(error)=>{let progress=error.retained_progress();if let Err(error)=cx.consume_retained(progress){self.close_refusal=Some(error)}else{self.close_refusal=Some(error)}}}return Ok(None)}
+            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}self.closing=None;if let Err(error)=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}){self.close_refusal=Some(error);return Ok(None)}return Ok(self.result.take());
+        }
+        let Some((capability,payload,_))=self.source.as_ref()else{return Ok(None)};
+        let answer=match crate::plugin_runtime::extension_invoke(&capability, &payload, cx).await{Ok(answer)=>answer,Err(cause)=>{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Fault(cause)));return Ok(None)}};
+        if let Some(cause)=answer.refusal{self.failure=Some(RetainedExtensionFaultReply::new(ExtensionInvocationCause::Value(cause)));if let Some(payload)=answer.payload{self.refused_output=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(payload).unwrap_or_else(|_|unreachable!("original refused bytes declare typed retirement")))}return Ok(None)}
+        let Some(payload)=answer.payload else{return Ok(None)};
+        self.result=Some(semio_framework::kernel::RequestOutcome::Ok(payload));
+        self.begin_source_close();Ok(None)
+    }
+    fn begin_source_close(&mut self){let original=self.source.take().expect("original invocation retains caller fields until actual output");self.closing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original request fields declare complete typed retirement")));}
+}
+
+thread_local!{
+    static RETAINED_EXTENSION_INVOCATIONS:RefCell<[Option<RetainedExtensionInvocation>;requests::REQUEST_SLOTS]>=const{RefCell::new([const{None};requests::REQUEST_SLOTS])};
+    static RETAINED_EXTENSION_CURSOR:Cell<usize>=const{Cell::new(0)};
+}
+
+async fn advance_retained_extension_invocation(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Effect>,semio_framework::Fault>{
+    let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+    let start=RETAINED_EXTENSION_CURSOR.get();let selected=RETAINED_EXTENSION_INVOCATIONS.with(|owners|{let mut owners=owners.borrow_mut();(0..requests::REQUEST_SLOTS).map(|offset|(start+offset)%requests::REQUEST_SLOTS).find_map(|index|owners[index].take().map(|owner|(index,owner)))});
+    let Some((index,mut owner))=selected else{return Ok(None)};let result=owner.step(cx).await;RETAINED_EXTENSION_CURSOR.set((index+1)%requests::REQUEST_SLOTS);
+    match result{Ok(Some(result))=>Ok(Some(Effect::Respond{req:owner.req,result})),result=>{RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow_mut()[index]=Some(owner));result.map(|_|None)}}
+}
 
 enum CommandIngressOwner {
     ReservedPresence { cursor: semio_framework::kernel::CommandPageCursor, admission: crate::app::PresenceRosterAdmission, page: semio_framework::kernel::FixedCommandPage },
@@ -168,6 +221,8 @@ pub struct TurnMoreWorkSources {
     pub executor_pending: bool,
     /// 📥️ A command ingress slot still owns an in-assembly command.
     pub command_ingress: bool,
+    /// 📨️ An original extension request still owes invocation, publication or paid retirement.
+    pub extension_invocation: bool,
     /// 🚪️ The guest lifecycle registry owes a receipt or a transition.
     pub lifecycle: bool,
     /// ♻️ UI owners released during this turn still owe bounded retirement work.
@@ -188,6 +243,7 @@ impl TurnMoreWorkSources {
         resumes: false,
         executor_pending: false,
         command_ingress: false,
+        extension_invocation: false,
         lifecycle: false,
         ui_retirement: false,
         document_load: false,
@@ -209,6 +265,7 @@ impl TurnMoreWorkSources {
             (self.resumes, "resumes"),
             (self.executor_pending, "executor_pending"),
             (self.command_ingress, "command_ingress"),
+            (self.extension_invocation, "extension_invocation"),
             (self.lifecycle, "lifecycle"),
             (self.ui_retirement, "ui_retirement"),
             (self.document_load, "document_load"),
@@ -543,8 +600,9 @@ pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
     cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
     identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
-    poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result, identity).await
+    poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result, identity,cx).await
 }
 
 /// 🧠️ One guest turn under [`with_turn_execution`] accounting — the only door into [`poll_kernel_turn`].
@@ -558,8 +616,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
     identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<T, semio_framework::Fault> {
-    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish, identity))).await
+    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish, identity,cx))).await
 }
 
 /// 📏️ `plugin_exchange`'s future is 76 848 B — awaiting it INLINE made it the single largest local
@@ -567,13 +626,18 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
 /// that most turns never reach. Boxed here, the turn generator holds an 8-byte pointer and the
 /// exchange state is allocated only on the turns that actually run a command. See
 /// `📓️poll-task-leak-2026-09-10.md` §3.2.
-fn plugin_exchange_boxed<'a, 'b, PA: crate::app::PluginApp>(
+fn plugin_exchange_boxed<'a, 'b, 'context, PA: crate::app::PluginApp>(
     runtime: &'a crate::plugin_runtime::PluginRuntime<PA>,
     instance_id: u32,
     command: Option<(u64, crate::plugin_runtime::PluginCommandIngress)>,
     identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,
+    cx:&'a mut semio_framework_job::StepContext<'context>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<crate::plugin_runtime::PluginExchangeOutput, semio_framework::Fault>> + 'a>> {
-    Box::pin(crate::plugin_runtime::plugin_exchange(runtime, instance_id, command, identity))
+    Box::pin(async move{
+        let mut output=crate::plugin_runtime::plugin_exchange(runtime,instance_id,command,identity,cx).await?;
+        if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){return Err(retain_refused_publication(instance_id,output,refusal,cx));}
+        Ok(output)
+    })
 }
 
 /// ↩️ One `Effect::Respond` per inbound `Event::Request` this turn served — kept apart from the
@@ -755,7 +819,12 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
     identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<T, semio_framework::Fault> {
+    budget.retained.validate().map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;
+    if budget.retained.operation!=cx.operation().0||budget.retained.generation!=cx.generation().0||budget.retained.grant!=cx.retained_grant(){return Err(reactor_close_fault("original reactor retained input does not match its borrowed context"));}
+    let original_progress=cx.retained_progress();
+    if REFUSED_PUBLICATION.with(|owner|owner.borrow().is_some()){return Err(reactor_close_fault("original refused publication still owns its output and receipts"));}
     trace_turn_phase_retention("enter");
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
     let mut dirty = DirtyPollOwners::new();
@@ -979,8 +1048,8 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                             Ok(bytes) => Ok(bytes.clone()),
                             Err(fault) => Err(fault.clone()),
                         };
-                        let output = crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output, identity).await;
-                        route_exchange_output(instance, output, &mut document_backbone_effects);
+                        let output = crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output, identity,cx).await;
+                        route_exchange_output(instance, output, &mut document_backbone_effects,cx)?;
                     }
                 }
                 REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(job), outcome));
@@ -1014,19 +1083,24 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 TASK_EXECUTOR.with(|executor| executor.wake(id));
             }
             Event::Wake => {}
-            Event::Request { req, capability, payload, .. } => {
-                let result = match crate::plugin_runtime::extension_invoke(&capability, &payload).await {
-                    Ok(answer) => semio_framework::kernel::RequestOutcome::Ok(answer),
-                    Err(fault) => semio_framework::kernel::RequestOutcome::Err(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&fault))),
-                };
-                inbound_request_effects.push(Effect::Respond { req, result });
+            Event::Request { req, from, capability, payload } => {
+                let owner=RetainedExtensionInvocation::new(req,from,capability,payload);
+                RETAINED_EXTENSION_INVOCATIONS.with(|owners|{let mut owners=owners.borrow_mut();let slot=owners.iter_mut().find(|slot|slot.is_none()).ok_or_else(||reactor_close_fault("original extension request slots are full"))?;*slot=Some(owner);Ok::<_,semio_framework::Fault>(())})?;
             }
             Event::SuspendRequest => crate::plugin_runtime::extension_deactivate().await,
             Event::Activate { .. } | Event::CapabilityChanged { .. } | Event::QuotaChanged { .. } => {}
         }
     }
 
-    let extension_retirement_work = crate::plugin_runtime::extension_retirement_turn(usize::from(budget.fuel > 0), if budget.fuel > 0 { budget.max_patch_bytes as usize } else { 0 })?;
+    if let Some(effect)=advance_retained_extension_invocation(cx).await?{inbound_request_effects.push(effect);}
+    let original_extension_grant = runtime.mounted_owner_policy().close;
+    let remaining=cx.retained_grant();
+    let extension_grant = semio_framework_value::RetainedCloneGrant { maximum_items: original_extension_grant.maximum_items.min(remaining.maximum_items),maximum_copy_bytes:original_extension_grant.maximum_copy_bytes.min(remaining.maximum_copy_bytes),maximum_capacity_bytes:original_extension_grant.maximum_capacity_bytes.min(remaining.maximum_capacity_bytes),maximum_release_bytes:original_extension_grant.maximum_release_bytes.min(remaining.maximum_release_bytes),maximum_depth:original_extension_grant.maximum_depth.min(remaining.maximum_depth) };
+    let (extension_retirement_work, extension_retirement_step) = crate::plugin_runtime::extension_retirement_turn(extension_grant)?;
+    if let Some(progress) = extension_retirement_step.progress() {
+        semio_framework_value::retained_clone::admit_retained_clone_progress(extension_grant, progress, "original reactor extension retirement").map_err(|error| semio_framework_diagnostic::FaultFrom::to_fault(&error))?;
+        cx.consume_retained(progress).map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;
+    }
     let close_cleanup_work = close_cleanup_work || extension_retirement_work;
     let mut effects: Vec<Effect> = document_backbone_effects;
     effects.extend(inbound_request_effects);
@@ -1148,7 +1222,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 retained = None;
                 command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
             } else {
-                match plugin_exchange_boxed(runtime, cursor.instance, None, identity).await {
+                match plugin_exchange_boxed(runtime, cursor.instance, None, identity,cx).await {
                     Ok(output) => {
                         let instance = cursor.instance;
                         if output.presence_terminal == Some(cursor.seq) {
@@ -1166,7 +1240,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                                 Err(cursor) => semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-index-exhausted".to_vec() },
                             };
                         }
-                        route_exchange_output(instance, output, &mut effects);
+                        route_exchange_output(instance, output, &mut effects,cx)?;
                     }
                     Err(fault) => {
                         command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) };
@@ -1178,7 +1252,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
     if let Some(owner) = retained.take() {
         match owner {
-            CommandIngressOwner::Generic { cursor, command } => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, command)), identity).await {
+            CommandIngressOwner::Generic { cursor, command } => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, command)), identity,cx).await {
                 Ok(mut output) => {
                     match advance_command_cursor(cursor.clone()) {
                         Ok(terminal) => {
@@ -1193,7 +1267,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                         }
                         Err(cursor) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-index-exhausted".to_vec() },
                     }
-                    route_exchange_output(cursor.instance, output, &mut effects);
+                    route_exchange_output(cursor.instance, output, &mut effects,cx)?;
                 }
                 Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
             },
@@ -1281,7 +1355,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 Ok(mut pages) => match pages.try_push(page) {
                     Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))), identity).await {
+                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))), identity,cx).await {
                             Ok(mut output) => {
                                 if let Some((_, command)) = output.retry_command.take() {
                                     retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -1292,7 +1366,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                                 } else {
                                     command_ingress = terminal_command_ingress(cursor.clone(), output.command_terminal_fault.take());
                                 }
-                                route_exchange_output(cursor.instance, output, &mut effects);
+                                route_exchange_output(cursor.instance, output, &mut effects,cx)?;
                             }
                             Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                         },
@@ -1317,7 +1391,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 match pages.try_push(page) {
                     Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     Ok(()) if cursor.page_index.checked_add(1) == Some(cursor.page_count) => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))), identity).await {
+                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))), identity,cx).await {
                             Ok(mut output) => {
                                 if let Some((_, command)) = output.retry_command.take() {
                                     retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -1328,7 +1402,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                                 } else {
                                     command_ingress = terminal_command_ingress(cursor.clone(), output.command_terminal_fault.take());
                                 }
-                                route_exchange_output(cursor.instance, output, &mut effects);
+                                route_exchange_output(cursor.instance, output, &mut effects,cx)?;
                             }
                             Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                         },
@@ -1401,10 +1475,10 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
 
     trace_turn_phase_retention("ingress");
-    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime, crate::plugin_runtime::TypedOperationGrant::turn(budget), identity).await?;
+    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime, crate::plugin_runtime::TypedOperationGrant::turn(budget), identity,cx).await?;
     let typed_operation_contended = typed_operation_scan.contended;
     if let Some((instance, output)) = continuation {
-        route_exchange_output(instance, output, &mut effects);
+        route_exchange_output(instance, output, &mut effects,cx)?;
     }
 
     trace_turn_phase_retention("continuation");
@@ -1497,7 +1571,8 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
     let ui_retirement_work = close_late_ui_retirement()?;
-    let more_work = more_work || close_cleanup_work || typed_operation_scan.runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work || document_load_work;
+    let extension_invocation_pending=RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow().iter().any(Option::is_some));
+    let more_work = more_work || extension_invocation_pending || close_cleanup_work || typed_operation_scan.runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work || document_load_work;
     LAST_MORE_WORK_SOURCES.set(TurnMoreWorkSources {
         executor_deadline: executor_deadline_work,
         process_pool: process_pool_work,
@@ -1508,6 +1583,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         resumes: resumes_remain,
         executor_pending,
         command_ingress: command_ingress_pending,
+        extension_invocation: extension_invocation_pending,
         lifecycle: lifecycle_work,
         ui_retirement: ui_retirement_work,
         document_load: document_load_work,
@@ -1544,7 +1620,8 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     });
     let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-    let mut result = semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
+    let retained_receipt=budget.retained.return_original(original_turn_progress(original_progress,cx.retained_progress())?).map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;
+    let mut result = semio_framework::kernel::TurnResult { retained_receipt, ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
     with_pending_patches(|pending| {
         let mut pending = pending.borrow_mut();
         let prepared = (|| {
@@ -2019,7 +2096,42 @@ fn live_patch_receipt<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime
     runtime.guest_lifetimes.borrow().get(receipt.lifetime.instance_id).is_some_and(|slot| slot.cell.is_live() && slot.cell.lifetime() == receipt.lifetime)
 }
 
-fn route_exchange_output(instance: u32, output: crate::plugin_runtime::PluginExchangeOutput, effects: &mut Vec<Effect>) {
+fn original_turn_progress(before:semio_framework_value::RetainedCloneProgress,after:semio_framework_value::RetainedCloneProgress)->Result<semio_framework_value::RetainedCloneProgress,semio_framework::Fault>{let delta=|left:usize,right:usize|right.checked_sub(left).ok_or_else(||reactor_close_fault("original reactor recipient currency moved backwards"));Ok(semio_framework_value::RetainedCloneProgress{copied_items:delta(before.copied_items,after.copied_items)?,copied_bytes:delta(before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:delta(before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:delta(before.released_bytes,after.released_bytes)?})}
+
+/// 🧾️ Keeps exact producer grants and original deltas together when their receiver refuses authority.
+struct OriginalPublicationReceipts{
+ constructor:Option<(crate::app::ArtifactStoreConstructorKind,crate::app::ArtifactStoreConstructorPhase,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
+ preparation:Option<(semio_framework_job::OperationId,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
+ history:Option<(semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
+ tool:Option<(semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
+ retirement:Option<(semio_framework_job::OperationId,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
+}
+struct OriginalPublicationReceiptRefusal{receipts:OriginalPublicationReceipts,error:semio_framework_value::ValueError}
+struct RefusedPublicationOwner{instance:u32,operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,output:std::mem::ManuallyDrop<crate::plugin_runtime::PluginExchangeOutput>,refusal:std::mem::ManuallyDrop<OriginalPublicationReceiptRefusal>}
+impl Drop for RefusedPublicationOwner{fn drop(&mut self){assert!(std::thread::panicking(),"original refused publication reached Drop before explicit funded retirement");}}
+crate::component_persistent_local!{static REFUSED_PUBLICATION:RefCell<Option<RefusedPublicationOwner>>=RefCell::new(None);}
+
+/// 📥️ Collects each actual producer delta once into the same original recipient before semantic publication.
+fn collect_original_publication_receipts(output:&mut crate::plugin_runtime::PluginExchangeOutput,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),OriginalPublicationReceiptRefusal>{
+ let receipts=OriginalPublicationReceipts{constructor:output.constructor_receipt.take(),preparation:output.preparation_receipt.take(),history:output.history_command_receipt.take(),tool:output.tool_run_receipt.take(),retirement:output.retirement_receipt.take()};let mut refusal=None;
+ for receipt in [receipts.constructor.map(|(_,_,grant,progress)|(grant,progress)),receipts.preparation.map(|(_,grant,progress)|(grant,progress)),receipts.history,receipts.tool,receipts.retirement.map(|(_,grant,progress)|(grant,progress))].into_iter().flatten(){
+  let(grant,progress)=receipt;let remaining=cx.retained_grant();
+  if (grant.maximum_items>remaining.maximum_items||grant.maximum_copy_bytes>remaining.maximum_copy_bytes||grant.maximum_capacity_bytes>remaining.maximum_capacity_bytes||grant.maximum_release_bytes>remaining.maximum_release_bytes||grant.maximum_depth>remaining.maximum_depth||!progress.fits(grant))&&refusal.is_none(){refusal=Some(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication receipt exceeds its producer or remaining caller authority").with_retained_progress(progress));}
+  if let Err(error)=cx.consume_retained(progress){if refusal.is_none(){refusal=Some(error);}}
+ }
+ match refusal{Some(error)=>Err(OriginalPublicationReceiptRefusal{receipts,error}),None=>Ok(())}
+}
+
+fn retain_refused_publication(instance:u32,output:crate::plugin_runtime::PluginExchangeOutput,refusal:OriginalPublicationReceiptRefusal,cx:&semio_framework_job::StepContext<'_>)->semio_framework::Fault{
+ REFUSED_PUBLICATION.with(|owner|{let mut owner=owner.borrow_mut();assert!(owner.is_none(),"original Reactor refusal slot cannot replace an earlier original output");*owner=Some(RefusedPublicationOwner{instance,operation:cx.operation(),generation:cx.generation(),output:std::mem::ManuallyDrop::new(output),refusal:std::mem::ManuallyDrop::new(refusal)});});
+ reactor_close_fault("original publication receipt refused; output and original receipts retained")
+}
+
+fn route_exchange_output(instance:u32,mut output:crate::plugin_runtime::PluginExchangeOutput,effects:&mut Vec<Effect>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework::Fault>{
+ if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){
+  return Err(retain_refused_publication(instance,output,refusal,cx));
+ }
+
     for page in output.typed_operation_results.iter() {
         effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: page.renderer_exchange_bytes() });
     }
@@ -2036,7 +2148,12 @@ fn route_exchange_output(instance: u32, output: crate::plugin_runtime::PluginExc
             effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
         }
     }
+    Ok(())
 }
+
+#[cfg(test)]
+#[path="🎟️receipt/🧪️tests/🦀️.rs"]
+mod publication_receipt_tests;
 
 fn same_command_cursor(left: &semio_framework::kernel::CommandPageCursor, right: &semio_framework::kernel::CommandPageCursor) -> bool {
     left.owner == right.owner

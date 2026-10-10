@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { resolve } from "node:path";
 import { mkdirSync, mkdtempSync } from "node:fs";
@@ -83,5 +84,5 @@ class BoundariesScript extends BundleScript {
 
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("boundaries", BoundariesScript);
-  await runScriptMain(router);
+  await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

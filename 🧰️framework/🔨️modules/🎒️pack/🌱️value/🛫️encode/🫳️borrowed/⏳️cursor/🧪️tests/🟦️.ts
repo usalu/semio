@@ -1,6 +1,7 @@
 import {test,expect} from "bun:test";
 import {readFileSync,existsSync} from "node:fs";
 import {join} from "node:path";
+import {spawnSync} from "node:child_process";
 import Ajv from "ajv/dist/2020";
 const base=join(import.meta.dir,"..");
 const fixture=JSON.parse(readFileSync(join(base,"🧫️fixtures/🔣️.json"),"utf8"));
@@ -82,4 +83,39 @@ test("retained intrinsic Body preserves ordered duplicate members and exact scal
   }
   expect(intrinsicFixture.cases[3].expectedHex).not.toBe(intrinsicFixture.cases[4].expectedHex);
   expect(request({fieldId:65536,maximumDepth:64})).toBe(false);expect(grant({maximumItems:-1,maximumCopyBytes:2,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:64})).toBe(false);
+});
+
+test("refused original Pack turns preserve the sole Value receipt and initialized prefix",()=>{
+  const schema=JSON.parse(readFileSync(join(base,"🧬️schema/🔣️.json"),"utf8"));
+  const refusal=JSON.parse(readFileSync(join(base,"../../../../../🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json"),"utf8"));
+  const rows=JSON.parse(readFileSync(join(base,"🧫️fixtures/⚠️failure/🔣️.json"),"utf8"));
+  const ajv=new Ajv({strict:true});ajv.addSchema(refusal);ajv.addSchema(schema);
+  const admit=ajv.compile({$ref:schema.$id+"#/$defs/BorrowedProjectedPackFailure"});
+  for(const row of rows.examples){
+    expect(admit(row.failure)).toBe(true);
+    const bytes=Buffer.from(row.text);const independent=new TextEncoder().encode(row.text);
+    expect([...bytes]).toEqual([...independent]);
+    if(row.text)expect(row.failure.reason.retainedProgress.copiedBytes).toBe(bytes.length*2);
+    expect(admit({...row.failure,progress:row.failure.reason.retainedProgress})).toBe(false);
+    expect(admit({...row.failure,writtenBytes:-1})).toBe(false);
+  }
+  const source=readFileSync(join(base,"🦀️.rs"),"utf8");
+  expect(source).toContain("pub struct BorrowedProjectedPackFailure");
+  expect(source).toContain("error.allocated_bytes");
+  expect(source).toContain("with_retained_progress");
+  expect(source).not.toContain("page_error(error.refusal()))?");
+});
+
+test("coupled borrowed Pack and original installed caller retain genuine Rust grammar",()=>{
+  for(const path of [join(base,"🦀️.rs"),join(base,"🧪️tests/🦀️.rs"),join(base,"../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs")]){
+    const parsed=spawnSync("rustfmt",["--edition","2021","--emit","stdout",path],{timeout:5000,stdio:["ignore","ignore","pipe"]});
+    expect(parsed.error).toBeUndefined();expect(parsed.status).toBe(0);
+  }
+});
+
+test("flat intrinsic Pack prices actual traversal depth without changing its inline bound",()=>{
+ const rows=JSON.parse(readFileSync(join(base,"🧫️fixtures/⚠️failure/🔣️.json"),"utf8"));const row=rows.depthProbe;
+ const bytes=Buffer.concat([varint(0n),varint(1n),varint(BigInt(row.fieldId)),Buffer.from([17]),intrinsicEncode({kind:"bool",value:row.source},[])]);
+ expect(bytes.toString("hex")).toBe(row.expectedHex);
+ const source=readFileSync(join(base,"🦀️.rs"),"utf8");expect(source).toContain("next_advance_depth_demand");expect(source).not.toContain("grant.maximum_depth < 64");expect(source).toContain("[Frame; 64]");expect(source).toContain("self.depth + 1 == 64");
 });

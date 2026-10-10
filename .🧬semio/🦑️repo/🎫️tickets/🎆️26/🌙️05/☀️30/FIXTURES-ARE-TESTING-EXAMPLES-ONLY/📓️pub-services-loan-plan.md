@@ -1,0 +1,5 @@
+# Current Services Borrowed Outcome Integration
+
+Original complete Kernel72285 failed on three current Services interfaces before assertions. NativeIo still returns an owned StepOutcome, and Compute takes an API removed by the genuine borrowed Job outcome contract. The defining repair must retain original payloads in the Job, admit semantic loans through its caller context, rebind descriptor views to exact original payloads, and let Compute invoke a synchronous typed borrowed terminal recipient before separate funded acknowledgement and closure. Original caller grants remain the authority; no owned payload reconstruction or empty fault substitute is allowed.
+
+The new three plain complete/cancel/fault lifecycle cases are independently compared with SQLite and JSON. The original Services Source law checks the actual defining interfaces and router recipient. Before hashes are retained without source copies. The existing preparation String-to-Value receipt loss is separate true RED21843; three proposal collectors and full generic JSON acquisition remain unfinished.

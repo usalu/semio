@@ -1,0 +1,32 @@
+{
+  "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA256": "817644e46ee8e598cb53dd736a8d6f84ef23b11adce6b835ca5f32230133200a",
+  "afterSHA256": "2e7565108973d47c94b2b9faa552dc3b84fddb721bf4c1e6ecc2b49fd815341d",
+  "actions": [
+    {
+      "beforeBlockSHA256": "cce38479e346cf497620b86da6d86c10c8adf7593fefe5f555576a7732f21c67",
+      "afterBlockSHA256": "39f83e301b07deb5c24bd52d3696e1c382ba5a9c3e85acd6d1aea9e13b5d7918"
+    },
+    {
+      "beforeBlockSHA256": "f7f32a5f8d63d69d907cbf86fd8a9c25ab774fa45d807f4c713d415ad6668f18",
+      "afterBlockSHA256": "7a558f5390f61ba63c3823a157d48fffcc2d323621c878efc0e29c897723f7ce"
+    },
+    {
+      "beforeBlockSHA256": "60b7ebf456c157bcda78744ed2fe5e66f89f9dcd0fd12c238aeff5880c45021f",
+      "afterBlockSHA256": "d0ae0e02604e1585a5b68247d651f9cb626186b01616d804b0689f2d9ad2b7f2"
+    },
+    {
+      "beforeBlockSHA256": "b1ddb8c197f16c0a87c71393fc019e487451e0d08b5bbaecb6e1c862ff2af9cb",
+      "afterBlockSHA256": "2f18a7e19f3d34247b35c8735bd173d31c73738e5630c8d57d7df72a625f9c9c"
+    },
+    {
+      "beforeBlockSHA256": "791ffff29fbc89119793af05ee38e5d5751194e464d4becf7c54f68ba4f9be73",
+      "afterBlockSHA256": "aa3a385af6a8c346249130a3ecd2b1947c4e6b9f21f7a4a9fc487223fd0dafa5"
+    },
+    {
+      "beforeBlockSHA256": "56ee3a03a56bd8ef665a7fa386d13df384cdd6e67656ca3b9430539f720e839e",
+      "afterBlockSHA256": "e7c07f85be9c88779b7dff344d54e31cc8a1017b56e61157aa6d339c846ec350"
+    }
+  ],
+  "scope": "two defining preparation advance traits, original authority validation/digest/refusal custody and exact receipt validation"
+}

@@ -1,0 +1,19 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts",
+      "action": "updated",
+      "beforeSha256": "4b124152a590d81be30d228657bbc9243ff45ec6c7b4b2ccb05706b940b79a61",
+      "afterSha256": "b95f7ef3a9e35438cf6afcbbfebf61d7f07a49ab477a82f21ffca215e9a26fa1",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/📇️discovery/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "bed97f29d36c2a01901ecdf66a52de6c5e80fb9567163c69e8f98c2952992c0d",
+      "afterSha256": "8df426d132b46f9fe5254e787b2659b5b7fef8a792825eb2b1e2023bc69bf204",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

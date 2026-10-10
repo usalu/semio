@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Media Exporter Fault Custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "port",
+    "message",
+    "display",
+    "moveHeap",
+    "sourcePointersPreserved",
+    "receivingCancellation",
+    "projection",
+    "wholeOperation"
+  ],
+  "properties": {
+    "port": {
+      "type": "string",
+      "minLength": 1
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "display": {
+      "type": "string",
+      "minLength": 1
+    },
+    "moveHeap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "sourcePointersPreserved": {
+      "const": true
+    },
+    "receivingCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releasedBeforeClose",
+        "deniedCloseHeap",
+        "terminalEmpty",
+        "originalBackingsConserved"
+      ],
+      "properties": {
+        "releasedBeforeClose": {
+          "const": 0
+        },
+        "deniedCloseHeap": {
+          "const": [
+            0,
+            0
+          ]
+        },
+        "terminalEmpty": {
+          "const": true
+        },
+        "originalBackingsConserved": {
+          "const": true
+        }
+      }
+    },
+    "projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "grantSource",
+        "deniedHeap",
+        "deniedProgress",
+        "sourcePointersPreserved",
+        "sourceConsumedOnSuccess",
+        "physicalReceiptsExact",
+        "backingConserved",
+        "terminalDropHeap",
+        "cancellation"
+      ],
+      "properties": {
+        "code": {
+          "const": "plugin.internal"
+        },
+        "grantSource": {
+          "const": "caller.media-request"
+        },
+        "deniedHeap": {
+          "const": [
+            0,
+            0
+          ]
+        },
+        "deniedProgress": {
+          "const": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        "sourcePointersPreserved": {
+          "const": true
+        },
+        "sourceConsumedOnSuccess": {
+          "const": true
+        },
+        "physicalReceiptsExact": {
+          "const": true
+        },
+        "backingConserved": {
+          "const": true
+        },
+        "terminalDropHeap": {
+          "const": [
+            0,
+            0
+          ]
+        },
+        "cancellation": {
+          "const": {
+            "callbackCuts": [
+              1,
+              2,
+              3
+            ],
+            "releasedBeforeClose": 0,
+            "deniedCloseHeap": [
+              0,
+              0
+            ],
+            "originalSourceHeld": true,
+            "terminalEmpty": true
+          }
+        }
+      }
+    },
+    "wholeOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grantSource",
+        "recipient",
+        "refusalType",
+        "exportCalledAfterAdmission",
+        "deniedHeap",
+        "deniedExporterCalls",
+        "sameSourcePointers",
+        "sameNativeControl",
+        "sameCumulativeWallet",
+        "exactFaultMessage",
+        "singleReceiptRecipient",
+        "terminalDropHeap"
+      ],
+      "properties": {
+        "grantSource": {
+          "const": "caller.media-request"
+        },
+        "recipient": {
+          "const": "original.native-encode-retirement"
+        },
+        "refusalType": {
+          "const": "ValueError"
+        },
+        "exportCalledAfterAdmission": {
+          "const": true
+        },
+        "deniedHeap": {
+          "const": [
+            0,
+            0
+          ]
+        },
+        "deniedExporterCalls": {
+          "const": 0
+        },
+        "sameSourcePointers": {
+          "const": true
+        },
+        "sameNativeControl": {
+          "const": true
+        },
+        "sameCumulativeWallet": {
+          "const": true
+        },
+        "exactFaultMessage": {
+          "const": true
+        },
+        "singleReceiptRecipient": {
+          "const": true
+        },
+        "terminalDropHeap": {
+          "const": [
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

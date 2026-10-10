@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📸️ `@semio-tech/remodel-plugin` router: `bun ./📜️script.ts test`. */
 import { registerPlaygroundSiteBuildCommands, runCargo, runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -8,7 +9,7 @@ import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/�
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-remodel"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-remodel"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -26,4 +27,4 @@ class RegenerateExampleScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("regenerate-example", RegenerateExampleScript);
 registerPlaygroundSiteBuildCommands(router);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

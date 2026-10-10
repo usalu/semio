@@ -45,7 +45,7 @@
       "const": "original-terminal-authority-in-place"
     },
     "bodyWords": {
-      "const": 3
+      "const": 4
     },
     "wordBytes": {
       "const": [
@@ -75,7 +75,7 @@
       "const": "original-terminal-job-in-place"
     },
     "jobPresenceBytes": {
-      "const": 1
+      "const": 0
     },
     "inlineJobBytes": {
       "const": [

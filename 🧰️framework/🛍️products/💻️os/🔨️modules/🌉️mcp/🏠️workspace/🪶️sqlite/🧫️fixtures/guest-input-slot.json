@@ -1,0 +1,12 @@
+{
+  "schema": "CREATE TABLE original_input (id INTEGER PRIMARY KEY, value TEXT)",
+  "value": "original guest input 🪶️",
+  "dialect": "s.guest-input-fixture@1/strict",
+  "grant": { "maximumItems": 4096, "maximumCopyBytes": 1048576, "maximumCapacityBytes": 1048576, "maximumReleaseBytes": 1048576, "maximumDepth": 64 },
+  "closeAuthority": "independentCallerWallet",
+  "closeGrant": { "maximumItems": 1024, "maximumCopyBytes": 65536, "maximumCapacityBytes": 65536, "maximumReleaseBytes": 65536, "maximumDepth": 64 },
+  "deniedCloseGrant": { "maximumItems": 0, "maximumCopyBytes": 0, "maximumCapacityBytes": 0, "maximumReleaseBytes": 0, "maximumDepth": 0 },
+  "nativeMaximumBytes": 2097152,
+  "maximumTurns": 4096,
+  "expected": { "originalSlotBeforeAdmission": true, "originalSlotAfterAdmission": false, "zeroCloseProgress": 0, "canceledKind": "Canceled" }
+}

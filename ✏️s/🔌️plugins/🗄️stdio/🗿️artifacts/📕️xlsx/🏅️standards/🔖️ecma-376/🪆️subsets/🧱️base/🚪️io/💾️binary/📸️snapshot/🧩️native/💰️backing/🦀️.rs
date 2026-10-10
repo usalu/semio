@@ -65,7 +65,7 @@ pub(in crate::standards::v_ecma_376::subsets::base::io) fn input(bytes: &[u8], b
         let mut native = NativeDecodeControl::new(remaining, &mut callback);
         let result = (|| {
             let body = if binary {
-                store::semio_format::unwrap_binary_controlled(bytes, "stdio.xlsx", store::semio_format::Component::Pack, 1, &mut native).map_err(store::semio_format::SemioError::into_value_error)?
+                store::semio_format::unwrap_binary_controlled(bytes, "stdio.xlsx", store::semio_format::Component::Pack, 1, &mut native)?
             } else {
                 let text = native.borrow_text(bytes)?;
                 store::semio_format::split_text_preamble_controlled(text, "stdio.xlsx", store::semio_format::Component::Dsl, 1, &mut native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes()

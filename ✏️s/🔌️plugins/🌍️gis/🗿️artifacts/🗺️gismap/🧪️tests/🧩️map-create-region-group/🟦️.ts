@@ -1,3 +1,4 @@
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { runRepositoryExactCargoLaws } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -86,15 +87,7 @@ export class MapCreateRegionGroupCheckScript extends BundleScript {
 export class MapCreateRegionGroupNativeCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisMapCreateRegionGroup(this.repoRoot);
-    const receipts = await runRepositoryExactCargoLaws({
-      cwd: this.root,
-      groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["standards::v1::subsets::any::schema::inferences::component::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }],
-      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined,
-      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
-      listBudgetMs: 60_000,
-      lawBudgetMs: 60_000,
-      progress(event) { console.log(`gis-map-create-region-group ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); },
-    });
+    const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["standards::v1::subsets::any::schema::inferences::component::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined, progress(event) { console.log(`gis-map-create-region-group ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`gis-map-create-region-group-receipt: ${JSON.stringify(receipt)}`);
   }
 }

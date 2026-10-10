@@ -3924,8 +3924,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
+ "semio-framework-diagnostic",
  "semio-framework-job",
+ "semio-framework-pack-json",
  "semio-framework-replication",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
@@ -4212,6 +4215,7 @@ name = "semio-framework-job"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-diagnostic",
  "semio-framework-trace",
  "semio-framework-value",
  "serde_json",

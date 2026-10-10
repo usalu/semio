@@ -1,0 +1,34 @@
+{
+  "grant": {
+    "items": 1,
+    "copyBytes": 2,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 8
+  },
+  "strings": [
+    {
+      "wire": "\"\"",
+      "expected": ""
+    },
+    {
+      "wire": "\"hello\\n\\u0000world\"",
+      "expected": "hello\n\u0000world"
+    },
+    {
+      "wire": "\"\\uD83D\\uDE00漢é\"",
+      "expected": "😀漢é"
+    },
+    {
+      "wire": "\"quote\\\"slash\\\\solidus\\/\\b\\f\\r\\t\"",
+      "expected": "quote\"slash\\solidus/\b\f\r\t"
+    }
+  ],
+  "refused": [
+    "\"\\uD800\"",
+    "\"\\uDC00\"",
+    "\"\\x00\"",
+    "\"bare\nnewline\"",
+    "\"\\uD800\\u0000\""
+  ]
+}

@@ -49,7 +49,7 @@ fn every_fixture_case_classifies_its_supersede_transitions() {
             .iter()
             .map(|transition| SupersedeRecord {
                 transition_id: transition["id"].as_str().expect("id").to_string(),
-                actor: transition["actor"].as_str().expect("actor").to_string(),
+                actor: transition["actor"].as_str().expect("actor").into(),
                 timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: transition["at"].as_u64().expect("at"), logical: 0 },
                 scope: transition["scope"].as_str().map(str::to_string),
                 inputs: transition["inputs"].as_array().expect("inputs").iter().map(|input| protocol::SupersededInput { target: MutationId(input["target"].as_str().expect("target").to_string()), replacement: replacement(&input["input"]) }).collect(),

@@ -4,7 +4,6 @@
 //! accessible names and validation of every geometry widget; the meta-schema in `🔣️.json` describes their shape.
 
 use semio_framework_value::DslValue;
-use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 fn is_false(value: &bool) -> bool {
@@ -12,8 +11,7 @@ fn is_false(value: &bool) -> bool {
 }
 
 /// 🗣️ A user-facing string in every supported language, English first and German second.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Localized {
     pub en: String,
     pub de: String,
@@ -30,8 +28,7 @@ impl Localized {
 }
 
 /// 🏷️ The fidelity of a kind: the kernel's operation quality for B-Rep kinds, the mesh fidelity for mesh kinds.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Quality {
     ExactAnalytic,
     ExactNumerical,
@@ -42,8 +39,7 @@ pub enum Quality {
 }
 
 /// 🔌️ The value type a port carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PortType {
     Number,
     Integer,
@@ -70,8 +66,7 @@ impl PortType {
 }
 
 /// 🧱️ The topological kind of a B-Rep shape.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShapeKind {
     Solid,
     Shell,
@@ -85,8 +80,7 @@ pub enum ShapeKind {
 }
 
 /// 🎯️ The element type a selection port refers to; `Mode` follows the enum port named by `mode_from`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SelectionComponent {
     Face,
     Edge,
@@ -95,8 +89,7 @@ pub enum SelectionComponent {
 }
 
 /// 🧲️ The sub-elements a selection port holds, taken from the shape or mesh on its source port.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Selection {
     pub component: SelectionComponent,
     pub source: String,
@@ -105,43 +98,36 @@ pub struct Selection {
 }
 
 /// 🔘️ One choice of an enum port.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EnumOption {
     pub value: String,
     pub label: Localized,
 }
 
 /// 🔌️ One input or output of a widget kind, with everything an inspector control needs.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Port {
     pub name: String,
     pub label: Localized,
     pub description: Localized,
-    #[value(rename = "type")]
     pub port_type: PortType,
     pub shape_kinds: Option<Vec<ShapeKind>>,
     pub selection: Option<Selection>,
-    #[value(default, skip_serializing_if = "is_false")]
     pub list: bool,
     pub min_items: Option<u32>,
     pub max_items: Option<u32>,
     pub default: Option<DslValue>,
     pub min: Option<f64>,
-    #[value(default, skip_serializing_if = "is_false")]
     pub exclusive_min: bool,
     pub max: Option<f64>,
     pub step: Option<f64>,
     pub unit: Option<String>,
     pub options: Option<Vec<EnumOption>>,
-    #[value(default, skip_serializing_if = "is_false")]
     pub optional: bool,
 }
 
 /// 👆️ The component a viewport pick delivers to a port.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PickComponent {
     Shape,
     Mesh,
@@ -151,16 +137,14 @@ pub enum PickComponent {
 }
 
 /// 👆️ A picked component that seeds a port when the kind is applied to the pick.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Pick {
     pub component: PickComponent,
     pub port: String,
 }
 
 /// 🧭️ The gumball motion that drives a port.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GumballMotion {
     Translate,
     Rotate,
@@ -168,15 +152,13 @@ pub enum GumballMotion {
 }
 
 /// 📏️ The reference direction of a scalar translate motion.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Along {
     Normal,
 }
 
 /// 🧭️ A gumball motion mapped to the port it drives, with the ports that fix its axis and origin.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Gumball {
     pub motion: GumballMotion,
     pub port: String,
@@ -186,18 +168,14 @@ pub struct Gumball {
 }
 
 /// 🕹️ How a kind reacts to viewport picks and gumball motions.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Interaction {
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub pick: Vec<Pick>,
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub gumball: Vec<Gumball>,
 }
 
 /// 🧩️ One geometry widget kind: its identity, texts, typed ports, fidelity and interaction hints.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Kind {
     pub id: String,
     pub category: String,
@@ -234,8 +212,7 @@ impl Kind {
 }
 
 /// 🗂️ A palette category with its sort position and texts.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Category {
     pub id: String,
     pub emoji: String,
@@ -245,8 +222,7 @@ pub struct Category {
 }
 
 /// 📄️ One category file: the category and every kind it owns.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CategoryFile {
     pub category: Category,
     pub kinds: Vec<Kind>,

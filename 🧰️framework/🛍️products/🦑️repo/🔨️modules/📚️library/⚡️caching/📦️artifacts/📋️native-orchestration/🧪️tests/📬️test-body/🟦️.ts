@@ -1,5 +1,9 @@
-import {consumeOwnerArgumentsV1} from "../../../../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
+import { advanceScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { readNativeOwnerCapabilities } from "../../📥️invocation/🟦️.ts";
+import { scriptInvocationBudget } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {consumeOwnerArgumentsV1,declaredNativeOwnerCommandV1} from "../../../../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import {test,expect} from "bun:test";
+
 import {readFileSync} from "node:fs";
 import {resolve,dirname,join,relative,isAbsolute} from "node:path";
 import ts from "typescript";
@@ -18,11 +22,12 @@ test("typed owner transport prepares only at actual current Cargo consumption",a
  const oracle=Bun.spawnSync(["node","--eval",`const cases=${JSON.stringify(fixture.cases)};console.log(JSON.stringify(cases.map(row=>row.route==='owner-command'?(row.consume?['owned','prepare:2','cargo:2']:['owned']):['refused'])))`]);expect(oracle.exitCode).toBe(0);expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(fixture.cases.map((row:any)=>row.expected));
  for(const compile of [(text:string)=>new Bun.Transpiler({loader:"ts"}).transformSync(text),(text:string)=>ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText,(text:string)=>transformSync(text,{loader:"ts",target:"es2022"}).code]){
   for(const row of fixture.cases){
-   const records:string[]=[];let version=1;
+   const records:string[]=[], progress:string[]=[], started=performance.now(), signal=new AbortController();let version=1;
+   const invocation={policy:{version:1,owner:"original-native-body",maximumElapsedMilliseconds:1000},control:{signal:signal.signal,remainingMilliseconds:()=>1000-(performance.now()-started),publish:async(value:any)=>{progress.push(value.stage);},yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))},capabilities:{version:1,repositoryRoot:"/repo",artifactDirectory:"/repo/artifacts",command:{kind:"native-owner-command",manifest:"owner/Cargo.toml",workingDirectory:"owner",program:row.command,arguments:row.args},transport:{maximumBytes:67108864,maximumLines:65536},child:{maximumElapsedMilliseconds:1000},network:{offline:true}}};
    const prepare=()=>records.push(`prepare:${version}`),policy=()=>({manifestPath:"/repo/owner/Cargo.toml",version});
    const consumeBody=new Function("getWorkspaceRoot","repositoryCargoPreparationStorageV1","cargoRepositoryPackageSelections","cargoWorkspaceForManifest","resolve","relative","prepareCargoWorkspaceInvocation","repositoryCargoTestPolicyV1","runCargoTestsV1","TEST_LEVELS","packageTestBudgetMs",compile(consume)+";return runRepositoryCargoTests;")(()=>"/repo",repositoryCargoPreparationStorageV1,()=>[{manifest:"owner/Cargo.toml",name:"owner"}],()=>({directory:"owner"}),resolve,()=>"owner/Cargo.toml",prepare,policy,async(_request:any,current:any)=>records.push(`cargo:${current.version}`),["quick"],()=>100);
-   const owned=async()=>{records.push("owned");version=2;if(row.consume)await consumeBody(["owner"],"/repo/owner",[],{});};
-   const Native=new Function("BundleScript","nativeOwnerTestManifestRequestV1","resolve","dirname","readFileSync","Bun","prepareCargoWorkspaceInvocation","repositoryVitestPolicyV1","repositoryProcessOwnerContextV1","repositoryCargoArtifactBuildPolicyV1","repositoryCargoTestPolicyV1","runOwnedCommand","process","consumeOwnerArgumentsV1",compile(native)+";return NativeScript;")(class{repoRoot="/repo"},nativeOwnerTestManifestRequestV1,resolve,dirname,()=>"[package]\nname=\"owner\"",{TOML:Bun.TOML},prepare,()=>({}),()=>({}),()=>({}),policy,owned,{env:{},execPath:"bun",stderr:{write(){}}},consumeOwnerArgumentsV1);
+   const owned=async(_command:string,_args:string[],_cwd:string,_label:string,_timeout:number,options:any)=>{expect(options.output).toBe(invocation.capabilities.transport);const limits=JSON.parse(readFileSync(resolve(library,"../../../../🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json"),"utf8"));expect(new Ajv({strict:true}).compile(limits)(options.output)).toBe(true);records.push("owned");version=2;if(row.consume)await consumeBody(["owner"],"/repo/owner",invocation.control,[],{});};
+   const Native=new Function("BundleScript","scriptInvocationBudget","advanceScriptInvocation","readNativeOwnerCapabilities","nativeOwnerTestManifestRequestV1","resolve","dirname","readFileSync","Bun","prepareCargoWorkspaceInvocation","repositoryVitestPolicyV1","repositoryProcessOwnerContextV1","repositoryCargoArtifactBuildPolicyV1","repositoryCargoTestPolicyV1","runOwnedCommand","process","consumeOwnerArgumentsV1",compile(native)+";return NativeScript;")(class{repoRoot="/repo";invocation=invocation},scriptInvocationBudget,advanceScriptInvocation,readNativeOwnerCapabilities,nativeOwnerTestManifestRequestV1,resolve,dirname,()=>"[package]\nname=\"owner\"",{TOML:Bun.TOML},prepare,()=>({}),()=>({}),()=>({}),policy,owned,{env:{CARGO_TARGET_DIR:"/repo/artifacts"},execPath:"bun",stderr:{write(){}}},consumeOwnerArgumentsV1);
    try{await new Native().run([row.route,"--manifest","owner/Cargo.toml","--cwd","owner","--",row.command,...row.args]);}catch{records.push("refused");}
    expect(records,row.id).toEqual(row.expected);
   }
@@ -31,10 +36,11 @@ test("typed owner transport prepares only at actual current Cargo consumption",a
 });
 
 test("canonical Nx inference delegates every owned command without eager or special test preparation",()=>{
+ const declarationsSchema=JSON.parse(readFileSync(join(owner,"🧬️schema/📬️target-declarations/🔣️.json"),"utf8"));expect(new Ajv({strict:true}).compile(declarationsSchema)(fixture.targets)).toBe(true);
  const syntax=ts.createSourceFile("nx.mjs",readFileSync(resolve(library,"🟨️.mjs"),"utf8"),ts.ScriptTarget.Latest,true);
  const declaration=syntax.statements.find((node:any)=>node.name?.text==="projectWithDefaults")!.getText(syntax);
  const manifest={package:{name:"owner"},workspace:{}},closure=["/repo/🏃️process/🧪️testing/🦀️cargo/🟦️.ts"];
- const bindings={existsSync:()=>true,join,resolve,dirname,relative,isAbsolute,readToml:()=>manifest,readFileSync:()=>"",SCRIPT_BASENAME:"📜️script.ts",DEFAULT_EXECUTOR:"nx:run-commands",LIBRARY_ROOT:"/repo/library",POLICY:{targetDefaults:{},nxSerialTargets:[]},withWasmTooling:(targets:any)=>targets,rootCommandTargets:()=>({}),cargoTargets:()=>({}),componentTargets:()=>({}),printDocumentTargets:()=>({}),generatorContractInputs:()=>({}),generatorOutputOwners:()=>[],genericCommandFallbackInputs:()=>[],withLeveledTestTargets:(targets:any)=>targets,targetPolicy:(_name:string,target:any)=>target,targetWithDefaults:(target:any,root:string)=>({...target,options:{cwd:root,...target.options}}),nativeTargetCommandInputs:()=>closure,targetScriptClosure:()=>closure,nxPath:(path:string)=>path.replaceAll("\\","/"),nativeLockInputs:()=>[],genericTargetCommandInputs:()=>[],generatorOutputCouplingInputs:()=>[],projectInputs:()=>({})};
+ const bindings={declaredNativeOwnerCommandV1,existsSync:()=>true,join,resolve,dirname,relative,isAbsolute,readToml:()=>manifest,readFileSync:()=>"",SCRIPT_BASENAME:"📜️script.ts",DEFAULT_EXECUTOR:"nx:run-commands",LIBRARY_ROOT:"/repo/library",POLICY:{targetDefaults:{},nxSerialTargets:[]},withWasmTooling:(targets:any)=>targets,rootCommandTargets:()=>({}),cargoTargets:()=>({}),componentTargets:()=>({}),printDocumentTargets:()=>({}),generatorContractInputs:()=>({}),generatorOutputOwners:()=>[],genericCommandFallbackInputs:()=>[],withLeveledTestTargets:(targets:any)=>targets,targetPolicy:(_name:string,target:any)=>target,targetWithDefaults:(target:any,root:string)=>({...target,options:{cwd:root,...target.options}}),nativeTargetCommandInputs:()=>closure,targetScriptClosure:()=>closure,nxPath:(path:string)=>path.replaceAll("\\","/"),nativeLockInputs:()=>[],genericTargetCommandInputs:()=>[],generatorOutputCouplingInputs:()=>[],projectInputs:()=>({})};
  for(const compile of [(text:string)=>text,(text:string)=>transformSync(text,{loader:"js",target:"es2022"}).code]){
   const infer=new Function(...Object.keys(bindings),declaration+";return projectWithDefaults;")(...Object.values(bindings));
   for(const row of fixture.targets){
@@ -43,6 +49,7 @@ test("canonical Nx inference delegates every owned command without eager or spec
    expect(command,row.id).not.toContain("repository-test-body");
    const expected=row.target.options.command.replace(/^bun\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_:string,path:string)=>`bun ${JSON.stringify(resolve("/repo/owner",path.replace(/^["']|["']$/g,"")))}`);
    expect(command.endsWith(` -- ${expected}`),row.id).toBe(true);
+   expect(result.targets.test.options.nativeOwnerCommand,row.id).toEqual(row.declaredCommand);
    expect(result.targets.test.options.cwd).toBe(".");
    expect(result.targets.test.inputs).toContain("nativeTestSources");
   }

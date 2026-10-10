@@ -8078,7 +8078,7 @@ impl MediaFingerprint {
 }
 
 /// 🚧️ Failure exporting, importing, or fingerprinting media on a declared port.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum MediaError {
     UnknownPort(String),
     Incompatible { port: String, produced: MediaType, accepted: MediaType },

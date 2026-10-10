@@ -3,10 +3,18 @@
  * @returns {import("../🚀️bootstrap/🟦️.ts").DependencyPolicySnapshot["policy"]}
  */
 function buildDependencyDirectionPolicy({ taxonomy: TAXONOMY, plugins: PLUGINS, workspacePackages, nodeBuiltins }) {
+const api = TAXONOMY?.dependencyDirections?.publicApi;
+if (!api || Object.keys(api).sort().join("|") !== "rulePrefix|sdkPackage|toolingRoles|version" || api.version !== 1 || api.rulePrefix !== "no-cross-package-relative-" || typeof api.sdkPackage !== "string" || !api.sdkPackage || /\s/u.test(api.sdkPackage) || !Array.isArray(api.toolingRoles) || api.toolingRoles.length) throw Error("Dependency policy requires canonical authored public API authority");
 const packageOwners = new Map(), packageNames = new Map();
 for (const pkg of workspacePackages) {
+  if (typeof pkg.owner !== "string" || !pkg.owner || pkg.sourceOwner !== (pkg.owner.includes("/📦️packages/") ? pkg.owner.split("/📦️packages/")[0] : pkg.owner) || !Array.isArray(pkg.exportTargets) || !Array.isArray(pkg.exports)) throw Error("Dependency policy requires complete authored package authority");
+  if (typeof pkg.name !== "string" || !pkg.name || pkg.exportTargets.some(row => !row || typeof row.subpath !== "string" || (row.target !== null && typeof row.target !== "string") || Object.keys(row).sort().join("|") !== "subpath|target")) throw Error("Dependency policy requires readable authored package authority");
+  const targets = new Map();
+  for (const row of pkg.exportTargets) { if (!targets.has(row.subpath)) targets.set(row.subpath,[]); targets.get(row.subpath).push(row.target); }
+  const canonical = authoredPackageExportAuthority(pkg.owner,{ exports: Object.fromEntries(targets) });
+  if (new Set(pkg.exportTargets.map(row => JSON.stringify(row))).size !== pkg.exportTargets.length || pkg.exports.length !== canonical.exports.length || pkg.exports.some(key => !canonical.exports.includes(key))) throw Error("Dependency policy has contradictory public export authority");
   const previous = packageOwners.get(pkg.owner), named = packageNames.get(pkg.name);
-  if (previous && (previous.name !== pkg.name || previous.dependencyRole !== pkg.dependencyRole || previous.exports.length !== pkg.exports.length || previous.exports.some((value,index) => value !== pkg.exports[index]))) throw Error("Dependency policy owner has conflicting package authority: "+pkg.owner);
+  if (previous && (previous.name !== pkg.name || previous.dependencyRole !== pkg.dependencyRole || previous.exports.length !== pkg.exports.length || previous.exports.some((value,index) => value !== pkg.exports[index]) || previous.sourceOwner !== pkg.sourceOwner || JSON.stringify(previous.exportTargets) !== JSON.stringify(pkg.exportTargets))) throw Error("Dependency policy owner has conflicting package authority: "+pkg.owner);
   if (named !== undefined && named !== pkg.owner) throw Error("Dependency policy package name has distinct owners: "+pkg.name+" ("+named+", "+pkg.owner+")");
   packageOwners.set(pkg.owner,pkg); packageNames.set(pkg.name,pkg.owner);
 }
@@ -30,6 +38,33 @@ function escapeRegex(literal) {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** 🌳️ Factors literal prefixes without introducing captures or changing their accepted strings. */
+function literalPrefixPattern(values) {
+  const root = { terminal: false, children: new Map() };
+  for (const value of values) {
+    let node = root;
+    for (const part of value) {
+      if (!node.children.has(part)) node.children.set(part, { terminal: false, children: new Map() });
+      node = node.children.get(part);
+    }
+    node.terminal = true;
+  }
+  const render = (node) => {
+    const branches = [];
+    for (const [head, child] of node.children) {
+      let prefix = head, tail = child;
+      while (!tail.terminal && tail.children.size === 1) {
+        const [part, next] = tail.children.entries().next().value;
+        prefix += part; tail = next;
+      }
+      branches.push(escapeRegex(prefix) + render(tail));
+    }
+    const suffix = branches.length > 1 ? `(?:${branches.join("|")})` : branches[0] ?? "";
+    return node.terminal && suffix ? `(?:${suffix})?` : suffix;
+  };
+  return render(root);
+}
+
 /** 🏷️ Physical source ownership ends before installed package storage. */
 function sourceOwnerPattern(owner) {
   return `^${escapeRegex(owner)}/(?!node_modules(?:/|$)|.*/node_modules(?:/|$))`;
@@ -38,13 +73,16 @@ function sourceOwnerPattern(owner) {
 /** 🏷️ Groups installed aliases that share the same direction while retaining exact package boundaries. */
 function packageOwnerPatterns(names) {
   const packages = [...new Set(names)].sort();
-  return packages.length ? [`(?:^(?:node_modules/)?|/node_modules/)(?:${packages.map(escapeRegex).join("|")})(?:$|/)`] : [];
+  return packages.length ? [`(?:^(?:node_modules/)?|/node_modules/)(?:${literalPrefixPattern(packages)})(?:$|/)`] : [];
 }
 
 /** 🗂️ Removes only redundant descendants already covered by an identical physical owner direction. */
 function sourceOwnerPatterns(owners) {
-  const roots = [...new Set(owners)];
-  return roots.filter((owner) => !roots.some((root) => owner !== root && owner.startsWith(`${root}/`))).map(sourceOwnerPattern);
+  const roots = [...new Set(owners)], index = new Set(roots);
+  return roots.filter(owner => {
+    for (let position = owner.indexOf("/"); position >= 0; position = owner.indexOf("/", position + 1)) if (index.has(owner.slice(0, position))) return false;
+    return true;
+  }).map(sourceOwnerPattern);
 }
 
 /** 🧪️ Fails config loading if the two resolver-boundary allowlists regress into broad source or vendor exclusions. */
@@ -215,37 +253,58 @@ function noCorePathRule() {
   };
 }
 
-/** 📦️ Step 7's "`$1`-capture rule": a relative (`local`) import may freely reach anywhere inside its OWN
- * package/module family — same directory tree, any depth — but must not resolve into a SIBLING family via
- * a deep relative path; cross-family reuse goes through a `@semio-tech/…` package-name import instead.
- * "Family" is approximated with a path-segment heuristic (chosen over wiring up M1's `discoverPackages()`
- * here: that library is an ESM/TS module meant for the registry/root-policy TS scripts, and importing it
- * into this plain `.cjs` config would need a build step for no real gain — the taxonomy's actual package
- * unit, `<owner>/📦️packages/<lang>/`, is Shape V2 end-state and most of these areas are still legacy
- * sandwiches today, so a `📦️packages`-anchored capture would simply fail to match almost anything yet;
- * the directory-family heuristic below already covers the real, present-day gap: `✏️s/🔌️plugins/*` cross
- * imports are already an ERROR via `crossPluginRules`, so plugins are deliberately left out here to avoid
- * a redundant WARN — the gap this rule actually closes is *within* 🧰️framework (product-to-product,
- * module-to-module), ✏️s/🔨️modules (s-module-to-s-module), 🌎️hub/🔨️modules, and ♻️mit-bestand
- * (item-to-item), none of which any existing rule reaches).
- * `📜️script.ts` itself is exempt (`pathNot` below): every such bootstrap script across the repo already
- * relative-imports repo-lib (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/…`) across family boundaries —
- * the SAME sanctioned pattern `no-escaping-relative-imports` above already carves out ("do not fix it into
- * a specifier-depth rule, that would break every script.ts in the repo") — flagging it here would just be
- * ~30 files of noise on an already-litigated non-issue, not a new real finding. */
-function crossPackageRelativeRule() {
-  const familyPattern = "🧰️framework/(?:🛍️products|🔨️modules)/[^/]+|✏️s/🔨️modules/[^/]+|🌎️hub/🔨️modules/[^/]+|♻️mit-bestand/[^/]+";
-  return {
-    name: "no-cross-package-relative",
-    severity: "warn",
-    comment:
-      "Deep relative imports must not cross package/module family boundaries in favor of @semio-tech/… package-name imports — WARN until package-name imports are the norm repo-wide, then promote at finalization",
-    from: { path: `^(${familyPattern})/`, pathNot: "(^|/)📜️script\\.ts$" },
-    to: {
-      dependencyTypes: ["local"],
-      pathNot: "^$1/",
-    },
-  };
+/** 🛍️ Selects the closest admitted semantic owner and its actual authored public targets. */
+function crossPackageRelativeRules() {
+  const siblings = new Map(), descendants = new Map(), selectors = new Map();
+  for (const pkg of workspacePackages) {
+    if (!siblings.has(pkg.sourceOwner)) { siblings.set(pkg.sourceOwner, []); descendants.set(pkg.sourceOwner, []); }
+    siblings.get(pkg.sourceOwner).push(pkg);
+  }
+  for (const owner of siblings.keys()) {
+    for (let position = owner.indexOf("/"); position >= 0; position = owner.indexOf("/", position + 1)) {
+      const parent = owner.slice(0, position);
+      if (descendants.has(parent)) descendants.get(parent).push(owner.slice(parent.length + 1) + "/");
+    }
+  }
+  for (const [owner, packages] of siblings) {
+    const nested = literalPrefixPattern(descendants.get(owner));
+    const exclusions = ["node_modules(?:/|$)", ".*/node_modules(?:/|$)", ...(nested ? [nested] : [])];
+    const owned = `^${escapeRegex(owner)}/(?!(?:${exclusions.join("|")}))`;
+    selectors.set(owner, { from: { path: "^", pathNot: owned }, to: { path: [owned, ...packageOwnerPatterns(packages.map(row => row.name))], pathNot: exportTargetPatterns(packages) } });
+  }
+  return workspacePackages.map(pkg => {
+    const selector = selectors.get(pkg.sourceOwner);
+    return { name: TAXONOMY.dependencyDirections.publicApi.rulePrefix + pkg.name, severity: "error", comment: "Cross-owner dependencies resolve only to authored package export targets, including scripts, types and literal dynamic imports", from: { ...selector.from }, to: { path: [...selector.to.path], pathNot: [...selector.to.pathNot] } };
+  });
+}
+
+/** 📮️ Matches authored targets after more specific public keys displace wildcard captures. */
+function exportTargetPatterns(packages) {
+  return [...new Set(packages.flatMap(pkg => pkg.exportTargets.filter(row => row.target !== null).flatMap(row => {
+    const parts = row.target.slice(2).split("*");
+    const target = parts.map((part,index) => escapeRegex(part) + (index < parts.length - 1 ? index === 0 ? "(.*)" : "\\1" : "")).join("");
+    const blocked = parts.length > 1 ? [...new Set(pkg.exportTargets.map(item => item.subpath))].flatMap(key => shadowCaptures(row.subpath,key)).map(capture => parts.map(escapeRegex).join(`(?:${capture})`)) : [];
+    const allowed = (blocked.length ? `(?!(?:${blocked.join("|")})$)` : "") + target + "$";
+    return [`^${escapeRegex(pkg.owner)}/${allowed}`, `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}/${allowed}`];
+  })))];
+}
+
+/** 🕳️ Computes values whose authored wildcard key is displaced by an exact or more specific key. */
+function shadowCaptures(key, override) {
+  const index = key.indexOf("*");
+  if (index < 0 || key === override) return [];
+  const prefix = key.slice(0,index), suffix = key.slice(index + 1), otherIndex = override.indexOf("*");
+  if (otherIndex < 0) return override.startsWith(prefix) && override.endsWith(suffix) && override.length >= prefix.length + suffix.length ? [escapeRegex(override.slice(prefix.length,override.length - suffix.length))] : [];
+  const otherPrefix = override.slice(0,otherIndex), otherSuffix = override.slice(otherIndex + 1);
+  if (otherPrefix.length < prefix.length || (otherPrefix.length === prefix.length && override.length <= key.length) || !otherPrefix.startsWith(prefix)) return [];
+  if (!otherSuffix.endsWith(suffix) && !suffix.endsWith(otherSuffix)) return [];
+  const extraPrefix = otherPrefix.slice(prefix.length), extraSuffix = otherSuffix.endsWith(suffix) ? otherSuffix.slice(0,otherSuffix.length - suffix.length) : "";
+  const captures = [escapeRegex(extraPrefix) + ".*" + escapeRegex(extraSuffix)];
+  for (let length = 0; length < extraPrefix.length; length++) {
+    const capture = extraPrefix.slice(0,length), candidate = prefix + capture + suffix;
+    if (candidate.length >= otherPrefix.length + otherSuffix.length && candidate.startsWith(otherPrefix) && candidate.endsWith(otherSuffix)) captures.push(escapeRegex(capture));
+  }
+  return captures;
 }
 
 /** 🧱️ `framework-no-s` (W1 of `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`): `🧰️framework` must not
@@ -296,38 +355,10 @@ function pluginNoExtensionOrArtifactRules() {
   }));
 }
 
-/** 🔌️ `plugins-framework-sdk-only` (`26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`): TS/JS mirror of
- * `PluginCapabilityLintScript`'s Cargo-side `semio-framework-os` ban (framework-os-dev's `📜️script.ts`,
- * `depRules`) — a plugin may depend on the plugin SDK (`@semio-tech/framework`, the product-neutral
- * package rooted at `🧰️framework/📦️packages/`) but must not depend on any OTHER `🧰️framework` package: the
- * OS host (`@semio-tech/framework-os`), a renderer target, or anything else product-specific that isn't
- * the SDK. `from` excludes `📜️script.ts` for the exact reason `crossPackageRelativeRule` above already
- * does: every plugin's own build/dev script relative-imports repo-lib
- * (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/…`), a sanctioned dev-tooling pattern, not a runtime
- * coupling — leaving it in would have drowned the real findings below in 108 identical script.ts hits. WARN,
- * not error, for the same reason this ticket's other policy rules stay report-mode (see
- * `noImplSegmentRule`/`crossPackageRelativeRule` above): do not shift the shared verify gate under the two
- * other sessions concurrently editing this tree. A dry sweep at seed time DID find 7 real runtime hits after
- * the `📜️script.ts` exclusion (`bunx dependency-cruiser --config .dependency-cruiser.cjs --output-type
- * err-long ✏️s`, grep `plugins-framework-sdk-only` minus `📜️script\.ts →` lines) — `📐️cad`'s renderer/brepjs
- * components reaching `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f`,
- * `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg` (a wasm build output), and three plugins'
- * `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript` direct-renderer imports — real,
- * pre-existing, left as WARN backlog for a future wave to triage rather than silenced or hastily excepted. */
+/** 🔌️ Every plugin source owner consumes only the admitted neutral public SDK. */
 function pluginsFrameworkSdkOnlyRule() {
-  const otherFrameworkPackageNames = FRAMEWORK_PACKAGES.filter((p) => /^@semio-tech\/framework($|-)/.test(p.name) && p.name !== "@semio-tech/framework").map(
-    (p) => `^${escapeRegex(p.name)}$`,
-  );
-  return {
-    name: "plugins-framework-sdk-only",
-    severity: "warn",
-    comment: "✏️s/🔌️plugins/** may depend on the plugin SDK (@semio-tech/framework) but not any other 🧰️framework package — mirrors the Cargo capability lint's semio-framework-os ban",
-    from: { path: "^✏️s/🔌️plugins/", pathNot: "(^|/)📜️script\\.ts$" },
-    to: {
-      path: ["^🧰️framework/"].concat(otherFrameworkPackageNames),
-      pathNot: ["^🧰️framework/📦️packages/", "^@semio-tech/framework$"],
-    },
-  };
+  const sdk = workspacePackages.filter(pkg => pkg.name === TAXONOMY.dependencyDirections.publicApi.sdkPackage);
+  return { name: "plugins-framework-sdk-only", severity: "error", comment: "Plugin runtime and executable owners use the neutral authored public SDK; private framework and product APIs are forbidden", from: { path: "^✏️s/🔌️plugins/" }, to: { path: [sourceOwnerPattern("🧰️framework"), ...packageOwnerPatterns(FRAMEWORK_PACKAGES.map(pkg => pkg.name))], pathNot: exportTargetPatterns(sdk) } };
 }
 
 /** 🖥️ Enforces the renderer host's presentation-only dependency boundary against dependency-cruiser's canonical resolved paths. */
@@ -396,13 +427,6 @@ return {
     },
     rendererHostsOnlyUiRule(),
     {
-      name: "no-generated-edits-upstream",
-      severity: "error",
-      comment: "only the plugin registry itself may import its generated plugin catalog directly — other consumers must go through generated/🟦️plugins.ts",
-      from: { pathNot: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/" },
-      to: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🔣️plugins\\.json$" },
-    },
-    {
       name: "no-state-outside-os",
       severity: "error",
       comment:
@@ -420,7 +444,7 @@ return {
     ...crossPluginRules(),
     noImplSegmentRule(),
     noCorePathRule(),
-    crossPackageRelativeRule(),
+    ...crossPackageRelativeRules(),
     frameworkNoSRule(),
     frameworkNoImplementationRule(),
     { ...frameworkNoImplementationRule(), name: "repo-no-implementation", comment: "Repository-wide source must remain independent of deletable implementation owners", from: { path: ["^[^/]+$"] } },
@@ -444,4 +468,27 @@ return {
 };
 
 }
-module.exports = { buildDependencyDirectionPolicy };
+/** 🧾️ Captures authored public keys and target leaves without implicit main or compatibility exports. */
+function authoredPackageExportAuthority(owner, manifest) {
+  if (typeof owner !== "string" || /[\\\0]/u.test(owner) || owner.split("/").some(segment => !segment || segment === "." || segment === "..")) throw Error("Canonical authored package owner required");
+  const sourceOwner = owner.includes("/📦️packages/") ? owner.split("/📦️packages/")[0] : owner;
+  const rows = [];
+  const collect = (subpath, value) => {
+    if (!/^\.(?:\/.*)?$/u.test(subpath) || /[\\\0]/u.test(subpath) || (subpath.match(/\*/g)?.length ?? 0) > 1 || (subpath !== "." && subpath.slice(2).split("/").some(segment => !segment || segment === "." || segment === ".."))) throw Error("Invalid authored package export key: " + subpath);
+    if (value === null) rows.push({ subpath, target: null });
+    else if (typeof value === "string") {
+      if (!value.startsWith("./") || /[\\\0]/u.test(value) || value.slice(2).split("/").some(segment => !segment || segment === "." || segment === "..") || (value.includes("*") && !subpath.includes("*"))) throw Error("Invalid authored package export target: " + value);
+      rows.push({ subpath, target: value });
+    } else if (Array.isArray(value)) value.forEach(item => collect(subpath, item));
+    else if (value && typeof value === "object") Object.values(value).forEach(item => collect(subpath, item));
+    else throw Error("Unreadable authored package export target");
+  };
+  const value = manifest.exports;
+  if (value !== undefined) {
+    if (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).some(key => key.startsWith("."))) Object.entries(value).forEach(([key, target]) => collect(key, target));
+    else collect(".", value);
+  }
+  const exportTargets = [...new Map(rows.map(row => [JSON.stringify(row), row])).values()].sort((a,b) => Buffer.compare(Buffer.from(a.subpath),Buffer.from(b.subpath)) || Buffer.compare(Buffer.from(String(a.target)),Buffer.from(String(b.target))));
+  return { sourceOwner, exports: [...new Set(exportTargets.filter(row => row.target !== null).map(row => row.subpath))], exportTargets };
+}
+module.exports = { buildDependencyDirectionPolicy, authoredPackageExportAuthority };

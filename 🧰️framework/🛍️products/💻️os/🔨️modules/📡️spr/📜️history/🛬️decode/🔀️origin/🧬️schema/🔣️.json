@@ -1,0 +1,73 @@
+{
+  "type": "object",
+  "required": [
+    "grant",
+    "origins",
+    "invalid"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "grant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "origins": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "json",
+          "kind"
+        ],
+        "properties": {
+          "json": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "owner",
+              "contributed",
+              "transaction"
+            ]
+          }
+        }
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

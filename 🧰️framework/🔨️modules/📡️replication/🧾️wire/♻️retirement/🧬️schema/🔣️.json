@@ -1,35 +1,108 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Protocol Cause Retirement Authority",
+  "title": "Protocol Original Cause Corpus",
   "type": "object",
-  "required": [
-    "maximumItems",
-    "copyBytes",
-    "capacityBytes",
-    "releaseBytes",
-    "depth"
-  ],
   "additionalProperties": false,
+  "required": [
+    "policy",
+    "cases",
+    "maximumTurns",
+    "copyLimit",
+    "pauses"
+  ],
   "properties": {
-    "maximumItems": {
+    "policy": {
+      "$ref": "#/$defs/Grant"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "texts",
+          "capacities"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "io",
+              "malformed",
+              "packMalformed",
+              "value",
+              "text",
+              "borrowed",
+              "scalar"
+            ]
+          },
+          "texts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "capacities": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "copyLimit": {
       "type": "integer",
       "minimum": 0
     },
-    "copyBytes": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "capacityBytes": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "releaseBytes": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "depth": {
-      "type": "integer",
-      "minimum": 0
+    "pauses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "$defs": {
+    "Grant": {
+      "type": "object",
+      "required": [
+        "maximumItems",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

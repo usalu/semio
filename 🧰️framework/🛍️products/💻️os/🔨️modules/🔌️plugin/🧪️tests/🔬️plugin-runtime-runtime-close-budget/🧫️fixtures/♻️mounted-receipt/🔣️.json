@@ -1,0 +1,11 @@
+{
+  "contract": "framework.plugin.original-mounted-close-receipt",
+  "originalGrant": [1, 4096, 65536, 262144, 64],
+  "phase": "Close",
+  "currencies": ["items", "copy", "capacity", "release"],
+  "operationSource": "original-mounted-operation",
+  "recipient": "original-reactor-context",
+  "nextProducerBeforeAcknowledgement": false,
+  "receipts": [[1, 0, 0, 8192], [1, 0, 0, 0]],
+  "total": [2, 0, 0, 8192]
+}

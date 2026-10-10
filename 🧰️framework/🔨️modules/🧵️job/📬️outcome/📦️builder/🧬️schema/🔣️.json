@@ -7,7 +7,8 @@
     "byteLengths",
     "stages",
     "ledgerStages",
-    "ledgerLeaseWords"
+    "ledgerLeaseWords",
+    "metadataCopyBytes"
   ],
   "properties": {
     "policy": {
@@ -68,6 +69,9 @@
     },
     "ledgerLeaseWords": {
       "const": 2
+    },
+    "metadataCopyBytes": {
+      "const": 0
     }
   }
 }

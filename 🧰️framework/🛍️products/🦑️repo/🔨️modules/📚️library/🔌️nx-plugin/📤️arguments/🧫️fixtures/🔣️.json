@@ -60,5 +60,33 @@
         1
       ]
     }
-  ]
+  ],
+  "nativeOriginal": {
+    "selected": "literal-owner:probe",
+    "owner": "literal-owner-arguments-test",
+    "maximumElapsedMilliseconds": 10000,
+    "command": {
+      "kind": "native-owner-command",
+      "manifest": "owner/Cargo.toml",
+      "workingDirectory": "owner",
+      "program": "bun",
+      "arguments": [
+        "./📜️script.ts",
+        "test"
+      ]
+    },
+    "resources": {
+      "artifactDirectory": "/repo/artifacts",
+      "transport": {
+        "maximumBytes": 67108864,
+        "maximumLines": 65536
+      },
+      "child": {
+        "maximumElapsedMilliseconds": 10000
+      },
+      "network": {
+        "offline": true
+      }
+    }
+  }
 }

@@ -1,0 +1,5 @@
+# Current Cancellation / Binary / TXT Trial Retirement
+
+Fresh three physical documents are exclusive full-trial authorities: fixed cancellation diagnostics/five cuts, an entire const original Binary schedule, and the original TXT encoding schedule/policies. No variable production DTO definitions or projected domain consumers occur. Current actual Grant, Snapshot, error owners and original SQLite/Buffer/System laws remain separate. Fresh endpoint hashes retained without Source copies. Absence RED pending; no Cargo or Rust edits.
+
+Actual absence RED58044 terminal Nx1/1.8s: all three exact live authorities refused. Earlier native-b25-red.log only shell/Nx argument framing failed before tests and receives no behavioral credit. Actual original Source renewal10978 terminal Nx0/1.0s,12 laws122 assertions plus independent depth1/612. SQLite/DataView/UTF8/Buffer outputs executed with DEBUG receipts; canonical per-Grant Ajv remains. All3 plain inputs unchanged by current observations; retired authorities absent. No Rust/native policy edits or native assertion credit. Next genuine complete Kernel acquisition belongs Publication.

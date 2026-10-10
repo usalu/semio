@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {runBudgetedTestCommand} from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import {resolveTestLevel,testLevelBudgetMs} from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import {cmdBudgetMs} from "../../../🏃️process/⏱️budget/🟦️.ts";
@@ -27,4 +28,4 @@ class BindingScript extends BundleScript{
 }
 
 const router=new ScriptRouter(import.meta.dir).register("test-native",NativeScript).register("test-binding",BindingScript);
-await runScriptMain(router,{defaultCommand:"test-native"});
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"test-native"}) }));

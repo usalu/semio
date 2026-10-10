@@ -17,3 +17,5 @@ test("original shared actor admission keeps every refused currency and the prebo
  expect(admitted.freed).toBe(0);expect(admitted.frame).toBe(law.expected.prebornFrame);expect(law.expected.deniedHeap).toEqual([0,0]);expect(law.expected.terminalHeap).toEqual([0,0]);
  console.log("[DEBUG] independent Ajv/NodeBuffer/RFC6902 actor admission rejects every unfunded axis, retains source and preborn shell, and separates birth from later shell release");
 });
+
+test("original receipt order fold 3 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️actor.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original receipt/order/fold trial has no whole-corpus schema authority");});

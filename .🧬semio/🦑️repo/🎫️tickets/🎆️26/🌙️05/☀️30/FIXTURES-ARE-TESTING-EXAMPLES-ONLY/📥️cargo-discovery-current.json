@@ -1,0 +1,21 @@
+{
+  "ownership": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "sha256": "94b9e08c4e9ae6416728d5558f48b7abb7a65497cb9a0697bde3a010a48be862"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "sha256": "4b9b9d0a6bbb945311d1db99b3dc38425f8d8d9a92147383f2e15506b39857f8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+      "sha256": "d52bd87e04758e3a2466192ffc8d3e4b100319f706fca4fac92db97c8f96f678"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "d842dc029762ae4718e11d889741aeb5d8e82925bdf1c3e6ff19923786048525"
+    }
+  ]
+}

@@ -105,7 +105,7 @@ async fn contributed_inference_computes_a_real_building_summary() {
     base.nodes.push(CadNode { id: "storey-1".into(), label: "Level One".into(), kind: "building-storey".into() });
     let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(&base);
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 };
-    let request = ArtifactInferenceExecutionRequest {
+    let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128},
         policy: b"aec-building-test",
         budgets: &budgets,
         cancellation_id: "aec-building-test",

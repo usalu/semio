@@ -1,0 +1,89 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "admissionGrant",
+    "bodyGrant",
+    "originalInputCapacity",
+    "phases",
+    "sameOriginalInput",
+    "sameCancelAndPayload"
+  ],
+  "properties": {
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "admissionGrant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "bodyGrant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "originalInputCapacity": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "admitted",
+          "ready",
+          "items"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "root-denied",
+              "root",
+              "payload-denied",
+              "payload",
+              "borrow"
+            ]
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "sameOriginalInput": {
+      "const": true
+    },
+    "sameCancelAndPayload": {
+      "const": true
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"grant":[9,4096,65536,262144],"receipts":[{"kind":"constructor","spent":[1,136,128,0]},{"kind":"preparation","spent":[1,41,0,0]},{"kind":"history","spent":[1,73,72,0]},{"kind":"tool","spent":[1,19,16,0]},{"kind":"retirement","spent":[1,8,0,128]}],"expected":[5,277,216,128]}

@@ -1,3 +1,4 @@
+fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
 use super::*;
 use crate::{GuestRuntime, JobStep, MockGuestRuntime, PackageHash, PackageId, PackageRef};
 use semio_framework::kernel::{Budget, Effect, JobPlacement};
@@ -32,7 +33,7 @@ async fn shard_stack_authority_matches_the_neutral_fixture() {
 
 async fn encode_frame(frame: super::super::ShardFrame) -> Vec<u8> {
     let mut bytes = Vec::new();
-    frame.pack_encode(&mut bytes).await;
+    frame.pack_encode(&mut bytes).await.expect("declared original frame authority");
     bytes
 }
 
@@ -216,7 +217,7 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
         payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
     };
     let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
-    let bytes = encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![envelope] }).await;
+    let bytes = encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![envelope] }).await;
     executor.send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
 
     match wait_for_one(&outcomes) {
@@ -282,14 +283,12 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     };
     let background_lane = lane(0);
     let interactive_lane = lane(1);
-    let background_frame = encode_frame(super::super::ShardFrame::Grant {
-        actor: background,
+    let background_frame = encode_frame(super::super::ShardFrame::Grant {         actor: background,
         budget: semio_framework_actor::lane_defaults::budget_for(background_lane),
         envelopes: vec![envelope(background, background_lane, frames[0]["sequence"].as_u64().expect("background sequence"))],
     })
     .await;
-    let interactive_frame = encode_frame(super::super::ShardFrame::Grant {
-        actor: interactive,
+    let interactive_frame = encode_frame(super::super::ShardFrame::Grant {         actor: interactive,
         budget: semio_framework_actor::lane_defaults::budget_for(interactive_lane),
         envelopes: vec![envelope(interactive, interactive_lane, frames[1]["sequence"].as_u64().expect("interactive sequence"))],
     })
@@ -340,7 +339,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::Wake).expect("wake") },
         };
         let submit_started = std::time::Instant::now();
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(submit_started.elapsed() < Duration::from_millis(8), "one mounted replay ingress opportunity exceeded 8ms");
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
 
@@ -358,7 +357,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
         let turn = JobTurn { job, operation, step_sequence: 0 };
         mock.script_job_step(actor, JobStep::Running { progress: Some(vec![11, 13]) }).await;
         let step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
         let original = wait_for_one(&outcomes);
         assert!(matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::PreviewReady { preview } if *preview == [11, 13])));
 
@@ -372,12 +371,12 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             cancel_of: None,
             payload: Payload::JobReplay { turn, request, worker_count: u16::try_from(worker_count).expect("worker count"), worker_slot: 0 },
         };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Resumed { actor: reported, operation: observed } if reported == actor.0 && observed == operation));
         mock.script_job_step(actor, JobStep::Done { output: vec![11, 13] }).await;
         mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
         let replay_step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 4, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
         let replayed = outcomes.wait_for(2, Duration::from_secs(2));
         assert!(
                 replayed.iter().any(|outcome| matches!(outcome, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13]))),
@@ -441,7 +440,7 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
             cancel_of: None,
             payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
         };
-        let bytes = encode_frame(super::super::ShardFrame::Grant { actor, budget: grant_budget, envelopes: vec![envelope] }).await;
+        let bytes = encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget: grant_budget, envelopes: vec![envelope] }).await;
         executors[shard_id.0 as usize].send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
     }
 
@@ -559,7 +558,7 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
                 cancel_of: None,
                 payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
             };
-            let bytes = semio_framework_async::block_on(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![envelope] }));
+            let bytes = semio_framework_async::block_on(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![envelope] }));
             semio_framework_async::block_on(executor.send_frame(bytes, semio_framework_actor::Lane::Interactive));
         }));
     }

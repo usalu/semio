@@ -1,0 +1,35 @@
+{
+  "observed": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧬️schema/🔣️.json",
+      "sha256": "5a6fcbe97868360fcda696571953bd201e15f31947dae162321b6e7301d1123a",
+      "bytes": 3047,
+      "role": "mutation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "f6fb1f843338db22b8ad4e13f20d3d4e974aebac95b34191a1dd35948b2e461f",
+      "bytes": 5854,
+      "role": "mutation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧫️fixtures/🔣️.json",
+      "sha256": "bea9f46c3edebdd209e66729e2c0097b47ddff5986e83f5b95cd4cd965f129a8",
+      "bytes": 3499,
+      "role": "observation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs",
+      "sha256": "7c519bd71bbbd5ffcc4ceb14744c5503eb84d5431175eeb319cec23dd80a3452",
+      "bytes": 20222,
+      "role": "observation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🧪️tests/🦀️.rs",
+      "sha256": "52180f08512538534192e85097d22abc07f81c95e5b70b3d5328d7383b47afdc",
+      "bytes": 7534,
+      "role": "observation"
+    }
+  ],
+  "classification": "Closed cases/extentCases wrapper; grant duplicated canonical Value grant; no production DTO defs. Sole TS reader ReceivingSchemaScript compiles complete fixture. Native tests consume plain vectors only."
+}

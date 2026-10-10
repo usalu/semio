@@ -1,0 +1,14 @@
+{
+  "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs",
+  "beforeSha256": "26be8911d76afc79bb4e62c0bef5289fec07e6944a83cd6ae333299d89c05b97",
+  "afterSha256": "766a90498a98721062cbba1306d27f8906e9486e9c249ec101d6551c68d44a24",
+  "oldBlock": "\";\"if depth==0",
+  "newBlock": "\";\" if depth==0",
+  "compilerRed": {
+    "session": 24982,
+    "cargoExit": 101,
+    "line": 69,
+    "column": 767
+  },
+  "scope": "lexical separation only; policy/receiveddata/control/progress unchanged"
+}

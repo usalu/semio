@@ -120,3 +120,31 @@ test("binary closed complete semantic cells agree with independent third-party S
   for(const[table,width]of Object.entries(completeSemantic.tableWidths)){const fields=db.query("PRAGMA table_info("+quote(table)+")").all()as{name:string}[];expect(fields.length).toBe(width);const cells=fields.map(({name})=>{const f=quote(name);return "CASE typeof("+f+") WHEN 'integer' THEN 8 WHEN 'real' THEN 8 WHEN 'text' THEN length(CAST("+f+" AS BLOB)) WHEN 'blob' THEN length("+f+") ELSE 0 END";}).join("+");const extent=db.query("SELECT COUNT(*) AS rows,COALESCE(SUM("+cells+"),0) AS bytes FROM "+quote(table)).get()as{rows:number;bytes:number};rows+=extent.rows;bytes+=extent.bytes;}expect(rows).toBe(sample.rows);expect(bytes).toBe(sample.bytes);
  }finally{db.close();}}
 });
+
+test("Original Binary receiving vectors have no whole-trial authority", async () => {
+ const { existsSync } = await import("node:fs");
+ expect(existsSync(new URL("../🫴️receiving/🧬️schema/🔣️.json",import.meta.url))).toBe(false);
+});
+
+
+test("Original Binary required paid receiver keeps the raw carrier and canonical supplied Grant", async () => {
+ const { readFileSync } = await import("node:fs");
+ const { resolve } = await import("node:path");
+ const repo=resolve(import.meta.dir,"../../../../../../../../../../../../..");
+ const original=JSON.parse(readFileSync(new URL("../🫴️receiving/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const { semioSchemaAjvV1 } = await import(resolve(repo,"🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts"));
+ const grant=JSON.parse(readFileSync(resolve(repo,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"),"utf8"));
+ expect(semioSchemaAjvV1({strict:true}).compile(grant)(original.original.grant)).toBe(true);
+ for(const row of original.shapeCases.filter((row:any)=>row.carrier==="binary")){
+  const raw=Uint8Array.from(row.raw),expected=Buffer.from(row.expected);
+  expect(Buffer.from(raw)).toEqual(expected);expect(parseBinarySnapshot({schema:original.original.canonicalSchema,bytes:[...raw]}).bytes).toEqual([...expected]);
+ }
+ const source=readFileSync(new URL("../../../💾️binary/📸️snapshot/🦀️.rs",import.meta.url),"utf8");
+ expect(source.includes("impl store::ArtifactPackReceiving for BinarySnapshot")).toBe(true);
+ expect(source.includes("owner.receive::<Self,Self>")).toBe(true);
+ expect(source.includes("bind_raw_pack(bytes,slot,native,body)")).toBe(true);
+ expect(source.includes("NativeDecodeControl::new")).toBe(false);
+ console.log("[DEBUG] Original required Binary receiver uses canonical supplied Grant and independent Buffer/Uint8Array raw-carrier output; actual System cancellation proof is separate");
+});
+
+test("current Binary examples have no whole-trial schema authority", async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🫴️receiving/🧫️fixtures/🧬️schema/🔣️.json",import.meta.url))).toBe(false);});

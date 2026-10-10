@@ -1,0 +1,14 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+      "sha256": "58665dda2e48ae7770803e0cfe9530d907489ecb286ce3c450fc318bd0adc886"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "sha256": "f4529f1252e97fe4315b7a69c43406839b73d45470955f3fe75d0c1aad671b0e"
+    }
+  ]
+}

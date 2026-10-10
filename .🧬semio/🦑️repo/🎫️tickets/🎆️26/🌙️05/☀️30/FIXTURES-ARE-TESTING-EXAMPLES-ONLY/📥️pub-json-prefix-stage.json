@@ -1,0 +1,126 @@
+{
+  "red": {
+    "session": 80898,
+    "NxStatus": 1,
+    "duration": "2.0s",
+    "tests": "0pass/1fail/9assertions",
+    "log": "🗑️generated/pub-json-prefix-red.log"
+  },
+  "stagedActions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "beforeSha256": "898e2fb3b85fcd8c393b2376104498b726beb5b5f3c03e1c898fd45a4efac0a6",
+      "afterSha256": "55cd4ea7339da3c13df67338ca749c60ba129ec182c2c621ce6d0caf55226da9",
+      "scope": "defining canonical JSON callback/error literal Value authority; grant/receipt and all direct caller propagation still in progress",
+      "observedCurrentSha256": "4ef80c7d6641ba9300cd523cee9548080279376e685d7c9e34276b2e27ca360d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔣️scalar/🦀️.rs",
+      "beforeSha256": "5b26519989ec9e5f52df3118f926e7f3a6ef4f32848ec56a4c0edd86f5e2e4fa",
+      "afterSha256": "a6afd3302cfd783070af55e2291a1db9c236a12195f1ef738ce3d5a957351293",
+      "scope": "actual fixed scalar literal Value failure and initialized original inline prefix authority; no owned String/I/O error allocation",
+      "observedCurrentSha256": "7632cd4a05d08f6ee92ac9880b64ddf9bc21a3493865183e42825e0ca715fe43"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
+      "beforeSha256": "bc7ea91a3003517a1bdb128e6e300fbdba7045f178b002b8bd401518c65c285a",
+      "afterSha256": "a56efee33dcf33dfb76b4b8d98850d1ac532055eb145bd6e12130344336af165",
+      "scope": "actual typed Tree scalar consumer forwards original canonical refusal physical authority",
+      "observedCurrentSha256": "a56efee33dcf33dfb76b4b8d98850d1ac532055eb145bd6e12130344336af165"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "beforeSha256": "55cd4ea7339da3c13df67338ca749c60ba129ec182c2c621ce6d0caf55226da9",
+      "afterSha256": "ee0d1ebc0783fd832c933d7201bc371d7a7a09c5ae09805b1cb49b78a176c155",
+      "scope": "single admitted original JSON structural/output event; exact active depth, typed prefix refusal and sole physical receipt; direct consumers pending",
+      "observedCurrentSha256": "4ef80c7d6641ba9300cd523cee9548080279376e685d7c9e34276b2e27ca360d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "dac4fbd72567a6f47716436cc2c1ed43a81a7305bdf995efacaace835b5e8e76",
+      "afterSha256": "3ea005c8b2aaf8eea80a9c47013103474255d6a70f0928c6f488b87260e2d6d0",
+      "scope": "actual original indexed cursor native plain depth/prefix/System/pointer/full-grant law; authored UNRUN",
+      "observedCurrentSha256": "5301e14ca67c83d2658894d2cf36f87d87c7684587c45c8204e417d2248a77eb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🔣️scalar/🦀️.rs",
+      "beforeSha256": "a6afd3302cfd783070af55e2291a1db9c236a12195f1ef738ce3d5a957351293",
+      "afterSha256": "7632cd4a05d08f6ee92ac9880b64ddf9bc21a3493865183e42825e0ca715fe43",
+      "scope": "defining scalar actual in-place original retained inline backing formatter and sole initialized prefix receipt; cold constructor delegates same producer",
+      "observedCurrentSha256": "7632cd4a05d08f6ee92ac9880b64ddf9bc21a3493865183e42825e0ca715fe43"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "beforeSha256": "2868e16568c8f2dc9f064549abbfd356de7db10f5209a2f7321a7e2fd5e53f4b",
+      "afterSha256": "dd4cfc96dafdd0abd220606bbae57a1dd9344b3e4c0e8936fc6e200adf68e7c2",
+      "scope": "actual JSON wire separate funded original binding/header/prefix/canonical event/hex byte retention, unchanged64 policy and depth debit; no reconstructed Value refusal",
+      "observedCurrentSha256": "dd4cfc96dafdd0abd220606bbae57a1dd9344b3e4c0e8936fc6e200adf68e7c2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧫️fixtures/🔣️.json",
+      "beforeSha256": "ee905c9d4b90a46fc7795bf08cf74da0eb5901527ba2a24d8c3f608be92e821e",
+      "afterSha256": "990279e406b3f8310dcca5eed6be710970b57743fcdb809b56f7bd01521e7790",
+      "scope": "independent immutable original JSON wire turn policy, same64 copy/depth and actual output samples remain distinct",
+      "observedCurrentSha256": "990279e406b3f8310dcca5eed6be710970b57743fcdb809b56f7bd01521e7790"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs",
+      "beforeSha256": "05f93e72b6de2c8c282960ef199ca622c267ea2dab8c90dfeb638011bb69c00f",
+      "afterSha256": "42df07b975d7905fc0b198a7add6305ae691627fb173cdb99639bac6ad558971",
+      "scope": "actual original JSON/Hex/Serde/System laws use immutable fixed64 physical grant independent of sampled output window; canonical one-event inert progress allowed only under real frontier",
+      "observedCurrentSha256": "9d915ad3ffb2d919f6caf8770c4f5f9bb264fdb637c5a13d3d9956b4c35375f4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts",
+      "beforeSha256": "4dd6e70024e2a1db745545ee23fbf8bed90fbe539ec3f6585ea7af3190ca9d1b",
+      "afterSha256": "a437745487c21b8c09df1d32ebd78660426292e3ed3c3b5d4d095a27b4732ad2",
+      "scope": "actual original Graph intent per-value neutral JSON/TextEncoder and indexed-source absence regression, before domain projection repair"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🦀️.rs",
+      "beforeSha256": "f27e30e7da7061e1158ccee89a3d0a7abae53b08555c98e116df0f060a873505",
+      "afterSha256": "7e844efe15079e528cc8e566f44e6fba958212e4f30079c4e6d23f939e513a58",
+      "beforeBlockSha256": "5fa3181f65f983c0c573c06b382a6a2c956067a7786785bd9f29996f7d017aa3",
+      "afterBlockSha256": "bfa41900031c3c1f749c4d363d4225745ef479d919a29fc3c3d83cd5b2787a95",
+      "scope": "actual allocation-free indexed original Graph intent widget/value/optional surface projection; validation and original fields/retirement unchanged"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧫️fixtures/🔣️.json",
+      "beforeSha256": "280147a248da961d5408b0bf6b4fb7824f95055573147900c79291f7f9173f51",
+      "afterSha256": "9d999c2bd17ea9c82ff3660416cc4be8690e9726b00e96592e9e6c485787dc35",
+      "scope": "independent fixed original64 copy/depth indexed domain encoding policy; all existing plain fields/order/value/text preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "4a6244d9de801c0704ca226cf58bdae722d4cfa3c82cc8d1768a01fe87051dd3",
+      "afterSha256": "2cb3dd4541a6535a3cf627b3d6928f864ef152b817de674a1a031919805cc06e",
+      "scope": "actual original Graph intent native indexed cursor/serde/System/refusal/pointer law; authored UNRUN"
+    }
+  ],
+  "sourceFreeze": false,
+  "native": "UNRUN",
+  "boundedSource": {
+    "session": 38598,
+    "NxStatus": 0,
+    "duration": "5.4s",
+    "Bun": "1pass/0fail/17assertions",
+    "log": "🗑️generated/pub-json-prefix-source.log",
+    "qualification": "independent JSON/Ajv and original Rust grammar only; old aggregate linkage and owned borrowed allocation seam still incomplete; native authored UNRUN"
+  },
+  "wireSource": {
+    "session": 10463,
+    "NxStatus": 0,
+    "duration": "2.4s",
+    "Bun": "8pass/0fail/129assertions",
+    "log": "🗑️generated/pub-json-wire-source.log",
+    "qualification": "original independent byte/schema and grammar source laws; actual updated native wire laws unrun; owned reader/sealer integration pending"
+  },
+  "graphDomainRed": {
+    "session": 11794,
+    "NxStatus": 1,
+    "duration": "8.7s",
+    "Bun": "1pass/1fail/24assertions",
+    "log": "🗑️generated/pub-json-domain-red.log",
+    "failure": "actual missing indexed original domain projection after independent existing per-value JSON oracle"
+  }
+}

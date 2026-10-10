@@ -1,0 +1,514 @@
+{
+  "original": {
+    "grant": {
+      "maximumItems": 65536,
+      "maximumCopyBytes": 1048576,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "nativeMaximumBytes": 16777216,
+    "closeZeroGrant": {
+      "maximumItems": 0,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 0
+    },
+    "closeFundedGrant": {
+      "maximumItems": 65536,
+      "maximumCopyBytes": 1048576,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "parentCompleted": 17,
+    "parentTotal": 17,
+    "canonicalSchema": "stdio.binary",
+    "canonicalPrefix": "semio stdio.binary.dsl v1\n",
+    "literalSchema": "世界 binary 🔣️",
+    "refusalGrant": {
+      "maximumItems": 0,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 0
+    },
+    "refusalNativeMaximumBytes": 0
+  },
+  "shapeCases": [
+    {
+      "id": "raw-octets",
+      "carrier": "binary",
+      "raw": [
+        0,
+        255,
+        1,
+        128
+      ],
+      "text": "",
+      "accepted": true,
+      "expected": [
+        0,
+        255,
+        1,
+        128
+      ],
+      "cause": null,
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "hex-octets",
+      "carrier": "text",
+      "raw": [],
+      "text": "00ff0180",
+      "accepted": true,
+      "expected": [
+        0,
+        255,
+        1,
+        128
+      ],
+      "cause": null,
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "hex-whitespace",
+      "carrier": "text",
+      "raw": [],
+      "text": "00 FF  01\n80",
+      "accepted": true,
+      "expected": [
+        0,
+        255,
+        1,
+        128
+      ],
+      "cause": null,
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "raw-empty",
+      "carrier": "binary",
+      "raw": [],
+      "text": "",
+      "accepted": true,
+      "expected": [],
+      "cause": null,
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "hex-empty",
+      "carrier": "text",
+      "raw": [],
+      "text": " \t\n",
+      "accepted": true,
+      "expected": [],
+      "cause": null,
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "hex-invalid",
+      "carrier": "text",
+      "raw": [],
+      "text": "00fg",
+      "accepted": false,
+      "expected": [],
+      "cause": "invalid native Binary hex digit",
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "hex-odd",
+      "carrier": "text",
+      "raw": [],
+      "text": "00f",
+      "accepted": false,
+      "expected": [],
+      "cause": "odd hex length",
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "header-lf",
+      "carrier": "text",
+      "raw": [],
+      "text": "semio stdio.binary.dsl v1\n00ff0180",
+      "accepted": true,
+      "expected": [
+        0,
+        255,
+        1,
+        128
+      ],
+      "cause": null,
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "header-crlf",
+      "carrier": "text",
+      "raw": [],
+      "text": "semio stdio.binary.dsl v1\r\n00ff0180",
+      "accepted": true,
+      "expected": [
+        0,
+        255,
+        1,
+        128
+      ],
+      "cause": null,
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "header-eof",
+      "carrier": "text",
+      "raw": [],
+      "text": "semio stdio.binary.dsl v1",
+      "accepted": true,
+      "expected": [],
+      "cause": null,
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "header-truncated",
+      "carrier": "text",
+      "raw": [],
+      "text": "semio stdio",
+      "accepted": false,
+      "expected": [],
+      "cause": "invalid semio preamble: truncated envelope token",
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "header-mismatch",
+      "carrier": "text",
+      "raw": [],
+      "text": "semio stdio.binary.opx v1\n00",
+      "accepted": false,
+      "expected": [],
+      "cause": "invalid semio preamble: declared envelope identity mismatch",
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "header-boundary",
+      "carrier": "text",
+      "raw": [],
+      "text": "semio stdio.binary.dsl v1 00",
+      "accepted": false,
+      "expected": [],
+      "cause": "invalid semio preamble: canonical preamble requires a line boundary",
+      "absentBeforeAdmission": true
+    },
+    {
+      "id": "header-invalid-hex",
+      "carrier": "text",
+      "raw": [],
+      "text": "semio stdio.binary.dsl v1\n﻿00",
+      "accepted": false,
+      "expected": [],
+      "cause": "invalid native Binary hex digit",
+      "absentBeforeAdmission": true
+    }
+  ],
+  "bodyCases": [
+    {
+      "id": "items-zero",
+      "axis": "items",
+      "ceiling": "zero",
+      "accepted": false,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 0
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 0
+        }
+      ]
+    },
+    {
+      "id": "items-oneShort",
+      "axis": "items",
+      "ceiling": "oneShort",
+      "accepted": false,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 2
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 2
+        }
+      ]
+    },
+    {
+      "id": "items-exact",
+      "axis": "items",
+      "ceiling": "exact",
+      "accepted": true,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 3
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 3
+        }
+      ]
+    },
+    {
+      "id": "copy-zero",
+      "axis": "copy",
+      "ceiling": "zero",
+      "accepted": false,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 0
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 0
+        }
+      ]
+    },
+    {
+      "id": "copy-oneShort",
+      "axis": "copy",
+      "ceiling": "oneShort",
+      "accepted": false,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 39
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 63
+        }
+      ]
+    },
+    {
+      "id": "copy-exact",
+      "axis": "copy",
+      "ceiling": "exact",
+      "accepted": true,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 40
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 64
+        }
+      ]
+    },
+    {
+      "id": "capacity-zero",
+      "axis": "capacity",
+      "ceiling": "zero",
+      "accepted": false,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 0
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 0
+        }
+      ]
+    },
+    {
+      "id": "capacity-oneShort",
+      "axis": "capacity",
+      "ceiling": "oneShort",
+      "accepted": false,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 15
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 15
+        }
+      ]
+    },
+    {
+      "id": "capacity-exact",
+      "axis": "capacity",
+      "ceiling": "exact",
+      "accepted": true,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 16
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 16
+        }
+      ]
+    },
+    {
+      "id": "depth-zero",
+      "axis": "depth",
+      "ceiling": "zero",
+      "accepted": false,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 0
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 0
+        }
+      ]
+    },
+    {
+      "id": "depth-oneShort",
+      "axis": "depth",
+      "ceiling": "oneShort",
+      "accepted": false,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 0
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 0
+        }
+      ]
+    },
+    {
+      "id": "depth-exact",
+      "axis": "depth",
+      "ceiling": "exact",
+      "accepted": true,
+      "absentOnRefusal": true,
+      "limits": [
+        {
+          "pointerBytes": 4,
+          "maximum": 1
+        },
+        {
+          "pointerBytes": 8,
+          "maximum": 1
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "pointerBytes": 4,
+      "typedHeaderBytes": 24,
+      "vectorHeaderBytes": 12,
+      "rawCopyBytes": 40
+    },
+    {
+      "pointerBytes": 8,
+      "typedHeaderBytes": 48,
+      "vectorHeaderBytes": 24,
+      "rawCopyBytes": 64
+    }
+  ],
+  "cancellation": {
+    "bytePattern": [
+      0,
+      255,
+      1,
+      128
+    ],
+    "byteCount": 196609,
+    "schemaSeed": "世界🔣️",
+    "schemaRepeat": 8193,
+    "checkpoints": [
+      "first",
+      "interior",
+      "final"
+    ],
+    "prefixMustBeOriginal": true,
+    "restoreParent": true,
+    "zeroCloseKeepsOwner": true,
+    "terminalDropReleaseBytes": 0
+  },
+  "semanticCases": [
+    {
+      "id": "literal-schema",
+      "accepted": true,
+      "expected": [
+        0,
+        255,
+        1,
+        128
+      ]
+    },
+    {
+      "id": "row-permutation",
+      "accepted": true,
+      "expected": [
+        0,
+        255,
+        1,
+        128
+      ]
+    },
+    {
+      "id": "invalid-octet",
+      "accepted": false,
+      "expected": []
+    },
+    {
+      "id": "ordinal-gap",
+      "accepted": false,
+      "expected": []
+    },
+    {
+      "id": "duplicate-identity",
+      "accepted": false,
+      "expected": []
+    },
+    {
+      "id": "unknown-document",
+      "accepted": false,
+      "expected": []
+    },
+    {
+      "id": "missing-document",
+      "accepted": false,
+      "expected": []
+    }
+  ],
+  "subsetCases": [
+    {
+      "subset": "*",
+      "accepted": true,
+      "cause": null,
+      "allocatorBirthBytes": 0,
+      "allocatorReleaseBytes": 0
+    },
+    {
+      "subset": "unsupported",
+      "accepted": false,
+      "cause": "Binary subset has no authored semantic validator",
+      "allocatorBirthBytes": 0,
+      "allocatorReleaseBytes": 0
+    }
+  ]
+}

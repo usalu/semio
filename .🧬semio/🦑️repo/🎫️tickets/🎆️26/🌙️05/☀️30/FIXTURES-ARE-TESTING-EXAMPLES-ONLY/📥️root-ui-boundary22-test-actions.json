@@ -1,0 +1,19 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "b5fb33f86a3b7a6cb805076b2b07a0aac62d4bf25d15884c00860aad83a5392e",
+      "afterSha256": "fa09e71c51a0ff11095634b81ed0d461f9f3ac42258481cb435d311aa5746e00",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "7751441a5471807d088474a60666fc0c253e6a2f3a97e27141ef699132abe700",
+      "afterSha256": "b308f5c9f3455c642af4db736e64cc7fb54a1cfb7acc7943e3f318bbe05749af",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

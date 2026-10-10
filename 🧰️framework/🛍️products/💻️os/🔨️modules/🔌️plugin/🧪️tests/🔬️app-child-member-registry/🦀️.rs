@@ -1,5 +1,110 @@
 mod child_member_registry_tests {
     use super::*;
+    /// 🧪️ Uses the actual funded payload producer and bounded capture to witness original identity and every native effect.
+    #[test]
+    fn original_mounted_fault_capture_preserves_native_payload_and_independent_copy_turns(){
+        use semio_framework_job::{JobPayloadAuthority,RetainedPayloadBuilder,JobPayloadStream,OperationId,Generation,StepContext,StepBudget};
+        use semio_framework_async::{CancelToken,CancelTokenRetirement};
+        use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+        let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🪟️outcome-borrow/🔣️.json")).unwrap();
+        let values=law["faultCapture"]["originalGrant"].as_array().unwrap();let grant=RetainedCloneGrant{maximum_items:values[0].as_u64().unwrap()as usize,maximum_copy_bytes:values[1].as_u64().unwrap()as usize,maximum_capacity_bytes:values[2].as_u64().unwrap()as usize,maximum_release_bytes:values[3].as_u64().unwrap()as usize,maximum_depth:values[4].as_u64().unwrap()as usize};
+        let source:[u8;321]=std::array::from_fn(|index|(index%251)as u8);let source_pointer=source.as_ptr();let operation=OperationId(99271);let generation=Generation(7);let mut born=0;let mut released=0;
+        let((cancel,birth),heap)=observe(||CancelToken::admit_root(grant).unwrap().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(birth.retained_capacity_bytes,0));assert_eq!(birth.copied_bytes,0);assert!(birth.fits(grant));born+=heap.requested_bytes;
+        let((mut authority,birth),heap)=observe(||JobPayloadAuthority::admit(operation,generation,grant).unwrap().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(birth.retained_capacity_bytes,0));assert_eq!(birth.copied_bytes,0);assert!(birth.fits(grant));born+=heap.requested_bytes;
+        let mut sequence=0;let mut first=RetainedPayloadBuilder::new(JobPayloadStream::Fault);let mut other=RetainedPayloadBuilder::new(JobPayloadStream::Fault);
+        for owner in [&mut first,&mut other]{
+            let mut cursor=0;let mut sealed=false;let mut turns=0;let mut copied=0;
+            while !sealed{
+                let mut receipt=RetainedCloneProgress::default();let(_,heap)=observe(||{
+                    let mut context=StepContext::with_payload_authority(operation,generation,StepBudget::new(1,u64::MAX,grant),&cancel,||Some(0),&mut sequence,&mut receipt,&authority).unwrap();
+                    if !owner.is_initialized(){owner.advance_initialization(&mut context).unwrap();}else if cursor<source.len(){owner.append_original(&mut context,&source,&mut cursor).unwrap();}else{sealed=owner.seal(&mut context).unwrap();}
+                });
+                assert!(receipt.fits(grant));assert_eq!(receipt.copied_items,1);assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;copied+=receipt.copied_bytes;turns+=1;assert!(turns<4096);assert_eq!(source.as_ptr(),source_pointer);
+            }
+            assert_eq!(copied,source.len());assert_eq!(owner.published().unwrap().len(),source.len());
+        }
+        let original=first.published().unwrap();let pointer=original as*const _;let page_pointer=original.page(0).unwrap().as_ptr();assert_eq!(original.page_count(),law["faultCapture"]["pageBytes"].as_array().unwrap().len());assert_ne!(pointer,other.published().unwrap()as*const _);
+        let mut capture=None;let mut recipient=None;let mut copied=0;let mut turns=0;
+        while recipient.is_none(){
+            let(demand,heap)=observe(||original_fault_capture_demands(&capture,original).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((demand.capacity_bytes,demand.release_bytes,demand.depth),(0,0,1));
+            let prior=capture.as_ref().map(|owner:&MountedWorkerFaultCapture|(owner.original,owner.expected,owner.page,owner.offset,owner.bounded.len));
+            for mask in 0..32{
+                if mask&(1|16)==0&&(demand.copy_bytes==0||mask&2==0){continue;}
+                let denied=RetainedCloneGrant{maximum_items:if mask&1!=0{0}else{grant.maximum_items},maximum_copy_bytes:if mask&2!=0{0}else{grant.maximum_copy_bytes},maximum_capacity_bytes:if mask&4!=0{0}else{grant.maximum_capacity_bytes},maximum_release_bytes:if mask&8!=0{0}else{grant.maximum_release_bytes},maximum_depth:if mask&16!=0{0}else{grant.maximum_depth}};
+                let(step,heap)=observe(||advance_original_fault_capture(&mut capture,original,&mut recipient,denied));assert_eq!(step.progress().unwrap_or_default(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(capture.as_ref().map(|owner|(owner.original,owner.expected,owner.page,owner.offset,owner.bounded.len)),prior);assert!(recipient.is_none());
+            }
+            if capture.is_some(){
+                let(step,heap)=observe(||advance_original_fault_capture(&mut capture,other.published().unwrap(),&mut recipient,grant));assert!(matches!(step,PluginLifecycleStep::Blocked{..}));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(capture.as_ref().map(|owner|(owner.original,owner.expected,owner.page,owner.offset,owner.bounded.len)),prior);assert!(recipient.is_none());
+            }
+            let incoming=RetainedCloneGrant{maximum_capacity_bytes:0,maximum_release_bytes:0,..grant};let(step,heap)=observe(||advance_original_fault_capture(&mut capture,original,&mut recipient,incoming));let progress=step.progress().unwrap();assert!(progress.fits(incoming));assert_eq!(progress.copied_items,1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));copied+=progress.copied_bytes;turns+=1;assert!(turns<64);if let Some(owner)=capture.as_ref(){assert_eq!(owner.bounded.as_bytes(),&source[..owner.bounded.len]);}assert_eq!(first.published().unwrap()as*const _,pointer);assert_eq!(original.page(0).unwrap().as_ptr(),page_pointer);
+        }
+        assert!(capture.is_none());assert_eq!(recipient.as_ref().unwrap().as_bytes(),source);assert_eq!(copied,source.len());assert_eq!(turns,law["faultCapture"]["copyReceipts"].as_array().unwrap().len()+2);
+        let(step,heap)=observe(||advance_original_fault_capture(&mut capture,original,&mut recipient,grant));assert!(matches!(step,PluginLifecycleStep::Blocked{..}));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(recipient.as_ref().unwrap().as_bytes(),source);
+        for owner in [&mut first,&mut other]{let mut turns=0;while !owner.terminal_is_empty(){let(step,heap)=observe(||owner.close_step_granted(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<4096);}}
+        let(step,heap)=observe(||authority.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));released+=heap.released_bytes;assert!(authority.terminal_is_empty());
+        let mut cancellation=CancelTokenRetirement::from_token(cancel);let mut cancel_turns=0;while !cancellation.terminal_is_empty(){let(step,heap)=observe(||cancellation.close_step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));released+=heap.released_bytes;cancel_turns+=1;assert!(cancel_turns<8);}
+        assert_eq!(released,born);let(_,heap)=observe(||drop((first,other,authority,cancellation,capture,recipient)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        eprintln!("[DEBUG] actual original mounted fault source321 captureTurns={turns} copied={copied} originalPayload={pointer:p} originalPage={page_pointer:p} birth={born} released={released} sameContentOtherOwnerRefused=true pureQuotes0heap independentDenied0heap capture0heap terminalDrop0");
+    }
+    #[test]
+    fn original_scheduled_archive_close_preserves_actual_native_progress_and_registry_backing(){
+        use crate::test_app_mutation_fixture::{TestSnapshot,TestMutation};
+        use semio_framework_trace::observe_heap_allocations_on_this_thread;
+        let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🗃️archive-turn/🔣️.json")).unwrap();
+        let values=law["admitted"].as_array().unwrap();let grant=RetainedCloneGrant{maximum_items:values[0].as_u64().unwrap()as usize,maximum_copy_bytes:values[1].as_u64().unwrap()as usize,maximum_capacity_bytes:values[2].as_u64().unwrap()as usize,maximum_release_bytes:values[3].as_u64().unwrap()as usize,maximum_depth:values[4].as_u64().unwrap()as usize};
+        for count in [1,2]{
+            let(mut registry,heap)=observe_heap_allocations_on_this_thread(||{
+                let mut registry=ArtifactFixedRegistry::new();
+                for operation in 19..19+count{let bytes=||{let mut value=Vec::with_capacity(8192);value.extend_from_slice(b"original/alpha\0utf8");value};let archive=protocol::DocumentArchivePack{parent_pack:bytes(),parent_spr:bytes(),members:Vec::with_capacity(3)};let decoder=protocol::RetainedHistoryDecode::new_persisted_document(archive.parent_spr.len(),protocol::RetainedSprLimits{file_bytes:protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u64,frame_body_bytes:65536,records:8192}).unwrap();registry.insert_admitted(operation,ActiveDocumentArchiveLoad::<TestSnapshot,TestMutation>::new(operation,archive,decoder));}registry
+            });
+            let held=heap.requested_bytes-heap.released_bytes;let original=registry.get(19).unwrap().archive.as_ref().unwrap().parent_spr.as_ptr();let mut births=0;let mut released=0;let mut turns=0;let mut terminal_marks=0;let mut removals=0;
+            while original_document_archive_close_demands(&registry,grant.maximum_copy_bytes,true).unwrap().is_some(){
+                let(demand,heap)=observe_heap_allocations_on_this_thread(||original_document_archive_close_demands(&registry,grant.maximum_copy_bytes,true).unwrap().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(demand.copy_bytes<=grant.maximum_copy_bytes&&demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes&&demand.depth<=grant.maximum_depth);
+                let pending=registry.len();let prior=registry.get(19).map(|active|(active.state,active.phase,active.terminal_target,active.archive.as_ref().map(|archive|archive.parent_spr.as_ptr())));
+                for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),Some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}),(demand.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant}),(demand.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant})].into_iter().flatten(){let(step,heap)=observe_heap_allocations_on_this_thread(||advance_original_document_archive_close(&mut registry,denied,true).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(registry.len(),pending);assert_eq!(registry.get(19).map(|active|(active.state,active.phase,active.terminal_target,active.archive.as_ref().map(|archive|archive.parent_spr.as_ptr()))),prior);if turns==0{assert_eq!(registry.get(19).unwrap().archive.as_ref().unwrap().parent_spr.as_ptr(),original);}}
+                let before_terminal=registry.get(19).is_some_and(ActiveDocumentArchiveLoad::terminal);let(step,heap)=observe_heap_allocations_on_this_thread(||advance_original_document_archive_close(&mut registry,grant,true).unwrap());assert!(matches!(step,RetainedCloneStep::Progress(_)));let progress=step.progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));births+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);if registry.len()<pending{removals+=1;assert_eq!((progress.copied_items,progress.copied_bytes,progress.retained_capacity_bytes,progress.released_bytes),(1,0,0,0));}if !before_terminal&&registry.get(19).is_some_and(ActiveDocumentArchiveLoad::terminal){terminal_marks+=1;assert!(registry.get(19).unwrap().terminal_is_empty());assert_eq!((progress.copied_items,progress.copied_bytes,progress.retained_capacity_bytes,progress.released_bytes),(1,0,0,0));}
+            }
+            assert_eq!(removals,count);assert_eq!(terminal_marks,1);assert!(registry.is_empty());assert_eq!(registry.empty_backing_byte_demand(),Some(0));assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(registry));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original scheduled Archive count={count} turns={turns} original={held} births={births} released={released} queryHeap0 allDeniedHeap0 statusAfterEmpty=true removalSeparate=true backingSeparate=true terminalDrop0");
+        }
+    }
+    #[test]
+    fn original_exchange_intersects_all_native_authority_axes_without_heap_effects(){
+        let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🤝️exchange-context/🔣️.json")).unwrap();
+        let grant=|name:&str|{let v=law[name].as_array().unwrap();RetainedCloneGrant{maximum_items:v[0].as_u64().unwrap()as usize,maximum_copy_bytes:v[1].as_u64().unwrap()as usize,maximum_capacity_bytes:v[2].as_u64().unwrap()as usize,maximum_release_bytes:v[3].as_u64().unwrap()as usize,maximum_depth:v[4].as_u64().unwrap()as usize}};
+        let policy=grant("phasePolicy");let incoming=grant("incomingRemaining");let expected=grant("admitted");
+        let(actual,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::plugin_runtime::original_plugin_turn_grant(policy,incoming));assert_eq!(actual,expected);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        for mask in 0..32{let denied=RetainedCloneGrant{maximum_items:if mask&1!=0{0}else{incoming.maximum_items},maximum_copy_bytes:if mask&2!=0{0}else{incoming.maximum_copy_bytes},maximum_capacity_bytes:if mask&4!=0{0}else{incoming.maximum_capacity_bytes},maximum_release_bytes:if mask&8!=0{0}else{incoming.maximum_release_bytes},maximum_depth:if mask&16!=0{0}else{incoming.maximum_depth}};let(actual,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::plugin_runtime::original_plugin_turn_grant(policy,denied));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(actual,RetainedCloneGrant{maximum_items:if mask&1!=0{0}else{expected.maximum_items},maximum_copy_bytes:if mask&2!=0{0}else{expected.maximum_copy_bytes},maximum_capacity_bytes:if mask&4!=0{0}else{expected.maximum_capacity_bytes},maximum_release_bytes:if mask&8!=0{0}else{expected.maximum_release_bytes},maximum_depth:if mask&16!=0{0}else{expected.maximum_depth}});}
+        eprintln!("[DEBUG] original exchange native authority axes=5 denialShapes=32 heapBirth=0 heapRelease=0 originalPolicyUnchanged=true");
+    }
+    #[test]
+    fn original_archive_history_and_physical_backing_retire_under_full_native_grants(){
+        use crate::test_app_mutation_fixture::{TestSnapshot,TestMutation};
+        use semio_framework_trace::observe_heap_allocations_on_this_thread;
+        let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🗃️archive-close/🔣️.json")).unwrap();
+        let values=law["originalGrant"].as_array().unwrap();let grant=RetainedCloneGrant{maximum_items:values[0].as_u64().unwrap()as usize,maximum_copy_bytes:values[1].as_u64().unwrap()as usize,maximum_capacity_bytes:values[2].as_u64().unwrap()as usize,maximum_release_bytes:values[3].as_u64().unwrap()as usize,maximum_depth:values[4].as_u64().unwrap()as usize};
+        for capacity in law["originalCapacities"].as_array().unwrap(){for count in law["originalMemberCounts"].as_array().unwrap(){
+            let capacity=capacity.as_u64().unwrap()as usize;let count=count.as_u64().unwrap()as usize;
+            let(mut active,heap)=observe_heap_allocations_on_this_thread(||{
+                let text=||{let mut value=String::with_capacity(capacity);value.push_str("original/α😀");value};
+                let bytes=||{let mut value=Vec::with_capacity(capacity+31);value.extend_from_slice(b"original persisted payload");value};
+                let reference=||protocol::DocumentArchiveArtifactRef{artifact_id:text(),artifact_kind:text(),standard:text(),subset:text()};
+                let mut members=Vec::with_capacity(count+7);for ordinal in 0..count{members.push(protocol::OwnedDocumentMemberPackEntry{ordinal:ordinal as u32,reference:reference(),owner:protocol::DocumentArchiveOwnerRef{parent:reference(),slot:text(),child_id:text()},envelope_pack:bytes()});}
+                let archive=protocol::DocumentArchivePack{parent_pack:bytes(),parent_spr:bytes(),members};
+                let history=protocol::RetainedHistoryDecode::new_persisted_document(archive.parent_spr.len(),protocol::RetainedSprLimits{file_bytes:protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u64,frame_body_bytes:65536,records:8192}).unwrap();
+                let mut active=ActiveDocumentArchiveLoad::<TestSnapshot,TestMutation>::new(19,archive,history);
+                active.decoded_history=Some(protocol::HistoryLog{doc_id:text(),schema:text(),edits:vec![protocol::HistoryEdit{id:text(),actor:None,started_at:text(),finished_at:Some(text()),verb:Some(text()),line:Some(text()),ops:vec![protocol::OpPayload{text:Some(text()),binary:Some(bytes())}],inverse:vec![protocol::OpPayload{text:None,binary:Some(bytes())}],meta:Some(vec![protocol::HistoryOpMeta{op_id:Some(text()),dependencies:vec![text()],group_id:Some(text()),..Default::default()}]),lane:Some(text())}],transitions:vec![protocol::HistoryTransitionRecord{id:text(),actor:Default::default(),hlt:(1,2,3),dependencies:vec![text()],observed:Some(text()),payload:bytes()}],composition:Some(protocol::HistoryComposition{owner:Some((text(),text(),text())),dialect:Some((text(),text(),text()))}),conflicts:vec![protocol::HistoryConflict{id:text(),kind:0,status:0,actors:vec![Default::default()],hlt:(1,2,3),edit_ids:vec![text()],envelopes:vec![bytes()],messages:vec![protocol::HistoryMessage{level:1,code:text(),message:text(),target:vec![text()],op_index:Some(0)}]}],viewer_line:Some(text()),viewer_checkpoint:Some(text())});active
+            });
+            let held=heap.requested_bytes-heap.released_bytes;let original=active.archive.as_ref().unwrap().parent_pack.as_ptr();let original_history=active.decoded_history.as_ref().unwrap().doc_id.as_ptr();let mut births=0;let mut released=0;let mut turns=0;
+            while !active.terminal_is_empty(){
+                let(demand,heap)=observe_heap_allocations_on_this_thread(||active.retirement_demands(grant.maximum_copy_bytes).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(demand.copy_bytes<=grant.maximum_copy_bytes&&demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes&&demand.depth<=grant.maximum_depth);
+                for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),Some(RetainedCloneGrant{maximum_depth:demand.depth-1,..grant}),(demand.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant}),(demand.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant})].into_iter().flatten(){
+                    let(step,heap)=observe_heap_allocations_on_this_thread(||active.close_step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if turns==0{assert_eq!(active.archive.as_ref().unwrap().parent_pack.as_ptr(),original);assert_eq!(active.decoded_history.as_ref().unwrap().doc_id.as_ptr(),original_history);}
+                }
+                let(step,heap)=observe_heap_allocations_on_this_thread(||active.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);if matches!(step,RetainedCloneStep::Complete(_)){assert!(active.terminal_is_empty());}
+            }
+            assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(active));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original Archive/History native memberCount={count} capacity={capacity} turns={turns} held={held} births={births} released={released} allDenied0heap originalPointers=true terminalDrop0");
+        }}
+    }
 #[test]
     fn original_composition_pin_retirement_preserves_native_fields_and_vector_backing(){
         use semio_framework_trace::observe_heap_allocations_on_this_thread;
@@ -245,6 +350,12 @@ mod child_member_registry_tests {
         RetainedCloneGrant{maximum_items:values[0].as_u64().unwrap()as usize,maximum_copy_bytes:values[1].as_u64().unwrap()as usize,maximum_capacity_bytes:values[2].as_u64().unwrap()as usize,maximum_release_bytes:values[3].as_u64().unwrap()as usize,maximum_depth:values[4].as_u64().unwrap()as usize}
     }
 
+    /// 🧳️ Preserves the original prepared policy without deriving funding from a demand.
+    fn original_prepared_fixture_grant() -> store::ArtifactStoreOneItemGrant {
+        let original = original_member_fixture_grant();
+        store::ArtifactStoreOneItemGrant { maximum_items: original.maximum_items, maximum_copy_bytes: original.maximum_copy_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes, maximum_depth: original.maximum_depth }
+    }
+
     fn close_ingress(mut ingress: OwnedDocumentMemberIngress, grant: RetainedCloneGrant) {
         for _ in 0..4096 {
             let step=ingress.close_step(grant).expect("original full ingress close");assert!(step.progress().fits(grant));
@@ -336,30 +447,29 @@ mod child_member_registry_tests {
         let ingress = member_ingress(2, 7, 11, "extra", "child-extra");
         let mut registry = OwnedDocumentMemberIngressRegistry::try_new(2).expect("two exact ingress slots");
         let (_, ingress) = registry.admit(ingress).expect_err("extra ordinal is rejected unchanged");
-        close_ingress(ingress);
+        close_ingress(ingress, original_member_fixture_grant());
         assert!(registry.seal().is_err());
-        for _ in 0..4 { let bytes = registry.next_close_byte_demand().max(1); registry.close_step(1, bytes).expect("empty registry close"); if registry.terminal_is_empty() { break; } }
+        for _ in 0..32 { registry.close_step(original_member_fixture_grant()).expect("empty registry close"); if registry.terminal_is_empty() { break; } }
         assert!(registry.terminal_is_empty());
         drop(registry);
     }
 
     #[test]
     fn displaced_composition_pins_retire_under_exact_byte_and_item_grants() {
+        let grant = original_member_fixture_grant();
         let mut retirement = CompositionPinsRetirement::new(vec![vcs::CompositionPin {
             child_ref: ArtifactRef { artifact_id: "child-δ".into(), dialect: dialect() },
             checkpoint_id: "checkpoint-α".into(),
         }]);
-        assert_eq!(retirement.close_step(0, 0), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        assert_eq!(retirement.close_step(1, 1), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(retirement.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap(), RetainedCloneStep::Progress(Default::default()));
+        assert_eq!(retirement.close_step(RetainedCloneGrant { maximum_release_bytes: 1, ..grant }).unwrap(), RetainedCloneStep::Progress(Default::default()));
         for _ in 0..512 {
-            let step = retirement.close_step(1, 2);
-            if step == PluginCloseStep::Complete {
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retirement.close_step(grant).unwrap());
+            assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+            if matches!(step, RetainedCloneStep::Complete(_)) {
                 assert!(retirement.terminal_is_empty());
                 drop(retirement);
                 return;
-            }
-            if let PluginCloseStep::Pending { released_items, released_bytes } = step {
-                assert!(released_items <= 1 && released_bytes <= 2);
             }
         }
         panic!("composition pin retirement did not reach exact terminal emptiness");
@@ -372,29 +482,30 @@ mod child_member_registry_tests {
         let retained = ChildContentView { root: Some(std::sync::Arc::new(ChildContentRoot::default())) };
         let mut alias = retained.clone();
         let pointer = std::sync::Arc::as_ptr(alias.root.as_ref().unwrap());
-        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 1 };
+        let full = original_prepared_fixture_grant();
+        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full };
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| alias.close_prepared_structure_step(&retained, zero).unwrap());
-        assert_eq!(step, PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(std::sync::Arc::as_ptr(alias.root.as_ref().unwrap()), pointer);
-        let one = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 };
+        let one = full;
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| alias.close_prepared_structure_step(&retained, one).unwrap());
-        assert_eq!(step, PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        assert_eq!(step, RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(alias.root.is_none());
         assert_eq!(std::sync::Arc::strong_count(retained.root.as_ref().unwrap()), 1);
         let mut exclusive = retained;
         let external = exclusive.clone();
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| exclusive.close_prepared_structure_step(&ChildContentView::EMPTY, one).unwrap());
-        assert_eq!(step, PluginCloseStep::Blocked { reason: "private child root remains externally borrowed" });
+        assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(external)).1.released_bytes, 0);
         let bytes = child_content_arc_bytes::<ChildContentRoot>();
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| exclusive.close_prepared_structure_step(&ChildContentView::EMPTY, store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes - 1 }).unwrap());
-        assert_eq!(step, PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| exclusive.close_prepared_structure_step(&ChildContentView::EMPTY, store::ArtifactStoreOneItemGrant { maximum_release_bytes: bytes - 1, ..full }).unwrap());
+        assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| exclusive.close_prepared_structure_step(&ChildContentView::EMPTY, store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }).unwrap());
-        assert_eq!(step, PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| exclusive.close_prepared_structure_step(&ChildContentView::EMPTY, full).unwrap());
+        assert_eq!(step, RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, bytes));
         println!("[DEBUG] prepared child exact retained root alias releases0; unrelated reader blocks until return; original root frame{bytes} denies one-below and frees exactly once");
     }
@@ -404,6 +515,7 @@ mod child_member_registry_tests {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
         let visibility = vcs::ArtifactGroupVisibilityOwner::new();
         let original_visibility = visibility.view();
+        let unrelated_visibility = vcs::ArtifactGroupVisibilityOwner::new().view();
         let original = original_member_fixture_grant();
         let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
         for row in fixture["cases"].as_array().unwrap() {
@@ -417,7 +529,10 @@ mod child_member_registry_tests {
             assert_eq!(owner.next_close_byte_demand(), physical);
             let full = store::ArtifactStoreOneItemGrant { maximum_items: original.maximum_items, maximum_copy_bytes: original.maximum_copy_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes, maximum_depth: original.maximum_depth };
             let demand = owner.retirement_demands();
-            for grant in [store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }, store::ArtifactStoreOneItemGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..full }, store::ArtifactStoreOneItemGrant { maximum_release_bytes: physical - 1, ..full }, store::ArtifactStoreOneItemGrant { maximum_depth: 0, ..full }] {
+            assert_eq!(demand.copy_bytes, 0);
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_metadata_step(&unrelated_visibility, full).unwrap());
+            assert_eq!(step, RetainedCloneStep::Progress(Default::default())); assert_eq!((events.requested_bytes, events.released_bytes), (0, 0)); assert_eq!(owner.metadata.as_ref().unwrap()[0].as_ptr(), pointer);
+            for grant in [store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }, store::ArtifactStoreOneItemGrant { maximum_release_bytes: physical - 1, ..full }, store::ArtifactStoreOneItemGrant { maximum_depth: 0, ..full }] {
                 let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_metadata_step(&original_visibility, grant).unwrap());
                 assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
                 assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
@@ -433,7 +548,7 @@ mod child_member_registry_tests {
                 if owner.terminal_is_empty() { break; }
                 let demand = owner.retirement_demands();
                 assert!(demand.release_bytes <= admission);
-                assert!(demand.copy_bytes > 0, "remaining native metadata removal has its own original header quote");
+                assert_eq!(demand.copy_bytes, 0, "metadata movement preserves the defining semantic copy contract");
                 let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_metadata_step(&original_visibility, full).unwrap());
                 assert_eq!(events.requested_bytes, 0);
                 let progress = step.progress(); assert!(progress.fits(original));
@@ -450,6 +565,7 @@ mod child_member_registry_tests {
 
     #[test]
     fn prepared_child_content_empty_scaffolds_release_whole_arc_frames_in_distinct_turns() {
+        let full = original_prepared_fixture_grant();
         let ((mut view, page_bytes, root_bytes), birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
             let page = std::sync::Arc::new(ChildContentPage::default());
             let mut root = ChildContentRoot::default();
@@ -461,19 +577,19 @@ mod child_member_registry_tests {
         for physical in [page_bytes, root_bytes] {
             assert_eq!(view.prepared_structure_close_byte_demand(), physical);
             let root_pointer = std::sync::Arc::as_ptr(view.root.as_ref().unwrap());
-            for grant in [store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: physical }, store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: physical - 1 }] {
+            for grant in [store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }, store::ArtifactStoreOneItemGrant { maximum_release_bytes: physical - 1, ..full }, store::ArtifactStoreOneItemGrant { maximum_depth: view.prepared_structure_close_depth_demand() - 1, ..full }] {
                 let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| view.close_prepared_structure_step(&ChildContentView::EMPTY, grant).unwrap());
-                assert_eq!(step, PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
                 assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
                 assert_eq!(std::sync::Arc::as_ptr(view.root.as_ref().unwrap()), root_pointer);
                 assert_eq!(view.prepared_structure_close_byte_demand(), physical);
             }
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| view.close_prepared_structure_step(&ChildContentView::EMPTY, store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: physical }).unwrap());
-            assert_eq!(step, PluginCloseStep::Pending { released_items: 1, released_bytes: physical });
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| view.close_prepared_structure_step(&ChildContentView::EMPTY, full).unwrap());
+            assert_eq!(step.progress(), RetainedCloneProgress { copied_items: 1, released_bytes: physical, ..Default::default() });
             assert_eq!((events.requested_bytes, events.released_bytes), (0, physical));
         }
         assert_eq!(view.prepared_structure_close_byte_demand(), 0);
-        assert_eq!(view.close_prepared_structure_step(&ChildContentView::EMPTY, store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 0 }).unwrap(), PluginCloseStep::Complete);
+        assert_eq!(view.close_prepared_structure_step(&ChildContentView::EMPTY, store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }).unwrap(), RetainedCloneStep::Complete(Default::default()));
         println!("[DEBUG] prepared child scaffold exact Arc page={page_bytes} root={root_bytes} allocator release matches each whole grant");
     }
 

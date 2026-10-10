@@ -1123,7 +1123,64 @@ interface reactor {
   use ui.{ui-patch};
   use instance-lifetime.{lifetime, receipt, ui-patch-receipt};
 
+  record retained-grant {
+    maximum-items: u64,
+    maximum-copy-bytes: u64,
+    maximum-capacity-bytes: u64,
+    maximum-release-bytes: u64,
+    maximum-depth: u64,
+  }
+  record retained-progress {
+    copied-items: u64,
+    copied-bytes: u64,
+    retained-capacity-bytes: u64,
+    released-bytes: u64,
+  }
+  record retained-turn-input {
+    operation: u64,
+    generation: u64,
+    epoch: u64,
+    grant: retained-grant,
+  }
+  record retained-turn-receipt {
+    input: retained-turn-input,
+    spent: retained-progress,
+    remaining: retained-grant,
+  }
+  enum actor-authority-refusal {
+    invalid-value,
+    canceled,
+    ownership-limit,
+    allocation-failed,
+    work-limit,
+    depth-limit,
+    unsupported-owner,
+    invariant-violated,
+  }
+  record actor-admission-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    ready: bool,
+    refusal: option<actor-authority-refusal>,
+  }
+  variant actor-call-failure {
+    authority(actor-authority-refusal),
+    semantic,
+  }
+  record actor-call-refusal {
+    input: retained-turn-input,
+    spent: retained-progress,
+    failure: actor-call-failure,
+  }
+  record actor-context-close-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    complete: bool,
+    blocked: bool,
+    refusal: option<actor-authority-refusal>,
+  }
   record budget {
+    retained: retained-turn-input,
     fuel: u64,
     deadline-ms: u32,
     max-effects: u32,
@@ -1224,6 +1281,7 @@ interface reactor {
     update: pack,
   }
   record turn-result {
+    retained-receipt: retained-turn-receipt,
     ui-patches: list<ui-patch>,
     effects: list<effect>,
     presence: list<presence-update>,
@@ -1258,7 +1316,9 @@ interface reactor {
   /// ▶️ One guest turn. Carries NO bulk payload: `list<event>` and `budget` flatten to seven values,
   /// which the canonical ABI passes directly, so this call — the one the host makes hundreds of
   /// thousands of times per session — allocates nothing in guest memory that outlives it.
-  poll: async func(events: list<event>, budget: budget) -> result<turn-result, plugin-error>;
+  admit-actor-context: async func(input: retained-turn-input) -> actor-admission-call;
+  close-actor-context: async func(input: retained-turn-input) -> actor-context-close-call;
+  poll: async func(events: list<event>, budget: budget) -> result<turn-result, actor-call-refusal>;
 
   /// 🤝️ The app-channel version this guest was compiled for (`CHANNEL_VERSION`). A host reads it exactly once, right after
   /// instantiation and before any frame, and refuses a guest of another version with `plugin.channel-mismatch`: the frame layout

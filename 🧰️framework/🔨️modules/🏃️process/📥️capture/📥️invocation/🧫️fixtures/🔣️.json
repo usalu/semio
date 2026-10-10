@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "callerCeilingMilliseconds": 15000,
+  "operationMilliseconds": 5000,
+  "maximumOutputBytes": 1024,
+  "publicationMilliseconds": 40,
+  "cases": [
+    {
+      "id": "capture refuses original cancellation before evidence acquisition",
+      "mode": "pre-cancel",
+      "reason": "cancelled",
+      "status": null,
+      "stdout": "",
+      "acquired": false,
+      "published": false
+    },
+    {
+      "id": "capture forwards the original live cancellation signal",
+      "mode": "live-cancel",
+      "reason": "cancelled",
+      "status": null,
+      "stdout": "ready",
+      "acquired": true,
+      "published": true
+    },
+    {
+      "id": "capture joins original asynchronous publication before terminal",
+      "mode": "publication",
+      "reason": "exit",
+      "status": 0,
+      "stdout": "ready",
+      "acquired": true,
+      "published": true
+    }
+  ],
+  "policyCases": [
+    {
+      "budgetMs": 0,
+      "maxOutputBytes": 536870912,
+      "accepted": true
+    },
+    {
+      "budgetMs": 9007199254740991,
+      "maxOutputBytes": 9007199254740991,
+      "accepted": true
+    },
+    {
+      "budgetMs": 0,
+      "maxOutputBytes": 9007199254740992,
+      "accepted": false
+    },
+    {
+      "budgetMs": -1,
+      "maxOutputBytes": 536870912,
+      "accepted": false
+    }
+  ],
+  "finiteWithoutChildCeiling": {
+    "originalMilliseconds": 250,
+    "childMilliseconds": 0,
+    "maximumOutputBytes": 536870912,
+    "reason": "timeout",
+    "maximumObservedMilliseconds": 2000
+  }
+}

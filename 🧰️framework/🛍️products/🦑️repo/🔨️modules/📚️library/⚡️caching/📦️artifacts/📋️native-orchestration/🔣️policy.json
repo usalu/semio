@@ -1,0 +1,11 @@
+{
+  "$schema": "./📥️invocation/🧬️schema/🔣️.json#/$defs/NativeOwnerExecutionPolicyV1",
+  "version": 1,
+  "transport": {
+    "maximumBytes": 134217728,
+    "maximumLines": 1000000
+  },
+  "child": {
+    "maximumElapsedMilliseconds": 3600000
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧫️fixtures/📥️native-caller.json",
+      "action": "updated",
+      "beforeSha256": "b3a55cac672675bc90153b8dd95e0941f91b0c5b46f1647d812772ea9f766d87",
+      "afterSha256": "d1803ac25e16bf5f0f1a15f73585837ea257df2cc7b2161e397440a7c153f66f",
+      "exclusive": false,
+      "scope": "Plain raw-alias/actualselector and canonicalartifact/explicitoverride cases; no production resources sourced from tests"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "c2389b17cb2b4cc16b9e5731c428d0fbcf6247c72063b95d5d1ece0df8e21c8f",
+      "afterSha256": "f8c286e407971b8bd782e62e3f12a62bd05efbcca0931b71123e834893833401",
+      "exclusive": false,
+      "scope": "Genuine producer/installed Nx run-many behavioral laws, canonical required selector, original eight laws unchanged"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "1d36f01d4d11acb11e25376db258c3157f917ea8604d37cd5165c1f814384869",
+      "afterSha256": "fb791c3dfec3d053ddad9b5fd2f505f7530965fc4c2909812af7b2901d3e270d",
+      "exclusive": false,
+      "scope": "Existing actual literal envelope caller uses canonical required selected argv API only"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

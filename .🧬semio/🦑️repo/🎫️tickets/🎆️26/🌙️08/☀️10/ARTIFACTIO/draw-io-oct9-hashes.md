@@ -1,10 +1,10 @@
 # Current Draw and IO Input Hash Manifest
 
-Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute path 197 UTF16 units. This source capture records current shared input state and does not imply every input was runtime compiled. Prior runtime receipts remain attached to their actual source epochs; current receiver evidence is in draw-io-oct9-current.md.
+Captured 2026-10-09T17:04:18.280Z. 639 current original inputs; maximum absolute path 197 UTF16 units. This capture follows actual Ei102 acceptance but also includes the new pending-ticket schema/test and concurrent wallet ingress, which are not yet runtime accepted. Receipts belong to their actual epochs; current evidence is in draw-io-oct9-current.md.
 
 | Absolute input | UTF16 units | SHA256 |
 |---|---:|---|
-| `/Users/ueli/Documents/semio/.vscode/launch.json` | 47 | `da9034a1130c86e6d44549bf5a396e1b29f4bc60d6a49d3eaa3d49a2c9436523` |
+| `/Users/ueli/Documents/semio/.vscode/launch.json` | 47 | `6d790aab240e247d783c7b21cd2851ae6b5c500efc4cb6975afdedb989c12ca0` |
 | `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/draw-id/Cargo.lock` | 102 | `db66191331c87776158d205d213ec4e4aabc7e8aba697970b33e26b1019f067c` |
 | `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/draw-id/Cargo.toml` | 102 | `25cb8bd98006ad7ad829e94438e975981a879f72e47af5bc2946017dc62bd5cf` |
 | `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/draw-id/📜️script.ts` | 104 | `4462d9959afd288bdd0e7b02f621d38d9c2fbb1640035a2696cce17af1628ade` |
@@ -15,7 +15,7 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/ei/Cargo.lock` | 97 | `c377ad61c60fa2e4f73140821b74e71bff7a4cec9c8d8f273db906c3df4a0746` |
 | `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/ei/Cargo.toml` | 97 | `0acb55b6a920011dd83eb4426af02add78af9b48a6c6d43b564b6de37ded0060` |
 | `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/ei/🦀️.rs` | 93 | `de3e8d7589bc90f71c3676b362ee1dabe5844ab1df16b6103f6f5a881e98fed1` |
-| `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/representation-owners/📜️script.ts` | 118 | `0db77aff134c129d921d33125aa8139e7f017d4251db383244997b5a8e4d9a3f` |
+| `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/representation-owners/📜️script.ts` | 118 | `bdb060899baa14eff0fe851bdb4ac991d62eb513e589b638f1b84b3240482ab0` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs` | 143 | `509cbc5a36cd2c2c7c33d9a97c2a6012379ccd6733ceafb88be4bfcee6598af0` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs` | 181 | `d0308dcc7f225e59a44006a74e452359ad76346b1681f0f4f6d96b061634077b` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs` | 185 | `2d61e027935946bf83e3cd9fbd5f255e50d0d3cb5dbb5b177bba7749d4f07463` |
@@ -303,11 +303,11 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs` | 156 | `c4c386ffd49434835635e2392906429ce68b9084a54c4b40758548416afabf3a` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` | 146 | `4a60412f77b95da266945c87d007b12d59e5629a6c22781a9686d3c0b95b0219` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs` | 157 | `148ea5a068e670dbfe2e63037ffd3e4784d622f7877e1fb11025daff036d870c` |
-| `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` | 147 | `54e6b40fed23324b7fffed44d4c82b25522c5efc07a5f9a375056477096c0052` |
+| `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` | 147 | `7ba4205364cb32e15a257c8a97695d71ce69347b7a5bf79101b23f3697151012` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs` | 158 | `f5d47439590c73cedc73f518512cbaf5e884627c487c8606579f3328f270f3d2` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` | 148 | `6a340cf94cd0c8c0742f5b2e3b72e60229c88b946051c4ee31fede1ba947da62` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs` | 154 | `15514cae4701faf354414f616fbc197ae455ae5a061f9d37e1c473f56fd43a7f` |
-| `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` | 144 | `b223065dc034f240fcc5d9cff2251e33243b2412bd9f493f1ab72a38ca605435` |
+| `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` | 144 | `7a8064470d11f0f948f614132affef1412963912ed8ab2a03ea56f6549832e10` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🧩️native/💰️backing/🦀️.rs` | 172 | `63b333295a47ef4f0b25d1152354f90a64e356435f2ecd2f513babeacd6d1822` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🧩️native/🦀️.rs` | 161 | `7d919d67744d527fd369ecd307df6458c30e352474896c32beb5355daa1e98dd` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` | 151 | `1fd07819bc52b5eb7b3c044562b10793fcc96b2d84696861d91df826b50ab955` |
@@ -434,28 +434,28 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs` | 192 | `d8469545edf196f2b70d4633c5b5da7f51869d445b9a56f62017f3bf2dcb0306` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs` | 189 | `897eaf8acd8aa1c61d92e6c6d09cbfb152ba167fb44d257471e06a572f97439c` |
 | `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs` | 149 | `1e80e168459394a38301b78ae7a8d956789e684fecb72ec26005498511137066` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs` | 80 | `dd659f1b338a5f29c3e73c5387fd78ae80df8ee406a539831ba8b9953ad006a8` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs` | 80 | `c2dab92a748b82605ed3139867a38691c66762ff98cf80ab5a9f41d631d31ae8` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/📏️maximum/🦀️.rs` | 88 | `39e0207a27457ce8ba957a0b2f938c3fe3d789bacfeff6bf6802661b76b35840` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🔭️observer/🦀️.rs` | 89 | `a8bb9d107708bcaef255fd197ad9469a5a1b4248eb702fc2bb339d0ede21a5dc` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🦀️.rs` | 91 | `02995e03f75a458d6d68be9a8708462e7c046e8871c90a73f30963104a54c2c3` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🦀️.rs` | 100 | `0e1fc73b8f3b35e9bd0ea1ea59bf70ed6c23a56b67e8f7752142a375b5c8475d` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧫️fixtures/🔣️.json` | 105 | `1424528023f78353f083b92b1096817ed2d1e8b7f01c50a11f0d06ade620e9b1` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🦀️.rs` | 91 | `148e8f7a0ec885808fb875e26afa42e25a9bfaa0bebd1d1583903097bd46b601` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🦀️.rs` | 100 | `aa71d710d1f5b60b56b733ec50cc06fc86e33df8205495d91a915fec2d8183b6` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧫️fixtures/🔣️.json` | 105 | `aa5a587cb3b01d734fd10e9b0cb101911476a8fdd7eaa2aa30ede24da21579c0` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧬️schema/🔣️.json` | 103 | `70a9c2b5ba84c14391fca81b83c7d89ace0b7baab91d8dfb57497199ba703998` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs` | 77 | `a67bf54c99b875e7f5c2477ec3557d4fc67760a70edae930a21c0d82f9bca706` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🔁️continuation/🦀️.rs` | 106 | `9d29c0811f3b40775b577ee1b4aea85cc4d7dd5d6de30da141226632648f9ee2` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🦀️.rs` | 90 | `f6807f706507f7ea985397119c58d75e0ddc8bb5e0899dc19eba76cc831916c6` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs` | 77 | `1ad1de5af5c8b8ba938986d990a3637d05f9e47fa64b3ab4addfd0ee645888ce` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🔁️continuation/🦀️.rs` | 106 | `661c49debf75aaadaa856cd18b5562f06784f04f1b38f44d12c0528e9839f8d7` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🦀️.rs` | 90 | `8f706091292eb4a60fcf80b14f1bf9896ff1b1298189eb4e12324aed0b2fbd58` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🦀️.rs` | 88 | `b2e1da8f49c237fc38b2f78cc7161b4e7cab840e491a2bc22723d16fc1904cc5` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🧪️tests/🦀️.rs` | 97 | `93ce4ea0c7078db9fe8b950daaa695dfa2f67af7b2942a02cb3d318125a287bd` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🧫️fixtures/🔣️.json` | 102 | `08da7b00c97a60f171c3df79ce78898b6fc827a1bec83b7a49ed9b176210479b` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🧬️schema/🔣️.json` | 100 | `43d0ce00e315dee5569c786a0d19cd5cf789b7de185a3fb97cedeaa86198670d` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🦀️.rs` | 89 | `9398992121864956cacfbdf01641efe873345d1c007751ee0af6d3ff35d82107` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🦀️.rs` | 91 | `9bf0da4680c32c64a030e9945aa9bcc9982283287f954ebb41208b4228ed8004` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs` | 100 | `34770614b09e3fd6a500cba40fac05ba14e778a139724b33d6cb1167ea5f7f38` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧫️fixtures/🔣️.json` | 105 | `6b0f6fe957e45dd07926fa8187cb39300573d32f00ec2565a5e41e75af72a65a` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs` | 100 | `96a5fbf99edc435ede0d97149a0600b7f95e1f3ad3f63eb7773d257f9b2bab89` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧫️fixtures/🔣️.json` | 105 | `5b9c00110ecc4c09720de5ebadef21c0c1b36c1fa07d908c9510c818792eb1cb` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧫️fixtures/🔤️receiving/🔣️.json` | 118 | `df38dbac8ce055781716c1965b7d9037dc8a92975d21f9bcad179ebab64b339b` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧬️schema/🔣️.json` | 103 | `5b071ad1a07310fbb003821d42b0f23029b9e812397b2f0cc5cd67330037d446` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts` | 77 | `7bd94bd2c2abecf3dcdffe640348358e82dd08618a648ab1c154106d0ca0d9df` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs` | 77 | `a85ad1f21cecece92315016d7257509964006a34420e869b499dee618217f6fd` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs` | 77 | `2c81aaa318c621633e589d423009285add7ff0c4911ffeadd67c2478fb6b9405` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🚮️absence/🟦️.ts` | 97 | `f0ae43fd755d40f678bb3b5d8bf52a6647b83821c0faea0d195e63f40ffa14fd` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts` | 86 | `a37320c08c43d0fde8a1bee5bf39a693430be5790c33033a8d4b3367cda95065` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs` | 86 | `eae92a8b835accff5370208f31ef187cfa91b92e71660ec80f835f24a03735cd` |
@@ -476,20 +476,21 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🪆️stage/🔣️.json` | 100 | `7290b0a8f674bcffd9b3042db07285ee43b1ee0706e254190c2f1f1c9daacd8e` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🫴️recipient.json` | 100 | `63b86d3ed0ee05cf983937d1ddce701caedb05830eff8111ff822fcf98e69f88` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🔌️detached/🔣️.json` | 101 | `868edb7603cf5739209b3ea4f7cae845836bc1c8b6200c508d963bb1cd78f2ea` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs` | 90 | `0e49b9d8d338690d613b84c84322ae4ec7609f24a3dbe73d454be83f43544dfe` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs` | 90 | `099cb6ecc588f7c7f2113be1cbbd513f7d684d45e9dc0fe8e2ace3fb6dfbbb2f` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🫴️receiving/🦀️.rs` | 80 | `f9a2d05bc03f66222c4d90cce47ac542103b6ea0bec281537a060991e9caa7bd` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🫴️receiving/🧪️tests/🦀️.rs` | 89 | `3866f1e193af47c34bef21ace48b35322101cac91063382a898f5c2f9ba06cfc` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🫴️receiving/🧫️fixtures/🔣️.json` | 94 | `43f03c653980df7e6d425444cfc459c2ab2e3a231ecba6812768637bf323fb3f` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🫴️receiving/🧬️schema/🔣️.json` | 92 | `028f9d391e3ce636bd2e533b2a2442666fa94511c13dbfc6f6cc420cae75a4dd` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs` | 86 | `c375f0a3b9204377107f35f5b201087ffdb124698735cb9dce1b10e975a4309a` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json` | 100 | `0187b87e0ca4c82a4d61ff9c7eab846286e7e4986c7c3768bf57dfd12ca9a659` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs` | 86 | `278228cc9203d3408a33de1c74f5ede7eaa298172a214f77d6d1cac231db423d` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🦀️.rs` | 95 | `56b62c3ceb30c3043662f79e7cae183a2ccedca999dbc71ec33c1dd93c448259` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json` | 100 | `e2533d66a22392f21c33751dd450f467540aad70f26043c4073c315d1dbfd0fc` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🪆️receiving/🔣️.json` | 113 | `4334312f31766785a3a0b72304db33c2be718d6c7b3ba237c47fb1778a71269b` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs` | 74 | `c640d6bf34a0b8b55d965f3d63da7572cf574dea427b70ca0b54437993cccdd3` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs` | 83 | `88d5760e06fbe63cfa0dad485a3c4cd9649b33a94339bfe507bd95a007fb9f9f` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs` | 74 | `e023b3a142dfa744e290a6f9769c0be35cabc8e9420b5176a909e162922dfd27` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs` | 83 | `a85b4a6213e8a95a69589f381643f0d0b696ad41c0126c000c9c6ba3daf808d0` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/📦️payload/🧬️schema/🦀️.rs` | 85 | `cd67a0d909d81af492444c9424b0452d4a87971b3ee3b149a8cb10b5849eddfc` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🧬️schema/♻️retirement/🦀️.rs` | 87 | `123a9b2a41c8ec5ee6800cce6cf549064720d9a83d7a56f9d174502838a42cb3` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🧬️schema/♻️retirement/🦀️.rs` | 87 | `ee5c0bb6d5b114b34c83d7ecc32fca03e890451facf327e022282b7ea14896bc` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs` | 74 | `d5ab2af92cf5bbe221e773f971bb956e90cb3be3abd021aac5b1ba085cbb5ff6` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/♻️retirement/🧪️tests/🦀️.rs` | 105 | `b0b2f2dacafb74a4c3194cde320074909492abf002258f1e296e120376189488` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/♻️retirement/🧪️tests/🦀️.rs` | 105 | `dfaf11f1d21f2b8ca0c6ad63207b5910ed69a8174a996619a3eea69a1ec402e3` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/♻️retirement/🧫️fixtures/🔣️.json` | 110 | `2626ee886afe2ba92753ab05df2ea3fa3771349fc7856b9ab00473ba58ca8031` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🟦️.ts` | 102 | `ba88ae752fe0d835d5832d56684e8b5afbaadeca3fa7f26c4cde7feba06bc20c` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🦀️.rs` | 102 | `1a9b22de0f5523101936d26d8175837c56d6abbb623f85f7cf31cd0fd288f151` |
@@ -497,7 +498,7 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml` | 107 | `08250307e446a3d3ba34c2f39541d64a2c0b3c02a861392f91efaf7d88517595` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/package.json` | 109 | `8aed3c1710de52b739fae0051200f7200e1e3856065d52a7d2db7f9bd4978745` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📋️project.json` | 112 | `ea0179c2d9b6c0f6a51589aecca6b4a3fdc58d36d501f9d4ea8569675f45c779` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts` | 109 | `91ef6c92e02645b025b702c25aa20205ba8e8eb908bb7403b468567ac130f619` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts` | 109 | `d80ae895ca80fb920f2b96cf59f66bcd6513ac4712bbc09c0d2998e7dc8fa5d6` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/🦀️.rs` | 103 | `9d7ddde4d5eaae155353bdb70971829f601b22047b5ba729fa80feb49e50c2b5` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔁️transfer/🦀️.rs` | 95 | `e0ecdf8ef4369046189f3036c633fe4f11e16f5a9eff05ac0a071cb79bfe6808` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts` | 94 | `c88047b5f122a97fb3c586c87871e0c94d2fbdfb37e940fe2671208665eb5f8d` |
@@ -506,12 +507,12 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧫️fixtures/🎯️integer-query.json` | 121 | `0a6c6f1eb81b34f159fc443c257a8f25031991ccf4ccb77b395b91e9f17623a6` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧫️fixtures/🔣️.json` | 108 | `d149b46601567a1b4a00e4c819143e94a755cb49fb5a31e381705d53bf94a2c4` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts` | 83 | `348686ec9518c8a0d5c46f29967e4272f06df0075ee39731b70f2e661ce168bd` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs` | 83 | `f211c5df94a031b8f060a380e415a0917459806910646903054ca60c06ad7438` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs` | 83 | `22f5e8eac379d6f59634960b165aad27a3a982407366463ff4b965dc54f17d87` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🔤️keys/🟦️.ts` | 103 | `982dc368d1ce1c13563f4cb7c85d053cfd07c6e61d6d880d54fbad15291c4e27` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🗂️row/🟦️.ts` | 102 | `356891def0d7f0d39758e5c53e73fa9571d04dfc18d63bde0990d30fdbcd32b6` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🗂️table/🟦️.ts` | 104 | `cac8c3743955fac4583fa4f3d5c288fad66e3bafba9db540fc73868f4d75af08` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts` | 95 | `10159937a06fb7e496dbb7ee92ff66601e0399de6e26c7193f09da94c4668c41` |
-| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🦀️.rs` | 95 | `8c36ca6c05242e8cb7e654db0eaa731ecca3daffd094946945e1b1ead526bdbb` |
+| `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🦀️.rs` | 95 | `addd9ef888f834b25563263aac1dfaf85fdf19dbde84dbed01cbcae50a0c550d` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🟦️.ts` | 118 | `fddb9638df0a4e851eebcae91df97a3230418559e890cb0f9ef1259794b6e887` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🦀️.rs` | 118 | `3aa9904c9bbd6abc46ec230d471b7ab6561d84277765f69f4ceccd907f21df15` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🫳️reconstruction/🦀️.rs` | 122 | `9d9b6169bbaf04937ff8bc229fdf9d1d1f0035961e64069c22c043d0ff1874d6` |
@@ -556,7 +557,7 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🏛️relational/🔣️.json` | 109 | `4b30b0ad186b21c5fde953f65cc15eab2e274f20bde8c3132b174951dfc4aaec` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🔣️.json` | 95 | `741710d4b350487dfcfbdfcd12a1ee989683638b1f6acad41ca4a24600beb7db` |
 | `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql` | 94 | `d5f171ea7b2f03090dc674a235d04159b79358bbc088858f7f68d507b42a1a06` |
-| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs` | 96 | `273f6a36821f0a59c294541e94e387591f64fb9288c6cb5f429f48f641878547` |
+| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs` | 96 | `a33b3d03a0de0309c38e40e876337ee6d273a05b3c2cc596790d9e6ddcd17873` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/📏️preflight/🦀️.rs` | 143 | `96ee365b1c2777fda2f6ad5706c699d11411feaf014ef11358985f50ebdfabf7` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/📏️preflight/🫳️borrowed/🦀️.rs` | 155 | `ed1a2add769985929cddaabdeaa82531a6bb4cbadfbcc43c0ce8d189b31e0940` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql` | 131 | `10e8861dff9be4fcd0f7ca6ac89b4e6337f7df672e104f49986ce8740f79831c` |
@@ -585,11 +586,11 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🧫️fixtures/🔣️.json` | 154 | `e5c62f0815f38941dd7fb70358aa3d25f3e6cc57930f24ff2c4fbddbf171ed5d` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/🦀️.rs` | 126 | `2ce8f70ec3960b1e1fdf2dd105ea28682e5b881d89f3aaa91f01bb51c1b548a9` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧫️fixtures/🔣️.json` | 131 | `6a545921a239f6e43d30a87a47015a1db73302bc18ded2a35777986f80e67cc4` |
-| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🦀️.rs` | 155 | `1cd9e6f0f9a5f2bf26832209457d298137e4df5adc2253619b5a0dbaabd63efb` |
+| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🦀️.rs` | 155 | `034f55f89ebaddd81cd46abc1c920ee86ee110bc2581cbc823ec070cb7c715a5` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts` | 168 | `93c80c41674b91b4051039e99c43606a47fb9adb398c28cb2ec477e7a951ba85` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🧫️fixtures/🔣️.json` | 182 | `978ad223427a9f8770ae1a1b857779d1fc2cdf39fa09a47b1caf9943ec97c4b3` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧬️octets/🦀️.rs` | 165 | `28bae2acd188f3ee7e281bb8c3dab778efbd160e1b5ab624d15303294910401c` |
-| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs` | 145 | `ef019c4782a2d7f41e227bc1a1493989034f5d53d24a3bfefdde49999c47f2b5` |
+| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs` | 145 | `b4f156fff4f577c372b6d1aaf1f15a7ad05959a5915a2fe13dafb08383e59fd9` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧫️fixtures/🔣️.json` | 150 | `f9a83cfe5422a4199b5d0c85a852d123650397b228c31c33eac889b1e84d48a1` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧬️schema/🗄️.sql` | 147 | `b55b64d4534b8c4ba881cdbe5efd2811730f0b57d1fafdd177d5f122bdf7076c` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs` | 145 | `5dcdbe2982ff72c339c31be0063c30296a08180346b659bf4fc527f1795e82ca` |
@@ -599,7 +600,7 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧪️tests/🦀️.rs` | 147 | `17d9ed15bdb759fbbc1b3e7f1d15c65a2b681f63ff366883eed040222f94afcf` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧫️fixtures/🔣️.json` | 152 | `d366d90f8b639afd34e0b6574143c42b4d3d2f3bb63dae01a9c9c8b1ce4a4198` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🗄️.sql` | 149 | `d85842e05542cf99a2218da3d8277543ba6f52c034caaa8905a15f44d85c6305` |
-| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs` | 85 | `3ca1056203ae8b29ed479c99919d3420cc22a0a3b56fa44b68f68bce8381d9f8` |
+| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs` | 85 | `82f6b31e832fd4a4121887e8408a1fc79284b631f642c3a4819b20730fc9eeed` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts` | 139 | `47c53a660360cf7787cc66111f0496dfaa68a09f31f1f76976fd97ef1de9a374` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🦀️.rs` | 115 | `69a9dc5048e5eab4e357d92ce08a06412823acbafda5f47e6a7ed047db3791fb` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🧪️tests/🦀️.rs` | 124 | `4f971fd9b30ec9932ee0cec96001e2b2ff6543afe26a30d58e6d819ca02a19eb` |
@@ -617,8 +618,8 @@ Captured 2026-10-09T15:08:21.030Z. 638 current original inputs; maximum absolute
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🔬️io-mechanism-laws/🦀️.rs` | 112 | `e267bf98c939d4700ccb293f4b5772e445e7a18fc3e5ce7d68af85eeb46d5ee0` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🦀️.rs` | 103 | `4b61c39b6d02afd08f686658e51548dea37aec493fcf87531b3c5561d72aeeac` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/⚠️emission/🦀️.rs` | 105 | `86d2473d9a96d20fb52f5b6ec9e02bdfd890b5946e65ea5c56179e0bc5675c8f` |
-| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts` | 108 | `2e4b6ffd7081a238c642772762d97e95fc9af6a04d4e1c994e72dd7e7203ee7d` |
-| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧫️fixtures/🚦️controlled/🔣️.json` | 113 | `a026427556b9e018aa87f2eeb9cd4172459a0d9f16241f2514970383f7a462db` |
+| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts` | 108 | `3e5929fcf3cbf01ca35c14a7838b0515192aab7aa22fa5a290541aba60f4f4e0` |
+| `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧫️fixtures/🚦️controlled/🔣️.json` | 113 | `04424fccd8264525605d94b3f8dd17a285523d498d90ab480b0bd750dc6dc1e5` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/📏️preflight/🦀️.rs` | 153 | `a31e1f62d8db433862cefe5678cc4a5e797da939df9668e51e5b7c95e8b312f5` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/📏️preflight/🫳️borrowed/🦀️.rs` | 165 | `2f2cd91834a7f9db3446f50ce2d932497fb49b14e76c6b7ba4bc3df6a69ca1a1` |
 | `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql` | 141 | `df947ca93e73fe1e969fed337da9af0bc4e02e3f8ac4617ce36c0eb0277f29bd` |

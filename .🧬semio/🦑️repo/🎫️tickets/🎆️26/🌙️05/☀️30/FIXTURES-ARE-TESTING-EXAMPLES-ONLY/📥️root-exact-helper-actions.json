@@ -1,0 +1,28 @@
+{
+  "actions": [
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "3abfe4fa9cb011eee6c82017634d72fbdd7b8cc65efc1b7c13ea972bec7dcd1d",
+      "afterSha256": "4c109282a35c18b553dcc740cf06bfba3f49832d951600bd81a97fdb1f6bbd5b",
+      "exclusive": false,
+      "scope": "Original caller invocation propagated across trusted GIS proof and publication/proposal helper chains; all actual caller and joined Source-oracle argument expectations preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🗣️verb-vocabulary/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "06a1686dae33982acf0bfd48ef9e83c43e2fcd881793c1c8aa048ae614858833",
+      "afterSha256": "184e547e664606c9587b917036684205ae21e71be491fcfe1dfffd0ed6ec098d",
+      "exclusive": false,
+      "scope": "Original neutral verb helper receives exact incoming ScriptInvocation; actual genuine execution policy"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "760ab3d47603f0b757801c4512585dc432e54d293e6a30cda1fbad7234422c39",
+      "afterSha256": "c365ca9d014714fb4610b415ebe59daa9a951d202c6c5944a5291130d4896d2d",
+      "exclusive": false,
+      "scope": "Actual registered verb script passes its same original control to native helper"
+    }
+  ]
+}

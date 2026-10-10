@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-09T23:18:53.549871+00:00",
+  "scope": "No returned public DTO changed; runOwnedCommand still Promise<void>/Error. Actual nullable Node close status/signal diagnostics and output drain only. Plain examples, independent Node stdspawn oracle.",
+  "before": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "sha256": "1c6635a791a1a7128dfc795fd787ada09245061ae5d5fe52dca78a2d078073f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "sha256": "b91633467acfb794bce4dfca15979a4c0620f61c86d892fecb3aceb0ea4f1001"
+    }
+  ],
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+      "kind": "append independent actual close/oracle law",
+      "beforeSha256": "1c6635a791a1a7128dfc795fd787ada09245061ae5d5fe52dca78a2d078073f5",
+      "afterSha256": "f666c02fb40a346834d0fb9d3533a1e84375a0638c443fa02261350d186036e0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📪️exit.json",
+      "kind": "create plain language-neutral close code/signal cases"
+    }
+  ]
+}

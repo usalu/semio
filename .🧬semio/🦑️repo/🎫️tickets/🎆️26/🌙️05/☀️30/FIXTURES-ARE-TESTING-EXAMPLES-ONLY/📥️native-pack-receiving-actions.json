@@ -1,0 +1,42 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs",
+    "beforeSha256": "40ad92ad1534ff6721a421f4aa207099bc266bbce410bb5fc7aa96a3f72bf54b",
+    "afterSha256": "318bcc18686d13e7c49ed522ad67c54a6643d54dd5876904f077c75ce399a443",
+    "action": "new required original receiving trait only",
+    "beforeBlockSha256": "d700d2299cf39692a7a03656effbe8e65366f4bae43b5e6887f012268be90173",
+    "afterBlockSha256": "37443e264de8211e9909508ea9f2ac3accd68492de4d72e62a4a3307561ccf1b"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "beforeSha256": "a4fa4b665034d4fb245ec08c263fd8c7769274c1b35747568408fc0f0c8d5a48",
+    "afterSha256": "2b9271cbf3dcc11dbce09d1d8350bb0a9ce5e0e2745f98d3bb5955920a07e793",
+    "action": "narrow genuine public receiving export only",
+    "beforeBlockSha256": "35ea5a9578b669fbbebb984ff0d7f06928244156a27159b5cb26ea41a412ec37",
+    "afterBlockSha256": "a9075c430c0a9faa9fea39ee66d9fd01e4b0658edd47d67ff9c8094b9408e009"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+    "beforeSha256": "bc8e7c51d5437209fd5fedb2e882332c869ea86c257c1f53c4eb858cd1cd3271",
+    "afterSha256": "12a543e5e20656a0e806c8587e14bc0a064d980d2bf26bc6653f369c49259fb9",
+    "action": "direct genuine Probe receiving provider original owner only",
+    "beforeBlockSha256": "3a053928746b30e33901a85aafc37cbb73a125ef1fc9c623d29616ad58211fb7",
+    "afterBlockSha256": "d0d8261839d4ef1db2eb714627b8b1635fa06a321a4ac14e9d7ce9c6abf572d7"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🚪️io/🔤️json/🦀️.rs",
+    "beforeSha256": "1dc1aaea7167972c796e58b7590c61fbe566049488ee36b17ade774fccd416e5",
+    "afterSha256": "6ceba9ffa337b9699f546542c16728294cbfffcc76b6e1234bce2fb476ae318a",
+    "action": "paid original JSON receiving body: typed output retained before receipt; only identity/Probe constructors",
+    "beforeBlockSha256": "2845d1846b25f706874b5cd186d8ee177133525c8028cdbb58c92f38015f86f5",
+    "afterBlockSha256": "fba1d0c0094e289ab71c5a56744ca6a00f682fa95d38a83240be68060654f95e"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+    "beforeSha256": "192316c1ddd760d67f697bf9888c7547748df768824bd90133aefe4ee392d5f3",
+    "afterSha256": "ad9ed84727f32b195830c7f81cb9d3ba1aa7d05eb09a4f7ad9687e892133f21b",
+    "action": "Source law verifies genuine retained typed output in existing paid body, no second nested adapter",
+    "beforeBlockSha256": "51f305253a530de9370eacf15c317e6d24faef491d40ffe41667781b4188be97",
+    "afterBlockSha256": "74ba468d505beb1e621d45d9626962001b785561280b82a40bac41c98be68506"
+  }
+]

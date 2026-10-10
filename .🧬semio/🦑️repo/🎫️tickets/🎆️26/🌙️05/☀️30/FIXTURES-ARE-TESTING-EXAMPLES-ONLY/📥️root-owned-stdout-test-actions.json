@@ -1,0 +1,23 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧫️fixtures/📤️stdout/🔣️.json",
+      "action": "created",
+      "afterSha256": "4c349624b418d49aa34bcdd33c3e1af888fe6fa53bfebf7143d01fb774cc1890",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json",
+      "action": "created",
+      "afterSha256": "98da81ef2a1bc61081ceb5a4e27c74959068c51531d1971bc22423db08b1fa8b",
+      "exclusive": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts",
+      "action": "created",
+      "afterSha256": "809c7b6c8890e20d4334f93319ef6f18be5cf4074bf6d1ee886fde1788442e31",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

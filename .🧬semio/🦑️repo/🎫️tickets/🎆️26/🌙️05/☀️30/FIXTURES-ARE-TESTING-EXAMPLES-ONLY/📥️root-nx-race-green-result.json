@@ -1,0 +1,10 @@
+{
+  "exitCode": 0,
+  "tests": 5,
+  "passed": 5,
+  "failed": 0,
+  "assertions": 361,
+  "durationMs": 1400,
+  "logSha256": "332bb46c71913c149fb6f98d8df121ab5d502633d683220b9865f51b4fac7cc3",
+  "qualification": "Actual retained original private Nx Source run; queued module symlink custody replacement refused while original bytes retained. Canonical root Nx target renewal pending after this fix."
+}

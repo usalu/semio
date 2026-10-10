@@ -20,5 +20,26 @@
       "expectLastCustody": true
     }
   ],
-  "parallelShares": 2
+  "parallelShares": 2,
+  "erasedReturn": {
+    "source": "älice",
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 256,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 2
+    },
+    "refusals": [
+      "items",
+      "copy",
+      "depth",
+      "busy"
+    ],
+    "expectedRequestedBytes": 0,
+    "expectedReleasedBytes": 0,
+    "expectedOriginalRegistryPreserved": true,
+    "expectedOriginalSourcePreserved": true,
+    "expectedSemanticMetadataCopyBytes": 0
+  }
 }

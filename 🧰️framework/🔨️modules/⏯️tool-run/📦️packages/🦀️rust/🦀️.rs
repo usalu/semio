@@ -5,9 +5,13 @@
 #[global_allocator]
 static ORIGINAL_WRITER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
+#[cfg(test)]
+extern crate self as semio_framework_tool_run;
+
 #[path = "../../🦀️.rs"]
 mod component;
 pub use component::{
+    ToolRunTickWireCursor,
     TOOL_RUN_STEP_RING_CAPACITY,
     TOOL_RUN_STEP_ARGS_MAX,
     TOOL_RUN_COUNTERS_MAX,

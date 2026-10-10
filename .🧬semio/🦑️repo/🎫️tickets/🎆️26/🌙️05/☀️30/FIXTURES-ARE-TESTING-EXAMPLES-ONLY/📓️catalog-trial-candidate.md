@@ -1,0 +1,9 @@
+# Bounded Catalog Trial Candidate
+
+No inventory or tests executed. Catalog is retained derived metadata (3755 scopes), not a current complete boundary result. Identity-candidate filtering found four scopes; names alone were not classified as violations. Pets Fixture and Energy water-system fixture-count are domain concepts; Framework Test DTOs are produced evidence contracts, so retain them.
+
+Concrete current embedded trial authority: Renderer schema JSON line1822 `$defs.ActorDocumentPortFixtureV1`. Required owner/limits/cases/retirement/disposal/bindingRetirement describes a complete actor-port behavioral matrix: cases carry current/activationActive/retired/outbound/inbound outcomes; disposal has fixed phase/events; bindingRetirement result enumerates refused/transport/duplicate/replaced with sequence. Genuine individual owner reference ActorDocumentPortOwnerV1 must remain. No produced domain value matching the full trial envelope was established.
+
+Actual actor-backbone TS test consumes fixture.bindingRetirement at27 and per-row activationActive163; retains real encode/decode, async capacity/refusal and transport behaviors. Its Ajv admission129 validates genuine Plugin bindingSchema per actual control value, not this Renderer trial definition. Bounded exact symbol search under OS finds ActorDocumentPortFixtureV1 only at its JSON definition; no live whole-schema admission was established. This is a current orphan complete-trial definition candidate, not grounds to remove genuine binding Ajv or behavioral cases. Remove only the embedded trial definition/export if complete source census confirms no genuine producer, preserving owner/limits contracts and all plain test inputs.
+
+Hashes/selector observations are in 📥️catalog-trial-candidate.json. No global absence, current catalog completeness, author attribution or runtime claim.

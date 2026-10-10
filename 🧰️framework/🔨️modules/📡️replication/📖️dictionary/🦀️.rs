@@ -1,6 +1,9 @@
 //! 📖 Deterministic string dictionary builder and reader.
 
 use crate::ProtocolError;
+#[path="🛬️decode/🦀️.rs"]
+mod retained_source_dictionary;
+pub use retained_source_dictionary::{RetainedSourceDictionary,RetainedSourceDictionaryStep};
 
 //#region 🔖️Dictionary
 /// 📚️ In-memory dictionary builder — deterministic first-use interning order — shared by

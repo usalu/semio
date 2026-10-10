@@ -1,0 +1,53 @@
+{
+  "contract": "framework.job.original-context-cancel-alias.v1",
+  "cases": [
+    {
+      "grant": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "admitted": true,
+      "receipt": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "grant": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "grant": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "admitted": false,
+      "receipt": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

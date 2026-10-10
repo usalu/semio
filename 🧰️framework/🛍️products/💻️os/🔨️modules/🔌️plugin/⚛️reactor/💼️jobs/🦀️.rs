@@ -1,55 +1,9 @@
-//! 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime, design-abi.md §4 + §6). Makes
-//! jobs authorable: a `kind` string registry (`register_bounded_job_kind`) resolved by
-//! `start_job`, each entry a `BoundedJobFactory` that admits ONE explicit bounded state machine —
-//! a `BoundedJob` whose `step(budget)` performs exactly one state action and returns
-//! `Running`/`Done`/`Failed`. There is one registry, one admission path and one executor shape;
-//! nothing in this module is `#[cfg(test)]`-gated, so the set of kinds a test build admits and the
-//! set a shipped component admits are the same set by construction (`BUILTIN_JOB_KINDS`, pinned by
-//! a law in `🧪️tests/🔬️unit`).
-//!
-//! ## Why the opaque-future executor is gone
-//! The previous shape kept TWO registries: a `JobFn` registry of `async` bodies sliced by parking
-//! on a `JobCtx::tick()` inside a private `ColdFutureExecutor`, and a bounded registry. Only the
-//! bounded one was admitted in a shipped build — `spawn_job` dropped every `JobFn` on the floor
-//! under a `cfg(not(test))` gate and parked the slot as `ExplicitStateMachineRequired`, so all five
-//! builtin kinds (`semio.io-run`, `semio.io-sniff`, `semio.infer`, `semio.mutation-plan`,
-//! `semio.migrate`) were refused with `job.explicit-state-machine-required` in every production
-//! build, for every plugin, while the unit suite exercised a path that only existed under
-//! `cfg(test)`. The cure is not a second admission door: it is that a builtin kind IS an explicit
-//! bounded state machine, authored the same way `framework.reserved.tool` and `🏗️fem`'s mounted
-//! visual jobs already are. `JobFn`, `JobCtx`, `JobTick` and the per-jobs `ColdFutureExecutor` are
-//! deleted rather than gated.
-//!
-//! ## Slicing mechanics
-//! `start_job` looks up `kind` in `KIND_REGISTRY` and calls the factory with the job id, the raw
-//! `input` bytes and — only on a checkpoint-restore replay — the bytes this SAME kind last handed
-//! back from `BoundedJob::checkpoint()`. A factory that refuses admission returns the fault bytes
-//! the first `step_job` answers with. `step_job(job, budget)` advances the admitted owner by
-//! exactly one state action; it never runs another job's work, because there is no shared executor
-//! left to run.
-//!
-//! ## Budget
-//! `JobBudget::fuel` is the work-unit grant for ONE step. Every state of a builtin machine
-//! declares its price (`WORK_UNITS_VALIDATE` for a decode/validate action, `WORK_UNITS_EXECUTE`
-//! for one unchunked native dispatch, `WORK_UNITS_RETIRE` for one bounded close action), and a
-//! step granted less than the current state's price is refused with a typed
-//! `job.<kind>.budget-exhausted` fault instead of overrunning the actor grant it was called under.
-//! `deadline_ms` is the host's wall bound, honoured by construction: one state action per step.
-//!
-//! ## Stall guard
-//! If `step_job` returns `Running` with no progress bytes AND the caller passed the SAME
-//! `JobBudget` as last time (no fuel/deadline change to indicate the host is doing anything
-//! differently) for `STALL_LIMIT` consecutive calls, the job fails with `job.stalled` instead of
-//! being steppable forever — see `step_job`'s own doc for the exact bookkeeping.
-//!
-//! ## Checkpoint (via lease into `⚛️reactor/📸️checkpoint/🦀️.rs`)
-//! `checkpoint_jobs()`/`restore_job()` are the two functions that side of the lease calls — see
-//! this ticket's `📓️terra-jobs-runtime-report.md`, `## lease-requests` section, for the exact diff
-//! text sol applies.
+//! 🧵️ Registered jobs retain original requests, checkpoints, typed failures and output until caller-funded closure.
+//! Admission and execution borrow the same original context; each producer declares its own five-axis demand.
+//! Checkpoint publication and builtin semantic decoding still require migration to funded continuations.
 
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::cell::RefCell;
-use std::collections::HashMap;
+use std::cell::{Cell,RefCell};
 use std::future::Future;
 use std::task::{Context, Poll};
 
@@ -100,7 +54,7 @@ pub struct JobBudget {
 
 /// ▶️ Plain-Rust mirror of `jobs.wit`'s `variant job-step` — see `JobBudget`'s doc for why this
 /// isn't the WIT-generated type itself.
-#[derive(serde::Deserialize, FromValue, serde::Serialize, ToValue)]
+#[derive(Debug,serde::Deserialize, FromValue, serde::Serialize, ToValue,semio_framework_value::RetireOwned)]
 pub enum JobStep {
     Running(Option<Vec<u8>>),
     Done(Vec<u8>),
@@ -123,8 +77,13 @@ pub const WORK_UNITS_PUMP: u64 = 64;
 
 /// 🧩️ Production job protocol. A registered owner advances one explicit bounded state-machine
 /// opportunity per `step-job`; there is no other body shape, in any build.
+pub use semio_framework_os_kernel::io::io_mechanism::IoRunControl;
+pub use crate::store::sqlite_snapshot::SqliteSnapshotControl;
+
 pub trait BoundedJob {
-    fn step(&mut self, budget: JobBudget) -> JobStep;
+    fn step(&mut self, budget: JobBudget, original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<JobStep,semio_framework_value::ValueError>;
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>;
+    fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
     fn cancel(&mut self);
     fn checkpoint(&self) -> Option<Vec<u8>>;
     fn terminal_drop_is_shallow(&self) -> bool;
@@ -134,192 +93,217 @@ pub trait BoundedJob {
 /// `start-job` input, and — only on a checkpoint-restore replay — the bytes this kind last handed
 /// back from `BoundedJob::checkpoint()`. An `Err` carries the fault bytes the first `step_job`
 /// answers with, so a refused admission surfaces exactly where a refused first step would.
-pub type BoundedJobFactory = fn(u64, &[u8], Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>>;
+pub type BoundedJobAdmission = fn(u64, &mut Option<Vec<u8>>, &mut Option<Vec<u8>>, &mut semio_framework_job::StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>, semio_framework_value::ValueError>;
+pub type BoundedJobDemand = fn(u64, &Option<Vec<u8>>, &Option<Vec<u8>>, &semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>;
+
+/// 📐️ A registered owner supplies its admission and exact original demand together.
+#[derive(Clone,Copy)]
+pub struct BoundedJobFactory {pub admit:BoundedJobAdmission,pub demands:BoundedJobDemand}
+
+/// 📏️ Quotes the real boxed frame and original handle transfers over all five currencies.
+pub(crate) fn original_job_admission_demands<T:BoundedJob>(input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>)->Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>{
+    use semio_framework_value::{RetainedCloneGrant,ValueError,ValueRefusalKind};
+    if input.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job admission has no owned input"))}
+    Ok(RetainedCloneGrant{maximum_items:2+usize::from(restored.is_some()),maximum_copy_bytes:0,maximum_capacity_bytes:std::mem::size_of::<T>(),maximum_release_bytes:0,maximum_depth:1})
+}
+
+/// 🪺️ Admits the exact boxed state and transfers original input handles without a body copy.
+pub(crate) fn admit_original_job<T:BoundedJob+'static>(input:&mut Option<Vec<u8>>,restored:&mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>,build:impl FnOnce(Vec<u8>,Option<Vec<u8>>)->T)->Result<Option<Box<dyn BoundedJob>>,semio_framework_value::ValueError>{
+    use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+    let demand=original_job_admission_demands::<T>(input,restored)?;let grant=cx.retained_grant();
+    if cx.is_cancelled()||grant.maximum_items<demand.maximum_items||grant.maximum_depth<demand.maximum_depth||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes{return Ok(None)}
+    cx.consume_retained(RetainedCloneProgress{copied_items:demand.maximum_items,retained_capacity_bytes:demand.maximum_capacity_bytes,..Default::default()})?;
+    let owner=Box::new(build(input.take().unwrap(),restored.take()));
+    Ok(Some(owner))
+}
 
 /// 🔎️ One phase body of a builtin two-phase machine. Synchronous on purpose: a bounded step may
 /// not suspend, so the framework call it wraps is settled inside the step by `settle_in_step`.
 pub(crate) type BuiltinPhaseFn = fn(&[u8]) -> Result<Vec<u8>, semio_framework::Fault>;
 
+pub(crate) enum BuiltinExecuteFn {
+    Pure(BuiltinPhaseFn),
+    OriginalIo(fn(&[u8], &mut IoRunControl<'_, '_>, &mut SqliteSnapshotControl<'_>) -> Result<Vec<u8>, semio_framework::Fault>),
+}
+
+
 //#endregion
 
 //#region 🔖️Registry
 
+#[derive(Clone,Copy)]
+struct RegisteredJobKind {kind:&'static str,factory:BoundedJobFactory}
+const REGISTERED_JOB_KINDS:usize=super::requests::REQUEST_SLOTS;
 crate::component_persistent_local! {
-    static KIND_REGISTRY: RefCell<HashMap<&'static str, BoundedJobFactory>> = RefCell::new(builtin_registry());
+    static KIND_REGISTRY: RefCell<[Option<RegisteredJobKind>;REGISTERED_JOB_KINDS]> = RefCell::new([const {None};REGISTERED_JOB_KINDS]);
+    static KIND_REGISTRY_EPOCH: Cell<u64> = Cell::new(1);
 }
 
-/// 🧬️ Every builtin kind is registered unconditionally for every plugin, the same "for free"
-/// behaviour the old hard-coded `match` gave every plugin — no `PluginBuilder::job(...)` call is
-/// required to get them, and no build configuration changes which of them is admitted.
-// 🚫️async: E4-adjacent — consumed by a `thread_local!` static initializer, which is a fixed
-// sync-only language context (cannot await); the body is a pure `HashMap` of fn-pointer inserts.
-fn builtin_registry() -> HashMap<&'static str, BoundedJobFactory> {
-    let mut map: HashMap<&'static str, BoundedJobFactory> = HashMap::new();
-    map.insert(JOB_KIND_IO_RUN, job_io_run as BoundedJobFactory);
-    map.insert(JOB_KIND_IO_SNIFF, job_io_sniff as BoundedJobFactory);
-    map.insert(JOB_KIND_INFER, infer::job_infer as BoundedJobFactory);
-    map.insert(JOB_KIND_MUTATION_PLAN, mutation_plan::job_mutation_plan as BoundedJobFactory);
-    map.insert(JOB_KIND_MIGRATE, migrate::job_migrate as BoundedJobFactory);
-    map
+fn builtin_factory(kind:&str)->Option<BoundedJobFactory>{Some(match kind{
+    JOB_KIND_IO_RUN=>BoundedJobFactory{admit:job_io_run,demands:two_phase_job_demands},
+    JOB_KIND_IO_SNIFF=>BoundedJobFactory{admit:job_io_sniff,demands:two_phase_job_demands},
+    JOB_KIND_INFER=>BoundedJobFactory{admit:infer::job_infer,demands:infer::job_infer_demands},
+    JOB_KIND_MUTATION_PLAN=>BoundedJobFactory{admit:mutation_plan::job_mutation_plan,demands:two_phase_job_demands},
+    JOB_KIND_MIGRATE=>BoundedJobFactory{admit:migrate::job_migrate,demands:two_phase_job_demands},
+    semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND=>BoundedJobFactory{admit:crate::plugin_runtime::framework_reserved_job_factory,demands:crate::plugin_runtime::framework_reserved_job_demands},
+    _=>return None,
+})}
+
+fn kind_at(index:usize)->Option<RegisteredJobKind>{
+    if index<REGISTERED_JOB_KINDS{return KIND_REGISTRY.with(|registry|registry.borrow()[index])}
+    let kind=match index-REGISTERED_JOB_KINDS{0=>JOB_KIND_IO_RUN,1=>JOB_KIND_IO_SNIFF,2=>JOB_KIND_INFER,3=>JOB_KIND_MUTATION_PLAN,4=>JOB_KIND_MIGRATE,5=>semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND,_=>return None};
+    Some(RegisteredJobKind{kind,factory:builtin_factory(kind).unwrap()})
 }
 
-/// 📤️ Called by `PluginBuilder::try_build()` (`🏗️builder/🦀️.rs`) once per `.job(kind, factory)`
-/// declaration, at bundle-install time — "registered on bundle install like other builder
-/// registrations" per this packet's brief. A later registration for the same `kind` overwrites an
-/// earlier one (including a builtin), matching `plugin_command`'s own last-writer convention one
-/// layer up minus the duplicate-id assertion (a plugin legitimately overriding `semio.io-run`'s
-/// default body is not an error here).
-pub fn register_bounded_job_kind(kind: &'static str, factory: BoundedJobFactory) {
-    KIND_REGISTRY.with(|registry| {
-        registry.borrow_mut().insert(kind, factory);
-    });
+enum OriginalJobKindLookupStep{Pending,Found(RegisteredJobKind),Missing}
+/// 🔎️ Original source bytes and static candidate bytes each consume their own funded turn.
+struct OriginalJobKindLookup{epoch:u64,index:usize,candidate:Option<RegisteredJobKind>,offset:usize,left:Option<u8>}
+impl OriginalJobKindLookup{
+    fn new()->Self{Self{epoch:KIND_REGISTRY_EPOCH.with(Cell::get),index:0,candidate:None,offset:0,left:None}}
+    fn demand(&self,source:&str)->semio_framework_value::RetainedCloneGrant{let copy=usize::from(self.epoch==KIND_REGISTRY_EPOCH.with(Cell::get)&&self.candidate.is_some_and(|candidate|self.offset<source.len()&&self.offset<candidate.kind.len()));semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}}
+    fn advance(&mut self,source:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<OriginalJobKindLookupStep,semio_framework_value::ValueError>{
+        use semio_framework_value::RetainedCloneProgress;
+        let demand=self.demand(source);let grant=cx.retained_grant();if cx.is_cancelled()||grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(OriginalJobKindLookupStep::Pending)}
+        let epoch=KIND_REGISTRY_EPOCH.with(Cell::get);
+        if self.epoch!=epoch{self.epoch=epoch;self.index=0;self.candidate=None;self.offset=0;self.left=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Pending)}
+        let Some(candidate)=self.candidate else{if self.index>=REGISTERED_JOB_KINDS+6{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Missing)}self.candidate=kind_at(self.index);if self.candidate.is_none(){self.index+=1}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Pending)};
+        if self.offset==source.len()||self.offset==candidate.kind.len(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;if self.offset==source.len()&&self.offset==candidate.kind.len(){return Ok(OriginalJobKindLookupStep::Found(candidate))}self.index+=1;self.candidate=None;self.offset=0;self.left=None;return Ok(OriginalJobKindLookupStep::Pending)}
+        if let Some(left)=self.left.take(){let right=candidate.kind.as_bytes()[self.offset];if left==right{self.offset+=1}else{self.index+=1;self.candidate=None;self.offset=0}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?}else{self.left=Some(source.as_bytes()[self.offset]);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?}
+        Ok(OriginalJobKindLookupStep::Pending)
+    }
 }
 
-/// 📜️ Whether `kind` resolves to an admitted bounded state machine right now — the predicate the
-/// admitted-set law reads, and the one a caller can ask before spawning.
-pub fn job_kind_is_admitted(kind: &str) -> bool {
-    KIND_REGISTRY.with(|registry| registry.borrow().contains_key(kind))
+/// 📤️ Installs only static producer metadata; saturation retains the declaration with its caller.
+pub fn register_bounded_job_kind(kind:&'static str,factory:BoundedJobFactory)->bool{
+    let Some(next_epoch)=KIND_REGISTRY_EPOCH.with(Cell::get).checked_add(1)else{return false};
+    KIND_REGISTRY.with(|registry|{let mut registry=registry.borrow_mut();
+        if let Some(entry)=registry.iter_mut().flatten().find(|entry|entry.kind==kind){entry.factory=factory;KIND_REGISTRY_EPOCH.with(|epoch|epoch.set(next_epoch));return true}
+        let Some(slot)=registry.iter_mut().find(|slot|slot.is_none())else{return false};
+        *slot=Some(RegisteredJobKind{kind,factory});KIND_REGISTRY_EPOCH.with(|epoch|epoch.set(next_epoch));true
+    })
 }
 
 //#endregion
 
 //#region 🔖️Slots
 
+/// 📥️ One original request and checkpoint stay owned until admitted and fully closed.
+#[derive(semio_framework_value::RetireOwned)]
+pub struct OriginalJobAdmission {
+    pub job:u64,
+    pub kind:String,
+    pub input:Option<Vec<u8>>,
+    pub checkpoint:Option<Vec<u8>>,
+}
+
 enum JobBody {
+    Resolving(OriginalJobKindLookup),
+    Preparing(BoundedJobFactory),
     Bounded(Box<dyn BoundedJob>),
-    AdmissionFailed(Vec<u8>),
-    UnknownKind,
+    AdmissionFailed(crate::component::extension_invocation_failure::RetainedExtensionFaultReply),
 }
 
 struct JobSlot {
-    kind: String,
-    input: Vec<u8>,
-    body: JobBody,
-    last_budget_seen: Option<JobBudget>,
-    stall_count: u32,
+    job:u64,
+    identity:(u64,u64),
+    source:Option<OriginalJobAdmission>,
+    source_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<OriginalJobAdmission>>,
+    body:Option<JobBody>,
+    outcome:Option<JobStep>,
+    outcome_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<JobStep>>,
+    rejected_output:Option<Vec<u8>>,
+    rejected_output_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<u8>>>,
+    cancelled:bool,
+    cancellation_fault_started:bool,
 }
-
+const JOB_SLOTS:usize=super::requests::REQUEST_SLOTS;
 crate::component_persistent_local! {
-    static JOBS: RefCell<HashMap<u64, JobSlot>> = RefCell::new(HashMap::new());
+    static JOBS: RefCell<[Option<JobSlot>;JOB_SLOTS]> = RefCell::new([const {None};JOB_SLOTS]);
 }
-
-/// 🛑️ Number of consecutive `step_job` calls a job may return `Running` with no progress bytes AND
-/// an unchanged `JobBudget` before the stall guard fails it — see `step_job`'s doc.
-const STALL_LIMIT: u32 = 3;
 
 //#endregion
 
 //#region 🔖️Lifecycle
 
-/// 📥️ `jobs::start-job` — admits `kind`'s registered state machine and parks it in the job table;
-/// the first `step_job` call performs its first state action. An id already in flight is kept,
-/// matching the old file's own doc note: the host never reuses a live job id, but a
-/// restarted-from-checkpoint actor may legitimately replay a `start-job` for one still in flight
-/// from the caller's point of view — see `restore_job` for the checkpoint-replay counterpart,
-/// which threads `restored` bytes this entry point always passes as `None`.
-pub async fn start_job(job: u64, kind: &str, input: &[u8]) {
-    spawn_job(job, kind, input, None).await;
+/// 🔎️ Quotes the registered original producer with the same retained request and caller identity.
+pub fn job_admission_demands(job:u64,cx:&semio_framework_job::StepContext<'_>)->Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>{
+    use semio_framework_value::{ValueError,ValueRefusalKind};
+    JOBS.with(|jobs|{let jobs=jobs.borrow();let slot=jobs.iter().flatten().find(|slot|slot.job==job).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"job has no original admission owner"))?;
+        if slot.identity!=(cx.operation().0,cx.generation().0){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"job admission quote differs from original identity"))}
+        let source=slot.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"job admission quote lost its original source"))?;
+        match slot.body.as_ref(){Some(JobBody::Resolving(lookup))=>Ok(lookup.demand(&source.kind)),Some(JobBody::Preparing(factory))=>(factory.demands)(job,&source.input,&source.checkpoint,cx),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"job admission is no longer preparing"))}
+    })
 }
 
-/// 📸️ Checkpoint-restore replay counterpart to `start_job` — never called from the WIT boundary
-/// directly (the `jobs` WIT interface has no `restored` parameter on `start-job`); called from the
-/// (leased) `⚛️reactor/📸️checkpoint/🦀️.rs::restore` for every entry `checkpoint_jobs()`
-/// packed, handing each kind's factory the last `checkpoint()` bytes it produced before the actor
-/// was torn down.
-pub async fn restore_job(job: u64, kind: &str, input: &[u8], checkpoint: Option<Vec<u8>>) {
-    spawn_job(job, kind, input, checkpoint).await;
-}
-
-async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>) {
-    if JOBS.with(|jobs| jobs.borrow().contains_key(&job)) {
-        return;
-    }
-    let Some(factory) = KIND_REGISTRY.with(|registry| registry.borrow().get(kind).copied()) else {
-        insert_slot(job, kind, input, JobBody::UnknownKind);
-        return;
-    };
-    let body = match factory(job, input, restored.as_deref()) {
-        Ok(owner) => JobBody::Bounded(owner),
-        Err(detail) => JobBody::AdmissionFailed(detail),
-    };
-    insert_slot(job, kind, input, body);
-}
-
-// 🚫️async: E4 pure table insert consumed by `spawn_job`'s three terminal arms; `HashMap::insert`
-// inside a `LocalKey::with` closure is a fixed sync-only language context.
-fn insert_slot(job: u64, kind: &str, input: &[u8], body: JobBody) {
-    JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body, last_budget_seen: None, stall_count: 0 }));
-}
-
-/// 🛑️ Signals the original owner, retaining its same slot until granted close turns make it shallow.
-pub async fn cancel_job(job: u64) {
-    JOBS.with(|jobs| {
+/// 🤝️ The actual caller keeps its exact request on denial or saturation; admission transfers handles only.
+pub async fn start_job(admission:&mut Option<OriginalJobAdmission>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+    use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+    let job=admission.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"job admission has no original request"))?.job;
+    let grant=cx.retained_grant();if cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+    JOBS.with(|jobs|{
         let mut jobs=jobs.borrow_mut();
-        let shallow=match jobs.get_mut(&job){Some(JobSlot{body:JobBody::Bounded(owner),..})=>{owner.cancel();owner.terminal_drop_is_shallow()},_=>true};
-        if shallow{jobs.remove(&job);}
-    });
+        if jobs.iter().flatten().any(|slot|slot.job==job){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job id already has an original owner"))}
+        let Some(destination)=jobs.iter_mut().find(|slot|slot.is_none())else{return Ok(false)};
+        let body=JobBody::Resolving(OriginalJobKindLookup::new());
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
+        *destination=Some(JobSlot{job,identity:(cx.operation().0,cx.generation().0),source:admission.take(),source_close:None,body:Some(body),outcome:None,outcome_close:None,rejected_output:None,rejected_output_close:None,cancelled:false,cancellation_fault_started:false});
+        Ok(true)
+    })
 }
 
-/// ▶️ `jobs::step-job` — an unknown job id is `Failed(job.unknown)`; an id started with an
-/// unrecognised kind is `Failed(job.unknown-kind)`; an id whose factory refused admission is
-/// `Failed(<the factory's own fault bytes>)` (and the slot is dropped in every one of those cases,
-/// matching the pre-rewrite one-shot-failure behaviour). Otherwise the admitted owner performs
-/// exactly one state action under `budget`.
-///
-/// Stall guard: compares `budget` against the previous call's — if unchanged AND the owner
-/// returned `Running` with no progress bytes, `stall_count` increments; any step with new progress
-/// OR a changed budget resets it to zero. Reaching `STALL_LIMIT` fails the job as `job.stalled`
-/// instead of returning `Running` forever.
-pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
-    let Some(outcome) = JOBS.with(|jobs| {
-        let mut jobs = jobs.borrow_mut();
-        let slot = jobs.get_mut(&job)?;
-        let JobBody::Bounded(owner) = &mut slot.body else { return None };
-        let budget_static = slot.last_budget_seen == Some(budget);
-        slot.last_budget_seen = Some(budget);
-        let step = owner.step(budget);
-        let stalled = match &step {
-            JobStep::Running(None) if budget_static => {
-                slot.stall_count += 1;
-                slot.stall_count >= STALL_LIMIT
-            }
-            JobStep::Running(_) => {
-                slot.stall_count = 0;
-                false
-            }
-            JobStep::Done(_) | JobStep::Failed(_) => false,
-        };
-        Some((step, stalled, owner.terminal_drop_is_shallow()))
-    }) else {
-        return refuse_unstepped(job);
-    };
-    let (step, stalled, shallow) = outcome;
-    if stalled {
-        let kind=JOBS.with(|jobs|jobs.borrow().get(&job).map(|slot|slot.kind.clone())).unwrap_or_default();
-        cancel_job(job).await;
-        let bytes=fault_bytes("job.stalled",format!("job {job} ({kind}) made no progress across {STALL_LIMIT} consecutive step-job calls with an unchanged budget"));
-        return if JOBS.with(|jobs|jobs.borrow().contains_key(&job)){JobStep::Running(Some(bytes))}else{JobStep::Failed(bytes)};
+/// 🛑️ Cancellation signals the same source and owner; only funded close turns remove its slot.
+pub async fn cancel_job(job:u64){JOBS.with(|jobs|{if let Some(slot)=jobs.borrow_mut().iter_mut().flatten().find(|slot|slot.job==job){slot.cancelled=true;if let Some(JobBody::Bounded(owner))=&mut slot.body{owner.cancel()}}});}
+
+pub(crate) fn close_original<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,closing:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+    use semio_framework_value::{RetainedCloneProgress,retirement::controlled::ControlledRetirement};
+    let grant=cx.retained_grant();if source.is_none()&&closing.is_none(){return Ok(true)}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+    if let Some(original)=source.take(){
+        match ControlledRetirement::new(original){Ok(owner)=>*closing=Some(owner),Err((error,original))=>{*source=Some(original);return Err(error)}}
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(false)
     }
-    if matches!(step,JobStep::Done(_)|JobStep::Failed(_)) {
-        if !shallow {
-            cancel_job(job).await;
-            return JobStep::Running(Some(fault_bytes("job.bounded-false-terminal",format!("bounded job {job} returned a terminal outcome while retaining its original deep owner"))));
+    let owner=closing.as_mut().unwrap();
+    if owner.terminal_is_empty(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*closing=None;return Ok(true)}
+    let step=owner.step(grant).map_err(|error|{match cx.consume_retained(error.retained_progress()){Ok(())=>error,Err(refusal)=>refusal}})?;
+    cx.consume_retained(step.progress())?;Ok(false)
+}
+
+fn close_body(slot:&mut JobSlot,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+    use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+    if !close_original(&mut slot.rejected_output,&mut slot.rejected_output_close,cx)?{return Ok(false)}
+    let Some(body)=slot.body.as_mut()else{return Ok(true)};
+    match body{
+        JobBody::Bounded(owner)=>{if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_drop_is_shallow(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"job close reports terminal with an original deep owner"))}},
+        JobBody::AdmissionFailed(reply)=>{if !reply.terminal_is_empty(){reply.begin_close();if let Some(output)=reply.advance(cx)?{slot.rejected_output=Some(output);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closing original diagnostic returned an owned output"))}return Ok(false)}},
+        JobBody::Resolving(_)|JobBody::Preparing(_)=>{},
+    }
+    let release=match body{JobBody::Bounded(owner)=>std::mem::size_of_val(owner.as_ref()),_=>0};let grant=cx.retained_grant();
+    if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<release{return Ok(false)}
+    cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})?;drop(slot.body.take());Ok(true)
+}
+
+/// ▶️ Every admitted state, retained output, refusal and final release uses the same original context.
+pub async fn step_job(job:u64,budget:JobBudget,original:&mut IoRunControl<'_,'_>,snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,semio_framework_value::ValueError>{
+    use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+    JOBS.with(|jobs|{
+        let mut jobs=jobs.borrow_mut();let entry=jobs.iter_mut().find(|entry|entry.as_ref().is_some_and(|slot|slot.job==job)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"job has no original registered owner"))?;let slot=entry.as_mut().unwrap();
+        if slot.identity!=(cx.operation().0,cx.generation().0){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job turn belongs to another original caller"))}
+        if !slot.cancellation_fault_started&&(slot.cancelled||cx.is_cancelled()){
+            if let Some(JobBody::Bounded(owner))=&mut slot.body{owner.cancel()}
+            if !close_body(slot,cx)?||!close_original(&mut slot.outcome,&mut slot.outcome_close,cx)?||!close_original(&mut slot.source,&mut slot.source_close,cx)?{return Ok(JobStep::Running(None))}
+            slot.cancellation_fault_started=true;slot.body=Some(JobBody::AdmissionFailed(crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::Canceled,"original job was canceled")))));return Ok(JobStep::Running(None))
         }
-        JOBS.with(|jobs|drop(jobs.borrow_mut().remove(&job)));
-    }
-    step
-}
-
-// 🚫️async: E1 pure error mapping consumed by `step_job`'s non-bounded arm; every branch is a table
-// read plus a `Fault` constructor, both sync.
-fn refuse_unstepped(job: u64) -> JobStep {
-    let Some((kind, body)) = JOBS.with(|jobs| jobs.borrow_mut().remove(&job).map(|slot| (slot.kind, slot.body))) else {
-        return JobStep::Failed(fault_bytes("job.unknown", format!("no job registered for id {job}")));
-    };
-    match body {
-        JobBody::AdmissionFailed(detail) => JobStep::Failed(detail),
-        JobBody::UnknownKind | JobBody::Bounded(_) => JobStep::Failed(fault_bytes("job.unknown-kind", format!("job kind {kind:?} has no admitted explicit bounded state machine"))),
-    }
+        if slot.outcome.is_some(){
+            if !close_body(slot,cx)?||!close_original(&mut slot.source,&mut slot.source_close,cx)?{return Ok(JobStep::Running(None))}
+            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;let outcome=slot.outcome.take().unwrap();*entry=None;return Ok(outcome)
+        }
+        match slot.body.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lost its retained body"))?{
+            JobBody::Resolving(lookup)=>{if budget.fuel==0{return Ok(JobStep::Running(None))}let source=slot.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lookup lost its retained source"))?;match lookup.advance(&source.kind,cx)?{OriginalJobKindLookupStep::Pending=>{},OriginalJobKindLookupStep::Found(candidate)=>slot.body=Some(JobBody::Preparing(candidate.factory)),OriginalJobKindLookupStep::Missing=>slot.body=Some(JobBody::AdmissionFailed(crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"job kind has no registered original owner")))))}Ok(JobStep::Running(None))},
+            JobBody::Preparing(factory)=>{let source=slot.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original job lost its admission source"))?;let demand=(factory.demands)(job,&source.input,&source.checkpoint,cx)?;let grant=cx.retained_grant();if grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes||grant.maximum_release_bytes<demand.maximum_release_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(JobStep::Running(None))}let body=match (factory.admit)(job,&mut source.input,&mut source.checkpoint,cx){Ok(Some(owner))=>Some(JobBody::Bounded(owner)),Ok(None)=>None,Err(error)=>Some(JobBody::AdmissionFailed(crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(error))))};if let Some(body)=body{slot.body=Some(body)}Ok(JobStep::Running(None))},
+            JobBody::AdmissionFailed(reply)=>{if let Some(bytes)=reply.advance(cx)?{slot.outcome=Some(JobStep::Failed(bytes))}Ok(JobStep::Running(None))},
+            JobBody::Bounded(owner)=>match owner.step(budget, original, snapshot, cx)?{step@JobStep::Running(_)=>Ok(step),step=>{slot.outcome=Some(step);Ok(JobStep::Running(None))}},
+        }
+    })
 }
 
 //#endregion
@@ -333,25 +317,18 @@ fn refuse_unstepped(job: u64) -> JobStep {
 pub struct JobCheckpointEntry {
     pub job: u64,
     pub kind: String,
-    pub input: Vec<u8>,
+    pub input: Option<Vec<u8>>,
     pub checkpoint: Option<Vec<u8>>,
 }
 
 /// 📸️ Every job this actor currently has open, in no particular order — `restore_job` (called by
 /// the leased `checkpoint::restore` for each entry) is what re-establishes them.
 pub async fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
-    JOBS.with(|jobs| {
-        jobs.borrow()
-            .iter()
-            .map(|(job, slot)| {
-                let checkpoint = match &slot.body {
-                    JobBody::Bounded(owner) => owner.checkpoint(),
-                    JobBody::UnknownKind | JobBody::AdmissionFailed(_) => None,
-                };
-                JobCheckpointEntry { job: *job, kind: slot.kind.clone(), input: slot.input.clone(), checkpoint }
-            })
-            .collect()
-    })
+    JOBS.with(|jobs|jobs.borrow().iter().flatten().filter_map(|slot|{
+        let source=slot.source.as_ref()?;
+        let checkpoint=match slot.body.as_ref(){Some(JobBody::Bounded(owner))=>owner.checkpoint(),_=>None};
+        Some(JobCheckpointEntry{job:slot.job,kind:source.kind.clone(),input:source.input.clone(),checkpoint})
+    }).collect())
 }
 
 //#endregion
@@ -414,17 +391,24 @@ pub(crate) struct TwoPhaseBoundedJob {
     fault_prefix: &'static str,
     state: TwoPhaseState,
     input: Vec<u8>,
+    restored:Option<Vec<u8>>,
+    checkpoint_scan:usize,
+    checkpoint_complete:bool,
+    failure:Option<crate::component::extension_invocation_failure::RetainedExtensionFaultReply>,
+    aborted_output:Option<Vec<u8>>,
+    close_payload:Option<(Vec<u8>,Option<Vec<u8>>,Option<Vec<u8>>)>,
+    source_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(Vec<u8>,Option<Vec<u8>>,Option<Vec<u8>>)>>,
     decode: BuiltinPhaseFn,
-    execute: BuiltinPhaseFn,
+    execute: BuiltinExecuteFn,
     cancelled: bool,
 }
 
 impl TwoPhaseBoundedJob {
     /// 🎟️ Admits the machine, starting at `Execute` when the restore bytes say this kind already
     /// reported `PHASE_DECODED` before the actor was torn down.
-    pub(crate) fn admit(fault_prefix: &'static str, input: &[u8], restored: Option<&[u8]>, decode: BuiltinPhaseFn, execute: BuiltinPhaseFn) -> Self {
-        let state = if restored == Some(PHASE_DECODED) { TwoPhaseState::Execute } else { TwoPhaseState::Decode };
-        Self { fault_prefix, state, input: input.to_vec(), decode, execute, cancelled: false }
+    pub(crate) fn admit(fault_prefix: &'static str, input: Vec<u8>, restored: Option<Vec<u8>>, decode: BuiltinPhaseFn, execute: BuiltinExecuteFn) -> Self {
+        let checkpoint_complete=restored.is_none();
+        Self { fault_prefix, state:TwoPhaseState::Decode, input, restored, checkpoint_scan:0,checkpoint_complete,failure:None,aborted_output:None,close_payload:None,source_close:None,decode, execute, cancelled: false }
     }
 
     /// 🚫️async: E1 pure price table consumed by `step`'s sync budget gate.
@@ -438,36 +422,47 @@ impl TwoPhaseBoundedJob {
 }
 
 impl BoundedJob for TwoPhaseBoundedJob {
-    fn step(&mut self, budget: JobBudget) -> JobStep {
-        if self.cancelled {
-            self.state = TwoPhaseState::Complete;
-            return JobStep::Failed(fault_bytes(&format!("{}.cancelled", self.fault_prefix), format!("{} was cancelled before its next state action", self.fault_prefix)));
+    fn step(&mut self,budget:JobBudget,original:&mut IoRunControl<'_,'_>,snapshot:&mut SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<JobStep,semio_framework_value::ValueError>{
+        use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+        if self.cancelled||cx.is_cancelled(){return Ok(JobStep::Running(None))}
+        if let Some(reply)=&mut self.failure{return Ok(match reply.advance(cx)?{Some(bytes)=>JobStep::Failed(bytes),None=>JobStep::Running(None)})}
+        if !self.checkpoint_complete{
+            let source=self.restored.as_ref().unwrap();
+            if source.len()!=PHASE_DECODED.len(){self.failure=Some(crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::InvalidValue,"original job checkpoint has an invalid phase"))));return Ok(JobStep::Running(None))}
+            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_copy_bytes==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}
+            let matched=source[self.checkpoint_scan]==PHASE_DECODED[self.checkpoint_scan];cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;self.checkpoint_scan+=1;
+            if !matched{self.failure=Some(crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::InvalidValue,"original job checkpoint has an unknown phase"))))}else if self.checkpoint_scan==PHASE_DECODED.len(){self.checkpoint_complete=true;self.state=TwoPhaseState::Execute}
+            return Ok(JobStep::Running(None))
         }
-        let price = self.price();
-        if budget.fuel < price {
-            self.state = TwoPhaseState::Complete;
-            return JobStep::Failed(fault_bytes(&format!("{}.budget-exhausted", self.fault_prefix), format!("{} needs {price} work units for its next state action and was granted {}", self.fault_prefix, budget.fuel)));
+        if budget.fuel<self.price(){return Ok(JobStep::Running(None))}
+        let result=match self.state{
+            TwoPhaseState::Decode=>(self.decode)(&self.input),
+            TwoPhaseState::Execute=>match self.execute{BuiltinExecuteFn::Pure(execute)=>execute(&self.input),BuiltinExecuteFn::OriginalIo(execute)=>execute(&self.input,original,snapshot)},
+            TwoPhaseState::Complete=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job has no remaining state action")),
+        };
+        Ok(match result{
+            Ok(bytes)=>{if self.state==TwoPhaseState::Decode{self.state=TwoPhaseState::Execute;JobStep::Running(Some(bytes))}else{self.state=TwoPhaseState::Complete;JobStep::Done(bytes)}},
+            Err(error)=>{self.state=TwoPhaseState::Complete;self.failure=Some(crate::component::extension_invocation_failure::RetainedExtensionFaultReply::new(crate::component::extension_invocation_failure::ExtensionInvocationCause::Fault(error)));JobStep::Running(None)},
+        })
+    }
+
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+        use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+        if let Some(reply)=&mut self.failure{
+            if !reply.terminal_is_empty(){reply.begin_close();if let Some(bytes)=reply.advance(cx)?{self.aborted_output=Some(bytes);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closing original job failure returned unpublished bytes"))}return Ok(false)}
+            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.failure=None;return Ok(false)
         }
-        match self.state {
-            TwoPhaseState::Decode => match (self.decode)(&self.input) {
-                Ok(progress) => {
-                    self.state = TwoPhaseState::Execute;
-                    JobStep::Running(Some(progress))
-                }
-                Err(error) => {
-                    self.state = TwoPhaseState::Complete;
-                    JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error))
-                }
-            },
-            TwoPhaseState::Execute => {
-                self.state = TwoPhaseState::Complete;
-                match (self.execute)(&self.input) {
-                    Ok(bytes) => JobStep::Done(bytes),
-                    Err(error) => JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error)),
-                }
-            }
-            TwoPhaseState::Complete => JobStep::Failed(fault_bytes(&format!("{}.terminal", self.fault_prefix), format!("{} has no state action left to advance", self.fault_prefix))),
+        if self.close_payload.is_none()&&self.source_close.is_none()&&(self.input.capacity()!=0||self.restored.is_some()||self.aborted_output.is_some()){
+            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.close_payload=Some((std::mem::take(&mut self.input),self.restored.take(),self.aborted_output.take()));
         }
+        close_original(&mut self.close_payload,&mut self.source_close,cx)
+    }
+
+    fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        use semio_framework_value::RetirementDemand;
+        if let Some(reply)=&self.failure{return reply.demands(copy)}
+        if let Some(owner)=&self.source_close{return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?,..Default::default()})}
+        Ok(RetirementDemand{depth:usize::from(self.close_payload.is_some()||self.input.capacity()!=0||self.restored.is_some()||self.aborted_output.is_some()),..Default::default()})
     }
 
     fn cancel(&mut self) {
@@ -478,9 +473,7 @@ impl BoundedJob for TwoPhaseBoundedJob {
         matches!(self.state, TwoPhaseState::Execute).then(|| PHASE_DECODED.to_vec())
     }
 
-    fn terminal_drop_is_shallow(&self) -> bool {
-        true
-    }
+    fn terminal_drop_is_shallow(&self)->bool{self.input.capacity()==0&&self.restored.is_none()&&self.failure.is_none()&&self.aborted_output.is_none()&&self.close_payload.is_none()&&self.source_close.is_none()}
 }
 //#endregion
 
@@ -492,7 +485,7 @@ impl BoundedJob for TwoPhaseBoundedJob {
 // 🧬️ `FromValue` only: this struct is decoded exclusively by `dsl::os_pack::json::from_json_str`
 // (`from_json_str<T: FromValue>`), never by serde. The `serde::Deserialize` derive was vestigial and
 // was the sole reason `io_schema::IoPayload` still had to implement `serde::Deserialize`.
-#[derive(::semio_framework_value_derive::FromValue)]
+#[derive(::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 struct IoRunInput {
     source: String,
     target: String,
@@ -501,13 +494,15 @@ struct IoRunInput {
 
 // 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory`, whose shape a factory must
 // match exactly; the admission body is a pure constructor call.
-fn job_io_run(_job: u64, input: &[u8], restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
-    Ok(Box::new(TwoPhaseBoundedJob::admit("job.io-run", input, restored, decode_io_run, execute_io_run)))
+fn two_phase_job_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>,_cx:&semio_framework_job::StepContext<'_>)->Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>{original_job_admission_demands::<TwoPhaseBoundedJob>(input,restored)}
+
+fn job_io_run(_job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>,semio_framework_value::ValueError> {
+    admit_original_job(input,restored,cx,|input,restored|TwoPhaseBoundedJob::admit("job.io-run", input, restored, decode_io_run, BuiltinExecuteFn::OriginalIo(execute_io_run)))
 }
 
 // 🚫️async: E4 fn-pointer slot — see `job_io_run`'s own comment above; same factory shape.
-fn job_io_sniff(_job: u64, input: &[u8], restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
-    Ok(Box::new(TwoPhaseBoundedJob::admit("job.io-sniff", input, restored, decode_io_sniff, execute_io_sniff)))
+fn job_io_sniff(_job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>,semio_framework_value::ValueError> {
+    admit_original_job(input,restored,cx,|input,restored|TwoPhaseBoundedJob::admit("job.io-sniff", input, restored, decode_io_sniff, BuiltinExecuteFn::Pure(execute_io_sniff)))
 }
 
 /// 🔎️ Validates `input` decodes as `{source, target, payload}` and reports the hop identity as the
@@ -539,8 +534,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 }
 
 // 🚫️async: E4 phase slot — see `decode_io_run`; the native call inside is settled by `settle_in_step`.
-fn execute_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    settle_in_step("job.io-run", run_io_run(input))
+fn execute_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>) -> Result<Vec<u8>, semio_framework::Fault> {
+    settle_in_step("job.io-run", run_io_run(input, original, snapshot))
 }
 
 // 🚫️async: E4 phase slot — see `decode_io_run`; the native call inside is settled by `settle_in_step`.
@@ -548,25 +543,41 @@ fn execute_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     settle_in_step("job.io-sniff", run_io_sniff(input))
 }
 
-/// 🌉️ Body unchanged from the pre-rewrite `run_io_run` — only the return type moved from
-/// `JobOutcome` to `Result<Vec<u8>, Fault>` so every registry entry (builtin or plugin-authored)
-/// shares one outcome shape; `step_job` re-encodes an `Err` into fault bytes uniformly.
-async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+#[derive(semio_framework_value::RetireOwned)]
+struct JobIoReceiving {
+    input: Option<IoRunInput>,
+    source: Option<semio_framework_artifact_reference::ArtifactDialect>,
+    target: Option<semio_framework_artifact_reference::ArtifactDialect>,
+    route: Option<semio_framework::io_schema::IoRoute>,
+    payload: Option<semio_framework::io_schema::IoPayload>,
+    outcome: Option<semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload>>,
+}
 
-    let input_text = std::str::from_utf8(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
-    let IoRunInput { source, target, payload } =
-        semio_framework_pack_json::from_json_str::<IoRunInput>(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
-    let source = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
-    let target = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
-    let descriptor = match semio_framework_os_kernel::io::io_mechanism::io_entries().into_iter().find(|entry| entry.from == source && entry.into == target) {
-        Some(descriptor) => descriptor,
-        None => return Err(fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate()))),
-    };
-    let fidelity = descriptor.fidelity;
-    let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
-    let outcome = semio_framework_os_kernel::io::io_mechanism::io_run(&route, payload).await.map_err(|error| fault("job.io-run", error.cause.into_message()))?;
-    Ok(semio_framework_pack_json::to_json_string(&outcome.value).into_bytes())
+/// 🌉️ Retains the original parsed request and exact hop result inside its admitted native recipient.
+async fn run_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>) -> Result<Vec<u8>, semio_framework::Fault> {
+    use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
+    original.receive_nested::<JobIoReceiving, Result<Vec<u8>, semio_framework::Fault>>(|slot, run| {
+        *slot = Some(JobIoReceiving { input: None, source: None, target: None, route: None, payload: None, outcome: None });
+        let frame = slot.as_mut().unwrap();
+        Ok(settle_in_step("job.io-run", async {
+            let text = std::str::from_utf8(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
+            frame.input = Some(semio_framework_pack_json::from_json_str::<IoRunInput>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?);
+            let request = frame.input.as_ref().unwrap();
+            frame.source = Some(semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&request.source).map_err(|message| fault("job.io-run", message))?);
+            frame.target = Some(semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&request.target).map_err(|message| fault("job.io-run", message))?);
+            let source = frame.source.as_ref().unwrap();
+            let target = frame.target.as_ref().unwrap();
+            let descriptor = semio_framework_os_kernel::io::io_mechanism::io_entries().into_iter().find(|entry| &entry.from == source && &entry.into == target).ok_or_else(|| fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate())))?;
+            let fidelity = descriptor.fidelity;
+            frame.route = Some(semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity });
+            frame.payload = Some(std::mem::replace(&mut frame.input.as_mut().unwrap().payload, semio_framework::io_schema::IoPayload::Binary(Vec::new())));
+            frame.outcome = Some(semio_framework_os_kernel::io::io_mechanism::io_run_with_snapshot_control(frame.route.as_ref().unwrap(), &mut frame.payload, run, snapshot).await);
+            match frame.outcome.as_ref().unwrap() {
+                Ok(outcome) => Ok(semio_framework_pack_json::to_json_string(&outcome.value).into_bytes()),
+                Err(error) => Err(fault("job.io-run", error.cause.message.as_ref())),
+            }
+        }))
+    }).map_err(|error| semio_framework_diagnostic::FaultFrom::to_fault(&error))?
 }
 
 /// 🔍️ Body unchanged from the pre-rewrite `run_io_sniff` — `Ok` carries a single-byte `Vec<u8>` of
@@ -595,3 +606,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🎟️admission/🦀️.rs"]
+mod original_job_admission_tests;

@@ -10,12 +10,12 @@
     ],
     "packCapacity": 8194,
     "forwards": [
-      0,
-      18446744073709552000
+      "0",
+      "18446744073709551615"
     ],
     "inverse": [
-      9,
-      7
+      "9",
+      "7"
     ],
     "edit": "owned-edit-🧵",
     "actor": "actor-owned",

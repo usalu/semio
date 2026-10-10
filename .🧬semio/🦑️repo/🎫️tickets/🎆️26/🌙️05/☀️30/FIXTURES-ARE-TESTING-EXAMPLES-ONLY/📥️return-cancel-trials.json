@@ -1,0 +1,46 @@
+{
+  "observationOnly": true,
+  "execution": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧬️schema/🔣️.json",
+      "sha256": "7bb00e34d25647a465364fb26359e0af39e27ec8df4468c9e5ade88eb8ec1c08",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧫️fixtures/🔣️.json",
+      "sha256": "785ed79f5470aa2af3d9b9564763186f21b2f7ca80df3357aa1d0638369d3cf5",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧪️tests/🦀️.rs",
+      "sha256": "eeaf52ceb1a8904f78b8946600a4161aabd549e8389fb527de1afb19e0d55e7f",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧬️schema/⚠️cancellation/🔣️.json",
+      "sha256": "ca860dc4ee60e75a06562c05ca57c75fbbb82ef4744566dffcd0815d29e598ef",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🟦️.ts",
+      "sha256": "23f2fa753856188c90481cf08c9d2607edbae383592f7acf14875f2f0af00eff",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🦀️.rs",
+      "sha256": "c2332bcc2d65580284cbc5bec7069a24435ce4d38f5781a0d0460bbb2c8e3aeb",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "d1df5a90981a371cd98fef007201735728d466cf3b292eda9b568310313efbf6",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "618545d11aa540bc518cd3170334dc8fbc03b0e65eedd597b8df3520776a0b0e",
+      "ownership": false
+    }
+  ]
+}

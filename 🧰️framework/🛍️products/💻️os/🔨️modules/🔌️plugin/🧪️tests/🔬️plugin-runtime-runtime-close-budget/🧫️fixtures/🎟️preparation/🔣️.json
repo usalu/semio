@@ -1,8 +1,28 @@
 {
   "schema": "framework.plugin.original-preparation-receipt",
-  "rows": [[7, 1, 29, 16384, 0], [7, 1, 17, 0, 8192]],
-  "currencies": ["items", "copy", "capacity", "release"],
-  "grantSource": "mounted-owner-preparation-policy",
+  "rows": [
+    [
+      7,
+      1,
+      29,
+      16384,
+      0
+    ],
+    [
+      7,
+      1,
+      17,
+      0,
+      8192
+    ]
+  ],
+  "currencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release"
+  ],
+  "grantSource": "original-phase-policy-and-context-remaining",
   "receiptSource": "original-store-preparation",
   "checkpointIsNotReceipt": true,
   "oneOutstandingReceipt": true

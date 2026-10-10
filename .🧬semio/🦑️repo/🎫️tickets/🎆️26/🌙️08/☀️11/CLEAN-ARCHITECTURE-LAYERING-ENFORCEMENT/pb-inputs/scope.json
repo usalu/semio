@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "roots": [
+    "🧰️framework/🔨️modules/🎒️pack",
+    "🧰️framework/🔨️modules/🏃️process",
+    "🧰️framework/🔨️modules/🧬️schema"
+  ],
+  "files": [
+    "package.json",
+    "nx.json",
+    "tsconfig.json",
+    "🧰️framework/🛍️products/💻️os/🟦️.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/📜️script.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/parent.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/scope.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/defining.json"
+  ],
+  "extensions": [
+    ".ts",
+    ".rs",
+    ".json",
+    ".toml",
+    ".cjs"
+  ],
+  "excludeDirectories": [
+    "node_modules",
+    "target",
+    "dist",
+    "🗑️generated"
+  ],
+  "qualification": "complete selected physical Pack/Process/Schema and explicit OS decoder/configuration sources; not all dynamically loaded OS/Repo transitive code and not native acceptance"
+}

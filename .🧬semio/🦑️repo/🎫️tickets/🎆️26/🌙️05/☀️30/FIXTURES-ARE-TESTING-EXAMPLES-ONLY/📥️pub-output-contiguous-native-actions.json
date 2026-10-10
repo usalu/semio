@@ -1,0 +1,18 @@
+{
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddf5\ufe0foperation-wire/\ud83d\udce6\ufe0foutput/\ud83e\udd80\ufe0f.rs",
+      "action": "updated",
+      "beforeSha256": "115a47cf94069a60d157f48a054dfcb73a014027d4efd724d273ae2f78dbd690",
+      "afterSha256": "b67fb8bf2583c1e905a397036bb15b0d1c29c57f900bdf5951d425948851fd78",
+      "scope": "actual borrowed partial Vec slice type observer"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddf5\ufe0foperation-wire/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "action": "updated",
+      "beforeSha256": "30751708ee1012abefffdbb2661091462821608d835dc99f4facf97bc90bdb43",
+      "afterSha256": "b4ba340b2430fdcff4114236fb8531aa658e0a412b03c35a28ed378efc3cd972",
+      "scope": "native original protocol output fixed-policy System/cancel-cut/refused prefix law authored unrun; transferred final backing release observed explicitly"
+    }
+  ]
+}

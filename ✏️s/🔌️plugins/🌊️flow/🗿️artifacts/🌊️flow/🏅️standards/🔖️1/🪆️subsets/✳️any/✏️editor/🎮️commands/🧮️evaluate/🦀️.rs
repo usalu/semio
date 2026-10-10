@@ -46,6 +46,7 @@ pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
 //#endregion 🔖️FlowEvalResolve
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Evaluate {}
 
 pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {

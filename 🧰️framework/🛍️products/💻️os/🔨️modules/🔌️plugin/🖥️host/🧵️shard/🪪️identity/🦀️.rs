@@ -18,6 +18,10 @@ impl std::fmt::Debug for ShardIdentityIssueRefused{fn fmt(&self,f:&mut std::fmt:
 
 /// 🧾️ Consuming custody survives actor yields and failures without creating another authority.
 pub struct OriginalShardIdentity{birth:RetainedCloneProgress,policy:ShardIdentityPolicy,receipt:Option<NativeForwardedEncodeReceipt>,recipient:Pin<Box<NativeEncodeRetirementRecipient>>,observer:Box<Observer<'static>>,allocate:Box<NativeEncodeAllocationPort<'static>>}
+struct OriginalShardIdentityLoan<'a>{original:&'a mut Option<NativeForwardedEncodeReceipt>,identity:Option<EntityIdentityAuthority<'a>>}
+impl<'a> std::ops::Deref for OriginalShardIdentityLoan<'a>{type Target=EntityIdentityAuthority<'a>;fn deref(&self)->&Self::Target{self.identity.as_ref().expect("original shard loan remains borrowed")}}
+impl std::ops::DerefMut for OriginalShardIdentityLoan<'_>{fn deref_mut(&mut self)->&mut Self::Target{self.identity.as_mut().expect("original shard loan remains borrowed")}}
+impl Drop for OriginalShardIdentityLoan<'_>{fn drop(&mut self){let identity=self.identity.take().expect("original shard loan returns exactly once");let receipt=identity.pause_forwarded().expect("original shard loan retains its forwarded authority").detach().expect("original shard loan ends between synchronous receiving hops");assert!(self.original.is_none(),"original shard receipt slot remains reserved by its unique loan");*self.original=Some(receipt);}}
 impl OriginalShardIdentity{
  /// 🏭️ The original port admits the stable return slot before its physical birth.
  pub fn issue(policy:ShardIdentityPolicy,mut observer:Box<Observer<'static>>,mut allocate:Box<NativeEncodeAllocationPort<'static>>)->Result<Self,ShardIdentityIssueRefused>{
@@ -38,33 +42,27 @@ impl OriginalShardIdentity{
  pub fn owned_bytes(&self)->usize{self.receipt.as_ref().expect("original shard identity exists between loans").owned_bytes()}
  /// 🎟️ Returns the independently authored policy without inferring it from work or owned bytes.
  pub fn policy(&self)->ShardIdentityPolicy{self.policy}
- fn loan(&mut self)->Result<EntityIdentityAuthority<'_>,ValueError>{
+ fn loan(&mut self)->Result<OriginalShardIdentityLoan<'_>,ValueError>{
   let receipt=self.receipt.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original shard identity is already loaned"))?;
   match receipt.bind(&mut *self.allocate,self.recipient.as_mut().get_mut()){
-   Ok(continuation)=>Ok(EntityIdentityAuthority::resume_forwarded(continuation,&mut *self.observer)),
+   Ok(continuation)=>Ok(OriginalShardIdentityLoan{original:&mut self.receipt,identity:Some(EntityIdentityAuthority::resume_forwarded(continuation,&mut *self.observer))}),
    Err((error,receipt))=>{self.receipt=Some(receipt);Err(error)}
   }
  }
  /// 📸️ Resumes the original identity through the entire asynchronous checkpoint callback.
  pub async fn checkpoint(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance)->Result<Vec<u8>,PluginHostError>{
   let mut identity=self.loan().map_err(PluginHostError::NativeIo)?;
-  let result=runtime.checkpoint(instance,&mut identity).await;
-  let receipt=identity.pause_forwarded().map_err(PluginHostError::NativeIo)?.detach().map_err(PluginHostError::NativeIo)?;
-  self.receipt=Some(receipt);result
+  runtime.checkpoint(instance,&mut *identity).await
  }
  /// ▶️ Restores through the same receiving port, cumulative ledger and cancellation observer.
  pub async fn restore(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,state:&[u8])->Result<(),PluginHostError>{
   let mut identity=self.loan().map_err(PluginHostError::NativeIo)?;
-  let result=runtime.restore(instance,state,&mut identity).await;
-  let receipt=identity.pause_forwarded().map_err(PluginHostError::NativeIo)?.detach().map_err(PluginHostError::NativeIo)?;
-  self.receipt=Some(receipt);result
+  runtime.restore(instance,state,&mut *identity).await
  }
  /// 🏃️ Retains the same caller admission after successful, yielded and refused actor turns.
  pub async fn execute_turn(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,events:&[semio_framework::kernel::Event],budget:semio_framework::kernel::Budget)->Result<semio_framework::kernel::TurnResult,TurnFault>{
-  let mut identity=self.loan().map_err(crate::identity_turn_fault)?;
-  let result=runtime.execute_turn(instance,events,budget,&mut identity).await;
-  let receipt=identity.pause_forwarded().map_err(crate::identity_turn_fault)?.detach().map_err(crate::identity_turn_fault)?;
-  self.receipt=Some(receipt);result
+  let mut identity=self.loan().map_err(super::super::identity_turn_fault)?;
+  runtime.execute_turn(instance,events,budget,&mut *identity).await
  }
 }
 

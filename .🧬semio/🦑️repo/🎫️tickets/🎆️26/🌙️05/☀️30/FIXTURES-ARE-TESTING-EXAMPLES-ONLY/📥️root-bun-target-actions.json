@@ -1,0 +1,30 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+    "action": "update",
+    "beforeSha256": "10c5ed64f938cabde405eb64a479c531143e88461054d9a18932761d26e134e3",
+    "afterSha256": "1708a52633c45538c5c9c0e6c5c199ffe0688cd74bef22b79744e1f71cb6c9f2",
+    "qualification": "Register original Bun ownership/native/source test and current physical-scope read-only producer in existing permanent caching script; inherited normal orchestrator policy, no test data runtime dependencies"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+    "action": "update",
+    "beforeSha256": "115d3678498f1f8732074491d29f77c487f5840569ad03fbc2d47d49ee98af94",
+    "afterSha256": "f4529f1252e97fe4315b7a69c43406839b73d45470955f3fe75d0c1aad671b0e",
+    "qualification": "Existing genuine repo project registers lower Bun workspace boundary command and shared policy dependencies; original Nx target gains actual lower authority inputs"
+  },
+  {
+    "path": ".vscode/launch.json",
+    "action": "update",
+    "beforeSha256": "d68f01ba186e65cfd6c31bc53b59f2600652fbdf3ae1b20bce631ff46306098a",
+    "afterSha256": "f9a7af81e9a1b1d4eadd8de100308b871859de71a94716fcfd4bd14019735691",
+    "qualification": "Register canonical Bun ownership verification launch next to original native input vocabulary, same clean-gate grouping/order"
+  },
+  {
+    "path": ".vscode/🧩️launch.seed.jsonc",
+    "action": "update",
+    "beforeSha256": "3048cd3d38daff83c87f4a9022bce0330c203463a72c76b1a62fd91f2c5ec3f7",
+    "afterSha256": "ec1b00d88b5d25d69fd1b0776a271f9e7c4a446dc9e51005099fe2de729ed63c",
+    "qualification": "Register canonical Bun ownership verification launch next to original native input vocabulary, same clean-gate grouping/order"
+  }
+]

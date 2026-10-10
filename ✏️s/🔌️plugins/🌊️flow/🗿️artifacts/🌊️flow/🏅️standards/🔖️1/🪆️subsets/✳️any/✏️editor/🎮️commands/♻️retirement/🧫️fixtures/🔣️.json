@@ -1,0 +1,302 @@
+{
+  "schema": "semio.flow.command-retirement.v1",
+  "commands": [
+    {
+      "owner": "AddWidget",
+      "fields": [
+        "kind",
+        "neuron_kind",
+        "x",
+        "y",
+        "label",
+        "action",
+        "format"
+      ]
+    },
+    {
+      "owner": "RemoveWidget",
+      "fields": [
+        "widget_id"
+      ]
+    },
+    {
+      "owner": "DuplicateWidget",
+      "fields": [
+        "widget_id"
+      ]
+    },
+    {
+      "owner": "DeleteSelection",
+      "fields": []
+    },
+    {
+      "owner": "Disconnect",
+      "fields": [
+        "synapse_id"
+      ]
+    },
+    {
+      "owner": "ConnectMediaPorts",
+      "fields": [
+        "source_node_id",
+        "source_port_id",
+        "target_node_id",
+        "target_port_id"
+      ]
+    },
+    {
+      "owner": "MoveMediaNode",
+      "fields": [
+        "node_id",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "owner": "Reorganize",
+      "fields": []
+    },
+    {
+      "owner": "PatchFlowWidgets",
+      "fields": [
+        "widget_ids",
+        "field",
+        "value"
+      ]
+    },
+    {
+      "owner": "RenameFlowWidget",
+      "fields": [
+        "old_id",
+        "value"
+      ]
+    },
+    {
+      "owner": "NodeGraphEdit",
+      "fields": [
+        "operations"
+      ]
+    },
+    {
+      "owner": "SpotlightCommit",
+      "fields": [
+        "operations"
+      ]
+    },
+    {
+      "owner": "RunExtensionAction",
+      "fields": [
+        "action_id"
+      ]
+    },
+    {
+      "owner": "SetActiveExample",
+      "fields": [
+        "example_id"
+      ]
+    },
+    {
+      "owner": "Evaluate",
+      "fields": []
+    },
+    {
+      "owner": "FocusSelection",
+      "fields": []
+    },
+    {
+      "owner": "NodeGraphViewport",
+      "fields": [
+        "viewport"
+      ]
+    },
+    {
+      "owner": "SetLodMode",
+      "fields": [
+        "value"
+      ]
+    },
+    {
+      "owner": "SetProximityDistance",
+      "fields": [
+        "value"
+      ]
+    },
+    {
+      "owner": "SetGridVisible",
+      "fields": [
+        "pressed"
+      ]
+    },
+    {
+      "owner": "SetGridSnapEnabled",
+      "fields": [
+        "pressed"
+      ]
+    },
+    {
+      "owner": "SetGridFactor",
+      "fields": [
+        "value"
+      ]
+    },
+    {
+      "owner": "ContextMenuAt",
+      "fields": [
+        "id"
+      ]
+    },
+    {
+      "owner": "SetPreviewOff",
+      "fields": [
+        "ids",
+        "value"
+      ]
+    },
+    {
+      "owner": "OpenSpotlight",
+      "fields": []
+    },
+    {
+      "owner": "ReplaceImage",
+      "fields": [
+        "id"
+      ]
+    },
+    {
+      "owner": "SetCatalogueSections",
+      "fields": [
+        "sections_json"
+      ]
+    },
+    {
+      "owner": "ToggleExtension",
+      "fields": [
+        "id",
+        "enabled"
+      ]
+    },
+    {
+      "owner": "AddGeneration",
+      "fields": []
+    },
+    {
+      "owner": "RemoveGeneration",
+      "fields": [
+        "id"
+      ]
+    },
+    {
+      "owner": "SelectGeneration",
+      "fields": [
+        "id"
+      ]
+    },
+    {
+      "owner": "RenameGeneration",
+      "fields": [
+        "id",
+        "name"
+      ]
+    },
+    {
+      "owner": "UpdateGenerationValues",
+      "fields": [
+        "generation_id",
+        "question_id",
+        "value"
+      ]
+    },
+    {
+      "owner": "FlowEvalTick",
+      "fields": [
+        "window_id",
+        "window_kind_id"
+      ]
+    },
+    {
+      "owner": "FlowEvalResolve",
+      "fields": [
+        "window_id",
+        "node_hash",
+        "output_json"
+      ]
+    },
+    {
+      "owner": "SetContributions",
+      "fields": [
+        "json",
+        "page",
+        "page_count"
+      ]
+    }
+  ],
+  "nested": [
+    {
+      "owner": "Delete",
+      "fields": [
+        "node_ids",
+        "synapse_ids"
+      ]
+    },
+    {
+      "owner": "InsertPort",
+      "fields": [
+        "node_id",
+        "side",
+        "index"
+      ]
+    },
+    {
+      "owner": "Connect",
+      "fields": [
+        "source_node_id",
+        "source_port_id",
+        "target_node_id",
+        "target_port_id"
+      ]
+    },
+    {
+      "owner": "Disconnect",
+      "fields": [
+        "synapse_id"
+      ]
+    },
+    {
+      "owner": "Move",
+      "fields": [
+        "gesture_id",
+        "node_ids",
+        "dx",
+        "dy"
+      ]
+    },
+    {
+      "owner": "SetSlider",
+      "fields": [
+        "widget_id",
+        "value"
+      ]
+    },
+    {
+      "owner": "Viewport2d",
+      "fields": [
+        "x",
+        "y",
+        "zoom"
+      ]
+    }
+  ],
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    9,
+    37
+  ],
+  "originalHeadersCopyBytes": 0,
+  "terminalDropBytes": 0
+}

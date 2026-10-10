@@ -1,0 +1,46 @@
+{
+  "observedOnly": true,
+  "execution": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧬️schema/🔣️.json",
+      "sha256": "b39256337ae2724ff54dc721d55e20ae83573d9a96d7bfea2717b71a1c6984ae",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧾️receipt/🧪️tests/🟦️.ts",
+      "sha256": "68ebaaa84eba8d3eed2a26876e4374d3c8de6c6e7a32bb175d8f3f56401ec15c",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧬️schema/🔣️.json",
+      "sha256": "7850ce3ccc727cc1eb0fe0e37b11257c9e4ad8516d005227bfb65b047159fa34",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🔢️occurrence-order/🧪️tests/🟦️.ts",
+      "sha256": "31a4bc42ba701dee5666d724d3d867bce90f4754e0281fa0ae45a9eb94da223c",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🧺️set.json",
+      "sha256": "add4403863423fee51b13f9e2d9128ee1b66f9190df7ab52926da044f09eead9",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧺️set.ts",
+      "sha256": "b0717de89dd42b2506561308322e449b0c79bbedd88e28900be5600db970cd6b",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧬️schema/🔣️actor.json",
+      "sha256": "cdad48030b1b2d466e10f4bc1996411cdee53bad28e296ef4b6fe505f289ddbe",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🟦️.ts",
+      "sha256": "db5d1efdf1f6ebe58f333f6cf9c7996b0edaa2ff4280f6d8660afb8049da87df",
+      "ownership": false
+    }
+  ]
+}

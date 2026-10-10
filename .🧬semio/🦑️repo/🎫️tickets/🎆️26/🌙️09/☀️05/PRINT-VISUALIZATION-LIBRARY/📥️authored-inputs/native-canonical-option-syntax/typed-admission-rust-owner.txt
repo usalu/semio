@@ -1,8 +1,0 @@
-/// 🧴️ The owned schema validator checks declared carriers without evaluating native arithmetic grammar.
-fn validate_option_value(value:&DslValue,descriptor:ChartOptionDescriptor)->Result<(),String>{
- let contract=descriptor.contract.as_object().ok_or_else(||"native option contract must be an object".to_string())?.iter().filter(|(key,_)|["type","enum","minimum"].contains(&key.as_str())).cloned().collect::<Vec<_>>();if contract.is_empty(){return Ok(());}
- let types=descriptor.contract.get("type");let has_type=|name:&str|types.is_some_and(|types|types.as_str()==Some(name)||types.as_array().is_some_and(|types|types.iter().any(|value|value.as_str()==Some(name))));let(mut contract,mut candidate)=(DslValue::Object(contract),value.clone());
- if descriptor.syntax==ChartOptionSyntax::Expression&&(has_type("number")||has_type("integer")){if let Some(value)=value.as_str(){let literal=value.trim();let numeric=(!literal.is_empty()&&literal.chars().all(|character|character.is_ascii_digit()||['.','+','-','e','E'].contains(&character))).then(||literal.parse::<f64>()).and_then(Result::ok);if let Some(number)=numeric{if !number.is_finite(){return Err("native option numbers must be finite".into());}candidate=DslValue::from(number);}else if !has_type("string")&&!literal.is_empty(){if let DslValue::Object(entries)=&mut contract{for(key,value)in entries{if key=="type"{*value=DslValue::String("string".into());}}}}}}
- let validator=semio_framework_schema_validator::OwnedJsonSchemaValidator::compile(&semio_framework_pack_json::to_json_string(&contract)).map_err(|error|error.to_string())?;
- validator.validate_json(&semio_framework_pack_json::to_json_string(&candidate)).map(|_|()).map_err(|error|format!("invalid declared native option value: {error}"))
-}

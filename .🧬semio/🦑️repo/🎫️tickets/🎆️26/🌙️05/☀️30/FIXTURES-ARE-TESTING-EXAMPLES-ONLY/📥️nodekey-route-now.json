@@ -1,0 +1,79 @@
+{
+  "observationOnly": true,
+  "execution": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "11654f64f88e3d9db39d29f1a7cff507b289814af9d8d83d4a42fbf60880fdc7",
+      "ownership": false,
+      "codepoints": 145,
+      "utf16": 157
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "92525adedd0c7618223951e9a4c9e5f9aa6b66563d3103a7dee87886222d36e4",
+      "ownership": false,
+      "codepoints": 144,
+      "utf16": 155
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/🦀️.rs",
+      "sha256": "7ee4adcdb56d55eb319814628a5bccbb8663393137b3e2ebe7b65eba6254368d",
+      "ownership": false,
+      "codepoints": 121,
+      "utf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/🧪️tests/🦀️.rs",
+      "sha256": "8c0d7fa79e57d31e3c85854071b128dbff5c92d129957c65f6e7fec748d79b64",
+      "ownership": false,
+      "codepoints": 129,
+      "utf16": 140
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "44914a350c71951f5a86c9a4548c40962c0de15df8887bae1123603e2d373579",
+      "ownership": false,
+      "codepoints": 139,
+      "utf16": 151
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "sha256": "e47611750e3a5146ffa41fd6367b6663e73f500f709813d4cb3fe8aa01e5920b",
+      "ownership": false,
+      "codepoints": 114,
+      "utf16": 123
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "8d16671f92401b15f34ecac71c4694a8d4bbfa2ee686a2672812e58550f1a4c0",
+      "ownership": false,
+      "codepoints": 95,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",
+      "sha256": "d5fd5441d042258c218a3dae68b6aa8c3d404081f1435afdb1010e5723edd8ab",
+      "ownership": false,
+      "codepoints": 119,
+      "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "sha256": "56f931e839c459c6ef194d81ee5b870a5409c52341229b207c0f1e15d794f9d4",
+      "ownership": false,
+      "codepoints": 112,
+      "utf16": 120
+    }
+  ],
+  "regressions": [
+    "whole comparisons array with immutable expected heap/borrow outcomes",
+    "whole topology node/edge trial pairs",
+    "whole waves with before/after outcomes",
+    "whole contributions fixed grant/alias/refusal schedules",
+    "whole Draw patch document/cases expected changes",
+    "whole SQLite receiving matrix with malformed/invalidUTF8 trials",
+    "genuine Raster mutation expected current-lock precondition stays admitted",
+    "genuine produced progress record stays admitted"
+  ]
+}

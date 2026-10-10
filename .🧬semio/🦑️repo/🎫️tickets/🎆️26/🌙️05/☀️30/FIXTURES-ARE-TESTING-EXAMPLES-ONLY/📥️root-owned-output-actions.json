@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "6bc3630d59c783b48a46db265e1bdf36561ff55c70fc8e4ef7d4d9ca50951da5",
+      "afterSha256": "ec50904f2f7416729c96ffeb21bbadf7d68b9e8eb712ac41096d2e73104823ba",
+      "exclusive": false,
+      "scope": "Actual stream-level combined raw bytes/started-lines gate before output/UTF8 observation; ignored stdout counted, refused child drained/terminated, original lifecycle preserved"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

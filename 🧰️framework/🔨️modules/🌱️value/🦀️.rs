@@ -35,7 +35,7 @@ pub use native_decoding::NativeDecodeControl;
 
 #[path = "🛫️encode/🦀️.rs"]
 pub mod native_encoding;
-pub use native_encoding::NativeEncodeControl;
+pub use native_encoding::{NativeEncodeControl,NativeEncodeContinuation};
 
 #[path = "🫴️receiving/🦀️.rs"]
 mod native_receiving;

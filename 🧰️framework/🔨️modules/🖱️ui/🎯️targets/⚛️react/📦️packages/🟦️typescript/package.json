@@ -16,10 +16,9 @@
     "./i18n": "./🌐️i18n.ts",
     "./chrome": "./🪟️chrome.ts",
     "./test": "./🟦️.ts",
-    "./components.json": "../../../../components.json",
-    "./🧵️.css": "../../../../🧵️styles/🎨️.css",
-    "./🌐️globals-ui.css": "../../../../🌐️globals/🎨️.css",
-    "./🌓️theme.css": "../../../../🎨️styling/🌓️theme/🎨️.css",
+    "./🧵️.css": "./🧵️.css",
+    "./🌐️globals-ui.css": "./🌐️globals-ui.css",
+    "./🌓️theme.css": "./🌓️theme.css",
     "./postcss.config": "./🟦️.mts"
   },
   "targets": {

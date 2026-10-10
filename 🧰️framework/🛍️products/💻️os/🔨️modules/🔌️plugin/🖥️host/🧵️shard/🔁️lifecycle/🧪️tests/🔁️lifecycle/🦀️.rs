@@ -1,3 +1,4 @@
+fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
 use super::*;
 
 fn lane() -> semio_framework_actor::Lane {
@@ -24,7 +25,7 @@ async fn setup() -> (ShardLoop, Arc<MockGuestRuntime>, Arc<Mutex<Vec<Vec<u8>>>>)
     for actor in [ActorId(1), ActorId(2)] {
         let instance = mock.instantiate(&compiled, actor, &[], &turn_budget_from_grant(grant()).await).await.unwrap();
         assert!(shard.register(actor, instance).is_ok());
-        shard.granted_budgets.insert(actor.0, grant());
+        shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(grant(), 1).expect("declared original single envelope"));
     }
     (shard, mock, outbound)
 }
@@ -70,7 +71,7 @@ async fn retry_keeps_exact_event_budget_credit_and_one_peer_order() {
     assert!(outbound.lock().unwrap().is_empty());
     assert!(shard.has_lifecycle_retry() && shard.can_accept_primed_frame());
     assert_eq!((shard.pending_interactive.len, shard.pending_interactive.bytes), (3, 606));
-    shard.granted_budgets.insert(1, semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance));
+    shard.granted_budgets.insert(1, IssuedShardTurn::new(semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance), 1).expect("declared original single envelope"));
     for _ in 0..3 {
         shard.pump().await.unwrap();
     }
@@ -168,7 +169,7 @@ async fn unknown_transport_actors_never_allocate_host_bookkeeping() {
     let before = (shard.granted_budgets.len(), shard.actor_lanes.len(), shard.allocations.len());
     for raw in 3..3 + count {
         let mut bytes = Vec::new();
-        ShardFrame::Grant { actor: ActorId(raw), budget: grant(), envelopes: Vec::new() }.pack_encode(&mut bytes).await;
+        ShardFrame::Grant { actor: ActorId(raw), budget: grant(), envelopes: Vec::new() }.pack_encode(&mut bytes).await.expect("declared original frame authority");
         assert!(shard.consume_frame(bytes).await.is_ok());
     }
     assert_eq!((shard.granted_budgets.len(), shard.actor_lanes.len(), shard.allocations.len()), before);

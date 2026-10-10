@@ -70,7 +70,9 @@
     "copyPrefixBytes": {
       "const": 4
     },
-    "cumulativeCopiedItems": {"const": 10},
+    "cumulativeCopiedItems": {
+      "const": 13
+    },
     "physicalDepth": {
       "const": 3
     },

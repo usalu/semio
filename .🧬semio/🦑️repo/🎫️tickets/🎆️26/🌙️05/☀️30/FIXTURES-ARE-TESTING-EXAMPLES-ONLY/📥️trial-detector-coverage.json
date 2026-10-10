@@ -1,0 +1,16 @@
+{
+  "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+  "sha256": "8d16671f92401b15f34ecac71c4694a8d4bbfa2ee686a2672812e58550f1a4c0",
+  "authored": false,
+  "executed": false,
+  "pendingScanner": 66519,
+  "cases": [
+    "whole key comparison matrix versus individual key union",
+    "fixed topology copy/refusal schedules versus produced topology record",
+    "wave input plus expectedInputJson versus produced wave result",
+    "fixed alias custody receipt matrix versus actual Grant/Progress",
+    "five route denial cases versus individual IoRoute",
+    "mutation expected changed+patch cases versus expected current-state precondition",
+    "raw-text SQLite trial versus actual binding/catalog/identity"
+  ]
+}

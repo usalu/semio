@@ -21,6 +21,9 @@ use std::sync::Arc;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 pub use semio_framework_job as job;
+#[path="🎟️retained-turn/🦀️.rs"]
+pub mod retained_turn;
+pub use retained_turn::{RetainedTurnInput,RetainedTurnReceipt};
 
 #[path = "🎠️activation-reservation/🦀️.rs"]
 pub mod activation;
@@ -87,7 +90,7 @@ pub mod schema_metadata {
             typescript: r#"export type ActorStatus = { "kind": "cold" } | { "kind": "activating" } | { "kind": "active" } | { "kind": "suspended", checkpoint: Array<number> | null, } | { "kind": "draining" } | { "kind": "trapped" } | { "kind": "quarantined" } | { "kind": "disabled" };"#,
         },
         SchemaMetadata { name: "Backpressure", version: 1, typescript: r#"export type Backpressure = { "kind": "accept" } | { "kind": "coalesced" } | { "kind": "dropped", lane: Lane, } | { "kind": "rejected" };"# },
-        SchemaMetadata { name: "Budget", version: 1, typescript: "export type Budget = { fuel: bigint, wall_ms: number, memory_bytes: bigint, ui_nodes: number, mailbox_len: number, max_effects: number, max_patch_bytes: number, };" },
+        SchemaMetadata { name: "Budget", version: 1, typescript: "export type Budget = { retained: RetainedTurnInput, fuel: bigint, wall_ms: number, memory_bytes: bigint, ui_nodes: number, mailbox_len: number, max_effects: number, max_patch_bytes: number, };" },
         SchemaMetadata { name: "CapabilityGrant", version: 1, typescript: "export type CapabilityGrant = { capability: string, scope: Array<number> | null, };" },
         SchemaMetadata { name: "CoalesceKey", version: 1, typescript: "export type CoalesceKey = string;" },
         SchemaMetadata { name: "Decision", version: 1, typescript: "export type Decision = { run: Array<TurnGrant>, wake_at: bigint | null, };" },
@@ -142,6 +145,8 @@ pub mod schema_metadata {
             version: 1,
             typescript: r#"export type Payload = { "kind": "event", bytes: Array<number>, } | { "kind": "suspend", operation: JobOperation, appliedProgress: bigint, } | { "kind": "resume", operation: JobOperation, checkpoint: JobCheckpoint, } | { "kind": "cancel", seq: bigint, } | { "kind": "jobStep", turn: JobTurn, };"#,
         },
+        SchemaMetadata { name: "RetainedTurnInput", version: 1, typescript: "export type RetainedTurnInput = { operation: bigint, generation: bigint, epoch: bigint, grant: import(\"../../../🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts\").RetainedCloneGrant, };" },
+        SchemaMetadata { name: "RetainedTurnReceipt", version: 1, typescript: "export type RetainedTurnReceipt = { input: RetainedTurnInput, spent: { copiedItems: number, copiedBytes: number, retainedCapacityBytes: number, releasedBytes: number }, remaining: import(\"../../../🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts\").RetainedCloneGrant, };" },
         SchemaMetadata { name: "RuntimeMetricsSnapshot", version: 1, typescript: "export type RuntimeMetricsSnapshot = { kernel: KernelMetrics, actors: Array<ActorMetricsSample>, shards: Array<ShardMetricsSample>, sampled_at_ms: bigint, };" },
         SchemaMetadata { name: "SceneSnapshot", version: 1, typescript: "export type SceneSnapshot = { revision: bigint, committed_ms: bigint, patches: Array<number>, node_count: number, };" },
         SchemaMetadata { name: "ShardId", version: 1, typescript: "export type ShardId = number;" },
@@ -153,7 +158,7 @@ pub mod schema_metadata {
         SchemaMetadata {
             name: "TurnResult",
             version: 1,
-            typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, command_ingress: Array<number>, cold_pair_ingress: ColdPairIngressStatus, lifecycle_receipt: import(\"../../🚪️lifetime/🟦️.ts\").ActorInstanceLifecycleReceipt | null, ui_patch_receipt: import(\"../../🚪️lifetime/🩹️patch/🟦️.ts\").ActorUiPatchReceipt | null, next_wake: bigint | null, status: TurnStatus, usage: Usage, };",
+            typescript: "export type TurnResult = { retained_receipt: RetainedTurnReceipt, ui_patches: Array<number>, effects: Array<number>, command_ingress: Array<number>, cold_pair_ingress: ColdPairIngressStatus, lifecycle_receipt: import(\"../../🚪️lifetime/🟦️.ts\").ActorInstanceLifecycleReceipt | null, ui_patch_receipt: import(\"../../🚪️lifetime/🩹️patch/🟦️.ts\").ActorUiPatchReceipt | null, next_wake: bigint | null, status: TurnStatus, usage: Usage, };",
         },
         SchemaMetadata {
             name: "ColdPairIngressStatus",
@@ -229,6 +234,7 @@ pub mod pack {
         InvalidLifecycle(&'static str),
         InvalidUiPatchReceipt(&'static str),
         InvalidColdPair(&'static str),
+        InvalidRetainedTurn(&'static str),
     }
 
     impl std::fmt::Display for PackError {
@@ -238,6 +244,7 @@ pub mod pack {
                 Self::InvalidTag { what, tag, offset } => write!(formatter, "pack: invalid tag {tag} for {what} at offset {offset}"),
                 Self::InvalidUtf8(what, offset) => write!(formatter, "pack: invalid utf8 in {what} at offset {offset}"),
                 Self::OverlongVarint(offset) => write!(formatter, "pack: overlong varint at offset {offset}"),
+                Self::InvalidRetainedTurn(reason) => write!(formatter, "pack: invalid original retained turn: {reason}"),
                 Self::InvalidLifecycle(reason) => write!(formatter, "pack: invalid instance lifecycle: {reason}"),
                 Self::InvalidUiPatchReceipt(reason) => write!(formatter, "pack: invalid issued UI patch receipt: {reason}"),
                 Self::InvalidColdPair(reason) => write!(formatter, "pack: invalid cold artifact pair status: {reason}"),
@@ -637,6 +644,7 @@ impl Lane {
 #[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct Budget {
+    pub retained: RetainedTurnInput,
     pub fuel: u64,
     pub wall_ms: u32,
     pub memory_bytes: u64,
@@ -653,6 +661,7 @@ impl Budget {
     pub async fn scaled(self, factor: f32) -> Budget {
         let factor = factor.clamp(0.05, 1.0);
         Budget {
+            retained: self.retained,
             fuel: ((self.fuel as f64) * factor as f64) as u64,
             wall_ms: ((self.wall_ms as f64) * factor as f64).max(1.0) as u32,
             memory_bytes: self.memory_bytes,
@@ -663,7 +672,8 @@ impl Budget {
         }
     }
 
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), pack::PackError> {
+        self.retained.pack_encode(out).await?;
         pack::write_u64(out, self.fuel).await;
         pack::write_u32(out, self.wall_ms).await;
         pack::write_u64(out, self.memory_bytes).await;
@@ -671,9 +681,11 @@ impl Budget {
         pack::write_u16(out, self.mailbox_len).await;
         pack::write_u32(out, self.max_effects).await;
         pack::write_u32(out, self.max_patch_bytes).await;
+        Ok(())
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         Ok(Self {
+            retained: RetainedTurnInput::pack_decode(bytes, pos).await?,
             fuel: pack::read_u64(bytes, pos, "Budget::fuel").await?,
             wall_ms: pack::read_u32(bytes, pos, "Budget::wall_ms").await?,
             memory_bytes: pack::read_u64(bytes, pos, "Budget::memory_bytes").await?,
@@ -691,14 +703,14 @@ impl Budget {
 /// down the same tiers so background/maintenance work can never out-spend memory/UI/mailbox room
 /// an interactive turn would need.
 pub mod lane_defaults {
-    use super::{Budget, Lane};
+    use super::{Budget, Lane, RetainedTurnInput};
 
-    pub fn budget_for(lane: Lane) -> Budget {
+    pub fn budget_for(lane: Lane, retained: RetainedTurnInput) -> Budget {
         match lane {
-            Lane::Interactive => Budget { fuel: 2_000_000, wall_ms: 4, memory_bytes: 64 * 1024 * 1024, ui_nodes: 20_000, mailbox_len: 256, max_effects: 64, max_patch_bytes: 262_144 },
-            Lane::UserVisible => Budget { fuel: 6_000_000, wall_ms: 16, memory_bytes: 96 * 1024 * 1024, ui_nodes: 20_000, mailbox_len: 256, max_effects: 128, max_patch_bytes: 524_288 },
-            Lane::Background => Budget { fuel: 20_000_000, wall_ms: 50, memory_bytes: 192 * 1024 * 1024, ui_nodes: 8_000, mailbox_len: 512, max_effects: 256, max_patch_bytes: 1_048_576 },
-            Lane::Maintenance => Budget { fuel: 80_000_000, wall_ms: 200, memory_bytes: 256 * 1024 * 1024, ui_nodes: 4_000, mailbox_len: 1024, max_effects: 512, max_patch_bytes: 2_097_152 },
+            Lane::Interactive => Budget { retained, fuel: 2_000_000, wall_ms: 4, memory_bytes: 64 * 1024 * 1024, ui_nodes: 20_000, mailbox_len: 256, max_effects: 64, max_patch_bytes: 262_144 },
+            Lane::UserVisible => Budget { retained, fuel: 6_000_000, wall_ms: 16, memory_bytes: 96 * 1024 * 1024, ui_nodes: 20_000, mailbox_len: 256, max_effects: 128, max_patch_bytes: 524_288 },
+            Lane::Background => Budget { retained, fuel: 20_000_000, wall_ms: 50, memory_bytes: 192 * 1024 * 1024, ui_nodes: 8_000, mailbox_len: 512, max_effects: 256, max_patch_bytes: 1_048_576 },
+            Lane::Maintenance => Budget { retained, fuel: 80_000_000, wall_ms: 200, memory_bytes: 256 * 1024 * 1024, ui_nodes: 4_000, mailbox_len: 1024, max_effects: 512, max_patch_bytes: 2_097_152 },
         }
     }
 }
@@ -1705,6 +1717,7 @@ pub enum JobPublicationError {
     StepSequence { expected: u64, published: u64 },
     PreviewSequence { before: u64, after: u64 },
     Terminal,
+    Retained(semio_framework_value::ValueError),
 }
 
 impl std::fmt::Display for JobPublicationError {
@@ -1715,6 +1728,7 @@ impl std::fmt::Display for JobPublicationError {
             Self::StepSequence { expected, published } => write!(formatter, "job bridge step sequence mismatch: expected={expected}, published={published}"),
             Self::PreviewSequence { before, after } => write!(formatter, "job bridge preview cursor mismatch: before={before}, after={after}"),
             Self::Terminal => formatter.write_str("job bridge received a turn after a terminal publication"),
+            Self::Retained(error) => std::fmt::Display::fmt(error, formatter),
         }
     }
 }
@@ -1722,97 +1736,65 @@ impl std::fmt::Display for JobPublicationError {
 impl std::error::Error for JobPublicationError {}
 
 #[cfg(test)]
-struct JobPayloadProjection {
-    owner: Option<job::RetainedJobPayload>,
-    bytes: Vec<u8>,
+struct JobOutcomeProjection {
+    descriptor: job::JobOutcomeDescriptor,
+    bytes: [Vec<u8>; 2],
+    phase: usize,
     page: usize,
 }
 
 #[cfg(test)]
-impl JobPayloadProjection {
-    fn new(owner: job::RetainedJobPayload) -> Self {
-        let bytes = Vec::with_capacity(owner.len());
-        Self { owner: Some(owner), bytes, page: 0 }
-    }
-
-    fn step(&mut self) -> (bool, bool) {
-        let Some(owner) = self.owner.as_mut() else { return (true, false) };
-        if owner.terminal_is_empty() {
-            drop(self.owner.take());
-            return (true, false);
-        }
-        let wrote = if let Some(page) = owner.page(self.page) {
-            self.bytes.extend_from_slice(page);
-            self.page = self.page.saturating_add(1);
-            true
-        } else { false };
-        let demand = owner.retirement_demands().expect("original payload frontier");
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let step = owner.close_step(grant).expect("funded original payload projection");
-        assert!(step.progress().fits(grant));
-        let complete = owner.terminal_is_empty();
-        if complete {
-            drop(self.owner.take());
-        }
-        (complete, wrote)
-    }
-
-    fn take_bytes(&mut self) -> Vec<u8> {
-        assert!(self.owner.is_none(), "projected job payload must be terminal before publication");
-        std::mem::take(&mut self.bytes)
-    }
-}
-
-#[cfg(test)]
-enum JobOutcomeProjection {
-    Preview { payload: JobPayloadProjection },
-    Checkpoint { state: JobPayloadProjection, applied_progress: u64 },
-    Complete { state: JobPayloadProjection, output: JobPayloadProjection, state_bytes: Option<Vec<u8>> },
-    Fault { detail: JobPayloadProjection },
-}
-
-#[cfg(test)]
 impl JobOutcomeProjection {
-    fn start(outcome: job::StepOutcome) -> Result<JobStepOutcome, Self> {
-        match outcome {
-            job::StepOutcome::Yield => Ok(JobStepOutcome::Yield),
-            job::StepOutcome::PreviewReady(preview) => Err(Self::Preview { payload: JobPayloadProjection::new(preview) }),
-            job::StepOutcome::CheckpointReady(checkpoint) => Err(Self::Checkpoint { state: JobPayloadProjection::new(checkpoint.state), applied_progress: checkpoint.applied_progress }),
-            job::StepOutcome::Complete(candidate) => Err(Self::Complete { state: JobPayloadProjection::new(candidate.state), output: JobPayloadProjection::new(candidate.output), state_bytes: None }),
-            job::StepOutcome::Cancelled => Ok(JobStepOutcome::Cancelled),
-            job::StepOutcome::Fault(fault) => Err(Self::Fault { detail: JobPayloadProjection::new(fault.detail) }),
-        }
+    fn new(descriptor: job::JobOutcomeDescriptor) -> Self {
+        Self { descriptor, bytes: [Vec::new(), Vec::new()], phase: 0, page: 0 }
     }
 
-    fn step(&mut self) -> Option<JobStepOutcome> {
-        match self {
-            Self::Preview { payload } => {
-                let (complete, _) = payload.step();
-                complete.then(|| JobStepOutcome::PreviewReady { preview: payload.take_bytes() })
-            }
-            Self::Checkpoint { state, applied_progress } => {
-                let (complete, _) = state.step();
-                complete.then(|| JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: state.take_bytes(), applied_progress: *applied_progress } })
-            }
-            Self::Complete { state, output, state_bytes } => {
-                if state_bytes.is_none() {
-                    let (complete, progressed) = state.step();
-                    if !complete {
-                        return None;
-                    }
-                    *state_bytes = Some(state.take_bytes());
-                    if progressed {
-                        return None;
-                    }
+    fn step<J: job::InteractiveJob + ?Sized>(&mut self, producer: &J, cx: &mut job::StepContext<'_>) -> Result<Option<JobStepOutcome>, semio_framework_value::ValueError> {
+        if !matches!(self.descriptor.kind(), job::JobOutcomeKind::Cancelled) && (cx.is_cancelled() || cx.fuel_remaining() == 0 || cx.latest_us().map(|now| now >= cx.deadline_us()).unwrap_or_else(|| cx.deadline_exceeded())) { return Ok(None); }
+        let view = producer.borrow_outcome(&self.descriptor)?;
+        let originals = match view {
+            job::JobOutcomeView::PreviewReady { payload, .. } => [Some(payload), None],
+            job::JobOutcomeView::CheckpointReady { state, .. } => [Some(state), None],
+            job::JobOutcomeView::Complete { state, output, .. } => [state, output],
+            job::JobOutcomeView::Fault { detail, .. } => [Some(detail), None],
+            job::JobOutcomeView::Yield { .. } | job::JobOutcomeView::Cancelled { .. } => [None, None],
+        };
+        while self.phase < originals.len() {
+            if let Some(page) = originals[self.phase].and_then(|original| original.page(self.page)) {
+                let destination = &mut self.bytes[self.phase];
+                let extent = destination.len().checked_add(page.len()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original actor projection extent overflow"))?;
+                let original_extent = originals[self.phase].unwrap().len();
+                if extent > original_extent { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original actor projection exceeded admitted payload extent")); }
+                let required = if destination.capacity() == 0 { original_extent } else { 0 };
+                let grant = cx.retained_grant();
+                if grant.maximum_items == 0 || grant.maximum_copy_bytes < page.len() || grant.maximum_capacity_bytes < required || grant.maximum_depth < 1 { return Ok(None); }
+                if required != 0 {
+                    let layout = std::alloc::Layout::array::<u8>(required).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original actor projection layout overflow"))?;
+                    let pointer = std::ptr::NonNull::new(unsafe { std::alloc::alloc(layout) }).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "original actor projection allocation failed"))?;
+                    *destination = unsafe { Vec::from_raw_parts(pointer.as_ptr(), 0, required) };
                 }
-                let (complete, _) = output.step();
-                complete.then(|| JobStepOutcome::Complete { candidate: JobCommitCandidate { state: state_bytes.take().expect("projected state"), output: output.take_bytes() } })
+                let progress = job::RetainedCloneProgress { copied_items: 1, copied_bytes: page.len(), retained_capacity_bytes: required, ..Default::default() };
+                cx.consume_retained(progress).map_err(|error| error.with_retained_progress(progress))?;
+                destination.extend_from_slice(page);
+                self.page += 1;
+                return Ok(None);
             }
-            Self::Fault { detail } => {
-                let (complete, _) = detail.step();
-                complete.then(|| JobStepOutcome::Fault { detail: detail.take_bytes() })
-            }
+            self.phase += 1;
+            self.page = 0;
         }
+        let acknowledged = self.descriptor.acknowledge(cx.retained_grant());
+        cx.consume_retained(acknowledged.progress())?;
+        if !self.descriptor.is_acknowledged() { return Ok(None); }
+        let first = std::mem::take(&mut self.bytes[0]);
+        let second = std::mem::take(&mut self.bytes[1]);
+        Ok(Some(match self.descriptor.kind() {
+            job::JobOutcomeKind::Yield => JobStepOutcome::Yield,
+            job::JobOutcomeKind::PreviewReady => JobStepOutcome::PreviewReady { preview: first },
+            job::JobOutcomeKind::CheckpointReady { applied_progress } => JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: first, applied_progress } },
+            job::JobOutcomeKind::Complete => JobStepOutcome::Complete { candidate: JobCommitCandidate { state: first, output: second } },
+            job::JobOutcomeKind::Cancelled => JobStepOutcome::Cancelled,
+            job::JobOutcomeKind::Fault => JobStepOutcome::Fault { detail: first },
+        }))
     }
 }
 
@@ -1823,13 +1805,44 @@ pub struct JobTurnBridge {
     next_step_sequence: u64,
     terminal: bool,
     pending: Option<JobOutcomeProjection>,
+    original: job::RetainedCloneGrant,
+    progress: job::RetainedCloneProgress,
+    authority: Option<job::JobPayloadAuthority>,
 }
 
 #[cfg(test)]
 impl JobTurnBridge {
-    pub fn new(operation: job::Operation) -> Self {
-        Self { operation, next_step_sequence: 0, terminal: false, pending: None }
+    pub fn new(operation: job::Operation, original: job::RetainedCloneGrant) -> Result<Self, semio_framework_value::ValueError> {
+        let Some((authority, progress)) = job::JobPayloadAuthority::admit(operation.operation, operation.generation, original)? else {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "actor bridge requires original payload authority admission"));
+        };
+        Ok(Self { operation, next_step_sequence: 0, terminal: false, pending: None, original, progress, authority: Some(authority) })
     }
+
+    pub fn close_step(&mut self, grant: job::RetainedCloneGrant) -> Result<job::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.terminal = true;
+        if let Some(pending) = self.pending.as_mut() {
+            if !pending.descriptor.is_acknowledged() { return Ok(job::RetainedCloneStep::Progress(pending.descriptor.acknowledge(grant).progress())); }
+            if let Some(bytes) = pending.bytes.iter_mut().find(|bytes| bytes.capacity() != 0) {
+                let released_bytes = bytes.capacity();
+                if grant.maximum_items == 0 || grant.maximum_release_bytes < released_bytes || grant.maximum_depth == 0 { return Ok(job::RetainedCloneStep::Progress(Default::default())); }
+                drop(std::mem::take(bytes));
+                return Ok(job::RetainedCloneStep::Progress(job::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
+            }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(job::RetainedCloneStep::Progress(Default::default())); }
+            self.pending = None;
+            return Ok(job::RetainedCloneStep::Progress(job::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        }
+        if let Some(authority) = self.authority.as_mut() {
+            if !authority.terminal_is_empty() { return authority.close_step(grant).map(|step| job::RetainedCloneStep::Progress(step.progress())); }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(job::RetainedCloneStep::Progress(Default::default())); }
+            self.authority = None;
+            return Ok(job::RetainedCloneStep::Progress(job::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        }
+        Ok(job::RetainedCloneStep::Complete(Default::default()))
+    }
+
+    pub fn terminal_is_empty(&self) -> bool { self.pending.is_none() && self.authority.is_none() }
 
     #[allow(clippy::too_many_arguments)]
     pub fn step<J: job::InteractiveJob + ?Sized>(
@@ -1845,6 +1858,7 @@ impl JobTurnBridge {
         cancel: job::CancelToken,
         now_us: fn() -> Option<u64>,
     ) -> Result<JobPublication, JobPublicationError> {
+        let next_step_sequence = self.next_step_sequence.checked_add(1).ok_or_else(|| JobPublicationError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original actor bridge sequence exhausted")))?;
         if self.terminal {
             return Err(JobPublicationError::Terminal);
         }
@@ -1864,33 +1878,41 @@ impl JobTurnBridge {
         {
             return Err(JobPublicationError::Stale { live_revision: live_revision.0, live_generation: live_generation.0 });
         }
+        if budget.retained != self.original {
+            return Err(JobPublicationError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "actor bridge requires its original cumulative grant")));
+        }
+        let authority = self.authority.as_ref().ok_or_else(|| JobPublicationError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original actor bridge authority has closed")))?;
+        let mut context = job::StepContext::with_payload_authority(self.operation.operation, self.operation.generation, budget, &cancel, now_us, &mut self.operation.preview_sequence, &mut self.progress, authority).map_err(JobPublicationError::Retained)?;
         let outcome = if let Some(projection) = self.pending.as_mut() {
-            match projection.step() {
-                Some(outcome) => {
-                    self.pending = None;
-                    outcome
-                }
+            match projection.step(job, &mut context).map_err(JobPublicationError::Retained)? {
+                Some(outcome) => { self.pending = None; outcome }
                 None => JobStepOutcome::Yield,
             }
         } else {
-            let before = self.operation.preview_sequence;
-            let outcome = job::drive_step(job, site, self.operation.operation, self.operation.generation, stage, budget, cancel, now_us, &mut self.operation.preview_sequence, &mut None);
-            let after = self.operation.preview_sequence;
-            let preview = matches!(outcome, job::StepOutcome::PreviewReady(_));
+            let before = context.preview_sequence();
+            let outcome = job::drive_step(job, &mut context, site, stage, &mut None).map_err(JobPublicationError::Retained)?;
+            let after = context.preview_sequence();
+            let Some(outcome) = outcome else {
+                self.next_step_sequence = next_step_sequence;
+                return Ok(JobPublication { turn: JobTurn { operation: JobOperation::from_job(self.operation), ..turn }, outcome: JobStepOutcome::Yield });
+            };
+            let mut descriptor = outcome.into_descriptor();
+            let preview = matches!(descriptor.kind(), job::JobOutcomeKind::PreviewReady);
             if (preview && after != before.saturating_add(1)) || (!preview && after != before) {
+                let acknowledged = descriptor.acknowledge(context.retained_grant());
+                context.consume_retained(acknowledged.progress()).map_err(JobPublicationError::Retained)?;
+                self.pending = (!descriptor.is_acknowledged()).then(|| JobOutcomeProjection::new(descriptor));
                 return Err(JobPublicationError::PreviewSequence { before, after });
             }
-            match JobOutcomeProjection::start(outcome) {
-                Ok(outcome) => outcome,
-                Err(projection) => {
-                    self.pending = Some(projection);
-                    JobStepOutcome::Yield
-                }
-            }
+            self.pending = Some(JobOutcomeProjection::new(descriptor));
+            if matches!(self.pending.as_ref().unwrap().descriptor.kind(), job::JobOutcomeKind::Yield | job::JobOutcomeKind::Cancelled) {
+                let projected = self.pending.as_mut().unwrap().step(job, &mut context).map_err(JobPublicationError::Retained)?;
+                if let Some(projected) = projected { self.pending = None; projected } else { JobStepOutcome::Yield }
+            } else { JobStepOutcome::Yield }
         };
         let terminal = matches!(outcome, JobStepOutcome::Complete { .. } | JobStepOutcome::Cancelled | JobStepOutcome::Fault { .. });
         let publication = JobPublication { turn: JobTurn { operation: JobOperation::from_job(self.operation), ..turn }, outcome };
-        self.next_step_sequence += 1;
+        self.next_step_sequence = next_step_sequence;
         self.terminal = terminal;
         Ok(publication)
     }
@@ -2036,22 +2058,22 @@ impl JobProgressRejected {
 }
 
 #[derive(Debug)]
-struct JobPublicationOwner {
-    publication: JobPublication,
-    phase: u8,
+pub(crate) struct JobPublicationOwner {
+    pub(crate) publication: JobPublication,
+    pub(crate) phase: u8,
     total_phases: u8,
     owner_bytes: usize,
 }
 
 impl JobPublicationOwner {
-    fn try_new(publication: JobPublication) -> Result<Self, (JobProgressFault, JobPublication)> {
+    pub(crate) fn try_new(publication: JobPublication) -> Result<Self, (JobProgressFault, JobPublication)> {
         match publication_owner_shape(&publication, false) {
             Ok((_, owner_bytes, total_phases)) => Ok(Self { publication, phase: 0, total_phases, owner_bytes }),
             Err(fault) => Err((fault, publication)),
         }
     }
 
-    fn close_one(&mut self) -> (bool, usize, usize) {
+    pub(crate) fn close_one(&mut self) -> (bool, usize, usize) {
         let released_bytes = match (&mut self.publication.outcome, self.phase) {
             (JobStepOutcome::PreviewReady { preview }, 0) => std::mem::take(preview).capacity(),
             (JobStepOutcome::CheckpointReady { checkpoint }, 0) => std::mem::take(&mut checkpoint.state).capacity(),
@@ -2065,7 +2087,7 @@ impl JobPublicationOwner {
         (self.phase >= self.total_phases, 1, released_bytes)
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.phase >= self.total_phases
             && self.owner_bytes == 0
             && match &self.publication.outcome {
@@ -2998,6 +3020,7 @@ impl Usage {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct TurnResult {
+    pub retained_receipt: RetainedTurnReceipt,
     pub ui_patches: Vec<u8>,
     pub effects: Vec<u8>,
     pub command_ingress: Vec<u8>,
@@ -3023,6 +3046,7 @@ impl TurnResult {
             Some(value) => value.encode(&mut patch_receipt).map_err(pack::PackError::InvalidUiPatchReceipt)?,
             None => 0,
         };
+        self.retained_receipt.pack_encode(out).await?;
         pack::write_bytes(out, &self.ui_patches).await;
         pack::write_bytes(out, &self.effects).await;
         pack::write_bytes(out, &self.command_ingress).await;
@@ -3036,6 +3060,7 @@ impl TurnResult {
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         let result = Self {
+            retained_receipt: RetainedTurnReceipt::pack_decode(bytes,pos).await?,
             ui_patches: pack::read_bytes(bytes, pos, "TurnResult::ui_patches").await?,
             effects: pack::read_bytes(bytes, pos, "TurnResult::effects").await?,
             command_ingress: pack::read_bytes(bytes, pos, "TurnResult::command_ingress").await?,
@@ -3952,6 +3977,8 @@ impl ShardTable {
 /// isn't shared plugin-level bookkeeping.
 #[derive(Clone, Debug)]
 struct ScheduledActor {
+    issued: Option<RetainedTurnInput>,
+    returned: bool,
     package: PackageId,
     lane: Lane,
     budget: Budget,
@@ -3960,6 +3987,12 @@ struct ScheduledActor {
     active: bool,
     throttle: f32,
     deficit: i64,
+}
+
+impl ScheduledActor {
+    fn can_issue(&self) -> bool {
+        self.active && self.issued.is_none() && !self.mailbox.is_empty() && self.budget.retained.validate().is_ok() && self.budget.retained.grant.maximum_items != 0 && (!self.returned || self.budget.retained.epoch.checked_add(1).is_some())
+    }
 }
 
 /// ⏱️ Result of one [`Scheduler::tick`] call: the turns granted this call, and (if nothing ran) the
@@ -3972,9 +4005,12 @@ pub struct Decision {
 }
 
 impl Decision {
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_vec(out, &self.run, TurnGrant::pack_encode).await;
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), pack::PackError> {
+        for grant in &self.run { grant.budget.retained.validate().map_err(|_| pack::PackError::InvalidRetainedTurn("operation identity is absent"))?; }
+        pack::write_varint_u64(out, self.run.len() as u64).await;
+        for grant in &self.run { grant.pack_encode(out).await?; }
         pack::write_opt_u64(out, &self.wake_at).await;
+        Ok(())
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt_u64(bytes, pos, "Decision::wake_at").await? })
@@ -3993,11 +4029,16 @@ pub struct TurnGrant {
 }
 
 impl TurnGrant {
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+    /// 🎟️ Borrows the scheduler's exact original input without changing its wallet or epoch.
+    pub fn original_input(&self) -> &RetainedTurnInput { &self.budget.retained }
+
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), pack::PackError> {
+        self.budget.retained.validate().map_err(|_| pack::PackError::InvalidRetainedTurn("operation identity is absent"))?;
         self.actor.pack_encode(out).await;
         self.shard.pack_encode(out).await;
-        self.budget.pack_encode(out).await;
+        self.budget.pack_encode(out).await?;
         pack::write_vec(out, &self.envelopes, Envelope::pack_encode).await;
+        Ok(())
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         Ok(Self {
@@ -4037,7 +4078,7 @@ impl Scheduler {
         if !self.plugin_order.contains(&package) {
             self.plugin_order.push(package.clone());
         }
-        self.actors.insert(actor, ScheduledActor { package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len).await, active, throttle: 1.0, deficit: 0 });
+        self.actors.insert(actor, ScheduledActor { issued: None, returned: false, package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len).await, active, throttle: 1.0, deficit: 0 });
     }
 
     pub async fn unregister_actor(&mut self, actor: ActorId) {
@@ -4098,7 +4139,7 @@ impl Scheduler {
 
         //#region 🔖️DeadlinePreemption
         // 🚨️ Interactive envelopes past (or nearest) their deadline short-circuit ahead of DRR order.
-        let mut overdue: Vec<(u64, ActorId)> = self.actors.iter().filter(|(_, e)| e.active && !e.mailbox.is_empty()).filter_map(|(id, e)| e.mailbox.earliest_deadline().filter(|d| *d <= now_ms).map(|d| (d, *id))).collect();
+        let mut overdue: Vec<(u64, ActorId)> = self.actors.iter().filter(|(_, e)| e.can_issue()).filter_map(|(id, e)| e.mailbox.earliest_deadline().filter(|d| *d <= now_ms).map(|d| (d, *id))).collect();
         overdue.sort();
         for (_, actor_id) in overdue {
             if budget_left == 0 {
@@ -4122,7 +4163,7 @@ impl Scheduler {
             while budget_left > 0 && idle_streak < plugin_count {
                 let package = self.plugin_order[self.plugin_cursor % plugin_count].clone();
                 self.plugin_cursor = (self.plugin_cursor + 1) % plugin_count;
-                let pending_actor_ids: Vec<ActorId> = self.actors.iter().filter(|(id, e)| e.package == package && e.active && !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).collect();
+                let pending_actor_ids: Vec<ActorId> = self.actors.iter().filter(|(id, e)| e.package == package && e.can_issue() && !granted_this_tick.contains(*id)).map(|(id, _)| *id).collect();
                 if pending_actor_ids.is_empty() {
                     self.plugin_deficit.insert(package, 0);
                     idle_streak += 1;
@@ -4133,7 +4174,7 @@ impl Scheduler {
                 let mut deficit = *self.plugin_deficit.entry(package.clone()).or_insert(0);
                 deficit += quantum;
                 while deficit > 0 && budget_left > 0 {
-                    let mut candidates: Vec<ActorId> = self.actors.iter().filter(|(id, e)| e.package == package && e.active && !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).collect();
+                    let mut candidates: Vec<ActorId> = self.actors.iter().filter(|(id, e)| e.package == package && e.can_issue() && !granted_this_tick.contains(*id)).map(|(id, _)| *id).collect();
                     candidates.sort();
                     let Some(actor_id) = self.pick_level2(&candidates).await else { break };
                     let weight = self.actors.get(&actor_id).map_or(1, Self::actor_weight);
@@ -4153,7 +4194,7 @@ impl Scheduler {
 
         // ⏰️ Earliest deadline still sitting in any active actor's mailbox after this tick's grants
         // were drained — a hint for "check again by this time," not a guarantee of a grant then.
-        let wake_at = self.actors.values().filter(|e| e.active && !e.mailbox.is_empty()).filter_map(|e| e.mailbox.earliest_deadline()).min();
+        let wake_at = self.actors.values().filter(|e| e.can_issue()).filter_map(|e| e.mailbox.earliest_deadline()).min();
         Decision { run, wake_at }
     }
 
@@ -4174,6 +4215,9 @@ impl Scheduler {
 
     async fn drain_turn(&mut self, actor_id: ActorId) -> Option<TurnGrant> {
         let entry = self.actors.get_mut(&actor_id)?;
+        if entry.issued.is_some() || entry.mailbox.is_empty() || entry.budget.retained.validate().is_err() || entry.budget.retained.grant.maximum_items == 0 { return None; }
+        let epoch = if entry.returned { entry.budget.retained.epoch.checked_add(1)? } else { entry.budget.retained.epoch };
+        let retained = RetainedTurnInput { epoch, ..entry.budget.retained };
         let mut envelopes = Vec::new();
         for _ in 0..TURN_ENVELOPE_BATCH {
             match entry.mailbox.pop_next().await {
@@ -4184,6 +4228,8 @@ impl Scheduler {
         if envelopes.is_empty() {
             return None;
         }
+        entry.budget.retained = retained;
+        entry.issued = Some(retained);
         entry.deficit -= Self::actor_weight(entry);
         Some(TurnGrant { actor: actor_id, shard: entry.shard, budget: entry.budget.scaled(entry.throttle).await, envelopes })
     }
@@ -4714,6 +4760,8 @@ pub enum KernelError {
     UnknownActor,
     NoExclusiveShard,
     InvalidTransition,
+    TurnNotIssued,
+    InvalidRetainedReceipt,
 }
 
 impl std::fmt::Display for KernelError {
@@ -4722,6 +4770,8 @@ impl std::fmt::Display for KernelError {
             Self::UnknownActor => formatter.write_str("unknown actor"),
             Self::NoExclusiveShard => formatter.write_str("no exclusive shard available"),
             Self::InvalidTransition => formatter.write_str("invalid status transition"),
+            Self::TurnNotIssued => formatter.write_str("actor turn was not issued"),
+            Self::InvalidRetainedReceipt => formatter.write_str("original actor retained receipt does not match issued authority"),
         }
     }
 }
@@ -4777,11 +4827,11 @@ impl Kernel {
     /// `pin_avoiding`'s own doc for why: a wholesale avoid-saturated-shards policy for EVERY lane
     /// would just relocate the count imbalance `pin`'s own budget-3 guarantee depends on, not fix
     /// interactive latency).
-    pub async fn activate(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent) -> ActorId {
+    pub async fn activate(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent, retained: RetainedTurnInput) -> ActorId {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
         *ordinal += 1;
-        let budget = lane_defaults::budget_for(lane);
+        let budget = lane_defaults::budget_for(lane, retained);
         let shard = if lane == Lane::Interactive {
             let avoid = self.saturated_shards().await;
             self.shards.pin_avoiding(id, &avoid).await
@@ -4829,6 +4879,16 @@ impl Kernel {
         self.scheduler.tick(now_ms).await
     }
 
+    /// 📮️ Borrows the scheduler's current original mailbox count without constructing a snapshot.
+    pub fn mailbox_len(&self, actor: ActorId) -> Option<u16> {
+        self.scheduler.actors.get(&actor).map(|entry| entry.mailbox.len())
+    }
+
+    /// 🎟️ Borrows the original remaining input independently of scheduling ceilings.
+    pub fn retained_turn(&self, actor: ActorId) -> Option<RetainedTurnInput> {
+        self.scheduler.actors.get(&actor).map(|entry| entry.budget.retained)
+    }
+
     /// ✅️ Records a turn's result against its actor: usage metrics, failure-ladder update (clean
     /// turn vs. `Faulted`), and status transition. Returns the escalation the caller (host) must
     /// act on for `Trapped`/`Quarantined` outcomes.
@@ -4837,6 +4897,13 @@ impl Kernel {
         if meta.reservation.is_some() {
             return Err(KernelError::InvalidTransition);
         }
+        let entry = self.scheduler.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
+        let issued = entry.issued.ok_or(KernelError::TurnNotIssued)?;
+        result.retained_receipt.validate_for(issued).map_err(|_| KernelError::InvalidRetainedReceipt)?;
+        entry.budget.retained = RetainedTurnInput { grant: result.retained_receipt.remaining, ..issued };
+        meta.budget.retained = entry.budget.retained;
+        entry.issued = None;
+        entry.returned = true;
         meta.metrics.record_turn(&result.usage).await;
         let escalation = match &result.status {
             TurnStatus::Faulted { detail } => {
@@ -5042,11 +5109,12 @@ impl Kernel {
         shard: ShardId,
         parent: Option<ActorId>,
         requested_capabilities: Vec<CapabilityGrant>,
+        retained: RetainedTurnInput,
     ) -> ActorId {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
         *ordinal += 1;
-        let budget = lane_defaults::budget_for(lane);
+        let budget = lane_defaults::budget_for(lane, retained);
         let shard = self.shards.pin_to(id, shard).await;
         self.scheduler.register_actor(id, package.clone(), lane, budget, shard).await;
         let capabilities = match parent {
@@ -5207,6 +5275,10 @@ impl Kernel {
     //#endregion 🔗️ExtensionActivation
 }
 //#endregion 🏛️Kernel
+
+#[cfg(test)]
+#[global_allocator]
+static ACTOR_TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

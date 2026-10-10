@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📏️ `@semio-tech/norm-plugin` router: `bun ./📜️script.ts test`. */
 import Ajv from "ajv";
@@ -125,7 +126,7 @@ function validateUniqueTaxonomy(value: MutationLeafTaxonomy): boolean {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-norm"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-norm"], this.repoRoot, this.invocation.control, rest);
   }
 }
 
@@ -245,7 +246,7 @@ class ResultsWindowConfigSourceScript extends BundleScript {
 class ResultsWindowConfigTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-artifact-norm-contract"], this.repoRoot, ["--test", "config_mutation", ...rest]);
+    await runRepositoryCargoTests(["semio-s-artifact-norm-contract"], this.repoRoot, this.invocation.control, ["--test", "config_mutation", ...rest]);
   }
 }
 
@@ -307,7 +308,7 @@ class SurfaceRenderSourceScript extends BundleScript {
 class SurfaceRenderTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-norm"], this.repoRoot, ["--test", "surface_render", ...rest], { ...process.env, RUST_MIN_STACK: "67108864" });
+    await runRepositoryCargoTests(["semio-hub-norm"], this.repoRoot, this.invocation.control, ["--test", "surface_render", ...rest], { ...process.env, RUST_MIN_STACK: "67108864" });
   }
 }
 
@@ -428,4 +429,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("mutation-leaf-taxonomy-check", MutationLeafTaxonomyCheckScript);
 registerPlaygroundSiteBuildCommands(router);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

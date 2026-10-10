@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|shutdown-drill|residency-watch|hub-freshness|agent-ceiling-check|docker-image-build|docker-image-check|typecheck>`.
  * Bun integration-test harness that boots the REAL `os-hub` binary and drives it with two
@@ -592,4 +593,4 @@ class TypecheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("two-client-e2e", TwoClientE2eScript).register("document-growth-e2e", DocumentGrowthE2eScript).register("backend", BackendScript).register("backup-restore-drill", BackupRestoreDrillScript).register("shutdown-drill", ShutdownDrillScript).register("residency-watch", ResidencyWatchScript).register("boot-watch", BootWatchScript).register("hub-freshness", HubFreshnessScript).register("agent-ceiling-check", AgentCeilingCheckScript).register("docker-image-build", DockerImageBuildScript).register("docker-image-check", DockerImageCheckScript).register("typecheck", TypecheckScript);
 
-await runScriptMain(router, { defaultCommand: "test" });
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

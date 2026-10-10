@@ -1,0 +1,40 @@
+{
+  "sourceRed": {
+    "session": 45388,
+    "NxStatus": 1,
+    "duration": "17.0s",
+    "Bun": "1pass2fail35assertions",
+    "qualification": "New Edit path law failed after independent original JSON byte comparison; separate retained original rustfmt 5s observation timed out, no budget override."
+  },
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs",
+      "beforeSha256": "4ef80c7d6641ba9300cd523cee9548080279376e685d7c9e34276b2e27ca360d",
+      "afterSha256": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589",
+      "blockBeforeSha256": "fa3ee28d6293f34a9e3e607487cd0617965003365830df1dfbb05eb9c0316699",
+      "scope": "remove Edit duplicate eager boxed borrowed iterator projection; preserve existing indexed node/key metadata implementation and all other peer text",
+      "observedCurrentSha256": "041f733c4c24c2588787ab643727490ce4520ab5a757a7e8f6ec4368fe9d1589"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts",
+      "beforeSha256": "381e49f360ec96af31d62ef8fbe7f0fb16f5e1beb36217bdb2580a7acf5b8a89",
+      "afterSha256": "cadf3284f00f9d00b75e1155ab1b58632c32c2b6aedd2d3f0c83a73e821624e6",
+      "scope": "original JSON/TextEncoder field/order oracle and absence of eager Edit traversal, original tests unchanged",
+      "observedCurrentSha256": "cadf3284f00f9d00b75e1155ab1b58632c32c2b6aedd2d3f0c83a73e821624e6"
+    }
+  ],
+  "native": "UNRUN",
+  "plainFixture": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/🔏️canonical-edit-sealer.json",
+    "sha256": "12e6427dda65ffe5765a88c0f5dddd15ef4f08f3c87e198fe1fdf299e2263589"
+  },
+  "sourceFreeze": false,
+  "sourceCurrent": {
+    "session": 51332,
+    "NxStatus": 0,
+    "duration": "11.9s",
+    "Bun": "3pass0fail36assertions",
+    "log": "🗑️generated/pub-json-edit-current.log",
+    "qualification": "Original budgets unchanged; JSON/TextEncoder/Ajv and original three Rust parses actual positive, not compiler/native proof"
+  }
+}

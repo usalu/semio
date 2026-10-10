@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "outerAuthority",
+    "wholeRequestRetained",
+    "samePayloadAllocation",
+    "pendingPayload",
+    "metadataMaterializedWhilePending",
+    "terminalDropBytes",
+    "originalCallerIdentity",
+    "childTerminalRequired"
+  ],
+  "properties": {
+    "outerAuthority": {
+      "const": true
+    },
+    "wholeRequestRetained": {
+      "const": true
+    },
+    "samePayloadAllocation": {
+      "const": true
+    },
+    "pendingPayload": {
+      "const": null
+    },
+    "metadataMaterializedWhilePending": {
+      "const": false
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "originalCallerIdentity": {
+      "const": true
+    },
+    "childTerminalRequired": {
+      "const": true
+    }
+  }
+}

@@ -33,6 +33,9 @@ mod lifecycle;
 use lifecycle::AdmittedAuthority;
 #[path="🪪️identity/🦀️.rs"]
 pub mod identity;
+
+#[path="🎟️grant/🦀️.rs"]
+pub mod grant;
 pub use identity::{OriginalShardIdentity,OriginalShardIdentityIssuer,ShardIdentityPolicy,native_identity_issuer};
 pub use lifecycle::{ShardActorAllocation, ShardRegistrationReason, ShardRegistrationRejected};
 
@@ -78,7 +81,7 @@ pub enum ShardFrame {
     /// `ShardLoop::pump` remembers `budget` as `actor`'s "last granted budget" (`Self::
     /// granted_budget`) — used for THIS grant's own envelopes, any later standalone `Envelope`
     /// frame for the same actor, and that actor's job steps.
-    Grant { actor: ActorId, budget: semio_framework_actor::Budget, envelopes: Vec<Envelope> },
+    Grant { actor: ActorId, retained: semio_framework_actor::RetainedTurnInput, budget: semio_framework_actor::Budget, envelopes: Vec<Envelope> },
     /// 🔌️ Passthrough for one raw envelope, budget-less — kept so the web `ShardClient`/
     /// `WorkerTransport` (and any other not-yet-migrated caller) can adopt this wire incrementally
     /// in a later packet without both ends changing atomically; this is NOT redundant with `Grant`,
@@ -97,18 +100,33 @@ impl ShardFrame {
         }
     }
 
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+    pub async fn pack_encode_grant(grant: &semio_framework_actor::TurnGrant, resources: grant::ShardResourceBudget, out: &mut Vec<u8>) -> Result<(), semio_framework_actor::pack::PackError> {
+        grant.original_input().validate().map_err(|_| semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"))?;
+        let mut budget = grant.budget;
+        resources.apply(&mut budget);
+        semio_framework_actor::pack::write_u8(out, 2).await;
+        grant.actor.pack_encode(out).await;
+        grant.original_input().pack_encode(out).await?;
+        budget.pack_encode(out).await?;
+        semio_framework_actor::pack::write_vec(out, &grant.envelopes, async |envelope, out| envelope.pack_encode(out).await).await;
+        Ok(())
+    }
+
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), semio_framework_actor::pack::PackError> {
+        if let ShardFrame::Grant { retained, .. } = self { retained.validate().map_err(|_| semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"))?; }
         semio_framework_actor::pack::write_u8(out, self.tag().await).await;
         match self {
             ShardFrame::Register { actor } => actor.pack_encode(out).await,
             ShardFrame::Unregister { actor } => actor.pack_encode(out).await,
-            ShardFrame::Grant { actor, budget, envelopes } => {
+            ShardFrame::Grant { actor, retained, budget, envelopes } => {
                 actor.pack_encode(out).await;
-                budget.pack_encode(out).await;
+                retained.pack_encode(out).await?;
+                budget.pack_encode(out).await?;
                 semio_framework_actor::pack::write_vec(out, envelopes, async |o, e| o.pack_encode(e).await).await;
             }
             ShardFrame::Envelope(envelope) => envelope.pack_encode(out).await,
         }
+        Ok(())
     }
 
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor::pack::PackError> {
@@ -118,6 +136,7 @@ impl ShardFrame {
             1 => Ok(ShardFrame::Unregister { actor: ActorId::pack_decode(bytes, pos).await? }),
             2 => Ok(ShardFrame::Grant {
                 actor: ActorId::pack_decode(bytes, pos).await?,
+                retained: semio_framework_actor::RetainedTurnInput::pack_decode(bytes, pos).await?,
                 budget: semio_framework_actor::Budget::pack_decode(bytes, pos).await?,
                 envelopes: semio_framework_actor::pack::read_vec(bytes, pos, "ShardFrame::Grant::envelopes", Envelope::pack_decode).await?,
             }),
@@ -140,13 +159,99 @@ const GRANT_BUDGET_DEFAULT_MAX_FRAMES: u32 = 8;
 /// [`semio_framework::kernel::Budget`] `GuestRuntime::execute_turn` actually takes.
 /// `wall_ms`→`deadline_ms` (both are "how long this turn may run", named differently per crate);
 /// `max_frames` has no source field yet (see [`GRANT_BUDGET_DEFAULT_MAX_FRAMES`]).
-async fn turn_budget_from_grant(budget: semio_framework_actor::Budget) -> Budget {
-    Budget { fuel: budget.fuel, deadline_ms: budget.wall_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: GRANT_BUDGET_DEFAULT_MAX_FRAMES }
+#[derive(Debug, PartialEq)]
+struct IssuedShardTurn {
+    retained: semio_framework_actor::RetainedTurnInput,
+    budget: semio_framework_actor::Budget,
+    envelopes: usize,
+    next: usize,
+    issued: Option<semio_framework_actor::RetainedTurnInput>,
+    spent: semio_framework_value::RetainedCloneProgress,
+    active_progress: semio_framework_value::RetainedCloneProgress,
+    returned: bool,
+}
+
+impl IssuedShardTurn {
+    fn new(retained: semio_framework_actor::RetainedTurnInput, budget: semio_framework_actor::Budget, envelopes: usize) -> Result<Self, semio_framework_value::ValueError> {
+        retained.validate()?;
+        if envelopes == 0 { return Err(Self::refusal("issued shard batch requires an original envelope")); }
+        Ok(Self { retained, budget, envelopes, next: 0, issued: None, spent: Default::default(), active_progress: Default::default(), returned: false })
+    }
+    fn original_input(&self) -> &semio_framework_actor::RetainedTurnInput { &self.retained }
+    fn remaining_input(&self) -> Result<semio_framework_actor::RetainedTurnInput, semio_framework_value::ValueError> {
+        if self.returned { return Err(Self::refusal("issued shard batch has already returned")); }
+        Ok(semio_framework_actor::RetainedTurnInput { grant: self.original_input().return_original(self.spent)?.remaining, ..*self.original_input() })
+    }
+    fn issue_envelope(&mut self, index: usize) -> Result<semio_framework_actor::RetainedTurnInput, semio_framework_value::ValueError> {
+        if index != self.next || index >= self.envelopes || self.issued.is_some() { return Err(Self::refusal("issued shard envelope is absent, duplicated, or out of order")); }
+        let input = self.remaining_input()?;
+        self.issued = Some(input);
+        Ok(input)
+    }
+    fn settle_envelope(&mut self, index: usize, receipt: semio_framework_actor::RetainedTurnReceipt) -> Result<Option<semio_framework_actor::RetainedTurnReceipt>, semio_framework_value::ValueError> {
+        if self.returned || index != self.next || index >= self.envelopes { return Err(Self::refusal("issued shard envelope cannot complete twice or out of order")); }
+        let issued = self.issued.ok_or_else(|| Self::refusal("issued shard envelope has no original checkout"))?;
+        receipt.validate_for(issued)?;
+        let active = self.active_progress;
+        if receipt.spent.copied_items < active.copied_items || receipt.spent.copied_bytes < active.copied_bytes || receipt.spent.retained_capacity_bytes < active.retained_capacity_bytes || receipt.spent.released_bytes < active.released_bytes { return Err(Self::refusal("issued shard receipt omits already received physical spans")); }
+        let spent = self.spent.checked_add(receipt.spent)?;
+        let whole = self.original_input().return_original(spent)?;
+        let next = self.next.checked_add(1).ok_or_else(|| Self::refusal("issued shard envelope index overflow"))?;
+        self.spent = spent; self.active_progress = Default::default(); self.issued = None; self.next = next;
+        if next == self.envelopes { self.returned = true; Ok(Some(whole)) } else { Ok(None) }
+    }
+    fn envelope_recipient(&mut self, index: usize) -> Result<IssuedShardRetainedRecipient<'_>, semio_framework_value::ValueError> {
+        let input = self.issue_envelope(index)?;
+        Ok(IssuedShardRetainedRecipient { turn: self, index, input, finished: false })
+    }
+    fn refusal(message: &'static str) -> semio_framework_value::ValueError {
+        semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message)
+    }
+}
+
+/// 🫴️ Borrows one issued envelope and settles its actual spans into the original batch.
+pub struct IssuedShardRetainedRecipient<'a> {
+    turn: &'a mut IssuedShardTurn,
+    index: usize,
+    input: semio_framework_actor::RetainedTurnInput,
+    finished: bool,
+}
+impl IssuedShardRetainedRecipient<'_> {
+    /// 👁️ Borrows the unchanged issued envelope identity and its original remaining currencies.
+    pub fn original_input(&self) -> &semio_framework_actor::RetainedTurnInput { &self.input }
+    /// 🧮️ Returns only authority unspent by accepted spans in this envelope.
+    pub fn remaining_grant(&self) -> Result<semio_framework_value::RetainedCloneGrant, semio_framework_value::ValueError> { Ok(self.input.return_original(self.turn.active_progress)?.remaining) }
+    /// 🧾️ Retains the actual child delta before reporting an exceeded original grant.
+    pub fn record_progress(&mut self, progress: semio_framework_value::RetainedCloneProgress) -> Result<(), semio_framework_value::ValueError> {
+        if self.finished { return Err(IssuedShardTurn::refusal("issued shard recipient has already settled")); }
+        let next = self.turn.active_progress.checked_add(progress)?;
+        self.turn.active_progress = next;
+        self.input.return_original(next).map(|_| ())
+    }
+    /// 📬️ Validates one envelope return and emits a parent receipt only at batch completion.
+    pub fn finish(&mut self) -> Result<Option<semio_framework_actor::RetainedTurnReceipt>, semio_framework_value::ValueError> {
+        if self.finished { return Err(IssuedShardTurn::refusal("issued shard recipient cannot return twice")); }
+        let receipt = self.input.return_original(self.turn.active_progress)?;
+        let whole = self.turn.settle_envelope(self.index, receipt)?;
+        self.finished = true;
+        Ok(whole)
+    }
+}
+
+impl semio_framework_os_services::ComputeRetainedRecipient for IssuedShardRetainedRecipient<'_> {
+    fn remaining_grant(&self) -> Result<semio_framework_value::RetainedCloneGrant, semio_framework_value::ValueError> { Self::remaining_grant(self) }
+    fn record_progress(&mut self, progress: semio_framework_value::RetainedCloneProgress) -> Result<(), semio_framework_value::ValueError> { Self::record_progress(self, progress) }
+}
+
+async fn turn_budget_from_grant(turn: IssuedShardTurn) -> Budget {
+    let budget = turn.budget;
+    Budget { retained: *turn.original_input(), fuel: budget.fuel, deadline_ms: budget.wall_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: GRANT_BUDGET_DEFAULT_MAX_FRAMES }
 }
 
 /// 🔀️ Same `Grant` budget, `GuestRuntime::step_job`'s shape — `JobBudget` only ever carried
 /// `fuel`/`deadline_ms`, so this is a straight field mapping, no invented default needed.
-async fn job_budget_from_grant(budget: semio_framework_actor::Budget) -> JobBudget {
+async fn job_budget_from_grant(turn: IssuedShardTurn) -> JobBudget {
+    let budget = turn.budget;
     JobBudget { fuel: budget.fuel, deadline_ms: budget.wall_ms }
 }
 
@@ -227,6 +332,7 @@ async fn to_actor_turn_result_in_place(result: &mut TurnResult, session: u64, wa
         }
     };
     Ok(semio_framework_actor::TurnResult {
+        retained_receipt: result.retained_receipt,
         ui_patches,
         effects,
         command_ingress,
@@ -448,7 +554,7 @@ pub struct ShardLoop {
     /// replaces the deleted `budget_for` closure / `TURN_BUDGET` / `JOB_STEP_BUDGET` constants.
     /// Read by [`Self::granted_budget`]; an actor with no entry (never granted) falls back to the
     /// Maintenance lane's default, per that method's own doc.
-    granted_budgets: HashMap<u64, semio_framework_actor::Budget>,
+    granted_budgets: HashMap<u64, IssuedShardTurn>,
     /// 🚦 terra-shard-lane (piece 1, `📓️terra-shard-lane-report.md`): the lane from the LAST
     /// [`Envelope`] this shard has dispatched for each actor (`Self::dispatch_envelope`, which
     /// sees every envelope bundled in a `ShardFrame::Grant` as well as every standalone
@@ -969,6 +1075,7 @@ fn defer_completion(
     terminal: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
     lane: semio_framework_actor::Lane,
     allocation: Option<ShardActorAllocation>,
+    budget: Option<IssuedShardTurn>,
     actor: u64,
     event: Event,
 ) -> Result<(), PluginHostError> {
@@ -978,7 +1085,7 @@ fn defer_completion(
             _ => unreachable!("ShardLoop: only job completions use generated authority admission"),
         };
     let ring = if ShardLoop::is_high_priority_lane(lane) { interactive } else { background };
-    let owner = AdmittedAuthority::new(allocation, semio_framework_actor::lane_defaults::budget_for(lane), DeferredAuthority::Event { actor, event }, lane, bytes);
+    let owner = AdmittedAuthority::new(allocation, budget, DeferredAuthority::Event { actor, event }, lane, bytes);
     match ring.try_push(owner, bytes) {
         Ok(_) => Ok(()),
         Err(rejected) => {
@@ -1020,18 +1127,9 @@ impl ShardLoop {
         }
     }
 
-    /// ⚖️ `actor`'s last [`ShardFrame::Grant`]ed budget — used for both turn execution and job
-    /// stepping (point 2 of the packet brief: "job steps take the owning actor's last granted
-    /// budget on the Maintenance lane"). Falls back to `lane_defaults::budget_for(Lane::
-    /// Maintenance)` — a real, already-designed floor from the actor crate's own vocabulary, not
-    /// an invented magic constant — for an actor that has never been granted a budget at all (e.g.
-    /// a standalone `ShardFrame::Envelope` arriving before any `Grant`, or a caller like the
-    /// `semio-shard` `[[bin]]` that does not yet send `Grant` frames at all).
-    fn granted_budget(&self, actor: u64) -> semio_framework_actor::Budget {
-        match self.granted_budgets.get(&actor).copied() {
-            Some(budget) => budget,
-            None => semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance),
-        }
+    /// 🎟️ Borrows only the actor's original supplied grant.
+    fn granted_budget(&self, actor: u64) -> Option<IssuedShardTurn> {
+        self.granted_budgets.get(&actor).copied()
     }
 
     /// 🚦 terra-shard-lane piece 1: true for the two lanes that must jump a shard's queue ahead of
@@ -1080,20 +1178,20 @@ impl ShardLoop {
         if !self.actor_generation_is_current(ActorId(actor)) {
             return false;
         }
-        let budget = self.granted_budgets.entry(actor).or_insert_with(|| semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance));
-        if budget.fuel == 0 || budget.wall_ms == 0 {
+        let Some(budget) = self.granted_budgets.get_mut(&actor) else { return false };
+        if budget.budget.fuel == 0 || budget.budget.wall_ms == 0 {
             return false;
         }
-        budget.fuel -= 1;
+        budget.budget.fuel -= 1;
         true
     }
 
     fn consume_replay_close_opportunity(&mut self, actor: u64) -> bool {
-        let budget = self.granted_budgets.entry(actor).or_insert_with(|| semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance));
-        if budget.fuel == 0 || budget.wall_ms == 0 {
+        let Some(budget) = self.granted_budgets.get_mut(&actor) else { return false };
+        if budget.budget.fuel == 0 || budget.budget.wall_ms == 0 {
             return false;
         }
-        budget.fuel -= 1;
+        budget.budget.fuel -= 1;
         true
     }
 
@@ -1123,7 +1221,7 @@ impl ShardLoop {
                 refusal.phase = ReplaySpawnRefusalPhase::RetireShell;
                 if publish {
                     let lane = self.actor_lane(actor);
-                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, lane, self.allocations.get(&actor).copied(), actor, Event::JobCompleted { job, result: RequestOutcome::Err(reason) })?;
+                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, lane, self.allocations.get(&actor).copied(), self.granted_budgets.get(&actor).copied(), actor, Event::JobCompleted { job, result: RequestOutcome::Err(reason) })?;
                 }
             }
             ReplaySpawnRefusalPhase::RetireShell => {
@@ -1608,7 +1706,7 @@ impl ShardLoop {
     }
 
     pub(super) fn can_accept_primed_frame(&self) -> bool {
-        !self.has_pending_work() || self.has_lifecycle_retry()
+        !self.has_pending_work() || self.has_lifecycle_retry() || self.has_unissued_authority()
     }
 
     pub fn has_pending_work(&self) -> bool {
@@ -1680,7 +1778,7 @@ impl ShardLoop {
                 frame = Some((self.claim_frame_epoch(), bytes));
             }
         }
-        if frame.is_none() && (!has_deferred || self.has_lifecycle_retry()) {
+        if frame.is_none() && (!has_deferred || self.has_lifecycle_retry() || self.has_unissued_authority()) {
             if let Some(bytes) = self.transport.recv().await {
                 frame = Some((self.claim_frame_epoch(), bytes));
             }
@@ -1707,6 +1805,7 @@ impl ShardLoop {
             }
         }
 
+        self.drive_unissued_authority();
         if self.drive_replay_refusal().await? {
             return Ok(1);
         }
@@ -1721,9 +1820,10 @@ impl ShardLoop {
                 }
                 return Ok(1);
             }
+            let budget = owner.budget.expect("selected authority owns original issued grant");
             let lane = owner.lane;
             if let DeferredAuthority::Event { actor, event } = &owner.authority {
-                if self.execute_turn_for(*actor, event, owner.budget, lane).await? {
+                if self.execute_turn_for(*actor, event, budget, lane).await? {
                     self.retain_lifecycle_retry(owner)?;
                 }
                 return Ok(1);
@@ -1741,7 +1841,7 @@ impl ShardLoop {
                         }
                     }
                     self.accept_job_turn(actor, turn)?;
-                    selected_step = Some((actor, turn));
+                    selected_step = Some((actor, turn, budget));
                 }
                 DeferredAuthority::JobReplay { actor, turn, request, worker_count, worker_slot } => {
                     self.begin_replay_seed(actor, turn, request, worker_count, worker_slot)?;
@@ -1765,7 +1865,7 @@ impl ShardLoop {
             return Ok(1);
         }
         let selected_step = selected_step;
-        if let Some((actor_id, turn)) = selected_step {
+        if let Some((actor_id, turn, budget)) = selected_step {
             let job = turn.job;
             let Some(authority) = self.job_authorities.get(&(actor_id, job)).copied() else {
                 let message = format!("ShardLoop::pump: job {job} has no independently admitted operation authority");
@@ -1798,7 +1898,7 @@ impl ShardLoop {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
                 return Ok(1);
             }
-            let job_budget = job_budget_from_grant(self.granted_budget(actor_id));
+            let job_budget = job_budget_from_grant(budget);
             let actor_lane = self.actor_lane(actor_id);
             let watchdog_stage = interactive_stage_for(actor_lane);
             let replayable = self.replay_seeds.iter().flatten().any(|seed| seed.actor == actor_id && seed.job == job && seed.replayable);
@@ -1825,6 +1925,7 @@ impl ShardLoop {
                                     &mut self.terminal_authorities,
                                     actor_lane,
                                     self.allocations.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).copied(),
                                     actor_id,
                                     Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) },
                                 )?;
@@ -1839,6 +1940,7 @@ impl ShardLoop {
                                     &mut self.terminal_authorities,
                                     actor_lane,
                                     self.allocations.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).copied(),
                                     actor_id,
                                     Event::JobCompleted { job, result: RequestOutcome::Err(detail.clone()) },
                                 )?;
@@ -1853,6 +1955,7 @@ impl ShardLoop {
                                 &mut self.terminal_authorities,
                                 actor_lane,
                                 self.allocations.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).copied(),
                                 actor_id,
                                 Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) },
                             )?;
@@ -1876,6 +1979,7 @@ impl ShardLoop {
                         &mut self.terminal_authorities,
                         actor_lane,
                         self.allocations.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).copied(),
                         actor_id,
                         Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) },
                     )?;
@@ -1939,7 +2043,7 @@ impl ShardLoop {
     /// wire-shape-mismatch sites this packet's report flags (`🦀️.rs`'s
     /// `execute_turn`, `⏳️runtime/🦀️.rs`'s `convert_poll_success`): nothing was dropped
     /// here, there was simply nothing produced.
-    async fn execute_turn_for(&mut self, actor_id: u64, event: &Event, granted: semio_framework_actor::Budget, actor_lane: semio_framework_actor::Lane) -> Result<bool, PluginHostError> {
+    async fn execute_turn_for(&mut self, actor_id: u64, event: &Event, granted: IssuedShardTurn, actor_lane: semio_framework_actor::Lane) -> Result<bool, PluginHostError> {
         let in_flight = self.instances.get(&actor_id).is_some_and(GuestInstance::turn_in_flight);
         let events = turn_events(event, in_flight);
         let turn_budget = turn_budget_from_grant(granted);
@@ -1967,6 +2071,7 @@ impl ShardLoop {
                                     &mut self.terminal_authorities,
                                     actor_lane,
                                     self.allocations.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).copied(),
                                     actor_id,
                                     Event::JobCompleted { job, result: RequestOutcome::Err(b"checked replay operation identity exhausted".to_vec()) },
                                 )?;
@@ -2091,8 +2196,13 @@ impl ShardLoop {
         match frame {
             ShardFrame::Register { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Register { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,
             ShardFrame::Unregister { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Unregister { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,
-            ShardFrame::Grant { actor, budget, envelopes } => {
-                self.granted_budgets.insert(actor.0, budget);
+            ShardFrame::Grant { actor, retained, budget, envelopes } => {
+                if envelopes.is_empty() { return Ok(FrameAdmission::Deferred); }
+                let issued = match IssuedShardTurn::new(retained, budget, envelopes.len()) {
+                    Ok(issued) => issued,
+                    Err(error) => return Err(self.retain_terminal_frame(bytes, PluginHostError::NativeIo(error))),
+                };
+                self.granted_budgets.insert(actor.0, issued);
                 let item_count = envelopes.len();
                 for (index, envelope) in envelopes.into_iter().enumerate() {
                     if let Err(error) = self.dispatch_envelope(envelope, split_frame_credit(bytes.len(), item_count, index)).await {
@@ -2554,6 +2664,9 @@ impl RecordingRuntime {
 
 #[cfg(test)]
 impl GuestRuntime for RecordingRuntime {
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorAdmissionReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(super::identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(crate::reactor::original_actor_context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input)))}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::reactor::original_actor_context::OriginalActorCloseReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(super::identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(crate::reactor::original_actor_context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input)))}
+
     async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<super::CompiledHandle, PluginHostError> {
         Ok(super::CompiledHandle { package_hash: package.hash.0, component: None, owned: None })
     }

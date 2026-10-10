@@ -1,9 +1,0 @@
-{
-  "status": "rejected",
-  "messages": [
-    {
-      "level": "error",
-      "code": "s.space.artifact-presence-invalid"
-    }
-  ]
-}

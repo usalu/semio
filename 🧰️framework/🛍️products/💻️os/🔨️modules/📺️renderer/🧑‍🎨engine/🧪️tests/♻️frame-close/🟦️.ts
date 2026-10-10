@@ -116,18 +116,78 @@ test("the actual empty engine backing quotes and receipts its physical array rel
 test("native and browser bootstrap frame authority is explicit, finite and preserves all five neutral axes",()=>{
  const law=JSON.parse(read("🪙️authority/🖼️frame/🔣️.json")),schema=JSON.parse(read("🪙️authority/🖼️frame/🧬️schema/🔣️.json"));const ajv=authoritySchema(),validate=ajv.compile(schema);expect(validate(law)).toBe(true);for(const axis of Object.keys(law.grant)){const missing=structuredClone(law);delete missing.grant[axis];expect(validate(missing)).toBe(false);const negative=structuredClone(law);negative.grant[axis]=-1;expect(validate(negative)).toBe(false);}
  const db=new Database(":memory:");try{const expected=db.query("SELECT 1 AS maximumItems,65536 AS maximumCopyBytes,65536 AS maximumCapacityBytes,16777216 AS maximumReleaseBytes,64 AS maximumDepth").get();expect(law.grant).toEqual(expected);}finally{db.close();}
- const native=read("🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"),browser=read("🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),frame=read("🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs"),renderer=read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");for(const source of [native,browser])expect(source.includes("OsHost::new(runtime, presenter, crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT)")).toBe(true);expect(frame.includes("pub(crate) fn new(retained: RetainedCloneGrant)")).toBe(true);expect(frame.includes("retained, site: \"os_renderer_frame_build\"")).toBe(true);expect(renderer.includes("retained, site: \"os_renderer.prepare.worker\"")).toBe(true);expect(frame.includes("self.retained, &mut self.preview_sequence")).toBe(true);
+ const native=read("🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"),browser=read("🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),frame=read("🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs"),renderer=read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");for(const source of [native,browser])expect(source.includes("OsHost::new(runtime, presenter, crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT)")).toBe(true);expect(frame.includes("pub(crate) fn new(retained: RetainedCloneGrant)")).toBe(true);expect(frame.includes("retained, site: \"os_renderer_frame_build\"")).toBe(true);expect(renderer.replace(/\s/g,"").includes("retained:self.retained,site:\"os_renderer.prepare.worker\"" )).toBe(true);expect(frame.replace(/\s/g,"").includes("receive_frame_outcome(&mutowner,self.retained,&mutself.retained_progress)")).toBe(true);
 });
 
 test("original Scene camera storage has strict packed identities and independent SQLite ownership semantics",()=>{
- const base="🧱️elements/🎞️Scenes/⏱️camera/",law=JSON.parse(read(base+"🧫️fixtures/🔣️.json")),schema=JSON.parse(read(base+"🧬️schema/🔣️.json")),ajv=authoritySchema(),validate=ajv.compile(schema);expect(validate(law)).toBe(true);for(const axis of Object.keys(law.rootGrant)){const missing=structuredClone(law);delete missing.rootGrant[axis];expect(validate(missing)).toBe(false);}
+ expect(existsSync(new URL("🧱️elements/🎞️Scenes/⏱️camera/🧬️schema/🔣️.json",engine))).toBe(false);
+ const base="🧱️elements/🎞️Scenes/⏱️camera/",law=JSON.parse(read(base+"🧫️fixtures/🔣️.json")),validate=authoritySchema().getSchema(grantKey)!;expect(validate(law.rootGrant)).toBe(true);for(const axis of Object.keys(law.rootGrant)){const missing=structuredClone(law.rootGrant);delete missing[axis];expect(validate(missing)).toBe(false);}
  const db=new Database(":memory:");try{const sql=db.query("SELECT lower(hex(CAST(?1||?2||?3||?4||?5||?6 AS BLOB))) AS hex,length(CAST(?1||?2||?3||?4||?5||?6 AS BLOB)) AS bytes");for(const row of law.cases){const o=row.owner,texts=[row.host,row.surface,o?.host??"",o?.window??"",o?.surface??"",o?.key.explicit??""];expect(sql.get(...texts)).toEqual({hex:row.packed.hex,bytes:row.packed.bytes});let offset=0;expect(texts.map(value=>{const bytes=Buffer.byteLength(value);const range=[offset,bytes];offset+=bytes;return range;})).toEqual(row.packed.ranges);}db.run("CREATE TABLE deadline(host TEXT PRIMARY KEY,at REAL,owner TEXT)");db.run("INSERT INTO deadline VALUES ('host',120,'old')");db.run("INSERT INTO deadline VALUES ('host',240,'new') ON CONFLICT(host) DO UPDATE SET at=excluded.at,owner=excluded.owner");expect(db.query("SELECT at,owner FROM deadline WHERE host='host'").get()).toEqual({at:240,owner:"new"});}finally{db.close();}
  expect(law.maximumEntries).toBe(256);expect(law.maximumIdentifierBytes).toBe(256);expect(existsSync(new URL(base+"🦀️.rs",engine))).toBe(true);const source=read("🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");expect(source.includes("hash_map::IntoIter<String, SceneCameraDeadline>")).toBe(false);expect(source.includes("camera_storage::DirectoryOwner")).toBe(true);const owner=read(base+"🦀️.rs");for(const marker of ["RetainedCloneGrant","RetainedCloneProgress","size_of","Layout","original_body_ptr","maximum_release_bytes","maximum_capacity_bytes"])expect(owner.includes(marker)).toBe(true);
 });
 
 
+test("camera exact capacity and identifier refusals agree with independent SQLite state transitions", () => {
+  const base = "🧱️elements/🎞️Scenes/⏱️camera/";
+  const corpus = JSON.parse(read(base + "🧫️fixtures/🔣️.json"));
+  const law = corpus.boundaries;
+  const db = new Database(":memory:");
+  try {
+    db.run("CREATE TABLE deadline(host TEXT PRIMARY KEY,at REAL,metadata INTEGER)");
+    db.run("WITH RECURSIVE ids(n) AS (SELECT 0 UNION ALL SELECT n+1 FROM ids WHERE n+1<?1) INSERT INTO deadline SELECT ?2||n,?3,?4 FROM ids", [law.identities.count, law.identities.prefix, law.identities.deadlineMs, law.identities.metadata]);
+    db.run("INSERT INTO deadline SELECT ?1,120,7 WHERE (SELECT count(*) FROM deadline)<?2", [law.overflow.host, corpus.maximumEntries]);
+    expect(db.query("SELECT count(*) AS retainedEntries FROM deadline").get()).toEqual({ retainedEntries: law.overflow.retainedEntries });
+    expect(db.query("SELECT count(*) AS overflowEntries FROM deadline WHERE host=?1").get(law.overflow.host)).toEqual({ overflowEntries: 0 });
+    db.run("CREATE TABLE cursor AS SELECT * FROM deadline");
+    db.run("DELETE FROM deadline");
+    const counts = () => db.query("SELECT (SELECT count(*) FROM deadline) AS globalEntries,(SELECT count(*) FROM cursor) AS cursorEntries").get();
+    expect(counts()).toEqual(law.checkout);
+    db.run("INSERT INTO deadline SELECT * FROM cursor");
+    db.run("DELETE FROM cursor");
+    expect(counts()).toEqual({ globalEntries: law.restore.globalEntries, cursorEntries: law.restore.cursorEntries });
+    db.run("INSERT INTO cursor SELECT 'original-'||host,at,metadata FROM deadline");
+    db.run("INSERT INTO deadline SELECT * FROM cursor LIMIT max(0,?1-(SELECT count(*) FROM deadline))", [corpus.maximumEntries]);
+    expect(counts()).toEqual({ globalEntries: law.occupiedRestore.globalEntries, cursorEntries: law.occupiedRestore.cursorEntries });
+    expect(db.query("SELECT length(CAST(?1 AS BLOB)) AS attemptedBytes").get("x".repeat(law.identifier.attemptedBytes))).toEqual({ attemptedBytes: law.identifier.attemptedBytes });
+    expect(law.identifier.attemptedBytes).toBe(corpus.maximumIdentifierBytes + 1);
+  } finally { db.close(); }
+  const native = read(base + "🧪️tests/🦀️.rs");
+  expect(native.includes("fn camera_exact_capacity_restores_originals_and_retains_a_full_cursor_on_refusal()")).toBe(true);
+  expect(native.includes("fn camera_identifier_maximum_plus_one_is_inert_on_a_vacant_original_owner()")).toBe(true);
+});
+
+test("actual atlas original-owner contract prices fixed backing with independent full authorities", () => {
+  const base = "../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/";
+  expect(existsSync(new URL(base+"🖼️atlas/🧬️schema/🔣️.json",engine))).toBe(false);
+  const corpus = JSON.parse(read(base + "🖼️atlas/🧫️fixtures/🔣️.json"));
+  const validate = authoritySchema().getSchema(grantKey)!;
+  for (const mode of ["normal", "retirement"]) {
+    const grant = corpus.authority[mode];
+    expect(validate(grant)).toBe(true);
+    for (const axis of Object.keys(grant)) {
+      const missing = structuredClone(grant);
+      delete missing[axis];
+      expect(validate(missing)).toBe(false);
+    }
+  }
+  const db = new Database(":memory:");
+  try {
+    const sql = db.query("WITH RECURSIVE page(startRow) AS (SELECT 0 UNION ALL SELECT startRow+?1/(?2*?3) FROM page WHERE startRow+?1/(?2*?3)<?4) SELECT startRow,min(?1/(?2*?3),?4-startRow) AS rows,min(?1/(?2*?3),?4-startRow)*?2*?3 AS payloadBytes,?1 AS allocationBytes FROM page");
+    for (const row of corpus.cases) {
+      expect(sql.all(corpus.policy.pageBytes, row.width, row.channels, row.height)).toEqual(row.pages);
+      expect(db.query("SELECT ?1*?2*?3 AS sourceBytes").get(row.width, row.height, row.channels)).toEqual({ sourceBytes: row.sourceBytes });
+      expect(db.query("SELECT sum(json_extract(value,'$.allocationBytes')) AS bytes FROM json_each(?1)").get(JSON.stringify(row.pages))).toEqual({ bytes: row.pages.length * corpus.policy.pageBytes });
+    }
+  } finally { db.close(); }
+  const native = read(base + "🦀️.rs");
+  expect(native.includes("pub struct PreparedAtlasAuthority")).toBe(true);
+  expect(native.includes("fn original_owner_progress(")).toBe(true);
+  expect(native.includes("fn close_original_step(")).toBe(true);
+});
+
 test("the actual typed ViewContext dictionaries preserve canonical UTF8 field order and the original wire oracle",()=>{
- const manifest="../../../../../🔨️modules/🛂️manifest/",law=JSON.parse(read(manifest+"🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json")),schema=JSON.parse(read(manifest+"🪟️view-context/🧬️schema/🔢️integer-carriers.json")),viewSchema=JSON.parse(read(manifest+"🪟️view-context/🧬️schema/🔣️.json")),ajv=authoritySchema().addSchema(viewSchema),validate=ajv.compile(schema);expect(validate(law)).toBe(true);const missing=structuredClone(law);delete missing.canonicalDictionaryOrder;expect(validate(missing)).toBe(false);
+ expect(existsSync(new URL("../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔢️integer-carriers.json",engine))).toBe(false);
+ const manifest="../../../../../🔨️modules/🛂️manifest/",law=JSON.parse(read(manifest+"🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json")),viewSchema=JSON.parse(read(manifest+"🪟️view-context/🧬️schema/🔣️.json")),ajv=authoritySchema(),validate=ajv.compile(viewSchema);expect(validate(law.viewContext)).toBe(true);
  const db=new Database(":memory:");try{for(const [name,fields]of Object.entries(law.canonicalDictionaryOrder)){const ordered=db.query("SELECT value FROM json_each(?1) ORDER BY CAST(value AS BLOB)").all(JSON.stringify(fields)).map((row)=>row.value);expect(fields).toEqual(ordered);const source=read(name==="ViewModel"?manifest+"🦀️.rs":"../../../../../🔨️modules/⏯️tool-run/🦀️.rs"),start=source.indexOf(`pub struct ${name} {`),body=source.slice(start,source.indexOf("\n}",start));const actual=[...body.matchAll(/pub ([a-z_]+):/g)].map(match=>match[1].replace(/_([a-z])/g,(_,letter)=>letter.toUpperCase()));expect(actual).toEqual(fields);}}finally{db.close();}
  expect(law.packHex.length).toBe(384);const bridge=read("🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");expect(bridge.includes("ToValue::to_value(view_state)")).toBe(true);
 });
@@ -136,12 +196,7 @@ test("the actual typed ViewContext dictionaries preserve canonical UTF8 field or
 test("borrowed key presentation releases Scene storage before entering UI and matches independent keys", () => {
   const base = new URL("../../../../../🔨️modules/🖱️ui/", engine);
   const corpus = JSON.parse(readFileSync(new URL("🔑️node-key/🧫️fixtures/🔣️.json", base), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("🔑️node-key/🧬️schema/🔣️.json", base), "utf8"));
-  const validate = new Ajv2020({ strict: true }).compile(schema);
-  expect(validate(corpus)).toBe(true);
-  const denied = structuredClone(corpus);
-  denied.cases[0].borrowed = { explicit: "key", positional: [7, 9] };
-  expect(validate(denied)).toBe(false);
+  expect(existsSync(new URL("🔑️node-key/🧬️schema/🔣️.json",base))).toBe(false);
   const database = new Database(":memory:");
   try {
     const sql = database.query("SELECT CASE WHEN json_type(?1,'$.explicit') IS NOT NULL AND json_type(?2,'$.explicit') IS NOT NULL THEN CAST(json_extract(?1,'$.explicit') AS BLOB) = CAST(json_extract(?2,'$.explicit') AS BLOB) WHEN json_type(?1,'$.positional') IS NOT NULL AND json_type(?2,'$.positional') IS NOT NULL THEN json_extract(?1,'$.positional[0]') = json_extract(?2,'$.positional[0]') AND json_extract(?1,'$.positional[1]') = json_extract(?2,'$.positional[1]') ELSE 0 END AS matched");

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://plugin/checkpoint/original-actor-admission-v1",
+  "description": "Restore receives the caller NativeSnapshotDecodeOwner, its independent full grant and already admitted EntityIdentityAuthority. Actor adoption preserves the same original UTF8 allocation, refuses and cancels before Arc birth with the same String slot, records actual physical native admission and never mints authority from checkpoint bytes or budgets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractId", "source", "grantSource", "acceptedGrants", "refusedGrants", "frameLayouts", "semanticMetadataCopyBytes", "prebirthRequestedBytes", "prebirthReleasedBytes", "preserveOriginalPointer", "preserveOriginalCapacity", "preserveOriginalNativeControl"],
+  "properties": {
+    "contractId": {"const": "semio.plugin.checkpoint.original-actor-admission/v1"},
+    "source": {"type": "string", "minLength": 1},
+    "grantSource": {"const": "io.native-snapshot-encode-owner/v1/cases"},
+    "acceptedGrants": {"type": "array", "uniqueItems": true, "minItems": 3, "maxItems": 3, "items": {"enum": ["full", "maximumCopyBytes", "maximumReleaseBytes"]}},
+    "refusedGrants": {"type": "array", "uniqueItems": true, "minItems": 3, "maxItems": 3, "items": {"enum": ["maximumItems", "maximumCapacityBytes", "maximumDepth"]}},
+    "frameLayouts": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["nativeWordBytes", "arcBytes"], "properties": {"nativeWordBytes": {"enum": [4, 8]}, "arcBytes": {"enum": [20, 40]}}}},
+    "semanticMetadataCopyBytes": {"const": 0},
+    "prebirthRequestedBytes": {"const": 0},
+    "prebirthReleasedBytes": {"const": 0},
+    "preserveOriginalPointer": {"const": true},
+    "preserveOriginalCapacity": {"const": true},
+    "preserveOriginalNativeControl": {"const": true}
+  }
+}

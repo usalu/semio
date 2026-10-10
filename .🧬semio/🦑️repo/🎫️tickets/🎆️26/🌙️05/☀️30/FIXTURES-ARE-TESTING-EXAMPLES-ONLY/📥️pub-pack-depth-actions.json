@@ -1,0 +1,90 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/⚠️failure/🔣️.json",
+      "scope": "plain original intrinsic Bool per-turn depth1 byte oracle, hard inline bound and fixed caller policy unchanged",
+      "beforeSha256": "aec4478a848935972dc33c401c64f4a8a9133bd328e3b4798672540189580109",
+      "afterSha256": "43d87c645de75b3b2bf5ec5d43df0658eda3a04c737c1f0ee278a856a4adf1ee"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts",
+      "scope": "existing original independent Buffer/varint intrinsic byte oracle plus actual shallow grant/missing traversal-depth Source RED",
+      "beforeSha256": "7a1740f766847ccc0313680d39d47f8b800f449ce666e8c1b1c5feafaae7ba7a",
+      "afterSha256": "26b0cd937f0b036b7ca940bf1fc5a157bb5e25df8864595198211db44a551220"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs",
+      "scope": "genuine actual per-turn borrowed source/symbol-page traversal quote, inert insufficient supplied depth before identity/work; inline hard64 unchanged, no grant enlargement",
+      "beforeSha256": "10b3249636962dda3a68f9c45f6d95daa06470124a8816774644d76eabd32666",
+      "afterSha256": "78f343d6c5a106305307b938bdbf7307d7fe64232a71cb84c70ce1a17ae7f555"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧬️schema/🔣️.json",
+      "scope": "genuine grant policy describes actual traversal frontier while preserving every payload rule and original hard64 request bound",
+      "beforeSha256": "57406b1d43e1db814238af1370541034e5f520737f3a46dbee10d43fd202a302",
+      "afterSha256": "7289c32336498597a53a7ae4135e00d39450b85c80dc4363c62138df641f6281"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs",
+      "scope": "actual original flat Bool Buffer bytes/System/five-axis/depth0 refusal native law; fixed plain depth1 and no symbol births; other native laws retained",
+      "beforeSha256": "d9ba81bf78f79cb2a0a6bf52c6d744111a71030b78aee9d4d3f171ecc01cd5b9",
+      "afterSha256": "9a78b6ae407a84964162e2d39d844bfc8330993010249914079eddb4cc9a5919",
+      "qualification": "native law authored UNRUN"
+    }
+  ],
+  "preTestSetupFailure": {
+    "session": 48688,
+    "mutation": false,
+    "NxStatus": 0,
+    "tests": "5pass/278assertions unchanged baseline",
+    "qualification": "preceding Python input encoding failed before mutation; this is NOT depth RED",
+    "log": "🗑️generated/pub-pack-depth-baseline.log"
+  },
+  "red": {
+    "session": 15614,
+    "NxStatus": 1,
+    "tests": "5pass/1fail/280assertions",
+    "taskDuration": "6.8s",
+    "log": "🗑️generated/pub-pack-depth-red.log",
+    "qualification": "true missing actual per-turn depth quote after independent byte oracle; original Rust grammar retained"
+  },
+  "green": {
+    "session": 12447,
+    "NxStatus": 0,
+    "taskDuration": "1.5s",
+    "tests": "6pass/0fail/283assertions",
+    "qualification": "Actual terminal observed before interruption; generated green log unavailable at resumed read. Original Source/oracle/grammar only, native authored UNRUN."
+  },
+  "resumedCurrentObservation": {
+    "utc": "2026-10-09T22:02:56.457255+00:00",
+    "sources": [
+      {
+        "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/⚠️failure/🔣️.json",
+        "sha256": "43d87c645de75b3b2bf5ec5d43df0658eda3a04c737c1f0ee278a856a4adf1ee",
+        "matchesAuthoredAfter": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts",
+        "sha256": "26b0cd937f0b036b7ca940bf1fc5a157bb5e25df8864595198211db44a551220",
+        "matchesAuthoredAfter": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs",
+        "sha256": "78f343d6c5a106305307b938bdbf7307d7fe64232a71cb84c70ce1a17ae7f555",
+        "matchesAuthoredAfter": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧬️schema/🔣️.json",
+        "sha256": "7289c32336498597a53a7ae4135e00d39450b85c80dc4363c62138df641f6281",
+        "matchesAuthoredAfter": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs",
+        "sha256": "9a78b6ae407a84964162e2d39d844bfc8330993010249914079eddb4cc9a5919",
+        "matchesAuthoredAfter": true
+      }
+    ],
+    "greenLogPresent": false,
+    "ownProcessObserved": false
+  }
+}

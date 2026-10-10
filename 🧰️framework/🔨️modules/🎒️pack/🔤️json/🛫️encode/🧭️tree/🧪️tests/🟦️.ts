@@ -1,17 +1,11 @@
 import { test, expect } from "bun:test";
-import Ajv2020 from "ajv/dist/2020";
 import { Database } from "bun:sqlite";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 test("native canonical paged traversal retains original byte prefixes and closes every admitted alias", () => {
   const root = new URL("../", import.meta.url);
   const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", root), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("🧬️schema/🔣️.json", root), "utf8"));
-  const validate = new Ajv2020({ strict: true }).compile(schema);
-  expect(validate(fixture)).toBe(true);
-  expect(validate({ ...fixture, grants: [0] })).toBe(false);
-  expect(validate({ ...fixture, depths: [-1] })).toBe(false);
   const db = new Database(":memory:");
   db.run("CREATE TABLE aliases (ordinal INTEGER PRIMARY KEY, owner TEXT NOT NULL)");
   for (const depth of fixture.depths) {
@@ -54,4 +48,13 @@ test("native canonical paged traversal retains original byte prefixes and closes
   expect(source).toContain("canonical_escaped_byte");
   expect(source).not.toContain("let mut escape = [0; 6]");
   console.log("[DEBUG] canonical original Unicode/NUL JSON byte prefixes and SQLite exact alias conservation at depths 0/1/80/257; tiny grants unchanged");
+});
+
+test("original scalar traversal uses real initialized bytes and independent positive grant policy",()=>{
+ const root=new URL("../",import.meta.url);const rows=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",root),"utf8"));
+ for(const row of rows.scalarCases){expect(JSON.stringify(row.value)).toBe(row.expected);}
+ expect(rows.retainedPolicy).toEqual({maximumItems:1,maximumCopyBytes:4096,maximumCapacityBytes:4096,maximumReleaseBytes:4096,maximumDepth:64});
+ for(const value of [true,false,null,42,-42,0.125]){const bytes=Buffer.from(JSON.stringify(value));expect([...bytes]).toEqual([...new TextEncoder().encode(JSON.stringify(value))]);expect(bytes.length).toBeLessThanOrEqual(64);}
+ const source=readFileSync(new URL("🦀️.rs",root),"utf8");expect(source).toContain("frame.scalar.write_node(scalar)");expect(source).not.toContain("frame.scalar = ScalarBytes::from_node");
+ const native=readFileSync(new URL("🧪️tests/🦀️.rs",root),"utf8");expect(native).toContain("rows[\"retainedPolicy\"]");expect(native).not.toContain("maximum_copy_bytes:demand.copy_bytes");expect(existsSync(new URL("🧬️schema/🔣️.json",root))).toBe(false);
 });

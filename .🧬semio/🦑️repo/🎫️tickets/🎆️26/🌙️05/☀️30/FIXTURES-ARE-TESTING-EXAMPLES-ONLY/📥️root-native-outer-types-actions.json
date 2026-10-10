@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "5b9d019320b79fec950890cbc78607640534f8907b2f4fbbca69a804f7145324",
+      "afterSha256": "8235f32fd43104fdf76f579c018054b84f3ef7c0368310e8abdadf4d0e68d3c7",
+      "exclusive": false,
+      "scope": "Require actual original launch initializer before extracting typed AST"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

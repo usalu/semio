@@ -1,6 +1,11 @@
 {
   "name": "@semio-tech/framework-plugin-web",
   "targets": {
+    "test-tick-payload": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {"command": "bun ./📜️script.ts test-tick-payload"}
+    },
     "support-dev": {
       "executor": "nx:run-commands",
       "cache": true,

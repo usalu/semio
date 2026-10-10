@@ -4,14 +4,12 @@ import Ajv from "ajv";
 import { parseTree, getNodeValue, type Node as JsonNode, type ParseError } from "jsonc-parser";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import * as TOML from "@iarna/toml";
 import axes from "../../🎚️axes/🔣️.json";
 import fixture from "../🧫️fixtures/🔣️.json";
-import Ajv2020 from "ajv/dist/2020.js";
 import retirementFixture from "../🏷️label/♻️retirement/🧫️fixtures/🔣️.json";
-import retirementSchema from "../🏷️label/♻️retirement/🧬️schema/🔣️.json";
 import labelSchema from "../🧬️schema/🏷️localized-label/🔣️.json";
 import { Locale, Terminology, LocalizedLabel, LocaleContractError, type LabelValue } from "../🟦️.ts";
 
@@ -20,8 +18,7 @@ const repoRoot = resolve(import.meta.dir, "../../../../..");
 const matrixOracle = new Ajv({ strict: true }).compile(labelSchema);
 const source = (path: string): string => readFileSync(join(repoRoot, path), "utf8");
 test("physical label fixture preserves every explicit locale cell against independent JSON decoding", () => {
-  const validate = new Ajv2020({ strict: true }).compile(retirementSchema);
-  expect(validate(retirementFixture), JSON.stringify(validate.errors)).toBe(true);
+  expect(existsSync(new URL("../🏷️label/♻️retirement/🧬️schema/🔣️.json",import.meta.url))).toBe(false);
   for (const row of retirementFixture.cases) {
     const cells = Object.fromEntries(axes.terminologies.map((terminology, ti) => [terminology.id, Object.fromEntries(axes.locales.map((locale, li) => [locale.id, row.cells[ti * axes.locales.length + li]!.text]))]));
     const reference = oracle(JSON.stringify(cells));

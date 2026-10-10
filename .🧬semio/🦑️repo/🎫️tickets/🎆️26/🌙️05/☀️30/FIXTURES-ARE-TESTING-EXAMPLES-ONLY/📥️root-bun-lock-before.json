@@ -1,0 +1,26 @@
+[
+  {
+    "path": "bun.lock",
+    "sha256": "10a670cb2828f681f53e759e7ae597d93d32c1a32b002174f5c6e2cb13f549e6"
+  },
+  {
+    "path": "♻️mit-bestand/bun.lock",
+    "sha256": "c61ee6597f48fb8ad289e4fab297a03be13584e411be09fe5590fc36faef6a45"
+  },
+  {
+    "path": "✏️s/bun.lock",
+    "sha256": "b2188cbae530fe83861e73c6d7391425b46779032ec32f3d73ea3e10cabeea07"
+  },
+  {
+    "path": "🌎️hub/bun.lock",
+    "sha256": "ce8aa4908203b611dd573e3b667033b93ff139d5343bf4417203bf6213c481c1"
+  },
+  {
+    "path": "🎓️teaching/bun.lock",
+    "sha256": "78372624b6ee2e23cd7252adf94823b567e0e9341846a8e149d1aa7242abe52f"
+  },
+  {
+    "path": "🏢️semio-tech/bun.lock",
+    "sha256": "5fc6228a82b995e4dac38deff5b87e241ac715b5548a543f6c227766532b1c07"
+  }
+]

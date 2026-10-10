@@ -34,7 +34,8 @@ impl KernelHost {
         let lane = crate::component::Lane::pack_decode(activation_bytes, &mut pos).await.map_err(to_js_error)?;
         let window = if pack::read_bool(activation_bytes, &mut pos, "activate::window").await.map_err(to_js_error)? { Some(crate::component::WindowId::pack_decode(activation_bytes, &mut pos).await.map_err(to_js_error)?) } else { None };
         let event = ActivationEvent::Manual;
-        let id = self.inner.activate(package, plugin_ordinal, kind, lane, window, event).await;
+        let retained = crate::component::RetainedTurnInput::pack_decode(activation_bytes, &mut pos).await.map_err(to_js_error)?;
+        let id = self.inner.activate(package, plugin_ordinal, kind, lane, window, event, retained).await;
         let mut out = Vec::new();
         id.pack_encode(&mut out).await;
         Ok(out)
@@ -51,11 +52,11 @@ impl KernelHost {
     }
 
     #[wasm_bindgen]
-    pub async fn tick(&mut self, now_ms: u64) -> Vec<u8> {
+    pub async fn tick(&mut self, now_ms: u64) -> Result<Vec<u8>, JsError> {
         let decision: Decision = self.inner.tick(now_ms).await;
         let mut out = Vec::new();
-        decision.pack_encode(&mut out).await;
-        out
+        decision.pack_encode(&mut out).await.map_err(to_js_error)?;
+        Ok(out)
     }
 
     #[wasm_bindgen]

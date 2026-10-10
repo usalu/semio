@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
@@ -104,5 +105,5 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
   const router = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
   for (const [name, Command] of Object.entries(options.commands ?? {})) router.register(name, Command);
   const segments = process.argv.slice(2);
-  await router.run(segments.length ? segments : ["test"]);
+  await receiveScriptProcessInvocation(process.env, original => (router).run(segments.length ? segments : ["test"], original));
 }

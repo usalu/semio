@@ -1,0 +1,24 @@
+{
+  "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udd80\ufe0f.rs",
+  "action": "update",
+  "beforeSourceObservationSha256": "ad34433f392e0c464b243f7649ce0b46d45760240912c713192168cb70c11d0e",
+  "afterSourceObservationSha256": "0d249fc57e29a117815c122f079be3230f04ad8d70fde89bfb7cfc8890fdd3d7",
+  "logicalActions": [
+    {
+      "scope": "BatchPublication exact refusal owners + original supplied demand/close/terminal/witness",
+      "beforeBlockSha256": "18ab8d3ac0e7ddff38282a8c540726a042268bfa3474d7af4d970a6d6b00fe7c",
+      "afterBlockSha256": "f1919837948daa14e51cebce3fede11a71de770ffbebac13892b3c062620d39a"
+    },
+    {
+      "scope": "BatchPublication original constructor empty refusal slots",
+      "beforeBlockSha256": "b19cad6ddd5c5acb90e2d18214a9ac6acaae6c6817e4ff08ae528d2fa43e75c0",
+      "afterBlockSha256": "f87b73ec4fb28e58b318609ccb64851987c15dd70c6a131f8cc51b160f27a938"
+    },
+    {
+      "scope": "actual begin_next original request/Value refusal handoff, no drop/stringification",
+      "beforeBlockSha256": "00c3bd21bfe7ddeeb06491aae733c3766600e393dbf88bf3aba754e7b9f6e50f",
+      "afterBlockSha256": "181dc9e6681ab3627e72b9768bcc03e0e5c7a6cc40125cb63f7181285f0b2804"
+    }
+  ],
+  "qualification": "existing request base mint/authority copy and cold semantic provider receipt remain partial; impossible child counter overflow retains original reported error without accepting valid physical receipt"
+}

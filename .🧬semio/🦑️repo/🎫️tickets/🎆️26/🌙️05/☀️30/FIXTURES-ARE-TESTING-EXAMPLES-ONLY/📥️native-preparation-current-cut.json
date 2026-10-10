@@ -1,0 +1,80 @@
+{
+  "sourceGreen": {
+    "session": 19545,
+    "nxExit": 0,
+    "seconds": 6.1,
+    "laws": 3,
+    "assertions": 115,
+    "extraDepthAssertions": 612,
+    "log": "\ud83d\uddd1\ufe0fgenerated/native-preparation-current-green.log"
+  },
+  "grammarSession": 5039,
+  "grammar": "8 original Rust parse-only exits0, not typecheck",
+  "rows": [
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\u2797\ufe0fmathematical/\ud83d\uddff\ufe0fartifacts/\u2797\ufe0fequation/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "0b9ff2dc6c48f39b08ac016f1cd44ad583c9d0c354751cb40c93f9f2413f111f",
+      "role": "authored exact preparation blocks; other file bodies observer-only"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf0d\ufe0fgis/\ud83d\uddff\ufe0fartifacts/\ud83d\uddfa\ufe0fgismap/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "a0017abc5e52f87b6a7086bf33b86d0578b55471017ffdcbcb3fb3fdd7f5a413",
+      "role": "authored exact preparation blocks; other file bodies observer-only"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udf3f\ufe0fvcs/\ud83d\uddff\ufe0fartifacts/\ud83c\udf3f\ufe0fvcs/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "b7a09f69977a245476dbd776e29b56d65be9c73c26076ab9b0fa450c0889b460",
+      "role": "authored exact preparation blocks; other file bodies observer-only"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\u25fb\ufe0f2d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "e6522fd020bd36a52f4a07f2d9c78341420a341ca292151ab86bb2f10f86c22b",
+      "role": "authored exact preparation blocks; other file bodies observer-only"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\ud83e\uddca\ufe0f3d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "f23871626e11e728d2bfccc0768846d53c6ecf0c3f857584148e413ba75b575e",
+      "role": "authored exact preparation blocks; other file bodies observer-only"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\uddf1\ufe0fblock/\ud83d\uddff\ufe0fartifacts/\ud83d\udd90\ufe0f5d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "7e97a2963a2e742450a1d57040cbe0fb3e252b2e4cd9bc3f9d4c0e8878158270",
+      "role": "authored exact preparation blocks; other file bodies observer-only"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\udcc7\ufe0fregistry/\ud83e\uddec\ufe0fcontract/\u270f\ufe0fediting/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83d\udfe6\ufe0f.test.ts",
+      "sha256": "a529ee1e7c66f5148b24cef06b9a0c861e4f1cf84c677f786972b33c7ff44894",
+      "role": "new or narrowly changed tests/plain policy; native law unrun"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\udcc7\ufe0fregistry/\ud83e\uddec\ufe0fcontract/\u270f\ufe0fediting/\ud83e\uddeb\ufe0ffixtures/\ud83e\uddf5\ufe0fretained-native/\ud83e\uddfe\ufe0frefusal.json",
+      "sha256": "de5e60cd25de4d72a71332b31a08757056f1dc4ae67462f0d6173ca3a037b3c2",
+      "role": "new or narrowly changed tests/plain policy; native law unrun"
+    },
+    {
+      "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83c\udfd7\ufe0ffem/\ud83d\uddff\ufe0fartifacts/\u25fb\ufe0f2d/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\ud83c\udf10\ufe0fany/\u270f\ufe0feditor/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0ffem2d-artifact-preparation-laws/\ud83e\udd80\ufe0f.rs",
+      "sha256": "a50dd0ee2f5b590860947c2c7ecf56caca010255b1ea286f9f0b4effddbc91d6",
+      "role": "new or narrowly changed tests/plain policy; native law unrun"
+    }
+  ],
+  "unitObserver": {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+    "wholeSha256": "72d75ffe7d48808acfaeaa07fdd879a37a58c9574a7b758818dedd2308bb11e9",
+    "ownedGuardBlocks": [
+      {
+        "start": "struct DemoEphemeralPreparation {",
+        "end": "fn close_durable_publication",
+        "sha256": "89e2f87b8dba3d460eb96e8dafe58adce08ecefe3e6ce110f0d1f637699261b3",
+        "matchesAuthoredGuard": true
+      },
+      {
+        "start": "struct DemoRetainedCloneEditCursor {",
+        "end": "fn retained_clone_preparation_factory",
+        "sha256": "d7713f6d127d889c2265aaf8f642287682ec15678d65e99e43a93e39a1a0276b",
+        "matchesAuthoredGuard": true
+      }
+    ]
+  },
+  "native": "unrun",
+  "coldSemanticFunding": "outstanding"
+}

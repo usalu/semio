@@ -79,6 +79,10 @@ use semio_framework_2d::compute::EngineHandles;
 mod retained;
 
 #[cfg(test)]
+#[path = "🎮️commands/♻️retirement/🧪️tests/🦀️.rs"]
+mod original_command_retirement_tests;
+
+#[cfg(test)]
 #[path = "🫧️transient/🧪️tests/🫧️transient/🦀️.rs"]
 mod transient_retirement_tests;
 
@@ -208,6 +212,7 @@ semio_framework_plugin::app_commands! {
     /// `🔖️Manifest`). `deleteSelection`/`focusSelection`/`nodeGraphEdit`/`spotlightCommit` read that
     /// domain's live selection via `InteractionView` — `FlowPlayApp::handle` routes them through their
     /// own `apply` (this macro's generated `dispatch(doc, cfg, session)` has no `interaction` slot).
+    #[derive(semio_framework_value::RetireOwned)]
     pub enum FlowCommand for FlowSnapshot, FlowMutation, NoConfig, NoConfigMutation, ctx = FlowEvalSession {
         "addWidget" as "add-widget" => add_widget::AddWidget,
         "removeWidget" as "remove-widget" => remove_widget::RemoveWidget,
@@ -877,18 +882,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         flow_direct_store_emit(command, &config, view).map(ArtifactCommandWorkStep::Complete)
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 34 {
-            return Err(Fault::from("flow-retained-direct-checkpoint-capacity"));
-        }
-        target[0] = u8::from(self.completed);
-        target[1..9].copy_from_slice(&(self.cursor as u64).to_le_bytes());
-        target[9..17].copy_from_slice(&(self.scan_cursor as u64).to_le_bytes());
-        target[17] = self.duplicate_phase;
-        target[18..26].copy_from_slice(&(self.duplicate_source.unwrap_or(usize::MAX) as u64).to_le_bytes());
-        target[26..34].copy_from_slice(&self.duplicate_suffix.to_le_bytes());
-        Ok(34)
-    }
+    fn checkpoint_byte(&self,index:usize)->Option<u8>{match index{0=>Some(u8::from(self.completed)),1..=8=>Some(((self.cursor as u64)>>((index-1)*8))as u8),9..=16=>Some(((self.scan_cursor as u64)>>((index-9)*8))as u8),17=>Some(self.duplicate_phase),18..=25=>Some(((self.duplicate_source.unwrap_or(usize::MAX)as u64)>>((index-18)*8))as u8),26..=33=>Some((self.duplicate_suffix>>((index-26)*8))as u8),_=>None}}
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 34 || checkpoint[0] > 1 || checkpoint[17] > 2 {
@@ -1249,6 +1243,9 @@ struct FlowHostEffectPayload {
     completion: semio_framework_plugin::ArtifactToolCompletion<semio_framework_plugin::EditorApp<FlowPlayApp>>,
 }
 
+#[path = "🧵️retained/📤️effect/🦀️.rs"]
+mod original_host_effect;
+
 fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::ScalarRecordView<'_>, &'static str> {
     use store::os_pack::{ScalarRecordField as Field, ScalarRecordView};
     let ordinal = FlowCommand::TOOL_JOB_IDS.iter().position(|id| *id == command.command_id()).ok_or("Flow scalar command ordinal missing")? as u64;
@@ -1260,7 +1257,7 @@ fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::Sca
         // an ADDRESSED evaluation hop and its answer need, and the reason the answer carries no
         // `extensionId`/`ok`/`fault_*`.
         FlowCommand::FlowEvalTick(command) => [Some(Field::Text(&command.window_id)), Some(Field::Text(&command.window_kind_id)), None],
-        FlowCommand::FlowEvalResolve(command) => [Some(Field::Text(&command.window_id)), Some(Field::U64(command.node_hash)), Some(Field::Text(&command.output_json))],
+        FlowCommand::FlowEvalResolve(command) => [Some(Field::Text(&command.window_id)), Some(Field::U64(command.node_hash)), command.output_json.as_deref().map(Field::Text)],
         _ => return Err("Flow command does not have an admitted scalar record witness"),
     };
     Ok(ScalarRecordView { ordinal, fields })
@@ -1276,6 +1273,9 @@ mod scalar_host_wire_tests;
 
 struct FlowHostEffectJob {
     payload: Option<Arc<FlowHostEffectPayload>>,
+    payload_close: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<FlowHostEffectPayload>>,
+    decoder_close: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<FlowHostEffectPayload>>,
+    completion_refusal: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<FlowPlayApp>>>>,
     input: Option<semio_framework::action_bus::RetainedToolWireInput>,
     decoder: Option<store::os_pack::ScalarRecordWireWitness<FlowHostEffectPayload>>,
     page: usize,
@@ -1286,40 +1286,48 @@ struct FlowHostEffectJob {
 }
 
 impl FlowHostEffectJob {
-    fn fault() -> semio_framework_job::StepOutcome {
-        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
+    fn fault() -> semio_framework_value::ValueError {
+        semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Flow host effect source refused its route")
+    }
+    fn close_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(owner)=self.completion_refusal.as_ref(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.max(1)})}
+        if let Some(input)=self.input.as_ref(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:input.next_close_copy_byte_demand()?,capacity_bytes:input.next_close_capacity_byte_demand(copy)?,release_bytes:input.next_close_release_byte_demand()?,depth:input.next_close_depth_demand()?.max(1)})}
+        if self.decoder.is_some(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+        if let Some(owner)=self.decoder_close.as_ref().or(self.payload_close.as_ref()){return Ok(semio_framework_value::RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.max(1)})}
+        Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.payload.is_some()),..Default::default()})
     }
 }
 
 impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
-    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError> {
         if context.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context);
         }
         if context.should_yield() || context.fuel_remaining() == 0 {
-            return semio_framework_job::StepOutcome::Yield;
+            return Ok(None);
         }
         if !self.validated {
-            let Some(input) = self.input.as_ref() else { return Self::fault() };
+            let grant=context.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes==0{return Ok(None)}
+            let Some(input) = self.input.as_ref() else { return Err(Self::fault()) };
             let page = input.page(self.page);
             if page.is_some_and(|page| self.byte == page.len()) {
                 self.page += 1;
                 self.byte = 0;
-                context.consume_fuel(1);
-                return semio_framework_job::StepOutcome::Yield;
+                context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;
+                return Ok(None);
             }
-            let Some(decoder) = self.decoder.as_mut() else { return Self::fault() };
-            match decoder.advance(page.and_then(|page| page.get(self.byte)).copied()) {
-                Ok(store::os_pack::ScalarRecordWireStep::Consumed { .. }) => self.byte += 1,
-                Ok(store::os_pack::ScalarRecordWireStep::Progress { .. }) => {}
-                Ok(store::os_pack::ScalarRecordWireStep::Complete) => self.validated = true,
-                Err(_) => return Self::fault(),
-            }
-            context.consume_fuel(1);
-            return semio_framework_job::StepOutcome::Yield;
+            let Some(decoder) = self.decoder.as_mut() else { return Err(Self::fault()) };
+            let compared_bytes=match decoder.advance(page.and_then(|page| page.get(self.byte)).copied()) {
+                Ok(store::os_pack::ScalarRecordWireStep::Consumed { compared_bytes }) => {self.byte += 1;compared_bytes},
+                Ok(store::os_pack::ScalarRecordWireStep::Progress { compared_bytes }) => compared_bytes,
+                Ok(store::os_pack::ScalarRecordWireStep::Complete) => {self.validated = true;0},
+                Err(_) => return Err(Self::fault()),
+            };
+            context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:compared_bytes,..Default::default()})?;
+            return Ok(None);
         }
         if !self.completed {
-            let Some(payload) = self.payload.as_ref() else { return Self::fault() };
+            let Some(payload) = self.payload.as_ref() else { return Err(Self::fault()) };
             let view = ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone());
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
@@ -1330,16 +1338,18 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
                     _ => Err(Fault::from("flow-host-effect-route-mismatch")),
                 })?
             });
-            if payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()).is_err() {
-                return Self::fault();
+            if let Err(original)=payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()) {
+                self.completion_refusal=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original completion refusal defines full source retirement")));
+                return Err(Self::fault());
             }
             self.completed = true;
             context.consume_fuel(1);
         }
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        semio_framework_job::JobOutcomeBorrow::admit_complete(context,None,None)
+    }
+
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{
+        match descriptor.kind(){semio_framework_job::JobOutcomeKind::Yield=>descriptor.yielded(),semio_framework_job::JobOutcomeKind::Cancelled=>descriptor.cancelled(),semio_framework_job::JobOutcomeKind::Complete if self.completed=>descriptor.complete(None,None),_=>Err(Self::fault())}
     }
 
     fn begin_close(&mut self) {
@@ -1349,37 +1359,25 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(input) = self.input.as_mut() {
-            let step = input.close_step(1, maximum_bytes.min(FLOW_HOST_ONLY_RAW_BYTES));
-            if input.terminal_is_empty() {
-                self.input = None;
-            }
-            return match step {
-                semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                step => step,
-            };
-        }
-        if let Some(decoder) = self.decoder.as_mut() {
-            decoder.begin_close();
-            let root = decoder.take_root();
-            assert!(self.payload.as_ref().zip(root.as_ref()).is_some_and(|(payload, root)| Arc::ptr_eq(payload, root)));
-            drop(root);
-            assert!(decoder.terminal_is_empty());
-            self.decoder = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if self.payload.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::InteractiveJobCloseStep as Close;use semio_framework_value::{RetainedCloneProgress as Progress,RetainedCloneStep};
+        if !self.closing||grant.maximum_items==0{return Close::Blocked}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Close::Refused{kind:error.kind,progress:error.retained_progress()}};
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Close::Blocked}
+        if let Some(owner)=self.completion_refusal.as_mut(){if owner.terminal_is_empty(){self.completion_refusal=None;return Close::Pending{progress:Progress{copied_items:1,..Default::default()}}}return match owner.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>Close::Refused{kind:error.kind,progress:error.retained_progress()}}}
+        if let Some(input)=self.input.as_mut(){let step=input.close_step(grant);if input.terminal_is_empty(){self.input=None;}return match step{Close::Complete{progress}=>Close::Pending{progress:Progress{copied_items:progress.copied_items.max(1),..progress}},step=>step}}
+        if let Some(decoder)=self.decoder.as_mut(){decoder.begin_close();let root=decoder.take_root().expect("original decoder owns its original payload Arc");assert!(self.payload.as_ref().is_some_and(|payload|Arc::ptr_eq(payload,&root)));assert!(decoder.terminal_is_empty());self.decoder=None;self.decoder_close=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(root));return Close::Pending{progress:Progress{copied_items:1,..Default::default()}}}
+        let owner=if self.decoder_close.is_some(){&mut self.decoder_close}else{&mut self.payload_close};
+        if let Some(cursor)=owner.as_mut(){if cursor.terminal_is_empty(){*owner=None;return Close::Pending{progress:Progress{copied_items:1,..Default::default()}}}return match cursor.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>Close::Refused{kind:error.kind,progress:error.retained_progress()}}}
+        if let Some(payload)=self.payload.take(){self.payload_close=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(payload));return Close::Pending{progress:Progress{copied_items:1,..Default::default()}}}
+        Close::Complete{progress:Default::default()}
     }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.depth)}
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.payload.is_none() && self.input.is_none() && self.decoder.is_none()
+        self.closing && self.payload.is_none() && self.payload_close.is_none() && self.decoder_close.is_none() && self.completion_refusal.is_none() && self.input.is_none() && self.decoder.is_none()
     }
 }
 
@@ -1414,7 +1412,7 @@ impl semio_framework::ToolJobFactory for FlowHostEffectJobFactory {
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(FlowHostEffectJob { payload: Some(Arc::new(payload)), input: None, decoder: None, page: 0, byte: 0, validated: true, completed: false, closing: false })
+        Ok(FlowHostEffectJob { payload: Some(Arc::new(payload)), payload_close:None, decoder_close:None, completion_refusal:None, input: None, decoder: None, page: 0, byte: 0, validated: true, completed: false, closing: false })
     }
 
     fn create_job_from_wire_pages_with_payload(
@@ -1585,14 +1583,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         self.apply(command, &composed, &config, interaction).map(ArtifactCommandWorkStep::Complete)
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 9 {
-            return Err(Fault::from("flow-retained-graph-checkpoint-capacity"));
-        }
-        target[0] = u8::from(self.completed);
-        target[1..9].copy_from_slice(&(self.cursor as u64).to_le_bytes());
-        Ok(9)
-    }
+    fn checkpoint_byte(&self,index:usize)->Option<u8>{match index{0=>Some(u8::from(self.completed)),1..=8=>Some(((self.cursor as u64)>>((index-1)*8))as u8),_=>None}}
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 9 || checkpoint[0] > 1 {
@@ -2321,7 +2312,7 @@ impl ArtifactEditor for FlowPlayApp {
             "flowEvalResolve" => Ok(FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| main::FLOW_PLAY_WINDOW_MAIN.into()),
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
+                output_json: str_arg(&["outputJson"]),
             })),
             "setContributions" => Ok(FlowCommand::SetContributions(set_contributions::SetContributions {
                 json: str_arg(&["json"]).unwrap_or_default(),

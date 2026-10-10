@@ -1,0 +1,18 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/💰️limits/🧪️tests/🟦️.ts",
+      "action": "update",
+      "beforeSha256": "0c5e850e6e35f0c890ab2cac6e251d1e67b794f669d83338343db4e724bf26bd",
+      "afterSha256": "a01b917df4535ae1e4cf384d048da39d03e0e44b857c3892dbf3d54f1672ddcd",
+      "scope": "original whole-trial absence law for receiving/SQLite limits"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts",
+      "action": "update",
+      "beforeSha256": "a83f32cb6af13ffd161b70388ac9db2852ed853b27d6cca704314796c8d9380d",
+      "afterSha256": "100bf01c983a9e3cd4bb50c91d22eb06618c8cf6663f803fad6c072224cad126",
+      "scope": "original whole-trial absence law for raw backing"
+    }
+  ]
+}

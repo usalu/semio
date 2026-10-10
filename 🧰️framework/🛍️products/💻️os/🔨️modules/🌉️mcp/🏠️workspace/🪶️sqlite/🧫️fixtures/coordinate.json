@@ -1,0 +1,13 @@
+{
+  "coordinate": "s.guest-input-fixture@1/strict",
+  "originalBytes": 30,
+  "oneShortBytes": 29,
+  "allocation": "exactOriginalExtentBeforeCopy",
+  "recipient": "originalCallerCoordinateSlot",
+  "canceledPrefix": "s.guest-input-fixture",
+  "canceledCopyBytes": 21,
+  "closeAuthority": "independentCallerWallet",
+  "bodyGrant": {"maximumItems":1,"maximumCopyBytes":30,"maximumCapacityBytes":30,"maximumReleaseBytes":0,"maximumDepth":1},
+  "deniedCloseGrant": {"maximumItems":0,"maximumCopyBytes":0,"maximumCapacityBytes":0,"maximumReleaseBytes":0,"maximumDepth":0},
+  "closeGrant": {"maximumItems":4096,"maximumCopyBytes":1048576,"maximumCapacityBytes":1048576,"maximumReleaseBytes":1048576,"maximumDepth":64}
+}

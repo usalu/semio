@@ -32,3 +32,5 @@ test("strict intrinsic occurrence contract preserves original ordinal wire indep
  expect(fixture.cases[0]!.bodyHex).not.toBe(fixture.cases[1]!.bodyHex);expect(fixture.cases[4]!.source.members!.map(member=>member.name)).toEqual(["z","a","a"]);
  console.log("[DEBUG] intrinsic occurrence order5 exact independent Buffer wire RFC6902 clone and5 strict Ajv negative authorities");
 });
+
+test("original receipt order fold 1 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original receipt/order/fold trial has no whole-corpus schema authority");});

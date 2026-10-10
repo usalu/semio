@@ -7,6 +7,7 @@ import { ActorDocumentBindingV1, ActorDocumentMessagePortV1, decodeDocumentBackb
 import { decodeBackboneMessage, encodeBackboneMessage, encodePackValue, packUInt, type BinaryBackboneMessage } from "@semio-tech/framework-os";
 import bindingSchema from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json";
 import bindingFixture from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧫️fixtures/🔣️.json";
+import rendererSchema from "../../../🧬️schema/🔣️.json";
 
 const owner = { ...fixture.owner, activationGeneration: BigInt(fixture.owner.activationGeneration) };
 const source = { runtimeKey: owner.runtimeKey, clientInstanceId: owner.clientInstanceId, scope: owner.scope };
@@ -23,6 +24,13 @@ function deferred() {
 }
 
 describe("actor-owned document backbone", () => {
+  it("keeps whole actor renderer trials outside canonical domain schema", () => {
+    for (const name of ["ActorDocumentPortFixtureV1", "PluginRuntimeChannelCloseV1", "PluginRuntimeLifecycleSchedulerV1"]) expect(Object.hasOwn(rendererSchema.$defs,name)).toBe(false);
+    const validate = new Ajv({strict:true}).addSchema(rendererSchema).getSchema(`${rendererSchema.$id}#/$defs/ActorDocumentPortOwnerV1`)!;
+    expect(validate(fixture.owner),JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({...fixture.owner,instanceId:0})).toBe(false);
+    console.error("[DEBUG] Canonical actor owner preserved with independent Ajv; three whole renderer trial selectors absent");
+  });
   it("retains uncertain bind control authority but locally retires a verified refusal", async () => {
     for (const row of fixture.bindingRetirement) {
       const events: string[] = [];
@@ -126,8 +134,8 @@ describe("actor-owned document backbone", () => {
   });
 
   it("matches the canonical native OpBinary vectors and rejects hostile records", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(bindingSchema);
-    expect(validate(bindingFixture), JSON.stringify(validate.errors)).toBe(true);
+    const ajv = new Ajv({strict:true,allErrors:true}).addSchema(bindingSchema), command = ajv.getSchema(`${bindingSchema.$id}#/$defs/DocumentBackboneBindingV1`)!, receipt = ajv.getSchema(`${bindingSchema.$id}#/$defs/DocumentBackboneBindingReceiptV1`)!;
+    for (const row of bindingFixture.cases) {expect(command(row.command),JSON.stringify(command.errors)).toBe(true);expect(receipt(row.receipt),JSON.stringify(receipt.errors)).toBe(true);}
     const fromHex = (value: string) => Uint8Array.from(value.match(/../g) ?? [], byte => Number.parseInt(byte, 16));
     for (const row of bindingFixture.codec.golden) {
       const value = row.value;

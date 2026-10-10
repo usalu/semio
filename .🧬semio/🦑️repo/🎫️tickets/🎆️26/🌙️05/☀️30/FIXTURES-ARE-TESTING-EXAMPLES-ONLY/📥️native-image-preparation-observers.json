@@ -1,0 +1,20 @@
+[
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83d\udcf7\ufe0fpng/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1.2/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\uddec\ufe0fpublication/\ud83e\udd80\ufe0f.rs",
+    "sha256": "619f39a9a3dd714b2d2979d5eb114282027ac6abbe6bcaa4fec40ea49aeadbc5",
+    "bytes": 13777,
+    "role": "observed current only; no authored mutation"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83e\ude9f\ufe0fbmp/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0fv3/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\u270f\ufe0feditor/\ud83e\uddec\ufe0fpublication/\ud83e\udd80\ufe0f.rs",
+    "sha256": "f9f7c3b038fee06e1ad90daa45ed68752a04b440b28cf00b863b07a33cb9309b",
+    "bytes": 14245,
+    "role": "observed current only; no authored mutation"
+  },
+  {
+    "path": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83d\udcf7\ufe0fpng/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1.2/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\ud83e\uddec\ufe0fschema/\u2699\ufe0foperations/\ud83e\udeaa\ufe0fvalidation/\ud83e\udd80\ufe0f.rs",
+    "sha256": "b1568ed1c59d54694a4285614a5c15dd5c9d99b7578fd07cd3070f03a8ed5dec",
+    "bytes": 9300,
+    "role": "observed current only; no authored mutation"
+  }
+]

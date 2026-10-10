@@ -15,6 +15,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 pub const MOVE_MEDIA_NODE_VERB: &str = "moveMediaNode";
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct MoveMediaNode {
     pub node_id: String,
     pub x: f64,

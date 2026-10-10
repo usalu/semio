@@ -1,0 +1,17 @@
+{
+  "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "observationWholeSha256": "d7cfbd38ee20702935ca76828b541d5688a56d02ffcf8cf07133c35476248e2e",
+  "blocks": [
+    {
+      "start": "struct DemoEphemeralPreparation {",
+      "end": "fn close_durable_publication",
+      "beforeSha256": "c4f91a17b7cea14e0e40d4c871f66b0cfa3e7ef4907936716419c6c9576e8446"
+    },
+    {
+      "start": "struct DemoRetainedCloneEditCursor {",
+      "end": "fn retained_clone_preparation_factory",
+      "beforeSha256": "a58ad880daa740bb847afccee129a5eb37344f6455bd1b67717da47ee06a4f1f"
+    }
+  ],
+  "sourceCopy": false
+}

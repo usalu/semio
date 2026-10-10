@@ -1,0 +1,18 @@
+{
+  "consumer": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧪️tests/🟦️.ts",
+  "beforeSha256": "d4e71a23785964dbbdb1447e080015bc9d1bb66bbb8e2e1dbab1da3586b0f0e4",
+  "schema": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧬️schema/🔣️.json",
+  "schemaSha256": "7fac3231b4372c1b19aa6eec6dda53045f9bbf82f88370c56417f616327076fb",
+  "excludedObservers": [
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧫️fixtures/🔣️.json",
+      "sha256": "de6b9a7cd27f9dfaeacb1371218fd7956eaa7f7f8d37708148d53e82fbddcf7b",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧪️tests/🦀️.rs",
+      "sha256": "f1d196923d7f50ba7650f6a1438ce3b9c3268e90a94d9750089365416c704a5f",
+      "authored": false
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧫️fixtures/🔣️.json",
+    "action": "update",
+    "scope": "plain actual Text leaf/child original supplied-depth rows; no trial schema",
+    "beforeSha256": "990279e406b3f8310dcca5eed6be710970b57743fcdb809b56f7bd01521e7790",
+    "afterSha256": "c89bef8091f75d9093f5e78113bb77d955bfb70819cae4c2972eeb3866006026"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts",
+    "action": "update",
+    "scope": "actual original Text frontier regression plus independent Buffer/TextEncoder Unicode oracle",
+    "beforeSha256": "25dd551babf5505ed6c570a4843b5d8b35e4903d9d54afd0ce53a8bfcd89f37a",
+    "afterSha256": "4b17f3fb0c3d12f6a22be266f4c3d5812777fd7b4f3942f27530b3ece217f032"
+  }
+]

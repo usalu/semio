@@ -48,5 +48,11 @@
     "checkoutPerOriginalTurn": true,
     "collectBeforeSuccessor": true,
     "wholeHeaderRequiresOriginalGrant": true
+  },
+  "contextCustody": {
+    "source": "OriginalStepContext",
+    "receipt": "SameRecipientOnce",
+    "renewal": "OriginalDriverOnly",
+    "pending": "RetainedUntilAcknowledged"
   }
 }

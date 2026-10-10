@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "version": 1,
+      "owner": "general",
+      "dependency": "general",
+      "mechanism": "static-import",
+      "allowed": true
+    },
+    {
+      "version": 1,
+      "owner": "general",
+      "dependency": "product",
+      "mechanism": "computed-import",
+      "allowed": false
+    },
+    {
+      "version": 1,
+      "owner": "general",
+      "dependency": "product",
+      "mechanism": "process-command",
+      "allowed": false
+    },
+    {
+      "version": 1,
+      "owner": "general",
+      "dependency": "system",
+      "mechanism": "caller-port",
+      "allowed": true
+    },
+    {
+      "version": 1,
+      "owner": "product",
+      "dependency": "general",
+      "mechanism": "static-import",
+      "allowed": true
+    }
+  ]
+}

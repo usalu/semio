@@ -1,0 +1,29 @@
+# Receiving Owner Inventory and Next Task
+
+2026-10-09 read-only source audit. No builds/tests executed. The complete explicit owner list is retained in `snapshot-public-owner-census-current.md` (its observed 154 declarations / 137 outside test paths are source declarations, not installed-provider counts; its Probe row predates current receiving implementation). This report overlays the current receiving contract without requalifying those rows as runtime-ready.
+
+## Current Contract and Actual Routes
+
+Store `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:12222` requires direct schema/project/reconstruct. At 12228 and 12230 the separate receiving relational methods default to UnsupportedOwner. Full repository Rust source search for either receiving method finds only this trait and workspace Probe's `🌉️mcp/🏠️workspace/🪶️sqlite/🦀️.rs:24,32`. No non-Probe explicit receiving override was found.
+
+Actual typed codec export at Store 12279-12284 is native decode -> OwnedSqliteSnapshot -> receiving projection -> check_database -> subset validation. Import at 12295-12300 is receiving reconstruction -> OwnedSqliteSnapshot -> subset validation -> native encode. Therefore a direct semantic schema, or even a productive native decode/encode pair, cannot presently qualify the codec's complete productive route without the receiving overrides. The deliberate default refusal preserves this distinction.
+
+| Inventory class | Current evidence | Remaining frontier |
+|---|---|---|
+| Workspace Probe | Explicit receiving projection/reconstruction plus native JSON owner routes | Current root work addresses plain caller cleanup; codec-level custody still needs assessment |
+| CSV and TSV | Mounted direct normalized relational backing; productive controlled Record decode/encode; exact borrowed native preflight | Receiving SQL construction/reconstruction and whole-codec retained output/intermediate cleanup |
+| CAD, Writer, Rewriting, Energy, Chart, history | Authored semantic owner implementations plus native owner-aware signatures | No receiving relational overrides; internal constructor/retirement audits remain necessary |
+| Other owner rows in full census | Direct schema/project/reconstruct declarations, varying native overrides and retirement/preflight coverage | All lack explicit receiving relational methods; native override presence alone proves no partial-owner custody |
+| Split/copy/unmounted implementations | CAD owner file explicitly says unmounted; CSV/TSV native copy files contain separate impls | Do not count source files as installed owners or choose alternate impls as productive evidence |
+
+The generic `📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs` wrapper's Drop calls `snapshot.retire_sqlite_snapshot()`. That is a synchronous owner method (trait default is plain drop), rather than an original-grant close receipt. Intermediate native snapshot custody after decode/reconstruction, and produced database/payload plus diagnostics after later cancellation/validation refusal, must be retained by the original operation. Receiving method adoption alone does not fix these subsequent transfer boundaries.
+
+## Next Actionable Owner: CSV
+
+Use mounted `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs`. It binds direct methods to `💰️backing/🦀️.rs` and native methods to `🚦️native/🦀️.rs`, with retirement explicitly delegated to FromValue. The active normalized model has three tables, explicit header and quoted flags, empty records, field UTF-8, and contiguous ordinal checks. Existing fixtures cover semantic rows, backing, native refusal and actual external carriers; `🧪️tests/🟦️.ts` supplies independent bun:sqlite mutation checks and Buffer UTF-8 facts. This is a stronger next adoption target than the unmounted CAD owner alternative or a scalar probe.
+
+Implement language-neutral receiving custody laws first for both relational directions: productive output, cancellation after a real copied UTF-8 field, denied original capacity/depth/item/release grant, malformed late SQL flag/ordinal, original-recipient identity, resumed cumulative accounting, and exact terminal release of every retained allocation. Reuse the authored semantic fixture and independently create/edit equivalent SQLite rows with bun:sqlite. Execute real Rust laws and inspect DEBUG runtime output before qualification.
+
+Refactor CSV backing into owned projection and reconstruction frames plus borrowed ports, following Probe's semantic frame/port separation without copying Probe's JSON node taxonomy. Projection must place table/schema/row/value ownership in the admitted receiving frame before each allocation or refusal; reconstruction must retain its row indexes, schema String, records/fields collections, and partial field/snapshot before checkpoints. Current `DecodedFieldOwner` cleanup and local RowWriter ownership are direct-method behavior; simply wrapping `backing::project/reconstruct` in owner.receive would leave their partial owners outside receiving custody. Use the original body wallet for exact performed work and physical capacity/release demands, and reconcile SQL/native admission once rather than creating a fresh allowance.
+
+Adopt the generic codec's successfully materialized snapshot and later database/payload/diagnostic ownership into the same priced caller lifecycle before the next fallible checkpoint. Then register the CSV receiving overrides, keep direct methods for explicitly direct callers, and validate the actual factory export/import consumer route. Add a bounded denied-close continuation proof and an exact final recipient-box release witness. Until that route runs with real receipt/cleanup evidence, report CSV as a direct semantic owner with native implementations and a receiving-adoption frontier, not as qualified universal native IO.

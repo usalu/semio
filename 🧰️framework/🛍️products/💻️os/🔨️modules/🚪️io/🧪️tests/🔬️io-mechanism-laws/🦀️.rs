@@ -27,7 +27,8 @@ mod laws {
         let mut receive=|_|true;let mut publish=|_|true;
         let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);
         let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut publish);
-        operation(&mut IoRunControl::new(&mut decode,&mut encode,serde_json::from_value(fixture["snapshotGrant"].clone()).unwrap()))
+        let mut control=IoRunControl::new(&mut decode,&mut encode,serde_json::from_value(fixture["snapshotGrant"].clone()).unwrap());
+        operation(&mut control)
     }
 
     async fn key(from: Dialect, into: Dialect) -> EntryKey {

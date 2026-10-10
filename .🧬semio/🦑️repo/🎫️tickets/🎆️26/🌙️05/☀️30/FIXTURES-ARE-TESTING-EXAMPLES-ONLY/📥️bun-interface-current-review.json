@@ -1,0 +1,21 @@
+{
+  "ownership": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "sha256": "0019585adca7c6e5b00bb6b1600c5651aadf958a592d3ed3b8b880129e5e8cc2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "sha256": "8b3fec5cead17af9b9eadcc7f69b36ed9b73cfa4a4ae4582bbae47463172b61e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "sha256": "96c6152ed27ed35f9b34f9eb4eeaabf8e96f19c6153835cc28ac3cf70c7018fd"
+    },
+    {
+      "path": "📋️project.json",
+      "sha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a"
+    }
+  ]
+}

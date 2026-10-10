@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",
+      "action": "updated",
+      "beforeSha256": "de2857e9ab3f5362e2ab21a0e5964331edc52bd4349478836a7cae58ed036cc8",
+      "afterSha256": "621a6b8bdb706fbbbff645ca22acd8a47d7c61e31b97f0e89cf0999138a74cf9",
+      "exclusive": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

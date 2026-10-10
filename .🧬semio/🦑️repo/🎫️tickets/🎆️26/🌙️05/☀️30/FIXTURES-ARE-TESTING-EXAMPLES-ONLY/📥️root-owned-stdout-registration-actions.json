@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "action": "updated",
+      "beforeSha256": "5f8239672d7ad687f4b7d5441eab0bdbbe20c58f53418bfdd06deb6e753283dd",
+      "afterSha256": "d3ee86a74c07e7d33977ddace3f9264892530c55fee02f25146c030a581d8427",
+      "exclusive": false,
+      "scope": "Existing owned-execution registered suite includes new real stdout law"
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

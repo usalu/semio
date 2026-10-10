@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Nx Native Caller",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspaceRoot",
+    "arguments",
+    "native",
+    "selection"
+  ],
+  "properties": {
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000]+$"
+    },
+    "arguments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "maxItems": 65536
+    },
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactDirectory",
+        "transport",
+        "child",
+        "network"
+      ],
+      "properties": {
+        "artifactDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "transport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumBytes",
+            "maximumLines"
+          ],
+          "properties": {
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maximumLines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "child": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumElapsedMilliseconds"
+          ],
+          "properties": {
+            "maximumElapsedMilliseconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            }
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "offline"
+          ],
+          "properties": {
+            "offline": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "selection": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "maxItems": 65536
+    },
+    "launches": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "maxItems": 65536
+      },
+      "minItems": 1,
+      "maxItems": 65536
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "reason": "Current finite-only schema drift observed while original normal routing run active; canonical no-deadline runtime still present. No writer attribution.",
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+      "beforeSha": "80d49c09a93855619b7a761810741e7f21c6cde2d96366035c54836684dfe09e",
+      "afterSha": "85c7b282907bd607fe78181c5c038eedc06be45950890b922b78e3aa185c5ac0",
+      "block": "maximumElapsedMilliseconds.minimum",
+      "before": 1,
+      "after": 0
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+      "beforeSha": "0430d1212c3ac9553f11e6494bd6c76e1b8313ab993371e27a9184ad0188c42a",
+      "afterSha": "c943ca9741c6c9f25b3ac72860d2f5a2445e3a9dbc9e5d0c542eeb18b6971fb7",
+      "blocks": [
+        "deadlineEpochMilliseconds.type",
+        "oneOf"
+      ],
+      "beforeDeadline": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991
+      },
+      "afterDeadline": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 1,
+        "maximum": 9007199254740991
+      },
+      "afterOneOf": [
+        {
+          "properties": {
+            "policy": {
+              "properties": {
+                "maximumElapsedMilliseconds": {
+                  "const": 0
+                }
+              }
+            },
+            "deadlineEpochMilliseconds": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "policy": {
+              "properties": {
+                "maximumElapsedMilliseconds": {
+                  "minimum": 1
+                }
+              }
+            },
+            "deadlineEpochMilliseconds": {
+              "type": "integer"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -135,3 +135,25 @@ test("actual pending snapshot fuel never refreshes its original ceiling",()=>{co
 
 
 test("real Host tests declare distinct finite Native ceiling and original retirement currencies",()=>{const root=resolve(import.meta.dir,"../../../../🖥️host");const law=JSON.parse(readFileSync(resolve(root,"🧫️fixtures/🛂️receiving/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(root,"🧬️schema/🛂️receiving/🔣️.json"),"utf8"));expect(new Ajv({strict:true,allErrors:true}).compile(schema)(law)).toBe(true);expect(law.maximumNativeBytes).toBeGreaterThan(law.grant.maximumCapacityBytes);expect(law.grant.maximumCopyBytes).not.toBe(law.grant.maximumCapacityBytes);const db=new Database(":memory:");try{db.exec("CREATE TABLE policy(ceiling INTEGER,copy INTEGER,capacity INTEGER,release INTEGER)");db.prepare("INSERT INTO policy VALUES(?,?,?,?)").run(law.maximumNativeBytes,law.grant.maximumCopyBytes,law.grant.maximumCapacityBytes,law.grant.maximumReleaseBytes);expect(db.query("SELECT ceiling,copy,capacity,release FROM policy").get()).toEqual({ceiling:33554432,copy:65536,capacity:2097152,release:33554432});}finally{db.close();}expect(JSON.parse(JSON.stringify(law)).grant).toEqual(law.grant);console.log("[DEBUG] real Host fixture uses explicit32MiB original Native ceiling, distinct copy64KiB capacity2MiB, caller-owned same recipient and observer; native execution pending");});
+
+
+test("component original input and physical frame wallet agree with independent SQLite arithmetic",()=>{
+ const root=resolve(import.meta.dir,"../../../../🚪️io/🛂️authority/🪶️snapshot");
+ const law=JSON.parse(readFileSync(resolve(root,"🧫️fixtures/input-wallet.json"),"utf8"));
+ const contract=JSON.parse(readFileSync(resolve(root,"🧬️schema/input-wallet.json"),"utf8"));
+ expect(new Ajv({strict:true}).compile(contract)(law)).toBe(true);
+ const database=new Database(":memory:");try{
+  database.exec("CREATE TABLE wallet(axis INTEGER PRIMARY KEY,original INTEGER,frame INTEGER,accepted INTEGER)");
+  for(let axis=0;axis<5;axis++)database.query("INSERT INTO wallet VALUES(?,?,?,?)").run(axis,law.original[axis],law.frame[axis],law.accepted[axis]??0);
+  expect(database.query("SELECT original-frame AS child FROM wallet ORDER BY axis").all().map((row:any)=>row.child)).toEqual(law.child);
+  expect(database.query("SELECT frame+accepted AS cumulative FROM wallet WHERE axis<4 ORDER BY axis").all().map((row:any)=>row.cumulative)).toEqual(law.cumulative);
+ }finally{database.close();}
+ const source=readFileSync(resolve(root,"🦀️.rs"),"utf8");
+ expect(source).toContain("input:&mut Option<sqlite_wire::SnapshotInput>");
+ expect(source.indexOf("let mut state=Box::new(SnapshotOperation")).toBeLessThan(source.indexOf("wire:input.take()"));
+ for(const debit of ["maximum_items:grant.maximum_items-1","maximum_capacity_bytes:grant.maximum_capacity_bytes-frame","maximum_depth:grant.maximum_depth-1","state.progress.checked_add(run.progress())?"])expect(source).toContain(debit);
+ const receiver=readFileSync(resolve(root,"../../../🧬️schema/🪶️sqlite/🦀️.rs"),"utf8");
+ expect(receiver).toContain("pub struct SnapshotInputOwner");
+ for(const field of ["wire: Option<SnapshotInput>","payload: Option<semio_framework::io_schema::IoPayload>"])expect(receiver).toContain(field);
+ console.log("[DEBUG] Original component input-slot and five-axis frame debit match independent SQLite example; original recipient precedes transfer, cumulative wallet source verified, native execution separate");
+});

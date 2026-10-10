@@ -1,0 +1,9 @@
+{
+  "contract": "framework.plugin.original-mounted-child-close",
+  "originalGrant": [1,4096,65536,262144,64],
+  "phase": "Close",
+  "metadataCopyCurrency": 0,
+  "childCompletionIsParentProgress": true,
+  "originalResultAcknowledgementRequired": true,
+  "parentRemovalIsSeparate": true
+}

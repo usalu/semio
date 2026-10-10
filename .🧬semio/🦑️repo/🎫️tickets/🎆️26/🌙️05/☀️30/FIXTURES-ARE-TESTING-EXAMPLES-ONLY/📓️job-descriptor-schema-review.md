@@ -1,0 +1,11 @@
+# Job Descriptor Trial Schema
+
+Read-only original Source cut, no execution or attribution. The descriptor/schema JSON is an anonymous complete trial contract: fixed schema marker, five-element grant array, exactly six named variants and stage/identity/borrow/ack observations. It has no $id or reusable $defs. It does not describe actual JobOutcomeDescriptor production representation (kind, original admission, two optional original native addresses, acknowledged), nor borrowed JobOutcomeView payload lifetimes.
+
+Exact confirmed Schema admission: descriptor/🧪️tests/🟦️.ts8 loads law and Schema with Bun.file and compiles whole law. Remove only Schema load/compile and physical trial Schema; preserve law values and independent SQLite/RFC6902 stage transitions9, same-owner/ACK source assertions11. Remove Ajv import only if otherwise unused and stop DEBUG claiming Ajv whole-trial admission. No nested genuine production type requires extraction from this wrapper.
+
+Preserve genuine defining descriptor Rust6–20 JobOutcomeKind/Descriptor/View, original pointer matches31–37, funded acknowledgement39, paid descriptor-slot cleanup and public Job reexports886. The native original_outcome_descriptors_keep_same_payload_and_receipt_until_paid_ack law exercises actual six variants, exact same native payload/admission/page pointers, alternate-original refusal, item/depth denials, System zero-birth acknowledgement and final physical cleanup. Its native execution remains separate proof; Source inspection does not establish pass.
+
+Canonical normal fixture boundary metadata is root project name workspace, targets.schema-fixture-boundary1655, cache false, schemaSources inputs, command bun ./📜️script.ts schema check --fixture-boundary. Normal target is workspace:schema-fixture-boundary. Default verification is workspace:schema-verify1665, command bun ./📜️script.ts schema verify, cache false. Root SchemaScript verify acquires fresh production entries and rejects --rust-entries, separate from fixture boundary API/private helper. Metadata is executable routing evidence, not a renewed runtime result.
+
+Hashes in companion observation. Bounded Job owner joins found the whole admission above and genuine production Rust descriptor uses; no global reader absence/purity claim.

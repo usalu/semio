@@ -1,0 +1,11 @@
+{
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0ftool-job-latest-wins/\ud83d\udfe6\ufe0f.ts",
+      "action": "updated",
+      "beforeSha256": "155722d35c5df02682570b76e947ed8a392e4a13ef10dca21606f7a2ad57e807",
+      "afterSha256": "bad95d21edb178ffa55dd31e1be18dcfb6708b93dd4be25733f9a03e234c5d87",
+      "scope": "current supplied grant/receipt tuple and actual parent-policy intersection; preserve all cold-original/clear hostile refusals"
+    }
+  ]
+}

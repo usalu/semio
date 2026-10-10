@@ -1,0 +1,76 @@
+{
+  "observedOnly": true,
+  "execution": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧬️schema/🔣️.json",
+      "sha256": "6d9fc1418d0875b160c928174c1f7fb87a598687633f33eb82c45767a9b144ef",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🟦️.ts",
+      "sha256": "b19e0b5d9c0aa255bd66e4b35eacf082f22c4a7d51bedf7b625cbeae59498c61",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧫️fixtures/🔣️.json",
+      "sha256": "a09e2ba8c93262e762e05f8c4dbe57cf8850d70f9307da5fd9cbd00fb111b345",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🦀️.rs",
+      "sha256": "123523d651abd320bf6b4d5f7af6240ae0db06760ba4894a6957fdcc3a99f27e",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📖️dictionary/🛬️decode/🧪️tests/🦀️.rs",
+      "sha256": "7051b65b9d6ec7b4051606c14b3237cc3d45bc2e8e8b0b2b6a4635abae8d5ee3",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧬️schema/🔣️.json",
+      "sha256": "6739f65744ec74039c1d40680af2ad34528d579b56e0993480ab157adedd277a",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🟦️.ts",
+      "sha256": "0a4ad1410da0a77117087cbcaac55b1da2df334d685163a69e9b72eb39688178",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧫️fixtures/🔣️.json",
+      "sha256": "830e60956cc90098cc5289c52cb3c6ea60a0cd9af52b1005e7985e5deba98d03",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🧾️source/🧪️tests/🦀️.rs",
+      "sha256": "654e139388e97a494500f6ad361a546ead134e65131b3447cc533fa73ce8aa91",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧬️schema/🔣️.json",
+      "sha256": "5ce72215ff443668184c81601226925329ec3629461009c03407a2de09afe7f5",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🟦️.ts",
+      "sha256": "dde26b6d725df62eff80c13123ab5f29962a8eca6c6e1c14c83246bc7114fad5",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧫️fixtures/🔣️.json",
+      "sha256": "daa9f7d6d62d5d89aa5145d3c1345a5ce604b2c2b8a78e8611dac692745cd2da",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs",
+      "sha256": "76ee04672d423e73f9b89d8b4de6a9edc1b97008d2836281ae2fe5446586cef9",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+      "sha256": "9fc7795398eb42879e7297b1538badc45e56da18265143950084535f30d35023",
+      "ownership": false
+    }
+  ]
+}

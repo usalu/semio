@@ -1,0 +1,98 @@
+{
+  "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA256": "2e7565108973d47c94b2b9faa552dc3b84fddb721bf4c1e6ecc2b49fd815341d",
+  "afterSHA256": "05a5b5339c0deed7dfe2d9b851dda8a92eaeab2a300d96786323daf724fa88a1",
+  "scope": "original publication typed refusal custody, borrowed receipt, separate terminal owned prose release and refusal signal",
+  "blocks": [
+    {
+      "count": 1,
+      "beforeBlockSHA256": "85db9eeaab6fd568c759469fd9e098598a8510cb682a5b4fb9e11a13aebda901",
+      "afterBlockSHA256": "1d9706a147b27d5b1f03a67f7941a1674f8883e0b7839f3ebe0faf7c99060066"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "f54f758ae5a3a224ca758bc211ffdb4ad94743a4782dd9ce99405e3b34e5c23a",
+      "afterBlockSHA256": "5224e5e9e7374db8f02880c7544a14a152acb20173c6a03fcb38db746fe1d5dd"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "b5e425f6467db8cd605edb1cd9ae388ad5b1e01b933d4bfae2c0a31f53e2b458",
+      "afterBlockSHA256": "dfffe909f92195652d6e956439d13401f8407b7f1c48239d639def57c0081044"
+    },
+    {
+      "count": 2,
+      "beforeBlockSHA256": "199d17d5725ba143dbec46956ce9d0955b316ede00d61a409a3927de4b7eff91",
+      "afterBlockSHA256": "5f519f8e8cea18bcc7acf25742b6ddbca95cffc586a2b84a3aa200384d38c773"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "f94a97d512e3356e7b04f41cd5d460205be8b4d44d9c4c06ae1d157ad6b76115",
+      "afterBlockSHA256": "1ad522c44a895c1816f7b003c162500b262ffe33e6fdaf7715f319b0dc849177"
+    },
+    {
+      "count": 2,
+      "beforeBlockSHA256": "590a2853598f52f38ceaad54481869cecac3cfe9c3c5a4e48453c203af3fddb5",
+      "afterBlockSHA256": "a7b9962d4532dddc3aa288fd1c0ee8bc815726af05a3b25cf6588df80df712a0"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "28a8828011ceda28da5d96e9fd825e92709d867a95a2728a1919575edab2bf5f",
+      "afterBlockSHA256": "a07f38950576b5db7ee2f4b1db2584043acf43aa6acea0027b389ff48b2fd46f"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "4c5aa70267569b5c5382ee9cc92b8b2a6fa87814a6a06ab549a4b5f24b711933",
+      "afterBlockSHA256": "15fdc860f7bcb2bf115f5fe0e74dc9c95f40e3f41c2620307d4de4af65422f72"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "d734e5f451d8feca33af0b88af01968e1c1d2dac729020e6360e324d71216e19",
+      "afterBlockSHA256": "297960e98b0696ea574bcfc3475907a45fbbc0141e2e53f85d6b711e9a9a1929"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "1fead85dfba914a1c6d24367fdf150c230b29937c46376acfb55e7b2cafb1f15",
+      "afterBlockSHA256": "24daab5dd700f7db857ad1da6b7380e3effea6e6062c4f611bf7969f548f88a3"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "618efdca9a1be9fe94f29f005423b7222226e02f2212f64dbbc1d28757ad309c",
+      "afterBlockSHA256": "297960e98b0696ea574bcfc3475907a45fbbc0141e2e53f85d6b711e9a9a1929"
+    },
+    {
+      "count": 2,
+      "beforeBlockSHA256": "7d5fd2e9b2ca70f19477ba7b481211078c3715d7f4efd5aec669e067d07a3c1f",
+      "afterBlockSHA256": "182d57d91149bf8a578987207c97157077c498eb5f10086f089a635bce910d64"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "7f32068c18328977f69bfe9510fe40ac5d74a3e80d34f9e81787b38d7303ae5d",
+      "afterBlockSHA256": "a3b225dbbe31b3773c71b8ebfeb03b541a3316aa698646b0d26d7ce284dd8271"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "524a37a40719ef87be77c5b94f4e937136b4c057aeb2584c681982e24c6264ce",
+      "afterBlockSHA256": "f17f85a82ae613aa61f4db6379ff2f5d8683c73a18234ed1b5118f07fd6846a8"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "04682875d04e0c212583f7fb04b2e787795bb91dbe2943a45a139fc11838aad9",
+      "afterBlockSHA256": "297960e98b0696ea574bcfc3475907a45fbbc0141e2e53f85d6b711e9a9a1929"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "7a32d0700ce534d8086617029d231f71145e5e182a2720facaf7c19c0659cfb4",
+      "afterBlockSHA256": "bf91b0968cbdb04334c270c5450012263096505dcd4f457b527e1f55de6809da"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "698f4b65c2a8cf94309a60486d4beed8bae0080fa900f12239f2f621b2e8fbc1",
+      "afterBlockSHA256": "90a3304616a1996a8a613fd238ba57dde6d622ba2a2e02670820b83f1d84af96"
+    },
+    {
+      "count": 1,
+      "beforeBlockSHA256": "2545754576caa509ba87a075d2c8b3c26a046d130094600c120dc33cc67ed197",
+      "afterBlockSHA256": "bec2213db7ffa2a65c6ceda800daaa7a83c69e5e5d3f6ebbc234cf0d7adc7cb1"
+    }
+  ]
+}

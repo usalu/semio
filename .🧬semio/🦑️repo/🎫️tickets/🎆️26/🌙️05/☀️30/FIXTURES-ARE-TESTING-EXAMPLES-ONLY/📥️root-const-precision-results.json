@@ -1,0 +1,27 @@
+{
+  "red": {
+    "session": 4240,
+    "exitCode": 1,
+    "pass": 136,
+    "fail": 3,
+    "skip": 66,
+    "expect": 1192,
+    "actualSemanticFailures": [
+      "produced-audit",
+      "fractional-pseudoauthority",
+      "unlinked-refusal-words"
+    ]
+  },
+  "green": {
+    "session": 88619,
+    "exitCode": 0,
+    "pass": 139,
+    "fail": 0,
+    "skip": 66,
+    "expect": 1201,
+    "neutralExamples": 136,
+    "log": "\ud83d\uddd1\ufe0fgenerated/root-const-precision-green.log"
+  },
+  "native": false,
+  "normalCli": false
+}

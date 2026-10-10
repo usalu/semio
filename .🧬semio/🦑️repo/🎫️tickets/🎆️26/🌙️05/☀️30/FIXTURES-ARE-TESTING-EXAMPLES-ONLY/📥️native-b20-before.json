@@ -1,0 +1,20 @@
+[
+  {
+    "consumer": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts",
+    "beforeSha256": "9527e30a03588a50519e53c905d4e1ab6ad8a902253c93821d67fd206b02d416",
+    "schema": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/⏱️finite.json",
+    "schemaSha256": "5f536f0b992dd7a6a3babece5fd4adfa2bc9c633256a334709a84780dabd5eb9"
+  },
+  {
+    "consumer": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧪️tests/🟦️.ts",
+    "beforeSha256": "dc54a9b984a60b8db351382bcf291b579d408d85be311da564f8f3d01381fab6",
+    "schema": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/🎟️admission/🧬️schema/🔣️.json",
+    "schemaSha256": "b050cbe26257e27c229ea36b14c3a264b9a3769a68263a9378c9d1e5cd2a6607"
+  },
+  {
+    "consumer": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts",
+    "beforeSha256": "f3a33db8f86621bdba9962560679a6c15ecf3de62055e623dc59065f62c477f8",
+    "schema": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📪️exit.json",
+    "schemaSha256": "ca243d09bb7d1160ca9d54bcd6fa8a8038b6ce52626b5f316cfe310f28b182cf"
+  }
+]

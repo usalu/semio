@@ -1,0 +1,37 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🦀️owner/🔣️.json",
+      "sha256": "0b1499a5833a943992ae0c2f471897d3e50207526a57fd16f04dcc6fa8c61b7e",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🦀️owner/🔣️.json",
+      "sha256": "3a2e3e7e5ce941d1ec221a25526dfcad43af9b9e286462cb779e8f8ce550fcda",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "sha256": "cf74ae6b098405e4ec709e2edb16277a6301fd7a0b31ad8418f9cbd202c7cec5",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "874915f0333e7d76fbfd5c092302c62ce32d62d620190cba34614ee4082f9b4f",
+      "authored": false
+    }
+  ],
+  "candidateActions": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🦀️owner/🔣️.json",
+      "action": "remove exclusive test-route mirror schema",
+      "guardSHA256": "0b1499a5833a943992ae0c2f471897d3e50207526a57fd16f04dcc6fa8c61b7e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts",
+      "action": "remove only import12/admission15; revise DEBUG25 schema-credit text",
+      "guardSHA256": "cf74ae6b098405e4ec709e2edb16277a6301fd7a0b31ad8418f9cbd202c7cec5"
+    }
+  ],
+  "executed": false
+}

@@ -5,6 +5,7 @@ import { createRequire, isBuiltin } from "node:module";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as loadedCommandInputs from "./⚡️caching/📥️inference/🟨️.mjs";
+import {declaredNativeOwnerCommandV1} from "./🔌️nx-plugin/📤️arguments/🟨️.mjs";
 
 const PROJECT_BASENAME = "📋️project.json";
 const SCRIPT_BASENAME = "📜️script.ts";
@@ -88,7 +89,8 @@ const libraryBootstrap = (loadedCommandInputs.sourceHash === commandInputHash ? 
 });
 
 const POLICY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json")).toString("utf8"));
-const EXAMPLE_COLLECTIONS = POLICY.exampleCollections.names;
+const WORKSPACE_OWNERSHIP = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "🗂️workspaces/🔣️policy.json")).toString("utf8"));
+const EXAMPLE_COLLECTIONS = WORKSPACE_OWNERSHIP.collections.names;
 const TAXONOMY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "🔣️taxonomy.json")).toString("utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
 const nxPath = (path) => path.split("\\").join("/");
@@ -780,13 +782,13 @@ function workspaceNegationClosed(inputs) {
 /** 🧫️ Exact example ancestry preserves a genuine module name and refuses nested collections. */
 function exampleCollectionPath(path) {
   const parts = nxPath(path).split("/");
-  return parts.some((part, index) => EXAMPLE_COLLECTIONS.includes(part) && parts[index - 1] !== POLICY.exampleCollections.moduleMember);
+  return parts.some((part, index) => EXAMPLE_COLLECTIONS.includes(part) && parts[index - 1] !== WORKSPACE_OWNERSHIP.collections.moduleMember);
 }
 
 /** 🧮️ Nx minimatch exclusions carry the same exact collection and module ancestry. */
 function exampleCollectionInputs(root) {
   const names = `{${EXAMPLE_COLLECTIONS.join(",")}}`;
-  return [`!${root}/${names}/**/*`, `!${root}/**/!(${POLICY.exampleCollections.moduleMember})/${names}/**/*`];
+  return [`!${root}/${names}/**/*`, `!${root}/**/!(${WORKSPACE_OWNERSHIP.collections.moduleMember})/${names}/**/*`];
 }
 
 /** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
@@ -939,7 +941,8 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
       const ownerCwd=target.options?.cwd??root;
       const boundCommand=command.replace(/^bun\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`bun ${JSON.stringify(nxPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
       policy.executor="@semio-tech/repo-lib:owner-command";
-      policy.options={...policy.options,cwd:".",command:`bun ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(`${nativeRoot}/Cargo.toml`)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
+      let nativeOwnerCommand;try{nativeOwnerCommand=declaredNativeOwnerCommandV1(`${nativeRoot}/Cargo.toml`,ownerCwd,boundCommand);}catch(error){throw new Error(`Original discovered native command owner ${json.name}:${name}: ${error.message}`,{cause:error});}
+      policy.options={...policy.options,cwd:".",nativeOwnerCommand,command:`bun ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(`${nativeRoot}/Cargo.toml`)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
       const manifest=readToml(join(workspaceRoot,nativeRoot,"Cargo.toml"));let scope=resolve(workspaceRoot,nativeRoot);
       if(manifest.package?.workspace)scope=resolve(scope,manifest.package.workspace);
       else while(scope!==workspaceRoot && (!existsSync(join(scope,"Cargo.toml"))||!readToml(join(scope,"Cargo.toml")).workspace))scope=dirname(scope);

@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:framework:value:factory:terminal-closing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bodyCopyBytes",
+    "terminalGrant",
+    "terminalOnly",
+    "copyWords",
+    "headers",
+    "deniedBodyRetainsOriginal",
+    "deniedHeapBytes"
+  ],
+  "properties": {
+    "bodyCopyBytes": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumCopyBytes": {
+          "const": 0
+        },
+        "maximumCapacityBytes": {
+          "const": 0
+        },
+        "maximumReleaseBytes": {
+          "const": 262144
+        },
+        "maximumDepth": {
+          "const": 1
+        }
+      }
+    },
+    "terminalOnly": {
+      "const": true
+    },
+    "copyWords": {
+      "const": 0
+    },
+    "headers": {
+      "const": [
+        {
+          "wordBytes": 4,
+          "copyBytes": 0
+        },
+        {
+          "wordBytes": 8,
+          "copyBytes": 0
+        }
+      ]
+    },
+    "deniedBodyRetainsOriginal": {
+      "const": true
+    },
+    "deniedHeapBytes": {
+      "const": 0
+    }
+  }
+}
